@@ -1,4 +1,4 @@
-# schoolagy-app
+# averages.io
 
 The Schoolagy app itself — `app.schoolagy.io`. Next.js, deployed to Cloudflare
 Workers as a static export.
