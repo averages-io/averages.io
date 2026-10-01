@@ -50,19 +50,6 @@ actually got wired. If a source page changes shape enough to break a transform,
 **the build fails** rather than quietly shipping an app whose NSFW filter or
 live-data wiring silently does nothing.
 
-
-### The server decides, not the browser
-
-Demo mode is a **real sign-in**: the API accepts `demo`/`demo` and issues the
-same kind of httpOnly session cookie a live login gets. Every page then asks
-`/auth/me` who you are before it renders anything.
-
-That's deliberate. An earlier version kept the mode in `localStorage` and let
-Escape on the login screen set it, which meant anyone could reach any page by
-editing browser storage or typing a URL, and pages flashed their content before
-the redirect caught up. There is now no keyboard shortcut, no local flag to
-forge, and no paint of a protected page for a signed-out visitor.
-
 ### How live data reaches the pages
 
 Each page keeps its sample data as a literal, and the port script rewrites the
