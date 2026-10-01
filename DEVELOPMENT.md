@@ -1,7 +1,7 @@
 # Developing Averages.io
 
 Technical notes for working on the app. For what Averages.io is and how to get
-help, see the [README](README.md). For deployment, see [DEPLOY.md](DEPLOY.md).
+help, see the [README](README.md).
 
 The app pairs with a separate API Worker, which does the OAuth-signed requests to
 the school platform. This app never sees a platform secret.
