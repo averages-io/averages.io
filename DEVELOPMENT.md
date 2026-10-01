@@ -50,18 +50,6 @@ actually got wired. If a source page changes shape enough to break a transform,
 **the build fails** rather than quietly shipping an app whose NSFW filter or
 live-data wiring silently does nothing.
 
-## The three modes
-
-| Mode | How you get there | What renders |
-|---|---|---|
-| **live** | Sign in with a personal API key from your school's learning platform | The student's real courses, grades, assignments |
-| **demo** | Sign in with `demo` as **both** the key and the secret | Every page, fully usable, on built-in sample data |
-| signed-out | Neither | App pages bounce to the login screen |
-
-Demo mode is the beta-testing path: a tester with no school account gets the
-whole app, not a cut-down demo. Same pages, same interactions; only the data
-source differs. A "Demo · sample data" badge marks it; closing that badge, or
-Sign out, returns to the login screen.
 
 ### The server decides, not the browser
 
