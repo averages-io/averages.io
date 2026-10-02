@@ -27,8 +27,7 @@ is lost.
 
 ### Why not rewrite the pages as React components?
 
-Each page is already built, tested, and documented in detail (see the project's
-`architecture-decisions.md`), with its own globals, element ids and inline
+Each page is already built, tested, and documented in detail, with its own globals, element ids and inline
 script. Rewriting them idiomatically would risk regressing a lot of carefully
 tuned behavior and buy nothing the user would notice. So instead each page's
 style/markup/script is extracted and injected as-is, and the interesting wiring
