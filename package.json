@@ -2,7 +2,7 @@
   "name": "schoolagy-app",
   "version": "0.1.0",
   "private": true,
-  "license": "AGPL-3.0-only",
+  "license": "GPL-3.0-only",
   "scripts": {
     "port": "node scripts/port-pages.mjs",
     "verify": "node scripts/verify-pages.mjs && node scripts/verify-model.mjs",

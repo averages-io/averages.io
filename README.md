@@ -50,10 +50,9 @@ page.
 
 Averages.io's code is public so you can see exactly what it does with your data
 before you trust it with your grades. It is licensed under the
-[GNU Affero General Public License v3.0](LICENSE): you are free to use, study,
-change and share it, and if you run a changed version as a public service, you
-must share your changes with its users. That keeps any copy of Averages.io as
-open as this one.
+[GNU General Public License v3.0](LICENSE): you are free to use, study, change
+and share it, and if you give out a changed version, you must share its source
+under the same license.
 
 The license covers the code only. The Averages.io name, logo and look are not
 included, so if you make your own version, please give it its own name.
