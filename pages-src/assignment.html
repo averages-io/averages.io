@@ -1614,6 +1614,9 @@
     // Which "Edit in" app a file gets (2026-10-05, per Martin): only one
     // that's connected. The preview shows both, as before.
     const EDIT_READY = { canva: CANVA_PREVIEW, gdrive: CANVA_PREVIEW };
+    // Incognito (2026-10-05, set by LegacyPage.tsx): connected apps are off, so
+    // no Edit buttons and no Save to cloud, and Canva / Google aren't asked anything.
+    const INCOGNITO = !!(window.__AVERAGES_INCOGNITO__ && window.__AVERAGES_INCOGNITO__.on);
     function editAppFor(ext) {
       const can = { canva: CANVA_EXTS.includes(ext), gdrive: DRIVE_EXTS.includes(ext) };
       const order = EDITOR_PREF === 'gdrive' ? ['gdrive', 'canva'] : ['canva', 'gdrive'];
@@ -2011,13 +2014,13 @@
       const editIn = kind === 'canva' ? 'Canva' : kind === 'gdrive' ? 'Google Drive' : '';
       fileMenu.setAttribute('aria-label', editIn ? `Edit in ${editIn}` : 'Save to cloud');
       // Signed in (2026-10-05): Save to cloud is real for whichever app is set up.
-      const liveSave = kind === 'cloud' && LIVE_DETAIL && ID_OK(btn.dataset.fileId) && cloudCfg;
+      const liveSave = kind === 'cloud' && LIVE_DETAIL && ID_OK(btn.dataset.fileId) && cloudCfg && !INCOGNITO;
       const ready = { 'Google Drive': liveSave && !!cloudCfg.google, OneDrive: liveSave && !!cloudCfg.microsoft };
       const appId = { 'Google Drive': 'gdrive', OneDrive: 'onedrive' };
       fileMenu.innerHTML = `<div class="file-menu-label">${editIn ? 'Edit' : 'Save'} "${escapeHtml(name)}" ${editIn ? 'in ' + editIn : 'to'}</div>` +
         items.map(n => ready[n]
           ? `<button class="file-menu-item" type="button" role="menuitem" data-save="${appId[n]}"><span>${n}<small>${appId[n] === 'onedrive' ? 'Into Apps/Averages.io' : 'Into an Averages.io folder'}</small></span></button>`
-          : `<button class="file-menu-item" type="button" role="menuitem" disabled><span>${n}</span><span class="soon">Coming soon</span></button>`).join('');
+          : `<button class="file-menu-item" type="button" role="menuitem" disabled><span>${n}</span><span class="soon">${INCOGNITO ? 'Off in Incognito' : 'Coming soon'}</span></button>`).join('');
       fileMenu.hidden = false;
       const r = btn.getBoundingClientRect(), w = fileMenu.offsetWidth, h = fileMenu.offsetHeight;
       fileMenu.style.left = Math.max(8, Math.min(r.right - w, window.innerWidth - w - 8)) + 'px';
@@ -2830,9 +2833,11 @@
           window.history.replaceState(window.history.state, '', u.pathname + u.search + u.hash);
         } catch (e) {}
       }
-      loadLiveDrafts(back === 'saved');
-      loadCloud();
-      loadCanvaReady();
+      if (!INCOGNITO) {
+        loadLiveDrafts(back === 'saved');
+        loadCloud();
+        loadCanvaReady();
+      }
     }
 
     // Attach from Files (2026-10-05, per Martin): Files' "Attach to an

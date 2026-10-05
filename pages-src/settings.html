@@ -1216,6 +1216,17 @@
               <button class="btn-secondary" type="button" id="profileEditBtn">Edit</button>
             </div>
 
+            <p class="settings-subhead">Mode</p>
+            <div class="settings-group">
+              <div class="settings-row">
+                <div class="settings-row-text">
+                  <p class="settings-row-label" id="modeLabel">Classic</p>
+                  <p class="settings-row-desc" id="modeDesc"></p>
+                </div>
+                <button class="btn-secondary" type="button" id="modeSwitchBtn" hidden>Switch</button>
+              </div>
+            </div>
+
             <p class="settings-subhead">School</p>
             <div class="settings-group">
               <div class="settings-row">
@@ -1527,6 +1538,22 @@
        Customizations Across Devices actually switches off, since doing
        so is a one-way "your other devices stop matching this one" kind
        of change, not a purely cosmetic toggle. ---------- -->
+  <div class="editor-overlay" id="modeConfirmOverlay">
+    <div class="editor-modal" role="alertdialog" aria-modal="true" aria-labelledby="modeConfirmTitle" aria-describedby="modeConfirmBody" style="max-width: 380px;">
+      <div class="editor-head">
+        <h2 id="modeConfirmTitle">Switch to Incognito?</h2>
+        <button class="editor-close" id="modeConfirmClose" type="button" aria-label="Close">&times;</button>
+      </div>
+      <div class="editor-body" style="padding-bottom: 16px;">
+        <p class="settings-row-desc" id="modeConfirmBody" style="font-size: 0.86rem;">Incognito mode stores nothing about you on our servers. It turns off Sync Across Devices and deletes what it stored, disconnects Canva, Google Drive and OneDrive, and turns off browser notifications. Files you saved to those apps stay in your accounts.</p>
+      </div>
+      <div class="editor-actions">
+        <button class="editor-reset" id="modeConfirmCancel" type="button">Cancel</button>
+        <button class="editor-done" id="modeConfirmOk" type="button">Switch to Incognito</button>
+      </div>
+    </div>
+  </div>
+
   <div class="editor-overlay" id="syncOffConfirmOverlay">
     <div class="editor-modal" role="dialog" aria-modal="true" aria-labelledby="syncOffConfirmTitle" style="max-width: 360px;">
       <div class="editor-head">
@@ -1837,6 +1864,9 @@
       const connected = new Set();
       const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
       const LIVE = window.__AVERAGES_MODE__ === 'live';
+      // Incognito (2026-10-05): connected apps are off, and nothing is asked of them.
+      const INCOG = window.__AVERAGES_INCOGNITO__ || null;
+      const INCOGNITO = !!(INCOG && INCOG.on);
       // state: loading | ready | error | unconfigured (the API has no Canva app credentials)
       const canvaLive = { state: 'loading', connected: false, name: '', busy: false };
       function canvaRowHTML(a) {
@@ -1907,8 +1937,19 @@
               ${action}
             </div>`;
       }
+      function incognitoRowHTML(a) {
+        return `
+            <div class="settings-row">
+              <div class="settings-row-text">
+                <p class="settings-row-label">${esc(a.name)}</p>
+                <p class="settings-row-desc">${esc(a.desc)}</p>
+                <span class="integ-status">Off in Incognito mode</span>
+              </div>
+            </div>`;
+      }
       function render() {
         list.innerHTML = APPS.map(a => {
+          if (INCOGNITO) return incognitoRowHTML(a);
           if (LIVE && a.id === 'canva') return canvaRowHTML(a);
           if (LIVE) return cloudRowHTML(a);
           const on = connected.has(a.id);
@@ -1942,7 +1983,8 @@
         const app = APPS.find(a => a.id === editorValue);
         let off = PREVIEW && app && !connected.has(app.id);
         // Signed in: only once we know for sure it isn't connected.
-        if (LIVE && app) {
+        if (INCOGNITO) off = false;
+        else if (LIVE && app) {
           off = app.id === 'canva'
             ? canvaLive.state === 'ready' && !canvaLive.connected
             : cloud.state === 'ready' && !!cloud.cfg.google && !cloudAccount(app.id);
@@ -2180,7 +2222,12 @@
       });
       render();
       syncEditorHint();
-      if (LIVE) {
+      if (INCOGNITO) {
+        const note = document.querySelector('.integ-note');
+        if (note) note.textContent = INCOG.locked
+          ? 'Connected apps are off because you signed in as under 13 (Incognito mode). Nothing about you is stored on our servers.'
+          : 'Connected apps are off in Incognito mode, so nothing about you is stored on our servers. You can switch modes in Settings > Account.';
+      } else if (LIVE) {
         loadCanvaStatus();
         loadCloud();
         // Signed in or out of a drive in another tab, or a sign-in finished late: show it.
@@ -2195,6 +2242,7 @@
           connected: ['Canva is connected. Edit in Canva on an assignment file to start a draft.', false],
           failed: ['Couldn’t connect Canva. Try again.', true],
           cancelled: ['Canva wasn’t connected.', false],
+          incognito: ['Connected apps are off in Incognito mode.', false],
         }[canvaParam];
         if (msg) {
           settingsStartSection = 'integrations';   // applied by the initial render at the end of this script
@@ -2350,6 +2398,8 @@
     // ------------------------------------------------------------------
     const AVERAGES_MODE = window.__AVERAGES_MODE__ || 'live';
     const AVERAGES_SYNC_UNAVAILABLE = AVERAGES_MODE === 'demo';
+    // Signed in and in Incognito mode (2026-10-05; set by LegacyPage.tsx).
+    const AVERAGES_INCOGNITO = !!(window.__AVERAGES_INCOGNITO__ && window.__AVERAGES_INCOGNITO__.on);
     const settingsOptions = loadSettingsOptions();
 
     // ------------------------------------------------------------------
@@ -3330,6 +3380,8 @@
       const desc = document.getElementById('browserNotifDesc');
       if (desc) desc.textContent = !NOTIF_SUPPORTED
         ? "This browser doesn't support notifications."
+        : AVERAGES_INCOGNITO
+        ? 'Off in Incognito mode: notifications need Sync Across Devices.'
         : 'Coming soon: notifications in your browser when grades, assignments or messages change. Will need Sync Across Devices.';
     }
     // Which kinds of notifications (all on unless turned off).
@@ -3504,7 +3556,20 @@
     const SYNC_OFF_BODY_DEFAULT = syncOffConfirmBody.textContent;
     const SYNC_OFF_BODY_WITH_WEEKLY = SYNC_OFF_BODY_DEFAULT + ' Browser Notifications needs sync to be on, so that turns off too.';
 
-    if (AVERAGES_SYNC_UNAVAILABLE) {
+    if (!AVERAGES_SYNC_UNAVAILABLE && AVERAGES_INCOGNITO) {
+      // Incognito (2026-10-05): nothing about the student is stored on our
+      // servers. If sync was left on from before, it's turned off here and
+      // what it stored is deleted (the API refuses new writes either way).
+      if (settingsOptions.syncAcrossDevices === true) {
+        deleteSyncSettingsNow();
+        try { localStorage.removeItem('schoolagy_sync_meta'); } catch {}   // clearSyncMeta's key; that helper is defined further down
+        saveSettingsOption('syncAcrossDevices', false);
+      }
+      syncAcrossDevicesToggle.checked = false;
+      syncAcrossDevicesToggle.disabled = true;
+      const desc = document.getElementById('syncAcrossDevicesDesc');
+      if (desc) desc.textContent = 'Off in Incognito mode: nothing about you is stored on our servers.';
+    } else if (AVERAGES_SYNC_UNAVAILABLE) {
       // Demo has no real Schoology uid for the API to key a stored record
       // on, and /sync/settings refuses demo sessions server-side regardless
       // (403 not_available_in_demo) — this just keeps a demo visitor from
@@ -3535,7 +3600,7 @@
     }
 
     function isSyncOn() {
-      if (AVERAGES_SYNC_UNAVAILABLE) return false;
+      if (AVERAGES_SYNC_UNAVAILABLE || AVERAGES_INCOGNITO) return false;
       return loadSettingsOptions().syncAcrossDevices === true;
     }
 
@@ -3798,11 +3863,90 @@
     // ------------------------------------------------------------------
     // Initial render
     // ------------------------------------------------------------------
+    // ------------------------------------------------------------------
+    // Mode (2026-10-05): Incognito or Classic, in Account. Classic is 13+.
+    // ------------------------------------------------------------------
+    (function () {
+      const label = document.getElementById('modeLabel');
+      const desc = document.getElementById('modeDesc');
+      const btn = document.getElementById('modeSwitchBtn');
+      const overlay = document.getElementById('modeConfirmOverlay');
+      const INC = window.__AVERAGES_INCOGNITO__ || null;   // signed in only
+      const read = k => { try { return localStorage.getItem(k); } catch { return null; } };
+      const is13 = read('schoolagy_13plus') === 'yes';
+      const incognito = INC ? INC.on : read('schoolagy_account_mode') === 'incognito';
+      const locked = !!(INC && INC.locked);
+      label.textContent = incognito ? 'Incognito' : 'Classic';
+      if (incognito && locked) {
+        desc.textContent = 'You said you\'re under 13 when you signed in, so Averages.io stays in Incognito mode. Nothing about you is stored on our servers, and Sync Across Devices and connected apps are off.';
+      } else if (incognito) {
+        desc.textContent = is13
+          ? 'Nothing about you is stored on our servers, so Sync Across Devices, connected apps (Canva, Google Drive, OneDrive) and browser notifications are off.'
+          : 'Nothing about you is stored on our servers, so Sync Across Devices and connected apps are off. Classic mode is for students 13 and older.';
+        if (is13) { btn.textContent = 'Switch to Classic'; btn.hidden = false; }
+      } else {
+        desc.textContent = 'You can turn on Sync Across Devices and connect apps (Canva, Google Drive, OneDrive). Only what you turn on is stored on our servers.';
+        btn.textContent = 'Switch to Incognito'; btn.hidden = false;
+      }
+      function reloadToAccount() {
+        const u = new URL(window.location.href);
+        u.searchParams.set('section', 'account');
+        window.location.replace(u.pathname + u.search);
+      }
+      function close() { overlay.classList.remove('show'); btn.focus(); }
+      btn.addEventListener('click', () => {
+        if (incognito) {
+          try { localStorage.setItem('schoolagy_account_mode', 'classic'); } catch {}
+          reloadToAccount();
+          return;
+        }
+        overlay.classList.add('show');
+        document.getElementById('modeConfirmCancel').focus();
+      });
+      document.getElementById('modeConfirmCancel').addEventListener('click', close);
+      document.getElementById('modeConfirmClose').addEventListener('click', close);
+      overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+      overlay.addEventListener('keydown', e => { if (e.key === 'Escape') { e.preventDefault(); close(); } });
+      document.getElementById('modeConfirmOk').addEventListener('click', async () => {
+        const ok = document.getElementById('modeConfirmOk');
+        ok.disabled = true;
+        ok.textContent = 'Switching…';
+        // Sync off, and what it stored deleted.
+        clearTimeout(syncPushTimer);
+        if (isSyncOn()) { await deleteSyncSettingsNow(); clearSyncMeta(); }
+        saveSettingsOption('syncAcrossDevices', false);
+        if (browserNotifToggle.checked) setBrowserNotif(false);
+        if (window.__AVERAGES_MODE__ === 'live') {
+          // Canva: tokens and Drafts list deleted on our server (designs stay in Canva).
+          try { await fetch(averagesApiBase() + '/canva/connection', { method: 'DELETE', credentials: 'include' }); } catch {}
+          // Google Drive / OneDrive: forgotten here (and Google's access withdrawn).
+          const C = window.AveragesCloud;
+          if (C) { try { C.disconnectGoogle(); C.disconnectOneDrive(); } catch {} }
+        }
+        try {
+          localStorage.setItem('schoolagy_account_mode', 'incognito');
+          localStorage.removeItem('averages_cloud_accounts');
+          localStorage.removeItem('averages_drive_drafts');
+          sessionStorage.removeItem('averages_cloud_tokens');
+        } catch {}
+        reloadToAccount();
+      });
+    })();
+
     buildSearchIndex();
     renderProfileCard();
     syncResponsiveView();
     // No initializer on purpose: the Integrations code above may already have set it.
     var settingsStartSection;
+    // ?section=account after switching modes (the page reloads to apply it everywhere).
+    (function () {
+      const u = new URL(window.location.href);
+      if (u.searchParams.get('section') === 'account') {
+        if (!settingsStartSection) settingsStartSection = 'account';
+        u.searchParams.delete('section');
+        try { window.history.replaceState(window.history.state, '', u.pathname + u.search + u.hash); } catch (e) {}
+      }
+    })();
     showSection(settingsStartSection || 'general', { showDetail: !!settingsStartSection });
     pullSyncSettingsNow();
   </script>

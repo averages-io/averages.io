@@ -1084,6 +1084,8 @@
         <section class="lf-sec" id="lfCanva" aria-label="Canva"></section>
         <p class="fx-note">Google Drive and OneDrive show the files you save, edit or add with Averages.io, not your whole drive.</p>`;
       const canvaBox = document.getElementById('lfCanva');
+      // Incognito (2026-10-05, set by LegacyPage.tsx): connected apps are off.
+      const INCOGNITO = !!(window.__AVERAGES_INCOGNITO__ && window.__AVERAGES_INCOGNITO__.on);
       const dayLabel = ms => {
         const t = Number(ms) || 0;
         if (!t) return '';
@@ -1465,6 +1467,15 @@
       // Signed in or out of a drive in another tab, or a sign-in finished late: show it.
       window.addEventListener('averages-cloud-change', () => { if (cfg) { startCloud('gdrive'); startCloud('onedrive'); } });
       loadCourse();
+      if (INCOGNITO) {
+        document.getElementById('filesSub').textContent = 'Your course files';
+        document.getElementById('lfOne').hidden = true;
+        canvaBox.hidden = true;
+        main.querySelectorAll(':scope > .fx-note').forEach(n => { n.hidden = true; });
+        CLOUD.gdrive.box.innerHTML = head('Google Drive, OneDrive and Canva')
+          + '<div class="fx-empty"><strong>Off in Incognito mode</strong>Incognito mode stores nothing about you on our servers, so connected apps are off.</div>';
+        return;
+      }
       loadCloud();
       load(false);
     }
