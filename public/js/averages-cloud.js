@@ -245,9 +245,13 @@
     }
   }
 
-  /** One of the signed-in student's assignment files, from our API. */
+  /**
+   * One of the signed-in student's course files, from our API: attached to an
+   * assignment (`src.assignment`) or to a Materials document (`src.document`).
+   */
   async function fetchAttachment(src) {
-    const q = `section=${encodeURIComponent(src.section)}&assignment=${encodeURIComponent(src.assignment)}&file=${encodeURIComponent(src.fileId)}`;
+    const parent = src.document ? `document=${encodeURIComponent(src.document)}` : `assignment=${encodeURIComponent(src.assignment)}`;
+    const q = `section=${encodeURIComponent(src.section)}&${parent}&file=${encodeURIComponent(src.fileId)}`;
     let r;
     try {
       r = await fetch(`${API}/data/attachment?${q}`, { credentials: 'include' });
