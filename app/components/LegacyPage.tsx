@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { getSession, loadBundle, signOut, type Mode } from "../lib/averages";
+import { clearCloudConnections, getSession, loadBundle, signOut, type Mode } from "../lib/averages";
 import { installNsfwGlobal, preloadNsfwModel } from "../lib/nsfw";
 import { SKELETON_CSS, skeletonHtml, revealContent } from "./PageSkeleton";
 import { THEME_BOOT_JS } from "../lib/theme-boot";
@@ -200,6 +200,21 @@ export default function LegacyPage({
       // supposed to be on that list. Set for every page (not just
       // requiresAuth ones) so a page can check it without special-casing.
       (window as any).__AVERAGES_MODE__ = session.mode;
+      // Incognito (2026-10-05): nothing about the student is stored on our
+      // servers, so Sync, connected apps and notifications are off. It's on
+      // when the API says so (signed in as under 13, which can't be switched
+      // off) or when the student picked it (onboarding or Settings).
+      let pickedIncognito = false;
+      try {
+        if (session.incognito) window.localStorage.setItem("schoolagy_account_mode", "incognito");
+        pickedIncognito = window.localStorage.getItem("schoolagy_account_mode") === "incognito";
+      } catch {
+        /* storage blocked: only the API's answer counts */
+      }
+      const incognito = !!session.incognito || pickedIncognito;
+      (window as any).__AVERAGES_INCOGNITO__ = { on: incognito, locked: !!session.incognito };
+      // Google Drive / OneDrive connections live on this device; Incognito has none.
+      if (incognito) clearCloudConnections();
 
       setMode(session.mode);
       setPhase("ready");
