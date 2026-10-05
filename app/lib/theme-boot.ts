@@ -19,7 +19,7 @@
  * page's own `html { background-color }` rule for precedence.
  *
  * It is also the ONLY copy of this logic. It hangs the applier on
- * `window.__schoolagyApplyTheme` so LegacyPage's `storage` listener (another
+ * `window.__averagesApplyTheme` so LegacyPage's `storage` listener (another
  * tab changing the setting) can call the same code rather than keeping a
  * second implementation in sync with it.
  *
@@ -148,7 +148,7 @@ export const THEME_BOOT_JS = `(function () {
 
   // Potato PC Mode (2026-10-04): applied here too, before first paint, so the
   // loading skeleton and every page start with animations already off.
-  window.__schoolagyApplyTheme = function () { apply(); applyPotato(); };
+  window.__averagesApplyTheme = function () { apply(); applyPotato(); };
   apply();
   applyPotato();
 })();`;

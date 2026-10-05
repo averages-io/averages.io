@@ -204,5 +204,5 @@ export async function scanImage(file: File): Promise<ScanVerdict> {
  */
 export function installNsfwGlobal(): void {
   if (typeof window === "undefined") return;
-  (window as any).__schoolagyScanImage = scanImage;
+  (window as any).__averagesScanImage = scanImage;
 }
