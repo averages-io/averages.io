@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="referrer" content="no-referrer">
+<title>Connecting OneDrive</title>
+<!--
+  Where Microsoft sends the OneDrive sign-in popup back to (2026-10-05).
+  Registered in Microsoft Entra as a single-page app redirect URI:
+  https://app.averages.io/auth/microsoftgraph
+
+  It hands the answer (?code=...&state=...) back to the Averages.io page that
+  started the sign-in, on a same-origin BroadcastChannel (Microsoft's
+  Cross-Origin-Opener-Policy header leaves window.opener empty) and through
+  window.opener where it still exists. That page checks the state and swaps
+  the code for a token itself (PKCE, so the code is useless without its
+  secret verifier). This page keeps nothing, sends nothing to any other site,
+  and closes itself.
+-->
+<style>
+  :root { color-scheme: light dark; --bg: #f6f7f9; --fg: #1d2330; --muted: #5d6677; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #14171d; --fg: #eef1f6; --muted: #a3acbb; } }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg); }
+  body { display: grid; place-items: center; font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; padding: 0 16px; }
+  p { margin: 0; text-align: center; max-width: 340px; }
+  .muted { color: var(--muted); margin-top: 6px; }
+  a { color: inherit; }
+</style>
+</head>
+<body>
+<div>
+  <p id="msg">Finishing up…</p>
+  <p class="muted" id="sub"></p>
+</div>
+<script>
+(function () {
+  var params = window.location.search;
+  // Take the code out of the address bar and history straight away.
+  try { history.replaceState(null, '', window.location.pathname); } catch (e) {}
+
+  var msg = { type: 'averages-ms-auth', params: params };
+  var sent = false;
+  // Microsoft's sign-in pages cut this window off from the page that opened
+  // it (Cross-Origin-Opener-Policy), so the answer goes on a BroadcastChannel,
+  // which only reaches Averages.io pages on this same origin...
+  try { var ch = new BroadcastChannel('averages-ms-auth'); ch.postMessage(msg); ch.close(); sent = true; } catch (e) {}
+  // ...and to the opener too, in browsers where it's still there.
+  try {
+    if (window.opener && !window.opener.closed) { window.opener.postMessage(msg, window.location.origin); sent = true; }
+  } catch (e) {}
+
+  if (sent && params) {
+    document.getElementById('msg').textContent = 'Done. You can close this window.';
+    setTimeout(function () { window.close(); }, 300);
+    return;
+  }
+  document.getElementById('msg').textContent = 'This window lost track of Averages.io.';
+  var sub = document.getElementById('sub');
+  sub.textContent = 'Close it, then click Connect again in ';
+  var a = document.createElement('a');
+  a.href = '/settings';
+  a.textContent = 'Settings';
+  sub.appendChild(a);
+  sub.appendChild(document.createTextNode('.'));
+})();
+</script>
+</body>
+</html>
