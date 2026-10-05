@@ -1,63 +1,17 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  // Must match the Worker in the Cloudflare dashboard (averages-api: it holds the
-  // secrets and the SYNC Durable Object). Renamed from schoolagy-api 2026-10-05.
-  "name": "averages-api",
-  "main": "src/index.ts",
+  "name": "schoolagy-app",
   "compatibility_date": "2026-09-05",
-  "compatibility_flags": ["nodejs_compat"],
-  "observability": {
-    "enabled": true
-  },
-  // Keep the variables set in the Cloudflare dashboard when deploying
-  // (2026-10-05). CANVA_CLIENT_ID, GOOGLE_CLIENT_ID and GOOGLE_DRIVE_CLIENT_ID
-  // live there as plain variables; without this, every deploy from GitHub
-  // would delete them (this file would be the only source of variables).
-  // Anything also listed under "vars" below still takes this file's value.
-  "keep_vars": true,
-  // Where Google and Canva send students back after they sign in. Not secret
-  // (they show in the address bar), so they live here instead of the dashboard.
-  // For local testing, .dev.vars overrides these with the localhost addresses.
-  "vars": {
-    "GOOGLE_REDIRECT_URI": "https://api.averages.io/auth/google/callback",
-    "CANVA_REDIRECT_URI": "https://api.averages.io/canva/callback",
-    // OneDrive (Microsoft Entra app "Averages.io", single-page app, no secret).
-    // Public: it's sent to the browser by GET /config/cloud.
-    "MS_CLIENT_ID": "c006202b-180f-4d4c-b03c-c0f43048c8e9"
-  },
-  // Sync Across Devices: one SyncStore Durable Object per student (src/syncStore.ts).
-  // The code always opens them in the "us" jurisdiction, so the stored record
-  // and the code that reads it stay in the United States (PowerSchool terms
-  // §3.2.1). Replaced the SYNC_KV namespace on 2026-10-04; KV copied data
-  // to Cloudflare locations worldwide. SQLite-backed, which the Free plan supports.
-  //
-  // Canva (2026-10-05): one CanvaStore Durable Object per student, also opened
-  // in the "us" jurisdiction (src/canvaStore.ts). Holds their Canva tokens
-  // (encrypted), drafts and short-lived Return contexts. Separate from SyncStore
-  // so turning Sync off never disconnects Canva.
-  "durable_objects": {
-    "bindings": [
-      { "name": "SYNC", "class_name": "SyncStore" },
-      { "name": "CANVA", "class_name": "CanvaStore" }
-    ]
-  },
-  // One-time setup Cloudflare runs on the first deploy that includes SyncStore.
-  // Never edit or remove a tag once deployed; later changes get a new tag.
-  "migrations": [
-    { "tag": "v1", "new_sqlite_classes": ["SyncStore"] },
-    { "tag": "v2", "new_sqlite_classes": ["CanvaStore"] }
-  ]
-  // Allowed CORS origins and the session cookie's domain are hardcoded as
-  // ALLOWED_ORIGINS/COOKIE_DOMAIN constants in src/index.ts rather than
-  // living here as wrangler vars.
-  //
-  // Secrets (dashboard or `npx wrangler secret put`, never in this file):
-  // SESSION_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET,
-  // CANVA_CLIENT_ID, CANVA_CLIENT_SECRET
-  //
-  // Also set in the dashboard (as a secret, so a deploy keeps it, even though
-  // it ends up public): GOOGLE_PICKER_API_KEY, a Google Cloud API key that MUST
-  // be restricted to app.averages.io and the Picker API. Without it Google
-  // Drive still connects and saves; only "Add from Google Drive" needs it.
-  // GOOGLE_PROJECT_NUMBER is optional (taken from GOOGLE_CLIENT_ID otherwise).
+  "assets": {
+    "directory": "./out",
+    // Without this, Cloudflare's static-assets handler returns its own
+    // generic "not found" response for any path that doesn't match a
+    // prerendered route — which is what showed up as "goes to a page that
+    // says it couldn't connect" instead of the real, custom 404.html this
+    // app already builds (from app/not-found.tsx, see pages-src/404.html).
+    // "404-page" tells it to serve that file (walking up to the nearest
+    // 404.html for the request path, root in this app's case) with a real
+    // 404 status instead. Found and fixed 2026-09-08.
+    "not_found_handling": "404-page"
+  }
 }
