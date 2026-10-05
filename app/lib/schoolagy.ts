@@ -179,8 +179,13 @@ export interface Bundle {
  *
  * In demo mode the API returns an empty bundle on purpose, which is the signal
  * for each page to fall through to the sample data in its own markup.
+ *
+ * Returns "signed_out" when the session died (401), and null when the data
+ * could not be loaded for any other reason (network error, timeout, 5xx).
+ * In live mode the caller must treat null as an error, never as "use the
+ * sample data": sample grades would look like the student's real ones.
  */
-export async function loadBundle(): Promise<Bundle | null> {
+export async function loadBundle(): Promise<Bundle | null | "signed_out"> {
   const cached = cacheGet(BUNDLE_CACHE);
   if (cached) {
     try {
@@ -197,7 +202,7 @@ export async function loadBundle(): Promise<Bundle | null> {
       // Session died underneath us — drop the cached "you're signed in" answer
       // so the next guard check sends them back to sign in.
       cacheClear(SESSION_CACHE);
-      return null;
+      return "signed_out";
     }
     if (!response.ok) return null;
     const bundle = (await response.json()) as Bundle;

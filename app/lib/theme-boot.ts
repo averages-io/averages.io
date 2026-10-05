@@ -108,6 +108,47 @@ export const THEME_BOOT_JS = `(function () {
     }
   }
 
-  window.__schoolagyApplyTheme = apply;
+  var POTATO_CSS = "body.potato-mode,body.potato-mode *,body.potato-mode *::before,body.potato-mode *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important;filter:none!important;text-shadow:none!important}html:has(body.potato-mode){scroll-behavior:auto!important}body.potato-mode,body.potato-mode *{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif!important}body.potato-mode h1.title{font-style:normal!important;transform:none!important}body.potato-mode .trend.has-popup:focus-visible{outline:2px solid currentColor;outline-offset:2px}";
+  function potatoOn() { return !!(document.body && document.body.classList.contains("potato-mode")); }
+  function applyPotato() {
+    var on = false;
+    try { on = (JSON.parse(localStorage.getItem("schoolagy_settings_options") || "{}") || {}).potatoMode === true; } catch (e) {}
+    if (document.body) document.body.classList.toggle("potato-mode", on);
+    if (!document.getElementById("potatoStyle")) {
+      var st = document.createElement("style");
+      st.id = "potatoStyle";
+      st.textContent = POTATO_CSS;
+      (document.head || document.documentElement).appendChild(st);
+    }
+    var EP = window.Element && Element.prototype;
+    if (EP && !EP.__potatoPatched) {
+      EP.__potatoPatched = true;
+      var anim = EP.animate;
+      if (anim) EP.animate = function (frames, opts) {
+        if (potatoOn()) opts = (typeof opts === "number" || opts == null) ? { duration: 0 } : Object.assign({}, opts, { duration: 0, delay: 0, endDelay: 0, iterations: 1 });
+        return anim.call(this, frames, opts);
+      };
+      var siv = EP.scrollIntoView;
+      if (siv) EP.scrollIntoView = function (arg) {
+        if (potatoOn() && arg && typeof arg === "object") arg = Object.assign({}, arg, { behavior: "auto" });
+        return siv.call(this, arg);
+      };
+      ["scrollTo", "scrollBy"].forEach(function (name) {
+        [EP, window].forEach(function (target) {
+          var fn = target[name];
+          if (!fn) return;
+          target[name] = function (a, b) {
+            if (potatoOn() && a && typeof a === "object") a = Object.assign({}, a, { behavior: "auto" });
+            return b === undefined ? fn.call(this, a) : fn.call(this, a, b);
+          };
+        });
+      });
+    }
+  }
+
+  // Potato PC Mode (2026-10-04): applied here too, before first paint, so the
+  // loading skeleton and every page start with animations already off.
+  window.__schoolagyApplyTheme = function () { apply(); applyPotato(); };
   apply();
+  applyPotato();
 })();`;
