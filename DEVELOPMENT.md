@@ -27,7 +27,8 @@ is lost.
 
 ### Why not rewrite the pages as React components?
 
-Each page is already built, tested, and documented in detail, with its own globals, element ids and inline
+Each page is already built, tested, and documented in detail (see the project's
+`architecture-decisions.md`), with its own globals, element ids and inline
 script. Rewriting them idiomatically would risk regressing a lot of carefully
 tuned behavior and buy nothing the user would notice. So instead each page's
 style/markup/script is extracted and injected as-is, and the interesting wiring
@@ -48,6 +49,31 @@ JavaScript embedded in every generated page and checks that each feature
 actually got wired. If a source page changes shape enough to break a transform,
 **the build fails** rather than quietly shipping an app whose NSFW filter or
 live-data wiring silently does nothing.
+
+## The three modes
+
+| Mode | How you get there | What renders |
+|---|---|---|
+| **live** | Sign in with a personal API key from your school's learning platform | The student's real courses, grades, assignments |
+| **demo** | Sign in with `demo` as **both** the key and the secret | Every page, fully usable, on built-in sample data |
+| signed-out | Neither | App pages bounce to the login screen |
+
+Demo mode is the beta-testing path: a tester with no school account gets the
+whole app, not a cut-down demo. Same pages, same interactions; only the data
+source differs. A "Demo · sample data" badge marks it; closing that badge, or
+Sign out, returns to the login screen.
+
+### The server decides, not the browser
+
+Demo mode is a **real sign-in**: the API accepts `demo`/`demo` and issues the
+same kind of httpOnly session cookie a live login gets. Every page then asks
+`/auth/me` who you are before it renders anything.
+
+That's deliberate. An earlier version kept the mode in `localStorage` and let
+Escape on the login screen set it, which meant anyone could reach any page by
+editing browser storage or typing a URL, and pages flashed their content before
+the redirect caught up. There is now no keyboard shortcut, no local flag to
+forge, and no paint of a protected page for a signed-out visitor.
 
 ### How live data reaches the pages
 

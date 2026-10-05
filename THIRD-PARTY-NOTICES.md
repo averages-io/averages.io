@@ -1,6 +1,6 @@
 # Third-party notices
 
-Schoolagy redistributes the following third-party material. Each is used under
+Averages.io redistributes the following third-party material. Each is used under
 its own license, reproduced below as those licenses require.
 
 ---
@@ -46,6 +46,17 @@ SOFTWARE.
 
 ---
 
+## Twemoji graphics
+
+The emoji icons in the app (for example on course pages, Materials and
+Messages) are Twemoji graphics, embedded as inline SVG in `pages-src/`.
+
+Copyright 2019 Twitter, Inc and other contributors.
+Copyright 2024 Twemoji contributors (https://github.com/jdecked/twemoji).
+Licensed under CC-BY 4.0: https://creativecommons.org/licenses/by/4.0/
+
+---
+
 ## Runtime dependencies
 
 These are installed from npm at build time rather than committed here, so their
@@ -62,8 +73,9 @@ license texts ship inside `node_modules/`. Listed for reference:
 
 ## Not covered by this project's license
 
-"Schoolagy", the Schoolagy name, logo and visual identity are not licensed for
+The Averages.io name, logo and visual identity are not licensed for
 reuse. See the LICENSE file for what the code itself permits.
 
-Schoology is a trademark of PowerSchool. Schoolagy is an independent project and
-is not affiliated with, endorsed by, or sponsored by PowerSchool or Schoology.
+Averages.io is an independent project and is not affiliated with, endorsed by,
+or sponsored by PowerSchool. Schoology and PowerSchool are trademarks of
+PowerSchool Holdings, Inc.
