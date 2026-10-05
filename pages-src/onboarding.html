@@ -1663,10 +1663,10 @@
       // user everywhere else in the app instead of each page asking the
       // OS fresh and disagreeing with the others. Defaults to whatever
       // the OS is already set to when nothing's been chosen yet.
-      const SCHOOLAGY_DARK_MODE_KEY = 'schoolagy_dark_mode';
-      const schoolagySavedDarkPref = () => {
+      const AVERAGES_DARK_MODE_KEY = 'schoolagy_dark_mode';
+      const averagesSavedDarkPref = () => {
         try {
-          const v = localStorage.getItem(SCHOOLAGY_DARK_MODE_KEY);
+          const v = localStorage.getItem(AVERAGES_DARK_MODE_KEY);
           if (v === 'dark') return true;
           if (v === 'light') return false;
         } catch {}
@@ -1676,17 +1676,17 @@
         if (under13) return true;
         return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
       };
-      const schoolagySetDarkPref = isDark => {
-        try { localStorage.setItem(SCHOOLAGY_DARK_MODE_KEY, isDark ? 'dark' : 'light'); } catch {}
+      const averagesSetDarkPref = isDark => {
+        try { localStorage.setItem(AVERAGES_DARK_MODE_KEY, isDark ? 'dark' : 'light'); } catch {}
       };
-      const initialDark = schoolagySavedDarkPref();
+      const initialDark = averagesSavedDarkPref();
       darkModeToggle.checked = initialDark;
       applyDarkMode(initialDark);
       // Save the under-13 default right away so Home and every other page open dark too.
-      try { if (!localStorage.getItem(SCHOOLAGY_DARK_MODE_KEY) && localStorage.getItem('schoolagy_13plus') !== 'yes') schoolagySetDarkPref(true); } catch {}
+      try { if (!localStorage.getItem(AVERAGES_DARK_MODE_KEY) && localStorage.getItem('schoolagy_13plus') !== 'yes') averagesSetDarkPref(true); } catch {}
       darkModeToggle.addEventListener('change', () => {
         applyDarkMode(darkModeToggle.checked);
-        schoolagySetDarkPref(darkModeToggle.checked);
+        averagesSetDarkPref(darkModeToggle.checked);
       });
     }
 
@@ -2374,7 +2374,7 @@
       }
       emailError.classList.remove('show');
 
-      // Front-end only — real submit will create the Schoolagy Profile
+      // Front-end only — real submit will create the Averages.io Profile
       // server-side (tied to the Schoology user ID). A real request has
       // network latency, so a brief loading state here (instead of an
       // instant jump to "You're all set!") sets the right expectation

@@ -1152,20 +1152,20 @@
     // is called right after the raw array literal below, mutating COURSES
     // in place, so it's already the customized/reordered version before
     // anything on this page ever renders it. Same defensive
-    // try/catch-per-key style as SCHOOLAGY_DARK_MODE_KEY in settings.html.
+    // try/catch-per-key style as AVERAGES_DARK_MODE_KEY in settings.html.
     // ------------------------------------------------------------------
-    const SCHOOLAGY_COURSE_CUSTOM_KEY = 'schoolagy_course_custom';
-    const SCHOOLAGY_COURSE_ORDER_KEY = 'schoolagy_course_order';
+    const AVERAGES_COURSE_CUSTOM_KEY = 'schoolagy_course_custom';
+    const AVERAGES_COURSE_ORDER_KEY = 'schoolagy_course_order';
     function loadCourseCustom() {
       try {
-        const raw = localStorage.getItem(SCHOOLAGY_COURSE_CUSTOM_KEY);
+        const raw = localStorage.getItem(AVERAGES_COURSE_CUSTOM_KEY);
         if (raw) return JSON.parse(raw);
       } catch {}
       return {};
     }
     function loadCourseOrder() {
       try {
-        const raw = localStorage.getItem(SCHOOLAGY_COURSE_ORDER_KEY);
+        const raw = localStorage.getItem(AVERAGES_COURSE_ORDER_KEY);
         if (raw) return JSON.parse(raw);
       } catch {}
       return null;

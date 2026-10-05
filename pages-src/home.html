@@ -1615,13 +1615,13 @@
     // file's rendering and in-place COURSES mutations (splice, index
     // assignment, etc.) needs no other change. Same defensive
     // try/catch-per-key style as
-    // SCHOOLAGY_DARK_MODE_KEY/SCHOOLAGY_PROFILE_KEY in settings.html.
+    // AVERAGES_DARK_MODE_KEY/AVERAGES_PROFILE_KEY in settings.html.
     // ------------------------------------------------------------------
-    const SCHOOLAGY_COURSE_CUSTOM_KEY = 'schoolagy_course_custom';
-    const SCHOOLAGY_COURSE_ORDER_KEY = 'schoolagy_course_order';
+    const AVERAGES_COURSE_CUSTOM_KEY = 'schoolagy_course_custom';
+    const AVERAGES_COURSE_ORDER_KEY = 'schoolagy_course_order';
     function loadCourseCustom() {
       try {
-        const raw = localStorage.getItem(SCHOOLAGY_COURSE_CUSTOM_KEY);
+        const raw = localStorage.getItem(AVERAGES_COURSE_CUSTOM_KEY);
         if (raw) return JSON.parse(raw);
       } catch {}
       return {};
@@ -1629,22 +1629,22 @@
     function saveCourseCustom(id, patch) {
       const all = loadCourseCustom();
       all[id] = Object.assign({}, all[id], patch);
-      try { localStorage.setItem(SCHOOLAGY_COURSE_CUSTOM_KEY, JSON.stringify(all)); } catch {}
+      try { localStorage.setItem(AVERAGES_COURSE_CUSTOM_KEY, JSON.stringify(all)); } catch {}
     }
     function loadCourseOrder() {
       try {
-        const raw = localStorage.getItem(SCHOOLAGY_COURSE_ORDER_KEY);
+        const raw = localStorage.getItem(AVERAGES_COURSE_ORDER_KEY);
         if (raw) return JSON.parse(raw);
       } catch {}
       return null;
     }
     function saveCourseOrder(ids) {
-      try { localStorage.setItem(SCHOOLAGY_COURSE_ORDER_KEY, JSON.stringify(ids)); } catch {}
+      try { localStorage.setItem(AVERAGES_COURSE_ORDER_KEY, JSON.stringify(ids)); } catch {}
     }
     function clearCourseCustomizations() {
       try {
-        localStorage.removeItem(SCHOOLAGY_COURSE_CUSTOM_KEY);
-        localStorage.removeItem(SCHOOLAGY_COURSE_ORDER_KEY);
+        localStorage.removeItem(AVERAGES_COURSE_CUSTOM_KEY);
+        localStorage.removeItem(AVERAGES_COURSE_ORDER_KEY);
       } catch {}
     }
     // Subject table (2026-10-01, per Martin): each course gets a color that
@@ -1783,11 +1783,11 @@
 
     // ------------------------------------------------------------------
     // New widgets' data (2026-10-03). Signed in, these come from the API
-    // (window.__SCHOOLAGY__.data) and are empty until it sends them; the
+    // (window.__AVERAGES__.data) and are empty until it sends them; the
     // samples below are only for the demo, never shown as real grades.
     // ------------------------------------------------------------------
-    const HOME_LIVE = !!(window.__SCHOOLAGY__ && window.__SCHOOLAGY__.data);
-    const HOME_DATA = HOME_LIVE ? window.__SCHOOLAGY__.data : {};
+    const HOME_LIVE = !!(window.__AVERAGES__ && window.__AVERAGES__.data);
+    const HOME_DATA = HOME_LIVE ? window.__AVERAGES__.data : {};
     // "Now" for due math: real time when signed in; the demo's own Monday, Aug 24.
     const REF_NOW = HOME_LIVE ? new Date() : new Date(2026, 7, 24, 8, 0);
     const RECENT_GRADES = HOME_LIVE ? (Array.isArray(HOME_DATA.RECENT_GRADES) ? HOME_DATA.RECENT_GRADES : []) : [

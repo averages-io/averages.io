@@ -1573,13 +1573,13 @@
     // in place, so `course` (found from COURSES right below) already
     // reflects any saved rename/recolor before this page renders
     // anything. Same defensive try/catch-per-key style as
-    // SCHOOLAGY_DARK_MODE_KEY in settings.html.
+    // AVERAGES_DARK_MODE_KEY in settings.html.
     // ------------------------------------------------------------------
-    const SCHOOLAGY_COURSE_CUSTOM_KEY = 'schoolagy_course_custom';
-    const SCHOOLAGY_COURSE_ORDER_KEY = 'schoolagy_course_order';
+    const AVERAGES_COURSE_CUSTOM_KEY = 'schoolagy_course_custom';
+    const AVERAGES_COURSE_ORDER_KEY = 'schoolagy_course_order';
     function loadCourseCustom() {
       try {
-        const raw = localStorage.getItem(SCHOOLAGY_COURSE_CUSTOM_KEY);
+        const raw = localStorage.getItem(AVERAGES_COURSE_CUSTOM_KEY);
         if (raw) return JSON.parse(raw);
       } catch {}
       return {};
@@ -1587,11 +1587,11 @@
     function saveCourseCustom(id, patch) {
       const all = loadCourseCustom();
       all[id] = Object.assign({}, all[id], patch);
-      try { localStorage.setItem(SCHOOLAGY_COURSE_CUSTOM_KEY, JSON.stringify(all)); } catch {}
+      try { localStorage.setItem(AVERAGES_COURSE_CUSTOM_KEY, JSON.stringify(all)); } catch {}
     }
     function loadCourseOrder() {
       try {
-        const raw = localStorage.getItem(SCHOOLAGY_COURSE_ORDER_KEY);
+        const raw = localStorage.getItem(AVERAGES_COURSE_ORDER_KEY);
         if (raw) return JSON.parse(raw);
       } catch {}
       return null;
@@ -2063,7 +2063,7 @@
     // Overdue rows: "Due 3 days ago" / "Due 5 hours ago" (11:59 PM unless a time is given).
     // "Now" for due math: the real time with live data; with the sample data
     // (August 2026) the mock's own today, Aug 24 2026 8:00 AM.
-    const IS_SAMPLE = !(window.__SCHOOLAGY__ && window.__SCHOOLAGY__.data);
+    const IS_SAMPLE = !(window.__AVERAGES__ && window.__AVERAGES__.data);
     const REF_NOW = IS_SAMPLE ? new Date(2026, 7, 24, 8, 0) : new Date();
     // Exact due moment: `dueAt`, or the date + time (11:59 PM if none given).
     function dueMoment(item) {

@@ -1378,7 +1378,7 @@
        last step before Weekly Grade Summary actually turns on, once the
        email/sync gates above already pass. Unlike those two, this isn't
        unblocking a missing prerequisite — it's disclosure: turning this
-       on means Schoolagy stores a real, reusable school sign-in
+       on means Averages.io stores a real, reusable school sign-in
        credential server-side (encrypted, using a separate locked-down key
        it keeps elsewhere) so it can check grades even while the person is
        signed out. That's a meaningfully bigger thing to store than
@@ -1726,10 +1726,10 @@
     // Sign out — both the profile-menu item and the danger button further down
     // the page call this directly instead of relying only on a page-agnostic
     // delegated listener elsewhere in the app.
-    function schoolagySignOutClick(e) {
+    function averagesSignOutClick(e) {
       e.preventDefault();
-      if (typeof window.__schoolagySignOut === 'function') {
-        window.__schoolagySignOut();
+      if (typeof window.__averagesSignOut === 'function') {
+        window.__averagesSignOut();
       } else {
         // Fallback for the standalone preview (this file opened outside the
         // Next.js app, where no session backend is wired up).
@@ -1737,7 +1737,7 @@
       }
     }
     document.querySelectorAll('[data-action="signout"]').forEach(btn => {
-      btn.addEventListener('click', schoolagySignOutClick);
+      btn.addEventListener('click', averagesSignOutClick);
     });
 
     // Bottom nav — same purely-visual-for-the-preview pattern as home.html;
@@ -1815,7 +1815,7 @@
     (function () {
       const list = document.getElementById('integrationList');
       if (!list) return;
-      const PREVIEW = !window.__SCHOOLAGY_MODE__;   // set by LegacyPage.tsx when signed in (live or demo); missing in the preview
+      const PREVIEW = !window.__AVERAGES_MODE__;   // set by LegacyPage.tsx when signed in (live or demo); missing in the preview
       const APPS = [
         { id: 'canva', name: 'Canva', desc: 'Edit assignment files in Canva, then turn them in from Drafts.' },
         { id: 'gdrive', name: 'Google Drive', desc: 'Edit Word, PowerPoint and Excel files in Google Docs, Slides and Sheets, and add files from Drive.' },
@@ -1952,7 +1952,7 @@
     // asking the OS fresh on every load and forgetting whatever the
     // toggle was set to — which is why turning Dark Mode on here and
     // then navigating anywhere else (including back to Settings) lost
-    // it. SCHOOLAGY_DARK_MODE_KEY below is a small shared localStorage
+    // it. AVERAGES_DARK_MODE_KEY below is a small shared localStorage
     // flag: Settings is the one page with a real toggle, so it's the
     // one place that WRITES a preference; every page (this one,
     // onboarding.html, calendar.html) reads it the same way on load, so
@@ -1960,17 +1960,17 @@
     // Calendar disagreeing with what Settings says — has one shared
     // answer instead of each page asking the OS independently.
     // ------------------------------------------------------------------
-    const SCHOOLAGY_DARK_MODE_KEY = 'schoolagy_dark_mode';
-    function schoolagySavedDarkPref() {
+    const AVERAGES_DARK_MODE_KEY = 'schoolagy_dark_mode';
+    function averagesSavedDarkPref() {
       try {
-        const v = localStorage.getItem(SCHOOLAGY_DARK_MODE_KEY);
+        const v = localStorage.getItem(AVERAGES_DARK_MODE_KEY);
         if (v === 'dark') return true;
         if (v === 'light') return false;
       } catch {}
       return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
     }
-    function schoolagySetDarkPref(isDark) {
-      try { localStorage.setItem(SCHOOLAGY_DARK_MODE_KEY, isDark ? 'dark' : 'light'); } catch {}
+    function averagesSetDarkPref(isDark) {
+      try { localStorage.setItem(AVERAGES_DARK_MODE_KEY, isDark ? 'dark' : 'light'); } catch {}
       schedulePushSyncSettings();
     }
     const darkModeToggle = document.getElementById('darkModeToggle');
@@ -1995,18 +1995,18 @@
       }
       document.body.classList.toggle('dark-mode', isDark);
     }
-    const initialDark = schoolagySavedDarkPref();
+    const initialDark = averagesSavedDarkPref();
     darkModeToggle.checked = initialDark;
     applyDarkMode(initialDark);
     darkModeToggle.addEventListener('change', () => {
       applyDarkMode(darkModeToggle.checked);
-      schoolagySetDarkPref(darkModeToggle.checked);
+      averagesSetDarkPref(darkModeToggle.checked);
     });
     // Another tab (or this same page, e.g. a future Onboarding revisit)
     // changing the preference should show up here without a reload.
     window.addEventListener('storage', e => {
-      if (e.key !== SCHOOLAGY_DARK_MODE_KEY) return;
-      const isDark = schoolagySavedDarkPref();
+      if (e.key !== AVERAGES_DARK_MODE_KEY) return;
+      const isDark = averagesSavedDarkPref();
       darkModeToggle.checked = isDark;
       applyDarkMode(isDark);
     });
@@ -2015,7 +2015,7 @@
     // Misc settings-page options — one small shared localStorage record
     // (schoolagy_settings_options, a flat { optionId: value } object) for
     // every other Settings control that isn't important enough for its
-    // own dedicated key like SCHOOLAGY_DARK_MODE_KEY/SCHOOLAGY_PROFILE_KEY
+    // own dedicated key like AVERAGES_DARK_MODE_KEY/AVERAGES_PROFILE_KEY
     // above. Added 2026-09-08 — before this, Potato PC Mode, Weekly
     // Grade Summary and Sync Across Devices all only mutated in-memory/DOM
     // state, so every one of them silently reset the instant you left the
@@ -2024,10 +2024,10 @@
     // writer. (The push-notification category toggles used this too until
     // they were removed on 2026-09-16 — see the Notifications section.)
     // ------------------------------------------------------------------
-    const SCHOOLAGY_SETTINGS_OPTIONS_KEY = 'schoolagy_settings_options';
+    const AVERAGES_SETTINGS_OPTIONS_KEY = 'schoolagy_settings_options';
     function loadSettingsOptions() {
       try {
-        const raw = localStorage.getItem(SCHOOLAGY_SETTINGS_OPTIONS_KEY);
+        const raw = localStorage.getItem(AVERAGES_SETTINGS_OPTIONS_KEY);
         if (raw) return JSON.parse(raw);
       } catch {}
       return {};
@@ -2036,7 +2036,7 @@
       try {
         const opts = loadSettingsOptions();
         opts[key] = value;
-        localStorage.setItem(SCHOOLAGY_SETTINGS_OPTIONS_KEY, JSON.stringify(opts));
+        localStorage.setItem(AVERAGES_SETTINGS_OPTIONS_KEY, JSON.stringify(opts));
       } catch {}
       schedulePushSyncSettings();
     }
@@ -2050,7 +2050,7 @@
     // see the block near the bottom of this script) can't work for a demo
     // session, which has no real Schoology uid for the API to key a stored
     // record on. This is the same server-verified signal every other
-    // server-gated feature already trusts (schoolagy-api refuses these same
+    // server-gated feature already trusts (averages-api refuses these same
     // two endpoints — /sync/settings and, indirectly, whatever eventually
     // sends the email — with a 403 for a demo session regardless of what
     // this page does), so disabling the toggles here is a UX courtesy on
@@ -2060,8 +2060,8 @@
     // read (see LegacyPage.tsx's own comment next to where it's set) —
     // this page only needs the mode flag, not a real data bundle.
     // ------------------------------------------------------------------
-    const SCHOOLAGY_MODE = window.__SCHOOLAGY_MODE__ || 'live';
-    const SCHOOLAGY_SYNC_UNAVAILABLE = SCHOOLAGY_MODE === 'demo';
+    const AVERAGES_MODE = window.__AVERAGES_MODE__ || 'live';
+    const AVERAGES_SYNC_UNAVAILABLE = AVERAGES_MODE === 'demo';
     const settingsOptions = loadSettingsOptions();
 
     // ------------------------------------------------------------------
@@ -2085,7 +2085,7 @@
     // it's always the same number." Because it was: "128 MB" was a
     // hardcoded placeholder string that never reflected anything real.
     // The one thing this app actually caches on-device "for faster
-    // loading" is the API response cache in schoolagy.ts (schoolagy_
+    // loading" is the API response cache in averages.ts (schoolagy_
     // bundle_cache — your grades/courses/assignments bundle — and the
     // small schoolagy_session_state alongside it), both sessionStorage.
     // Deliberately NOT included: the schoolagy_* localStorage keys
@@ -2169,10 +2169,10 @@
     // app page applies whatever's saved here, read-only, on its own
     // load.
     // ------------------------------------------------------------------
-    const SCHOOLAGY_APPEARANCE_KEY = 'schoolagy_appearance';
+    const AVERAGES_APPEARANCE_KEY = 'schoolagy_appearance';
     function loadAppearance() {
       try {
-        const raw = localStorage.getItem(SCHOOLAGY_APPEARANCE_KEY);
+        const raw = localStorage.getItem(AVERAGES_APPEARANCE_KEY);
         if (raw) return JSON.parse(raw);
       } catch {}
       return null;
@@ -2183,7 +2183,7 @@
     function persistAppearance() {
       const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#d94a2b';
       try {
-        localStorage.setItem(SCHOOLAGY_APPEARANCE_KEY, JSON.stringify({
+        localStorage.setItem(AVERAGES_APPEARANCE_KEY, JSON.stringify({
           accent,
           accentDark: darken(accent, 0.22),
           background: currentBackgroundValue,
@@ -2863,7 +2863,7 @@
     // Account: profile state, Edit Profile modal, email validation +
     // mock verification, and the Weekly Grade Summary gate.
     // profileState.email starts empty and profileState.emailVerified
-    // starts false — Schoolagy doesn't assume an address, and doesn't
+    // starts false — Averages.io doesn't assume an address, and doesn't
     // trust one until it's "verified"
     // (simulated here, no real mail server behind this mockup).
     //
@@ -2871,24 +2871,24 @@
     // in a page-local variable — reset to the hardcoded default the
     // instant you navigated anywhere and back, which is why a photo
     // "didn't save when you go to a diff page" and a verified email
-    // looked like it silently un-verified itself. SCHOOLAGY_PROFILE_KEY
+    // looked like it silently un-verified itself. AVERAGES_PROFILE_KEY
     // is the one shared localStorage record; this page is the only place
     // that writes it (see saveProfileState() below, called from
     // renderProfileCard() so every place that already re-renders the
     // card also persists it), and every other page's topbar profile
     // button reads it read-only to show the same photo/initial.
     // ------------------------------------------------------------------
-    const SCHOOLAGY_PROFILE_KEY = 'schoolagy_profile';
+    const AVERAGES_PROFILE_KEY = 'schoolagy_profile';
     function loadProfileState() {
       const defaults = { name: 'Martin', email: '', emailVerified: false, photo: null };
       try {
-        const raw = localStorage.getItem(SCHOOLAGY_PROFILE_KEY);
+        const raw = localStorage.getItem(AVERAGES_PROFILE_KEY);
         if (raw) return Object.assign(defaults, JSON.parse(raw));
       } catch {}
       return defaults;
     }
     function saveProfileState() {
-      try { localStorage.setItem(SCHOOLAGY_PROFILE_KEY, JSON.stringify(profileState)); } catch {}
+      try { localStorage.setItem(AVERAGES_PROFILE_KEY, JSON.stringify(profileState)); } catch {}
       schedulePushSyncSettings();
     }
     const profileState = loadProfileState();
@@ -3022,7 +3022,7 @@
     const browserNotifToggle = document.getElementById('browserNotifToggle');
     const notifTypesWrap = document.getElementById('notifTypesWrap');
     const notifBlockedNote = document.getElementById('notifBlockedNote');
-    const NOTIF_PREVIEW = !window.__SCHOOLAGY_MODE__;
+    const NOTIF_PREVIEW = !window.__AVERAGES_MODE__;
     const NOTIF_SUPPORTED = 'Notification' in window;
     // The email is gone: a saved "on" goes back to off, which also makes the
     // API stop keeping its two GPA snapshots for this student.
@@ -3185,9 +3185,9 @@
     // locally (see the "no options save basically" comment up near
     // saveSettingsOption) — nothing was actually kept anywhere a second
     // device could read. Now, whenever this is on, every write this page
-    // makes through saveSettingsOption/schoolagySetDarkPref/
+    // makes through saveSettingsOption/averagesSetDarkPref/
     // persistAppearance/saveProfileState also pushes a merged snapshot to
-    // schoolagy-api's /sync/settings (see schedulePushSyncSettings, called
+    // averages-api's /sync/settings (see schedulePushSyncSettings, called
     // from inside each of those four functions — one shared hook instead
     // of hunting down every call site), and on load this page pulls
     // whatever's stored there and adopts it if it differs from what's
@@ -3216,7 +3216,7 @@
     const SYNC_OFF_BODY_DEFAULT = syncOffConfirmBody.textContent;
     const SYNC_OFF_BODY_WITH_WEEKLY = SYNC_OFF_BODY_DEFAULT + ' Browser Notifications needs sync to be on, so that turns off too.';
 
-    if (SCHOOLAGY_SYNC_UNAVAILABLE) {
+    if (AVERAGES_SYNC_UNAVAILABLE) {
       // Demo has no real Schoology uid for the API to key a stored record
       // on, and /sync/settings refuses demo sessions server-side regardless
       // (403 not_available_in_demo) — this just keeps a demo visitor from
@@ -3227,7 +3227,7 @@
       if (desc) desc.textContent = 'Not available on the demo account — there\'s no real account for it to sync to.';
     } else {
       // Persisted via schoolagy_settings_options. Defaults to OFF — this
-      // is an opt-in "let Schoolagy.io keep your unique ID" toggle (see
+      // is an opt-in "let Averages.io keep your unique ID" toggle (see
       // its own row description), and nothing should get pushed to the
       // server for someone who never actually asked for cross-device
       // sync. Only an explicit saved `true` turns it on.
@@ -3237,7 +3237,7 @@
       // (matching the HTML's own `checked` attribute, now removed) —
       // which was worse than just a surprising default: this toggle and
       // isSyncOn() below disagreed with the server's own
-      // syncEnabledIn() (schoolagy-api/src/sync.ts), which has always
+      // syncEnabledIn() (averages-api/src/sync.ts), which has always
       // required an explicit `=== true`. So the UI showed sync as ON
       // for every user by default while the API silently treated them
       // as OFF (no GPA snapshots recorded, /data/bundle never wrote
@@ -3247,17 +3247,17 @@
     }
 
     function isSyncOn() {
-      if (SCHOOLAGY_SYNC_UNAVAILABLE) return false;
+      if (AVERAGES_SYNC_UNAVAILABLE) return false;
       return loadSettingsOptions().syncAcrossDevices === true;
     }
 
-    function schoolagyApiBase() {
-      // Mirrors app/lib/schoolagy.ts's API_BASE — this app has no shared
+    function averagesApiBase() {
+      // Mirrors app/lib/averages.ts's API_BASE — this app has no shared
       // external JS file (see the single-file-per-page note elsewhere in
       // this doc/repo), so it's duplicated here rather than imported.
       // schoolagy.io only, as of 2026-09-08 (a brief sch00lagy.com
       // second-domain fallback was removed — see API_BASE's own comment in
-      // schoolagy.ts for why).
+      // averages.ts for why).
       return window.location.hostname.endsWith('averages.io') ? 'https://api.averages.io' : 'http://localhost:8787';   // schoolagy.io until 2026-10-05
     }
 
@@ -3270,21 +3270,21 @@
         } catch { return null; }
       };
       let darkMode = null;
-      try { darkMode = localStorage.getItem(SCHOOLAGY_DARK_MODE_KEY); } catch {}
+      try { darkMode = localStorage.getItem(AVERAGES_DARK_MODE_KEY); } catch {}
       return {
-        settingsOptions: readJSON(SCHOOLAGY_SETTINGS_OPTIONS_KEY),
-        appearance: readJSON(SCHOOLAGY_APPEARANCE_KEY),
+        settingsOptions: readJSON(AVERAGES_SETTINGS_OPTIONS_KEY),
+        appearance: readJSON(AVERAGES_APPEARANCE_KEY),
         darkMode,
-        profile: readJSON(SCHOOLAGY_PROFILE_KEY),
+        profile: readJSON(AVERAGES_PROFILE_KEY),
       };
     }
     function applySyncedSettings(remote) {
       if (!remote || typeof remote !== 'object') return;
       try {
-        if (remote.settingsOptions) localStorage.setItem(SCHOOLAGY_SETTINGS_OPTIONS_KEY, JSON.stringify(remote.settingsOptions));
-        if (remote.appearance) localStorage.setItem(SCHOOLAGY_APPEARANCE_KEY, JSON.stringify(remote.appearance));
-        if (remote.darkMode) localStorage.setItem(SCHOOLAGY_DARK_MODE_KEY, remote.darkMode);
-        if (remote.profile) localStorage.setItem(SCHOOLAGY_PROFILE_KEY, JSON.stringify(remote.profile));
+        if (remote.settingsOptions) localStorage.setItem(AVERAGES_SETTINGS_OPTIONS_KEY, JSON.stringify(remote.settingsOptions));
+        if (remote.appearance) localStorage.setItem(AVERAGES_APPEARANCE_KEY, JSON.stringify(remote.appearance));
+        if (remote.darkMode) localStorage.setItem(AVERAGES_DARK_MODE_KEY, remote.darkMode);
+        if (remote.profile) localStorage.setItem(AVERAGES_PROFILE_KEY, JSON.stringify(remote.profile));
       } catch {}
     }
 
@@ -3307,21 +3307,21 @@
     // fix shipped) is never trusted over local at all — this device's
     // current state gets pushed up to replace it instead of pulled down.
     // ------------------------------------------------------------------
-    const SCHOOLAGY_SYNC_META_KEY = 'schoolagy_sync_meta';
+    const AVERAGES_SYNC_META_KEY = 'schoolagy_sync_meta';
     function loadSyncMeta() {
       try {
-        const raw = localStorage.getItem(SCHOOLAGY_SYNC_META_KEY);
+        const raw = localStorage.getItem(AVERAGES_SYNC_META_KEY);
         if (raw) return JSON.parse(raw);
       } catch {}
       return null;
     }
     function saveSyncMeta(settingsUpdatedAt) {
       try {
-        localStorage.setItem(SCHOOLAGY_SYNC_META_KEY, JSON.stringify({ settingsUpdatedAt }));
+        localStorage.setItem(AVERAGES_SYNC_META_KEY, JSON.stringify({ settingsUpdatedAt }));
       } catch {}
     }
     function clearSyncMeta() {
-      try { localStorage.removeItem(SCHOOLAGY_SYNC_META_KEY); } catch {}
+      try { localStorage.removeItem(AVERAGES_SYNC_META_KEY); } catch {}
     }
 
     // Debounced so a burst of writes (dragging the accent-color picker,
@@ -3335,7 +3335,7 @@
     async function pushSyncSettingsNow() {
       if (!isSyncOn()) return;
       try {
-        const res = await fetch(schoolagyApiBase() + '/sync/settings', {
+        const res = await fetch(averagesApiBase() + '/sync/settings', {
           method: 'PUT',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
@@ -3367,7 +3367,7 @@
     // off, i.e. while it's still (about to stop being) on.
     async function deleteSyncSettingsNow() {
       try {
-        await fetch(schoolagyApiBase() + '/sync/settings', { method: 'DELETE', credentials: 'include' });
+        await fetch(averagesApiBase() + '/sync/settings', { method: 'DELETE', credentials: 'include' });
       } catch {
         // Offline or the API's unreachable — this device is turning sync
         // off either way; nothing left to do here but not block on it.
@@ -3386,7 +3386,7 @@
     async function pullSyncSettingsNow() {
       if (!isSyncOn()) return;
       try {
-        const res = await fetch(schoolagyApiBase() + '/sync/settings', { credentials: 'include' });
+        const res = await fetch(averagesApiBase() + '/sync/settings', { credentials: 'include' });
         if (!res.ok) return;
         const record = await res.json();
         if (!record || !record.settings) {

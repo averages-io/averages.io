@@ -528,7 +528,7 @@
     // Sign-in buttons (2026-10-04). Schoology appAuth and Google sign-in
     // (for Google Classroom schools) aren't built yet. In the preview they
     // walk on to onboarding like the old mock; in the built app
-    // (window.__schoolagySignIn exists) they say what's coming instead.
+    // (window.__averagesSignIn exists) they say what's coming instead.
     const ssoNote = document.getElementById('ssoNote');
     const SSO_SOON = {
       schoology: "Sign in with Schoology is waiting on Schoology's approval. It's coming soon.",
@@ -542,7 +542,7 @@
     document.getElementById('connectBtn').addEventListener('click', saveAge, true);
     document.querySelectorAll('[data-provider]').forEach(b => b.addEventListener('click', () => {
       saveAge();
-      if (window.__schoolagySignIn) {
+      if (window.__averagesSignIn) {
         ssoNote.textContent = SSO_SOON[b.dataset.provider];
         ssoNote.hidden = false;
         return;

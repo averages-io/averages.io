@@ -1232,20 +1232,20 @@
     // is called right after the raw array literal below, mutating COURSES
     // in place, so it's already the customized/reordered version before
     // anything on this page ever renders it. Same defensive
-    // try/catch-per-key style as SCHOOLAGY_DARK_MODE_KEY in settings.html.
+    // try/catch-per-key style as AVERAGES_DARK_MODE_KEY in settings.html.
     // ------------------------------------------------------------------
-    const SCHOOLAGY_COURSE_CUSTOM_KEY = 'schoolagy_course_custom';
-    const SCHOOLAGY_COURSE_ORDER_KEY = 'schoolagy_course_order';
+    const AVERAGES_COURSE_CUSTOM_KEY = 'schoolagy_course_custom';
+    const AVERAGES_COURSE_ORDER_KEY = 'schoolagy_course_order';
     function loadCourseCustom() {
       try {
-        const raw = localStorage.getItem(SCHOOLAGY_COURSE_CUSTOM_KEY);
+        const raw = localStorage.getItem(AVERAGES_COURSE_CUSTOM_KEY);
         if (raw) return JSON.parse(raw);
       } catch {}
       return {};
     }
     function loadCourseOrder() {
       try {
-        const raw = localStorage.getItem(SCHOOLAGY_COURSE_ORDER_KEY);
+        const raw = localStorage.getItem(AVERAGES_COURSE_ORDER_KEY);
         if (raw) return JSON.parse(raw);
       } catch {}
       return null;
@@ -1568,7 +1568,7 @@
     // in Canva" — see `claude/updates-roadmap.md`), so a "View" action
     // that only ever opened a "no live preview" placeholder modal doesn't
     // belong in the app before that's real. Download is the one file
-    // action Schoolagy offers for now — see the click handler below,
+    // action Averages.io offers for now — see the click handler below,
     // which now triggers a real file download instead of another
     // placeholder modal.
     // Attached Materials rows (2026-10-04, per Martin): `actions === 'full'`
@@ -1578,7 +1578,7 @@
     const CANVA_EXTS = ['pdf', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'key', 'numbers', 'pages', 'odt', 'odp', 'ods', 'png', 'jpg', 'jpeg', 'gif', 'heic', 'ai', 'psd'];
     // Canva isn't connected yet: in the preview, Edit in Canva runs the Drafts
     // flow below; signed in, it opens the Coming soon menu.
-    const CANVA_PREVIEW = !(window.__SCHOOLAGY__ && window.__SCHOOLAGY__.data);
+    const CANVA_PREVIEW = !(window.__AVERAGES__ && window.__AVERAGES__.data);
     // Edit in Google Drive (2026-10-04): Word/PowerPoint/Excel use Google Drive
     // when Settings > Integrations > Open files in says so.
     const DRIVE_EXTS = ['doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx'];
@@ -1865,14 +1865,14 @@
       const bodyEl = document.getElementById('submissionBody');
       let html = '';
       // Quizzes/tests are actually taken in Schoology itself, not in
-      // Schoolagy — there's no real "upload a file" or "type an answer"
+      // Averages.io — there's no real "upload a file" or "type an answer"
       // step for them here, unlike a normal assignment or discussion post
       // (2026-09-03, per Martin: "for quizes i don't think they can take
       // it in our app, they have to use schoology"). So instead of the
       // upload dropzone / submission history / Add Submission button
       // below, a quiz-type item gets one static redirect notice no matter
       // its status — the status banner above still reflects the real
-      // Missing/Submitted/Graded/Returned state, since Schoolagy does
+      // Missing/Submitted/Graded/Returned state, since Averages.io does
       // still mirror that from Schoology once it happens.
       if (item.type === 'assessment') {
         html += `
@@ -1885,7 +1885,7 @@
             </a>
           </div>`;
         // Feedback/a comment is still real Schoology grading data, not a
-        // "submission" — Schoolagy already mirrors the score in the banner
+        // "submission" — Averages.io already mirrors the score in the banner
         // above, so it shows this the same way rather than hiding it just
         // because the file-submission UI above it went away.
         if (currentStatus === 'graded' && detail.feedback) {

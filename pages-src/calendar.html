@@ -1086,20 +1086,20 @@
     // is called right after the raw array literal below, mutating COURSES
     // in place, so it's already the customized/reordered version before
     // anything on this page ever renders it. Same defensive
-    // try/catch-per-key style as SCHOOLAGY_DARK_MODE_KEY in settings.html.
+    // try/catch-per-key style as AVERAGES_DARK_MODE_KEY in settings.html.
     // ------------------------------------------------------------------
-    const SCHOOLAGY_COURSE_CUSTOM_KEY = 'schoolagy_course_custom';
-    const SCHOOLAGY_COURSE_ORDER_KEY = 'schoolagy_course_order';
+    const AVERAGES_COURSE_CUSTOM_KEY = 'schoolagy_course_custom';
+    const AVERAGES_COURSE_ORDER_KEY = 'schoolagy_course_order';
     function loadCourseCustom() {
       try {
-        const raw = localStorage.getItem(SCHOOLAGY_COURSE_CUSTOM_KEY);
+        const raw = localStorage.getItem(AVERAGES_COURSE_CUSTOM_KEY);
         if (raw) return JSON.parse(raw);
       } catch {}
       return {};
     }
     function loadCourseOrder() {
       try {
-        const raw = localStorage.getItem(SCHOOLAGY_COURSE_ORDER_KEY);
+        const raw = localStorage.getItem(AVERAGES_COURSE_ORDER_KEY);
         if (raw) return JSON.parse(raw);
       } catch {}
       return null;
@@ -1670,10 +1670,10 @@
     // so this page agrees with the rest of the app instead of running
     // its own separate check.
     // ------------------------------------------------------------------
-    const SCHOOLAGY_DARK_MODE_KEY = 'schoolagy_dark_mode';
-    function schoolagySavedDarkPref() {
+    const AVERAGES_DARK_MODE_KEY = 'schoolagy_dark_mode';
+    function averagesSavedDarkPref() {
       try {
-        const v = localStorage.getItem(SCHOOLAGY_DARK_MODE_KEY);
+        const v = localStorage.getItem(AVERAGES_DARK_MODE_KEY);
         if (v === 'dark') return true;
         if (v === 'light') return false;
       } catch {}
@@ -1704,11 +1704,11 @@
       }
       document.body.classList.toggle('dark-mode', isDark);
     }
-    applyDarkMode(schoolagySavedDarkPref());
+    applyDarkMode(averagesSavedDarkPref());
     // A Settings-toggle change (or another tab) should reflect here live,
     // since this page has no toggle of its own to re-trigger a load.
     window.addEventListener('storage', e => {
-      if (e.key === SCHOOLAGY_DARK_MODE_KEY) applyDarkMode(schoolagySavedDarkPref());
+      if (e.key === AVERAGES_DARK_MODE_KEY) applyDarkMode(averagesSavedDarkPref());
     });
 
     // ------------------------------------------------------------------

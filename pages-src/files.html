@@ -836,14 +836,14 @@
     // (drive.file only, never their whole Drive) and their Canva designs.
     //
     // Sample data for the preview only. Signed in (LegacyPage.tsx sets
-    // window.__SCHOOLAGY_MODE__), nothing here is real yet: course files
+    // window.__AVERAGES_MODE__), nothing here is real yet: course files
     // need an API route that lists every course's materials, Drive needs the
     // Picker + drive.file, Canva needs GET /canva/designs. Until then a
     // signed-in student sees a "coming soon" note, never these samples.
     // FILE_COURSES (not COURSES) on purpose, so scripts/port-pages.mjs
     // doesn't swap in live course data next to sample files.
     // ------------------------------------------------------------------
-    const FILES_SIGNED_IN = !!window.__SCHOOLAGY_MODE__;
+    const FILES_SIGNED_IN = !!window.__AVERAGES_MODE__;
     const FILE_COURSES = [
       { id: 'apchem', name: 'AP Chemistry', color: '#a67a22' },
       { id: 'algebra2', name: 'Algebra II', color: '#5b6ea3' },
