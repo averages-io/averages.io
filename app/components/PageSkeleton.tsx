@@ -394,12 +394,14 @@ const SPECS: Record<string, SkeletonSpec[]> = {
    */
   "course-home": [
     {
+      // Current grade, under the projected grade in the course banner (2026-10-01).
       sel: "#curVal",
       reveal: false,
       count: 1,
-      row: () => `<span data-skel>${bar("30px", 26)}</span><span class="grade-hero-pct" data-skel>${bar("34px", 10)}</span>`,
+      row: () => `<span class="sheet-letter" data-skel>${bar("56px", 44)}</span><span class="sheet-pct" data-skel>${bar("30px", 9)}</span>`,
     },
     {
+      // Projected grade, inside the course banner (2026-10-01).
       sel: "#predVal",
       reveal: false,
       count: 1,
@@ -421,19 +423,11 @@ const SPECS: Record<string, SkeletonSpec[]> = {
       </button>`,
     },
     {
-      // assignRowHTML(). The status modifier is left off for the same reason
-      // as assignments.html's: it only recolors `.hub-assign-tick`, which
-      // already has a neutral background of its own.
-      sel: "#assignListBody",
-      count: 4,
-      row: (i) => `<div class="hub-assign-item" data-skel>
-        <span class="hub-assign-tick"></span>
-        <div class="hub-assign-text">
-          <p class="hub-assign-title">${bar(w(i), 10)}</p>
-          <p class="hub-assign-meta">${bar("42%", 8)}</p>
-        </div>
-        <span class="hub-assign-due">${bar("56px", 9)}</span>
-      </div>`,
+      // renderWeek(): the hub's "Coming up" ribbon (redo 2026-10-01). One
+      // placeholder row stands in for the grid while data loads.
+      sel: "#upcomingBody",
+      count: 3,
+      row: (i) => `<div class="week-item" data-skel>${dot(18)}<span class="week-item-text"><span class="week-title">${bar(w(i), 10)}</span><span class="week-when">${bar("48px", 8)}</span></span></div>`,
     },
   ],
 

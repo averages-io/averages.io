@@ -116,7 +116,7 @@ export default function LegacyPage({
    * is "ready", so a signed-out visitor never gets a paint of a protected page
    * — which is also why there's no half-rendered flash on a slow connection.
    */
-  const [phase, setPhase] = useState<"checking" | "ready">("checking");
+  const [phase, setPhase] = useState<"checking" | "ready" | "error">("checking");
   const [mode, setMode] = useState<Mode>("out");
   const [bannerDismissed, setBannerDismissed] = useState(false);
 
@@ -171,6 +171,22 @@ export default function LegacyPage({
       // through to its own sample data.
       const bundle = requiresAuth ? await loadBundle() : null;
       if (cancelled) return;
+
+      // The session died between the check above and the data request.
+      if (bundle === "signed_out") {
+        window.location.href = "/";
+        return;
+      }
+
+      // Live mode with no data (school platform down, timeout, network):
+      // stop here. Falling through would render each page's built-in SAMPLE
+      // grades, which look exactly like this student's real ones. Keep the
+      // skeleton up and show a retry message instead.
+      if (requiresAuth && session.mode === "live" && bundle === null) {
+        setMode(session.mode);
+        setPhase("error");
+        return;
+      }
 
       (window as any).__SCHOOLAGY__ = {
         mode: session.mode,
@@ -335,6 +351,50 @@ export default function LegacyPage({
       {usesSavedTheme && <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_JS }} />}
       <style dangerouslySetInnerHTML={{ __html: styleCss }} />
       <style dangerouslySetInnerHTML={{ __html: SKELETON_CSS }} />
+      {phase === "error" && (
+        <div
+          role="alert"
+          style={{
+            position: "fixed",
+            left: "50%",
+            bottom: 96,
+            transform: "translateX(-50%)",
+            zIndex: 2147483000,
+            width: "min(420px, calc(100vw - 32px))",
+            boxSizing: "border-box",
+            padding: "16px 20px",
+            borderRadius: 16,
+            background: "#17171a",
+            color: "#fff",
+            font: "700 14px/1.45 Nunito, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+            boxShadow: "0 12px 32px rgba(0,0,0,0.35)",
+            display: "flex",
+            alignItems: "center",
+            gap: 16,
+          }}
+        >
+          <span style={{ flex: 1 }}>
+            We couldn't load your grades right now. Your school's platform didn't
+            answer.
+          </span>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            style={{
+              all: "unset",
+              cursor: "pointer",
+              flex: "none",
+              padding: "8px 16px",
+              borderRadius: 999,
+              background: "#fff",
+              color: "#17171a",
+              fontWeight: 900,
+            }}
+          >
+            Try again
+          </button>
+        </div>
+      )}
       {mode === "demo" && !bannerDismissed && (
         <div
           role="status"
