@@ -364,6 +364,13 @@
 
   /* ---------- Drafts (2026-10-04): Canva edits waiting to be turned in ---------- */
   .drafts { margin-bottom: 22px; }
+  /* Signed in (2026-10-05) */
+  .drafts-note { margin: 0 0 10px; padding: 10px 12px; border-radius: 10px; background: var(--panel-inner); font-size: 0.8rem; font-weight: 700; color: var(--text-dark); }
+  .drafts-note[hidden] { display: none; }
+  .material-link { color: var(--text-dark); text-decoration: underline; text-underline-offset: 2px; }
+  .material-link:hover { color: var(--accent-dark); }
+  .canva-btn[aria-busy="true"] { opacity: 0.7; cursor: progress; }
+  .assign-retry { margin-left: 6px; border: none; background: none; padding: 0; font: inherit; font-style: normal; font-weight: 800; color: var(--accent-dark); text-decoration: underline; cursor: pointer; }
   .drafts[hidden] { display: none; }
   .drafts .material-row.file-bar:first-child { margin-top: 0; }
   .draft-badge { width: 36px; height: 36px; flex-shrink: 0; border-radius: 7px; background: var(--panel-bg); display: grid; place-items: center; }
@@ -1442,7 +1449,7 @@
     function buildDetail(item) {
       const key = `${item.courseId}|${item.title}`;
       const found = DETAILS[key];
-      if (found) return found;
+      if (found && !LIVE) return found;   // sample detail is preview-only
       const generic = { description: 'No description provided by your teacher yet.', materials: [] };
       if (item.status === 'submitted' || item.status === 'graded' || item.status === 'returned') {
         const ts = item.status === 'graded' ? item.due : (item.submittedOn || item.returnedOn);
@@ -1477,13 +1484,20 @@
     // Build one normalized master list across every status, exactly as
     // assignments.html does, so this page can look any assignment up by
     // course + title regardless of which list it came from.
+    // Signed in (2026-10-05): the API's items carry their Schoology `id`
+    // (kept below, it's what loads the real attachments). Lists the API
+    // doesn't send yet (Recently Submitted, Returned) are empty rather than
+    // the sample ones, and HISTORY's sample `titles` only exist in the preview.
+    const LIVE = window.__AVERAGES_MODE__ === 'live';
+    const LIVE_DATA = (window.__AVERAGES__ && window.__AVERAGES__.data) || {};
     const ALL_ITEMS = [];
-    OVERDUE.forEach(o => ALL_ITEMS.push({ status: 'overdue', type: o.type, title: o.title, courseId: o.courseId, due: o.due }));
-    UPCOMING.forEach(u => ALL_ITEMS.push({ status: 'upcoming', type: u.type, title: u.title, courseId: u.courseId, due: u.due }));
-    SUBMITTED.forEach(s => ALL_ITEMS.push({ status: 'submitted', type: s.type, title: s.title, courseId: s.courseId, submittedOn: s.submittedOn }));
-    RETURNED.forEach(r => ALL_ITEMS.push({ status: 'returned', type: r.type, title: r.title, courseId: r.courseId, returnedOn: r.returnedOn }));
+    OVERDUE.forEach(o => ALL_ITEMS.push({ status: 'overdue', type: o.type, title: o.title, courseId: o.courseId, due: o.due, id: o.id }));
+    UPCOMING.forEach(u => ALL_ITEMS.push({ status: 'upcoming', type: u.type, title: u.title, courseId: u.courseId, due: u.due, id: u.id }));
+    (LIVE && !LIVE_DATA.SUBMITTED ? [] : SUBMITTED).forEach(s => ALL_ITEMS.push({ status: 'submitted', type: s.type, title: s.title, courseId: s.courseId, submittedOn: s.submittedOn, id: s.id }));
+    (LIVE ? [] : RETURNED).forEach(r => ALL_ITEMS.push({ status: 'returned', type: r.type, title: r.title, courseId: r.courseId, returnedOn: r.returnedOn }));
     COURSES.forEach(course => {
       const hist = HISTORY[course.id];
+      if (!hist || !Array.isArray(hist.titles) || !Array.isArray(hist.dates)) return;
       hist.dates.forEach((d, i) => {
         ALL_ITEMS.push({ status: 'graded', type: hist.titles[i][1], title: hist.titles[i][0], courseId: course.id, due: fmtAug(dayNum(d)), score: hist.points[i] });
       });
@@ -1526,6 +1540,10 @@
     } else {
       item = findAssignment('apchem', 'Molarity Practice Set');
     }
+    if (!item) item = ALL_ITEMS[0] || { status: 'upcoming', type: 'assignment', title: 'Assignment', courseId: (COURSES[0] || {}).id, due: null };
+    // An explicit ?id= (Schoology assignment id) wins when the lists didn't have one.
+    const qId = params.get('id');
+    if (qId && /^\d{1,20}$/.test(qId) && !item.id) item.id = qId;
     const course = findCourse(item.courseId) || COURSES[0];
     const detail = buildDetail(item);
 
@@ -1576,8 +1594,9 @@
     // can open), Save to cloud and Download. `true` is the plain Download-only
     // row the Submission Preview popup uses.
     const CANVA_EXTS = ['pdf', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'key', 'numbers', 'pages', 'odt', 'odp', 'ods', 'png', 'jpg', 'jpeg', 'gif', 'heic', 'ai', 'psd'];
-    // Canva isn't connected yet: in the preview, Edit in Canva runs the Drafts
-    // flow below; signed in, it opens the Coming soon menu.
+    // In the preview, Edit in Canva runs the Drafts flow below in memory.
+    // Signed in (2026-10-05) it's real: see liveEditInCanva. Demo keeps the
+    // Coming soon menu.
     const CANVA_PREVIEW = !(window.__AVERAGES__ && window.__AVERAGES__.data);
     // Edit in Google Drive (2026-10-04): Word/PowerPoint/Excel use Google Drive
     // when Settings > Integrations > Open files in says so.
@@ -1589,19 +1608,20 @@
     function materialRowHTML(m, actions) {
       const color = EXT_COLOR[m.ext] || '#83849a';
       const nm = escapeHtml(m.name), ex = escapeHtml(m.ext);
+      const fid = m.fileId ? ` data-file-id="${escapeHtml(m.fileId)}"` : '';   // live attachments (2026-10-05)
       const tip = (label, inner) => `<span class="tipwrap">${inner}<span class="tip" role="tooltip">${label}</span></span>`;
-      const download = `<button class="material-icon-btn" type="button" data-file-action="download" data-file-name="${nm}" data-file-ext="${ex}" aria-label="Download ${nm}">${DOWNLOAD_ICON}</button>`;
+      const download = `<button class="material-icon-btn" type="button" data-file-action="download" data-file-name="${nm}" data-file-ext="${ex}"${fid} aria-label="Download ${nm}">${DOWNLOAD_ICON}</button>`;
       let btns = '';
       if (actions === 'full') {
         const ext = String(m.ext || '').toLowerCase();
         const canva = (EDITOR_PREF === 'gdrive' && DRIVE_EXTS.includes(ext))
-          ? `<button class="canva-btn drive-btn" type="button" data-file-action="gdrive" data-file-name="${nm}" data-file-ext="${ex}"${CANVA_PREVIEW ? '' : ' aria-haspopup="menu"'}><span>Edit in Google Drive</span></button>`
+          ? `<button class="canva-btn drive-btn" type="button" data-file-action="gdrive" data-file-name="${nm}" data-file-ext="${ex}"${fid}${CANVA_PREVIEW ? '' : ' aria-haspopup="menu"'}><span>Edit in Google Drive</span></button>`
           : CANVA_EXTS.includes(ext)
-          ? `<button class="canva-btn" type="button" data-file-action="canva" data-file-name="${nm}"${CANVA_PREVIEW ? '' : ' aria-haspopup="menu"'}><span class="canva-mark" aria-hidden="true"></span><span>Edit in Canva</span></button>` : '';
+          ? `<button class="canva-btn" type="button" data-file-action="canva" data-file-name="${nm}"${fid}${CANVA_PREVIEW || (LIVE && m.fileId) ? '' : ' aria-haspopup="menu"'}><span class="canva-mark" aria-hidden="true"></span><span>Edit in Canva</span></button>` : '';
         btns = `
           <div class="material-actions">
             ${canva}
-            ${tip('Save to cloud', `<button class="material-icon-btn" type="button" data-file-action="cloud" data-file-name="${nm}" aria-label="Save ${nm} to cloud" aria-haspopup="menu">${CLOUD_ICON}</button>`)}
+            ${tip('Save to cloud', `<button class="material-icon-btn" type="button" data-file-action="cloud" data-file-name="${nm}"${fid} aria-label="Save ${nm} to cloud" aria-haspopup="menu">${CLOUD_ICON}</button>`)}
             ${tip('Download', download)}
           </div>`;
       } else if (actions) {
@@ -1656,6 +1676,116 @@
       : '<p class="assign-empty">No materials attached to this assignment.</p>';
 
     // ------------------------------------------------------------------
+    // Signed in (2026-10-05): the real description and Attached Materials
+    // come from the API (GET /data/assignment). Files arrive as ids + names;
+    // the Worker looks up and fetches the real file whenever one is
+    // downloaded or opened in Canva, so no Schoology URL reaches the page.
+    // ------------------------------------------------------------------
+    function averagesApiBase() {
+      // Same rule as app/lib/averages.ts's API_BASE (pages can't import it).
+      return window.location.hostname.endsWith('averages.io') ? 'https://api.averages.io' : 'http://localhost:8787';
+    }
+    const ID_OK = v => /^\d{1,20}$/.test(String(v || ''));
+    const LIVE_DETAIL = LIVE && ID_OK(item.id) && ID_OK(item.courseId);
+    /** This page's own path for Return / Connect, minus our one-off ?canva= message flag. */
+    function currentAppPath() {
+      const u = new URL(window.location.href);
+      u.searchParams.delete('canva');
+      return u.pathname + u.search;
+    }
+    function linkRowHTML(l) {
+      return `
+        <div class="material-row file-bar">
+          <span class="material-badge" style="background:#4f6b8c">LINK</span>
+          <a class="material-name material-link" href="${escapeHtml(l.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(l.title)}</a>
+        </div>`;
+    }
+    async function loadLiveDetail() {
+      const desc = document.getElementById('descText');
+      desc.textContent = 'Loading…';
+      materialsEl.innerHTML = '<p class="assign-empty">Loading attached materials…</p>';
+      try {
+        const res = await fetch(`${averagesApiBase()}/data/assignment?section=${encodeURIComponent(item.courseId)}&id=${encodeURIComponent(item.id)}`, { credentials: 'include' });
+        if (res.status === 401) { window.location.href = '/'; return; }
+        if (!res.ok) throw new Error('status ' + res.status);
+        const d = await res.json();
+        desc.textContent = d.description || 'No description provided by your teacher yet.';
+        const files = Array.isArray(d.files) ? d.files : [];
+        const links = Array.isArray(d.links) ? d.links : [];
+        const rows = files.map(f => materialRowHTML({ name: f.name, ext: String(f.ext || '').toLowerCase(), fileId: String(f.id) }, 'full')).join('')
+          + links.map(linkRowHTML).join('');
+        materialsEl.innerHTML = rows || '<p class="assign-empty">No materials attached to this assignment.</p>';
+      } catch {
+        desc.textContent = 'Couldn’t load this assignment’s details right now.';
+        materialsEl.innerHTML = '<p class="assign-empty">Couldn’t load the attached materials.<button class="assign-retry" type="button" data-live-retry>Try again</button></p>';
+      }
+    }
+    if (LIVE) {
+      if (LIVE_DETAIL) loadLiveDetail();
+      else materialsEl.innerHTML = '<p class="assign-empty">No materials attached to this assignment.</p>';
+    }
+
+    // A small popup for anything that stops Edit in Canva. Connect sends the
+    // student through Canva and back to this same page.
+    function showCanvaProblem(code) {
+      const connect = code === 'canva_not_connected' || code === 'canva_reconnect_needed';
+      const MSG = {
+        canva_not_connected: ['Connect Canva first', 'Edit in Canva opens assignment files in your own Canva account. Connect it once and this button works from then on.'],
+        canva_reconnect_needed: ['Reconnect Canva', 'Your Canva connection ran out. Connect it again to keep editing.'],
+        canva_not_configured: ['Canva is coming soon', 'Editing in Canva isn’t switched on yet.'],
+        canva_missing_permission: ['Canva needs permission', 'Disconnect and connect Canva again in Settings, and allow access when Canva asks.'],
+        canva_duplicate_import: ['Already in your Canva', 'This file was opened in Canva before. Find it in your Canva account or on the Files tab.'],
+        canva_rate_limited: ['Canva is busy', 'Too many files were opened at once. Try again in a minute.'],
+        canva_invalid_file: ['Canva can’t open this file', 'Download it instead and open it another way.'],
+        file_too_large: ['This file is too big for Canva', 'Files over 25 MB can’t be opened in Canva from Averages.io. Download it instead.'],
+        file_not_found: ['File not found', 'This file isn’t on the assignment anymore. Reload the page to see what’s attached now.'],
+        canva_design_gone: ['Design not found', 'This draft was deleted in Canva, so it’s been removed from Drafts.'],
+      };
+      const [title, text] = MSG[code] || ['Couldn’t open this in Canva', 'Something went wrong. Try again in a moment.'];
+      openModal(`
+        <h3>${escapeHtml(title)}</h3>
+        <p>${escapeHtml(text)}</p>
+        <div class="modal-actions">
+          ${connect
+            ? '<button class="modal-btn secondary" type="button" id="canvaProbCancel">Not now</button><button class="modal-btn primary" type="button" id="canvaProbConnect">Connect Canva</button>'
+            : '<button class="modal-btn primary" type="button" id="canvaProbCancel">OK</button>'}
+        </div>`);
+      modalBox.setAttribute('role', 'alertdialog'); modalBox.setAttribute('aria-modal', 'true');
+      document.getElementById('canvaProbCancel').addEventListener('click', closeModal);
+      const go = document.getElementById('canvaProbConnect');
+      if (go) go.addEventListener('click', () => { window.location.href = `${averagesApiBase()}/canva/connect?return_to=${encodeURIComponent(currentAppPath())}`; });
+      (go || document.getElementById('canvaProbCancel')).focus();
+    }
+    const CANVA_EDIT_URL = /^https:\/\/(www\.)?canva\.com\//i;
+    async function liveEditInCanva(btn) {
+      if (btn.getAttribute('aria-busy') === 'true') return;
+      const label = btn.querySelector('span:last-child');
+      const was = label ? label.textContent : '';
+      btn.setAttribute('aria-busy', 'true');
+      if (label) label.textContent = 'Opening Canva…';
+      const done = () => { btn.removeAttribute('aria-busy'); if (label) label.textContent = was; };
+      try {
+        const res = await fetch(averagesApiBase() + '/canva/edit', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ section: String(item.courseId), assignment: String(item.id), fileId: btn.dataset.fileId, returnTo: currentAppPath() }),
+        });
+        const j = await res.json().catch(() => ({}));
+        if (res.ok && typeof j.editUrl === 'string' && CANVA_EDIT_URL.test(j.editUrl)) {
+          if (j.draft) { upsertLiveDraft(j.draft); renderDrafts(); }
+          window.location.assign(j.editUrl);   // stays "Opening Canva…" while the page leaves
+          return;
+        }
+        done();
+        showCanvaProblem(j.error);
+      } catch {
+        done();
+        showCanvaProblem('network');
+      }
+    }
+
+    // ------------------------------------------------------------------
     // Shared small modal — Add Submission and the View/Download file
     // info both open into this one overlay.
     // ------------------------------------------------------------------
@@ -1708,10 +1838,17 @@
     window.addEventListener('resize', closeFileMenu);
 
     materialsEl.addEventListener('click', e => {
+      if (e.target.closest('[data-live-retry]')) { loadLiveDetail(); return; }
       const btn = e.target.closest('[data-file-action]');
       if (!btn) return;
-      if (btn.dataset.fileAction === 'download') downloadPlaceholderFile(btn.dataset.fileName, btn.dataset.fileExt);
+      const liveFile = LIVE_DETAIL && ID_OK(btn.dataset.fileId);
+      if (btn.dataset.fileAction === 'download' && liveFile) {
+        // The real file, streamed through the API (it answers as a download, so the page stays put).
+        window.location.href = `${averagesApiBase()}/data/attachment?section=${encodeURIComponent(item.courseId)}&assignment=${encodeURIComponent(item.id)}&file=${encodeURIComponent(btn.dataset.fileId)}`;
+      }
+      else if (btn.dataset.fileAction === 'download') downloadPlaceholderFile(btn.dataset.fileName, btn.dataset.fileExt);
       else if ((btn.dataset.fileAction === 'canva' || btn.dataset.fileAction === 'gdrive') && CANVA_PREVIEW) { closeFileMenu(); editInCanvaPreview(btn); }
+      else if (btn.dataset.fileAction === 'canva' && liveFile) { closeFileMenu(); liveEditInCanva(btn); }
       else openFileMenu(btn, btn.dataset.fileAction);
     });
     // Same download delegation as the Attached Materials list above, but
@@ -2216,6 +2353,25 @@
       const nm = escapeHtml(d.name);
       const tip = (label, inner) => `<span class="tipwrap">${inner}<span class="tip" role="tooltip">${label}</span></span>`;
       const testItem = item.type === 'assessment';
+      if (d.live) {
+        // Signed in (2026-10-05): a real Canva design. Turning it in from
+        // Averages.io isn't built yet (it needs a PDF export from Canva), so
+        // Submit stays greyed out and says so.
+        const submitLive = `<button class="draft-submit" type="button" data-draft-action="submit" disabled aria-label="Submit ${nm}">Submit</button>`;
+        return `
+        <div class="material-row file-bar draft-row" data-draft="${escapeHtml(d.id)}">
+          ${draftBadgeHTML(d)}
+          <span class="draft-text">
+            <span class="material-name">${nm}</span>
+            <span class="draft-meta">Canva draft · Edited ${escapeHtml(d.edited)}</span>
+          </span>
+          <div class="material-actions">
+            <button class="canva-btn" type="button" data-draft-action="open" aria-label="Open ${nm} in Canva"><span class="canva-mark" aria-hidden="true"></span><span>Open in Canva</span></button>
+            ${tip(testItem ? 'Tests are turned in on Schoology' : 'Turning in from Averages.io is coming soon', submitLive)}
+            ${tip('Delete draft', `<button class="material-icon-btn" type="button" data-draft-action="delete" aria-label="Delete draft ${nm}">${TRASH_ICON}</button>`)}
+          </div>
+        </div>`;
+      }
       const submit = `<button class="draft-submit" type="button" data-draft-action="submit"${testItem ? ' disabled' : ''} aria-label="Submit ${nm}">Submit</button>`;
       return `
         <div class="material-row file-bar draft-row" data-draft="${escapeHtml(d.id)}">
@@ -2231,8 +2387,67 @@
         </div>`;
     }
     function renderDrafts() {
-      draftsSec.hidden = drafts.length === 0;
+      draftsSec.hidden = drafts.length === 0 && draftsNote.hidden;
       draftsList.innerHTML = drafts.map(draftRowHTML).join('');
+    }
+    // Signed in (2026-10-05): drafts are the student's real Canva designs, kept by the API.
+    const draftsNote = document.createElement('p');
+    draftsNote.className = 'drafts-note';
+    draftsNote.setAttribute('role', 'status');
+    draftsNote.hidden = true;
+    draftsList.parentNode.insertBefore(draftsNote, draftsList);
+    function editedLabel(ms) {
+      const t = Number(ms) || 0;
+      if (!t) return 'recently';
+      const mins = Math.round((Date.now() - t) / 60000);
+      if (mins < 1) return 'just now';
+      if (mins < 60) return `${mins} min ago`;
+      const hrs = Math.round(mins / 60);
+      if (hrs < 24) return `${hrs} hour${hrs === 1 ? '' : 's'} ago`;
+      return new Date(t).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+    function liveDraft(api) {
+      return { id: 'c-' + api.designId, designId: String(api.designId), name: String(api.title || api.sourceName || 'Canva design'), app: 'canva', edited: editedLabel(api.updatedAt), live: true };
+    }
+    function upsertLiveDraft(api) {
+      if (!api || !api.designId) return;
+      const d = liveDraft(api);
+      const i = drafts.findIndex(x => x.id === d.id);
+      if (i === -1) drafts.unshift(d); else drafts[i] = d;
+    }
+    async function loadLiveDrafts(cameBack) {
+      try {
+        const res = await fetch(`${averagesApiBase()}/canva/drafts?section=${encodeURIComponent(item.courseId)}&assignment=${encodeURIComponent(item.id)}`, { credentials: 'include' });
+        if (!res.ok) return;
+        const j = await res.json();
+        // Newest first, as the API sends them.
+        drafts.splice(0, drafts.length, ...(Array.isArray(j.drafts) ? j.drafts : []).filter(x => x && x.designId).map(liveDraft));
+        renderDrafts();
+        if (cameBack && drafts.length) pulse(draftsList.querySelector('.draft-row'));
+      } catch {
+        /* Drafts are extra: the rest of the page works without them */
+      }
+    }
+    async function openLiveDraft(d, btn) {
+      if (btn.getAttribute('aria-busy') === 'true') return;
+      const label = btn.querySelector('span:last-child');
+      btn.setAttribute('aria-busy', 'true');
+      if (label) label.textContent = 'Opening…';
+      const done = () => { btn.removeAttribute('aria-busy'); if (label) label.textContent = 'Open in Canva'; };
+      try {
+        const res = await fetch(`${averagesApiBase()}/canva/designs/${encodeURIComponent(d.designId)}/open`, {
+          method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ returnTo: currentAppPath() }),
+        });
+        const j = await res.json().catch(() => ({}));
+        if (res.ok && typeof j.editUrl === 'string' && CANVA_EDIT_URL.test(j.editUrl)) { window.location.assign(j.editUrl); return; }
+        done();
+        if (j.error === 'canva_design_gone') removeDraftRow(d.id);
+        showCanvaProblem(j.error);
+      } catch {
+        done();
+        showCanvaProblem('network');
+      }
     }
     function pulse(el) {
       if (!el || reduceMotion() || !el.animate) return;
@@ -2319,7 +2534,20 @@
       modalBox.setAttribute('role', 'alertdialog'); modalBox.setAttribute('aria-modal', 'true');
       const back = () => { if (fromBtn && document.body.contains(fromBtn)) fromBtn.focus(); };
       document.getElementById('draftDelCancel').addEventListener('click', () => { closeModal(); back(); });
-      document.getElementById('draftDelOk').addEventListener('click', () => { closeModal(); removeDraftRow(d.id); });
+      document.getElementById('draftDelOk').addEventListener('click', async () => {
+        closeModal();
+        if (!d.live) { removeDraftRow(d.id); return; }
+        // Signed in: forget it on the API first (the design stays in Canva).
+        try {
+          const res = await fetch(`${averagesApiBase()}/canva/drafts/${encodeURIComponent(d.designId)}`, { method: 'DELETE', credentials: 'include' });
+          if (!res.ok) throw new Error('status ' + res.status);
+          removeDraftRow(d.id);
+        } catch {
+          draftsNote.textContent = 'Couldn’t delete that draft. Try again.';
+          draftsNote.hidden = false;
+          draftsSec.hidden = false;
+        }
+      });
       document.getElementById('draftDelCancel').focus();
     }
     draftsList.addEventListener('click', e => {
@@ -2329,6 +2557,7 @@
       const d = drafts.find(x => x.id === id);
       if (!d) return;
       if (btn.dataset.draftAction === 'delete') { confirmDeleteDraft(d, btn); return; }
+      if (btn.dataset.draftAction === 'open') { if (d.live) openLiveDraft(d, btn); return; }
       // Submit: the Canva design goes in as a PDF, like any other turn-in.
       removeDraftRow(id, () => {
         // Canva designs go in as a PDF; a Google Drive file in its own format.
@@ -2339,6 +2568,25 @@
         renderSubmissionsPanel();
       });
     });
+
+    // Signed in: load this assignment's drafts, and say so when Canva's
+    // Return button brought the student back (?canva=saved).
+    if (LIVE_DETAIL && !CANVA_PREVIEW) {
+      const back = params.get('canva');
+      if (back === 'saved') {
+        draftsNote.textContent = 'Back from Canva. Your draft is saved here in Drafts.';
+        draftsNote.hidden = false;
+        draftsSec.hidden = false;
+      }
+      if (back) {
+        try {
+          const u = new URL(window.location.href);
+          u.searchParams.delete('canva');
+          window.history.replaceState(window.history.state, '', u.pathname + u.search + u.hash);
+        } catch (e) {}
+      }
+      loadLiveDrafts(back === 'saved');
+    }
 
     // Attach from Files (2026-10-05, per Martin): Files' "Attach to an
     // assignment" opens this page with ?attach=<file name>&src=course|gdrive|

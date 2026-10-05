@@ -392,6 +392,13 @@
   .integ-btn.disconnect { color: var(--grade-bad, #b6432f); }
   .integ-soon { font-size: 0.72rem; font-weight: 800; color: var(--text-faint); white-space: nowrap; flex-shrink: 0; }
   .integ-note { margin: 10px 2px 0; }
+  /* Canva, signed in (2026-10-05) */
+  .integ-btn[disabled] { opacity: 0.55; cursor: default; }
+  .integ-flash { margin: 0 2px 10px; padding: 10px 12px; border-radius: 10px; background: var(--panel-inner); font-size: 0.82rem; font-weight: 700; color: var(--text-dark); }
+  .integ-flash.bad { color: var(--grade-bad, #b6432f); }
+  .integ-flash[hidden] { display: none; }
+  .editor-done.integ-danger { background: var(--grade-bad, #b6432f); }
+  .editor-done.integ-danger:hover { background: var(--grade-bad, #b6432f); filter: brightness(0.92); }
   .integ-note + .settings-subhead { margin-top: 22px; }
   .integ-hint { color: var(--text-faint); font-weight: 700; }
   /* Rounded dropdown (2026-10-04): pill button + rounded menu */
@@ -1807,10 +1814,13 @@
     // ------------------------------------------------------------------
     // Integrations (2026-10-04, per Martin). Canva's review requires both a
     // "connected" indicator and a Disconnect button, so every row has them.
-    // Not wired to the API yet: in the preview, Connect/Disconnect just flips
-    // the state (in memory); signed in, the rows say Coming soon. The real
-    // version reads GET /canva/status (and the Google Drive/OneDrive equivalents),
-    // Connect goes to /canva/connect, Disconnect calls DELETE /canva/connection.
+    // In the preview, Connect/Disconnect just flips the state (in memory).
+    // Signed in (2026-10-05): Canva is real. Its row reads GET /canva/status,
+    // Connect navigates to the API's /canva/connect (which sends the student
+    // to Canva and back here with ?canva=connected|failed|cancelled), and
+    // Disconnect asks first, then calls DELETE /canva/connection. Google
+    // Drive and OneDrive still say Coming soon until their sign-in is built;
+    // demo sessions get Coming soon for all three.
     // ------------------------------------------------------------------
     (function () {
       const list = document.getElementById('integrationList');
@@ -1823,8 +1833,41 @@
       ];
       const connected = new Set();
       const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+      const LIVE = window.__AVERAGES_MODE__ === 'live';
+      // state: loading | ready | error | unconfigured (the API has no Canva app credentials)
+      const canvaLive = { state: 'loading', connected: false, name: '', busy: false };
+      function canvaRowHTML(a) {
+        const s = canvaLive;
+        let status, action;
+        if (s.state === 'loading') {
+          status = '<span class="integ-status">Checking…</span>';
+          action = '<button class="btn-secondary integ-btn" type="button" disabled>Connect</button>';
+        } else if (s.state === 'unconfigured') {
+          status = '<span class="integ-status">Not connected</span>';
+          action = '<span class="integ-soon">Coming soon</span>';
+        } else if (s.state === 'error') {
+          status = '<span class="integ-status">Couldn’t check right now</span>';
+          action = '<button class="btn-secondary integ-btn" type="button" data-canva="retry">Try again</button>';
+        } else if (s.connected) {
+          status = `<span class="integ-status on">Connected${s.name ? ' as ' + esc(s.name) : ''}</span>`;
+          action = `<button class="btn-secondary integ-btn disconnect" type="button" data-canva="disconnect" aria-label="Disconnect Canva"${s.busy ? ' disabled' : ''}>Disconnect</button>`;
+        } else {
+          status = '<span class="integ-status">Not connected</span>';
+          action = `<button class="btn-secondary integ-btn" type="button" data-canva="connect" aria-label="Connect Canva"${s.busy ? ' disabled' : ''}>Connect</button>`;
+        }
+        return `
+            <div class="settings-row">
+              <div class="settings-row-text">
+                <p class="settings-row-label">${esc(a.name)}</p>
+                <p class="settings-row-desc">${esc(a.desc)}</p>
+                ${status}
+              </div>
+              ${action}
+            </div>`;
+      }
       function render() {
         list.innerHTML = APPS.map(a => {
+          if (LIVE && a.id === 'canva') return canvaRowHTML(a);
           const on = connected.has(a.id);
           const action = PREVIEW
             ? `<button class="btn-secondary integ-btn${on ? ' disconnect' : ''}" type="button" data-integ="${a.id}" aria-label="${on ? 'Disconnect' : 'Connect'} ${esc(a.name)}">${on ? 'Disconnect' : 'Connect'}</button>`
@@ -1906,6 +1949,95 @@
         window.addEventListener('resize', () => closeEditorMenu(false));
         document.querySelector('.settings-detail-wrap').addEventListener('scroll', () => closeEditorMenu(false), { passive: true });
       }
+      // Messages after coming back from Canva, and the Disconnect confirm.
+      const flash = document.createElement('p');
+      flash.className = 'integ-flash';
+      flash.setAttribute('role', 'status');
+      flash.hidden = true;
+      list.parentNode.insertBefore(flash, list);
+      function showFlash(text, bad) {
+        flash.textContent = text;
+        flash.classList.toggle('bad', !!bad);
+        flash.hidden = false;
+      }
+      async function loadCanvaStatus() {
+        canvaLive.state = 'loading';
+        render();
+        try {
+          const res = await fetch(averagesApiBase() + '/canva/status', { credentials: 'include' });
+          if (!res.ok) throw new Error('status ' + res.status);
+          const j = await res.json();
+          canvaLive.state = j.configured === false ? 'unconfigured' : 'ready';
+          canvaLive.connected = !!j.connected;
+          canvaLive.name = String(j.name || '');
+        } catch {
+          canvaLive.state = 'error';
+        }
+        render();
+      }
+      const disc = document.createElement('div');
+      disc.className = 'editor-overlay';
+      disc.innerHTML = `
+        <div class="editor-modal" role="alertdialog" aria-modal="true" aria-labelledby="canvaDiscTitle" aria-describedby="canvaDiscText" style="max-width: 360px;">
+          <div class="editor-head">
+            <h2 id="canvaDiscTitle">Disconnect Canva?</h2>
+            <button class="editor-close" type="button" data-disc="cancel" aria-label="Close">&times;</button>
+          </div>
+          <div class="editor-body" style="padding-bottom: 16px;">
+            <p class="settings-row-desc" id="canvaDiscText" style="font-size: 0.86rem;">Averages.io stops using your Canva account and forgets your Drafts list. Your designs stay in your Canva account. To remove Averages.io completely, also remove it in Canva's own settings.</p>
+          </div>
+          <div class="editor-actions">
+            <button class="editor-reset" type="button" data-disc="cancel">Cancel</button>
+            <button class="editor-done integ-danger" type="button" data-disc="ok">Disconnect</button>
+          </div>
+        </div>`;
+      document.body.appendChild(disc);
+      function closeDisc() {
+        disc.classList.remove('show');
+        const b = list.querySelector('[data-canva]');
+        if (b) b.focus();
+      }
+      disc.addEventListener('click', async e => {
+        if (e.target === disc) { closeDisc(); return; }
+        const d = e.target.closest('[data-disc]');
+        if (!d) return;
+        if (d.dataset.disc === 'cancel') { closeDisc(); return; }
+        disc.classList.remove('show');
+        canvaLive.busy = true;
+        render();
+        try {
+          const res = await fetch(averagesApiBase() + '/canva/connection', { method: 'DELETE', credentials: 'include' });
+          if (!res.ok) throw new Error('status ' + res.status);
+          canvaLive.connected = false;
+          canvaLive.name = '';
+          showFlash('Canva is disconnected.');
+        } catch {
+          showFlash('Couldn’t disconnect Canva. Try again.', true);
+        }
+        canvaLive.busy = false;
+        render();
+        const b = list.querySelector('[data-canva]');
+        if (b) b.focus();
+      });
+      disc.addEventListener('keydown', e => { if (e.key === 'Escape') { e.preventDefault(); closeDisc(); } });
+      list.addEventListener('click', e => {
+        const c = e.target.closest('[data-canva]');
+        if (c && !c.disabled) {
+          const act = c.dataset.canva;
+          if (act === 'retry') { loadCanvaStatus(); return; }
+          if (act === 'connect') {
+            canvaLive.busy = true;
+            render();
+            window.location.href = averagesApiBase() + '/canva/connect?return_to=' + encodeURIComponent('/settings');
+            return;
+          }
+          if (act === 'disconnect') {
+            disc.classList.add('show');
+            disc.querySelector('[data-disc="cancel"].editor-reset').focus();
+            return;
+          }
+        }
+      });
       list.addEventListener('click', e => {
         const b = e.target.closest('[data-integ]');
         if (!b) return;
@@ -1918,6 +2050,25 @@
       });
       render();
       syncEditorHint();
+      if (LIVE) loadCanvaStatus();
+      // Back from Canva: open Integrations and say how it went, then tidy the address.
+      const canvaParam = new URLSearchParams(window.location.search).get('canva');
+      if (canvaParam) {
+        const msg = {
+          connected: ['Canva is connected. Edit in Canva on an assignment file to start a draft.', false],
+          failed: ['Couldn’t connect Canva. Try again.', true],
+          cancelled: ['Canva wasn’t connected.', false],
+        }[canvaParam];
+        if (msg) {
+          settingsStartSection = 'integrations';   // applied by the initial render at the end of this script
+          showFlash(msg[0], msg[1]);
+        }
+        try {
+          const u = new URL(window.location.href);
+          u.searchParams.delete('canva');
+          window.history.replaceState(window.history.state, '', u.pathname + u.search + u.hash);
+        } catch {}
+      }
     })();
 
     const searchInput = document.getElementById('settingsSearch');
@@ -3513,7 +3664,9 @@
     buildSearchIndex();
     renderProfileCard();
     syncResponsiveView();
-    showSection('general', { showDetail: false });
+    // No initializer on purpose: the Integrations code above may already have set it.
+    var settingsStartSection;
+    showSection(settingsStartSection || 'general', { showDetail: !!settingsStartSection });
     pullSyncSettingsNow();
   </script>
   <script>

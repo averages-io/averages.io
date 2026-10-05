@@ -548,6 +548,13 @@
   .fx-note { margin: 10px 2px 0; font-size: 0.74rem; font-weight: 600; color: var(--text-faint); }
   .fx-empty { margin: 24px 0 8px; padding: 26px; border-radius: 14px; background: var(--panel-inner); text-align: center; font-size: 0.86rem; font-weight: 600; color: var(--text-muted); }
   .fx-empty strong { display: block; font-size: 1rem; color: var(--text-dark); margin-bottom: 4px; }
+  /* Signed in: real Canva designs (2026-10-05) */
+  .fx-side[hidden] { display: none; }   /* display:flex above beat the hidden attribute, so the signed-in pages still showed the sidebar */
+  .fx-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .fx-tile[aria-busy="true"] { opacity: 0.6; cursor: progress; }
+  .fx-connect { margin-top: 12px; border: none; border-radius: 999px; background: var(--accent); color: #fff; font: inherit; font-size: 0.8rem; font-weight: 800; padding: 8px 18px; cursor: pointer; }
+  .fx-connect:hover { background: var(--accent-dark); }
+  .fx-more-designs { margin-top: 12px; border: 1px solid var(--border); border-radius: 999px; background: var(--panel-bg); font: inherit; font-size: 0.8rem; font-weight: 800; color: var(--text-dark); padding: 8px 16px; cursor: pointer; }
   .fx-menu { position: fixed; z-index: 300; min-width: 220px; max-width: calc(100vw - 16px); background: var(--panel-bg); border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 18px 44px -14px rgba(0,0,0,0.45); padding: 6px; }
   .fx-menu[hidden] { display: none; }
   .fx-menu-label { padding: 4px 10px 8px; font-size: 0.72rem; font-weight: 700; color: var(--text-muted); overflow-wrap: anywhere; }
@@ -1041,6 +1048,91 @@
       const first = fxMenu.querySelector('.fx-menu-item:not(:disabled)');
       if (first) first.focus();
     }
+    // ------------------------------------------------------------------
+    // Signed in (2026-10-05): the student's real Canva designs. Course files
+    // and Google Drive/OneDrive are still on the way.
+    // ------------------------------------------------------------------
+    function liveFiles() {
+      const api = window.location.hostname.endsWith('averages.io') ? 'https://api.averages.io' : 'http://localhost:8787';
+      const CANVA_EDIT_URL = /^https:\/\/(www\.)?canva\.com\//i;
+      const main = document.getElementById('fxMain');
+      document.getElementById('fxSide').hidden = true;
+      document.getElementById('fx').style.gridTemplateColumns = 'minmax(0, 1fr)';
+      document.getElementById('filesSub').textContent = 'Your Canva designs';
+      const soon = '<p class="fx-note">Course files, Google Drive and OneDrive are on the way.</p>';
+      let items = [];
+      let next = null;
+      const dayLabel = ms => {
+        const t = Number(ms) || 0;
+        if (!t) return '';
+        const days = Math.floor((Date.now() - t) / 86400000);
+        if (days <= 0) return 'Today';
+        if (days === 1) return 'Yesterday';
+        return new Date(t).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      };
+      // Canva's thumbnail links come from Canva's own CDN and expire; only https ones are used.
+      const thumbOk = u => /^https:\/\//i.test(String(u || ''));
+      function tile(d) {
+        const thumb = thumbOk(d.thumbnailUrl)
+          ? `<span class="fx-thumb canva"><img src="${esc(d.thumbnailUrl)}" alt="" loading="lazy" referrerpolicy="no-referrer"></span>`
+          : '<span class="fx-thumb canva" style="background:linear-gradient(135deg,#7d2ae7,#00c4cc)"><span class="page"><i></i><i></i><i></i></span></span>';
+        return `<button class="fx-tile" type="button" data-design="${esc(d.id)}" aria-label="Open ${esc(d.title || 'Untitled design')} in Canva">${thumb}<span class="fx-tile-name">${esc(d.title || 'Untitled design')}</span><span class="fx-tile-src">Canva${d.updatedAt ? ' · ' + esc(dayLabel(d.updatedAt)) : ''}</span></button>`;
+      }
+      function draw() {
+        main.innerHTML = `
+          <div class="fx-head"><h2>Canva</h2><span class="fx-meta">${items.length} design${items.length === 1 ? '' : 's'}${next ? '+' : ''}</span></div>
+          ${items.length ? `<div class="fx-grid">${items.map(tile).join('')}</div>` : '<div class="fx-empty"><strong>No designs yet</strong>Edit in Canva on an assignment file and it shows up here.</div>'}
+          ${next ? '<button class="fx-more-designs" type="button" data-more-designs>Show more</button>' : ''}
+          ${soon}`;
+      }
+      async function load(more) {
+        if (!more) main.innerHTML = '<div class="fx-empty"><strong>Loading your Canva designs…</strong></div>';
+        try {
+          const res = await fetch(`${api}/canva/designs${more && next ? '?continuation=' + encodeURIComponent(next) : ''}`, { credentials: 'include' });
+          if (res.status === 401) { window.location.href = '/'; return; }
+          if (res.status === 503) {
+            main.innerHTML = '<div class="fx-empty"><strong>Files is on the way</strong>Your course files, Google Drive and OneDrive files, and Canva designs will all show up here.</div>';
+            document.getElementById('filesSub').textContent = 'Coming soon';
+            return;
+          }
+          const j = await res.json();
+          if (j.connected === false) {
+            main.innerHTML = `<div class="fx-empty"><strong>Connect Canva to see your designs here</strong>Averages.io shows your Canva designs and opens them in Canva.<br><button class="fx-connect" type="button" data-connect-canva>Connect Canva</button></div>${soon}`;
+            return;
+          }
+          if (!res.ok) throw new Error(j.error || 'status ' + res.status);
+          items = more ? items.concat(j.items || []) : (j.items || []);
+          next = typeof j.continuation === 'string' ? j.continuation : null;
+          draw();
+        } catch {
+          main.innerHTML = `<div class="fx-empty"><strong>Couldn’t load your Canva designs</strong>Try again in a moment.<br><button class="fx-more-designs" type="button" data-retry-designs>Try again</button></div>${soon}`;
+        }
+      }
+      main.addEventListener('click', async e => {
+        if (e.target.closest('[data-connect-canva]')) { window.location.href = `${api}/canva/connect?return_to=${encodeURIComponent('/files')}`; return; }
+        if (e.target.closest('[data-retry-designs]')) { load(false); return; }
+        if (e.target.closest('[data-more-designs]')) { load(true); return; }
+        const t = e.target.closest('[data-design]');
+        if (!t || t.getAttribute('aria-busy') === 'true') return;
+        t.setAttribute('aria-busy', 'true');
+        try {
+          const res = await fetch(`${api}/canva/designs/${encodeURIComponent(t.dataset.design)}/open`, {
+            method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ returnTo: '/files' }),
+          });
+          const j = await res.json().catch(() => ({}));
+          if (res.ok && CANVA_EDIT_URL.test(String(j.editUrl || ''))) { window.location.assign(j.editUrl); return; }
+          if (j.error === 'canva_design_gone') { items = items.filter(x => x.id !== t.dataset.design); draw(); return; }
+          if (j.error === 'canva_not_connected' || j.error === 'canva_reconnect_needed') { load(false); return; }
+        } catch {}
+        t.removeAttribute('aria-busy');
+      });
+      // Back from Canva's Return button: tidy the address.
+      try {
+        const u = new URL(window.location.href);
+        if (u.searchParams.has('canva')) { u.searchParams.delete('canva'); window.history.replaceState(window.history.state, '', u.pathname + u.search + u.hash); }
+      } catch {}
+      load(false);
+    }
     function downloadPlaceholder(f) {
       const blob = new Blob([`${f.name}\n\nSample file from the Averages.io preview.`], { type: 'text/plain' });
       const a = document.createElement('a');
@@ -1091,7 +1183,9 @@
       openFxMenu(anchor, f.name, fileItems(f));
     }
 
-    if (FILES_SIGNED_IN) {
+    if (FILES_SIGNED_IN && window.__AVERAGES_MODE__ === 'live') {
+      liveFiles();
+    } else if (FILES_SIGNED_IN) {
       document.getElementById('fxSide').hidden = true;
       document.getElementById('fx').style.gridTemplateColumns = 'minmax(0, 1fr)';
       document.getElementById('fxMain').innerHTML = '<div class="fx-empty"><strong>Files is on the way</strong>Your course files, Google Drive and OneDrive files, and Canva designs will all show up here.</div>';
