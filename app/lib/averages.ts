@@ -27,6 +27,8 @@ const SESSION_CACHE = "schoolagy_session_state";
 const SESSION_CACHE_MS = 60 * 1000;
 
 const BUNDLE_CACHE = "schoolagy_bundle_cache";
+/** The Files page's course-file list (pages-src/files.html keeps it 5 minutes). */
+const FILES_CACHE = "averages_files_cache";
 
 export const API_BASE =
   typeof window !== "undefined" &&
@@ -125,6 +127,7 @@ export async function signIn(key: string, secret: string): Promise<SignInResult>
     // A fresh sign-in invalidates whatever we thought before.
     cacheClear(SESSION_CACHE);
     cacheClear(BUNDLE_CACHE);
+    cacheClear(FILES_CACHE);
     return { ok: true, demo: !!data?.demo };
   } catch {
     return { ok: false, error: "network_error" };
@@ -163,6 +166,7 @@ function claimCloudConnections(uid: string): void {
   try {
     if (window.localStorage.getItem(CLOUD_OWNER_KEY) === uid) return;
     clearCloudConnections();
+    cacheClear(FILES_CACHE);
     window.localStorage.setItem(CLOUD_OWNER_KEY, uid);
   } catch {
     /* storage blocked: nothing can be connected on this device anyway */
@@ -172,6 +176,7 @@ function claimCloudConnections(uid: string): void {
 export async function signOut(): Promise<void> {
   cacheClear(SESSION_CACHE);
   cacheClear(BUNDLE_CACHE);
+  cacheClear(FILES_CACHE);
   clearCloudConnections();
   // The DELETE below is what actually clears the httpOnly session cookie —
   // the API responds with a Set-Cookie that expires it; nothing on this side
