@@ -61,6 +61,8 @@ function cacheClear(key: string): void {
 export interface SessionState {
   mode: Mode;
   name?: string;
+  /** Signed in as under 13: Incognito only (sealed into the session by the API). */
+  incognito?: boolean;
 }
 
 /**
@@ -89,7 +91,7 @@ export async function getSession(): Promise<SessionState> {
     const response = await fetch(`${API_BASE}/auth/me`, { credentials: "include" });
     if (response.ok) {
       const data = (await response.json()) as any;
-      state = { mode: data?.demo ? "demo" : "live", name: data?.name };
+      state = { mode: data?.demo ? "demo" : "live", name: data?.name, incognito: data?.incognito === true };
       if (!data?.demo && data?.uid != null) claimCloudConnections(String(data.uid));
     }
   } catch {
@@ -112,13 +114,23 @@ export interface SignInResult {
  * Signs in with a Schoology personal API key — or with "demo"/"demo", which is
  * the one and only way into sample-data mode.
  */
+function under13(): boolean {
+  try {
+    return window.localStorage.getItem("schoolagy_13plus") !== "yes";
+  } catch {
+    return true;
+  }
+}
+
 export async function signIn(key: string, secret: string): Promise<SignInResult> {
   try {
     const response = await fetch(`${API_BASE}/auth/session`, {
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ key, secret }),
+      // The login page's "I'm 13 or older" box (saved just before this runs).
+      // Unticked means under 13: the API seals Incognito into the session.
+      body: JSON.stringify({ key, secret, under13: under13() }),
     });
     const data = (await response.json().catch(() => ({}))) as any;
     if (!response.ok) {
@@ -142,7 +154,7 @@ export async function signIn(key: string, secret: string): Promise<SignInResult>
  */
 const CLOUD_OWNER_KEY = "averages_cloud_owner";
 
-function clearCloudConnections(): void {
+export function clearCloudConnections(): void {
   try {
     window.sessionStorage.removeItem("averages_cloud_tokens");
   } catch {
