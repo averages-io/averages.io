@@ -1455,6 +1455,12 @@
       const found = DETAILS[key];
       if (found && !LIVE) return found;   // sample detail is preview-only
       const generic = { description: 'No description provided by your teacher yet.', materials: [] };
+      // Preview/demo (2026-10-05): opened from a Materials file, that file is
+      // what's attached (Materials only lists assignments that have one).
+      const fromFile = !LIVE && params.get('file');
+      if (fromFile && /\.[a-z0-9]{1,8}$/i.test(fromFile)) {
+        generic.materials = [{ name: fromFile.slice(0, 200), ext: fromFile.split('.').pop().toLowerCase() }];
+      }
       if (item.status === 'submitted' || item.status === 'graded' || item.status === 'returned') {
         const ts = item.status === 'graded' ? item.due : (item.submittedOn || item.returnedOn);
         if (ts) generic.submissions = [{ name: `${item.title}.pdf`, ext: 'pdf', timestamp: ts }];

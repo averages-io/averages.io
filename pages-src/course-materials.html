@@ -1691,8 +1691,14 @@
     // assignment.html falls back to generic placeholder content rather
     // than showing the wrong assignment.
     function openAssignmentDetail(f) {
+      // Signed in: the exact assignment the file is attached to.
+      if (f.live && f.live.parent) {
+        window.location.href = `assignment.html?course=${encodeURIComponent(f.live.course)}&id=${encodeURIComponent(f.live.parent)}&title=${encodeURIComponent(f.live.parentTitle || f.name)}&from=materials`;
+        return;
+      }
       const title = f.name.replace(/\.[^.]+$/, '');
-      window.location.href = `assignment.html?course=${encodeURIComponent(courseId)}&title=${encodeURIComponent(title)}&from=materials`;
+      // `file`: the preview's assignment page lists this file as attached (2026-10-05).
+      window.location.href = `assignment.html?course=${encodeURIComponent(courseId)}&title=${encodeURIComponent(title)}&from=materials${f.quiz ? '' : `&file=${encodeURIComponent(f.name)}`}`;
     }
 
     // ------------------------------------------------------------------
@@ -2324,7 +2330,12 @@
 
     const STARRED = { apchem: ['Syllabus.pdf'], algebra2: ['Syllabus.pdf'], english10: ['Syllabus.pdf'], ushistory: ['Syllabus.pdf'], spanish3: ['Syllabus.pdf'], pe: ['Syllabus.pdf'] };
 
-    const root = MATERIALS[course.id] || MATERIALS.apchem;
+    // Signed in (2026-10-05): the class's real files load from the API
+    // (see liveMaterials at the end); the sample tree is the preview's and
+    // demo's only. It used to show AP Chemistry's sample folders, with their
+    // file-less sample assignments, for every real class.
+    const MATERIALS_LIVE = window.__AVERAGES_MODE__ === 'live';
+    const root = MATERIALS_LIVE ? { name: 'Materials', folders: [], files: [] } : (MATERIALS[course.id] || MATERIALS.apchem);
     root.name = `${course.name} Materials`;
 
     // An assignment with no attached file isn't a material (2026-10-05, per
@@ -2442,8 +2453,9 @@
     function fileBadgeColor(ext) {
       if (ext === 'link') return '#2d6f8f';
       if (ext === 'pdf') return '#c1443a';
-      if (ext === 'docx') return '#3b6fd1';
-      if (ext === 'pptx') return '#d1852f';
+      if (ext === 'docx' || ext === 'doc') return '#3b6fd1';
+      if (ext === 'pptx' || ext === 'ppt') return '#d1852f';
+      if (ext === 'xlsx' || ext === 'xls' || ext === 'csv') return '#2f7d54';
       return '#7c7c86';
     }
 
@@ -2504,7 +2516,7 @@
         .join('');
     }
     function fileIconSVG(f) {
-      if (f && typeof f === 'object' && f.url) return "<svg aria-hidden=\"true\" focusable=\"false\" viewBox=\"-5 -5 46 46\"><path fill=\"#3B88C3\" d=\"M18 0C8.059 0 0 8.059 0 18s8.059 18 18 18 18-8.059 18-18S27.941 0 18 0zM2.05 19h3.983c.092 2.506.522 4.871 1.229 7H4.158a15.885 15.885 0 0 1-2.108-7zM19 8V2.081c2.747.436 5.162 2.655 6.799 5.919H19zm7.651 2c.754 2.083 1.219 4.46 1.317 7H19v-7h7.651zM17 2.081V8h-6.799C11.837 4.736 14.253 2.517 17 2.081zM17 10v7H8.032c.098-2.54.563-4.917 1.317-7H17zM6.034 17H2.05a15.9 15.9 0 0 1 2.107-7h3.104c-.705 2.129-1.135 4.495-1.227 7zm1.998 2H17v7H9.349c-.754-2.083-1.219-4.459-1.317-7zM17 28v5.919c-2.747-.437-5.163-2.655-6.799-5.919H17zm2 5.919V28h6.8c-1.637 3.264-4.053 5.482-6.8 5.919zM19 26v-7h8.969c-.099 2.541-.563 4.917-1.317 7H19zm10.967-7h3.982a15.87 15.87 0 0 1-2.107 7h-3.104c.706-2.129 1.136-4.494 1.229-7zm0-2c-.093-2.505-.523-4.871-1.229-7h3.104a15.875 15.875 0 0 1 2.107 7h-3.982zm.512-9h-2.503c-.717-1.604-1.606-3.015-2.619-4.199A16.034 16.034 0 0 1 30.479 8zM10.643 3.801C9.629 4.985 8.74 6.396 8.023 8H5.521a16.047 16.047 0 0 1 5.122-4.199zM5.521 28h2.503c.716 1.604 1.605 3.015 2.619 4.198A16.031 16.031 0 0 1 5.521 28zm19.836 4.198c1.014-1.184 1.902-2.594 2.619-4.198h2.503a16.031 16.031 0 0 1-5.122 4.198z\"/></svg>";
+      if (f && typeof f === 'object' && f.url && !f.drive) return "<svg aria-hidden=\"true\" focusable=\"false\" viewBox=\"-5 -5 46 46\"><path fill=\"#3B88C3\" d=\"M18 0C8.059 0 0 8.059 0 18s8.059 18 18 18 18-8.059 18-18S27.941 0 18 0zM2.05 19h3.983c.092 2.506.522 4.871 1.229 7H4.158a15.885 15.885 0 0 1-2.108-7zM19 8V2.081c2.747.436 5.162 2.655 6.799 5.919H19zm7.651 2c.754 2.083 1.219 4.46 1.317 7H19v-7h7.651zM17 2.081V8h-6.799C11.837 4.736 14.253 2.517 17 2.081zM17 10v7H8.032c.098-2.54.563-4.917 1.317-7H17zM6.034 17H2.05a15.9 15.9 0 0 1 2.107-7h3.104c-.705 2.129-1.135 4.495-1.227 7zm1.998 2H17v7H9.349c-.754-2.083-1.219-4.459-1.317-7zM17 28v5.919c-2.747-.437-5.163-2.655-6.799-5.919H17zm2 5.919V28h6.8c-1.637 3.264-4.053 5.482-6.8 5.919zM19 26v-7h8.969c-.099 2.541-.563 4.917-1.317 7H19zm10.967-7h3.982a15.87 15.87 0 0 1-2.107 7h-3.104c.706-2.129 1.136-4.494 1.229-7zm0-2c-.093-2.505-.523-4.871-1.229-7h3.104a15.875 15.875 0 0 1 2.107 7h-3.982zm.512-9h-2.503c-.717-1.604-1.606-3.015-2.619-4.199A16.034 16.034 0 0 1 30.479 8zM10.643 3.801C9.629 4.985 8.74 6.396 8.023 8H5.521a16.047 16.047 0 0 1 5.122-4.199zM5.521 28h2.503c.716 1.604 1.605 3.015 2.619 4.198A16.031 16.031 0 0 1 5.521 28zm19.836 4.198c1.014-1.184 1.902-2.594 2.619-4.198h2.503a16.031 16.031 0 0 1-5.122 4.198z\"/></svg>";
       const isQuiz = typeof f === 'object' && f && f.quiz;
       const ext = typeof f === 'string' ? f : f.ext;
       const isAssignment = typeof f === 'object' && f && f.assignment;
@@ -2538,7 +2550,7 @@
       </svg>`;
     }
     function smallFileIconSVG(f) {
-      if (f && typeof f === 'object' && f.url) return "<svg aria-hidden=\"true\" focusable=\"false\" viewBox=\"-2 -2 40 40\"><path fill=\"#3B88C3\" d=\"M18 0C8.059 0 0 8.059 0 18s8.059 18 18 18 18-8.059 18-18S27.941 0 18 0zM2.05 19h3.983c.092 2.506.522 4.871 1.229 7H4.158a15.885 15.885 0 0 1-2.108-7zM19 8V2.081c2.747.436 5.162 2.655 6.799 5.919H19zm7.651 2c.754 2.083 1.219 4.46 1.317 7H19v-7h7.651zM17 2.081V8h-6.799C11.837 4.736 14.253 2.517 17 2.081zM17 10v7H8.032c.098-2.54.563-4.917 1.317-7H17zM6.034 17H2.05a15.9 15.9 0 0 1 2.107-7h3.104c-.705 2.129-1.135 4.495-1.227 7zm1.998 2H17v7H9.349c-.754-2.083-1.219-4.459-1.317-7zM17 28v5.919c-2.747-.437-5.163-2.655-6.799-5.919H17zm2 5.919V28h6.8c-1.637 3.264-4.053 5.482-6.8 5.919zM19 26v-7h8.969c-.099 2.541-.563 4.917-1.317 7H19zm10.967-7h3.982a15.87 15.87 0 0 1-2.107 7h-3.104c.706-2.129 1.136-4.494 1.229-7zm0-2c-.093-2.505-.523-4.871-1.229-7h3.104a15.875 15.875 0 0 1 2.107 7h-3.982zm.512-9h-2.503c-.717-1.604-1.606-3.015-2.619-4.199A16.034 16.034 0 0 1 30.479 8zM10.643 3.801C9.629 4.985 8.74 6.396 8.023 8H5.521a16.047 16.047 0 0 1 5.122-4.199zM5.521 28h2.503c.716 1.604 1.605 3.015 2.619 4.198A16.031 16.031 0 0 1 5.521 28zm19.836 4.198c1.014-1.184 1.902-2.594 2.619-4.198h2.503a16.031 16.031 0 0 1-5.122 4.198z\"/></svg>";
+      if (f && typeof f === 'object' && f.url && !f.drive) return "<svg aria-hidden=\"true\" focusable=\"false\" viewBox=\"-2 -2 40 40\"><path fill=\"#3B88C3\" d=\"M18 0C8.059 0 0 8.059 0 18s8.059 18 18 18 18-8.059 18-18S27.941 0 18 0zM2.05 19h3.983c.092 2.506.522 4.871 1.229 7H4.158a15.885 15.885 0 0 1-2.108-7zM19 8V2.081c2.747.436 5.162 2.655 6.799 5.919H19zm7.651 2c.754 2.083 1.219 4.46 1.317 7H19v-7h7.651zM17 2.081V8h-6.799C11.837 4.736 14.253 2.517 17 2.081zM17 10v7H8.032c.098-2.54.563-4.917 1.317-7H17zM6.034 17H2.05a15.9 15.9 0 0 1 2.107-7h3.104c-.705 2.129-1.135 4.495-1.227 7zm1.998 2H17v7H9.349c-.754-2.083-1.219-4.459-1.317-7zM17 28v5.919c-2.747-.437-5.163-2.655-6.799-5.919H17zm2 5.919V28h6.8c-1.637 3.264-4.053 5.482-6.8 5.919zM19 26v-7h8.969c-.099 2.541-.563 4.917-1.317 7H19zm10.967-7h3.982a15.87 15.87 0 0 1-2.107 7h-3.104c.706-2.129 1.136-4.494 1.229-7zm0-2c-.093-2.505-.523-4.871-1.229-7h3.104a15.875 15.875 0 0 1 2.107 7h-3.982zm.512-9h-2.503c-.717-1.604-1.606-3.015-2.619-4.199A16.034 16.034 0 0 1 30.479 8zM10.643 3.801C9.629 4.985 8.74 6.396 8.023 8H5.521a16.047 16.047 0 0 1 5.122-4.199zM5.521 28h2.503c.716 1.604 1.605 3.015 2.619 4.198A16.031 16.031 0 0 1 5.521 28zm19.836 4.198c1.014-1.184 1.902-2.594 2.619-4.198h2.503a16.031 16.031 0 0 1-5.122 4.198z\"/></svg>";
       const isQuiz = typeof f === 'object' && f && f.quiz;
       if (isQuiz) {
         return `<svg viewBox="0 0 20 20" aria-hidden="true"><rect x="2" y="1" width="14" height="18" rx="2" style="fill:var(--finder-icon-page);stroke:var(--finder-icon-border)"/>${smallQuizAnswerRowsSVG()}</svg>`;
@@ -3119,10 +3131,14 @@
         // helpers above) and a different "why no preview" reason: not
         // because this mock is missing a viewer, but because a quiz is
         // genuinely taken in Schoology, not previewed here at all.
-        qlSubtitle.textContent = item.quiz ? 'Quiz' : `${item.ext.toUpperCase()} Document${item.assignment ? ' · Assignment' : ''}`;
+        qlSubtitle.textContent = item.quiz ? 'Quiz' : item.drive ? `Google Drive${item.assignment ? ' · Assignment' : ''}` : `${item.ext.toUpperCase()} Document${item.assignment ? ' · Assignment' : ''}`;
         qlBody.innerHTML = item.quiz
           ? '<p class="ql-empty">Taken in Schoology, not in Averages — open this item for a link over there.</p>'
-          : `<p class="ql-empty">Created ${escapeHtml(item.created || '—')}. No preview available in this mock.</p>`;
+          : item.drive
+            ? `<p class="ql-empty">Added ${escapeHtml(item.created || 'recently')}. It opens in Google Drive.</p>`
+            : item.live
+              ? `<p class="ql-empty">Added ${escapeHtml(item.created || 'recently')}. There's no preview here: download it to open it.</p>`
+              : `<p class="ql-empty">Created ${escapeHtml(item.created || '—')}. No preview available in this mock.</p>`;
       }
       quickLookOverlay.hidden = false;
       qlCloseBtn.focus();
@@ -3178,6 +3194,7 @@
     // the file's *content* is a stand-in, same honesty convention Quick
     // Look already uses ("No preview available in this mock").
     function downloadPlaceholderFile(item) {
+      if (item.live && !item.url) { window.location.href = liveFileUrl(item); return; }   // signed in: the real file
       const content = `${item.name}\n\nThis is a placeholder file from the Averages mockup — no real file content is stored yet.\nReal file delivery is coming with the Drive/Canva integrations (Release 1.0.0).`;
       const blob = new Blob([content], { type: 'text/plain' });
       const url = URL.createObjectURL(blob);
@@ -3219,7 +3236,39 @@
         return;
       }
       const zip = new JSZip();
-      addFolderToZip(zip, folder);
+      if (MATERIALS_LIVE) {
+        // Signed in: the real files (Google Drive links are skipped). Capped so
+        // a big class can't fill a Chromebook's memory.
+        const files = allFilesFlat(folder).filter(f => f.live && !f.url);
+        const bytes = files.reduce((n, f) => n + (Number(f.live.size) || 0), 0);
+        if (!files.length || bytes > 100 * 1024 * 1024) {
+          infoTitle.textContent = folder.name;
+          infoBody.innerHTML = `<p class="info-row-value">${files.length ? 'This folder is too big to download at once (over 100 MB). Download the files one at a time.' : 'There are no files here to download.'}</p>`;
+          infoOverlay.hidden = false;
+          infoCloseBtn.focus();
+          return;
+        }
+        async function addLive(zipFolder, node) {
+          for (const f of node.files) {
+            if (!f.live || f.url) continue;
+            const res = await fetch(liveFileUrl(f), { credentials: 'include' });
+            if (!res.ok) throw new Error('download_failed');
+            zipFolder.file(f.name, await res.blob());
+          }
+          for (const sub of node.folders) await addLive(zipFolder.folder(sub.name), sub);
+        }
+        try {
+          await addLive(zip, folder);
+        } catch {
+          infoTitle.textContent = folder.name;
+          infoBody.innerHTML = '<p class="info-row-value">Some files couldn\'t be downloaded just now. Try again in a moment.</p>';
+          infoOverlay.hidden = false;
+          infoCloseBtn.focus();
+          return;
+        }
+      } else {
+        addFolderToZip(zip, folder);
+      }
       const blob = await zip.generateAsync({ type: 'blob' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -3247,7 +3296,7 @@
         add(cmItem('Download Folder', () => downloadFolderAsZip(item)));
       } else {
         const dl = cmItem('Download', () => { if (!item.quiz && !item.url) downloadPlaceholderFile(item); });
-        add(item.quiz ? lockedItem(dl, 'tests stay in Schoology') : item.url ? lockedItem(dl, 'web links open in the browser') : dl);
+        add(item.quiz ? lockedItem(dl, 'tests stay in Schoology') : item.url ? lockedItem(dl, item.drive ? 'it opens in Google Drive' : 'web links open in the browser') : dl);
       }
       // Opens where the right-click menu was. setTimeout: the same click would
       // otherwise reach the "click outside closes it" listener and shut it.
@@ -3256,7 +3305,7 @@
         const x = parseFloat(contextMenu.style.left) || 0, y = parseFloat(contextMenu.style.top) || 0;
         setTimeout(() => openCloudMenu(item.name, x, y, false, canvaCanOpen(item, isFolder)), 0);
       }, { chevron: true });
-      add(item.quiz ? lockedItem(cloud, 'tests stay in Schoology') : item.url ? lockedItem(cloud, 'web links open in the browser') : cloud);
+      add(item.quiz ? lockedItem(cloud, 'tests stay in Schoology') : item.url ? lockedItem(cloud, item.drive ? 'it\'s already in Google Drive' : 'web links open in the browser') : cloud);
       add(cmItem('Get Info', () => openInfoModal(item, isFolder)));
       divider();
       // Tests and teacher folders: no Rename / Duplicate (2026-10-02)
@@ -3474,6 +3523,7 @@
 
     function currentItems() {
       if (mode === 'recents') {
+        if (MATERIALS_LIVE) return { folders: [], files: allFilesFlat(root).filter(f => f.live && f.live.at).sort((a, b) => b.live.at - a.live.at).slice(0, 8) };
         return { folders: [], files: allFilesFlat(root).slice(-8).reverse() };
       }
       if (mode === 'starred') {
@@ -3709,7 +3759,7 @@
           const tr = document.createElement('tr');
           tr.dataset.id = f._id;
           tr.className = selectedId === f._id ? 'selected' : '';
-          const kindLabel = f.quiz ? 'Quiz' : (f.url ? 'Web link' : `${f.ext.toUpperCase()} Document${f.assignment ? ' · Assignment' : ''}`);
+          const kindLabel = f.quiz ? 'Quiz' : f.drive ? `Google Drive${f.assignment ? ' · Assignment' : ''}` : (f.url ? 'Web link' : `${f.ext.toUpperCase()} Document${f.assignment ? ' · Assignment' : ''}`);
           tr.innerHTML = `<td class="name-cell"><span class="item-icon">${smallFileIconSVG(f)}</span>${nameAndEditMarkup(f)}${whereMarkup(f)}${starBadgeMarkup(f)}</td><td class="kind-cell">${escapeHtml(kindLabel)}</td><td class="size-cell">${escapeHtml(inAssignments ? (f.due || '—') : (f.created || '—'))}</td>`;
           // Same fix as the grid tile above (2026-09-07 for the open action
           // existing at all, 2026-09-08 for single click triggering it): a
@@ -3798,7 +3848,7 @@
         const b = document.getElementById(id);
         if (!b) return;
         b.disabled = test || link;
-        b.title = test ? 'Tests stay in Schoology' : link ? 'Web links open in the browser' : (id === 'downloadBtn' ? 'Download' : 'Save to cloud');
+        b.title = test ? 'Tests stay in Schoology' : link ? (hit.item.drive ? 'Opens in Google Drive' : 'Web links open in the browser') : (id === 'downloadBtn' ? 'Download' : 'Save to cloud');
       });
     }
     const renderWithoutTestLock = render;
@@ -4106,6 +4156,93 @@
     // ------------------------------------------------------------------
     // Profile menu — same behavior as every other page.
     // ------------------------------------------------------------------
+    // ------------------------------------------------------------------
+    // Signed in: the class's real files (2026-10-05). GET /data/files lists
+    // every file in the student's classes (teachers' Materials documents and
+    // files attached to assignments), so an assignment with nothing attached
+    // never appears. Same 5-minute cache as the Files page. Google Classroom
+    // files are Google Drive links. Teacher files can't be renamed or deleted
+    // (they aren't the student's); the student's own folders work as before,
+    // on this page only.
+    // ------------------------------------------------------------------
+    function liveApiBase() { return window.location.hostname.endsWith('averages.io') ? 'https://api.averages.io' : 'http://localhost:8787'; }
+    function liveFileUrl(f) {
+      const l = f.live || {};
+      return `${liveApiBase()}/data/attachment?section=${encodeURIComponent(l.course)}&${l.kind === 'document' ? 'document' : 'assignment'}=${encodeURIComponent(l.parent)}&file=${encodeURIComponent(l.id)}`;
+    }
+    if (MATERIALS_LIVE) (function liveMaterials() {
+      const emptyEl = document.getElementById('emptyState');
+      const ID = /^\d{1,24}$/;
+      const DRIVE_ID = /^[A-Za-z0-9_-]{10,128}$/;
+      const DRIVE_URL = /^https:\/\/(drive|docs)\.google\.com\//;
+      const CACHE = 'averages_files_cache', CACHE_MS = 5 * 60 * 1000;
+      const owner = () => { try { return localStorage.getItem('averages_cloud_owner') || ''; } catch { return ''; } };
+      let rootNote = 'Loading this class\'s files…';
+      // The empty message says what's going on at the top of the class; inside a folder it's the usual one.
+      const renderBeforeLive = render;
+      render = function () {
+        renderBeforeLive();
+        if (!emptyEl.hidden) emptyEl.textContent = (mode === 'browse' && currentNode() === root && !searchInput.value.trim()) ? rootNote : 'No items here.';
+      };
+      function cached() {
+        try {
+          const c = JSON.parse(sessionStorage.getItem(CACHE) || 'null');
+          if (c && c.owner === owner() && Date.now() - c.at < CACHE_MS && c.data) return c.data;
+        } catch {}
+        return null;
+      }
+      const data = (window.__AVERAGES__ && window.__AVERAGES__.data) || {};
+      const dueById = new Map();
+      [].concat(Array.isArray(data.OVERDUE) ? data.OVERDUE : [], Array.isArray(data.UPCOMING) ? data.UPCOMING : []).forEach(x => { if (x && x.id) dueById.set(String(x.id), String(x.due || '')); });
+      const label = ms => (ms ? new Date(ms).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '');
+      async function load() {
+        render();
+        try {
+          let j = cached();
+          if (!j) {
+            const res = await fetch(`${liveApiBase()}/data/files`, { credentials: 'include' });
+            if (res.status === 401) { window.location.href = '/'; return; }
+            if (!res.ok) throw new Error('status ' + res.status);
+            j = await res.json();
+            if (!j.partial) { try { sessionStorage.setItem(CACHE, JSON.stringify({ at: Date.now(), owner: owner(), data: j })); } catch {} }
+          }
+          const classroom = j.platform === 'classroom';
+          const mine = (Array.isArray(j.files) ? j.files : []).filter(f => f && String(f.course) === String(course.id) && ID.test(String(f.parent))
+            && (classroom ? DRIVE_ID.test(String(f.id)) && DRIVE_URL.test(String(f.url || '')) && (f.kind === 'material' || f.kind === 'assignment')
+                          : ID.test(String(f.id)) && (f.kind === 'document' || f.kind === 'assignment')));
+          const items = mine.map(f => {
+            const at = Number(f.at) || 0;
+            const rawExt = String(f.ext || '').toLowerCase();
+            const item = {
+              name: String(f.name || 'File'),
+              // Google's own types have no extension; short labels that fit the badge.
+              ext: (classroom ? ({ gdoc: 'doc', gsheet: 'xls', gslides: 'ppt', gdraw: 'img' })[rawExt] : '') || rawExt || 'file',
+              created: label(at),
+              live: { course: String(f.course), kind: String(f.kind), parent: String(f.parent), parentTitle: String(f.parentTitle || ''), id: String(f.id), size: Number(f.size) || 0, at },
+            };
+            if (f.kind === 'assignment') { item.assignment = true; item.due = dueById.get(String(f.parent)) || ''; }
+            if (classroom) { item.url = String(f.url); item.drive = true; }
+            return item;
+          });
+          root.folders = [];
+          root.files = items;   // newest first, as the API sends them
+          (function assignLiveIds(node) {
+            node._id = node._id || 'n' + (idCounter++);
+            node.folders.forEach(assignLiveIds);
+            node.files.forEach(f => { f._id = 'n' + (idCounter++); });
+          })(root);
+          history = [root]; pointer = 0; selectedId = null;
+          rootNote = items.length ? 'No items here.' : (j.partial ? 'This class didn\'t answer just now. Reload to try again.' : 'No files in this class yet. Files your teacher posts, and files attached to assignments, show up here.');
+        } catch {
+          rootNote = 'Couldn\'t load this class\'s files. Reload the page to try again.';
+        }
+        undoStack.length = 0;   // the empty "loading" tree isn't something to undo back to
+        renderUnitList();
+        render();
+      }
+      load();
+    })();
+
     const profileBtn = document.getElementById('profileBtn');
     // Shared profile photo/name (2026-09-07) — settings.html's Edit
     // Profile modal is the only place this is ever set, but every other
