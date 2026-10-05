@@ -115,9 +115,9 @@ for (const file of pageFiles) {
     continue;
   }
 
-  if (script.includes("__schoolagyScanImage")) wiring.nsfw.push(rel);
-  if (script.includes("window.__SCHOOLAGY__")) wiring.liveData.push(rel);
-  if (script.includes("__schoolagySignIn")) wiring.signIn.push(rel);
+  if (script.includes("__averagesScanImage")) wiring.nsfw.push(rel);
+  if (script.includes("window.__AVERAGES__")) wiring.liveData.push(rel);
+  if (script.includes("__averagesSignIn")) wiring.signIn.push(rel);
 
   // Placeholders that are supposed to be gone. If any survives, a transform
   // silently no-opped and a feature is quietly missing.

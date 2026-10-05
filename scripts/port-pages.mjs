@@ -1,5 +1,5 @@
 /**
- * Build step: turns Schoolagy's self-contained HTML mockup pages into Next.js
+ * Build step: turns Averages.io's self-contained HTML mockup pages into Next.js
  * routes, and wires them to real data, real image screening and real auth.
  *
  * Run with:  node scripts/port-pages.mjs
@@ -164,7 +164,7 @@ function wireNsfwScan(script, file) {
         // app/lib/nsfw.ts) — the image is never uploaded anywhere to be
         // checked. Reuses the gate's existing scanning/error panes, so the
         // UI here is exactly what was already designed for it.
-        window.__schoolagyScanImage(file).then((verdict) => {
+        window.__averagesScanImage(file).then((verdict) => {
           if (verdict.allowed) {
             onAccepted(file);
             closeUploadGate();
@@ -185,10 +185,10 @@ function wireNsfwScan(script, file) {
  * Lets live Schoology data replace a page's built-in sample data.
  *
  * `const COURSES = [...]` becomes
- * `const COURSES = (window.__SCHOOLAGY__?.data?.COURSES) || [...]`
+ * `const COURSES = (window.__AVERAGES__?.data?.COURSES) || [...]`
  *
  * The literal stays as the fallback, so mock mode and any not-yet-adapted feed
- * keep working untouched. LegacyPage guarantees `__SCHOOLAGY__` is populated
+ * keep working untouched. LegacyPage guarantees `__AVERAGES__` is populated
  * before this script runs.
  */
 function wireDataOverrides(script, file) {
@@ -199,7 +199,7 @@ function wireDataOverrides(script, file) {
     if (pattern.test(out)) {
       out = out.replace(
         pattern,
-        `$1const ${name} = (window.__SCHOOLAGY__ && window.__SCHOOLAGY__.data && window.__SCHOOLAGY__.data.${name}) || $2`
+        `$1const ${name} = (window.__AVERAGES__ && window.__AVERAGES__.data && window.__AVERAGES__.data.${name}) || $2`
       );
       hits++;
     }
@@ -272,7 +272,7 @@ function wireLoginSubmit(script, file) {
       // Real sign-in. The key + secret go straight to api.averages.io, which
       // verifies them against Schoology and seals them into an httpOnly
       // session cookie — the secret is never kept in browser-readable storage.
-      window.__schoolagySignIn(key, secret).then((result) => {
+      window.__averagesSignIn(key, secret).then((result) => {
         if (result.ok) {
           window.location.href = result.next;
           return;
@@ -378,7 +378,7 @@ function generatePage(name, route, data) {
 
   const loginExtras = isLogin
     ? `
-import { getSession, signIn } from "./lib/schoolagy";
+import { getSession, signIn } from "./lib/averages";
 
 const ERROR_MESSAGES: Record<string, string> = {
   invalid_credentials: "That API key and secret didn't work. Double-check you copied both from your school's Schoology /api page.",
@@ -403,7 +403,7 @@ const ERROR_MESSAGES: Record<string, string> = {
     // server decides who gets in and there is nothing local to forge.
 
     // The legacy login script calls this; it must exist before that runs.
-    (window as any).__schoolagySignIn = async (key: string, secret: string) => {
+    (window as any).__averagesSignIn = async (key: string, secret: string) => {
       const result = await signIn(key, secret);
       if (result.ok) {
         let onboarded = false;
