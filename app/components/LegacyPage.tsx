@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { getSession, loadBundle, signOut, type Mode } from "../lib/schoolagy";
+import { getSession, loadBundle, signOut, type Mode } from "../lib/averages";
 import { installNsfwGlobal, preloadNsfwModel } from "../lib/nsfw";
 import { SKELETON_CSS, skeletonHtml, revealContent } from "./PageSkeleton";
 import { THEME_BOOT_JS } from "../lib/theme-boot";
@@ -16,11 +16,11 @@ import { THEME_BOOT_JS } from "../lib/theme-boot";
  * one the boot script left on `window`.
  */
 function reapplyStoredTheme(): void {
-  (window as unknown as { __schoolagyApplyTheme?: () => void }).__schoolagyApplyTheme?.();
+  (window as unknown as { __averagesApplyTheme?: () => void }).__averagesApplyTheme?.();
 }
 
 /**
- * Renders one of Schoolagy's self-contained HTML/CSS/JS pages inside a real
+ * Renders one of Averages.io's self-contained HTML/CSS/JS pages inside a real
  * Next.js route, and wires it to auth, real data and image screening.
  *
  * Why the pages aren't rewritten as React components: each one is already
@@ -40,7 +40,7 @@ function reapplyStoredTheme(): void {
  *      (An earlier version of this comment claimed the markup didn't paint at
  *      all. It hasn't been true since the markup started mounting immediately,
  *      and it was worth correcting rather than trusting.)
- *   2. `window.__SCHOOLAGY__` (real data) and `window.__schoolagyScanImage`
+ *   2. `window.__AVERAGES__` (real data) and `window.__averagesScanImage`
  *      (the NSFW check) exist BEFORE the page's script runs, since it reads
  *      them synchronously at top level.
  */
@@ -188,18 +188,18 @@ export default function LegacyPage({
         return;
       }
 
-      (window as any).__SCHOOLAGY__ = {
+      (window as any).__AVERAGES__ = {
         mode: session.mode,
         data: bundle ?? {},
       };
-      // Separate from __SCHOOLAGY__ above on purpose: settings.html only
+      // Separate from __AVERAGES__ above on purpose: settings.html only
       // needs to know demo-vs-live to gate the sync toggles, not consume real
       // student data, and scripts/verify-pages.mjs's "Live-data hooks" check
       // treats any embedded page script that references the combined global
       // as a page that renders live data — settings and onboarding aren't
       // supposed to be on that list. Set for every page (not just
       // requiresAuth ones) so a page can check it without special-casing.
-      (window as any).__SCHOOLAGY_MODE__ = session.mode;
+      (window as any).__AVERAGES_MODE__ = session.mode;
 
       setMode(session.mode);
       setPhase("ready");
@@ -220,7 +220,7 @@ export default function LegacyPage({
   useEffect(() => {
     let running = false;
     async function runSignOut() {
-      // A page's own script may call this directly (window.__schoolagySignOut)
+      // A page's own script may call this directly (window.__averagesSignOut)
       // as well as the delegated listener below reaching it through a click —
       // guard against both firing at once.
       if (running) return;
@@ -232,7 +232,7 @@ export default function LegacyPage({
       }
     }
 
-    (window as any).__schoolagySignOut = runSignOut;
+    (window as any).__averagesSignOut = runSignOut;
 
     async function onClick(event: MouseEvent) {
       const target = (event.target as HTMLElement | null)?.closest?.(
@@ -246,8 +246,8 @@ export default function LegacyPage({
     document.addEventListener("click", onClick, true);
     return () => {
       document.removeEventListener("click", onClick, true);
-      if ((window as any).__schoolagySignOut === runSignOut) {
-        delete (window as any).__schoolagySignOut;
+      if ((window as any).__averagesSignOut === runSignOut) {
+        delete (window as any).__averagesSignOut;
       }
     };
   }, []);

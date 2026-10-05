@@ -31,7 +31,7 @@
  */
 
 export const SKELETON_CSS = `
-  @keyframes schoolagySkeletonShimmer {
+  @keyframes averagesSkeletonShimmer {
     0%   { background-position: -340px 0; }
     100% { background-position:  340px 0; }
   }
@@ -49,7 +49,7 @@ export const SKELETON_CSS = `
     );
     background-size: 680px 100%;
     background-repeat: no-repeat;
-    animation: schoolagySkeletonShimmer 1.25s ease-in-out infinite;
+    animation: averagesSkeletonShimmer 1.25s ease-in-out infinite;
   }
   .skel-dot { border-radius: 50%; }
   /* Respect the OS setting: a constant sweep is a problem for some people.
@@ -67,7 +67,7 @@ export const SKELETON_CSS = `
      want the whole page to revel up to down i only want the data to do
      that". The structure is already at its final size and position from the
      first frame, and it stays there. */
-  @keyframes schoolagyReveal {
+  @keyframes averagesReveal {
     from { opacity: 0; }
     to   { opacity: 1; }
   }
@@ -622,7 +622,7 @@ export function revealContent(root: HTMLElement, pageId?: string): void {
     }
     const delay = Math.min(band * BAND_STEP_MS, BAND_MAX_MS);
     row.el.setAttribute("data-reveal", "");
-    row.el.style.animation = `schoolagyReveal ${REVEAL_MS}ms ease-out ${delay}ms both`;
+    row.el.style.animation = `averagesReveal ${REVEAL_MS}ms ease-out ${delay}ms both`;
     row.el.addEventListener("animationend", () => {
       // Leave no inline styles behind, so nothing the page does later has to
       // fight them and a re-render can't replay the reveal.
