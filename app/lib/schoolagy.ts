@@ -15,7 +15,7 @@
  * An earlier version kept the mode in localStorage and let Escape on the login
  * screen set it, which meant anyone could type a URL or edit browser storage
  * and walk straight into any page. Now the only way in is a session cookie
- * issued by api.schoolagy.io after it accepted your credentials — httpOnly, so
+ * issued by api.averages.io after it accepted your credentials — httpOnly, so
  * page JS can't read or forge it — and every page asks the API who you are
  * before it renders anything.
  */
@@ -30,8 +30,8 @@ const BUNDLE_CACHE = "schoolagy_bundle_cache";
 
 export const API_BASE =
   typeof window !== "undefined" &&
-  window.location.hostname.endsWith("schoolagy.io")
-    ? "https://api.schoolagy.io"
+  window.location.hostname.endsWith("averages.io")   // app.averages.io (schoolagy.io until 2026-10-05)
+    ? "https://api.averages.io"
     : "http://localhost:8787";
 
 function cacheGet(key: string): string | null {
