@@ -41,6 +41,7 @@ const ROUTES = {
   calendar: "calendar",
   messages: "messages",
   contacts: "contacts",
+  files: "files",
   settings: "settings",
 };
 
@@ -217,9 +218,12 @@ function wireDataOverrides(script, file) {
  *   login/onboarding — pre-account screens
  *   settings         — its only data is theme swatch palettes (verified), not
  *                      courses or grades
+ *   files            — sample files for the preview only; signed in it shows a
+ *                      "coming soon" note until the API lists course files,
+ *                      Drive files and Canva designs (2026-10-04)
  * Anything NOT listed here must have overridable data, or the build fails.
  */
-const NO_DATA_PAGES = new Set(["login", "onboarding", "settings"]);
+const NO_DATA_PAGES = new Set(["login", "onboarding", "settings", "files"]);
 
 /**
  * Replaces login's simulated credential check with the real one.
@@ -379,9 +383,9 @@ import { getSession, signIn } from "./lib/schoolagy";
 const ERROR_MESSAGES: Record<string, string> = {
   invalid_credentials: "That API key and secret didn't work. Double-check you copied both from your school's Schoology /api page.",
   missing_credentials: "Please enter both your API key and secret.",
-  network_error: "Couldn't reach Schoolagy. Check your connection and try again.",
+  network_error: "Couldn't reach Averages. Check your connection and try again.",
   schoology_error: "Schoology isn't responding right now. Try again in a moment.",
-  server_misconfigured: "Schoolagy's server isn't set up correctly yet. Please let us know.",
+  server_misconfigured: "The Averages server isn't set up correctly yet. Please let us know.",
 };
 `
     : "";
