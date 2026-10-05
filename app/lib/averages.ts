@@ -63,6 +63,8 @@ export interface SessionState {
   name?: string;
   /** Signed in as under 13: Incognito only (sealed into the session by the API). */
   incognito?: boolean;
+  /** Which sign-in this is: Schoology, or Google (for Google Classroom, 2026-10-05). */
+  provider?: "schoology" | "google";
 }
 
 /**
@@ -91,7 +93,12 @@ export async function getSession(): Promise<SessionState> {
     const response = await fetch(`${API_BASE}/auth/me`, { credentials: "include" });
     if (response.ok) {
       const data = (await response.json()) as any;
-      state = { mode: data?.demo ? "demo" : "live", name: data?.name, incognito: data?.incognito === true };
+      state = {
+        mode: data?.demo ? "demo" : "live",
+        name: data?.name,
+        incognito: data?.incognito === true,
+        provider: data?.provider === "google" ? "google" : "schoology",
+      };
       if (!data?.demo && data?.uid != null) claimCloudConnections(String(data.uid));
     }
   } catch {
@@ -120,6 +127,28 @@ function under13(): boolean {
   } catch {
     return true;
   }
+}
+
+/**
+ * Sign in with Google, for schools on Google Classroom (2026-10-05). The
+ * browser goes to the API, which sends it on to Google's consent screen and,
+ * once the student agrees, back to the login page with ?google=ok (or a
+ * reason it didn't work). The Google tokens never reach the browser: the API
+ * seals them into the same httpOnly session cookie as a Schoology sign-in.
+ *
+ * Forgets the cached "signed out" answer first: coming back from Google within
+ * a minute would otherwise read it and stay on the login page.
+ */
+export function googleSignInUrl(): string {
+  forgetSession();
+  return `${API_BASE}/auth/google/start?under13=${under13() ? "1" : "0"}`;
+}
+
+/** Drops every cached answer about who's signed in and their data. */
+export function forgetSession(): void {
+  cacheClear(SESSION_CACHE);
+  cacheClear(BUNDLE_CACHE);
+  cacheClear(FILES_CACHE);
 }
 
 export async function signIn(key: string, secret: string): Promise<SignInResult> {
@@ -254,7 +283,15 @@ export async function loadBundle(): Promise<Bundle | null | "signed_out"> {
   }
 
   try {
-    const response = await fetch(`${API_BASE}/data/bundle`, { credentials: "include" });
+    // The device's time zone, so Google Classroom's UTC due dates show on the
+    // right day (Schoology's bundle ignores it).
+    let tz = "";
+    try {
+      tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+    } catch {
+      /* the API falls back to its own guess */
+    }
+    const response = await fetch(`${API_BASE}/data/bundle${tz ? `?tz=${encodeURIComponent(tz)}` : ""}`, { credentials: "include" });
     if (response.status === 401) {
       // Session died underneath us — drop the cached "you're signed in" answer
       // so the next guard check sends them back to sign in.
