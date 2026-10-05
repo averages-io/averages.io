@@ -229,7 +229,7 @@ const NO_DATA_PAGES = new Set(["login", "onboarding", "settings", "files"]);
  * Replaces login's simulated credential check with the real one.
  *
  * The placeholder faked a round trip and treated the literal string "fail" as a
- * failed login. This swaps in a real call to api.schoolagy.io, which verifies
+ * failed login. This swaps in a real call to api.averages.io, which verifies
  * the key/secret by calling Schoology as that user before issuing a session.
  */
 function wireLoginSubmit(script, file) {
@@ -269,7 +269,7 @@ function wireLoginSubmit(script, file) {
   const script_ = out;
 
   const replacement = `
-      // Real sign-in. The key + secret go straight to api.schoolagy.io, which
+      // Real sign-in. The key + secret go straight to api.averages.io, which
       // verifies them against Schoology and seals them into an httpOnly
       // session cookie — the secret is never kept in browser-readable storage.
       window.__schoolagySignIn(key, secret).then((result) => {
