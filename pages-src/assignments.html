@@ -940,18 +940,26 @@
     // score?} shape — the same fields assignRowHTML() below expects,
     // whichever list it came from.
     // ------------------------------------------------------------------
+    // Live items with a real due time sort by it (day of month alone breaks across months).
+    const sortDay = x => (x.dueAt && !isNaN(Date.parse(x.dueAt)) ? Date.parse(x.dueAt) : dayNum(x.due));
     const overdueItems = OVERDUE
-      .map(o => ({ status: 'overdue', type: o.type, title: o.title, courseId: o.courseId, day: dayNum(o.due), due: o.due }))
+      .map(o => ({ status: 'overdue', type: o.type, title: o.title, courseId: o.courseId, day: sortDay(o), due: o.due, id: o.id }))
       .sort((a, b) => a.day - b.day);
     const upcomingItems = UPCOMING
-      .map(u => ({ status: 'upcoming', type: u.type, title: u.title, courseId: u.courseId, day: dayNum(u.due), due: u.due }))
+      .map(u => ({ status: 'upcoming', type: u.type, title: u.title, courseId: u.courseId, day: sortDay(u), due: u.due, id: u.id }))
       .sort((a, b) => a.day - b.day);
     const submittedItems = SUBMITTED
-      .map(s => ({ status: 'submitted', type: s.type, title: s.title, courseId: s.courseId, day: dayNum(s.submittedOn), due: s.submittedOn }))
+      .map(s => ({ status: 'submitted', type: s.type, title: s.title, courseId: s.courseId, day: dayNum(s.submittedOn), due: s.submittedOn, id: s.id }))
       .sort((a, b) => b.day - a.day);
     const gradedItems = [];
+    const LIVE_GRADES = window.__AVERAGES__ && window.__AVERAGES__.data && window.__AVERAGES__.data.RECENT_GRADES;
+    if (Array.isArray(LIVE_GRADES)) {
+      // Signed in: newest first, as the API sends them.
+      LIVE_GRADES.forEach((r, i) => gradedItems.push({ status: 'graded', type: 'assignment', title: String(r.title || ''), courseId: String(r.courseId || ''), day: LIVE_GRADES.length - i, due: '', score: r.pct, id: r.id }));
+    }
     COURSES.forEach(course => {
       const hist = HISTORY[course.id];
+      if (Array.isArray(LIVE_GRADES) || !hist || !Array.isArray(hist.titles)) return;
       hist.dates.forEach((d, i) => {
         const day = dayNum(d);
         gradedItems.push({ status: 'graded', type: hist.titles[i][1], title: hist.titles[i][0], courseId: course.id, day, due: fmtAug(day), score: hist.points[i] });
@@ -969,7 +977,7 @@
         : item.status === 'overdue' ? `Missing · ${item.due}`
         : item.status === 'submitted' ? `Submitted · ${item.due}`
         : `Due ${item.due}`;
-      const dest = `assignment.html?course=${encodeURIComponent(item.courseId)}&title=${encodeURIComponent(item.title)}`;
+      const dest = `assignment.html?course=${encodeURIComponent(item.courseId)}&title=${encodeURIComponent(item.title)}${/^\d{1,24}$/.test(String(item.id || '')) ? `&id=${encodeURIComponent(item.id)}` : ''}`;
       return `
         <div class="assign-row ${escapeHtml(item.status)}" style="--row-course-color: ${escapeHtml(course.color)}" role="link" tabindex="0" data-href="${escapeHtml(dest)}" aria-label="${escapeHtml(item.title)}, ${escapeHtml(course.name)}">
           <span class="assign-tick"></span>

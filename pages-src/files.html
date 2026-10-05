@@ -1233,7 +1233,11 @@
       const courseBox = document.getElementById('lfCourse');
       const CF = { state: 'loading', courses: [], files: [], partial: false, filter: 'all', shown: 30 };
       const CF_BADGE = { pdf: ['PDF', '#c1443a'], doc: ['DOC', '#3b6fd1'], docx: ['DOCX', '#3b6fd1'], ppt: ['PPT', '#d1852f'], pptx: ['PPTX', '#d1852f'], xls: ['XLS', '#2f7d54'], xlsx: ['XLSX', '#2f7d54'], csv: ['CSV', '#2f7d54'], png: ['PNG', '#7a5ba6'], jpg: ['JPG', '#7a5ba6'], jpeg: ['JPG', '#7a5ba6'], gif: ['GIF', '#7a5ba6'], txt: ['TXT', '#83849a'], zip: ['ZIP', '#83849a'] };
-      const ID_OK = v => /^\d{1,20}$/.test(String(v || ''));
+      const ID_OK = v => /^\d{1,24}$/.test(String(v || ''));
+      // Google Classroom (2026-10-05): its files are Google Drive files, listed with their Drive link.
+      const DRIVE_ID_OK = v => /^[A-Za-z0-9_-]{10,128}$/.test(String(v || ''));
+      const DRIVE_URL_OK = u => /^https:\/\/(drive|docs)\.google\.com\//.test(String(u || ''));
+      Object.assign(CF_BADGE, { gdoc: ['DOC', '#3b6fd1'], gsheet: ['SHEET', '#2f7d54'], gslides: ['SLIDES', '#d1852f'], gdraw: ['DRAW', '#7a5ba6'] });
       const cfCourse = id => CF.courses.find(c => c.id === id) || { id, name: 'Course', color: '#83849a' };
       const cfColor = c => (/^#[0-9a-f]{3,8}$/i.test(String(c.color || '')) ? c.color : '#83849a');
       const cfFlash = document.createElement('p');
@@ -1311,8 +1315,11 @@
             if (!j.partial) { try { sessionStorage.setItem(CF_CACHE, JSON.stringify({ at: Date.now(), owner: cfOwner(), data: j })); } catch {} }
           }
           CF.courses = (Array.isArray(j.courses) ? j.courses : []).filter(c => c && ID_OK(c.id)).map(c => ({ id: String(c.id), name: String(c.name || 'Course'), color: String(c.color || '') }));
-          CF.files = (Array.isArray(j.files) ? j.files : []).filter(f => f && ID_OK(f.id) && ID_OK(f.course) && ID_OK(f.parent) && (f.kind === 'document' || f.kind === 'assignment'))
-            .map(f => ({ id: String(f.id), name: String(f.name || 'File'), ext: String(f.ext || '').toLowerCase(), course: String(f.course), kind: f.kind, parent: String(f.parent), parentTitle: String(f.parentTitle || ''), at: Number(f.at) || 0 }));
+          CF.classroom = j.platform === 'classroom';
+          CF.files = (Array.isArray(j.files) ? j.files : []).filter(f => f && ID_OK(f.course) && ID_OK(f.parent) && (CF.classroom
+              ? DRIVE_ID_OK(f.id) && DRIVE_URL_OK(f.url) && (f.kind === 'material' || f.kind === 'assignment')
+              : ID_OK(f.id) && (f.kind === 'document' || f.kind === 'assignment')))
+            .map(f => ({ id: String(f.id), name: String(f.name || 'File'), ext: String(f.ext || '').toLowerCase(), course: String(f.course), kind: f.kind, parent: String(f.parent), parentTitle: String(f.parentTitle || ''), at: Number(f.at) || 0, url: CF.classroom ? String(f.url) : '' }));
           CF.partial = !!j.partial;
           CF.state = 'ready';
         } catch {
@@ -1349,6 +1356,11 @@
       function cfItems(f) {
         const items = [];
         if (f.kind === 'assignment') items.push({ label: 'Open assignment', sub: f.parentTitle, run: () => { window.location.href = `assignment.html?course=${encodeURIComponent(f.course)}&id=${encodeURIComponent(f.parent)}&title=${encodeURIComponent(f.parentTitle)}`; } });
+        // Classroom files are already in Google Drive: they open there.
+        if (f.url) {
+          items.push({ label: 'Open in Google Drive', run: () => { if (DRIVE_URL_OK(f.url)) window.open(f.url, '_blank', 'noopener,noreferrer'); } });
+          return items;
+        }
         items.push({ label: 'Download', run: () => { window.location.href = cfDownloadUrl(f); } });
         if (cfg && cfg.google) items.push({ label: 'Save to Google Drive', run: () => cfSave('gdrive', f) });
         if (cfg && cfg.microsoft) items.push({ label: 'Save to OneDrive', run: () => cfSave('onedrive', f) });

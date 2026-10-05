@@ -1893,8 +1893,8 @@
               <span class="course-name">${escapeHtml(c.name)}</span>
             </div>
           </td>
-          <td><span class="grade-val ${gradeBand(c.grade)}">${escapeHtml(c.grade)}<span class="grade-pct">${escapeHtml(c.pct)}%</span></span></td>
-          <td><span class="trend has-popup ${escapeHtml(c.trend)}" tabindex="0" role="button" aria-haspopup="true" aria-label="Why is ${escapeHtml(c.name)} predicted ${escapeHtml(c.predicted)}, ${escapeHtml(c.predictedPct)} percent? Show reasoning." data-course="${escapeHtml(c.id)}"><span class="arrow">${TREND_ARROW[c.trend]}</span>${escapeHtml(c.predicted)}<span class="grade-pct">(${escapeHtml(c.predictedPct)}%)</span></span></td>
+          <td><span class="grade-val ${gradeBand(c.grade)}">${escapeHtml(c.grade)}${c.grade === '—' ? '' : `<span class="grade-pct">${escapeHtml(c.pct)}%</span>`}</span></td>
+          <td><span class="trend has-popup ${escapeHtml(c.trend)}" tabindex="0" role="button" aria-haspopup="true" aria-label="${c.predicted === '—' ? `${escapeHtml(c.name)} has no grades yet. Show more.` : `Why is ${escapeHtml(c.name)} predicted ${escapeHtml(c.predicted)}, ${escapeHtml(c.predictedPct)} percent? Show reasoning.`}" data-course="${escapeHtml(c.id)}"><span class="arrow">${TREND_ARROW[c.trend]}</span>${escapeHtml(c.predicted)}${c.predicted === '—' ? '' : `<span class="grade-pct">(${escapeHtml(c.predictedPct)}%)</span>`}</span></td>
           <td class="updated">${escapeHtml(c.updated)}</td>
         `;
         gradesBody.appendChild(tr);
@@ -2267,6 +2267,7 @@
       });
     }
     function buildGradeChartSVG(course) {
+      if (!HISTORY[course.id] || !Array.isArray(HISTORY[course.id].points) || !HISTORY[course.id].points.length) return '<p class="trend-note">No graded work yet. The trend shows up after the first grades.</p>';
       const hist = groupSameDay(HISTORY[course.id]);
       const allLabels = hist.dates.concat(['Predicted']);
       const allValues = hist.points.concat([course.predictedPct]);
@@ -2338,6 +2339,7 @@
 
     function renderGradePopup(course) {
       const hist = HISTORY[course.id];
+      if (!hist || !Array.isArray(hist.points) || !hist.points.length) return `<h3>${escapeHtml(course.name)}</h3><p class="popup-sub">No graded work yet. The trend and predicted grade show up after the first grades.</p>`;
       const first = hist.points[0], lastGraded = hist.points[hist.points.length - 1];
       return `
         <h3>${escapeHtml(course.name)}</h3>

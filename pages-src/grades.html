@@ -1172,6 +1172,13 @@
       { id: 'pe', name: 'PE', code: '76_P0300', period: 6, teacher: 'Reyes', section: '1125', color: '#4f8c8a', grade: 'A', pct: 97, predicted: 'A', predictedPct: 97, trend: 'flat' },
     ];
     applyCourseCustomizationsInPlace(COURSES);
+    // Signed in (2026-10-05): what the API doesn't know about a class yet
+    // (code, period, teacher, section) is empty, never "undefined".
+    COURSES.forEach(c => { ['code', 'period', 'teacher', 'section'].forEach(k => { if (c[k] === undefined || c[k] === null) c[k] = ''; }); });
+    function courseMetaLine(c) {
+      const left = [c.period !== '' ? `Pd:${c.period}` : '', c.teacher].filter(Boolean).join(' ');
+      return [left, c.section].filter(Boolean).join(' - ');
+    }
 
     function findCourse(id) { return COURSES.find(c => c.id === id); }
 
@@ -1428,6 +1435,7 @@
       });
     }
     function buildGradeChartSVG(course) {
+      if (!HISTORY[course.id] || !Array.isArray(HISTORY[course.id].points) || !HISTORY[course.id].points.length) return '<p class="trend-note">No graded work yet. The trend shows up after the first grades.</p>';
       const hist = groupSameDay(HISTORY[course.id]);
       const allLabels = hist.dates.concat(['Predicted']);
       const allValues = hist.points.concat([course.predictedPct]);
@@ -1486,6 +1494,7 @@
 
     function renderGradePopup(course) {
       const hist = HISTORY[course.id];
+      if (!hist || !Array.isArray(hist.points) || !hist.points.length) return `<h3>${escapeHtml(course.name)}</h3><p class="popup-sub">No graded work yet. The trend and predicted grade show up after the first grades.</p>`;
       const first = hist.points[0], lastGraded = hist.points[hist.points.length - 1];
       return `
         <h3>${escapeHtml(course.name)}</h3>
@@ -1552,12 +1561,12 @@
                   <span class="course-row-name">${escapeHtml(c.name)}</span>
                   <span class="course-row-code">${escapeHtml(c.code)}</span>
                 </div>
-                <div class="course-row-meta">Pd:${escapeHtml(c.period)} ${escapeHtml(c.teacher)} - ${escapeHtml(c.section)}</div>
+                <div class="course-row-meta">${escapeHtml(courseMetaLine(c))}</div>
               </div>
             </div>
           </td>
-          <td><span class="grade-val ${gradeBand(c.grade)}">${escapeHtml(c.grade)}<span class="grade-pct">${escapeHtml(c.pct)}%</span></span></td>
-          <td><span class="trend has-popup ${escapeHtml(c.trend)}" tabindex="0" role="button" aria-haspopup="true" aria-label="Why is ${escapeHtml(c.name)} predicted ${escapeHtml(c.predicted)}, ${escapeHtml(c.predictedPct)} percent? Show reasoning." data-course="${escapeHtml(c.id)}"><span class="arrow">${TREND_ARROW[c.trend]}</span>${escapeHtml(c.predicted)}<span class="grade-pct">(${escapeHtml(c.predictedPct)}%)</span></span></td>
+          <td><span class="grade-val ${gradeBand(c.grade)}">${escapeHtml(c.grade)}${c.grade === '—' ? '' : `<span class="grade-pct">${escapeHtml(c.pct)}%</span>`}</span></td>
+          <td><span class="trend has-popup ${escapeHtml(c.trend)}" tabindex="0" role="button" aria-haspopup="true" aria-label="${c.predicted === '—' ? `${escapeHtml(c.name)} has no grades yet. Show more.` : `Why is ${escapeHtml(c.name)} predicted ${escapeHtml(c.predicted)}, ${escapeHtml(c.predictedPct)} percent? Show reasoning.`}" data-course="${escapeHtml(c.id)}"><span class="arrow">${TREND_ARROW[c.trend]}</span>${escapeHtml(c.predicted)}${c.predicted === '—' ? '' : `<span class="grade-pct">(${escapeHtml(c.predictedPct)}%)</span>`}</span></td>
           <td class="calc-cell" data-course="${escapeHtml(c.id)}"><button class="calc-btn" type="button" data-course="${escapeHtml(c.id)}" aria-label="Open the grade calculator for ${escapeHtml(c.name)}">${CALC_ICON}Calculate</button></td>
         `;
         gradesBody.appendChild(tr);
@@ -1710,7 +1719,7 @@
     // feed back into the category list above.
     function recomputeCalc() {
       const gb = GRADEBOOK[calcCourse.id];
-      let overall = 0;
+      let overall = 0, weightUsed = 0;
       gb.categories.forEach(cat => {
         let earned = 0, possible = 0;
         cat.assignments.forEach(a => {
@@ -1726,9 +1735,11 @@
           // same as before (doesn't count as a zero).
           if (scoreToUse !== null) { earned += scoreToUse; possible += a.points; }
         });
-        const avg = possible > 0 ? (earned / possible) * 100 : 0;
-        overall += avg * (cat.weight / 100);
+        // A category with nothing counted yet is left out and the other
+        // weights scale up (2026-10-05), as in Google Classroom.
+        if (possible > 0) { overall += (earned / possible) * 100 * cat.weight; weightUsed += cat.weight; }
       });
+      overall = weightUsed > 0 ? overall / weightUsed : 0;
 
       const pct = Math.max(0, Math.min(100, overall));
       const letter = letterFromPct(pct);

@@ -286,7 +286,7 @@
   }
   .card-inner h2.second { margin-top: 20px; }
 
-  .assign-desc-text { font-size: 0.86rem; line-height: 1.55; color: var(--text-muted); margin: 0; }
+  .assign-desc-text { font-size: 0.86rem; line-height: 1.55; color: var(--text-muted); margin: 0; white-space: pre-line; overflow-wrap: anywhere; }
 
   /* ---------- Attached / submitted file rows — same red/blue/orange
      PDF/DOCX/PPTX badge colors course-materials.html already uses, so
@@ -1494,6 +1494,10 @@
     // the sample ones, and HISTORY's sample `titles` only exist in the preview.
     const LIVE = window.__AVERAGES_MODE__ === 'live';
     const LIVE_DATA = (window.__AVERAGES__ && window.__AVERAGES__.data) || {};
+    // Google Classroom sign-in (2026-10-05): work is turned in on Classroom
+    // itself (its API only lets an app turn in work that app created), so this
+    // page shows the status and sends the student there. No Drafts.
+    const CLASSROOM = LIVE && LIVE_DATA.platform === 'classroom';
     const ALL_ITEMS = [];
     OVERDUE.forEach(o => ALL_ITEMS.push({ status: 'overdue', type: o.type, title: o.title, courseId: o.courseId, due: o.due, id: o.id }));
     UPCOMING.forEach(u => ALL_ITEMS.push({ status: 'upcoming', type: u.type, title: u.title, courseId: u.courseId, due: u.due, id: u.id }));
@@ -1520,7 +1524,7 @@
     const qFrom = params.get('from');
     let item = null;
     const qId = params.get('id');
-    const qIdOk = !!qId && /^\d{1,20}$/.test(qId);
+    const qIdOk = !!qId && /^\d{1,24}$/.test(qId);
     if (qCourse && qTitle) {
       // The Schoology id, when given, picks the exact item (two can share a title).
       item = (qIdOk && ALL_ITEMS.find(i => i.courseId === qCourse && String(i.id || '') === qId)) || findAssignment(qCourse, qTitle);
@@ -1704,7 +1708,7 @@
       // Same rule as app/lib/averages.ts's API_BASE (pages can't import it).
       return window.location.hostname.endsWith('averages.io') ? 'https://api.averages.io' : 'http://localhost:8787';
     }
-    const ID_OK = v => /^\d{1,20}$/.test(String(v || ''));
+    const ID_OK = v => /^\d{1,24}$/.test(String(v || ''));
     const LIVE_DETAIL = LIVE && ID_OK(item.id) && ID_OK(item.courseId);
     /** This page's own path for Return / Connect, minus our one-off ?canva= message flag. */
     function currentAppPath() {
@@ -1719,9 +1723,32 @@
           <a class="material-name material-link" href="${escapeHtml(l.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(l.title)}</a>
         </div>`;
     }
-    let liveMaterials = null;   // { files, links } once loaded
+    // Classroom materials are links: Drive files open in Google Drive, plus
+    // web links, YouTube videos and Google Forms.
+    const CLASSROOM_BADGE = { drive: ['DRIVE', '#3b6fd1'], youtube: ['VIDEO', '#c1443a'], form: ['FORM', '#7a4fae'], link: ['LINK', '#4f6b8c'] };
+    function classroomMaterialRowHTML(m) {
+      const ext = (String(m.title || '').match(/\.([a-z0-9]{1,5})$/i) || [])[1];
+      const u = String(m.url || '');
+      const badge = m.kind !== 'drive' ? (CLASSROOM_BADGE[m.kind] || CLASSROOM_BADGE.link)
+        : ext ? [ext.toUpperCase(), EXT_COLOR[ext.toLowerCase()] || '#3b6fd1']
+        : /^https:\/\/docs\.google\.com\/document\//.test(u) ? ['DOC', '#3b6fd1']
+        : /^https:\/\/docs\.google\.com\/spreadsheets\//.test(u) ? ['SHEET', '#2f7d54']
+        : /^https:\/\/docs\.google\.com\/presentation\//.test(u) ? ['SLIDES', '#d1852f']
+        : CLASSROOM_BADGE.drive;
+      const small = badge[0].length > 4 ? ';font-size:0.44rem;letter-spacing:0' : '';
+      return `
+        <div class="material-row file-bar">
+          <span class="material-badge" style="background:${badge[1]}${small}">${escapeHtml(badge[0])}</span>
+          <a class="material-name material-link" href="${escapeHtml(m.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(m.title)}</a>
+        </div>`;
+    }
+    let liveMaterials = null;   // { files, links, materials } once loaded
     function renderLiveMaterials() {
       if (!liveMaterials) return;
+      if (liveMaterials.materials) {
+        materialsEl.innerHTML = liveMaterials.materials.map(classroomMaterialRowHTML).join('') || '<p class="assign-empty">No materials attached to this assignment.</p>';
+        return;
+      }
       const rows = liveMaterials.files.map(f => materialRowHTML({ name: f.name, ext: String(f.ext || '').toLowerCase(), fileId: String(f.id) }, 'full')).join('')
         + liveMaterials.links.map(linkRowHTML).join('');
       materialsEl.innerHTML = rows || '<p class="assign-empty">No materials attached to this assignment.</p>';
@@ -1747,13 +1774,20 @@
       desc.textContent = 'Loading…';
       materialsEl.innerHTML = '<p class="assign-empty">Loading attached materials…</p>';
       try {
-        const res = await fetch(`${averagesApiBase()}/data/assignment?section=${encodeURIComponent(item.courseId)}&id=${encodeURIComponent(item.id)}`, { credentials: 'include' });
+        let tz = '';
+        try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch {}
+        const res = await fetch(`${averagesApiBase()}/data/assignment?section=${encodeURIComponent(item.courseId)}&id=${encodeURIComponent(item.id)}${tz ? '&tz=' + encodeURIComponent(tz) : ''}`, { credentials: 'include' });
         if (res.status === 401) { window.location.href = '/'; return; }
         if (!res.ok) throw new Error('status ' + res.status);
         const d = await res.json();
         desc.textContent = d.description || 'No description provided by your teacher yet.';
-        liveMaterials = { files: Array.isArray(d.files) ? d.files : [], links: Array.isArray(d.links) ? d.links : [] };
+        liveMaterials = {
+          files: Array.isArray(d.files) ? d.files : [],
+          links: Array.isArray(d.links) ? d.links : [],
+          materials: CLASSROOM && Array.isArray(d.materials) ? d.materials.filter(m => m && /^https?:\/\//i.test(String(m.url || ''))).map(m => ({ kind: String(m.kind || 'link'), title: String(m.title || 'Link'), url: String(m.url) })) : null,
+        };
         renderLiveMaterials();
+        if (CLASSROOM) applyClassroomSubmission(d);
       } catch {
         desc.textContent = 'Couldn’t load this assignment’s details right now.';
         materialsEl.innerHTML = '<p class="assign-empty">Couldn’t load the attached materials.<button class="assign-retry" type="button" data-live-retry>Try again</button></p>';
@@ -2089,6 +2123,37 @@
       graded: () => ({ label: 'Graded', meta: typeof item.score === 'number' ? `${item.score}%` : '' }),
       returned: () => ({ label: 'Returned: revision requested', meta: item.returnedOn ? `Returned ${item.returnedOn}` : '' }),
     };
+    // Google Classroom's own words for its states (2026-10-05).
+    let classroomLink = '';
+    let classroomLate = false;
+    const CLASSROOM_URL = u => /^https:\/\/classroom\.google\.com\//.test(String(u || ''));
+    if (CLASSROOM) {
+      BANNER_COPY.overdue = () => ({ label: 'Missing: not turned in', meta: item.due ? `Was due ${item.due}` : '' });
+      BANNER_COPY.upcoming = () => ({ label: 'Not turned in yet', meta: item.due ? `Due ${item.due}` : '' });
+      BANNER_COPY.submitted = () => ({ label: 'Turned in: awaiting grade', meta: classroomLate ? 'Turned in late' : '' });
+      BANNER_COPY.graded = () => ({ label: 'Graded', meta: typeof item.score === 'number' ? `${item.score}%${item.points ? ' · ' + item.points + ' points' : ''}` : '' });
+      BANNER_COPY.returned = () => ({ label: 'Returned by your teacher', meta: '' });
+    }
+    /** The student's real state on Classroom, from /data/assignment. */
+    function applyClassroomSubmission(d) {
+      classroomLink = CLASSROOM_URL(d.classroomUrl) ? String(d.classroomUrl) : '';
+      const s = d.submission || {};
+      classroomLate = s.late === true;
+      if (d.due) item.due = String(d.due);
+      if (s.state === 'unknown') { renderSubmissionsPanel(); return; }   // Classroom didn't say: keep the list's status
+      if (s.state === 'turned_in') currentStatus = 'submitted';
+      else if (s.state === 'returned') {
+        if (typeof s.grade === 'number' && typeof s.maxPoints === 'number' && s.maxPoints > 0) {
+          currentStatus = 'graded';
+          item.score = Math.round(s.grade / s.maxPoints * 100);
+          item.points = `${s.grade}/${s.maxPoints}`;
+        } else currentStatus = 'returned';
+      } else {
+        const due = d.dueAt ? new Date(d.dueAt) : null;
+        currentStatus = due && !isNaN(due) && due < new Date() ? 'overdue' : 'upcoming';
+      }
+      renderSubmissionsPanel();
+    }
 
     // Rows are clickable (2026-08-31, per Martin's request) — each one
     // is a specific turn-in, so clicking it pops up a preview plus that
@@ -2207,6 +2272,20 @@
 
       const bodyEl = document.getElementById('submissionBody');
       let html = '';
+      if (CLASSROOM) {
+        const done = currentStatus === 'submitted' || currentStatus === 'graded' || currentStatus === 'returned';
+        const href = classroomLink || (CLASSROOM_URL(course.link) ? course.link : 'https://classroom.google.com/');
+        bodyEl.innerHTML = `
+          <div class="submit-dropzone quiz-redirect-notice classroom-turnin">
+            ${EXTERNAL_LINK_ICON}
+            <div>${done ? 'This was turned in on Google Classroom. Open it there to see your work and any comments.' : 'Turn this in on Google Classroom. Your status and grade show up here once it’s in.'}</div>
+            <a class="quiz-redirect-btn" href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer">
+              ${done ? 'Open in Google Classroom' : 'Turn in on Google Classroom'}
+              ${EXTERNAL_LINK_ICON}
+            </a>
+          </div>`;
+        return;
+      }
       // Quizzes/tests are actually taken in Schoology itself, not in
       // Averages.io — there's no real "upload a file" or "type an answer"
       // step for them here, unlike a normal assignment or discussion post
@@ -2833,7 +2912,7 @@
           window.history.replaceState(window.history.state, '', u.pathname + u.search + u.hash);
         } catch (e) {}
       }
-      if (!INCOGNITO) {
+      if (!INCOGNITO && !CLASSROOM) {
         loadLiveDrafts(back === 'saved');
         loadCloud();
         loadCanvaReady();

@@ -1774,6 +1774,13 @@
       { id: 'pe', name: 'PE', code: '76_P0300', period: 6, teacher: 'Coach Reyes', section: '1125', color: '#4f8c8a', grade: 'A', pct: 97, predicted: 'A', predictedPct: 97, trend: 'flat', updated: '2d ago', desc: 'Fitness training and team sports, graded on participation and fitness logs.' },
     ];
     applyCourseCustomizationsInPlace(COURSES);
+    // Signed in (2026-10-05): what the API doesn't know about a class yet
+    // (code, period, teacher, section) is empty, never "undefined".
+    COURSES.forEach(c => { ['code', 'period', 'teacher', 'section'].forEach(k => { if (c[k] === undefined || c[k] === null) c[k] = ''; }); });
+    function courseMetaLine(c) {
+      const left = [c.period !== '' ? `Pd:${c.period}` : '', c.teacher].filter(Boolean).join(' ');
+      return [left, c.section].filter(Boolean).join(' - ');
+    }
 
     // Which course this hub is showing — from ?course=<id> in the URL,
     // same route shape as site-map.md's /courses/{course_id}. Falls back
@@ -1826,7 +1833,7 @@
     applyCourseColor(course.color);
 
     document.getElementById('hubTitle').textContent = course.name;
-    document.getElementById('hubSubtitle').textContent = `Pd ${course.period} · ${course.teacher} · Section ${course.section} · ${course.code}`;
+    document.getElementById('hubSubtitle').textContent = [course.period !== '' ? `Pd ${course.period}` : '', course.teacher, course.section ? `Section ${course.section}` : '', course.code].filter(Boolean).join(' · ');
     linkTeacherIn(document.getElementById('hubSubtitle'), course.teacher, course.name);
     document.getElementById('bannerIcon').innerHTML = emojiSvg(course.emoji || courseEmoji(course.name));
     document.title = `Averages - ${course.name} Hub`;
@@ -1875,13 +1882,19 @@
         { id: 'a1', text: 'Bring your fitness log and a water bottle. Outdoor circuit training all week.', time: '1d ago', pinned: false, unread: false },
       ],
     };
+    // Signed in: Google Classroom announcements come with the bundle (2026-10-05).
+    const LIVE_UPDATES = window.__AVERAGES__ && window.__AVERAGES__.data && window.__AVERAGES__.data.COURSE_UPDATES;
+    if (Array.isArray(LIVE_UPDATES)) {
+      ANNOUNCEMENTS[course.id] = LIVE_UPDATES.filter(u => u && u.courseId === course.id)
+        .map((u, i) => ({ id: 'live' + i, text: String(u.body || ''), time: String(u.when || ''), pinned: false, unread: !!u.unread, author: 'Your teacher' }));
+    }
     const announceItems = (ANNOUNCEMENTS[course.id] || []).slice().sort((a, b) => (b.pinned - a.pinned));
     function announceRowHTML(item) {
       return `
         <button type="button" class="announce-item" data-id="${escapeHtml(item.id)}">
           <div class="announce-item-head">
-            <span class="announce-avatar" aria-hidden="true">${escapeHtml(course.teacher.replace(/^(Mr\.|Mrs\.|Ms\.|Sra\.|Coach)\s*/, '').charAt(0))}</span>
-            <span class="announce-author">${escapeHtml(course.teacher)}</span>
+            <span class="announce-avatar" aria-hidden="true">${escapeHtml(String(item.author || course.teacher || 'T').replace(/^(Mr\.|Mrs\.|Ms\.|Sra\.|Coach)\s*/, '').charAt(0))}</span>
+            <span class="announce-author">${escapeHtml(item.author || course.teacher)}</span>
             <span class="announce-time">${escapeHtml(item.time)}</span>
             ${item.unread ? '<span class="announce-unread-dot" aria-label="Unread"></span>' : ''}
           </div>
@@ -1946,7 +1959,7 @@
     const TREND_ARROW = { up: '↗', down: '↘', flat: '–' };
     const TREND_WORD = { up: 'Trending up', down: 'Trending down', flat: 'Holding steady' };
 
-    document.getElementById('curVal').innerHTML = `<span class="sheet-letter">${escapeHtml(course.grade)}</span><span class="sheet-pct">${escapeHtml(course.pct)}%</span>`;
+    document.getElementById('curVal').innerHTML = `<span class="sheet-letter">${escapeHtml(course.grade)}</span>${course.grade === '—' ? '' : `<span class="sheet-pct">${escapeHtml(course.pct)}%</span>`}`;
 
     // Current grade opens this course's Grades tab (2026-10-04, per Martin).
     (function () {
@@ -1957,7 +1970,7 @@
       b.addEventListener('click', go);
       b.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
     })();
-    document.getElementById('predVal').innerHTML = `<span class="sheet-letter"><span class="arrow">${TREND_ARROW[course.trend]}</span>${escapeHtml(course.predicted)}</span><span class="sheet-pct">${escapeHtml(course.predictedPct)}%</span>`;
+    document.getElementById('predVal').innerHTML = course.predicted === '—' ? '<span class="sheet-letter">—</span>' : `<span class="sheet-letter"><span class="arrow">${TREND_ARROW[course.trend]}</span>${escapeHtml(course.predicted)}</span><span class="sheet-pct">${escapeHtml(course.predictedPct)}%</span>`;
 
     // ------------------------------------------------------------------
     // Assignment-score history behind the Predicted-grade reasoning
@@ -2017,7 +2030,8 @@
     // disagree about how far back "recent" reaches.
     // ------------------------------------------------------------------
     const hist = HISTORY[course.id];
-    const gradedItems = hist.points.map((score, i) => ({
+    // Live HISTORY has no sample `titles` (assignment.html skips it the same way).
+    const gradedItems = (!hist || !Array.isArray(hist.titles) ? [] : hist.points).map((score, i) => ({
       status: 'graded', type: hist.titles[i][1], title: hist.titles[i][0],
       day: dayNum(hist.dates[i]), due: fmtAug(dayNum(hist.dates[i])), score,
     })).sort((a, b) => a.day - b.day);
@@ -2270,6 +2284,7 @@
       });
     }
     function buildGradeChartSVG(c) {
+      if (!HISTORY[c.id] || !Array.isArray(HISTORY[c.id].points) || !HISTORY[c.id].points.length) return '<p class="trend-note">No graded work yet. The trend shows up after the first grades.</p>';
       const h = groupSameDay(HISTORY[c.id]);
       const allLabels = h.dates.concat(['Predicted']);
       const allValues = h.points.concat([c.predictedPct]);
@@ -2313,6 +2328,7 @@
     }
     function renderGradePopup(c) {
       const h = HISTORY[c.id];
+      if (!h || !Array.isArray(h.points) || !h.points.length) return `<h3>${escapeHtml(c.name)}</h3><p class="popup-sub">No graded work yet. The trend and predicted grade show up after the first grades.</p>`;
       const first = h.points[0], lastGraded = h.points[h.points.length - 1];
       return `
         <h3>${escapeHtml(c.name)}</h3>

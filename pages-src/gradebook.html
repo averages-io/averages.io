@@ -1538,13 +1538,18 @@
 
     document.title = `Averages - ${course.name} Gradebook`;
     document.getElementById('gbTitle').textContent = `${course.name} Gradebook`;
-    document.getElementById('gbSubtitle').textContent = `${course.code} · Pd:${course.period} ${course.teacher} - ${course.section}`;
+    {
+      const has = v => v !== undefined && v !== null && v !== '';
+      const left = [has(course.period) ? `Pd:${course.period}` : '', has(course.teacher) ? course.teacher : ''].filter(Boolean).join(' ');
+      const meta = [left, has(course.section) ? course.section : ''].filter(Boolean).join(' - ');
+      document.getElementById('gbSubtitle').textContent = [has(course.code) ? course.code : '', meta].filter(Boolean).join(' · ');
+    }
     document.getElementById('backToHubBtn').addEventListener('click', () => {
       window.location.href = `course-home.html?course=${course.id}`;
     });
 
-    document.getElementById('curVal').innerHTML = `<span class="${gradeBand(course.grade)}">${escapeHtml(course.grade)}</span><span class="grade-hero-pct">${escapeHtml(course.pct)}%</span>`;
-    document.getElementById('predVal').innerHTML = `<span class="grade-hero-trend ${escapeHtml(course.trend)}"><span class="arrow">${TREND_ARROW[course.trend]}</span>${escapeHtml(course.predicted)}</span><span class="grade-hero-pct">${escapeHtml(course.predictedPct)}%</span>`;
+    document.getElementById('curVal').innerHTML = `<span class="${gradeBand(course.grade)}">${escapeHtml(course.grade)}</span>${course.grade === '—' ? '' : `<span class="grade-hero-pct">${escapeHtml(course.pct)}%</span>`}`;
+    document.getElementById('predVal').innerHTML = course.predicted === '—' ? '<span class="grade-hero-trend flat">—</span>' : `<span class="grade-hero-trend ${escapeHtml(course.trend)}"><span class="arrow">${TREND_ARROW[course.trend]}</span>${escapeHtml(course.predicted)}</span><span class="grade-hero-pct">${escapeHtml(course.predictedPct)}%</span>`;
     document.getElementById('predBlock').setAttribute('aria-label', `Why is ${course.name} predicted ${course.predicted}, ${course.predictedPct} percent? Show reasoning.`);
     document.getElementById('gradingPeriodNote').textContent = `Grading period: ${GRADING_PERIOD}`;
 
@@ -1573,7 +1578,7 @@
     }
     function renderCategories() {
       const gb = GRADEBOOK[course.id];
-      document.getElementById('gradeSummaryTotal').textContent = `${course.pct}% overall`;
+      document.getElementById('gradeSummaryTotal').textContent = course.grade === '—' ? 'No overall grade yet' : `${course.pct}% overall`;
       document.getElementById('gbCategories').innerHTML = gb.categories.map((cat, ci) => {
         const avg = categoryAverage(cat.assignments);
         const barColor = avg !== null ? barColorForPct(avg) : 'var(--border)';
@@ -1611,7 +1616,8 @@
       const a = cat && cat.assignments[+row.dataset.idx];
       if (!a) return;
       try { sessionStorage.setItem('schoolagy_gb_open', JSON.stringify({ courseId: course.id, title: a.title, category: cat.name, graded: !!a.graded, score: a.score, points: a.points })); } catch {}
-      window.location.href = `assignment.html?course=${encodeURIComponent(course.id)}&title=${encodeURIComponent(a.title)}&from=gradebook`;
+      const idPart = /^\d{1,24}$/.test(String(a.id || '')) ? `&id=${encodeURIComponent(a.id)}` : '';
+      window.location.href = `assignment.html?course=${encodeURIComponent(course.id)}&title=${encodeURIComponent(a.title)}${idPart}&from=gradebook`;
     });
 
     // ------------------------------------------------------------------
@@ -1810,7 +1816,7 @@
     // feed back into the category list above.
     function recomputeCalc() {
       const gb = GRADEBOOK[course.id];
-      let overall = 0;
+      let overall = 0, weightUsed = 0;
       gb.categories.forEach(cat => {
         let earned = 0, possible = 0;
         cat.assignments.forEach(a => {
@@ -1826,9 +1832,11 @@
           // same as before (doesn't count as a zero).
           if (scoreToUse !== null) { earned += scoreToUse; possible += a.points; }
         });
-        const avg = possible > 0 ? (earned / possible) * 100 : 0;
-        overall += avg * (cat.weight / 100);
+        // A category with nothing counted yet is left out and the other
+        // weights scale up (2026-10-05), as in Google Classroom.
+        if (possible > 0) { overall += (earned / possible) * 100 * cat.weight; weightUsed += cat.weight; }
       });
+      overall = weightUsed > 0 ? overall / weightUsed : 0;
 
       const pct = Math.max(0, Math.min(100, overall));
       const letter = letterFromPct(pct);

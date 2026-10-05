@@ -525,14 +525,24 @@
       window.addEventListener('storage', function (e) { if (e.key === 'schoolagy_settings_options') applyPotato(); });
     })();
 
-    // Sign-in buttons (2026-10-04). Schoology appAuth and Google sign-in
-    // (for Google Classroom schools) aren't built yet. In the preview they
-    // walk on to onboarding like the old mock; in the built app
-    // (window.__averagesSignIn exists) they say what's coming instead.
+    // Sign-in buttons (2026-10-04). Schoology appAuth isn't built yet: in
+    // the built app (window.__averagesSignIn exists) it says it's coming.
+    // Google (for Google Classroom schools) is live since 2026-10-05: the
+    // built app's __averagesGoogleSignIn sends the student to Google and
+    // back here with ?google=<outcome>. In the preview both walk on to
+    // onboarding like the old mock.
     const ssoNote = document.getElementById('ssoNote');
     const SSO_SOON = {
       schoology: "Sign in with Schoology is waiting on Schoology's approval. It's coming soon.",
       google: 'Sign in with Google, for Google Classroom schools, is coming soon.',
+    };
+    const GOOGLE_RESULT = {
+      ok: 'Signed in with Google. Opening Averages.io…',
+      cancelled: 'Google sign-in was cancelled. Try again whenever you’re ready.',
+      permissions: 'Averages.io needs to see your classes and your coursework and grades in Google Classroom. Try again and leave those boxes ticked on Google’s screen.',
+      expired: 'That sign-in took too long or was started in another tab. Try again.',
+      failed: 'Something went wrong signing in with Google. Try again in a moment.',
+      unavailable: 'Sign in with Google isn’t switched on yet.',
     };
     // 13+ (2026-10-04): decides which modes onboarding offers (Classic is
     // 13+; Incognito is for everyone). Kept on this device only.
@@ -540,8 +550,32 @@
     function saveAge() { try { localStorage.setItem('schoolagy_13plus', age13.checked ? 'yes' : 'no'); } catch {} }
     age13.addEventListener('change', saveAge);
     document.getElementById('connectBtn').addEventListener('click', saveAge, true);
+    const googleOutcome = new URLSearchParams(location.search).get('google');
+    if (googleOutcome && Object.prototype.hasOwnProperty.call(GOOGLE_RESULT, googleOutcome)) {
+      ssoNote.textContent = GOOGLE_RESULT[googleOutcome];
+      ssoNote.hidden = false;
+      // Just back from Google: keep the 13+ answer they gave before leaving.
+      try { age13.checked = localStorage.getItem('schoolagy_13plus') === 'yes'; } catch {}
+    }
+    // Back from Google with the browser's Back button: undo "Opening Google…".
+    window.addEventListener('pageshow', (e) => {
+      if (!e.persisted) return;
+      document.querySelectorAll('[data-provider].busy').forEach(b => {
+        b.classList.remove('busy');
+        b.querySelector('.sso-label').textContent = b.dataset.label || b.querySelector('.sso-label').textContent;
+      });
+    });
     document.querySelectorAll('[data-provider]').forEach(b => b.addEventListener('click', () => {
       saveAge();
+      if (b.dataset.provider === 'google' && window.__averagesGoogleSignIn) {
+        if (b.classList.contains('busy')) return;
+        b.dataset.label = b.querySelector('.sso-label').textContent;
+        b.classList.add('busy');
+        b.querySelector('.sso-label').textContent = 'Opening Google…';
+        ssoNote.hidden = true;
+        window.__averagesGoogleSignIn();
+        return;
+      }
       if (window.__averagesSignIn) {
         ssoNote.textContent = SSO_SOON[b.dataset.provider];
         ssoNote.hidden = false;
