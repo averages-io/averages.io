@@ -354,6 +354,9 @@
   .file-menu-label { padding: 4px 10px 8px; font-size: 0.72rem; font-weight: 700; color: var(--text-muted); overflow-wrap: anywhere; }
   .file-menu-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; padding: 8px 10px; border: none; background: none; border-radius: 6px; font-family: inherit; font-size: 0.8rem; font-weight: 700; color: var(--text-dark); text-align: left; }
   .file-menu-item:disabled { color: var(--text-faint); cursor: default; }
+  .file-menu-item:not(:disabled) { cursor: pointer; }
+  .file-menu-item:not(:disabled):hover, .file-menu-item:not(:disabled):focus-visible { background: var(--panel-inner); outline: none; }
+  .file-menu-item small { display: block; margin-top: 2px; font-size: 0.68rem; font-weight: 700; color: var(--text-faint); }
   .soon { font-size: 0.66rem; font-weight: 800; color: var(--text-faint); white-space: nowrap; }
   /* Add Submission: other places to add a file from */
   .upload-sources { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
@@ -661,6 +664,7 @@
     font-size: 0.78rem;
     cursor: pointer;
   }
+  a.modal-btn { display: inline-flex; align-items: center; text-decoration: none; }
   .modal-btn.secondary { background: var(--panel-inner); color: var(--text-dark); }
   .modal-btn.secondary:hover { background: var(--border); }
   .modal-btn.primary { background: var(--accent); color: #fff; }
@@ -1615,7 +1619,7 @@
       if (actions === 'full') {
         const ext = String(m.ext || '').toLowerCase();
         const canva = (EDITOR_PREF === 'gdrive' && DRIVE_EXTS.includes(ext))
-          ? `<button class="canva-btn drive-btn" type="button" data-file-action="gdrive" data-file-name="${nm}" data-file-ext="${ex}"${fid}${CANVA_PREVIEW ? '' : ' aria-haspopup="menu"'}><span>Edit in Google Drive</span></button>`
+          ? `<button class="canva-btn drive-btn" type="button" data-file-action="gdrive" data-file-name="${nm}" data-file-ext="${ex}"${fid}${CANVA_PREVIEW || (LIVE && m.fileId) ? '' : ' aria-haspopup="menu"'}><span>Edit in Google Drive</span></button>`
           : CANVA_EXTS.includes(ext)
           ? `<button class="canva-btn" type="button" data-file-action="canva" data-file-name="${nm}"${fid}${CANVA_PREVIEW || (LIVE && m.fileId) ? '' : ' aria-haspopup="menu"'}><span class="canva-mark" aria-hidden="true"></span><span>Edit in Canva</span></button>` : '';
         btns = `
@@ -1786,6 +1790,154 @@
     }
 
     // ------------------------------------------------------------------
+    // Google Drive and OneDrive, signed in (2026-10-05). Both run in this
+    // browser with public/js/averages-cloud.js: the file comes from our API
+    // (/data/attachment) and goes straight to the student's own drive, into
+    // an "Averages.io" folder. Their Google/Microsoft tokens never reach our
+    // servers. Sign-in windows must open inside the click, so the token is
+    // asked for before anything is awaited.
+    // ------------------------------------------------------------------
+    let cloudCfg = null;   // null until loaded: { google, microsoft }
+    const CLOUD_NAME = { gdrive: 'Google Drive', onedrive: 'OneDrive' };
+    // Where saved files go: a folder Averages.io makes in Drive, and OneDrive's app folder (all it can reach).
+    const CLOUD_WHERE = { gdrive: 'the Averages.io folder in your Google Drive', onedrive: 'the Apps/Averages.io folder in your OneDrive' };
+    function loadCloudScript() {
+      return new Promise((resolve, reject) => {
+        if (window.AveragesCloud) { resolve(window.AveragesCloud); return; }
+        const sc = document.createElement('script');
+        sc.src = '/js/averages-cloud.js';
+        sc.onload = () => (window.AveragesCloud ? resolve(window.AveragesCloud) : reject(new Error('cloud')));
+        sc.onerror = () => reject(new Error('cloud'));
+        document.head.appendChild(sc);
+      });
+    }
+    async function loadCloud() {
+      try {
+        const C = await loadCloudScript();
+        const cfg = await C.config();
+        if (cfg.failed) return;
+        cloudCfg = cfg;
+        if (cfg.google) C.prepareGoogle().catch(() => {});
+        mergeDrafts();
+        if (await C.refreshDriveDrafts(String(item.courseId), String(item.id))) mergeDrafts();
+      } catch {
+        /* Save to cloud just says Coming soon */
+      }
+    }
+    function attachmentSource(btn) {
+      return { section: String(item.courseId), assignment: String(item.id), fileId: btn.dataset.fileId, name: btn.dataset.fileName || 'File' };
+    }
+    function showCloudProblem(title, err) {
+      const C = window.AveragesCloud;
+      const code = err && err.code ? err.code : String(err || '');
+      openModal(`
+        <h3>${escapeHtml(title)}</h3>
+        <p>${escapeHtml(C ? C.messageFor(err) : 'Something went wrong. Try again in a moment.')}</p>
+        <div class="modal-actions">
+          ${code === 'signed_out' ? '<button class="modal-btn primary" type="button" id="cloudProbOk">Sign in</button>' : '<button class="modal-btn primary" type="button" id="cloudProbOk">OK</button>'}
+        </div>`);
+      modalBox.setAttribute('role', 'alertdialog'); modalBox.setAttribute('aria-modal', 'true');
+      const ok = document.getElementById('cloudProbOk');
+      ok.addEventListener('click', () => { if (code === 'signed_out') window.location.href = '/'; else closeModal(); });
+      ok.focus();
+    }
+    function showOpenLink(title, text, url, linkLabel) {
+      const C = window.AveragesCloud;
+      const link = C && C.linkOk(url)
+        ? `<a class="modal-btn primary" id="cloudOpenLink" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(linkLabel)}</a>` : '';
+      openModal(`
+        <h3>${escapeHtml(title)}</h3>
+        <p>${escapeHtml(text)}</p>
+        <div class="modal-actions">
+          <button class="modal-btn ${link ? 'secondary' : 'primary'}" type="button" id="cloudOpenDone">Done</button>
+          ${link}
+        </div>`);
+      document.getElementById('cloudOpenDone').addEventListener('click', closeModal);
+      const a = document.getElementById('cloudOpenLink');
+      if (a) a.addEventListener('click', () => setTimeout(closeModal, 0));
+      (a || document.getElementById('cloudOpenDone')).focus();
+    }
+    /** Asks for the token inside the click (it may open a sign-in window). */
+    function cloudToken(C, app) {
+      if (app === 'gdrive') {
+        if (!C.googleReady()) { C.prepareGoogle().catch(() => {}); return Promise.reject({ code: 'not_ready' }); }
+        return C.googleSession({ interactive: true });
+      }
+      return C.oneDriveToken({ interactive: true });
+    }
+    function saveToCloud(app, btn) {
+      const C = window.AveragesCloud;
+      const name = CLOUD_NAME[app];
+      if (!C) { showCloudProblem(`Couldn’t save to ${name}`, 'not_ready'); return; }
+      const src = attachmentSource(btn);
+      const pending = cloudToken(C, app);
+      openModal(`
+        <h3>Saving to ${escapeHtml(name)}…</h3>
+        <p>Copying "${escapeHtml(src.name)}" to ${escapeHtml(CLOUD_WHERE[app])}. If a sign-in window opened, finish there first.</p>`);
+      modalBox.setAttribute('aria-busy', 'true');
+      pending
+        .then(async token => {
+          const blob = await C.fetchAttachment(src);
+          return app === 'gdrive' ? C.googleUpload(token, { name: src.name, blob }) : C.oneDriveUpload(token, { name: src.name, blob });
+        })
+        .then(f => {
+          modalBox.removeAttribute('aria-busy');
+          showOpenLink(`Saved to ${name}`, `"${f.name || src.name}" is in ${CLOUD_WHERE[app]}.`, f.webViewLink || f.webUrl, `Open in ${name}`);
+        })
+        .catch(err => {
+          modalBox.removeAttribute('aria-busy');
+          if (err && err.code === 'popup_closed') { closeModal(); return; }
+          showCloudProblem(`Couldn’t save to ${name}`, err);
+        });
+    }
+    function liveEditInDrive(btn) {
+      if (btn.getAttribute('aria-busy') === 'true') return;
+      const C = window.AveragesCloud;
+      if (!C || !cloudCfg) { showCloudProblem('Couldn’t open this in Google Drive', 'not_ready'); return; }
+      if (!cloudCfg.google) { showCloudProblem('Google Drive is coming soon', 'not_configured'); return; }
+      const src = attachmentSource(btn);
+      // Already signed in to Google in this tab: the new tab opens now, inside
+      // this click, and the file loads into it when it's ready. Otherwise this
+      // click goes to Google's sign-in window, and the file opens from a link.
+      const signedIn = C.hasToken('gdrive') && C.googleReady();
+      const pending = cloudToken(C, 'gdrive');
+      let tab = null;
+      if (signedIn) {
+        try {
+          tab = window.open('', '_blank');
+          if (tab) {
+            tab.opener = null;
+            tab.document.title = 'Opening Google Drive…';
+            tab.document.body.style.font = '15px system-ui, sans-serif';
+            tab.document.body.textContent = 'Opening Google Drive…';
+          }
+        } catch { tab = null; }
+      }
+      const label = btn.querySelector('span:last-child');
+      const was = label ? label.textContent : '';
+      btn.setAttribute('aria-busy', 'true');
+      if (label) label.textContent = 'Opening Google Drive…';
+      const done = () => { btn.removeAttribute('aria-busy'); if (label) label.textContent = was; };
+      pending
+        .then(token => C.editInGoogleDrive(token, src))
+        .then(d => {
+          done();
+          mergeDrafts();
+          const row = draftsList.querySelector(`[data-draft="g-${CSS.escape(d.fileId)}"]`);
+          if (row) { row.scrollIntoView({ block: 'nearest', behavior: reduceMotion() ? 'auto' : 'smooth' }); pulse(row); }
+          if (tab && !tab.closed && C.linkOk(d.webViewLink)) { tab.location.href = d.webViewLink; return; }
+          if (tab) { try { tab.close(); } catch {} }
+          showOpenLink('Ready in Google Drive', `"${d.name}" is in your Google Drive and in Drafts here.`, d.webViewLink, 'Open in Google Drive');
+        })
+        .catch(err => {
+          done();
+          if (tab) { try { tab.close(); } catch {} }
+          if (err && err.code === 'popup_closed') return;
+          showCloudProblem('Couldn’t open this in Google Drive', err);
+        });
+    }
+
+    // ------------------------------------------------------------------
     // Shared small modal — Add Submission and the View/Download file
     // info both open into this one overlay.
     // ------------------------------------------------------------------
@@ -1823,15 +1975,30 @@
       const items = kind === 'canva' ? ['Open in Canva'] : kind === 'gdrive' ? ['Open in Google Drive'] : ['Google Drive', 'OneDrive'];   // OneDrive back 2026-10-05
       const editIn = kind === 'canva' ? 'Canva' : kind === 'gdrive' ? 'Google Drive' : '';
       fileMenu.setAttribute('aria-label', editIn ? `Edit in ${editIn}` : 'Save to cloud');
+      // Signed in (2026-10-05): Save to cloud is real for whichever app is set up.
+      const liveSave = kind === 'cloud' && LIVE_DETAIL && ID_OK(btn.dataset.fileId) && cloudCfg;
+      const ready = { 'Google Drive': liveSave && !!cloudCfg.google, OneDrive: liveSave && !!cloudCfg.microsoft };
+      const appId = { 'Google Drive': 'gdrive', OneDrive: 'onedrive' };
       fileMenu.innerHTML = `<div class="file-menu-label">${editIn ? 'Edit' : 'Save'} "${escapeHtml(name)}" ${editIn ? 'in ' + editIn : 'to'}</div>` +
-        items.map(n => `<button class="file-menu-item" type="button" role="menuitem" disabled><span>${n}</span><span class="soon">Coming soon</span></button>`).join('');
+        items.map(n => ready[n]
+          ? `<button class="file-menu-item" type="button" role="menuitem" data-save="${appId[n]}"><span>${n}<small>${appId[n] === 'onedrive' ? 'Into Apps/Averages.io' : 'Into an Averages.io folder'}</small></span></button>`
+          : `<button class="file-menu-item" type="button" role="menuitem" disabled><span>${n}</span><span class="soon">Coming soon</span></button>`).join('');
       fileMenu.hidden = false;
       const r = btn.getBoundingClientRect(), w = fileMenu.offsetWidth, h = fileMenu.offsetHeight;
       fileMenu.style.left = Math.max(8, Math.min(r.right - w, window.innerWidth - w - 8)) + 'px';
       fileMenu.style.top = (r.bottom + 6 + h > window.innerHeight - 8 ? Math.max(8, r.top - h - 6) : r.bottom + 6) + 'px';
       btn.setAttribute('aria-expanded', 'true');
       fileMenuFor = btn;
+      const first = fileMenu.querySelector('.file-menu-item:not(:disabled)');
+      if (first) first.focus();
     }
+    fileMenu.addEventListener('click', e => {
+      const it = e.target.closest('[data-save]');
+      if (!it || !fileMenuFor) return;
+      const btn = fileMenuFor;
+      closeFileMenu();
+      saveToCloud(it.dataset.save, btn);
+    });
     document.addEventListener('click', e => { if (!fileMenu.hidden && !fileMenu.contains(e.target) && !(fileMenuFor && fileMenuFor.contains(e.target))) closeFileMenu(); });
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && !fileMenu.hidden) { const b = fileMenuFor; closeFileMenu(); if (b) b.focus(); } });
     window.addEventListener('scroll', closeFileMenu, true);
@@ -1849,6 +2016,7 @@
       else if (btn.dataset.fileAction === 'download') downloadPlaceholderFile(btn.dataset.fileName, btn.dataset.fileExt);
       else if ((btn.dataset.fileAction === 'canva' || btn.dataset.fileAction === 'gdrive') && CANVA_PREVIEW) { closeFileMenu(); editInCanvaPreview(btn); }
       else if (btn.dataset.fileAction === 'canva' && liveFile) { closeFileMenu(); liveEditInCanva(btn); }
+      else if (btn.dataset.fileAction === 'gdrive' && liveFile) { closeFileMenu(); liveEditInDrive(btn); }
       else openFileMenu(btn, btn.dataset.fileAction);
     });
     // Same download delegation as the Attached Materials list above, but
@@ -1872,16 +2040,16 @@
     const previousScore = (item.status === 'graded' && typeof item.score === 'number') ? item.score : null;
 
     const BANNER_COPY = {
-      overdue: () => ({ label: 'Missing — nothing submitted', meta: item.due ? `Was due ${item.due}` : '' }),
+      overdue: () => ({ label: 'Missing: nothing submitted', meta: item.due ? `Was due ${item.due}` : '' }),
       upcoming: () => ({ label: 'Not submitted yet', meta: item.due ? `Due ${item.due}` : '' }),
       submitted: () => {
         const latest = submissionHistory[submissionHistory.length - 1];
         let meta = latest ? `Submitted ${latest.timestamp}` : '';
         if (previousScore !== null) meta += meta ? ` · previously graded ${previousScore}%` : `Previously graded ${previousScore}%`;
-        return { label: 'Submitted — awaiting grade', meta };
+        return { label: 'Submitted: awaiting grade', meta };
       },
       graded: () => ({ label: 'Graded', meta: typeof item.score === 'number' ? `${item.score}%` : '' }),
-      returned: () => ({ label: 'Returned — revision requested', meta: item.returnedOn ? `Returned ${item.returnedOn}` : '' }),
+      returned: () => ({ label: 'Returned: revision requested', meta: item.returnedOn ? `Returned ${item.returnedOn}` : '' }),
     };
 
     // Rows are clickable (2026-08-31, per Martin's request) — each one
@@ -2353,6 +2521,24 @@
       const nm = escapeHtml(d.name);
       const tip = (label, inner) => `<span class="tipwrap">${inner}<span class="tip" role="tooltip">${label}</span></span>`;
       const testItem = item.type === 'assessment';
+      if (d.live && d.drive) {
+        // Signed in (2026-10-05): a Google Doc/Slides/Sheet made by Edit in
+        // Google Drive. Remembered in this browser; the file is in their Drive.
+        const submitDrive = `<button class="draft-submit" type="button" data-draft-action="submit" disabled aria-label="Submit ${nm}">Submit</button>`;
+        return `
+        <div class="material-row file-bar draft-row" data-draft="${escapeHtml(d.id)}">
+          ${draftBadgeHTML(d)}
+          <span class="draft-text">
+            <span class="material-name">${nm}</span>
+            <span class="draft-meta">Google Drive draft · Edited ${escapeHtml(d.edited)}</span>
+          </span>
+          <div class="material-actions">
+            <button class="canva-btn drive-btn" type="button" data-draft-action="open" aria-label="Open ${nm} in Google Drive"><span>Open in Google Drive</span></button>
+            ${tip(testItem ? 'Tests are turned in on Schoology' : 'Turning in from Averages.io is coming soon', submitDrive)}
+            ${tip('Delete draft', `<button class="material-icon-btn" type="button" data-draft-action="delete" aria-label="Delete draft ${nm}">${TRASH_ICON}</button>`)}
+          </div>
+        </div>`;
+      }
       if (d.live) {
         // Signed in (2026-10-05): a real Canva design. Turning it in from
         // Averages.io isn't built yet (it needs a PDF export from Canva), so
@@ -2407,7 +2593,18 @@
       return new Date(t).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     }
     function liveDraft(api) {
-      return { id: 'c-' + api.designId, designId: String(api.designId), name: String(api.title || api.sourceName || 'Canva design'), app: 'canva', edited: editedLabel(api.updatedAt), live: true };
+      return { id: 'c-' + api.designId, designId: String(api.designId), name: String(api.title || api.sourceName || 'Canva design'), app: 'canva', edited: editedLabel(api.updatedAt), t: Number(api.updatedAt) || 0, live: true };
+    }
+    function driveDraft(g) {
+      return { id: 'g-' + g.fileId, driveId: String(g.fileId), name: String(g.name || 'Google Drive file'), app: 'gdrive', ext: String(g.ext || 'docx'), edited: editedLabel(g.modifiedTime), t: Number(g.modifiedTime) || 0, link: String(g.webViewLink || ''), live: true, drive: true };
+    }
+    // Canva's drafts come from the API, Google Drive's from this browser; one list, newest first.
+    let canvaDrafts = [];
+    function mergeDrafts() {
+      const C = window.AveragesCloud;
+      const drive = C ? C.listDriveDrafts(String(item.courseId), String(item.id)).map(driveDraft) : [];
+      drafts.splice(0, drafts.length, ...canvaDrafts.concat(drive).sort((a, b) => (b.t || 0) - (a.t || 0)));
+      renderDrafts();
     }
     function upsertLiveDraft(api) {
       if (!api || !api.designId) return;
@@ -2420,9 +2617,8 @@
         const res = await fetch(`${averagesApiBase()}/canva/drafts?section=${encodeURIComponent(item.courseId)}&assignment=${encodeURIComponent(item.id)}`, { credentials: 'include' });
         if (!res.ok) return;
         const j = await res.json();
-        // Newest first, as the API sends them.
-        drafts.splice(0, drafts.length, ...(Array.isArray(j.drafts) ? j.drafts : []).filter(x => x && x.designId).map(liveDraft));
-        renderDrafts();
+        canvaDrafts = (Array.isArray(j.drafts) ? j.drafts : []).filter(x => x && x.designId).map(liveDraft);
+        mergeDrafts();
         if (cameBack && drafts.length) pulse(draftsList.querySelector('.draft-row'));
       } catch {
         /* Drafts are extra: the rest of the page works without them */
@@ -2537,6 +2733,12 @@
       document.getElementById('draftDelOk').addEventListener('click', async () => {
         closeModal();
         if (!d.live) { removeDraftRow(d.id); return; }
+        if (d.drive) {
+          // Only forgotten here; the file stays in their Google Drive.
+          if (window.AveragesCloud) window.AveragesCloud.removeDriveDraft(d.driveId);
+          removeDraftRow(d.id);
+          return;
+        }
         // Signed in: forget it on the API first (the design stays in Canva).
         try {
           const res = await fetch(`${averagesApiBase()}/canva/drafts/${encodeURIComponent(d.designId)}`, { method: 'DELETE', credentials: 'include' });
@@ -2557,7 +2759,15 @@
       const d = drafts.find(x => x.id === id);
       if (!d) return;
       if (btn.dataset.draftAction === 'delete') { confirmDeleteDraft(d, btn); return; }
-      if (btn.dataset.draftAction === 'open') { if (d.live) openLiveDraft(d, btn); return; }
+      if (btn.dataset.draftAction === 'open') {
+        if (d.drive) {
+          const C = window.AveragesCloud;
+          if (C && C.linkOk(d.link)) window.open(d.link, '_blank', 'noopener,noreferrer');
+          return;
+        }
+        if (d.live) openLiveDraft(d, btn);
+        return;
+      }
       // Submit: the Canva design goes in as a PDF, like any other turn-in.
       removeDraftRow(id, () => {
         // Canva designs go in as a PDF; a Google Drive file in its own format.
@@ -2586,6 +2796,7 @@
         } catch (e) {}
       }
       loadLiveDrafts(back === 'saved');
+      loadCloud();
     }
 
     // Attach from Files (2026-10-05, per Martin): Files' "Attach to an

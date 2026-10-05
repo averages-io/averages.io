@@ -554,6 +554,10 @@
   .fx-tile[aria-busy="true"] { opacity: 0.6; cursor: progress; }
   .fx-connect { margin-top: 12px; border: none; border-radius: 999px; background: var(--accent); color: #fff; font: inherit; font-size: 0.8rem; font-weight: 800; padding: 8px 18px; cursor: pointer; }
   .fx-connect:hover { background: var(--accent-dark); }
+  .lf-sec + .lf-sec { margin-top: 30px; }
+  .lf-sec .fx-empty { margin-top: 14px; }
+  .lf-sec .fx-grid { margin-top: 14px; }
+  .fx-add:disabled { opacity: 0.6; cursor: progress; }
   .fx-more-designs { margin-top: 12px; border: 1px solid var(--border); border-radius: 999px; background: var(--panel-bg); font: inherit; font-size: 0.8rem; font-weight: 800; color: var(--text-dark); padding: 8px 16px; cursor: pointer; }
   .fx-menu { position: fixed; z-index: 300; min-width: 220px; max-width: calc(100vw - 16px); background: var(--panel-bg); border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 18px 44px -14px rgba(0,0,0,0.45); padding: 6px; }
   .fx-menu[hidden] { display: none; }
@@ -843,10 +847,10 @@
     // (drive.file only, never their whole Drive) and their Canva designs.
     //
     // Sample data for the preview only. Signed in (LegacyPage.tsx sets
-    // window.__AVERAGES_MODE__), nothing here is real yet: course files
-    // need an API route that lists every course's materials, Drive needs the
-    // Picker + drive.file, Canva needs GET /canva/designs. Until then a
-    // signed-in student sees a "coming soon" note, never these samples.
+    // window.__AVERAGES_MODE__) a student never sees these samples: live
+    // mode shows their real Google Drive, OneDrive and Canva files instead
+    // (liveFiles below). Course files still need an API route that lists
+    // every course's materials.
     // FILE_COURSES (not COURSES) on purpose, so scripts/port-pages.mjs
     // doesn't swap in live course data next to sample files.
     // ------------------------------------------------------------------
@@ -1049,8 +1053,11 @@
       if (first) first.focus();
     }
     // ------------------------------------------------------------------
-    // Signed in (2026-10-05): the student's real Canva designs. Course files
-    // and Google Drive/OneDrive are still on the way.
+    // Signed in (2026-10-05): the student's Google Drive and OneDrive files
+    // and their Canva designs. Course files are still on the way.
+    // Google Drive and OneDrive run in this browser (public/js/averages-cloud.js)
+    // and only ever see the files Averages.io made or the student picked:
+    // Google's drive.file permission, and OneDrive's Averages.io folder.
     // ------------------------------------------------------------------
     function liveFiles() {
       const api = window.location.hostname.endsWith('averages.io') ? 'https://api.averages.io' : 'http://localhost:8787';
@@ -1058,10 +1065,13 @@
       const main = document.getElementById('fxMain');
       document.getElementById('fxSide').hidden = true;
       document.getElementById('fx').style.gridTemplateColumns = 'minmax(0, 1fr)';
-      document.getElementById('filesSub').textContent = 'Your Canva designs';
-      const soon = '<p class="fx-note">Course files, Google Drive and OneDrive are on the way.</p>';
-      let items = [];
-      let next = null;
+      document.getElementById('filesSub').textContent = 'Your Google Drive, OneDrive and Canva files';
+      main.innerHTML = `
+        <section class="lf-sec" id="lfDrive" aria-label="Google Drive"></section>
+        <section class="lf-sec" id="lfOne" aria-label="OneDrive"></section>
+        <section class="lf-sec" id="lfCanva" aria-label="Canva"></section>
+        <p class="fx-note">Google Drive and OneDrive show the files you save, edit or add with Averages.io, not your whole drive. Course files are on the way.</p>`;
+      const canvaBox = document.getElementById('lfCanva');
       const dayLabel = ms => {
         const t = Number(ms) || 0;
         if (!t) return '';
@@ -1070,6 +1080,140 @@
         if (days === 1) return 'Yesterday';
         return new Date(t).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
       };
+      const head = (title, count, tools) => `<div class="fx-head"><h2>${esc(title)}</h2>${count == null ? '' : `<span class="fx-meta">${esc(count)}</span>`}${tools ? `<div class="fx-tools">${tools}</div>` : ''}</div>`;
+
+      // ---------- Google Drive and OneDrive ----------
+      const CLOUD = {
+        gdrive: { name: 'Google Drive', box: document.getElementById('lfDrive'), state: 'loading', files: [], busy: false },
+        onedrive: { name: 'OneDrive', box: document.getElementById('lfOne'), state: 'loading', files: [], busy: false },
+      };
+      let cfg = null;
+      const C = () => window.AveragesCloud || null;
+      const G_TYPE = {
+        'application/vnd.google-apps.document': ['doc', 'Docs'],
+        'application/vnd.google-apps.spreadsheet': ['sheet', 'Sheets'],
+        'application/vnd.google-apps.presentation': ['slides', 'Slides'],
+        'application/pdf': ['pdf', 'PDF'],
+      };
+      function typeOf(name, mime) {
+        if (G_TYPE[mime]) return G_TYPE[mime];
+        const m = String(name || '').match(/\.([a-z0-9]{1,6})$/i);
+        const ext = m ? m[1].toLowerCase() : 'file';
+        return [ext, ext.toUpperCase()];
+      }
+      function normalize(app, f) {
+        if (app === 'gdrive') {
+          const [type, kind] = typeOf(f.name, f.mimeType);
+          return { name: String(f.name || 'Untitled'), type, kind, url: String(f.webViewLink || ''), t: Date.parse(f.modifiedTime) || 0 };
+        }
+        const [type, kind] = typeOf(f.name, '');
+        return { name: String(f.name || 'Untitled'), type, kind, url: String(f.webUrl || ''), t: Date.parse(f.lastModifiedDateTime) || 0 };
+      }
+      function cloudTile(app, f, i) {
+        const thumb = `<span class="fx-thumb" style="background:${THUMB[f.type] || '#e4e4e8'}"><span class="page"><i></i><i></i><i></i><i></i><i></i></span></span>`;
+        const when = dayLabel(f.t);
+        return `<button class="fx-tile" type="button" data-open-cloud="${app}" data-i="${i}" aria-label="Open ${esc(f.name)} in ${esc(CLOUD[app].name)}">${thumb}<span class="fx-tile-name">${esc(f.name)}</span><span class="fx-tile-src">${esc(f.kind)}${when ? ' · ' + esc(when) : ''}</span></button>`;
+      }
+      function drawCloud(app) {
+        const c = CLOUD[app];
+        const acct = C() ? C().accounts()[app] : null;
+        const canPick = app === 'gdrive' && cfg && cfg.google && cfg.google.apiKey && cfg.google.appId;
+        const addBtn = canPick ? `<button class="fx-add" type="button" data-pick-drive${c.busy ? ' disabled' : ''}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add from Google Drive</button>` : '';
+        let body;
+        if (c.state === 'loading') body = `<div class="fx-empty"><strong>Loading your ${esc(c.name)} files…</strong></div>`;
+        else if (c.state === 'soon') body = `<div class="fx-empty"><strong>${esc(c.name)} is coming soon</strong>Files you save to ${esc(c.name)} with Averages.io will show up here.</div>`;
+        else if (c.state === 'error') body = `<div class="fx-empty"><strong>Couldn’t load your ${esc(c.name)} files</strong>${esc(c.message || 'Try again in a moment.')}<br><button class="fx-more-designs" type="button" data-cloud-retry="${app}">Try again</button></div>`;
+        else if (c.state === 'connect') body = `<div class="fx-empty"><strong>Connect ${esc(c.name)} to see your files here</strong>Averages.io only sees the files it saves there or that you add, never the rest of your drive.<br><button class="fx-connect" type="button" data-cloud-connect="${app}"${c.busy ? ' disabled' : ''}>Connect ${esc(c.name)}</button></div>`;
+        else if (c.state === 'click') body = `<div class="fx-empty"><strong>Your ${esc(c.name)} files</strong>${acct && (acct.email || acct.username) ? 'Connected as ' + esc(acct.email || acct.username) + '. ' : ''}${esc(c.name)} may ask you to confirm it’s you.<br><button class="fx-connect" type="button" data-cloud-show="${app}"${c.busy ? ' disabled' : ''}>Show files</button></div>`;
+        else if (!c.files.length) body = `<div class="fx-empty"><strong>No files yet</strong>${app === 'gdrive' ? 'Save to cloud or Edit in Google Drive on an assignment file, or add files from your Drive.' : 'Save to cloud on an assignment file and it shows up here, in your OneDrive’s Apps/Averages.io folder.'}</div>`;
+        else body = `<div class="fx-grid">${c.files.map((f, i) => cloudTile(app, f, i)).join('')}</div>`;
+        const count = c.state === 'ready' ? `${c.files.length} file${c.files.length === 1 ? '' : 's'}` : null;
+        c.box.innerHTML = head(c.name, count, c.state === 'ready' || c.state === 'click' ? addBtn : '') + body;
+      }
+      async function listCloud(app, token) {
+        const c = CLOUD[app];
+        c.state = 'loading';
+        drawCloud(app);
+        try {
+          const raw = app === 'gdrive' ? await C().googleList(token) : await C().oneDriveList(token);
+          c.files = raw.map(f => normalize(app, f)).sort((a, b) => b.t - a.t);
+          c.state = 'ready';
+        } catch (err) {
+          c.state = err && err.code === 'needs_click' ? 'click' : 'error';
+          c.message = C().messageFor(err);
+        }
+        drawCloud(app);
+      }
+      /** On page load: list right away when this tab can, without opening anything. */
+      function startCloud(app) {
+        const c = CLOUD[app];
+        const configured = app === 'gdrive' ? !!cfg.google : !!cfg.microsoft;
+        if (!configured) { c.state = 'soon'; drawCloud(app); return; }
+        if (!C().accounts()[app]) { c.state = 'connect'; drawCloud(app); return; }
+        const quiet = app === 'gdrive' ? C().googleToken({}) : C().oneDriveToken({});
+        quiet.then(t => listCloud(app, t), () => { c.state = 'click'; drawCloud(app); });
+      }
+      /** Connect / Show files / Add: asks for the token inside the click, then lists. */
+      function askCloud(app, how) {
+        const c = CLOUD[app];
+        const K = C();
+        if (!K) return;
+        let pending;
+        if (app === 'gdrive') {
+          if (!K.googleReady()) {
+            K.prepareGoogle().catch(() => {});
+            c.state = 'error'; c.message = K.messageFor('not_ready'); drawCloud(app);
+            return;
+          }
+          pending = how === 'connect' ? K.connectGoogle().then(() => K.googleToken({})) : K.googleSession({ interactive: true });
+        } else {
+          pending = how === 'connect' ? K.connectOneDrive().then(() => K.oneDriveToken({})) : K.oneDriveToken({ interactive: true });
+        }
+        c.busy = true;
+        drawCloud(app);
+        pending
+          .then(async token => {
+            if (how === 'pick') {
+              const picked = await K.googlePick(token);
+              if (!picked.length && c.state === 'ready') return;
+            }
+            await listCloud(app, token);
+          })
+          .catch(err => {
+            if (err && err.code === 'popup_closed') return;
+            c.state = 'error';
+            c.message = K.messageFor(err);
+          })
+          .finally(() => { c.busy = false; drawCloud(app); });
+      }
+      function loadCloudScript() {
+        return new Promise((resolve, reject) => {
+          if (window.AveragesCloud) { resolve(window.AveragesCloud); return; }
+          const sc = document.createElement('script');
+          sc.src = '/js/averages-cloud.js';
+          sc.onload = () => (window.AveragesCloud ? resolve(window.AveragesCloud) : reject(new Error('cloud')));
+          sc.onerror = () => reject(new Error('cloud'));
+          document.head.appendChild(sc);
+        });
+      }
+      async function loadCloud() {
+        Object.keys(CLOUD).forEach(app => { CLOUD[app].state = 'loading'; drawCloud(app); });
+        try {
+          const K = await loadCloudScript();
+          const c = await K.config();
+          if (c.failed) throw new Error('config');
+          cfg = c;
+          if (cfg.google) K.prepareGoogle().catch(() => {});
+          startCloud('gdrive');
+          startCloud('onedrive');
+        } catch {
+          Object.keys(CLOUD).forEach(app => { CLOUD[app].state = 'error'; CLOUD[app].message = 'Try again in a moment.'; drawCloud(app); });
+        }
+      }
+
+      // ---------- Canva ----------
+      let items = [];
+      let next = null;
       // Canva's thumbnail links come from Canva's own CDN and expire; only https ones are used.
       const thumbOk = u => /^https:\/\//i.test(String(u || ''));
       function tile(d) {
@@ -1079,25 +1223,23 @@
         return `<button class="fx-tile" type="button" data-design="${esc(d.id)}" aria-label="Open ${esc(d.title || 'Untitled design')} in Canva">${thumb}<span class="fx-tile-name">${esc(d.title || 'Untitled design')}</span><span class="fx-tile-src">Canva${d.updatedAt ? ' · ' + esc(dayLabel(d.updatedAt)) : ''}</span></button>`;
       }
       function draw() {
-        main.innerHTML = `
-          <div class="fx-head"><h2>Canva</h2><span class="fx-meta">${items.length} design${items.length === 1 ? '' : 's'}${next ? '+' : ''}</span></div>
+        canvaBox.innerHTML = `
+          ${head('Canva', `${items.length} design${items.length === 1 ? '' : 's'}${next ? '+' : ''}`)}
           ${items.length ? `<div class="fx-grid">${items.map(tile).join('')}</div>` : '<div class="fx-empty"><strong>No designs yet</strong>Edit in Canva on an assignment file and it shows up here.</div>'}
-          ${next ? '<button class="fx-more-designs" type="button" data-more-designs>Show more</button>' : ''}
-          ${soon}`;
+          ${next ? '<button class="fx-more-designs" type="button" data-more-designs>Show more</button>' : ''}`;
       }
       async function load(more) {
-        if (!more) main.innerHTML = '<div class="fx-empty"><strong>Loading your Canva designs…</strong></div>';
+        if (!more) canvaBox.innerHTML = head('Canva') + '<div class="fx-empty"><strong>Loading your Canva designs…</strong></div>';
         try {
           const res = await fetch(`${api}/canva/designs${more && next ? '?continuation=' + encodeURIComponent(next) : ''}`, { credentials: 'include' });
           if (res.status === 401) { window.location.href = '/'; return; }
           if (res.status === 503) {
-            main.innerHTML = '<div class="fx-empty"><strong>Files is on the way</strong>Your course files, Google Drive and OneDrive files, and Canva designs will all show up here.</div>';
-            document.getElementById('filesSub').textContent = 'Coming soon';
+            canvaBox.innerHTML = head('Canva') + '<div class="fx-empty"><strong>Canva is coming soon</strong>Designs you edit in Canva from Averages.io will show up here.</div>';
             return;
           }
           const j = await res.json();
           if (j.connected === false) {
-            main.innerHTML = `<div class="fx-empty"><strong>Connect Canva to see your designs here</strong>Averages.io shows your Canva designs and opens them in Canva.<br><button class="fx-connect" type="button" data-connect-canva>Connect Canva</button></div>${soon}`;
+            canvaBox.innerHTML = head('Canva') + '<div class="fx-empty"><strong>Connect Canva to see your designs here</strong>Averages.io shows your Canva designs and opens them in Canva.<br><button class="fx-connect" type="button" data-connect-canva>Connect Canva</button></div>';
             return;
           }
           if (!res.ok) throw new Error(j.error || 'status ' + res.status);
@@ -1105,10 +1247,26 @@
           next = typeof j.continuation === 'string' ? j.continuation : null;
           draw();
         } catch {
-          main.innerHTML = `<div class="fx-empty"><strong>Couldn’t load your Canva designs</strong>Try again in a moment.<br><button class="fx-more-designs" type="button" data-retry-designs>Try again</button></div>${soon}`;
+          canvaBox.innerHTML = head('Canva') + '<div class="fx-empty"><strong>Couldn’t load your Canva designs</strong>Try again in a moment.<br><button class="fx-more-designs" type="button" data-retry-designs>Try again</button></div>';
         }
       }
       main.addEventListener('click', async e => {
+        // Google Drive / OneDrive first: each opens a window, so nothing is awaited before it.
+        const open = e.target.closest('[data-open-cloud]');
+        if (open) {
+          const f = CLOUD[open.dataset.openCloud] && CLOUD[open.dataset.openCloud].files[+open.dataset.i];
+          if (f && C() && C().linkOk(f.url)) window.open(f.url, '_blank', 'noopener,noreferrer');
+          return;
+        }
+        const conn = e.target.closest('[data-cloud-connect]');
+        if (conn && !conn.disabled) { askCloud(conn.dataset.cloudConnect, 'connect'); return; }
+        const show = e.target.closest('[data-cloud-show]');
+        if (show && !show.disabled) { askCloud(show.dataset.cloudShow, 'show'); return; }
+        const pick = e.target.closest('[data-pick-drive]');
+        if (pick && !pick.disabled) { askCloud('gdrive', 'pick'); return; }
+        const retry = e.target.closest('[data-cloud-retry]');
+        if (retry) { if (cfg) startCloud(retry.dataset.cloudRetry); else loadCloud(); return; }
+
         if (e.target.closest('[data-connect-canva]')) { window.location.href = `${api}/canva/connect?return_to=${encodeURIComponent('/files')}`; return; }
         if (e.target.closest('[data-retry-designs]')) { load(false); return; }
         if (e.target.closest('[data-more-designs]')) { load(true); return; }
@@ -1131,6 +1289,9 @@
         const u = new URL(window.location.href);
         if (u.searchParams.has('canva')) { u.searchParams.delete('canva'); window.history.replaceState(window.history.state, '', u.pathname + u.search + u.hash); }
       } catch {}
+      // Signed in or out of a drive in another tab, or a sign-in finished late: show it.
+      window.addEventListener('averages-cloud-change', () => { if (cfg) { startCloud('gdrive'); startCloud('onedrive'); } });
+      loadCloud();
       load(false);
     }
     function downloadPlaceholder(f) {

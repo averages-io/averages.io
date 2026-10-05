@@ -1241,7 +1241,7 @@
             <div class="settings-group" id="integrationList">
               <div class="settings-row"><div class="settings-row-text"><p class="settings-row-label">Canva</p><p class="settings-row-desc">Edit assignment files in Canva, then turn them in from Drafts.</p></div></div>
               <div class="settings-row"><div class="settings-row-text"><p class="settings-row-label">Google Drive</p><p class="settings-row-desc">Edit Word, PowerPoint and Excel files in Google Docs, Slides and Sheets, and add files from Drive.</p></div></div>
-              <div class="settings-row"><div class="settings-row-text"><p class="settings-row-label">OneDrive</p><p class="settings-row-desc">Save course files to OneDrive and add files from it.</p></div></div>
+              <div class="settings-row"><div class="settings-row-text"><p class="settings-row-label">OneDrive</p><p class="settings-row-desc">Save course files to OneDrive and find them on the Files tab.</p></div></div>
             </div>
             <p class="settings-row-desc integ-note">Averages only gets what you allow: your Canva designs, and just the Google Drive or OneDrive files you open with Averages, never the rest. Disconnecting removes Averages' access right away. To remove it completely, also remove Averages.io in that app's own account settings.</p>
             <p class="settings-subhead">Editing</p>
@@ -1818,9 +1818,12 @@
     // Signed in (2026-10-05): Canva is real. Its row reads GET /canva/status,
     // Connect navigates to the API's /canva/connect (which sends the student
     // to Canva and back here with ?canva=connected|failed|cancelled), and
-    // Disconnect asks first, then calls DELETE /canva/connection. Google
-    // Drive and OneDrive still say Coming soon until their sign-in is built;
-    // demo sessions get Coming soon for all three.
+    // Disconnect asks first, then calls DELETE /canva/connection.
+    // Google Drive and OneDrive (2026-10-05) connect from this browser, with
+    // public/js/averages-cloud.js: Connect opens Google's or Microsoft's own
+    // sign-in window, and what's connected is remembered on this device only
+    // (signing out forgets it). Each says Coming soon until the API's
+    // /config/cloud has its app ID. Demo sessions get Coming soon for all three.
     // ------------------------------------------------------------------
     (function () {
       const list = document.getElementById('integrationList');
@@ -1829,7 +1832,7 @@
       const APPS = [
         { id: 'canva', name: 'Canva', desc: 'Edit assignment files in Canva, then turn them in from Drafts.' },
         { id: 'gdrive', name: 'Google Drive', desc: 'Edit Word, PowerPoint and Excel files in Google Docs, Slides and Sheets, and add files from Drive.' },
-        { id: 'onedrive', name: 'OneDrive', desc: 'Save course files to OneDrive and add files from it.' },   // back 2026-10-05
+        { id: 'onedrive', name: 'OneDrive', desc: 'Save course files to OneDrive and find them on the Files tab.' },   // back 2026-10-05
       ];
       const connected = new Set();
       const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
@@ -1865,9 +1868,49 @@
               ${action}
             </div>`;
       }
+      // Google Drive and OneDrive, signed in. state: loading | ready | error
+      const cloud = { state: 'loading', cfg: { google: null, microsoft: null }, busy: {} };
+      const cloudApi = () => window.AveragesCloud || null;
+      function cloudAccount(id) {
+        const C = cloudApi();
+        return C ? C.accounts()[id] || null : null;
+      }
+      function cloudRowHTML(a) {
+        const configured = a.id === 'gdrive' ? !!cloud.cfg.google : !!cloud.cfg.microsoft;
+        const acct = cloudAccount(a.id);
+        const busy = cloud.busy[a.id] ? ' disabled' : '';
+        let status, action;
+        if (cloud.state === 'loading') {
+          status = '<span class="integ-status">Checking…</span>';
+          action = '<button class="btn-secondary integ-btn" type="button" disabled>Connect</button>';
+        } else if (cloud.state === 'error') {
+          status = '<span class="integ-status">Couldn’t check right now</span>';
+          action = `<button class="btn-secondary integ-btn" type="button" data-cloud="retry" data-app="${a.id}">Try again</button>`;
+        } else if (!configured) {
+          status = '<span class="integ-status">Not connected</span>';
+          action = '<span class="integ-soon">Coming soon</span>';
+        } else if (acct) {
+          const who = acct.email || acct.username || acct.name || '';
+          status = `<span class="integ-status on">Connected${who ? ' as ' + esc(who) : ''}</span>`;
+          action = `<button class="btn-secondary integ-btn disconnect" type="button" data-cloud="disconnect" data-app="${a.id}" aria-label="Disconnect ${esc(a.name)}"${busy}>Disconnect</button>`;
+        } else {
+          status = `<span class="integ-status">${cloud.busy[a.id] ? 'Connecting…' : 'Not connected'}</span>`;
+          action = `<button class="btn-secondary integ-btn" type="button" data-cloud="connect" data-app="${a.id}" aria-label="Connect ${esc(a.name)}"${busy}>Connect</button>`;
+        }
+        return `
+            <div class="settings-row">
+              <div class="settings-row-text">
+                <p class="settings-row-label">${esc(a.name)}</p>
+                <p class="settings-row-desc">${esc(a.desc)}</p>
+                ${status}
+              </div>
+              ${action}
+            </div>`;
+      }
       function render() {
         list.innerHTML = APPS.map(a => {
           if (LIVE && a.id === 'canva') return canvaRowHTML(a);
+          if (LIVE) return cloudRowHTML(a);
           const on = connected.has(a.id);
           const action = PREVIEW
             ? `<button class="btn-secondary integ-btn${on ? ' disconnect' : ''}" type="button" data-integ="${a.id}" aria-label="${on ? 'Disconnect' : 'Connect'} ${esc(a.name)}">${on ? 'Disconnect' : 'Connect'}</button>`
@@ -1882,7 +1925,9 @@
               ${action}
             </div>`;
         }).join('');
+        if (typeof syncEditorHint === 'function' && editorReady) syncEditorHint();
       }
+      let editorReady = false;
       // Default editor (2026-10-04): which app "Edit in …" uses for Word,
       // PowerPoint and Excel files. Kept on this device.
       const EDITOR_KEY = 'schoolagy_default_editor';
@@ -1895,7 +1940,13 @@
       function syncEditorHint() {
         if (!editorHint) return;
         const app = APPS.find(a => a.id === editorValue);
-        const off = PREVIEW && app && !connected.has(app.id);
+        let off = PREVIEW && app && !connected.has(app.id);
+        // Signed in: only once we know for sure it isn't connected.
+        if (LIVE && app) {
+          off = app.id === 'canva'
+            ? canvaLive.state === 'ready' && !canvaLive.connected
+            : cloud.state === 'ready' && !!cloud.cfg.google && !cloudAccount(app.id);
+        }
         editorHint.hidden = !off;
         if (off) editorHint.textContent = `Connect ${app.name} above to use it.`;
       }
@@ -1949,6 +2000,7 @@
         window.addEventListener('resize', () => closeEditorMenu(false));
         document.querySelector('.settings-detail-wrap').addEventListener('scroll', () => closeEditorMenu(false), { passive: true });
       }
+      editorReady = true;
       // Messages after coming back from Canva, and the Disconnect confirm.
       const flash = document.createElement('p');
       flash.className = 'integ-flash';
@@ -1992,10 +2044,28 @@
           </div>
         </div>`;
       document.body.appendChild(disc);
+      // The same confirm serves Google Drive and OneDrive (2026-10-05).
+      const DISC_TEXT = {
+        canva: ['Disconnect Canva?', 'Averages.io stops using your Canva account and forgets your Drafts list. Your designs stay in your Canva account. To remove Averages.io completely, also remove it in Canva\'s own settings.'],
+        gdrive: ['Disconnect Google Drive?', 'Averages.io stops using your Google Drive in this browser and forgets your Google Drive drafts. Files it saved stay in your Drive, in the Averages.io folder. To remove Averages.io completely, also remove it in your Google Account\'s third-party connections.'],
+        onedrive: ['Disconnect OneDrive?', 'Averages.io stops using your OneDrive in this browser. Files it saved stay in your OneDrive, in Apps/Averages.io. To remove Averages.io completely, also remove it in your Microsoft account\'s app permissions.'],
+      };
+      let discApp = 'canva';
+      function openDisc(app) {
+        discApp = app;
+        const [title, text] = DISC_TEXT[app];
+        disc.querySelector('#canvaDiscTitle').textContent = title;
+        disc.querySelector('#canvaDiscText').textContent = text;
+        disc.classList.add('show');
+        disc.querySelector('[data-disc="cancel"].editor-reset').focus();
+      }
+      function focusRow(app) {
+        const b = app === 'canva' ? list.querySelector('[data-canva]') : list.querySelector(`[data-cloud][data-app="${app}"]`);
+        if (b) b.focus();
+      }
       function closeDisc() {
         disc.classList.remove('show');
-        const b = list.querySelector('[data-canva]');
-        if (b) b.focus();
+        focusRow(discApp);
       }
       disc.addEventListener('click', async e => {
         if (e.target === disc) { closeDisc(); return; }
@@ -2003,6 +2073,14 @@
         if (!d) return;
         if (d.dataset.disc === 'cancel') { closeDisc(); return; }
         disc.classList.remove('show');
+        if (discApp !== 'canva') {
+          const C = cloudApi();
+          if (C) { if (discApp === 'gdrive') C.disconnectGoogle(); else C.disconnectOneDrive(); }
+          showFlash(`${discApp === 'gdrive' ? 'Google Drive' : 'OneDrive'} is disconnected.`);
+          render();
+          focusRow(discApp);
+          return;
+        }
         canvaLive.busy = true;
         render();
         try {
@@ -2032,12 +2110,64 @@
             return;
           }
           if (act === 'disconnect') {
-            disc.classList.add('show');
-            disc.querySelector('[data-disc="cancel"].editor-reset').focus();
+            openDisc('canva');
             return;
           }
         }
       });
+      // Google Drive / OneDrive. Connect has to open the sign-in window inside
+      // this click, so nothing is awaited before connectGoogle/connectOneDrive.
+      list.addEventListener('click', e => {
+        const b = e.target.closest('[data-cloud]');
+        if (!b || b.disabled) return;
+        const app = b.dataset.app;
+        const name = app === 'gdrive' ? 'Google Drive' : 'OneDrive';
+        const act = b.dataset.cloud;
+        if (act === 'retry') { loadCloud(); return; }
+        if (act === 'disconnect') { openDisc(app); return; }
+        if (act !== 'connect') return;
+        const C = cloudApi();
+        if (!C) { showFlash('Still loading. Try again in a second.', true); return; }
+        if (app === 'gdrive' && !C.googleReady()) {
+          C.prepareGoogle().catch(() => {});
+          showFlash(C.messageFor('not_ready'), true);
+          return;
+        }
+        const pending = app === 'gdrive' ? C.connectGoogle() : C.connectOneDrive();
+        cloud.busy[app] = true;
+        flash.hidden = true;
+        render();
+        pending
+          .then(() => showFlash(app === 'gdrive' ? 'Google Drive is connected. Use Save to cloud or Edit in Google Drive on an assignment file.' : 'OneDrive is connected. Use Save to cloud on an assignment file.'))
+          .catch(err => showFlash(C.messageFor(err), !err || err.code !== 'popup_closed'))
+          .finally(() => { cloud.busy[app] = false; render(); focusRow(app); });
+      });
+      function loadCloudScript() {
+        return new Promise((resolve, reject) => {
+          if (window.AveragesCloud) { resolve(window.AveragesCloud); return; }
+          const sc = document.createElement('script');
+          sc.src = '/js/averages-cloud.js';
+          sc.onload = () => (window.AveragesCloud ? resolve(window.AveragesCloud) : reject(new Error('cloud')));
+          sc.onerror = () => reject(new Error('cloud'));
+          document.head.appendChild(sc);
+        });
+      }
+      async function loadCloud() {
+        cloud.state = 'loading';
+        render();
+        try {
+          const C = await loadCloudScript();
+          const cfg = await C.config();
+          if (cfg.failed) throw new Error('config');
+          cloud.cfg = cfg;
+          cloud.state = 'ready';
+          // Google's sign-in script loads now, so Connect can open its window straight away.
+          if (cfg.google) C.prepareGoogle().catch(() => {});
+        } catch {
+          cloud.state = 'error';
+        }
+        render();
+      }
       list.addEventListener('click', e => {
         const b = e.target.closest('[data-integ]');
         if (!b) return;
@@ -2050,7 +2180,14 @@
       });
       render();
       syncEditorHint();
-      if (LIVE) loadCanvaStatus();
+      if (LIVE) {
+        loadCanvaStatus();
+        loadCloud();
+        // Signed in or out of a drive in another tab, or a sign-in finished late: show it.
+        window.addEventListener('averages-cloud-change', () => { if (cloud.state === 'ready') render(); });
+        const note = document.querySelector('.integ-note');
+        if (note) note.textContent += ' Google Drive and OneDrive stay connected in this browser only, and signing out of Averages.io disconnects them.';
+      }
       // Back from Canva: open Integrations and say how it went, then tidy the address.
       const canvaParam = new URLSearchParams(window.location.search).get('canva');
       if (canvaParam) {
