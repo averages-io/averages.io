@@ -88,6 +88,7 @@ export async function getSession(): Promise<SessionState> {
     if (response.ok) {
       const data = (await response.json()) as any;
       state = { mode: data?.demo ? "demo" : "live", name: data?.name };
+      if (!data?.demo && data?.uid != null) claimCloudConnections(String(data.uid));
     }
   } catch {
     // Network failure is not authorization. Treat it as signed-out rather than
@@ -130,9 +131,48 @@ export async function signIn(key: string, secret: string): Promise<SignInResult>
   }
 }
 
+/**
+ * Google Drive and OneDrive connect in the browser (public/js/averages-cloud.js),
+ * so their tokens, "Connected as" markers and Edit in Google Drive drafts live
+ * on this device. Signing out forgets all of it, so the next person on a shared
+ * Chromebook can't reach this student's drive. (Added 2026-10-05.)
+ */
+const CLOUD_OWNER_KEY = "averages_cloud_owner";
+
+function clearCloudConnections(): void {
+  try {
+    window.sessionStorage.removeItem("averages_cloud_tokens");
+  } catch {
+    /* storage blocked: nothing was saved there either */
+  }
+  try {
+    window.localStorage.removeItem("averages_cloud_accounts");
+    window.localStorage.removeItem("averages_drive_drafts");
+    window.localStorage.removeItem(CLOUD_OWNER_KEY);
+  } catch {
+    /* same */
+  }
+}
+
+/**
+ * Session expiry doesn't run signOut(), so a different student could sign in
+ * on a browser that still has someone else's drive connected. The device
+ * remembers whose connections these are and drops them when that changes.
+ */
+function claimCloudConnections(uid: string): void {
+  try {
+    if (window.localStorage.getItem(CLOUD_OWNER_KEY) === uid) return;
+    clearCloudConnections();
+    window.localStorage.setItem(CLOUD_OWNER_KEY, uid);
+  } catch {
+    /* storage blocked: nothing can be connected on this device anyway */
+  }
+}
+
 export async function signOut(): Promise<void> {
   cacheClear(SESSION_CACHE);
   cacheClear(BUNDLE_CACHE);
+  clearCloudConnections();
   // The DELETE below is what actually clears the httpOnly session cookie —
   // the API responds with a Set-Cookie that expires it; nothing on this side
   // can touch that cookie directly (that's the point of httpOnly). It has to
