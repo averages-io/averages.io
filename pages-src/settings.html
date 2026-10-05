@@ -1132,7 +1132,7 @@
                  modal that called Notification.requestPermission() for
                  real. The permission half worked; delivery never existed —
                  there was no service worker, no stored push subscription
-                 and nothing on api.schoolagy.io to trigger a send — so the
+                 and nothing on api.averages.io to trigger a send — so the
                  toggles promised something the web app could not do.
                  The section keeps its "Notifications" name deliberately,
                  so iOS push can move back in here later without the
@@ -3258,7 +3258,7 @@
       // schoolagy.io only, as of 2026-09-08 (a brief sch00lagy.com
       // second-domain fallback was removed — see API_BASE's own comment in
       // schoolagy.ts for why).
-      return window.location.hostname.endsWith('schoolagy.io') ? 'https://api.schoolagy.io' : 'http://localhost:8787';
+      return window.location.hostname.endsWith('averages.io') ? 'https://api.averages.io' : 'http://localhost:8787';   // schoolagy.io until 2026-10-05
     }
 
     // What actually gets synced — see the scope note above.
