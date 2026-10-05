@@ -555,6 +555,17 @@
   .fx-connect { margin-top: 12px; border: none; border-radius: 999px; background: var(--accent); color: #fff; font: inherit; font-size: 0.8rem; font-weight: 800; padding: 8px 18px; cursor: pointer; }
   .fx-connect:hover { background: var(--accent-dark); }
   .lf-sec + .lf-sec { margin-top: 30px; }
+  /* Course files (signed in): course filter chips on every width, a status line for saves */
+  .lf-chips { display: flex; gap: 6px; margin-top: 14px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+  .lf-chips::-webkit-scrollbar { display: none; }
+  .lf-chips .fx-chip { flex: none; display: inline-flex; align-items: center; gap: 6px; border: none; font: inherit; padding: 7px 14px; border-radius: 999px; background: var(--panel-inner); font-size: 0.78rem; font-weight: 800; color: var(--text-muted); white-space: nowrap; cursor: pointer; }
+  .lf-chips .fx-chip[aria-pressed="true"] { background: var(--accent); color: #fff; }
+  .lf-sec .fx-list { margin-top: 14px; }
+  .fx-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; display: inline-block; }
+  .lf-flash { margin: 14px 0 0; padding: 10px 12px; border-radius: 10px; background: var(--panel-inner); font-size: 0.8rem; font-weight: 700; color: var(--text-dark); }
+  .lf-flash.bad { color: var(--grade-bad, #b6432f); }
+  .lf-flash[hidden] { display: none; }
+  .lf-flash a { color: inherit; margin-left: 6px; }
   .lf-sec .fx-empty { margin-top: 14px; }
   .lf-sec .fx-grid { margin-top: 14px; }
   .fx-add:disabled { opacity: 0.6; cursor: progress; }
@@ -1065,12 +1076,13 @@
       const main = document.getElementById('fxMain');
       document.getElementById('fxSide').hidden = true;
       document.getElementById('fx').style.gridTemplateColumns = 'minmax(0, 1fr)';
-      document.getElementById('filesSub').textContent = 'Your Google Drive, OneDrive and Canva files';
+      document.getElementById('filesSub').textContent = 'Your course files, Google Drive, OneDrive and Canva';
       main.innerHTML = `
+        <section class="lf-sec" id="lfCourse" aria-label="Course files"></section>
         <section class="lf-sec" id="lfDrive" aria-label="Google Drive"></section>
         <section class="lf-sec" id="lfOne" aria-label="OneDrive"></section>
         <section class="lf-sec" id="lfCanva" aria-label="Canva"></section>
-        <p class="fx-note">Google Drive and OneDrive show the files you save, edit or add with Averages.io, not your whole drive. Course files are on the way.</p>`;
+        <p class="fx-note">Google Drive and OneDrive show the files you save, edit or add with Averages.io, not your whole drive.</p>`;
       const canvaBox = document.getElementById('lfCanva');
       const dayLabel = ms => {
         const t = Number(ms) || 0;
@@ -1211,6 +1223,167 @@
         }
       }
 
+      // ---------- Course files (2026-10-05) ----------
+      // Every file in the student's classes: what teachers posted in
+      // Materials and what's attached to assignments (GET /data/files, ids and
+      // names only). Download goes through the API; Save to Google Drive /
+      // OneDrive copies it into their drive from this browser.
+      const courseBox = document.getElementById('lfCourse');
+      const CF = { state: 'loading', courses: [], files: [], partial: false, filter: 'all', shown: 30 };
+      const CF_BADGE = { pdf: ['PDF', '#c1443a'], doc: ['DOC', '#3b6fd1'], docx: ['DOCX', '#3b6fd1'], ppt: ['PPT', '#d1852f'], pptx: ['PPTX', '#d1852f'], xls: ['XLS', '#2f7d54'], xlsx: ['XLSX', '#2f7d54'], csv: ['CSV', '#2f7d54'], png: ['PNG', '#7a5ba6'], jpg: ['JPG', '#7a5ba6'], jpeg: ['JPG', '#7a5ba6'], gif: ['GIF', '#7a5ba6'], txt: ['TXT', '#83849a'], zip: ['ZIP', '#83849a'] };
+      const ID_OK = v => /^\d{1,20}$/.test(String(v || ''));
+      const cfCourse = id => CF.courses.find(c => c.id === id) || { id, name: 'Course', color: '#83849a' };
+      const cfColor = c => (/^#[0-9a-f]{3,8}$/i.test(String(c.color || '')) ? c.color : '#83849a');
+      const cfFlash = document.createElement('p');
+      cfFlash.className = 'lf-flash';
+      cfFlash.setAttribute('role', 'status');
+      cfFlash.hidden = true;
+      function flash(text, bad, link) {
+        cfFlash.textContent = text;
+        cfFlash.classList.toggle('bad', !!bad);
+        if (link && C() && C().linkOk(link.url)) {
+          const a = document.createElement('a');
+          a.href = link.url; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.textContent = link.label;
+          cfFlash.appendChild(a);
+        }
+        cfFlash.hidden = false;
+      }
+      function cfVisible() {
+        return CF.files.filter(f => CF.filter === 'all' || f.course === CF.filter);
+      }
+      function cfRow(f, i) {
+        const b = (Object.prototype.hasOwnProperty.call(CF_BADGE, f.ext) && CF_BADGE[f.ext]) || [String(f.ext || 'file').toUpperCase().slice(0, 4), '#83849a'];
+        const c = cfCourse(f.course);
+        const when = dayLabel(f.at) || '';
+        const from = f.kind === 'assignment' ? f.parentTitle : 'Materials';
+        return `<div class="fx-row" role="row" tabindex="0" data-cf="${i}" aria-label="${esc(f.name)}, ${esc(c.name)}${when ? ', ' + esc(when) : ''}">
+            <span class="fx-badge" aria-hidden="true" style="background:${b[1]}">${esc(b[0])}</span>
+            <span class="fx-name"><span>${esc(f.name)}</span><small>${esc(c.name)}${when ? ' · ' + esc(when) : ''}</small></span>
+            <span class="fx-src"><span class="fx-dot" style="background:${esc(cfColor(c))}"></span><span style="overflow:hidden;text-overflow:ellipsis">${esc(c.name)} · ${esc(from)}</span></span>
+            <span class="fx-date">${esc(when)}</span>
+            <button class="fx-more" type="button" data-cf-more="${i}" aria-label="More for ${esc(f.name)}" aria-haspopup="menu">${MORE_ICON}</button>
+          </div>`;
+      }
+      function drawCourse() {
+        if (CF.state === 'loading') { courseBox.innerHTML = head('Course files') + '<div class="fx-empty"><strong>Loading your course files…</strong>This takes a moment the first time: every class is asked for its files.</div>'; return; }
+        if (CF.state === 'error') { courseBox.innerHTML = head('Course files') + '<div class="fx-empty"><strong>Couldn’t load your course files</strong>Try again in a moment.<br><button class="fx-more-designs" type="button" data-cf-retry>Try again</button></div>'; return; }
+        const list = cfVisible();
+        const withFiles = CF.courses.filter(c => CF.files.some(f => f.course === c.id));
+        const chips = withFiles.length > 1
+          ? `<div class="lf-chips" role="group" aria-label="Show files from">${[['all', 'All', null]].concat(withFiles.map(c => [c.id, c.name, cfColor(c)])).map(([k, l, col]) =>
+              `<button class="fx-chip" type="button" data-cf-filter="${esc(k)}" aria-pressed="${CF.filter === k}">${col ? `<span class="fx-dot" style="background:${esc(col)}"></span>` : ''}${esc(l)}</button>`).join('')}</div>`
+          : '';
+        let body;
+        if (!CF.files.length) body = '<div class="fx-empty"><strong>No course files yet</strong>Files your teachers post in Materials or attach to assignments show up here.</div>';
+        else {
+          const shown = list.slice(0, CF.shown);
+          body = `<div class="fx-list" role="table" aria-label="Course files"><div class="fx-row head" role="row"><span></span><span>Name</span><span>From</span><span>Added</span><span></span></div>${shown.map(f => cfRow(f, CF.files.indexOf(f))).join('')}</div>`
+            + (list.length > shown.length ? `<button class="fx-more-designs" type="button" data-cf-showmore>Show more (${list.length - shown.length})</button>` : '');
+        }
+        const note = CF.partial ? '<p class="fx-note">Some classes didn’t answer, so a few files may be missing. Use Refresh to try again.</p>' : '';
+        const count = `${list.length} file${list.length === 1 ? '' : 's'}`;
+        const refresh = '<button class="fx-add" type="button" data-cf-refresh>Refresh</button>';
+        courseBox.innerHTML = head('Course files', CF.files.length ? count : null, refresh) + chips + body + note;
+        courseBox.insertBefore(cfFlash, courseBox.children[1] || null);
+      }
+      const CF_CACHE = 'averages_files_cache';
+      const CF_CACHE_MS = 5 * 60 * 1000;
+      const cfOwner = () => { try { return localStorage.getItem('averages_cloud_owner') || ''; } catch { return ''; } };
+      function cfCached() {
+        try {
+          const c = JSON.parse(sessionStorage.getItem(CF_CACHE) || 'null');
+          if (c && c.owner === cfOwner() && Date.now() - c.at < CF_CACHE_MS && c.data) return c.data;
+        } catch {}
+        return null;
+      }
+      async function loadCourse(fresh) {
+        CF.state = 'loading';
+        drawCourse();
+        try {
+          let j = fresh ? null : cfCached();
+          if (!j) {
+            const res = await fetch(`${api}/data/files`, { credentials: 'include' });
+            if (res.status === 401) { window.location.href = '/'; return; }
+            if (!res.ok) throw new Error('status ' + res.status);
+            j = await res.json();
+            if (!j.partial) { try { sessionStorage.setItem(CF_CACHE, JSON.stringify({ at: Date.now(), owner: cfOwner(), data: j })); } catch {} }
+          }
+          CF.courses = (Array.isArray(j.courses) ? j.courses : []).filter(c => c && ID_OK(c.id)).map(c => ({ id: String(c.id), name: String(c.name || 'Course'), color: String(c.color || '') }));
+          CF.files = (Array.isArray(j.files) ? j.files : []).filter(f => f && ID_OK(f.id) && ID_OK(f.course) && ID_OK(f.parent) && (f.kind === 'document' || f.kind === 'assignment'))
+            .map(f => ({ id: String(f.id), name: String(f.name || 'File'), ext: String(f.ext || '').toLowerCase(), course: String(f.course), kind: f.kind, parent: String(f.parent), parentTitle: String(f.parentTitle || ''), at: Number(f.at) || 0 }));
+          CF.partial = !!j.partial;
+          CF.state = 'ready';
+        } catch {
+          CF.state = 'error';
+        }
+        drawCourse();
+      }
+      const cfDownloadUrl = f => `${api}/data/attachment?section=${encodeURIComponent(f.course)}&${f.kind === 'document' ? 'document' : 'assignment'}=${encodeURIComponent(f.parent)}&file=${encodeURIComponent(f.id)}`;
+      function cfSave(app, f) {
+        const K = C();
+        const name = app === 'gdrive' ? 'Google Drive' : 'OneDrive';
+        if (!K) return;
+        let pending;
+        if (app === 'gdrive') {
+          if (!K.googleReady()) { K.prepareGoogle().catch(() => {}); flash(K.messageFor('not_ready'), true); return; }
+          pending = K.googleSession({ interactive: true });   // inside the click: may open Google's window
+        } else {
+          pending = K.oneDriveToken({ interactive: true });
+        }
+        flash(`Saving "${f.name}" to ${name}…`);
+        const src = { section: f.course, fileId: f.id, name: f.name };
+        if (f.kind === 'document') src.document = f.parent; else src.assignment = f.parent;
+        pending
+          .then(async token => {
+            const blob = await K.fetchAttachment(src);
+            return app === 'gdrive' ? K.googleUpload(token, { name: f.name, blob }) : K.oneDriveUpload(token, { name: f.name, blob });
+          })
+          .then(saved => {
+            flash(`Saved "${saved.name || f.name}" to ${app === 'gdrive' ? 'the Averages.io folder in your Google Drive' : 'Apps/Averages.io in your OneDrive'}.`, false, { url: saved.webViewLink || saved.webUrl, label: `Open in ${name}` });
+            if (cfg) startCloud(app);   // the new file shows in that section too
+          })
+          .catch(err => flash(K.messageFor(err), !err || err.code !== 'popup_closed'));
+      }
+      function cfItems(f) {
+        const items = [];
+        if (f.kind === 'assignment') items.push({ label: 'Open assignment', sub: f.parentTitle, run: () => { window.location.href = `assignment.html?course=${encodeURIComponent(f.course)}&id=${encodeURIComponent(f.parent)}&title=${encodeURIComponent(f.parentTitle)}`; } });
+        items.push({ label: 'Download', run: () => { window.location.href = cfDownloadUrl(f); } });
+        if (cfg && cfg.google) items.push({ label: 'Save to Google Drive', run: () => cfSave('gdrive', f) });
+        if (cfg && cfg.microsoft) items.push({ label: 'Save to OneDrive', run: () => cfSave('onedrive', f) });
+        return items;
+      }
+      courseBox.addEventListener('click', e => {
+        if (e.target.closest('[data-cf-retry]') || e.target.closest('[data-cf-refresh]')) { loadCourse(true); return; }
+        if (e.target.closest('[data-cf-showmore]')) { CF.shown += 30; drawCourse(); return; }
+        const chip = e.target.closest('[data-cf-filter]');
+        if (chip) { CF.filter = chip.dataset.cfFilter; CF.shown = 30; drawCourse(); return; }
+        const more = e.target.closest('[data-cf-more]');
+        const row = e.target.closest('[data-cf]');
+        const f = CF.files[+(more ? more.dataset.cfMore : row ? row.dataset.cf : -1)];
+        if (f) openFxMenu(more || row, f.name, cfItems(f), more ? null : { x: e.clientX, y: e.clientY });
+      });
+      courseBox.addEventListener('contextmenu', e => {
+        const row = e.target.closest('[data-cf]');
+        const f = row && CF.files[+row.dataset.cf];
+        if (!f) return;
+        e.preventDefault();
+        openFxMenu(row, f.name, cfItems(f), e.clientX === 0 && e.clientY === 0 ? null : { x: e.clientX, y: e.clientY });
+      });
+      courseBox.addEventListener('keydown', e => {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        const row = e.target.closest('.fx-row[data-cf]');
+        if (!row || e.target !== row) return;
+        e.preventDefault();
+        const f = CF.files[+row.dataset.cf];
+        if (f) openFxMenu(row, f.name, cfItems(f));
+      });
+      // The file menu closes like everywhere else on this page.
+      document.addEventListener('click', e => { if (!fxMenu.hidden && e.target.isConnected && !fxMenu.contains(e.target) && !(fxMenuFor && fxMenuFor.contains(e.target))) closeFxMenu(false); });
+      document.addEventListener('contextmenu', e => { if (!fxMenu.hidden && !fxMenu.contains(e.target) && !(fxMenuFor && fxMenuFor.contains(e.target))) closeFxMenu(false); });
+      document.addEventListener('keydown', e => { if (e.key === 'Escape') closeFxMenu(true); });
+      window.addEventListener('resize', () => closeFxMenu(false));
+      window.addEventListener('scroll', () => closeFxMenu(false), true);
+
       // ---------- Canva ----------
       let items = [];
       let next = null;
@@ -1291,6 +1464,7 @@
       } catch {}
       // Signed in or out of a drive in another tab, or a sign-in finished late: show it.
       window.addEventListener('averages-cloud-change', () => { if (cfg) { startCloud('gdrive'); startCloud('onedrive'); } });
+      loadCourse();
       loadCloud();
       load(false);
     }
@@ -1397,6 +1571,14 @@
       window.addEventListener('resize', () => closeFxMenu(false));
       window.addEventListener('scroll', () => closeFxMenu(false), true);
     }
+
+    // Nav: each button goes to its page (same as every other page). The
+    // current page (Files) has no data-href, so clicking it does nothing.
+    document.querySelectorAll('.nav-link').forEach(link => {
+      link.addEventListener('click', () => {
+        if (link.dataset.href) window.location.href = link.dataset.href;
+      });
+    });
 
     // ------------------------------------------------------------------
     // Profile menu — same behavior as every other page.

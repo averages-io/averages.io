@@ -1519,8 +1519,11 @@
     const qTitle = params.get('title');
     const qFrom = params.get('from');
     let item = null;
+    const qId = params.get('id');
+    const qIdOk = !!qId && /^\d{1,20}$/.test(qId);
     if (qCourse && qTitle) {
-      item = findAssignment(qCourse, decodeURIComponent(qTitle));
+      // The Schoology id, when given, picks the exact item (two can share a title).
+      item = (qIdOk && ALL_ITEMS.find(i => i.courseId === qCourse && String(i.id || '') === qId)) || findAssignment(qCourse, qTitle);
       if (!item) {
         // A real title/course was passed (e.g. an assignment-flagged file
         // opened from course-materials.html — see openAssignmentDetail()
@@ -1528,7 +1531,7 @@
         // OVERDUE/UPCOMING/SUBMITTED/HISTORY lists. Show its real title
         // with generic fallback content rather than silently swapping in
         // an unrelated default assignment.
-        item = { status: 'upcoming', type: 'assignment', title: decodeURIComponent(qTitle), courseId: qCourse, due: null };
+        item = { status: 'upcoming', type: 'assignment', title: qTitle, courseId: qCourse, due: null };
         // Opened from a course's Grades tab (2026-10-04): use that row's own
         // graded state and score instead of calling it upcoming.
         if (qFrom === 'gradebook') {
@@ -1546,8 +1549,7 @@
     }
     if (!item) item = ALL_ITEMS[0] || { status: 'upcoming', type: 'assignment', title: 'Assignment', courseId: (COURSES[0] || {}).id, due: null };
     // An explicit ?id= (Schoology assignment id) wins when the lists didn't have one.
-    const qId = params.get('id');
-    if (qId && /^\d{1,20}$/.test(qId) && !item.id) item.id = qId;
+    if (qIdOk && !item.id) item.id = qId;
     const course = findCourse(item.courseId) || COURSES[0];
     const detail = buildDetail(item);
 
@@ -1599,8 +1601,9 @@
     // row the Submission Preview popup uses.
     const CANVA_EXTS = ['pdf', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'key', 'numbers', 'pages', 'odt', 'odp', 'ods', 'png', 'jpg', 'jpeg', 'gif', 'heic', 'ai', 'psd'];
     // In the preview, Edit in Canva runs the Drafts flow below in memory.
-    // Signed in (2026-10-05) it's real: see liveEditInCanva. Demo keeps the
-    // Coming soon menu.
+    // Signed in (2026-10-05) it's real: see liveEditInCanva. Since 10-5 an
+    // Edit button only shows for a connected app (EDIT_READY below), so demo
+    // sessions, where nothing is connected, have none.
     const CANVA_PREVIEW = !(window.__AVERAGES__ && window.__AVERAGES__.data);
     // Edit in Google Drive (2026-10-04): Word/PowerPoint/Excel use Google Drive
     // when Settings > Integrations > Open files in says so.
@@ -1608,6 +1611,14 @@
     const DRIVE_KIND = { doc: ['DOC', '#3b6fd1'], docx: ['DOC', '#3b6fd1'], ppt: ['SLIDES', '#d1852f'], pptx: ['SLIDES', '#d1852f'], xls: ['SHEET', '#2f7d54'], xlsx: ['SHEET', '#2f7d54'] };
     let EDITOR_PREF = 'canva';
     try { if (localStorage.getItem('schoolagy_default_editor') === 'gdrive') EDITOR_PREF = 'gdrive'; } catch {}
+    // Which "Edit in" app a file gets (2026-10-05, per Martin): only one
+    // that's connected. The preview shows both, as before.
+    const EDIT_READY = { canva: CANVA_PREVIEW, gdrive: CANVA_PREVIEW };
+    function editAppFor(ext) {
+      const can = { canva: CANVA_EXTS.includes(ext), gdrive: DRIVE_EXTS.includes(ext) };
+      const order = EDITOR_PREF === 'gdrive' ? ['gdrive', 'canva'] : ['canva', 'gdrive'];
+      return order.find(app => can[app] && EDIT_READY[app]) || null;
+    }
     const CLOUD_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18H6.5a4.5 4.5 0 0 1-.6-8.96A6 6 0 0 1 17.6 8.1 4.5 4.5 0 0 1 17.5 18H17"/><path d="M12 20v-8M9 15l3-3 3 3"/></svg>';
     function materialRowHTML(m, actions) {
       const color = EXT_COLOR[m.ext] || '#83849a';
@@ -1618,9 +1629,10 @@
       let btns = '';
       if (actions === 'full') {
         const ext = String(m.ext || '').toLowerCase();
-        const canva = (EDITOR_PREF === 'gdrive' && DRIVE_EXTS.includes(ext))
+        const editApp = editAppFor(ext);
+        const canva = editApp === 'gdrive'
           ? `<button class="canva-btn drive-btn" type="button" data-file-action="gdrive" data-file-name="${nm}" data-file-ext="${ex}"${fid}${CANVA_PREVIEW || (LIVE && m.fileId) ? '' : ' aria-haspopup="menu"'}><span>Edit in Google Drive</span></button>`
-          : CANVA_EXTS.includes(ext)
+          : editApp === 'canva'
           ? `<button class="canva-btn" type="button" data-file-action="canva" data-file-name="${nm}"${fid}${CANVA_PREVIEW || (LIVE && m.fileId) ? '' : ' aria-haspopup="menu"'}><span class="canva-mark" aria-hidden="true"></span><span>Edit in Canva</span></button>` : '';
         btns = `
           <div class="material-actions">
@@ -1704,6 +1716,29 @@
           <a class="material-name material-link" href="${escapeHtml(l.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(l.title)}</a>
         </div>`;
     }
+    let liveMaterials = null;   // { files, links } once loaded
+    function renderLiveMaterials() {
+      if (!liveMaterials) return;
+      const rows = liveMaterials.files.map(f => materialRowHTML({ name: f.name, ext: String(f.ext || '').toLowerCase(), fileId: String(f.id) }, 'full')).join('')
+        + liveMaterials.links.map(linkRowHTML).join('');
+      materialsEl.innerHTML = rows || '<p class="assign-empty">No materials attached to this assignment.</p>';
+    }
+    // Signed in: is Canva connected? (Google Drive is checked in this browser, see loadCloud.)
+    async function loadCanvaReady() {
+      try {
+        const res = await fetch(averagesApiBase() + '/canva/status', { credentials: 'include' });
+        if (!res.ok) return;
+        const j = await res.json();
+        if (!!j.connected !== EDIT_READY.canva) { EDIT_READY.canva = !!j.connected; renderLiveMaterials(); }
+      } catch {
+        /* no Edit in Canva button then */
+      }
+    }
+    function syncDriveReady() {
+      const C = window.AveragesCloud;
+      const ready = !!(C && cloudCfg && cloudCfg.google && C.accounts().gdrive);
+      if (ready !== EDIT_READY.gdrive) { EDIT_READY.gdrive = ready; renderLiveMaterials(); }
+    }
     async function loadLiveDetail() {
       const desc = document.getElementById('descText');
       desc.textContent = 'Loading…';
@@ -1714,11 +1749,8 @@
         if (!res.ok) throw new Error('status ' + res.status);
         const d = await res.json();
         desc.textContent = d.description || 'No description provided by your teacher yet.';
-        const files = Array.isArray(d.files) ? d.files : [];
-        const links = Array.isArray(d.links) ? d.links : [];
-        const rows = files.map(f => materialRowHTML({ name: f.name, ext: String(f.ext || '').toLowerCase(), fileId: String(f.id) }, 'full')).join('')
-          + links.map(linkRowHTML).join('');
-        materialsEl.innerHTML = rows || '<p class="assign-empty">No materials attached to this assignment.</p>';
+        liveMaterials = { files: Array.isArray(d.files) ? d.files : [], links: Array.isArray(d.links) ? d.links : [] };
+        renderLiveMaterials();
       } catch {
         desc.textContent = 'Couldn’t load this assignment’s details right now.';
         materialsEl.innerHTML = '<p class="assign-empty">Couldn’t load the attached materials.<button class="assign-retry" type="button" data-live-retry>Try again</button></p>';
@@ -1818,6 +1850,8 @@
         if (cfg.failed) return;
         cloudCfg = cfg;
         if (cfg.google) C.prepareGoogle().catch(() => {});
+        syncDriveReady();
+        window.addEventListener('averages-cloud-change', syncDriveReady);
         mergeDrafts();
         if (await C.refreshDriveDrafts(String(item.courseId), String(item.id))) mergeDrafts();
       } catch {
@@ -1882,6 +1916,7 @@
         })
         .then(f => {
           modalBox.removeAttribute('aria-busy');
+          syncDriveReady();
           showOpenLink(`Saved to ${name}`, `"${f.name || src.name}" is in ${CLOUD_WHERE[app]}.`, f.webViewLink || f.webUrl, `Open in ${name}`);
         })
         .catch(err => {
@@ -2797,6 +2832,7 @@
       }
       loadLiveDrafts(back === 'saved');
       loadCloud();
+      loadCanvaReady();
     }
 
     // Attach from Files (2026-10-05, per Martin): Files' "Attach to an
