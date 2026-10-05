@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Schoolagy — Home</title>
+<title>Averages — Home</title>
 <link rel="stylesheet" href="https://use.typekit.net/gsk6off.css">
 <style>
   :root {
@@ -715,6 +715,84 @@
   }
   .nav-link.active .label { color: var(--text-dark); }
   .nav-link.active .dot { background: var(--accent); }
+  /* ---------- "More" overflow (2026-10-01, per Martin: "if the text has
+     to get ... we should add a more button on the far right side with a
+     list of the other options"). Labels never truncate: when they would,
+     the rightmost pages move into the More menu instead. ---------- */
+  .nav-link[hidden], .nav-more[hidden], .nav-more-menu[hidden] { display: none; }
+  /* While the More menu is open the whole bar sits above everything else on
+     the page (sticky headers, pop-ups, the edit button go up to z-index 90),
+     so the menu is never drawn underneath them. */
+  .app-nav.more-open { z-index: 1000; }
+  .nav-more {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    flex: 0 0 auto;
+    position: relative;
+    margin-left: 4px;
+    padding: 12px 16px 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+  }
+  .nav-more .label { display: flex; align-items: center; height: 1.2em; font-size: 0.72rem; color: var(--text-faint); }
+  .nav-more .label svg { display: block; fill: currentColor; }
+  /* thin divider between the pages and the dots */
+  .nav-more::before { content: ""; position: absolute; left: 0; top: 12px; bottom: 12px; width: 1px; background: var(--border, #cfcfd6); }
+  .nav-more:hover .label, .nav-more[aria-expanded="true"] .label { color: var(--text-dark); }
+  .nav-more .dot { width: 4px; height: 4px; border-radius: 50%; background: transparent; }
+  .nav-more.has-active .label { color: var(--text-dark); }
+  .nav-more.has-active .dot { background: var(--accent); }
+  .nav-more:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring) inset; }
+  .nav-more-menu {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    right: 20px;
+    min-width: 168px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    background: var(--panel-bg);
+    border-radius: var(--window-radius-md);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+    pointer-events: auto;
+  }
+  .nav-more-item {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: var(--text-faint);
+    text-align: left;
+    padding: 12px 12px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .nav-more-item:hover, .nav-more-item:focus-visible { outline: none; color: var(--text-dark); box-shadow: 0 0 0 3px var(--accent-ring) inset; }
+  .nav-more-item.active { color: var(--text-dark); }
+  .nav-more-item.active span { position: relative; display: inline-block; padding-bottom: 6px; margin-bottom: -6px; }
+  .nav-more-item.active span::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; border-radius: 999px; background: var(--accent); }
+  /* Labels sit centered in the bar; the active page is underlined in the
+     accent color instead of marked with a dot (2026-10-01, per Martin). */
+  .app-nav-inner .nav-link, .app-nav-inner .nav-more { justify-content: center; gap: 0; padding-top: 10px; padding-bottom: 10px; }
+  .app-nav-inner .nav-link .dot, .app-nav-inner .nav-more .dot { display: none; }
+  .app-nav-inner .nav-link .label, .app-nav-inner .nav-more .label { position: relative; padding: 6px 0; }
+  .app-nav-inner .nav-link.active .label::after, .app-nav-inner .nav-more.has-active .label::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; border-radius: 999px; background: var(--accent); }
+  @media (max-width: 520px) {
+    .nav-more { padding: 10px 12px 8px; }
+    .nav-more::before { top: 10px; bottom: 10px; }
+    .app-nav-inner .nav-link, .app-nav-inner .nav-more { padding-top: 8px; padding-bottom: 8px; }
+    .nav-more .label { font-size: 0.58rem; }
+  }
   .nav-link:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring) inset; }
 
   @media (max-width: 520px) {
@@ -1013,6 +1091,87 @@
     cursor: pointer;
   }
   .editor-done:hover { background: var(--accent-dark); }
+  /* Phones (2026-10-03): nothing runs past the card's right edge */
+  @media (max-width: 860px) {
+    .card-grid { grid-template-columns: minmax(0, 1fr); }
+    .col-left, .col-right { min-width: 0; }
+  }
+  @media (max-width: 520px) {
+    body { padding-left: 16px; padding-right: 16px; }
+    .col-left, .col-right { padding: 20px 16px; }
+    table.grades thead th:nth-child(4), table.grades td.updated { display: none; }
+    table.grades thead th, table.grades tbody td { padding-left: 4px; padding-right: 4px; }
+  }
+  .widget-block[hidden] { display: none !important; }   /* a widget turned off in Customize */
+
+  /* ---------- New Home widgets (2026-10-03) ---------- */
+  .widget-empty { margin: 0; padding: 12px 0 4px; font-size: 0.8rem; font-weight: 700; color: var(--text-faint); }
+  /* Recently graded */
+  .rg-item { display: flex; align-items: center; gap: 11px; padding: 9px 0; border-bottom: 1px solid var(--border); }
+  .rg-item:last-child { border-bottom: none; }
+  .rg-text { flex: 1; min-width: 0; }
+  .rg-text p { margin: 0; }
+  .rg-title { font-weight: 700; font-size: 0.86rem; color: var(--text-dark); overflow-wrap: anywhere; }
+  .rg-meta { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px !important; }
+  .rg-score { text-align: right; flex-shrink: 0; }
+  .rg-score .grade-val { font-size: 0.9rem; }
+  .rg-score .rg-pct { font-weight: 700; font-size: 0.78rem; margin-left: 4px; }
+  .rg-pts { display: block; font-size: 0.7rem; font-weight: 700; color: var(--text-faint); margin-top: 2px; }
+  .new-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); margin-left: 6px; vertical-align: middle; }
+  /* Course updates */
+  .updates-new { font-size: 0.76rem; font-weight: 700; color: var(--accent); }
+  .tu-item { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .tu-item:last-child { border-bottom: none; padding-bottom: 2px; }
+  .tu-avatar { width: 28px; height: 28px; border-radius: 50%; color: #fff; font-weight: 800; font-size: 0.74rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .tu-text { flex: 1; min-width: 0; }
+  .tu-text p { margin: 0; }
+  .tu-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+  .tu-from { font-weight: 800; font-size: 0.82rem; color: var(--text-dark); }
+  .tu-course { font-weight: 700; font-size: 0.72rem; color: var(--text-muted); }
+  .tu-time { font-size: 0.68rem; font-weight: 700; color: var(--text-faint); flex-shrink: 0; white-space: nowrap; }
+  .tu-body { font-size: 0.78rem; color: var(--text-dark); line-height: 1.4; margin-top: 4px !important; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  /* Quiz / Test label (GitHub style) */
+  .test-tag { display: inline-block; margin-left: 8px; padding: 3px 7px 1px; border: 1px solid rgb(from var(--grade-bad) r g b / 0.55); border-radius: 999px; background: transparent; color: var(--grade-bad); font-size: 0.6rem; font-weight: 700; line-height: 1.2; vertical-align: 2px; text-align: center; font-style: normal; }
+  .assign-item.is-test .assign-title { font-weight: 800; }
+  /* Summary card */
+  .sum-card { position: relative; background: var(--panel-inner); border-radius: var(--window-radius-md); padding: 12px 16px 24px; margin-bottom: 16px; }
+  .sum-card[hidden] { display: none; }
+  .sum-view { position: relative; overflow: hidden; transition: filter 260ms ease, opacity 260ms ease; }   /* category change: slower, 2026-10-04 (was 140ms) */
+  .sum-view.switching { filter: blur(6px); opacity: 0.35; }
+  .sum-slide { display: flex; align-items: center; gap: 12px; }
+  .sum-slide[data-href] { cursor: pointer; }
+  .sum-view.sliding .sum-slide { position: absolute; top: 0; left: 0; width: 100%; transition: transform 380ms cubic-bezier(.4, 0, .2, 1); }
+  .sum-slide.from-right, .sum-slide.to-right { transform: translateX(100%); }
+  .sum-slide.from-left, .sum-slide.to-left { transform: translateX(-100%); }
+  .sum-when { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 52px; height: 52px; border-radius: 12px; color: #fff; flex-shrink: 0; }
+  .sum-when span { font-size: 0.56rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px; }
+  .sum-when b { font-size: 1.4rem; font-weight: 900; line-height: 1; }
+  .sum-body { flex: 1; min-width: 0; }
+  .sum-title { font-size: 0.95rem; font-weight: 800; color: var(--text-dark); margin: 2px 0 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sum-meta { font-size: 0.74rem; font-weight: 700; color: var(--text-muted); margin: 2px 0 0; }
+  .sum-pick { position: relative; z-index: 2; display: inline-flex; align-items: center; gap: 4px; background: none; border: none; padding: 2px 6px; margin: -2px -6px; border-radius: 6px; font: inherit; font-size: 0.66rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-faint); cursor: pointer; }
+  .sum-pick:hover, .sum-pick[aria-expanded="true"] { background: var(--border); color: var(--text-dark); }
+  .sum-pick:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
+  .sum-pick svg { width: 10px; height: 10px; fill: none; stroke: currentColor; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+  .sum-dots { position: absolute; right: 16px; bottom: 12px; display: flex; align-items: center; gap: 6px; }
+  .sum-dots:empty { display: none; }
+  .sum-dot { position: relative; width: 6px; height: 6px; padding: 0; border: none; border-radius: 999px; background: rgb(from var(--text-faint) r g b / 0.4); cursor: pointer; transition: width 260ms ease, background 260ms ease; }
+  .sum-dot::after { content: ""; position: absolute; inset: -8px -4px; }
+  .sum-dot:hover { background: var(--text-faint); }
+  .sum-dot.on { width: 24px; background: rgb(from var(--text-faint) r g b / 0.4); cursor: default; }
+  /* the fill: darker grey growing left to right over the card's 4 seconds */
+  .sum-dot.on::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: calc(var(--fill, 0) * 100%); border-radius: inherit; background: var(--text-muted); }
+  .sum-dot:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
+  .sum-menu { position: absolute; top: 34px; left: 72px; z-index: 5; min-width: 220px; background: var(--panel-bg); border: 1px solid var(--border); border-radius: var(--window-radius-md); box-shadow: 0 20px 50px -12px rgba(0,0,0,0.45); padding: 8px; }
+  .sum-menu[hidden] { display: none; }
+  .sum-menu-label { padding: 4px 10px 6px; font-size: 0.62rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-faint); }
+  .sum-opt { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; padding: 8px 10px; border: none; background: none; border-radius: 8px; font: inherit; font-size: 0.82rem; font-weight: 700; color: var(--text-dark); text-align: left; cursor: pointer; }
+  .sum-opt:hover, .sum-opt.sel { background: var(--panel-inner); }
+  .sum-opt:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
+  .sum-opt svg { width: 14px; height: 14px; fill: none; stroke: var(--accent); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+  .sum-opt small { display: block; font-size: 0.68rem; font-weight: 700; color: var(--text-faint); margin-top: 1px; }
+  .sum-card:not([hidden]) + .assign-section-label { margin-top: 0; }   /* turned off: label keeps its normal space */
+  @media (prefers-reduced-motion: reduce) { .sum-view, .sum-view.sliding .sum-slide, .sum-dot { transition: none; } .sum-view.switching { filter: none; opacity: 1; } }
 </style>
 </head>
 <body>
@@ -1059,6 +1218,15 @@
             </div>
             <div id="todayList"></div>
           </div>
+
+          <!-- Recently graded (2026-10-03) -->
+          <div class="widget-block" id="block-recent" data-widget="recent">
+            <div class="section-head">
+              <h2>Recently graded</h2>
+              <span class="see-all" role="link" tabindex="0" data-href="grades.html">See gradebook</span>
+            </div>
+            <div id="recentList"></div>
+          </div>
         </div>
 
         <div class="col-right" id="colRight">
@@ -1067,10 +1235,20 @@
               <h2>Assignments</h2>
               <span class="see-all" role="link" tabindex="0" data-href="assignments.html">See all</span>
             </div>
+            <div class="sum-card" id="sumCard" role="region" aria-roledescription="carousel" aria-label="Summary"></div>
             <div class="assign-section-label overdue">Overdue <span class="assign-count" id="overdueCount">0</span></div>
             <div id="overdueList"></div>
             <div class="assign-section-label">Upcoming</div>
             <div id="upcomingList"></div>
+          </div>
+
+          <!-- Course updates (2026-10-03) -->
+          <div class="today-block widget-block widget-messages" id="block-updates" data-widget="updates">
+            <div class="today-head">
+              <div class="today-date">Course updates</div>
+              <span class="updates-new" id="updatesNew" hidden></span>
+            </div>
+            <div id="updatesList"></div>
           </div>
 
           <!-- Optional widget — hidden unless added via the editor's
@@ -1124,8 +1302,48 @@
 
           <div class="editor-widget-row">
             <div class="editor-widget-text">
+              <p class="editor-widget-title">Assignment overview</p>
+              <p class="editor-widget-desc">The sliding card at the top of Assignments: your next test, next assignment and today.</p>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="widgetSummaryToggle" aria-label="Show Assignment overview on Home" checked>
+              <span class="track"><span class="thumb"></span></span>
+            </label>
+          </div>
+          <div class="editor-widget-row">
+            <div class="editor-widget-text">
+              <p class="editor-widget-title">Recently graded</p>
+              <p class="editor-widget-desc">Your newest scores, with the points and when they were posted.</p>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="widgetRecentToggle" aria-label="Show Recently graded widget on Home" checked>
+              <span class="track"><span class="thumb"></span></span>
+            </label>
+          </div>
+          <div class="editor-widget-row">
+            <div class="editor-widget-text">
+              <p class="editor-widget-title">Course updates</p>
+              <p class="editor-widget-desc">Announcements from your teachers in every course, newest first.</p>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="widgetUpdatesToggle" aria-label="Show Course updates widget on Home" checked>
+              <span class="track"><span class="thumb"></span></span>
+            </label>
+          </div>
+          <div class="editor-widget-row">
+            <div class="editor-widget-text">
+              <p class="editor-widget-title">Today's schedule</p>
+              <p class="editor-widget-desc">What's on today, with a link to your calendar.</p>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="widgetTodayToggle" aria-label="Show Today's schedule widget on Home" checked>
+              <span class="track"><span class="thumb"></span></span>
+            </label>
+          </div>
+          <div class="editor-widget-row">
+            <div class="editor-widget-text">
               <p class="editor-widget-title">Messages</p>
-              <p class="editor-widget-desc">Not shown by default — add a preview of your recent messages to Home.</p>
+              <p class="editor-widget-desc">A preview of your recent messages. Off by default.</p>
             </div>
             <label class="toggle">
               <input type="checkbox" id="widgetMessagesToggle" aria-label="Show Messages widget on Home">
@@ -1159,6 +1377,10 @@
         <span class="label">Assignments</span>
         <span class="dot"></span>
       </button>
+      <button class="nav-link" type="button" data-page="files" data-href="files.html">
+        <span class="label">Files</span>
+        <span class="dot"></span>
+      </button>
       <button class="nav-link" type="button" data-page="calendar" data-href="calendar.html">
         <span class="label">Calendar</span>
         <span class="dot"></span>
@@ -1175,8 +1397,140 @@
         <span class="label">Settings</span>
         <span class="dot"></span>
       </button>
+      <button class="nav-more" type="button" id="navMore" aria-haspopup="menu" aria-expanded="false" aria-controls="navMoreMenu" aria-label="More pages" hidden>
+        <span class="label"><svg viewBox="0 0 16 4" width="16" height="4" aria-hidden="true"><circle cx="2" cy="2" r="1.75"/><circle cx="8" cy="2" r="1.75"/><circle cx="14" cy="2" r="1.75"/></svg></span>
+        <span class="dot"></span>
+      </button>
     </div>
+    <div class="nav-more-menu" id="navMoreMenu" role="menu" aria-label="More pages" hidden></div>
   </nav>
+
+  <script>
+    // Potato PC Mode on every page (2026-10-04, per Martin). The saved
+    // setting turns off all CSS animations and transitions, makes animate()
+    // calls and smooth scrolling instant, and drops the slanted page title.
+    // Same code as app/lib/theme-boot.ts, which runs it before first paint in
+    // the app; this copy covers the preview and pages theme-boot skips.
+    (function () {
+    var POTATO_CSS = "body.potato-mode,body.potato-mode *,body.potato-mode *::before,body.potato-mode *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important;filter:none!important;text-shadow:none!important}html:has(body.potato-mode){scroll-behavior:auto!important}body.potato-mode,body.potato-mode *{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif!important}body.potato-mode h1.title{font-style:normal!important;transform:none!important}body.potato-mode .trend.has-popup:focus-visible{outline:2px solid currentColor;outline-offset:2px}";
+    function potatoOn() { return !!(document.body && document.body.classList.contains("potato-mode")); }
+    function applyPotato() {
+      var on = false;
+      try { on = (JSON.parse(localStorage.getItem("schoolagy_settings_options") || "{}") || {}).potatoMode === true; } catch (e) {}
+      if (document.body) document.body.classList.toggle("potato-mode", on);
+      if (!document.getElementById("potatoStyle")) {
+        var st = document.createElement("style");
+        st.id = "potatoStyle";
+        st.textContent = POTATO_CSS;
+        (document.head || document.documentElement).appendChild(st);
+      }
+      var EP = window.Element && Element.prototype;
+      if (EP && !EP.__potatoPatched) {
+        EP.__potatoPatched = true;
+        var anim = EP.animate;
+        if (anim) EP.animate = function (frames, opts) {
+          if (potatoOn()) opts = (typeof opts === "number" || opts == null) ? { duration: 0 } : Object.assign({}, opts, { duration: 0, delay: 0, endDelay: 0, iterations: 1 });
+          return anim.call(this, frames, opts);
+        };
+        var siv = EP.scrollIntoView;
+        if (siv) EP.scrollIntoView = function (arg) {
+          if (potatoOn() && arg && typeof arg === "object") arg = Object.assign({}, arg, { behavior: "auto" });
+          return siv.call(this, arg);
+        };
+        ["scrollTo", "scrollBy"].forEach(function (name) {
+          [EP, window].forEach(function (target) {
+            var fn = target[name];
+            if (!fn) return;
+            target[name] = function (a, b) {
+              if (potatoOn() && a && typeof a === "object") a = Object.assign({}, a, { behavior: "auto" });
+              return b === undefined ? fn.call(this, a) : fn.call(this, a, b);
+            };
+          });
+        });
+      }
+    }
+      applyPotato();
+      window.addEventListener('storage', function (e) { if (e.key === 'schoolagy_settings_options') applyPotato(); });
+    })();
+
+    // Bottom nav "More" overflow. Shows as many pages as fit without
+    // cutting a label off ("Cour..."); the rest go in the More menu.
+    // The current page always stays in the bar.
+    (function () {
+      const nav = document.querySelector('.app-nav');
+      const inner = nav && nav.querySelector('.app-nav-inner');
+      const more = document.getElementById('navMore');
+      const menu = document.getElementById('navMoreMenu');
+      if (!inner || !more || !menu) return;
+      const links = Array.from(inner.querySelectorAll('.nav-link'));
+
+      const cut = () =>
+        inner.scrollWidth > inner.clientWidth + 1 ||
+        links.some(l => !l.hidden && l.querySelector('.label').scrollWidth > l.querySelector('.label').clientWidth + 1);
+
+      function fit() {
+        closeMenu();
+        links.forEach(l => { l.hidden = false; });
+        more.hidden = true;
+        if (!cut()) return;
+        more.hidden = false;
+        // Hide from the right, but never the current page.
+        for (let i = links.length - 1; i >= 1 && cut(); i--) {
+          if (!links[i].classList.contains('active')) links[i].hidden = true;
+        }
+        const hidden = links.filter(l => l.hidden);
+        more.classList.toggle('has-active', hidden.some(l => l.classList.contains('active')));
+        menu.textContent = '';
+        hidden.forEach(l => {
+          const item = document.createElement('button');
+          item.type = 'button';
+          item.className = 'nav-more-item' + (l.classList.contains('active') ? ' active' : '');
+          item.setAttribute('role', 'menuitem');
+          const text = document.createElement('span'); text.textContent = l.querySelector('.label').textContent; item.appendChild(text);
+          item.addEventListener('click', () => { closeMenu(); l.click(); });
+          menu.appendChild(item);
+        });
+      }
+
+      function openMenu() {
+        const navBox = nav.getBoundingClientRect();
+        const innerBox = inner.getBoundingClientRect();
+        menu.style.right = Math.max(0, navBox.right - innerBox.right) + 'px';
+        menu.hidden = false;
+        nav.classList.add('more-open');
+        more.setAttribute('aria-expanded', 'true');
+        const first = menu.querySelector('.nav-more-item');
+        if (first) first.focus();
+      }
+      function closeMenu() {
+        if (menu.hidden) return;
+        menu.hidden = true;
+        nav.classList.remove('more-open');
+        more.setAttribute('aria-expanded', 'false');
+      }
+
+      more.addEventListener('click', e => {
+        e.stopPropagation();
+        menu.hidden ? openMenu() : closeMenu();
+      });
+      document.addEventListener('click', e => { if (!menu.contains(e.target)) closeMenu(); });
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && !menu.hidden) { closeMenu(); more.focus(); }
+        if (!menu.hidden && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+          const items = Array.from(menu.querySelectorAll('.nav-more-item'));
+          const i = items.indexOf(document.activeElement);
+          const next = items[(i + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length];
+          if (next) { e.preventDefault(); next.focus(); }
+        }
+      });
+
+      fit();
+      if (window.ResizeObserver) new ResizeObserver(fit).observe(nav);
+      else window.addEventListener('resize', fit);
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
+    })();
+  </script>
+
 
   <script>
     // ------------------------------------------------------------------
@@ -1293,6 +1647,47 @@
         localStorage.removeItem(SCHOOLAGY_COURSE_ORDER_KEY);
       } catch {}
     }
+    // Subject table (2026-10-01, per Martin): each course gets a color that
+    // fits its subject, picked from its name. First match wins, so specific
+    // subjects come before broad ones ("Computer Science" before "Science",
+    // "Physical Education" before "Physics"). A color the student picked in
+    // the course's info pop-up still wins over this. No match keeps the
+    // course's own color. All colors pass 4.5:1 with white text.
+    const COURSE_SUBJECTS = [
+      [/\bchem/, '🧪', '#1b7f67'],
+      [/\bbio|anatom|physiolog/, '🧬', '#387f33'],
+      [/\bphysical ed|(^|[^a-z])p\.?e\.?($|[^a-z])|fitness|\bweight/, '🏃', '#c2562b'],
+      [/\bhealth/, '🩺', '#c0404a'],
+      [/\bphysics/, '⚛️', '#4a56b8'],
+      [/astronom/, '🔭', '#3b3f8f'],
+      [/environment|\bearth|geolog/, '🌍', '#2f7f63'],
+      [/robotic/, '🤖', '#55697d'],
+      [/computer|programming|coding|\bcs[ap]?\b|software/, '💻', '#2d6f8f'],
+      [/engineer/, '⚙️', '#6a6478'],
+      [/government|civics|politic/, '🏛️', '#2f4f8a'],
+      [/econ/, '📈', '#2e7d4f'],
+      [/psych/, '🧠', '#9a4583'],
+      [/geograph/, '🗺️', '#4c7a5a'],
+      [/histor/, '📜', '#9a5a2a'],
+      [/statistic|\bstats?\b/, '📊', '#2f72a8'],
+      [/geometr|\btrig/, '📐', '#3e64b0'],
+      [/calc|algebra|\bmath/, '🧮', '#2f5fb3'],
+      [/english|literature|\blit\b|writing|composition|language arts|reading/, '📖', '#a63a4f'],
+      [/spanish|french|german|chinese|mandarin|japanese|korean|latin|italian|\basl\b|sign language|language/, '🗣️', '#7a4fae'],
+      [/theat|drama/, '🎭', '#a3364b'],
+      [/music|band|choir|orchestra|chorus/, '🎵', '#6b48a8'],
+      [/photo/, '📷', '#4f5d6e'],
+      [/culinary|cooking|\bfoods?\b|nutrition/, '🍳', '#b05a26'],
+      [/\barts?\b|drawing|painting|ceramic|sculpt|design/, '🎨', '#b03f7a'],
+      [/business|marketing|accounting|financ/, '💼', '#3d5f6e'],
+      [/journalism|yearbook|newspaper/, '📰', '#5c5c6e'],
+      [/science/, '🔬', '#2b7b8c'],
+    ];
+    function courseSubject(name) {
+      const n = String(name || '').toLowerCase();
+      return COURSE_SUBJECTS.find(([re]) => re.test(n)) || null;
+    }
+
     function applyCourseCustomizationsInPlace(courses) {
       const custom = loadCourseCustom();
       // Mutates each course object's own fields in place (never clones,
@@ -1302,7 +1697,11 @@
       // than wrapping it in a function call) is what lets
       // scripts/port-pages.mjs's data-overrides transform find and
       // rewrite it for live Schoology data.
-      courses.forEach(c => Object.assign(c, custom[c.id] || {}));
+      courses.forEach(c => {
+        const subject = courseSubject(c.name);
+        if (subject) c.color = subject[2];
+        Object.assign(c, custom[c.id] || {});
+      });
       const order = loadCourseOrder();
       if (order && order.length) {
         const byId = new Map(courses.map(c => [c.id, c]));
@@ -1331,7 +1730,7 @@
     const DEFAULT_COURSES = JSON.parse(JSON.stringify(RAW_COURSES));
     const COURSES = RAW_COURSES;
     applyCourseCustomizationsInPlace(COURSES);
-    const DEFAULT_WIDGETS = { messages: false };
+    const DEFAULT_WIDGETS = { messages: false, today: true, recent: true, updates: true, summary: true };
 
     // Per-course assignment score history behind the "Predicted" figure —
     // the real thing (see architecture-decisions.md) extrapolates the
@@ -1378,6 +1777,30 @@
       { type: 'assessment', title: 'Unit 2 Quiz', courseId: 'algebra2', due: 'Mon Aug 24' },
       { type: 'assignment', title: 'Vocab Worksheet', courseId: 'spanish3', due: 'Tue Aug 25' },
       { type: 'assignment', title: 'Problem Set 7', courseId: 'algebra2', due: 'Wed Aug 26' },
+      { type: 'assessment', title: 'Gas Laws Test', courseId: 'apchem', due: 'Fri Aug 28' },
+      { type: 'assessment', title: 'Chapter 7 Vocab Quiz', courseId: 'spanish3', due: 'Mon Aug 31' },
+    ];
+
+    // ------------------------------------------------------------------
+    // New widgets' data (2026-10-03). Signed in, these come from the API
+    // (window.__SCHOOLAGY__.data) and are empty until it sends them; the
+    // samples below are only for the demo, never shown as real grades.
+    // ------------------------------------------------------------------
+    const HOME_LIVE = !!(window.__SCHOOLAGY__ && window.__SCHOOLAGY__.data);
+    const HOME_DATA = HOME_LIVE ? window.__SCHOOLAGY__.data : {};
+    // "Now" for due math: real time when signed in; the demo's own Monday, Aug 24.
+    const REF_NOW = HOME_LIVE ? new Date() : new Date(2026, 7, 24, 8, 0);
+    const RECENT_GRADES = HOME_LIVE ? (Array.isArray(HOME_DATA.RECENT_GRADES) ? HOME_DATA.RECENT_GRADES : []) : [
+      { title: 'Molarity Practice Set', courseId: 'apchem', when: '2h ago', letter: 'A-', pct: 90, pts: '18/20', isNew: true },
+      { title: 'Essay 2: Rhetorical Analysis', courseId: 'english10', when: '3h ago', letter: 'D+', pct: 68, pts: '27/40', isNew: true },
+      { title: 'Unit 1 Test', courseId: 'algebra2', when: '1d ago', letter: 'A', pct: 94, pts: '47/50' },
+      { title: 'Reading Log 3', courseId: 'english10', when: '1d ago', letter: 'A-', pct: 90, pts: '9/10' },
+    ];
+    const COURSE_UPDATES = HOME_LIVE ? (Array.isArray(HOME_DATA.COURSE_UPDATES) ? HOME_DATA.COURSE_UPDATES : []) : [
+      { from: 'Mr. Alvarez', courseId: 'apchem', when: '1h ago', unread: true, body: 'Lab report grading rubric is posted in Materials. Read it before Thursday’s lab.' },
+      { from: 'Mr. Cho', courseId: 'english10', when: '4h ago', unread: true, body: 'Essay Draft feedback is in. Check the comments before you revise for the final draft.' },
+      { from: 'Mr. Cho', courseId: 'english10', when: '1d ago', body: 'Reminder: Chapter 6 Discussion post is overdue. Late posts still get partial credit through Friday.' },
+      { from: 'Coach Reyes', courseId: 'pe', when: '2d ago', body: 'Fitness test retakes are Wednesday during 6th period. Bring running shoes.' },
     ];
 
     // Overdue work belongs in the Assignments list's own Overdue section,
@@ -1391,7 +1814,7 @@
     // would give, trimmed to what a compact preview needs.
     const MESSAGES = [
       { from: 'Mr. Alvarez', courseId: 'apchem', preview: 'Lab report grading rubric is posted — see the Materials tab.', time: '1h ago' },
-      { from: 'Ms. Cho', courseId: 'english10', preview: 'Reminder: Chapter 6 discussion post is due Thursday.', time: '3h ago' },
+      { from: 'Mr. Cho', courseId: 'english10', preview: 'Reminder: Chapter 6 discussion post is due Thursday.', time: '3h ago' },
       { from: 'Coach Reyes', courseId: 'pe', preview: 'Great work on the fitness test this week!', time: '1d ago' },
     ];
 
@@ -1508,11 +1931,11 @@
     }
     function renderAssignList(container, items, overdue) {
       container.innerHTML = items.map(item => `
-        <div class="assign-item ${overdue ? 'is-overdue' : ''}" role="link" tabindex="0" data-href="${escapeHtml(assignmentHref(item))}" aria-label="${escapeHtml(item.title)}, ${escapeHtml(courseName(item.courseId))}">
+        <div class="assign-item ${overdue ? 'is-overdue' : ''}${item.type === 'assessment' ? ' is-test' : ''}" role="link" tabindex="0" data-href="${escapeHtml(assignmentHref(item))}" aria-label="${escapeHtml(item.title)}, ${escapeHtml(courseName(item.courseId))}">
           <span class="assign-tick" style="background:${escapeHtml(courseColor(item.courseId))}"></span>
           <div class="assign-text">
-            <p class="assign-title">${escapeHtml(item.title)}</p>
-            <p class="assign-meta"><span class="assign-type">${TYPE_LABEL[item.type]}</span> · <span class="assign-course">${escapeHtml(courseName(item.courseId))}</span></p>
+            <p class="assign-title">${escapeHtml(item.title)}${item.type === 'assessment' ? `<span class="test-tag">${testWord(item)}</span>` : ''}</p>
+            <p class="assign-meta">${item.type === 'assessment' ? '' : `<span class="assign-type">${TYPE_LABEL[item.type] || ''}</span> · `}<span class="assign-course">${escapeHtml(courseName(item.courseId))}</span></p>
           </div>
           <span class="assign-due">${escapeHtml(item.due)}</span>
         </div>
@@ -1599,6 +2022,204 @@
     wireRowNav(todayList);
     wireRowNav(messagesList);
 
+    // ------------------------------------------------------------------
+    // Recently graded + Course updates (2026-10-03)
+    // ------------------------------------------------------------------
+    const recentList = document.getElementById('recentList');
+    function renderRecentGrades() {
+      recentList.innerHTML = RECENT_GRADES.length ? RECENT_GRADES.map(r => `
+        <div class="rg-item" role="link" tabindex="0" data-href="gradebook.html?course=${encodeURIComponent(r.courseId)}" aria-label="${escapeHtml(r.title)}, ${escapeHtml(courseName(r.courseId))}, ${escapeHtml(r.letter)} ${escapeHtml(r.pct)} percent">
+          <span class="assign-tick" style="background:${escapeHtml(courseColor(r.courseId))}"></span>
+          <div class="rg-text">
+            <p class="rg-title">${escapeHtml(r.title)}${r.isNew ? '<span class="new-dot" title="New"></span>' : ''}</p>
+            <p class="rg-meta">${escapeHtml(courseName(r.courseId))} · ${escapeHtml(r.when)}</p>
+          </div>
+          <div class="rg-score">
+            <span class="grade-val ${gradeBand(String(r.letter))}">${escapeHtml(r.letter)}<span class="rg-pct">${escapeHtml(r.pct)}%</span></span>
+            ${r.pts ? `<span class="rg-pts">${escapeHtml(r.pts)}</span>` : ''}
+          </div>
+        </div>`).join('') : '<p class="widget-empty">No new grades yet.</p>';
+    }
+    const updatesList = document.getElementById('updatesList');
+    function renderCourseUpdates() {
+      const initial = n => String(n).replace(/^(Mr\.|Mrs\.|Ms\.|Mx\.|Dr\.|Sra\.|Sr\.|Coach)\s*/i, '').charAt(0).toUpperCase();
+      updatesList.innerHTML = COURSE_UPDATES.length ? COURSE_UPDATES.map(u => `
+        <div class="tu-item" role="link" tabindex="0" data-href="course-home.html?course=${encodeURIComponent(u.courseId)}" aria-label="${escapeHtml(u.from)}, ${escapeHtml(courseName(u.courseId))}: ${escapeHtml(u.body)}">
+          <span class="tu-avatar" style="background:${escapeHtml(courseColor(u.courseId))}" aria-hidden="true">${escapeHtml(initial(u.from))}</span>
+          <div class="tu-text">
+            <div class="tu-top">
+              <p><span class="tu-from">${escapeHtml(u.from)}</span> <span class="tu-course">· ${escapeHtml(courseName(u.courseId))}</span></p>
+              <span class="tu-time">${escapeHtml(u.when)}${u.unread ? '<span class="new-dot" title="New"></span>' : ''}</span>
+            </div>
+            <p class="tu-body">${escapeHtml(u.body)}</p>
+          </div>
+        </div>`).join('') : '<p class="widget-empty">No updates from your teachers yet.</p>';
+      const unread = COURSE_UPDATES.filter(u => u.unread).length;
+      const tag = document.getElementById('updatesNew');
+      tag.hidden = !unread; tag.textContent = `${unread} new`;
+    }
+    wireRowNav(recentList);
+    wireRowNav(updatesList);
+
+    // ------------------------------------------------------------------
+    // Summary card at the top of Assignments (2026-10-03, per Martin).
+    // Next test / Next assignment / Today. Same category: slide. New
+    // category: the calendar's blur. Dots are the current category's items.
+    // ------------------------------------------------------------------
+    const SUMMARY_KEY = 'schoolagy_home_summary';
+    const SUM_DWELL = 8000;   // each card shows for 8s (was 4s; slowed 2x on 2026-10-04, per Martin)
+    const SUM_REDUCE = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const SUM_CHEV = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+    const SUM_CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>';
+    const SHORT_DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    function dayStart(d) { return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+    function dueDateOf(item) {
+      if (item.dueAt) { const d = new Date(item.dueAt); if (!isNaN(d)) return d; }
+      try { const d = parseMockDate(String(item.due || '')); return isNaN(d) ? null : d; } catch { return null; }
+    }
+    function daysAway(d) { return Math.round((dayStart(d) - dayStart(REF_NOW)) / 86400000); }
+    function testWord(item) { return /\b(test|exam|final|midterm)\b/i.test(item.title) ? 'Test' : 'Quiz'; }
+    function tileFor(d) {
+      const n = daysAway(d);
+      return { top: n === 0 ? 'Today' : n === 1 ? 'Tmrw' : SHORT_DOW[d.getDay()], num: d.getDate() };
+    }
+    function buildSummaryCats() {
+      const dated = UPCOMING.map(i => ({ ...i, _d: dueDateOf(i) })).filter(i => i._d && daysAway(i._d) >= 0).sort((a, b) => a._d - b._d);
+      const tests = dated.filter(i => i.type === 'assessment');
+      const work = dated.filter(i => i.type !== 'assessment');
+      const cats = [];
+      if (tests.length) cats.push({ key: 'test', label: 'Next test', desc: 'Your upcoming quizzes and tests', items: tests.slice(0, 5).map(i => {
+        const n = daysAway(i._d);
+        return { ...tileFor(i._d), color: courseColor(i.courseId), title: i.title, href: assignmentHref(i),
+          meta: `${courseName(i.courseId)} · ${n === 0 ? 'Today' : n === 1 ? 'Tomorrow' : `In ${n} days`}` };
+      }) });
+      if (work.length) cats.push({ key: 'assignment', label: 'Next assignment', desc: 'What you have due next', items: work.slice(0, 5).map(i => {
+        const n = daysAway(i._d);
+        return { ...tileFor(i._d), color: courseColor(i.courseId), title: i.title, href: assignmentHref(i),
+          meta: `${courseName(i.courseId)} · ${n === 0 ? 'Due today' : n === 1 ? 'Due tomorrow' : `Due in ${n} days`}` };
+      }) });
+      const today = dated.filter(i => daysAway(i._d) === 0);
+      const allTests = today.length && today.every(i => i.type === 'assessment');
+      const word = allTests ? (today.length === 1 ? testWord(today[0]).toLowerCase() : (today.every(i => testWord(i) === 'Quiz') ? 'quizzes' : 'tests')) : '';
+      const title = !today.length ? 'Nothing due today' : allTests ? `${today.length} ${word} due today` : `${today.length} thing${today.length === 1 ? '' : 's'} due today`;
+      const metaParts = [];
+      if (today.length) metaParts.push(`${today[0].title}, ${courseName(today[0].courseId)}${today.length > 1 ? ` + ${today.length - 1} more` : ''}`);
+      metaParts.push(OVERDUE.length ? `${OVERDUE.length} overdue` : 'Nothing overdue');
+      cats.push({ key: 'today', label: 'Today', desc: 'A summary of today', items: [
+        { top: SHORT_DOW[REF_NOW.getDay()], num: REF_NOW.getDate(), color: 'var(--accent)', title, meta: metaParts.join(' · '), href: 'calendar.html' } ] });
+      return cats;
+    }
+    const sumCard = document.getElementById('sumCard');
+    let sumCats = [], sumCat = 0, sumItem = 0, sumTimer = null, sumPaused = false, sumBusy = false;
+    let sumFirst = (() => { try { return localStorage.getItem(SUMMARY_KEY) || 'test'; } catch { return 'test'; } })();
+    sumCard.innerHTML = `<div class="sum-view" aria-live="polite"></div><div class="sum-dots" role="group" aria-label="Choose an item"></div><div class="sum-menu" role="menu" aria-label="Show first" hidden></div>`;
+    const sumView = sumCard.querySelector('.sum-view'), sumDots = sumCard.querySelector('.sum-dots'), sumMenu = sumCard.querySelector('.sum-menu');
+    function sumSlideEl(c, i) {
+      const C = sumCats[c], it = C.items[i];
+      const el = document.createElement('div');
+      el.className = 'sum-slide'; el.dataset.href = it.href || '';
+      el.innerHTML = `<div class="sum-when" style="background:${escapeHtml(it.color)}"><span>${escapeHtml(it.top)}</span><b>${escapeHtml(it.num)}</b></div>
+        <div class="sum-body"><button class="sum-pick" type="button" aria-haspopup="menu" aria-expanded="${!sumMenu.hidden}">${escapeHtml(C.label)} ${SUM_CHEV}</button>
+        <p class="sum-title">${escapeHtml(it.title)}</p><p class="sum-meta">${escapeHtml(it.meta)}</p></div>`;
+      return el;
+    }
+    function sumPaintDots() {
+      const items = sumCats[sumCat].items;
+      if (sumDots.dataset.cat !== sumCats[sumCat].key || sumDots.children.length !== (items.length > 1 ? items.length : 0)) {
+        sumDots.dataset.cat = sumCats[sumCat].key;
+        sumDots.innerHTML = items.length > 1 ? items.map((it, k) => `<button class="sum-dot" type="button" data-i="${k}" aria-label="${escapeHtml(it.title)}"></button>`).join('') : '';
+      }
+      sumDots.querySelectorAll('.sum-dot').forEach((d, k) => { d.classList.toggle('on', k === sumItem); d.setAttribute('aria-current', k === sumItem ? 'true' : 'false'); d.style.setProperty('--fill', '0'); });
+    }
+    function sumPaint() { sumView.innerHTML = ''; sumView.appendChild(sumSlideEl(sumCat, sumItem)); sumPaintDots(); }
+    function sumSlideTo(i) {
+      const old = sumView.querySelector('.sum-slide'), back = i < sumItem;
+      sumItem = i; sumPaintDots();
+      if (SUM_REDUCE || !old || document.body.classList.contains('potato-mode')) { sumPaint(); return; }
+      sumBusy = true;
+      const next = sumSlideEl(sumCat, sumItem);
+      sumView.style.height = old.offsetHeight + 'px';
+      sumView.classList.add('sliding');
+      next.classList.add(back ? 'from-left' : 'from-right');
+      sumView.appendChild(next);
+      void next.offsetWidth;
+      old.classList.add(back ? 'to-right' : 'to-left'); next.classList.remove('from-right', 'from-left');
+      setTimeout(() => { old.remove(); sumView.classList.remove('sliding'); sumView.style.height = ''; sumBusy = false; }, 400);
+    }
+    function sumSwitchCat(c) {
+      sumCat = (c + sumCats.length) % sumCats.length; sumItem = 0;
+      if (SUM_REDUCE || sumCats.length === 1 || document.body.classList.contains('potato-mode')) { sumPaint(); return; }
+      sumBusy = true;
+      sumView.classList.add('switching');
+      sumPaintDots();
+      setTimeout(() => { sumPaint(); sumView.classList.remove('switching'); setTimeout(() => { sumBusy = false; }, 270); }, 270);
+    }
+    function sumStep() { if (sumCats[sumCat].items.length > sumItem + 1) sumSlideTo(sumItem + 1); else sumSwitchCat(sumCat + 1); }
+    // Progress (2026-10-04): the current dot fills darker from left to right
+    // like a video bar; when it's full, the next card comes in. Time only
+    // counts while nothing is paused, so pausing holds the bar where it is.
+    let sumElapsed = 0, sumLastTs = 0, sumLoopOn = false;
+    function sumFill() {
+      const on = sumDots.querySelector('.sum-dot.on');
+      if (on) on.style.setProperty('--fill', String(Math.min(1, sumElapsed / SUM_DWELL)));
+    }
+    function sumSchedule() {   // (re)start the current card's time from empty
+      sumElapsed = 0;
+      sumFill();
+      if (sumLoopOn) return;
+      sumLoopOn = true;
+      if (document.body.classList.contains('potato-mode')) { sumLoopOn = false; return; }   // Potato mode: no frame loop at all
+      requestAnimationFrame(function loop(ts) {
+        if (document.body.classList.contains('potato-mode')) { sumLoopOn = false; sumLastTs = 0; sumElapsed = 0; sumFill(); return; }
+        const dt = sumLastTs ? Math.min(ts - sumLastTs, 100) : 0;   // no jump after a hidden tab
+        sumLastTs = ts;
+        if (!sumCard.hidden && !sumPaused && sumMenu.hidden && !sumBusy && !widgetDragModeOn && !document.hidden && !document.body.classList.contains('potato-mode')) {   // Potato mode: no auto-advance
+          sumElapsed += dt;
+          if (sumElapsed >= SUM_DWELL) { sumElapsed = 0; sumStep(); }
+        }
+        sumFill();
+        requestAnimationFrame(loop);
+      });
+    }
+    function sumPaintMenu() {
+      sumMenu.innerHTML = '<div class="sum-menu-label">Show first</div>' + sumCats.map(c => `<button class="sum-opt${c.key === sumFirst ? ' sel' : ''}" type="button" role="menuitemradio" aria-checked="${c.key === sumFirst}" data-key="${c.key}"><span>${escapeHtml(c.label)}<small>${escapeHtml(c.desc)}</small></span>${c.key === sumFirst ? SUM_CHECK : ''}</button>`).join('');
+    }
+    function renderSummary() {
+      const curKey = sumCats.length ? sumCats[sumCat].key : sumFirst;
+      sumCats = buildSummaryCats();
+      const at = sumCats.findIndex(c => c.key === curKey);
+      sumCat = at === -1 ? Math.max(0, sumCats.findIndex(c => c.key === sumFirst)) : at;
+      sumItem = Math.min(sumItem, sumCats[sumCat].items.length - 1);
+      sumPaint();
+    }
+    sumCard.addEventListener('mouseenter', () => { sumPaused = true; });
+    sumCard.addEventListener('mouseleave', () => { sumPaused = false; });   // resumes where it paused
+    sumCard.addEventListener('focusin', () => { sumPaused = true; });
+    sumCard.addEventListener('focusout', () => { sumPaused = false; });
+    sumCard.addEventListener('click', e => {
+      if (widgetDragModeOn) return;
+      const dot = e.target.closest('.sum-dot');
+      if (dot) { if (!sumBusy) { const k = Number(dot.dataset.i); if (k !== sumItem) sumSlideTo(k); sumSchedule(); } return; }
+      if (e.target.closest('.sum-pick')) {
+        sumMenu.hidden = !sumMenu.hidden; sumPaintMenu();
+        const b = sumCard.querySelector('.sum-pick'); if (b) b.setAttribute('aria-expanded', String(!sumMenu.hidden));
+        return;
+      }
+      const opt = e.target.closest('.sum-opt');
+      if (opt) {
+        sumFirst = opt.dataset.key; try { localStorage.setItem(SUMMARY_KEY, sumFirst); } catch {}
+        sumMenu.hidden = true;
+        const c = sumCats.findIndex(x => x.key === sumFirst);
+        if (c !== -1 && c !== sumCat) sumSwitchCat(c); else sumPaint();
+        sumSchedule(); return;
+      }
+      if (e.target.closest('.sum-menu')) return;
+      const slide = e.target.closest('.sum-slide[data-href]');
+      if (slide && slide.dataset.href) window.location.href = slide.dataset.href;
+    });
+    document.addEventListener('click', e => { if (!sumMenu.hidden && !sumCard.contains(e.target)) { sumMenu.hidden = true; const b = sumCard.querySelector('.sum-pick'); if (b) b.setAttribute('aria-expanded', 'false'); } });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && !sumMenu.hidden) { sumMenu.hidden = true; const b = sumCard.querySelector('.sum-pick'); if (b) { b.setAttribute('aria-expanded', 'false'); b.focus(); } } });
+
     // Nav: purely visual page-switching for the preview — swaps the
     // active state, doesn't actually navigate anywhere yet.
     document.querySelectorAll('.nav-link').forEach(link => {
@@ -1629,8 +2250,24 @@
       return [lo, hi];
     }
 
+    // Grades given on the same day become one point: their average, with
+    // the date labeled "Aug 18 ×3" (2026-10-01). Otherwise three grades on
+    // one day drew as a zigzag across three fake "days".
+    function groupSameDay(h) {
+      const days = [];
+      h.points.forEach((p, i) => {
+        const d = h.dates[i];
+        const last = days[days.length - 1];
+        if (last && last.date === d) { last.sum += p; last.n++; }
+        else days.push({ date: d, sum: p, n: 1 });
+      });
+      return Object.assign({}, h, {
+        points: days.map(x => Math.round(x.sum / x.n)),
+        dates: days.map(x => x.n > 1 ? `${x.date} ×${x.n}` : x.date),
+      });
+    }
     function buildGradeChartSVG(course) {
-      const hist = HISTORY[course.id];
+      const hist = groupSameDay(HISTORY[course.id]);
       const allLabels = hist.dates.concat(['Predicted']);
       const allValues = hist.points.concat([course.predictedPct]);
       const [yLo, yHi] = niceBounds(allValues);
@@ -1755,18 +2392,31 @@
     // color, and order (used everywhere that course shows up — the
     // Grades table, Today, Assignments, Messages); which optional
     // widgets are on; and each widget's position/size within its column.
-    // Nothing here persists past a page reload yet (see
+    // Which widgets are on is saved in this browser (2026-10-03); order
+    // and size still don't persist past a page reload (see
     // architecture-decisions.md for what real persistence needs, and
     // for the note about course order needing to carry over to a future
     // Courses page too).
     // ------------------------------------------------------------------
-    const widgetPrefs = { messages: false };
+    // Widget on/off, saved per browser (2026-10-03) so turning one off sticks.
+    const WIDGET_PREFS_KEY = 'schoolagy_home_widgets';
+    function loadWidgetPrefs() {
+      try { const v = JSON.parse(localStorage.getItem(WIDGET_PREFS_KEY) || '{}'); return v && typeof v === 'object' ? v : {}; } catch { return {}; }
+    }
+    function saveWidgetPrefs() { try { localStorage.setItem(WIDGET_PREFS_KEY, JSON.stringify(widgetPrefs)); } catch {} }
+    const widgetPrefs = { ...DEFAULT_WIDGETS };
+    { const saved = loadWidgetPrefs(); Object.keys(DEFAULT_WIDGETS).forEach(k => { if (typeof saved[k] === 'boolean') widgetPrefs[k] = saved[k]; }); }
 
     const editFab = document.getElementById('editFab');
     const editorOverlay = document.getElementById('editorOverlay');
     const editorCourseList = document.getElementById('editorCourseList');
     const widgetMessagesToggle = document.getElementById('widgetMessagesToggle');
     const messagesWidget = document.getElementById('block-messages');
+    const widgetTodayToggle = document.getElementById('widgetTodayToggle');
+    const todayWidget = document.getElementById('block-today');
+    const widgetRecentToggle = document.getElementById('widgetRecentToggle');
+    const widgetUpdatesToggle = document.getElementById('widgetUpdatesToggle');
+    const widgetSummaryToggle = document.getElementById('widgetSummaryToggle');
 
     // Drag-and-drop reorder: only mutate the DOM/array on 'drop', never
     // on 'dragover' (which fires continuously as the mouse moves) — an
@@ -2029,12 +2679,24 @@
       renderAssignLists();
       renderTodayList();
       renderMessagesWidget();
+      renderRecentGrades();
+      renderCourseUpdates();
+      renderSummary();
     }
 
     function applyWidgetPrefs() {
       messagesWidget.hidden = !widgetPrefs.messages;
       widgetMessagesToggle.checked = widgetPrefs.messages;
+      todayWidget.hidden = !widgetPrefs.today;
+      widgetTodayToggle.checked = widgetPrefs.today;
+      document.getElementById('block-recent').hidden = !widgetPrefs.recent;
+      widgetRecentToggle.checked = widgetPrefs.recent;
+      document.getElementById('block-updates').hidden = !widgetPrefs.updates;
+      widgetUpdatesToggle.checked = widgetPrefs.updates;
+      document.getElementById('sumCard').hidden = !widgetPrefs.summary;   // the timer below stops while it's hidden
+      widgetSummaryToggle.checked = widgetPrefs.summary;
     }
+    applyWidgetPrefs();   // a widget turned off last time stays off
 
     // ------------------------------------------------------------------
     // Reorder & resize widgets — the editor's button for this closes
@@ -2049,26 +2711,28 @@
     // places with ANY other widget, in either column, not just one in
     // its own — see onWidgetDragMove/onWidgetDragUp below.
     // ------------------------------------------------------------------
-    const WIDGET_LABELS = { grades: 'Grades', today: "Today's schedule", assignments: 'Assignments', messages: 'Messages' };
+    const WIDGET_LABELS = { grades: 'Grades', today: "Today's schedule", recent: 'Recently graded', assignments: 'Assignments', updates: 'Course updates', messages: 'Messages' };
     const BLOCK_EL = {
       grades: document.getElementById('block-grades'),
       today: document.getElementById('block-today'),
+      recent: document.getElementById('block-recent'),
       assignments: document.getElementById('block-assignments'),
+      updates: document.getElementById('block-updates'),
       messages: document.getElementById('block-messages'),
     };
     const ALL_WIDGET_IDS = Object.keys(BLOCK_EL);
     const colLeftEl = document.getElementById('colLeft');
     const colRightEl = document.getElementById('colRight');
 
-    let leftOrder = ['grades', 'today'];
-    let rightOrder = ['assignments', 'messages'];
+    let leftOrder = ['grades', 'today', 'recent'];
+    let rightOrder = ['assignments', 'updates', 'messages'];
     const DEFAULT_LEFT_ORDER = [...leftOrder];
     const DEFAULT_RIGHT_ORDER = [...rightOrder];
 
     // Continuous scale (not a 3-tier preset) — driven live by dragging
     // the corner resize handle, so "Standard" as a fixed name doesn't
     // really apply anymore; 1 is the default/reset size.
-    let widgetSizes = { grades: 1, today: 1, assignments: 1, messages: 1 };
+    let widgetSizes = { grades: 1, today: 1, recent: 1, assignments: 1, updates: 1, messages: 1 };
     const DEFAULT_WIDGET_SIZES = { ...widgetSizes };
     const RESIZE_MIN = 0.82, RESIZE_MAX = 1.3;
 
@@ -2371,7 +3035,18 @@
     widgetMessagesToggle.addEventListener('change', () => {
       widgetPrefs.messages = widgetMessagesToggle.checked;
       applyWidgetPrefs();
+      saveWidgetPrefs();
     });
+    widgetTodayToggle.addEventListener('change', () => {
+      widgetPrefs.today = widgetTodayToggle.checked;
+      applyWidgetPrefs();
+      saveWidgetPrefs();
+    });
+    [[widgetRecentToggle, 'recent'], [widgetUpdatesToggle, 'updates'], [widgetSummaryToggle, 'summary']].forEach(([t, k]) => t.addEventListener('change', () => {
+      widgetPrefs[k] = t.checked;
+      applyWidgetPrefs();
+      saveWidgetPrefs();
+    }));
 
     document.getElementById('editorReset').addEventListener('click', () => {
       // Restore both the array's CONTENTS and its ORDER to the true
@@ -2387,7 +3062,8 @@
       COURSES.length = 0;
       DEFAULT_COURSES.forEach(c => COURSES.push(JSON.parse(JSON.stringify(c))));
       clearCourseCustomizations();
-      widgetPrefs.messages = DEFAULT_WIDGETS.messages;
+      Object.assign(widgetPrefs, DEFAULT_WIDGETS);
+      try { localStorage.removeItem(WIDGET_PREFS_KEY); } catch {}
       leftOrder = [...DEFAULT_LEFT_ORDER];
       rightOrder = [...DEFAULT_RIGHT_ORDER];
       widgetSizes = { ...DEFAULT_WIDGET_SIZES };
@@ -2472,9 +3148,48 @@
     renderAssignLists();
     renderTodayList();
     renderMessagesWidget();
+    renderRecentGrades();
+    renderCourseUpdates();
+    renderSummary();
+    sumSchedule();
     applyWidgetPrefs();
     applyColumnOrder();
     applyWidgetSizes();
+  </script>
+  <script>
+    // Back link (2026-10-01, per Martin: "where it returns to ... is always
+    // wrong"). Every page records itself in a short per-tab trail; a page's
+    // back link then says and goes to the page before it ("Back to AP
+    // Chemistry Hub", "Back to Grades"...). With no trail (the page was
+    // opened directly) the page's own default back link is left alone.
+    (function () {
+      const SELF = 'home.html';
+      const KEY = 'averages_nav_trail';
+      const here = SELF + location.search;
+      const label = (document.title || '').replace(/^Averages\s*[—-]\s*/, '') || 'Home';
+      let trail = [];
+      try { trail = JSON.parse(sessionStorage.getItem(KEY) || '[]'); } catch {}
+      if (!Array.isArray(trail)) trail = [];
+      const last = trail[trail.length - 1];
+      if (last && last.href === here) last.label = label;                 // reload
+      else if (trail.length > 1 && trail[trail.length - 2].href === here) { trail.pop(); trail[trail.length - 1].label = label; } // went back
+      else trail.push({ href: here, label });
+      trail = trail.slice(-20);
+      try { sessionStorage.setItem(KEY, JSON.stringify(trail)); } catch {}
+
+      const btn = document.querySelector('.back-link');
+      const prev = trail[trail.length - 2];
+      if (!btn || !prev) return;
+      const fresh = btn.cloneNode(false);          // same button, minus old click handlers
+      fresh.removeAttribute('onclick');
+      const icon = btn.querySelector('svg');
+      if (icon) fresh.appendChild(icon.cloneNode(true));
+      const text = document.createElement('span');
+      text.textContent = 'Back to ' + prev.label;
+      fresh.appendChild(text);
+      fresh.addEventListener('click', () => { window.location.href = prev.href; });
+      btn.replaceWith(fresh);
+    })();
   </script>
 </body>
 </html>

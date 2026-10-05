@@ -383,6 +383,34 @@
   .settings-row-desc { font-size: 0.76rem; color: var(--text-muted); margin: 2px 0 0; line-height: 1.4; }
   .settings-row-value { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; flex-shrink: 0; }
 
+  /* ---------- Integrations (2026-10-04) ---------- */
+  .integ-status { display: inline-flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 0.72rem; font-weight: 800; color: var(--text-faint); }
+  .integ-status::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--border); flex: none; }
+  .integ-status.on { color: var(--grade-good, #2f7d54); }
+  .integ-status.on::before { background: var(--grade-good, #2f7d54); }
+  .integ-btn { min-width: 104px; }
+  .integ-btn.disconnect { color: var(--grade-bad, #b6432f); }
+  .integ-soon { font-size: 0.72rem; font-weight: 800; color: var(--text-faint); white-space: nowrap; flex-shrink: 0; }
+  .integ-note { margin: 10px 2px 0; }
+  .integ-note + .settings-subhead { margin-top: 22px; }
+  .integ-hint { color: var(--text-faint); font-weight: 700; }
+  /* Rounded dropdown (2026-10-04): pill button + rounded menu */
+  .pick { flex-shrink: 0; }
+  .pick-btn { display: inline-flex; align-items: center; gap: 8px; font: inherit; font-weight: 700; font-size: 0.83rem; color: var(--text-dark); background: var(--panel-bg); border: 1px solid var(--border); border-radius: 999px; padding: 8px 12px 8px 16px; cursor: pointer; white-space: nowrap; }
+  .pick-btn:hover { background: var(--panel-inner); }
+  .pick-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring); }
+  .pick-chev { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; transition: transform 0.15s ease; }
+  .pick-btn[aria-expanded="true"] .pick-chev { transform: rotate(180deg); }
+  .pick-menu { position: fixed; z-index: 300; min-width: 180px; background: var(--panel-bg); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 18px 44px -14px rgba(0,0,0,0.45); padding: 6px; display: flex; flex-direction: column; gap: 2px; }
+  .pick-menu[hidden] { display: none; }
+  .pick-opt { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: 100%; border: none; background: none; border-radius: 11px; padding: 9px 12px; font: inherit; font-weight: 700; font-size: 0.83rem; color: var(--text-dark); text-align: left; cursor: pointer; }
+  .pick-opt:hover, .pick-opt:focus-visible { background: var(--panel-inner); outline: none; }
+  .pick-opt[aria-selected="true"] { color: var(--accent); }
+  .pick-check { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; visibility: hidden; }
+  .pick-opt[aria-selected="true"] .pick-check { visibility: visible; }
+  @media (prefers-reduced-motion: reduce) { .pick-chev { transition: none; } }
+  .integ-hint[hidden] { display: none; }
+
   .accent-swatch-btn {
     width: 28px;
     height: 28px;
@@ -519,6 +547,11 @@
   .toggle input:checked ~ .track .thumb { transform: translateX(16px); }
   .toggle input:focus-visible ~ .track { box-shadow: 0 0 0 3px var(--accent-ring); }
 
+  /* Browser notifications (2026-10-04) */
+  #notifTypesWrap[hidden], .notif-blocked[hidden] { display: none; }
+  .notif-blocked { margin: 10px 2px 0; color: var(--grade-bad); font-weight: 700; }
+  .notif-test { margin-top: 12px; }
+  #notifTypesWrap > .settings-subhead { margin-top: 22px; }
   select.settings-select {
     font: inherit;
     font-weight: 700;
@@ -872,6 +905,84 @@
   .nav-link .dot { width: 4px; height: 4px; border-radius: 50%; background: transparent; }
   .nav-link.active .label { color: var(--text-dark); }
   .nav-link.active .dot { background: var(--accent); }
+  /* ---------- "More" overflow (2026-10-01, per Martin: "if the text has
+     to get ... we should add a more button on the far right side with a
+     list of the other options"). Labels never truncate: when they would,
+     the rightmost pages move into the More menu instead. ---------- */
+  .nav-link[hidden], .nav-more[hidden], .nav-more-menu[hidden] { display: none; }
+  /* While the More menu is open the whole bar sits above everything else on
+     the page (sticky headers, pop-ups, the edit button go up to z-index 90),
+     so the menu is never drawn underneath them. */
+  .app-nav.more-open { z-index: 1000; }
+  .nav-more {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    flex: 0 0 auto;
+    position: relative;
+    margin-left: 4px;
+    padding: 12px 16px 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+  }
+  .nav-more .label { display: flex; align-items: center; height: 1.2em; font-size: 0.72rem; color: var(--text-faint); }
+  .nav-more .label svg { display: block; fill: currentColor; }
+  /* thin divider between the pages and the dots */
+  .nav-more::before { content: ""; position: absolute; left: 0; top: 12px; bottom: 12px; width: 1px; background: var(--border, #cfcfd6); }
+  .nav-more:hover .label, .nav-more[aria-expanded="true"] .label { color: var(--text-dark); }
+  .nav-more .dot { width: 4px; height: 4px; border-radius: 50%; background: transparent; }
+  .nav-more.has-active .label { color: var(--text-dark); }
+  .nav-more.has-active .dot { background: var(--accent); }
+  .nav-more:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring) inset; }
+  .nav-more-menu {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    right: 20px;
+    min-width: 168px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    background: var(--panel-bg);
+    border-radius: var(--window-radius-md);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+    pointer-events: auto;
+  }
+  .nav-more-item {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: var(--text-faint);
+    text-align: left;
+    padding: 12px 12px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .nav-more-item:hover, .nav-more-item:focus-visible { outline: none; color: var(--text-dark); box-shadow: 0 0 0 3px var(--accent-ring) inset; }
+  .nav-more-item.active { color: var(--text-dark); }
+  .nav-more-item.active span { position: relative; display: inline-block; padding-bottom: 6px; margin-bottom: -6px; }
+  .nav-more-item.active span::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; border-radius: 999px; background: var(--accent); }
+  /* Labels sit centered in the bar; the active page is underlined in the
+     accent color instead of marked with a dot (2026-10-01, per Martin). */
+  .app-nav-inner .nav-link, .app-nav-inner .nav-more { justify-content: center; gap: 0; padding-top: 10px; padding-bottom: 10px; }
+  .app-nav-inner .nav-link .dot, .app-nav-inner .nav-more .dot { display: none; }
+  .app-nav-inner .nav-link .label, .app-nav-inner .nav-more .label { position: relative; padding: 6px 0; }
+  .app-nav-inner .nav-link.active .label::after, .app-nav-inner .nav-more.has-active .label::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; border-radius: 999px; background: var(--accent); }
+  @media (max-width: 520px) {
+    .nav-more { padding: 10px 12px 8px; }
+    .nav-more::before { top: 10px; bottom: 10px; }
+    .app-nav-inner .nav-link, .app-nav-inner .nav-more { padding-top: 8px; padding-bottom: 8px; }
+    .nav-more .label { font-size: 0.58rem; }
+  }
   .nav-link:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring) inset; }
 
   @media (max-width: 520px) {
@@ -933,6 +1044,10 @@
               Account
               <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
             </button>
+            <button class="settings-nav-item" type="button" data-section="integrations">
+              Integrations
+              <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+            </button>
             <button class="settings-nav-item" type="button" data-section="privacy">
               Privacy
               <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
@@ -960,7 +1075,7 @@
               <div class="settings-row">
                 <div class="settings-row-text">
                   <p class="settings-row-label">Potato PC Mode</p>
-                  <p class="settings-row-desc">Turns off the stylized display font and interface animations so Averages loads and feels faster on slower devices.</p>
+                  <p class="settings-row-desc">Made for Chromebooks and older computers: turns off every animation and visual effect and uses the font already on your device, so Averages uses as little power as possible.</p>
                 </div>
                 <label class="toggle">
                   <input type="checkbox" id="potatoModeToggle" aria-label="Toggle Potato PC Mode">
@@ -1023,15 +1138,62 @@
                  so iOS push can move back in here later without the
                  navigation shifting around under returning users. -->
 
-            <p class="settings-subhead">Email</p>
+            <!-- Browser notifications are back (2026-10-04, per Martin), now
+                 requiring Sync Across Devices, and the Weekly Grade Summary
+                 email is gone. Sending still isn't built (see the comment
+                 above), so the toggle only works in the preview; signed in it
+                 says Coming soon until the API side exists. -->
+            <p class="settings-subhead">This browser</p>
             <div class="settings-group">
               <div class="settings-row">
                 <div class="settings-row-text">
-                  <p class="settings-row-label">Weekly Grade Summary</p>
-                  <p class="settings-row-desc" id="weeklyGradeSummaryDesc">A recap of grade changes, sent every Sunday. Turning it on needs an email on file and Sync Across Devices turned on, and stores an encrypted sign-in key for your school's learning platform so it can check for you while you're away.</p>
+                  <p class="settings-row-label">Browser Notifications</p>
+                  <p class="settings-row-desc" id="browserNotifDesc">Get a notification when something changes, even with Averages closed. Needs Sync Across Devices.</p>
                 </div>
-                <label class="toggle"><input type="checkbox" id="weeklyGradeSummaryToggle"><span class="track"><span class="thumb"></span></span></label>
+                <label class="toggle"><input type="checkbox" id="browserNotifToggle" aria-label="Browser notifications"><span class="track"><span class="thumb"></span></span></label>
               </div>
+            </div>
+            <p class="settings-row-desc notif-blocked" id="notifBlockedNote" hidden>Notifications are blocked for this site. Allow them in your browser's site settings, then turn this on again.</p>
+            <div id="notifTypesWrap" hidden>
+              <p class="settings-subhead">Notify me about</p>
+              <div class="settings-group">
+              <div class="settings-row">
+                <div class="settings-row-text">
+                  <p class="settings-row-label">Grade Updates</p>
+                  <p class="settings-row-desc">A new grade or a changed score.</p>
+                </div>
+                <label class="toggle"><input type="checkbox" data-notify-type="grades" aria-label="Notify me about grade updates" checked><span class="track"><span class="thumb"></span></span></label>
+              </div>
+              <div class="settings-row">
+                <div class="settings-row-text">
+                  <p class="settings-row-label">New Assignments</p>
+                  <p class="settings-row-desc">Work your teachers just posted.</p>
+                </div>
+                <label class="toggle"><input type="checkbox" data-notify-type="assignments" aria-label="Notify me about new assignments" checked><span class="track"><span class="thumb"></span></span></label>
+              </div>
+              <div class="settings-row">
+                <div class="settings-row-text">
+                  <p class="settings-row-label">Due Date Reminders</p>
+                  <p class="settings-row-desc">The day before something is due.</p>
+                </div>
+                <label class="toggle"><input type="checkbox" data-notify-type="due" aria-label="Notify me about due date reminders" checked><span class="track"><span class="thumb"></span></span></label>
+              </div>
+              <div class="settings-row">
+                <div class="settings-row-text">
+                  <p class="settings-row-label">Messages</p>
+                  <p class="settings-row-desc">New messages in your inbox.</p>
+                </div>
+                <label class="toggle"><input type="checkbox" data-notify-type="messages" aria-label="Notify me about messages" checked><span class="track"><span class="thumb"></span></span></label>
+              </div>
+              <div class="settings-row">
+                <div class="settings-row-text">
+                  <p class="settings-row-label">Announcements</p>
+                  <p class="settings-row-desc">New posts in your course updates.</p>
+                </div>
+                <label class="toggle"><input type="checkbox" data-notify-type="announcements" aria-label="Notify me about announcements" checked><span class="track"><span class="thumb"></span></span></label>
+              </div>
+              </div>
+              <button class="btn-secondary notif-test" type="button" id="notifTestBtn">Send a Test Notification</button>
             </div>
           </div>
 
@@ -1066,6 +1228,37 @@
             <button class="btn-danger" type="button" data-action="signout">Sign Out</button>
           </div>
 
+          <!-- ---------- Integrations (2026-10-04) ---------- -->
+          <div class="settings-section" data-section="integrations">
+            <p class="settings-subhead">Connected apps</p>
+            <div class="settings-group" id="integrationList">
+              <div class="settings-row"><div class="settings-row-text"><p class="settings-row-label">Canva</p><p class="settings-row-desc">Edit assignment files in Canva, then turn them in from Drafts.</p></div></div>
+              <div class="settings-row"><div class="settings-row-text"><p class="settings-row-label">Google Drive</p><p class="settings-row-desc">Edit Word, PowerPoint and Excel files in Google Docs, Slides and Sheets, and add files from Drive.</p></div></div>
+              <div class="settings-row"><div class="settings-row-text"><p class="settings-row-label">OneDrive</p><p class="settings-row-desc">Save course files to OneDrive and add files from it.</p></div></div>
+            </div>
+            <p class="settings-row-desc integ-note">Averages only gets what you allow: your Canva designs, and just the Google Drive or OneDrive files you open with Averages, never the rest. Disconnecting removes Averages' access right away. To remove it completely, also remove Averages.io in that app's own account settings.</p>
+            <p class="settings-subhead">Editing</p>
+            <div class="settings-group">
+              <div class="settings-row">
+                <div class="settings-row-text">
+                  <p class="settings-row-label">Open files in</p>
+                  <p class="settings-row-desc">Which app the Edit button uses for Word, PowerPoint and Excel files. PDFs and images always open in Canva.</p>
+                  <p class="settings-row-desc integ-hint" id="defaultEditorHint" hidden></p>
+                </div>
+                <div class="pick" id="defaultEditorPick">
+                  <button type="button" class="pick-btn" id="defaultEditorBtn" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="defaultEditorName defaultEditorLabel">
+                    <span id="defaultEditorLabel">Canva</span><svg class="pick-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+                  </button>
+                  <span id="defaultEditorName" hidden>Open files in</span>
+                  <div class="pick-menu" id="defaultEditorMenu" role="listbox" aria-label="Open files in" tabindex="-1" hidden>
+                    <button type="button" class="pick-opt" role="option" data-value="canva" aria-selected="true"><span>Canva</span><svg class="pick-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
+                    <button type="button" class="pick-opt" role="option" data-value="gdrive" aria-selected="false"><span>Google Drive</span><svg class="pick-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- ---------- Privacy ---------- -->
           <div class="settings-section" data-section="privacy">
             <p class="settings-subhead">Privacy</p>
@@ -1083,10 +1276,10 @@
           <!-- ---------- About ---------- -->
           <div class="settings-section" data-section="about">
             <div class="about-block">
-              <a href="https://github.com/Schoolagy" target="_blank" rel="noopener" aria-label="Averages on GitHub">
-              <img class="about-logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAYAAABccqhmAAAAAXNSR0IB2cksfwAAAAlwSFlzAAAHFgAABxYB45pq/gAAHwJJREFUeNrt3Xl8FdXZB/DfM3NvErKxCIKQkAUwCakLikurqFAVWxcWBV/Rvq5137fqa2vR11aqb7W1VutW3ADfWFdcqn0lLtW6ILiFJKBJSMKiQCArubl3zvP+EdQCd0JCcpfc+X0/n/kD5mbm3HPmPHPOuTPnAERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERE8UKYBZQQykqSMrTjIIgUK5AD1YEARBWNAtTClhUtAzo+RN7Z7cwsBgBKBDrXyvh83IkKnAXosQBSd/EX7QJdooLHWgJtz2HiBUEGAKJ+KP2ThbOheiuAgt2KHUA1oLe07n/64xBRBgCifiDtw5IRlt0xH5Dj+uiQb/vU+dnmif9ZywBAFMcyP1pwsEJeADCijw/doKKntEw8vZQBgCgem/zvLTxSLLwEID1CNSEAg1nNP5yzmAGAKJ6a/e8v3NcyeBvAwAifaivEHNP8wzPeZQAgigPDSkvS2/2hpYAUROmUX5ugvX/r5NnrvZC/Fi8ximcB27kDjhTAAaK0Dbct5w9sARDF2KAlT+1nLCyDRv9GZdQ6qmXK7LfYAiCKEaO4CQ4sGCDam6jezBYAUYykvr5opA9SC8COVRpUTVHz1DkVbAEQRZlPrVNhxIYRxGoTteewC0AUk/Y/jo1F03/7TY5lACCKhZAcAkcQ2w0HoqQkKaFbWrzSKN6kvbBwuBgMjof6kZ6EsS3ACgYAoijxO9YIjZPhaZ+lw8EAQBQ9TshKtaw4iQAGGewCEEWRBXTAxEdaVKSdAYC6r7TUlzGiNh+Ov8CIZlpAmgKbYcwGhV3eus+cr5lJuxC0N8OOjzk6FLKZAYC6NLTikYxAR8rJgJmlWDNJg3YGYCAAvr+MBQKDtM+erBboPwBrQcs+c97x8mw0bhpHDqkduHZTB4CYj8AL2r9M5Lzmk4C9MHhpycCgv+M6qFyK3XlVVfEZLLm1Zb85zzA3tzfoiWeWAnpgjGtHzZYzTsljC4B2kr7syVOC6PgTHOnN7DT7wtG/pS9b8EYIOLf9gNNXM2e31T2jpQo5MMapWJLo+cwHgXajj5/50YJ7xbGeFscaIY6gD7Yf+x1ZnvnRgp8ygzs5Dv4WxVeAw26WwdMJH2h5qfVAWUlSRotTAui0CJ0hJCrnNB162hPMbGDQQ89+BsE+MTp93Zb6wfmYOznEFgABOtfK3BJ8HI5Oi+Bdx6dG52e8u2AaMxwQo/NidfcXR+5I9MrPANCTPv97hTdq5xtqkX4LzYZaC9L/9VSR1/N887rPnxJjvS9GEM3NMrJqcyD5IU8EWVbtXRv49lMHGOgHiOKgqQLLWtbbB2P2bMfT3YB7nt1PbPkAQHK0hh9UrSlbLp32thfyly2AXdZEFXVwnzji66MBv25tliMHZA5zLvR69m+5fOancHBV1Jr/If21Vyo/WwDdkPF/T50ggljNFb++ydqah8lc0HLw3S/8DqLXR/IcQ1Lsp7+64IRTvfRwFlsAu4qQiitiOCnFiMxgyiyWArD5qmm/gIMbIpXX/5E7GEumjhulHqsTbAF0dUd45ZmskBVaHdNAqfJ6009mT2VpbBsT+J8XZtqQ+UY1sy+Ol2QLrtxnGM4Y++30A3Jjdl7BPAYAQsarJeeK6sMxTkbHADsw5Oup/9nKEun0948/+dND5ZsuLV3T0qvj/GhEGm6YsCdyMrZ75aBDVA7Oyi/4lF0Arzf/HRwey0kpt21JgWDywSyNTkuXLvUXD0k55Q+HjcLCo3MwdVQGkkR60tzv8CtefvDIrHX3H5G1Y+UHgCQVfWLVqlXJXshPvgvQdQCIi9/iFVIIoJQlAowYkj5Dt60OXDwkBXccNhLNHQ7+tb4Ni6ubvnirvnWjADkABm37kyYAqyEoV8VbISv0esONMzcdXLXyCMCUutwE90nxO/8N4HoGAC9zkBUXnSTBaBbGt0Mi2Omn0YwkG8eOzsAxo9JOGz12/BfdOc7o/L3frqupuAuKa12i7jW1VZWLR+cXvMMugHevtvQ46AJAQpLBwgBqalYWATjKZfc73a3832oP2r8E8Llb3RDRxzZUVGQwAHi3BWBi/UYaHMAYCbEwABt6EVwGrhV6f0+PN27cuICxnNMAuD1nkdeehLsZALzKSGM8tAAslSavF8X69Z+mQfVnLru/CYR8z+7OcXNyissAuaWL7te5a6rKT2QA8GQAQHXsV6cB4OhXXi+KYFvKHHw/sLfD3V8eGTduXGB3j52Vu/cdgL7tfh+QR6qqPh/OAOAxYvC5OECsN1XzhefLQvQCt/ppRB/q3bHFOCJnAWh2+cgwv/gfYADwXAvAeisOugBbGv34xMvFUFe98hAFDnSpva/k5hZW9/YcubmF1QK9touPTKuvLj+TAcBD/M2h16FoiXEXYLHXXwnWzsE/N/f31Xmy8ooehMhL7umQe9ZWrchhAPCIDZfMbkHIei6WC1Sq4nFP3/3ryoYIdHbYmz9Qk5Wz92t9eT4HzvkQbHTZnemI9aiqWgwAHmGFZB4MTGwG/2R549kz3/D03d+xzgYwwOWO/ICI9GnrKDd3/DpV+XkXHzlqTc3KKxgAPKLhwukrYLAwFgFAVX/h5YVDVFVE5XyX3R1B7ZgfifOOzit4HoInu+iS3F73Vfk+DABeGQtwQteJI5uiOSOQhGRh44Uz/+Hp5n91xTEA9nbZ/bf8/H0itsxah+O/FECty+5kWHisrKwsiQHAG2MB6+GYM6PYFfgS/uDFXs93EXEd/DNG7o/kuceMGdMogrPx76u7bZ+6CQMH2Df3+zxm9e6+wX94/mII/hzh02y0LHvSpstOrPByXtfWVowUBzUA/GEa4Suycgt/IFHoHtVVV/wRwOVucUhVjurPLwyxBdADm6+cft+MrEGlErnn/tdpyBzt9coPAOLoBeErP6Bi/VmiNDYSQvIvIHB7EMsS0Ue/KStLZwDwQp+0qmLfWw4YcfgdB41EmmX1abM/e0DSBjXOD7dcM/NTr+ezlpb6ADnXpc3aEghaT0YrLXl5ee02zJkAgi4fye9Ite9gAEj0i1LVguAvAPxTszLx9I/zcPie6b1ehCJFbFw6fhiePzZv0CenFLM8AKzJ2Ws6gFHhywFPjhs3LqovR43MHb8MkN+4XhvAhXU1lT9lAEjki7Lzt98ffvvvrHQ/7puUhQeOyMbEoakKB9qT5n6qWDgtfxBePC4X5xftAb8lfksTfwaabgVbgevgny32g7FIU1bN2t+gc3GY8O0S1Yfr68v36HddLV5uu7a2akWOY1lfQBG2ryeC24oXfTnfMnqyQCdDMQGCHZYNlyCgVQNsWf6rQ4ZPn5KVkTLAt1P2B20140bmj/fsMuF1X5aNhW2vDHdtquLd0fmFh8cqbbW1q8aIcT5xuw4AeTY7r+BkBoBEuyhrKhdD9QSX3StDSN4vLy9vu0klht/5WlogEBqqIbX9/sDWjUM3bsQFFwQBoLa6/C6BXOXS1/hzdn7RpV7N69rqirsFuNLlaj0jO7dwQWzHgcovhcif3LsDOmd0XtEiqErqiqf2FzVHQfQHAh0jkHRV9UOkFYp6AOWq+s/WQNu7mHhBGwNAXFb+itOhrk+FqQiOzsotXNKTY1ZXl43wwa5C+EdcA/DJmOzsgjWey+u6ugEItdYDGBLmSt0Y0uTsHQNtDMaCpL6m8mUAPwm3f5MGG09pqfjrOg3MECC3m4dtVsUzUPlj64TTo/rmJ8cAulBfX74HFHd1ET8f6mnlB4C8vOL1ANzeYU9GSK/zZN/faT0tbOXvvLX+NdaVv7O7Jwqf/BxAw3ZRWw3+1L4WxzR9MXC903GVGMntwSvfGaJylgDL0pcteCZl2YIcBoB4uCBDcjeAPV12rzdW4IbdPbYjZh6ArS67L6itrRjptfwWuA7+KYx5OF7SmZ1dsAail3377wqnDTMby3F/6zq0h0xvJn8RMZjpNyjL+HjBWQwAsbz711RMhuIM96tVL83J2Xfz7h4/N3f8OlG4vcySYoX0Gi/l95qaVROgmOiy++/ZY8aviqf0ZucWLRTgf5d0bMGczStRHQz05SQwaXBkfvpHC++BzrUYAKJs7dqlqap4yHWMRPXl7NyiZ3p9xzO+eQACLoMLF67/8ss9PdPaUucy14tU9f54TPOR33zx6hWbq9DumIi8EyIOLsv4oOARqAoDQBSZ9oxbAYxx2d0kju/CvjjPqLFj6xR41GV3atAOeaIVUF1dPUiBU112143MK3wl3tKc8c+Fh38TCj7gRHxSGJyV+d6i/2YAiFbTv6pyPxW93PVOBdyQNW5cfV+dz2ec3wLocNl9iRdaAX4EzgKQGr4lhD6f9KPXlf+Dx/aAyiIYJEdlXggjN2a+s/A4BoBIN0NLS30QfQQuL6EA8n52bkGfzg47ckxxLcR12q+0Dtu5MrGb/ioKuLWogrAwP+4S3Z50Bwyyojg5jAUjDw4rLUlnAIjk3T93r6tdZ58FOoxlnSsips+7HGLdDkXY1X9E9LK1lZVDEzXP19SunAKgIOx3B54dPbpwbTyld1Bpyf7iyNlRnRymszuQHVBzNQNAxPqh5bkAupjgQX6bkzNuRSTOnZOzd5WIPOnS50g3yXpFoua7Ou4z/u7Ocl8RHx9yzA0wkBjNEH3F8NceT2MAiEg/1HoQgFvmVoaQ9LuIXli2dZtbK0AVl69e/dngRMvzmpoVe0FwkstYS3lWbuHbcdX3/79n94CRGTFcI2LIVkmZ2Zffqdc/L+itJxfDNidAUARYqWGPanUnBdKDz+54XKsHnw3T0cwYmhvKGH5Q2L8VaFJD7Zt2oHlj36TXcv1sYFDOwSYpLSfc39pbN69IallX1qv87W5arV3kqdXdY+yw49/2qwUEB+w1PpQ0qHi7z237jK9j43J/YOOX3T9HD76vdPN77rB7XnBs/jxnzIGxDEIH+RrXvT7ww9dhSbll8JIc/FBZTAKA3j49F8a6F8DxO2W87OIs0kUA6NZnu/G33UpDnJ4zUnnU3b+TXXy/7f5PunG8MAFAdpHGXqdNdnGMbhxrh+Od07EvnnX2imkrJF1CqBr2FvzQb7/iy2Lbl8qEv9RErQugt04/EMb66LvKT+QBnziDYr5SdIvjx1eh1H/vKh1vjPlIPz7vwKgEAP3NScNhWS8BGMpLgrwiqIK64ADEw2KxVcGdHpkYamC9pO+fNzziAQDq+w2w42QXRImtCT6EjIU4WCwWm5ywyxGMMD73acv6JADo3FlDgC5ekCFKUAG1EeNFYr/btqodPpEiZ2jZuUN68r18PcoF2xwBIJmXA3nNAHE653OMA2nuCUl2OuwjADwfmQAgyOelQF6UKSEkGUVHHDw6M9QKuldRg7zItQDU6HY/+xB5hA1FvtWGylDs1wAZk9TaZS2NXACAVd3D4xMljAN8TagMZMQ0DUPsIPJ97gFALdT0qEb36OyO9TZcJrAgSnRHJm+I+QDgpNRNsNwb4QE7yXk7YgFA5j7dAOBJXgrkRccPWN85ABfDAHBy5rouGv/6pBQ/0hC5FgAASOgmAOt5OZDXpFkOZg1YE+EZgNy3kVYAx2RscEveeiukN/X0O/U4AMhNL34NY04AsJGXBHnN5YO/QpKamNz9rxhWhaTw01FstGBOkEMf/jriAQAA5ObnP4ZlDgLwMi8J8pJcfxsuHlzd60Vhe7oVJbfgzKG1O9dF4GXLsg6SAx/+eLfqcm8zJK5fB7ZtX/ue46aq2KnhvqkVaK1Nbqj5ILrptXr43To5yel7dGSOnhLuswKnLaVh5atQNV2mN0avAwfScw81vtTscG8DJrWtfcsONn7z3R/t9ivHPfi+u/k68Lea1GcfvurIo9cEUzOjEXR8ombR3h8tmTJo4+bOrr62xfx14P6grqr8Xohc4rK7IajB8fn5+3zdb75PdcUSAJPDR2I5Pzu/4KF4S/O2ZdBWAwj3APuqrNyCAhHpd78t73H3s0XGlvcADIr4yUQv2nzZzL9E4tAJOyNQXfXKQyDS1XRT1/Snyv9te6uLi+SmsrKypHhLsa32eS6VHwD+3B8rPwBsumpmOUJyEoy0RvLFHzFya6Qqf8IGgM6KoI908f3ezM4tfKy/fa/svKI3AXX7nTcnI9U+Pa7ClaotgvNcdm+Fz3miP19nm6+e/o5ldAoc2QAH6OPNEUeuabhy+q8j+R0SMgBkpvpuALTY9cJznJ/31zuPWNatXfTnbtLSUl+8pLWuuvJ4AG4LXS7Kzi5u6O/X2qarZ3xoiTUBxnqzD+/8aw3sqQ3XTLsr0ulPuACwpqqiANAbu/jI3OyxxV/21++XlVPwBoB3XHaPWZMzck7cBCuBexfM4P5EueY2XX3ims3XnjjFUjlbDOrEALu5bRWDuyTZX9R4zYlvRKWMEqnyq6q1ZnXlW6o43OUjn329qWXixIkTg/35e9ZWl08VyN9dat2XWdVri2Ty5FAs07h69cp8y5hVLjeZj7LzCg9OyMGnuSVJeyQlnwbgbAUmdesmK1gFYIFt+x7YcP3xUX3ILqECQH11xYUK1zuLowaHjh5TuDQRvmttVcU/RXBY+FLV07NzixbGtPlfU3EHFNeFDdTAOaPzCucjwWXO/fsQvy94pIr5gRqMFUvSRZGkQLNA6lRRYfvMOxtunBazFmnCBICamhV72WqtgMvPMqLy+6z8gmsT5fvW1VT+FKovu1Sw8uzcgh9EYhWj7li1alVyis+pBRBuXcMtdnLLqJEjJ7aBYi5hxgBslT/D/TfZ1UlbQ3MTqeCycwteAfCRS1QvqqtZOStWaUuxnVkulR8Knc/KzwDQx3fD8pmAzHAdG4BesGdxcUuiFZ4qbnNv2pmbVTU25es++Ke2ygOsdgwAfdnczITKPV1cjE+Mzit6LRELb3R+4YsQuIxpyPj61RUzoh6Mqyr2BfAjl0i8ZFR+YSWrXfzwxW3KVCX9syeG2WKnA4BJlqbmgjk7vYGY4jN3AhjlcpRN/pDv2sQuQvktoM+Gz0PrFlV9LppjASq42HVgydL7WeXi7OqJm5SUlNhpRYEpAut4QCcBKAIwYIdPtSiwAsBbltHFn2YcIn4xb7p+D8XPsvMLE3oCE1WV+prK5QD2C58FMmN0XsHz0UjLhoqKjPZk1AMI95LMuq83teT0959gGQD62LCykvS2UPBCUVwBIKsnf7uXldRxfvKIpJlJQ5G081dZkpVbcHR/feKvJ+qrKmapoMQlRCzPyi08MBr5UFtTeYmo3uuSjluy84rmssoxAHwnffmCWVC5G9BRveoLW8m4OW00DvN9d+NpM5a1T07O3lVeKMRtrYBPAewTvuWtJ43KL1oc8f5/dcVnYdOgCIlj52WNG1fPKhdfYjMI+F7JgIyPFvxVHJSI0VG9eHQSYoC6UADnN67CHW31CAFQkV95pfIDgIioQn7rtt8RmauqEQ32tVWVk9wCEEQXs/LHp6gPAg5aPn+Q0xF6EUYm9eldEMCjLd+gIrC1aUCbechrBZmdu3dJ/erKm6D4QZhm3gH1q1ceB+DVyAUh9+f+jXLwjy2AbXd+pz15MQwmRWretPcDzZmlVusiLH3A76m+XOdI/7wuIuTNkTr3ulWrhgE602X3V6Pzit5gVWMAQKY682Hk8IivoKpyfHpg4O+9VphZOQVPAXD5nV0Pra0qPzYS53V8ofPgsmakitwXq0eSKY4CQMY7i85RB6dGYOKEsJs4elnGOwtP9FgrwBHo7V3sn9vX51RVSyE/d9m91fKZx1jN4viaiUrlL104FCKVAIZE+futzkhPH7924omeefZcVe36mspyAONc+uo/zsotXNJX56uvWXm8qnkp/MUlj2blFZzNaubxFoCl1vViZEi0p1IWIznNTa0Xeq0VoOI+FmAMbu3TgGMc90k/FBz883oLYFhpSXogZNYCyIjRF1zT6BueixhPkBFNS5cu9Q/fI70ScFsqWo/Kzit6q7fnWftV2WjHsqsA2GF2f5KdVziBVczjLYD2IE6BkYyID/y5bGpkVGZgw9FeKtSJEycGBTqvi7DYJ78IOJZ1kUvlBzpfzyavBwDL6LRYr6gKmJO8VrDrN7XOF7guFT1l24M7u62srCxJYLn17xv9qe2LWL28HgBURUM4Iloj/65byGUxjQRvBRjgDvexAv1lb46fmWadotDhLrsfGzFiv1ZWL48HgD1eenpkjAb/dtiscSidn+K1wm1ucx4BsNpl97FrVlcctvtjK+6LrhjLeZBViwEAJoi8mDf/Ozc7syUj22uFW1xc3AHV/3EtH4Obdue4q1eXFXcx8/KbOTnFZaxaDABwFANjtZb6jpsEMNCLBRySlIcBrHXZ/ZParyoP6vFF41hdLLkmf2G1YgAAANhqWXHSAoC6jVYnuLy8vHZ0NRZg9+wdgW/KytIh8jOX3eub20LPsVoxAHTeDYLaHKuf/3bcjDHNni1lX9qDAMIvOKF6/NqaFQd091AdqdbpCD/jD0TxSHFxcQerFQNAZx8zpPUx/wVg25bU0eHZ99Gzs7O3qsidbo0AR61utwIU4vZkpWMpB/8YAP5NUzKqt613hhhvaxrOOKPJywWdlNL+AIBvXHafVF9Vud+ujrGmpvxHAPYPG0WAl0eOKa5llepnjcOIHn32bAePP/M+ENvf4VXlba8X9IgR+7XWVVfchfBzBoha+ksAs9LK5o8Q4yuEZQ0TYLABWi2jjfA5KwOQi90mWTDQ+1idGAB2rnwheUVEYxoABPoqixrwDwjcG9yafA2AYd836YGPnWa8GNx0yuDPFqwJOjqys0Gv0M47OxQAgjYODS7HQb4MTPUNxlT/YKR+34Csys4t/AdzmF2AnS86tRfCiBO7AUC0+tscjkxvawWI6B++rfivBjdjevMK/KxlJZ4ObELQYGRXedlmDN7qaMR/tdXgqKbPcU/7WrSqAyj+wkk/+qeozAcw8KHnFgg0NuvWK+7ecv7Mq1nUnb4pK0tflRKsvbm1dvAHod7/MLKn5ddMtc/5ZMLJjzJ32QUIf5IOvc2xMQtAtOfpa/aJ3sli/t6Y9uVHJbf5BgRgIH0Q/zc4IdmA0Pz0DxdMaKnxX43Zsx3mMlsAOxl837PzAPlFlPv+1zRcPPMuFnOnjA8Wngng4QgG/ueb032nong2nwXgGMD2NodSfg0Hy6L227/R0oahoT+yiDul/2vBTDh4BA58Ecz36emNoUehcy3mOFsAOxl07zM54tjvARgZ2W4/Voak4/CWy2dvYBEDGe88tTfELAUkOrMyKW5onnTa75jzDAA7GXLXi8Uq5h8A9orQKb5Uxzl6y7Unr2bxAigt9WXa6z9UIJrTc4UcxcFtR562nAXALsB2Gq4+qcyErMPg4LO+b4LKP/0ih7Pyfy9T118MRyaII4ji5vMZcEowtgDcZd1VMqAtlHy7Apei92/qBUQxr2Fr5m2Y653JP3fplVeSM5ObqiLd5XLvCpifNB095+8sCAYA93GBeYv3EzhzBTJtN9LjiOIpy7Zu2XD9iatYnDv0/V9fdJaIzI9hEl5vOuY/prIkGAB2adjtL4x1DM4A5KcADuiiVRAC8IECi0XNwoZfTq9jMboEgFf/9w0RTIlhEpwQfNltx528jqXBANBtQ3/3QgYC9t4qTg5UMgExsNDsiFWdGjQr1871zko/ux1QS0vSA1u1AdF/+Gr7XoDgrOafnMrlweKULx4TtfEX05oBfLxt284Wllm3dLTIIRDEfIVkC5gEgAGAAYCieuc1WhQPzTsBilgaDAAU7YrnSBZEYx+IgGyWBgMARTsAGKSrxMUQTyZLgwGAos2BiZMhXj6XwQBAUW96qzRB4yIpjSwNBgCKdhdAUaXxEQCqWBoMABRlxpgvLBMHb+WqfsHSYACgKGsaOWzZoNrNTYDGdhBOpZSlEb84cUOimjw5pIqXY7wkW6u/1VnCwmALgGLBkUehOC2Gt/+nN1wyu4UFwRYAxUDjuTNeh8HHMbr7q0B+z1JgAKAYMo65KSYBwMHjm8+byQFABgCKpaaLTnlNjPVUlGcE2hACrmfuMwBQHNCAXgSDqijd/Q0Mzmy5aOY3zPn4J8wCb8i864WxPkvfVcGeEQ02oldtuXzGH5jjDAAUZwbd/dz+ovIqgBERqfvQ6xqunsGBPwYAilcD73wxz4YpUcHEPjxso4ie23DNjGeYwwwAFO/mliQNSUu+EYobAKT07r6Plx1LLmu87qRqZiwDAPUjg+ctHg1jrhfBmQDSe1TtgVIx1m833XTiG8xJBgDqx4bf+VpaRyBwkgiOBfRHgORjx6dEFesBLIOFUsfBM42/4h2fAYAS0wMP+IduHDo0GEweID5xkpN9G7++bmorM4aIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiKLs/wFrwPI/QAPDkAAAAABJRU5ErkJggg==" alt="Averages logo">
+              <a href="https://github.com/averages-io" target="_blank" rel="noopener" aria-label="Averages on GitHub">
+              <svg class="about-logo" aria-hidden="true" focusable="false" viewBox="-8 -8 470 470"><defs><linearGradient id="aboutLogoGrad" x1="0" y1="0" x2="0" y2="454" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FF7A50"/><stop offset="1" stop-color="#E5484D"/></linearGradient></defs><path fill="url(#aboutLogoGrad)" fill-rule="evenodd" d="M0.02 452.75C0.15 442.97 5.78 407.10 10.02 389.00C11.63 382.12 15.00 367.50 17.51 356.50C28.03 310.27 40.89 265.53 58.60 213.50C77.33 158.47 85.57 136.89 103.25 96.50C118.88 60.79 129.55 39.21 141.04 20.00C144.17 14.78 147.92 8.14 149.38 5.25L152.03 0.00L226.00 0.00L299.97 0.00L302.62 5.25C304.08 8.14 307.83 14.78 310.96 20.00C322.28 38.92 336.94 68.63 348.06 95.18C350.75 101.61 354.55 110.26 356.49 114.41C367.49 137.90 397.74 222.92 410.96 267.50C419.09 294.91 429.04 332.52 434.49 356.50C437.00 367.50 440.37 382.12 441.98 389.00C446.22 407.10 451.85 442.97 451.98 452.75C452.00 453.74 436.27 454.00 376.64 454.00L301.28 454.00L299.60 442.75C296.88 424.51 291.11 392.27 288.63 381.50L286.34 371.50L223.34 371.24L160.34 370.99L158.19 380.33C155.44 392.33 149.65 424.19 147.53 439.00C146.63 445.32 145.66 451.29 145.38 452.25C144.90 453.90 140.55 454.00 72.43 454.00C15.14 454.00 0.00 453.74 0.02 452.75ZM184.00 348.25C189.69 345.41 191.44 335.66 187.41 329.29C184.35 324.47 172.42 324.01 167.19 328.51C164.78 330.58 164.50 331.51 164.50 337.31C164.50 344.14 166.09 347.25 170.50 349.05C173.93 350.46 180.35 350.07 184.00 348.25ZM274.28 347.02C284.17 342.33 288.64 332.80 287.74 318.33C286.79 303.07 279.66 295.00 265.16 292.75C256.25 291.37 245.93 293.01 240.22 296.71C232.38 301.79 228.36 311.77 229.23 323.96C230.09 335.93 235.58 344.50 244.50 347.78C249.77 349.72 251.32 349.90 260.50 349.59C267.31 349.35 270.66 348.73 274.28 347.02ZM220.00 325.25L220.00 301.50L209.50 301.50L199.00 301.50L199.00 325.25L199.00 349.00L209.50 349.00L220.00 349.00L220.00 325.25ZM252.40 330.90C250.89 329.22 250.50 327.26 250.50 321.31C250.50 314.35 250.70 313.66 253.31 311.41C256.89 308.33 260.44 308.35 263.55 311.45C265.70 313.61 266.00 314.79 266.00 321.23C266.00 330.70 264.56 333.00 258.60 333.00C255.51 333.00 253.78 332.41 252.40 330.90ZM218.38 292.67C221.03 290.93 222.25 286.49 221.33 281.90C220.47 277.58 215.94 275.01 209.18 275.00C200.42 275.00 197.08 277.76 197.03 285.08C197.01 288.68 197.53 290.15 199.48 291.98C203.75 295.99 212.81 296.32 218.38 292.67ZM258.58 254.35C258.23 253.44 256.13 245.45 253.90 236.60C244.34 198.58 227.57 140.97 224.09 134.18L222.37 130.84L216.22 150.67C207.52 178.73 204.15 190.56 195.49 223.50C191.29 239.45 187.63 253.29 187.36 254.25C186.90 255.89 189.07 256.00 223.04 256.00C256.26 256.00 259.16 255.87 258.58 254.35Z"/></svg>
               </a>
-              <a class="about-name" href="https://github.com/Schoolagy" target="_blank" rel="noopener" style="text-decoration:none;">Averages</a>
+              <a class="about-name" href="https://github.com/averages-io" target="_blank" rel="noopener" style="text-decoration:none;">Averages</a>
               <!-- Keep this in sync by hand: bump the number and re-check the
                    wording here every time a change ships, the same way the
                    About > version row on every other page would need it.
@@ -1094,9 +1287,9 @@
               <p class="about-version">Beta Version 0.1.0 - Welcome to Averages.io</p>
             </div>
             <div class="settings-group" style="margin-top: 18px;">
-              <a class="list-row" href="https://schoolagy.io/privacy" target="_blank" rel="noopener">Privacy Policy <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></a>
-              <a class="list-row" href="https://github.com/Schoolagy/schoolagy/discussions/categories/q-a" target="_blank" rel="noopener">Help Center <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></a>
-              <a class="list-row" href="https://github.com/Schoolagy/schoolagy/discussions/categories/ideas" target="_blank" rel="noopener">Send Feedback <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></a>
+              <a class="list-row" href="https://averages.io/privacy-policy" target="_blank" rel="noopener">Privacy Policy <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></a>
+              <a class="list-row" href="https://averages.io/support" target="_blank" rel="noopener">Help Center <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></a>
+              <a class="list-row" href="https://github.com/averages-io/averages.io/discussions" target="_blank" rel="noopener">Send Feedback <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></a>
             </div>
           </div>
         </div>
@@ -1128,7 +1321,7 @@
           <h3>Email</h3>
           <input type="email" id="profileEditEmailInput" placeholder="you@example.com (optional)" style="width: 100%; font: inherit; font-size: 0.9rem; color: var(--text-dark); background: var(--panel-inner); border: 1px solid var(--border); border-radius: var(--window-radius-sm); padding: 10px 12px;">
           <p class="settings-row-desc" id="profileEditEmailError" style="margin-top: 6px; color: var(--grade-bad); font-weight: 700;" hidden>Enter a valid email address (like you@example.com).</p>
-          <p class="settings-row-desc" style="margin-top: 6px;">Not required. Add one if you want the Weekly Grade Summary.</p>
+          <p class="settings-row-desc" style="margin-top: 6px;">Not required.</p>
         </div>
       </div>
       <div class="editor-actions">
@@ -1172,7 +1365,7 @@
         <button class="editor-close" id="syncRequiredClose" type="button" aria-label="Close">&times;</button>
       </div>
       <div class="editor-body" style="padding-bottom: 16px;">
-        <p class="settings-row-desc" style="font-size: 0.86rem;">Weekly Grade Summary needs Sync Across Devices turned on — that's what lets Averages keep last week's grade snapshot to compare this week's against.</p>
+        <p class="settings-row-desc" style="font-size: 0.86rem;">Browser Notifications needs Sync Across Devices turned on. That's how Averages knows this browser wants notifications and where to send them while Averages is closed.</p>
       </div>
       <div class="editor-actions">
         <button class="editor-reset" id="syncRequiredCancel" type="button">Not now</button>
@@ -1200,8 +1393,8 @@
         <button class="editor-close" id="weeklyEmailConsentClose" type="button" aria-label="Close">&times;</button>
       </div>
       <div class="editor-body" style="padding-bottom: 16px;">
-        <p class="settings-row-desc" style="font-size: 0.86rem;">Once this is on, Averages checks your grades once a week — even when you're not signed in — so it can send you this email. To do that without you being logged in, it stores your school sign-in key, encrypted, using a separate locked-down key it keeps elsewhere, so nothing can read it with just one or the other.</p>
-        <p class="settings-row-desc" style="font-size: 0.86rem; margin-top: 10px;">That stored key is only ever used to build this email — nothing else. Turn this back off any time and it's deleted immediately, not just left unused.</p>
+        <p class="settings-row-desc" style="font-size: 0.86rem;">To notify you while Averages is closed, it checks for changes every so often, even when you're not signed in. To do that it stores your school sign-in key, encrypted, using a separate locked-down key it keeps elsewhere, so nothing can read it with just one or the other.</p>
+        <p class="settings-row-desc" style="font-size: 0.86rem; margin-top: 10px;">Notifications only say what kind of thing changed, like "A new grade was posted." The details stay in Averages. Turn this off any time and the stored key is deleted right away.</p>
       </div>
       <div class="editor-actions">
         <button class="editor-reset" id="weeklyEmailConsentCancel" type="button">Not now</button>
@@ -1362,6 +1555,10 @@
         <span class="label">Assignments</span>
         <span class="dot"></span>
       </button>
+      <button class="nav-link" type="button" data-page="files" data-href="files.html">
+        <span class="label">Files</span>
+        <span class="dot"></span>
+      </button>
       <button class="nav-link" type="button" data-page="calendar" data-href="calendar.html">
         <span class="label">Calendar</span>
         <span class="dot"></span>
@@ -1378,8 +1575,140 @@
         <span class="label">Settings</span>
         <span class="dot"></span>
       </button>
+      <button class="nav-more" type="button" id="navMore" aria-haspopup="menu" aria-expanded="false" aria-controls="navMoreMenu" aria-label="More pages" hidden>
+        <span class="label"><svg viewBox="0 0 16 4" width="16" height="4" aria-hidden="true"><circle cx="2" cy="2" r="1.75"/><circle cx="8" cy="2" r="1.75"/><circle cx="14" cy="2" r="1.75"/></svg></span>
+        <span class="dot"></span>
+      </button>
     </div>
+    <div class="nav-more-menu" id="navMoreMenu" role="menu" aria-label="More pages" hidden></div>
   </nav>
+
+  <script>
+    // Potato PC Mode on every page (2026-10-04, per Martin). The saved
+    // setting turns off all CSS animations and transitions, makes animate()
+    // calls and smooth scrolling instant, and drops the slanted page title.
+    // Same code as app/lib/theme-boot.ts, which runs it before first paint in
+    // the app; this copy covers the preview and pages theme-boot skips.
+    (function () {
+    var POTATO_CSS = "body.potato-mode,body.potato-mode *,body.potato-mode *::before,body.potato-mode *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important;filter:none!important;text-shadow:none!important}html:has(body.potato-mode){scroll-behavior:auto!important}body.potato-mode,body.potato-mode *{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif!important}body.potato-mode h1.title{font-style:normal!important;transform:none!important}body.potato-mode .trend.has-popup:focus-visible{outline:2px solid currentColor;outline-offset:2px}";
+    function potatoOn() { return !!(document.body && document.body.classList.contains("potato-mode")); }
+    function applyPotato() {
+      var on = false;
+      try { on = (JSON.parse(localStorage.getItem("schoolagy_settings_options") || "{}") || {}).potatoMode === true; } catch (e) {}
+      if (document.body) document.body.classList.toggle("potato-mode", on);
+      if (!document.getElementById("potatoStyle")) {
+        var st = document.createElement("style");
+        st.id = "potatoStyle";
+        st.textContent = POTATO_CSS;
+        (document.head || document.documentElement).appendChild(st);
+      }
+      var EP = window.Element && Element.prototype;
+      if (EP && !EP.__potatoPatched) {
+        EP.__potatoPatched = true;
+        var anim = EP.animate;
+        if (anim) EP.animate = function (frames, opts) {
+          if (potatoOn()) opts = (typeof opts === "number" || opts == null) ? { duration: 0 } : Object.assign({}, opts, { duration: 0, delay: 0, endDelay: 0, iterations: 1 });
+          return anim.call(this, frames, opts);
+        };
+        var siv = EP.scrollIntoView;
+        if (siv) EP.scrollIntoView = function (arg) {
+          if (potatoOn() && arg && typeof arg === "object") arg = Object.assign({}, arg, { behavior: "auto" });
+          return siv.call(this, arg);
+        };
+        ["scrollTo", "scrollBy"].forEach(function (name) {
+          [EP, window].forEach(function (target) {
+            var fn = target[name];
+            if (!fn) return;
+            target[name] = function (a, b) {
+              if (potatoOn() && a && typeof a === "object") a = Object.assign({}, a, { behavior: "auto" });
+              return b === undefined ? fn.call(this, a) : fn.call(this, a, b);
+            };
+          });
+        });
+      }
+    }
+      applyPotato();
+      window.addEventListener('storage', function (e) { if (e.key === 'schoolagy_settings_options') applyPotato(); });
+    })();
+
+    // Bottom nav "More" overflow. Shows as many pages as fit without
+    // cutting a label off ("Cour..."); the rest go in the More menu.
+    // The current page always stays in the bar.
+    (function () {
+      const nav = document.querySelector('.app-nav');
+      const inner = nav && nav.querySelector('.app-nav-inner');
+      const more = document.getElementById('navMore');
+      const menu = document.getElementById('navMoreMenu');
+      if (!inner || !more || !menu) return;
+      const links = Array.from(inner.querySelectorAll('.nav-link'));
+
+      const cut = () =>
+        inner.scrollWidth > inner.clientWidth + 1 ||
+        links.some(l => !l.hidden && l.querySelector('.label').scrollWidth > l.querySelector('.label').clientWidth + 1);
+
+      function fit() {
+        closeMenu();
+        links.forEach(l => { l.hidden = false; });
+        more.hidden = true;
+        if (!cut()) return;
+        more.hidden = false;
+        // Hide from the right, but never the current page.
+        for (let i = links.length - 1; i >= 1 && cut(); i--) {
+          if (!links[i].classList.contains('active')) links[i].hidden = true;
+        }
+        const hidden = links.filter(l => l.hidden);
+        more.classList.toggle('has-active', hidden.some(l => l.classList.contains('active')));
+        menu.textContent = '';
+        hidden.forEach(l => {
+          const item = document.createElement('button');
+          item.type = 'button';
+          item.className = 'nav-more-item' + (l.classList.contains('active') ? ' active' : '');
+          item.setAttribute('role', 'menuitem');
+          const text = document.createElement('span'); text.textContent = l.querySelector('.label').textContent; item.appendChild(text);
+          item.addEventListener('click', () => { closeMenu(); l.click(); });
+          menu.appendChild(item);
+        });
+      }
+
+      function openMenu() {
+        const navBox = nav.getBoundingClientRect();
+        const innerBox = inner.getBoundingClientRect();
+        menu.style.right = Math.max(0, navBox.right - innerBox.right) + 'px';
+        menu.hidden = false;
+        nav.classList.add('more-open');
+        more.setAttribute('aria-expanded', 'true');
+        const first = menu.querySelector('.nav-more-item');
+        if (first) first.focus();
+      }
+      function closeMenu() {
+        if (menu.hidden) return;
+        menu.hidden = true;
+        nav.classList.remove('more-open');
+        more.setAttribute('aria-expanded', 'false');
+      }
+
+      more.addEventListener('click', e => {
+        e.stopPropagation();
+        menu.hidden ? openMenu() : closeMenu();
+      });
+      document.addEventListener('click', e => { if (!menu.contains(e.target)) closeMenu(); });
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && !menu.hidden) { closeMenu(); more.focus(); }
+        if (!menu.hidden && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+          const items = Array.from(menu.querySelectorAll('.nav-more-item'));
+          const i = items.indexOf(document.activeElement);
+          const next = items[(i + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length];
+          if (next) { e.preventDefault(); next.focus(); }
+        }
+      });
+
+      fit();
+      if (window.ResizeObserver) new ResizeObserver(fit).observe(nav);
+      else window.addEventListener('resize', fit);
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
+    })();
+  </script>
+
 
   <script>
     // ------------------------------------------------------------------
@@ -1474,6 +1803,123 @@
     // pieces render on load, so there's no need to re-index per
     // keystroke.
     // ------------------------------------------------------------------
+
+    // ------------------------------------------------------------------
+    // Integrations (2026-10-04, per Martin). Canva's review requires both a
+    // "connected" indicator and a Disconnect button, so every row has them.
+    // Not wired to the API yet: in the preview, Connect/Disconnect just flips
+    // the state (in memory); signed in, the rows say Coming soon. The real
+    // version reads GET /canva/status (and the Google Drive/OneDrive equivalents),
+    // Connect goes to /canva/connect, Disconnect calls DELETE /canva/connection.
+    // ------------------------------------------------------------------
+    (function () {
+      const list = document.getElementById('integrationList');
+      if (!list) return;
+      const PREVIEW = !window.__SCHOOLAGY_MODE__;   // set by LegacyPage.tsx when signed in (live or demo); missing in the preview
+      const APPS = [
+        { id: 'canva', name: 'Canva', desc: 'Edit assignment files in Canva, then turn them in from Drafts.' },
+        { id: 'gdrive', name: 'Google Drive', desc: 'Edit Word, PowerPoint and Excel files in Google Docs, Slides and Sheets, and add files from Drive.' },
+        { id: 'onedrive', name: 'OneDrive', desc: 'Save course files to OneDrive and add files from it.' },   // back 2026-10-05
+      ];
+      const connected = new Set();
+      const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+      function render() {
+        list.innerHTML = APPS.map(a => {
+          const on = connected.has(a.id);
+          const action = PREVIEW
+            ? `<button class="btn-secondary integ-btn${on ? ' disconnect' : ''}" type="button" data-integ="${a.id}" aria-label="${on ? 'Disconnect' : 'Connect'} ${esc(a.name)}">${on ? 'Disconnect' : 'Connect'}</button>`
+            : `<span class="integ-soon">Coming soon</span>`;
+          return `
+            <div class="settings-row">
+              <div class="settings-row-text">
+                <p class="settings-row-label">${esc(a.name)}</p>
+                <p class="settings-row-desc">${esc(a.desc)}</p>
+                <span class="integ-status${on ? ' on' : ''}">${on ? 'Connected' : 'Not connected'}</span>
+              </div>
+              ${action}
+            </div>`;
+        }).join('');
+      }
+      // Default editor (2026-10-04): which app "Edit in …" uses for Word,
+      // PowerPoint and Excel files. Kept on this device.
+      const EDITOR_KEY = 'schoolagy_default_editor';
+      const editorBtn = document.getElementById('defaultEditorBtn');
+      const editorMenu = document.getElementById('defaultEditorMenu');
+      const editorLabel = document.getElementById('defaultEditorLabel');
+      const editorHint = document.getElementById('defaultEditorHint');
+      const editorOpts = editorMenu ? [...editorMenu.querySelectorAll('.pick-opt')] : [];
+      let editorValue = 'canva';
+      function syncEditorHint() {
+        if (!editorHint) return;
+        const app = APPS.find(a => a.id === editorValue);
+        const off = PREVIEW && app && !connected.has(app.id);
+        editorHint.hidden = !off;
+        if (off) editorHint.textContent = `Connect ${app.name} above to use it.`;
+      }
+      function setEditor(v, save) {
+        if (v !== 'canva' && v !== 'gdrive') return;
+        editorValue = v;
+        editorOpts.forEach(o => o.setAttribute('aria-selected', String(o.dataset.value === v)));
+        const o = editorOpts.find(x => x.dataset.value === v);
+        if (o) editorLabel.textContent = o.textContent.trim();
+        if (save) { try { localStorage.setItem(EDITOR_KEY, v); } catch {} }
+        syncEditorHint();
+      }
+      function placeEditorMenu() {
+        const r = editorBtn.getBoundingClientRect();
+        editorMenu.style.minWidth = r.width + 'px';
+        editorMenu.style.left = '0px'; editorMenu.style.top = '0px';   // measure at full width, not squeezed against the edge
+        const w = editorMenu.offsetWidth, h = editorMenu.offsetHeight;
+        editorMenu.style.left = Math.max(8, Math.min(r.right - w, window.innerWidth - w - 8)) + 'px';   // right edges line up
+        // Open upward when there's no room above the bottom nav bar.
+        const nav = document.querySelector('.app-nav');
+        const floor = Math.min(window.innerHeight, nav ? nav.getBoundingClientRect().top : window.innerHeight) - 8;
+        editorMenu.style.top = (r.bottom + 6 + h > floor ? Math.max(8, r.top - h - 6) : r.bottom + 6) + 'px';
+      }
+      function openEditorMenu() {
+        editorMenu.hidden = false;
+        editorBtn.setAttribute('aria-expanded', 'true');
+        placeEditorMenu();
+        (editorOpts.find(o => o.dataset.value === editorValue) || editorOpts[0]).focus();
+      }
+      function closeEditorMenu(focusBtn) {
+        if (editorMenu.hidden) return;
+        editorMenu.hidden = true;
+        editorBtn.setAttribute('aria-expanded', 'false');
+        if (focusBtn) editorBtn.focus();
+      }
+      if (editorBtn && editorMenu) {
+        try { setEditor(localStorage.getItem(EDITOR_KEY) || 'canva', false); } catch { setEditor('canva', false); }
+        editorBtn.addEventListener('click', () => { if (editorMenu.hidden) openEditorMenu(); else closeEditorMenu(true); });
+        editorBtn.addEventListener('keydown', e => { if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); openEditorMenu(); } });
+        editorOpts.forEach(o => o.addEventListener('click', () => { setEditor(o.dataset.value, true); closeEditorMenu(true); }));
+        editorMenu.addEventListener('keydown', e => {
+          const i = editorOpts.indexOf(document.activeElement);
+          if (e.key === 'ArrowDown') { e.preventDefault(); editorOpts[(i + 1) % editorOpts.length].focus(); }
+          else if (e.key === 'ArrowUp') { e.preventDefault(); editorOpts[(i - 1 + editorOpts.length) % editorOpts.length].focus(); }
+          else if (e.key === 'Home') { e.preventDefault(); editorOpts[0].focus(); }
+          else if (e.key === 'End') { e.preventDefault(); editorOpts[editorOpts.length - 1].focus(); }
+          else if (e.key === 'Escape') { e.preventDefault(); closeEditorMenu(true); }
+          else if (e.key === 'Tab') closeEditorMenu(false);
+        });
+        document.addEventListener('click', e => { if (!editorMenu.hidden && !editorMenu.contains(e.target) && !editorBtn.contains(e.target)) closeEditorMenu(false); });
+        window.addEventListener('resize', () => closeEditorMenu(false));
+        document.querySelector('.settings-detail-wrap').addEventListener('scroll', () => closeEditorMenu(false), { passive: true });
+      }
+      list.addEventListener('click', e => {
+        const b = e.target.closest('[data-integ]');
+        if (!b) return;
+        const id = b.dataset.integ;
+        if (connected.has(id)) connected.delete(id); else connected.add(id);
+        render();
+        syncEditorHint();
+        const again = list.querySelector(`[data-integ="${id}"]`);
+        if (again) again.focus();
+      });
+      render();
+      syncEditorHint();
+    })();
+
     const searchInput = document.getElementById('settingsSearch');
     const noResults = document.getElementById('settingsNoResults');
     const sectionSearchIndex = {};
@@ -2566,26 +3012,64 @@
       }
     });
 
-    const weeklyGradeSummaryToggle = document.getElementById('weeklyGradeSummaryToggle');
-    // Persisted via schoolagy_settings_options as of 2026-09-08. Still
-    // gated behind a verified email on every load, same as the toggle
-    // logic below — a saved "on" from before doesn't override that. As of
-    // 2026-09-08 it's also gated behind Sync Across Devices being on (see
-    // the rule below and the "Turn on sync first" nudge): the weekly email
-    // is generated server-side, with no browser open to ask, so it needs a
-    // synced per-user record to know who's opted in and to hold the GPA
-    // history the email's "vs last week" line reads from — an account with
-    // sync off has neither, so a stale "on" from before sync was turned off
-    // must not survive a reload.
-    weeklyGradeSummaryToggle.checked = !SCHOOLAGY_SYNC_UNAVAILABLE
-      && settingsOptions.weeklyGradeSummary === true
-      && !!profileState.email && profileState.emailVerified
-      && settingsOptions.syncAcrossDevices !== false;
-    if (SCHOOLAGY_SYNC_UNAVAILABLE) {
-      weeklyGradeSummaryToggle.disabled = true;
-      const desc = document.getElementById('weeklyGradeSummaryDesc');
-      if (desc) desc.textContent = 'Not available on the demo account — this sends real email to a real account.';
+    // ------------------------------------------------------------------
+    // Browser notifications (2026-10-04, per Martin; replaces the Weekly
+    // Grade Summary email). Same gate chain the email used, minus the email
+    // steps: Sync Across Devices on -> consent popup -> the browser's own
+    // permission prompt. Sending isn't built yet, so only the preview runs
+    // it; signed in (live or demo) it says Coming soon.
+    // ------------------------------------------------------------------
+    const browserNotifToggle = document.getElementById('browserNotifToggle');
+    const notifTypesWrap = document.getElementById('notifTypesWrap');
+    const notifBlockedNote = document.getElementById('notifBlockedNote');
+    const NOTIF_PREVIEW = !window.__SCHOOLAGY_MODE__;
+    const NOTIF_SUPPORTED = 'Notification' in window;
+    // The email is gone: a saved "on" goes back to off, which also makes the
+    // API stop keeping its two GPA snapshots for this student.
+    if (settingsOptions.weeklyGradeSummary === true) saveSettingsOption('weeklyGradeSummary', false);
+    function notifPermission() { return NOTIF_SUPPORTED ? Notification.permission : 'denied'; }
+    function renderNotifState() {
+      const on = browserNotifToggle.checked;
+      notifTypesWrap.hidden = !on;
+      notifBlockedNote.hidden = on || notifPermission() !== 'denied' || !NOTIF_PREVIEW;
     }
+    browserNotifToggle.checked = NOTIF_PREVIEW
+      && settingsOptions.browserNotifications === true
+      && settingsOptions.syncAcrossDevices === true
+      && notifPermission() === 'granted';
+    if (!NOTIF_PREVIEW || !NOTIF_SUPPORTED) {
+      browserNotifToggle.disabled = true;
+      const desc = document.getElementById('browserNotifDesc');
+      if (desc) desc.textContent = !NOTIF_SUPPORTED
+        ? "This browser doesn't support notifications."
+        : 'Coming soon: notifications in your browser when grades, assignments or messages change. Will need Sync Across Devices.';
+    }
+    // Which kinds of notifications (all on unless turned off).
+    const notifyTypes = Object.assign({ grades: true, assignments: true, due: true, messages: true, announcements: true }, settingsOptions.notifyTypes || {});
+    document.querySelectorAll('[data-notify-type]').forEach(t => {
+      t.checked = notifyTypes[t.dataset.notifyType] !== false;
+      t.addEventListener('change', () => { notifyTypes[t.dataset.notifyType] = t.checked; saveSettingsOption('notifyTypes', { ...notifyTypes }); });
+    });
+    function setBrowserNotif(on) {
+      browserNotifToggle.checked = on;
+      saveSettingsOption('browserNotifications', on);
+      renderNotifState();
+    }
+    // Last step, after sync and consent: the browser's own prompt.
+    function enableBrowserNotifAfterConsent() {
+      if (!NOTIF_SUPPORTED) return;
+      const ask = notifPermission() === 'granted' ? Promise.resolve('granted') : Notification.requestPermission();
+      Promise.resolve(ask).then(result => {
+        if (result === 'granted') { setBrowserNotif(true); return; }
+        setBrowserNotif(false);
+        notifBlockedNote.hidden = result !== 'denied';
+      }).catch(() => setBrowserNotif(false));
+    }
+    document.getElementById('notifTestBtn').addEventListener('click', () => {
+      if (!NOTIF_SUPPORTED || notifPermission() !== 'granted') return;
+      try { new Notification('Averages.io', { body: 'A new grade was posted. Open Averages to see it.', tag: 'averages-test' }); } catch {}
+    });
+    renderNotifState();
     const emailNudgeOverlay = document.getElementById('emailNudgeOverlay');
     const emailNudgeTitle = document.getElementById('emailNudgeTitle');
     const emailNudgeBody = document.getElementById('emailNudgeBody');
@@ -2635,13 +3119,7 @@
       // "Good to go" — per Martin, once the email clears verification
       // during the weekly-summary flow, the toggle should flip on by
       // itself rather than making the user go turn it on again.
-      if (pendingWeeklySummaryEnable) {
-        pendingWeeklySummaryEnable = false;
-        // Email just cleared, but the user still hasn't seen the
-        // "what turning this on means" consent modal — see
-        // openWeeklyEmailConsent further down. Added 2026-09-12.
-        openWeeklyEmailConsent();
-      }
+      pendingWeeklySummaryEnable = false;   // email no longer gates anything (2026-10-04)
     }
     function openEmailVerifyModal() {
       emailVerifyAddress.textContent = profileState.email;
@@ -2682,34 +3160,11 @@
     });
     profileCardVerifyBtn.addEventListener('click', openEmailVerifyModal);
 
-    weeklyGradeSummaryToggle.addEventListener('change', () => {
-      if (SCHOOLAGY_SYNC_UNAVAILABLE) { weeklyGradeSummaryToggle.checked = false; return; } // belt-and-suspenders — the control is also .disabled
-      if (!weeklyGradeSummaryToggle.checked) { saveSettingsOption('weeklyGradeSummary', false); return; } // turning it off never needs gating
-      if (!profileState.email) {
-        weeklyGradeSummaryToggle.checked = false;
-        openEmailNudge();
-        return;
-      }
-      if (!profileState.emailVerified) {
-        weeklyGradeSummaryToggle.checked = false;
-        openEmailNudge();
-        return;
-      }
-      // Added 2026-09-08: needs Sync Across Devices on too — see the const's
-      // comment above for why. Checked last, after the email gates, so
-      // someone who needs to fix both sees the email nudge first (the more
-      // familiar, already-existing ask) rather than being sent back and
-      // forth between two modals for two different missing things at once.
-      if (!isSyncOn()) {
-        weeklyGradeSummaryToggle.checked = false;
-        openSyncRequiredNudge();
-        return;
-      }
-      // Added 2026-09-12: one more step before this actually turns on.
-      // Unlike the two gates above, this isn't fixing something missing —
-      // it's making sure the person has actually seen what the toggle
-      // stores before it does. See openWeeklyEmailConsent below.
-      weeklyGradeSummaryToggle.checked = false; // hold off until consent is confirmed
+    browserNotifToggle.addEventListener('change', () => {
+      if (browserNotifToggle.disabled) return;
+      if (!browserNotifToggle.checked) { setBrowserNotif(false); return; }   // turning it off never needs gating
+      browserNotifToggle.checked = false;   // hold off until every step below says yes
+      if (!isSyncOn()) { openSyncRequiredNudge(); return; }
       openWeeklyEmailConsent();
     });
 
@@ -2759,7 +3214,7 @@
     const syncOffConfirmOverlay = document.getElementById('syncOffConfirmOverlay');
     const syncOffConfirmBody = document.getElementById('syncOffConfirmBody');
     const SYNC_OFF_BODY_DEFAULT = syncOffConfirmBody.textContent;
-    const SYNC_OFF_BODY_WITH_WEEKLY = SYNC_OFF_BODY_DEFAULT + ' Weekly Grade Summary needs sync to be on, so that turns off too.';
+    const SYNC_OFF_BODY_WITH_WEEKLY = SYNC_OFF_BODY_DEFAULT + ' Browser Notifications needs sync to be on, so that turns off too.';
 
     if (SCHOOLAGY_SYNC_UNAVAILABLE) {
       // Demo has no real Schoology uid for the API to key a stored record
@@ -2979,7 +3434,7 @@
     syncAcrossDevicesToggle.addEventListener('change', () => {
       if (syncAcrossDevicesToggle.checked) { saveSettingsOption('syncAcrossDevices', true); return; } // turning on never needs confirming
       syncAcrossDevicesToggle.checked = true; // hold it on until the user actually confirms
-      syncOffConfirmBody.textContent = weeklyGradeSummaryToggle.checked ? SYNC_OFF_BODY_WITH_WEEKLY : SYNC_OFF_BODY_DEFAULT;
+      syncOffConfirmBody.textContent = browserNotifToggle.checked ? SYNC_OFF_BODY_WITH_WEEKLY : SYNC_OFF_BODY_DEFAULT;
       syncOffConfirmOverlay.classList.add('show');
     });
     document.getElementById('syncOffConfirmClose').addEventListener('click', closeSyncOffConfirm);
@@ -2994,17 +3449,14 @@
       clearSyncMeta(); // the server record is gone; a stale timestamp here would be meaningless if sync comes back on later
       syncAcrossDevicesToggle.checked = false;
       saveSettingsOption('syncAcrossDevices', false);
-      // The rule: no sync, no weekly emails. Cascade the turn-off rather
-      // than leaving a Weekly Grade Summary that's now enforcing a
-      // condition it no longer meets.
-      if (weeklyGradeSummaryToggle.checked) {
-        weeklyGradeSummaryToggle.checked = false;
-        saveSettingsOption('weeklyGradeSummary', false);
-      }
+      // The rule: no sync, no browser notifications (2026-10-04; was the
+      // weekly email). Turn it off with sync rather than leave it on with
+      // nowhere to send from.
+      if (browserNotifToggle.checked) setBrowserNotif(false);
       closeSyncOffConfirm();
     });
 
-    // "Turn on sync first" nudge — see the weeklyGradeSummaryToggle change
+    // "Turn on sync first" nudge — see the browserNotifToggle change
     // handler above, and the syncRequiredOverlay markup's own comment.
     const syncRequiredOverlay = document.getElementById('syncRequiredOverlay');
     function openSyncRequiredNudge() {
@@ -3031,11 +3483,7 @@
       // saveSettingsOption directly.
       if (pendingWeeklySummaryEnable) {
         pendingWeeklySummaryEnable = false;
-        if (profileState.email && profileState.emailVerified) {
-          // Sync just cleared, but the consent modal still hasn't been
-          // shown — see openWeeklyEmailConsent below. Added 2026-09-12.
-          openWeeklyEmailConsent();
-        }
+        openWeeklyEmailConsent();   // sync is on now: next is the consent popup, then the browser's prompt
       }
     });
 
@@ -3055,9 +3503,8 @@
     document.getElementById('weeklyEmailConsentCancel').addEventListener('click', closeWeeklyEmailConsent);
     weeklyEmailConsentOverlay.addEventListener('click', e => { if (e.target === weeklyEmailConsentOverlay) closeWeeklyEmailConsent(); });
     document.getElementById('weeklyEmailConsentConfirm').addEventListener('click', () => {
-      weeklyGradeSummaryToggle.checked = true;
-      saveSettingsOption('weeklyGradeSummary', true);
       closeWeeklyEmailConsent();
+      enableBrowserNotifAfterConsent();
     });
 
     // ------------------------------------------------------------------
@@ -3068,6 +3515,41 @@
     syncResponsiveView();
     showSection('general', { showDetail: false });
     pullSyncSettingsNow();
+  </script>
+  <script>
+    // Back link (2026-10-01, per Martin: "where it returns to ... is always
+    // wrong"). Every page records itself in a short per-tab trail; a page's
+    // back link then says and goes to the page before it ("Back to AP
+    // Chemistry Hub", "Back to Grades"...). With no trail (the page was
+    // opened directly) the page's own default back link is left alone.
+    (function () {
+      const SELF = 'settings.html';
+      const KEY = 'averages_nav_trail';
+      const here = SELF + location.search;
+      const label = (document.title || '').replace(/^Averages\s*[—-]\s*/, '') || 'Settings';
+      let trail = [];
+      try { trail = JSON.parse(sessionStorage.getItem(KEY) || '[]'); } catch {}
+      if (!Array.isArray(trail)) trail = [];
+      const last = trail[trail.length - 1];
+      if (last && last.href === here) last.label = label;                 // reload
+      else if (trail.length > 1 && trail[trail.length - 2].href === here) { trail.pop(); trail[trail.length - 1].label = label; } // went back
+      else trail.push({ href: here, label });
+      trail = trail.slice(-20);
+      try { sessionStorage.setItem(KEY, JSON.stringify(trail)); } catch {}
+
+      const btn = document.querySelector('.back-link');
+      const prev = trail[trail.length - 2];
+      if (!btn || !prev) return;
+      const fresh = btn.cloneNode(false);          // same button, minus old click handlers
+      fresh.removeAttribute('onclick');
+      const icon = btn.querySelector('svg');
+      if (icon) fresh.appendChild(icon.cloneNode(true));
+      const text = document.createElement('span');
+      text.textContent = 'Back to ' + prev.label;
+      fresh.appendChild(text);
+      fresh.addEventListener('click', () => { window.location.href = prev.href; });
+      btn.replaceWith(fresh);
+    })();
   </script>
 </body>
 </html>

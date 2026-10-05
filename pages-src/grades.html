@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Schoolagy — Grades</title>
+<title>Averages — Grades</title>
 <link rel="stylesheet" href="https://use.typekit.net/gsk6off.css">
 <style>
   /* ---------- Shared design system — copied verbatim from courses.html
@@ -511,6 +511,84 @@
   .nav-link .dot { width: 4px; height: 4px; border-radius: 50%; background: transparent; }
   .nav-link.active .label { color: var(--text-dark); }
   .nav-link.active .dot { background: var(--accent); }
+  /* ---------- "More" overflow (2026-10-01, per Martin: "if the text has
+     to get ... we should add a more button on the far right side with a
+     list of the other options"). Labels never truncate: when they would,
+     the rightmost pages move into the More menu instead. ---------- */
+  .nav-link[hidden], .nav-more[hidden], .nav-more-menu[hidden] { display: none; }
+  /* While the More menu is open the whole bar sits above everything else on
+     the page (sticky headers, pop-ups, the edit button go up to z-index 90),
+     so the menu is never drawn underneath them. */
+  .app-nav.more-open { z-index: 1000; }
+  .nav-more {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    flex: 0 0 auto;
+    position: relative;
+    margin-left: 4px;
+    padding: 12px 16px 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+  }
+  .nav-more .label { display: flex; align-items: center; height: 1.2em; font-size: 0.72rem; color: var(--text-faint); }
+  .nav-more .label svg { display: block; fill: currentColor; }
+  /* thin divider between the pages and the dots */
+  .nav-more::before { content: ""; position: absolute; left: 0; top: 12px; bottom: 12px; width: 1px; background: var(--border, #cfcfd6); }
+  .nav-more:hover .label, .nav-more[aria-expanded="true"] .label { color: var(--text-dark); }
+  .nav-more .dot { width: 4px; height: 4px; border-radius: 50%; background: transparent; }
+  .nav-more.has-active .label { color: var(--text-dark); }
+  .nav-more.has-active .dot { background: var(--accent); }
+  .nav-more:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring) inset; }
+  .nav-more-menu {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    right: 20px;
+    min-width: 168px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    background: var(--panel-bg);
+    border-radius: var(--window-radius-md);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+    pointer-events: auto;
+  }
+  .nav-more-item {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: var(--text-faint);
+    text-align: left;
+    padding: 12px 12px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .nav-more-item:hover, .nav-more-item:focus-visible { outline: none; color: var(--text-dark); box-shadow: 0 0 0 3px var(--accent-ring) inset; }
+  .nav-more-item.active { color: var(--text-dark); }
+  .nav-more-item.active span { position: relative; display: inline-block; padding-bottom: 6px; margin-bottom: -6px; }
+  .nav-more-item.active span::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; border-radius: 999px; background: var(--accent); }
+  /* Labels sit centered in the bar; the active page is underlined in the
+     accent color instead of marked with a dot (2026-10-01, per Martin). */
+  .app-nav-inner .nav-link, .app-nav-inner .nav-more { justify-content: center; gap: 0; padding-top: 10px; padding-bottom: 10px; }
+  .app-nav-inner .nav-link .dot, .app-nav-inner .nav-more .dot { display: none; }
+  .app-nav-inner .nav-link .label, .app-nav-inner .nav-more .label { position: relative; padding: 6px 0; }
+  .app-nav-inner .nav-link.active .label::after, .app-nav-inner .nav-more.has-active .label::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; border-radius: 999px; background: var(--accent); }
+  @media (max-width: 520px) {
+    .nav-more { padding: 10px 12px 8px; }
+    .nav-more::before { top: 10px; bottom: 10px; }
+    .app-nav-inner .nav-link, .app-nav-inner .nav-more { padding-top: 8px; padding-bottom: 8px; }
+    .nav-more .label { font-size: 0.58rem; }
+  }
   .nav-link:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring) inset; }
   @media (max-width: 520px) {
     .nav-link { min-width: 0; padding: 10px 3px 8px; }
@@ -738,6 +816,10 @@
         <span class="label">Assignments</span>
         <span class="dot"></span>
       </button>
+      <button class="nav-link" type="button" data-page="files" data-href="files.html">
+        <span class="label">Files</span>
+        <span class="dot"></span>
+      </button>
       <button class="nav-link" type="button" data-page="calendar" data-href="calendar.html">
         <span class="label">Calendar</span>
         <span class="dot"></span>
@@ -754,8 +836,140 @@
         <span class="label">Settings</span>
         <span class="dot"></span>
       </button>
+      <button class="nav-more" type="button" id="navMore" aria-haspopup="menu" aria-expanded="false" aria-controls="navMoreMenu" aria-label="More pages" hidden>
+        <span class="label"><svg viewBox="0 0 16 4" width="16" height="4" aria-hidden="true"><circle cx="2" cy="2" r="1.75"/><circle cx="8" cy="2" r="1.75"/><circle cx="14" cy="2" r="1.75"/></svg></span>
+        <span class="dot"></span>
+      </button>
     </div>
+    <div class="nav-more-menu" id="navMoreMenu" role="menu" aria-label="More pages" hidden></div>
   </nav>
+
+  <script>
+    // Potato PC Mode on every page (2026-10-04, per Martin). The saved
+    // setting turns off all CSS animations and transitions, makes animate()
+    // calls and smooth scrolling instant, and drops the slanted page title.
+    // Same code as app/lib/theme-boot.ts, which runs it before first paint in
+    // the app; this copy covers the preview and pages theme-boot skips.
+    (function () {
+    var POTATO_CSS = "body.potato-mode,body.potato-mode *,body.potato-mode *::before,body.potato-mode *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important;filter:none!important;text-shadow:none!important}html:has(body.potato-mode){scroll-behavior:auto!important}body.potato-mode,body.potato-mode *{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif!important}body.potato-mode h1.title{font-style:normal!important;transform:none!important}body.potato-mode .trend.has-popup:focus-visible{outline:2px solid currentColor;outline-offset:2px}";
+    function potatoOn() { return !!(document.body && document.body.classList.contains("potato-mode")); }
+    function applyPotato() {
+      var on = false;
+      try { on = (JSON.parse(localStorage.getItem("schoolagy_settings_options") || "{}") || {}).potatoMode === true; } catch (e) {}
+      if (document.body) document.body.classList.toggle("potato-mode", on);
+      if (!document.getElementById("potatoStyle")) {
+        var st = document.createElement("style");
+        st.id = "potatoStyle";
+        st.textContent = POTATO_CSS;
+        (document.head || document.documentElement).appendChild(st);
+      }
+      var EP = window.Element && Element.prototype;
+      if (EP && !EP.__potatoPatched) {
+        EP.__potatoPatched = true;
+        var anim = EP.animate;
+        if (anim) EP.animate = function (frames, opts) {
+          if (potatoOn()) opts = (typeof opts === "number" || opts == null) ? { duration: 0 } : Object.assign({}, opts, { duration: 0, delay: 0, endDelay: 0, iterations: 1 });
+          return anim.call(this, frames, opts);
+        };
+        var siv = EP.scrollIntoView;
+        if (siv) EP.scrollIntoView = function (arg) {
+          if (potatoOn() && arg && typeof arg === "object") arg = Object.assign({}, arg, { behavior: "auto" });
+          return siv.call(this, arg);
+        };
+        ["scrollTo", "scrollBy"].forEach(function (name) {
+          [EP, window].forEach(function (target) {
+            var fn = target[name];
+            if (!fn) return;
+            target[name] = function (a, b) {
+              if (potatoOn() && a && typeof a === "object") a = Object.assign({}, a, { behavior: "auto" });
+              return b === undefined ? fn.call(this, a) : fn.call(this, a, b);
+            };
+          });
+        });
+      }
+    }
+      applyPotato();
+      window.addEventListener('storage', function (e) { if (e.key === 'schoolagy_settings_options') applyPotato(); });
+    })();
+
+    // Bottom nav "More" overflow. Shows as many pages as fit without
+    // cutting a label off ("Cour..."); the rest go in the More menu.
+    // The current page always stays in the bar.
+    (function () {
+      const nav = document.querySelector('.app-nav');
+      const inner = nav && nav.querySelector('.app-nav-inner');
+      const more = document.getElementById('navMore');
+      const menu = document.getElementById('navMoreMenu');
+      if (!inner || !more || !menu) return;
+      const links = Array.from(inner.querySelectorAll('.nav-link'));
+
+      const cut = () =>
+        inner.scrollWidth > inner.clientWidth + 1 ||
+        links.some(l => !l.hidden && l.querySelector('.label').scrollWidth > l.querySelector('.label').clientWidth + 1);
+
+      function fit() {
+        closeMenu();
+        links.forEach(l => { l.hidden = false; });
+        more.hidden = true;
+        if (!cut()) return;
+        more.hidden = false;
+        // Hide from the right, but never the current page.
+        for (let i = links.length - 1; i >= 1 && cut(); i--) {
+          if (!links[i].classList.contains('active')) links[i].hidden = true;
+        }
+        const hidden = links.filter(l => l.hidden);
+        more.classList.toggle('has-active', hidden.some(l => l.classList.contains('active')));
+        menu.textContent = '';
+        hidden.forEach(l => {
+          const item = document.createElement('button');
+          item.type = 'button';
+          item.className = 'nav-more-item' + (l.classList.contains('active') ? ' active' : '');
+          item.setAttribute('role', 'menuitem');
+          const text = document.createElement('span'); text.textContent = l.querySelector('.label').textContent; item.appendChild(text);
+          item.addEventListener('click', () => { closeMenu(); l.click(); });
+          menu.appendChild(item);
+        });
+      }
+
+      function openMenu() {
+        const navBox = nav.getBoundingClientRect();
+        const innerBox = inner.getBoundingClientRect();
+        menu.style.right = Math.max(0, navBox.right - innerBox.right) + 'px';
+        menu.hidden = false;
+        nav.classList.add('more-open');
+        more.setAttribute('aria-expanded', 'true');
+        const first = menu.querySelector('.nav-more-item');
+        if (first) first.focus();
+      }
+      function closeMenu() {
+        if (menu.hidden) return;
+        menu.hidden = true;
+        nav.classList.remove('more-open');
+        more.setAttribute('aria-expanded', 'false');
+      }
+
+      more.addEventListener('click', e => {
+        e.stopPropagation();
+        menu.hidden ? openMenu() : closeMenu();
+      });
+      document.addEventListener('click', e => { if (!menu.contains(e.target)) closeMenu(); });
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && !menu.hidden) { closeMenu(); more.focus(); }
+        if (!menu.hidden && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+          const items = Array.from(menu.querySelectorAll('.nav-more-item'));
+          const i = items.indexOf(document.activeElement);
+          const next = items[(i + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length];
+          if (next) { e.preventDefault(); next.focus(); }
+        }
+      });
+
+      fit();
+      if (window.ResizeObserver) new ResizeObserver(fit).observe(nav);
+      else window.addEventListener('resize', fit);
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
+    })();
+  </script>
+
 
   <!-- Final Grade Calculator — site-map.md's Final Grade Calculator spec:
        imports the course's real gradebook, lets the user edit any
@@ -885,6 +1099,47 @@
       } catch {}
       return null;
     }
+    // Subject table (2026-10-01, per Martin): each course gets a color that
+    // fits its subject, picked from its name. First match wins, so specific
+    // subjects come before broad ones ("Computer Science" before "Science",
+    // "Physical Education" before "Physics"). A color the student picked in
+    // the course's info pop-up still wins over this. No match keeps the
+    // course's own color. All colors pass 4.5:1 with white text.
+    const COURSE_SUBJECTS = [
+      [/\bchem/, '🧪', '#1b7f67'],
+      [/\bbio|anatom|physiolog/, '🧬', '#387f33'],
+      [/\bphysical ed|(^|[^a-z])p\.?e\.?($|[^a-z])|fitness|\bweight/, '🏃', '#c2562b'],
+      [/\bhealth/, '🩺', '#c0404a'],
+      [/\bphysics/, '⚛️', '#4a56b8'],
+      [/astronom/, '🔭', '#3b3f8f'],
+      [/environment|\bearth|geolog/, '🌍', '#2f7f63'],
+      [/robotic/, '🤖', '#55697d'],
+      [/computer|programming|coding|\bcs[ap]?\b|software/, '💻', '#2d6f8f'],
+      [/engineer/, '⚙️', '#6a6478'],
+      [/government|civics|politic/, '🏛️', '#2f4f8a'],
+      [/econ/, '📈', '#2e7d4f'],
+      [/psych/, '🧠', '#9a4583'],
+      [/geograph/, '🗺️', '#4c7a5a'],
+      [/histor/, '📜', '#9a5a2a'],
+      [/statistic|\bstats?\b/, '📊', '#2f72a8'],
+      [/geometr|\btrig/, '📐', '#3e64b0'],
+      [/calc|algebra|\bmath/, '🧮', '#2f5fb3'],
+      [/english|literature|\blit\b|writing|composition|language arts|reading/, '📖', '#a63a4f'],
+      [/spanish|french|german|chinese|mandarin|japanese|korean|latin|italian|\basl\b|sign language|language/, '🗣️', '#7a4fae'],
+      [/theat|drama/, '🎭', '#a3364b'],
+      [/music|band|choir|orchestra|chorus/, '🎵', '#6b48a8'],
+      [/photo/, '📷', '#4f5d6e'],
+      [/culinary|cooking|\bfoods?\b|nutrition/, '🍳', '#b05a26'],
+      [/\barts?\b|drawing|painting|ceramic|sculpt|design/, '🎨', '#b03f7a'],
+      [/business|marketing|accounting|financ/, '💼', '#3d5f6e'],
+      [/journalism|yearbook|newspaper/, '📰', '#5c5c6e'],
+      [/science/, '🔬', '#2b7b8c'],
+    ];
+    function courseSubject(name) {
+      const n = String(name || '').toLowerCase();
+      return COURSE_SUBJECTS.find(([re]) => re.test(n)) || null;
+    }
+
     function applyCourseCustomizationsInPlace(courses) {
       const custom = loadCourseCustom();
       // Mutates each course object's own fields in place (never clones,
@@ -893,7 +1148,11 @@
       // for scripts/port-pages.mjs's data-overrides transform to match
       // and rewrite for live Schoology data. This function only edits
       // the array's contents/order after that binding already exists.
-      courses.forEach(c => Object.assign(c, custom[c.id] || {}));
+      courses.forEach(c => {
+        const subject = courseSubject(c.name);
+        if (subject) c.color = subject[2];
+        Object.assign(c, custom[c.id] || {});
+      });
       const order = loadCourseOrder();
       if (order && order.length) {
         const byId = new Map(courses.map(c => [c.id, c]));
@@ -1152,8 +1411,24 @@
       return [lo, hi];
     }
 
+    // Grades given on the same day become one point: their average, with
+    // the date labeled "Aug 18 ×3" (2026-10-01). Otherwise three grades on
+    // one day drew as a zigzag across three fake "days".
+    function groupSameDay(h) {
+      const days = [];
+      h.points.forEach((p, i) => {
+        const d = h.dates[i];
+        const last = days[days.length - 1];
+        if (last && last.date === d) { last.sum += p; last.n++; }
+        else days.push({ date: d, sum: p, n: 1 });
+      });
+      return Object.assign({}, h, {
+        points: days.map(x => Math.round(x.sum / x.n)),
+        dates: days.map(x => x.n > 1 ? `${x.date} ×${x.n}` : x.date),
+      });
+    }
     function buildGradeChartSVG(course) {
-      const hist = HISTORY[course.id];
+      const hist = groupSameDay(HISTORY[course.id]);
       const allLabels = hist.dates.concat(['Predicted']);
       const allValues = hist.points.concat([course.predictedPct]);
       const [yLo, yHi] = niceBounds(allValues);
@@ -1596,6 +1871,41 @@
         closeProfileMenu();
       });
     });
+  </script>
+  <script>
+    // Back link (2026-10-01, per Martin: "where it returns to ... is always
+    // wrong"). Every page records itself in a short per-tab trail; a page's
+    // back link then says and goes to the page before it ("Back to AP
+    // Chemistry Hub", "Back to Grades"...). With no trail (the page was
+    // opened directly) the page's own default back link is left alone.
+    (function () {
+      const SELF = 'grades.html';
+      const KEY = 'averages_nav_trail';
+      const here = SELF + location.search;
+      const label = (document.title || '').replace(/^Averages\s*[—-]\s*/, '') || 'Grades';
+      let trail = [];
+      try { trail = JSON.parse(sessionStorage.getItem(KEY) || '[]'); } catch {}
+      if (!Array.isArray(trail)) trail = [];
+      const last = trail[trail.length - 1];
+      if (last && last.href === here) last.label = label;                 // reload
+      else if (trail.length > 1 && trail[trail.length - 2].href === here) { trail.pop(); trail[trail.length - 1].label = label; } // went back
+      else trail.push({ href: here, label });
+      trail = trail.slice(-20);
+      try { sessionStorage.setItem(KEY, JSON.stringify(trail)); } catch {}
+
+      const btn = document.querySelector('.back-link');
+      const prev = trail[trail.length - 2];
+      if (!btn || !prev) return;
+      const fresh = btn.cloneNode(false);          // same button, minus old click handlers
+      fresh.removeAttribute('onclick');
+      const icon = btn.querySelector('svg');
+      if (icon) fresh.appendChild(icon.cloneNode(true));
+      const text = document.createElement('span');
+      text.textContent = 'Back to ' + prev.label;
+      fresh.appendChild(text);
+      fresh.addEventListener('click', () => { window.location.href = prev.href; });
+      btn.replaceWith(fresh);
+    })();
   </script>
 </body>
 </html>

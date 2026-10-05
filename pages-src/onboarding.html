@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Schoolagy — Onboarding</title>
+<title>Averages — Onboarding</title>
 <link rel="stylesheet" href="https://use.typekit.net/gsk6off.css">
 <style>
   :root {
@@ -1071,27 +1071,70 @@
   body.potato-mode h1.title {
     transform: none !important;
   }
+  /* Emoji icons (2026-10-01, per Martin): icons that show a thing are emoji;
+     buttons and action icons stay line icons. */
+  /* Each emoji is an inline SVG sized by font-size (1em box), so it is
+     exactly as big as its box and sits dead center. The svg rule undoes
+     the line-icon styles (stroke, fill:none, opacity) that the parent
+     rows still set for their other icons. */
+  .emo { display: inline-block; width: 1em; height: 1em; line-height: 0; flex-shrink: 0; vertical-align: middle; }
+  .emo svg { display: block; width: 100%; height: 100%; fill: initial; stroke: none; opacity: 1; }
+  .theme-row .mode-toggle-icon .emo { font-size: 18px; }
+
+  /* ---------- Mode step (2026-10-04): Incognito / Classic ---------- */
+  .mode-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 14px; }
+  .mode-option { display: flex; flex-direction: column; gap: 8px; text-align: left; margin: 0; background: var(--control-bg); border: 2px solid transparent; border-radius: var(--window-radius); padding: 22px 20px; font-family: inherit; color: var(--text-dark); cursor: pointer; appearance: none; -webkit-appearance: none; transition: border-color 0.15s ease, transform 0.08s ease; }
+  .mode-option:hover { transform: translateY(-1px); }
+  .mode-option[aria-checked="true"] { border-color: var(--accent-dark); }
+  .mode-option:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring); }
+  .mode-option[hidden] { display: none; }
+  .mode-name { font-weight: 800; font-size: 1.1rem; }
+  .mode-desc { font-size: 0.82rem; font-weight: 600; color: var(--text-muted); line-height: 1.45; }
+  .mode-hint { margin: 0 0 4px; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); }
+  .btn-next:disabled { opacity: 0.5; cursor: not-allowed; }
+  body.potato-mode .mode-option { transition: none; }
 </style>
 </head>
 <body>
   <div class="page">
     <header class="top">
       <h1 class="title">Onboarding</h1>
-      <div class="subtitle">Customize your Schoolagy experience</div>
+      <div class="subtitle">Customize your Averages experience</div>
     </header>
 
     <div class="card">
       <div class="step-progress" id="stepProgress">
         <div class="step-progress-dots">
+          <div class="step-progress-dot" data-step-dot="mode"></div>
           <div class="step-progress-dot" data-step-dot="theme"></div>
           <div class="step-progress-dot" data-step-dot="features"></div>
           <div class="step-progress-dot" data-step-dot="profile"></div>
         </div>
-        <span class="step-progress-label" id="stepProgressLabel">Step 1 of 3</span>
+        <span class="step-progress-label" id="stepProgressLabel">Step 1 of 4</span>
       </div>
 
       <div class="card-inner">
       <div class="panel">
+        <!-- MODE (2026-10-04): Incognito for everyone, Classic for 13+ -->
+        <section class="step-section" data-section="mode">
+          <h2 class="section-label">Choose how Averages works for you</h2>
+          <div class="mode-options" id="modeOptions" role="radiogroup" aria-label="Mode">
+            <button type="button" class="mode-option" data-mode="incognito" role="radio" aria-checked="false">
+              <span class="mode-name">Incognito</span>
+              <span class="mode-desc">Stores nothing. Your settings stay on this device, and nothing about you is saved on our servers. No Sync, connected apps or notifications.</span>
+            </button>
+            <button type="button" class="mode-option" data-mode="classic" role="radio" aria-checked="false">
+              <span class="mode-name">Classic</span>
+              <span class="mode-desc">Sync your settings across devices, connect Canva and Google Drive, and get browser notifications. For students 13 and older.</span>
+            </button>
+          </div>
+          <p class="mode-hint" id="modeHint">Pick one to continue.</p>
+
+          <div class="next-row">
+            <button class="btn-next" data-next="theme" id="modeNext">Next</button>
+          </div>
+        </section>
+
         <!-- THEME -->
         <section class="step-section" data-section="theme">
           <h2 class="section-label">Choose your window type</h2>
@@ -1117,9 +1160,7 @@
               <span class="track"><span class="thumb"></span></span>
             </label>
             <span class="mode-toggle-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
+              <span class="emo" aria-hidden="true"><svg aria-hidden="true" focusable="false" viewBox="0 0 36 36"><path fill="#FFD983" d="M30.312.776C32 19 20 32 .776 30.312c8.199 7.717 21.091 7.588 29.107-.429C37.9 21.867 38.03 8.975 30.312.776z"/><path fill="#FFCC4D" d="M30.705 15.915a1.163 1.163 0 1 0 1.643 1.641 1.163 1.163 0 0 0-1.643-1.641zm-16.022 14.38a1.74 1.74 0 0 0 0 2.465 1.742 1.742 0 1 0 0-2.465zm13.968-2.147a2.904 2.904 0 0 1-4.108 0 2.902 2.902 0 0 1 0-4.107 2.902 2.902 0 0 1 4.108 0 2.902 2.902 0 0 1 0 4.107z"/></svg></span>
             </span>
             <div class="feature-text">
               <p class="feature-title">Dark mode</p>
@@ -1127,6 +1168,7 @@
           </div>
 
           <div class="next-row">
+            <button class="btn-back" data-back="mode">Back</button>
             <button class="btn-next" data-next="features">Next</button>
           </div>
         </section>
@@ -1149,6 +1191,7 @@
             <input type="text" id="nameInput" class="name-input" placeholder="First name only, no spaces">
             <div class="error-text" id="nameError">Name is required.</div>
 
+            <div id="emailBlock">
             <label class="field-label" for="emailInput" style="margin-top: 22px;">Email <span class="optional">(optional)</span></label>
             <input type="email" id="emailInput" class="name-input" placeholder="you@example.com">
             <div class="error-text" id="emailError">Enter a valid email address.</div>
@@ -1160,6 +1203,7 @@
                 <svg class="verify-icon verify-check is-hidden" id="verifyIconCheck" viewBox="0 0 24 24" aria-label="Verified"><circle cx="12" cy="12" r="10"/><path d="M8 12.5l2.5 2.5L16 9"/></svg>
               </span>
             </div>
+            </div>
 
             <div class="submit-row">
               <button class="btn-back" data-back="features">Back</button>
@@ -1169,7 +1213,7 @@
 
           <div class="complete-state" id="completeState">
             <h3>You're all set!</h3>
-            <p>Your Schoolagy profile has been created — redirecting to your Homepage next.</p>
+            <p>Your Averages profile has been created — redirecting to your Homepage next.</p>
             <div class="redirect-dots" aria-hidden="true"><span></span><span></span><span></span></div>
             <div class="recap" id="completeRecap"></div>
           </div>
@@ -1178,6 +1222,7 @@
       </div>
 
       <nav class="step-nav bottom" id="stepNavBottom">
+        <button class="step-tab" data-step="mode">Mode</button>
         <button class="step-tab" data-step="theme">Theme</button>
         <button class="step-tab" data-step="features">Features</button>
         <button class="step-tab" data-step="profile">Profile</button>
@@ -1236,6 +1281,53 @@
   </div>
 
   <script>
+    // Potato PC Mode on every page (2026-10-04, per Martin). The saved
+    // setting turns off all CSS animations and transitions, makes animate()
+    // calls and smooth scrolling instant, and drops the slanted page title.
+    // Same code as app/lib/theme-boot.ts, which runs it before first paint in
+    // the app; this copy covers the preview and pages theme-boot skips.
+    (function () {
+    var POTATO_CSS = "body.potato-mode,body.potato-mode *,body.potato-mode *::before,body.potato-mode *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important;filter:none!important;text-shadow:none!important}html:has(body.potato-mode){scroll-behavior:auto!important}body.potato-mode,body.potato-mode *{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif!important}body.potato-mode h1.title{font-style:normal!important;transform:none!important}body.potato-mode .trend.has-popup:focus-visible{outline:2px solid currentColor;outline-offset:2px}";
+    function potatoOn() { return !!(document.body && document.body.classList.contains("potato-mode")); }
+    function applyPotato() {
+      var on = false;
+      try { on = (JSON.parse(localStorage.getItem("schoolagy_settings_options") || "{}") || {}).potatoMode === true; } catch (e) {}
+      if (document.body) document.body.classList.toggle("potato-mode", on);
+      if (!document.getElementById("potatoStyle")) {
+        var st = document.createElement("style");
+        st.id = "potatoStyle";
+        st.textContent = POTATO_CSS;
+        (document.head || document.documentElement).appendChild(st);
+      }
+      var EP = window.Element && Element.prototype;
+      if (EP && !EP.__potatoPatched) {
+        EP.__potatoPatched = true;
+        var anim = EP.animate;
+        if (anim) EP.animate = function (frames, opts) {
+          if (potatoOn()) opts = (typeof opts === "number" || opts == null) ? { duration: 0 } : Object.assign({}, opts, { duration: 0, delay: 0, endDelay: 0, iterations: 1 });
+          return anim.call(this, frames, opts);
+        };
+        var siv = EP.scrollIntoView;
+        if (siv) EP.scrollIntoView = function (arg) {
+          if (potatoOn() && arg && typeof arg === "object") arg = Object.assign({}, arg, { behavior: "auto" });
+          return siv.call(this, arg);
+        };
+        ["scrollTo", "scrollBy"].forEach(function (name) {
+          [EP, window].forEach(function (target) {
+            var fn = target[name];
+            if (!fn) return;
+            target[name] = function (a, b) {
+              if (potatoOn() && a && typeof a === "object") a = Object.assign({}, a, { behavior: "auto" });
+              return b === undefined ? fn.call(this, a) : fn.call(this, a, b);
+            };
+          });
+        });
+      }
+    }
+      applyPotato();
+      window.addEventListener('storage', function (e) { if (e.key === 'schoolagy_settings_options') applyPotato(); });
+    })();
+
     // ------------------------------------------------------------------
     // Reusable color-swatch popup (replaces native <input type="color">,
     // which doesn't behave consistently everywhere it's used). A flat
@@ -1380,7 +1472,7 @@
         category: 'Performance',
         key: 'potatoMode',
         title: 'Potato PC Mode',
-        desc: 'Turns off the stylized display font and interface animations so Schoolagy loads and feels faster on slower devices.',
+        desc: 'Made for Chromebooks and older computers: turns off every animation and visual effect and uses the font already on your device, so Averages uses as little power as possible.',
         checked: false
       }
     ];
@@ -1388,7 +1480,7 @@
     // ---------- Step navigation ----------
     const stepTabs = document.querySelectorAll('.step-tab');
     const sections = document.querySelectorAll('.step-section');
-    const STEP_ORDER = ['theme', 'features', 'profile'];
+    const STEP_ORDER = ['mode', 'theme', 'features', 'profile'];
     const progressDots = document.querySelectorAll('.step-progress-dot');
     const progressLabel = document.getElementById('stepProgressLabel');
 
@@ -1433,7 +1525,7 @@
       btn.addEventListener('click', () => goToStep(btn.dataset.back));
     });
 
-    goToStep('theme');
+    goToStep('mode');
 
     // ---------- Window type (Windowed) ----------
     // This drives --window-radius globally, so every interactive element
@@ -1578,6 +1670,10 @@
           if (v === 'dark') return true;
           if (v === 'light') return false;
         } catch {}
+        // Under 13 (Incognito only): dark by default (2026-10-04).
+        let under13 = true;
+        try { under13 = localStorage.getItem('schoolagy_13plus') !== 'yes'; } catch {}
+        if (under13) return true;
         return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
       };
       const schoolagySetDarkPref = isDark => {
@@ -1586,6 +1682,8 @@
       const initialDark = schoolagySavedDarkPref();
       darkModeToggle.checked = initialDark;
       applyDarkMode(initialDark);
+      // Save the under-13 default right away so Home and every other page open dark too.
+      try { if (!localStorage.getItem(SCHOOLAGY_DARK_MODE_KEY) && localStorage.getItem('schoolagy_13plus') !== 'yes') schoolagySetDarkPref(true); } catch {}
       darkModeToggle.addEventListener('change', () => {
         applyDarkMode(darkModeToggle.checked);
         schoolagySetDarkPref(darkModeToggle.checked);
@@ -2087,6 +2185,8 @@
     // immediately see and feel change.
     const potatoToggle = document.querySelector('[data-key="potatoMode"]');
     if (potatoToggle) {
+      // Start from the saved setting (2026-10-04), so Potato mode stays on if it already was.
+      try { if ((JSON.parse(localStorage.getItem('schoolagy_settings_options') || '{}') || {}).potatoMode === true) potatoToggle.checked = true; } catch {}
       document.body.classList.toggle('potato-mode', potatoToggle.checked);
       potatoToggle.addEventListener('change', () => {
         document.body.classList.toggle('potato-mode', potatoToggle.checked);
@@ -2099,6 +2199,59 @@
     const emailInput = document.getElementById('emailInput');
     const emailError = document.getElementById('emailError');
     const submitBtn = document.getElementById('submitBtn');
+
+    // ---------- Mode step (2026-10-04): Incognito / Classic ----------
+    // Classic is 13+ (the login page's checkbox, saved as schoolagy_13plus).
+    // Anyone else, or anyone we can't tell about, only gets Incognito.
+    // Incognito stores nothing about the student on our servers, so it also
+    // hides Sync and the email field below.
+    let IS_13_PLUS = false;
+    try { IS_13_PLUS = localStorage.getItem('schoolagy_13plus') === 'yes'; } catch {}
+    const modeButtons = document.querySelectorAll('.mode-option');
+    const modeNext = document.getElementById('modeNext');
+    const modeHint = document.getElementById('modeHint');
+    let accountMode = null;
+    function setMode(mode) {
+      accountMode = mode;
+      modeButtons.forEach(b => b.setAttribute('aria-checked', String(b.dataset.mode === mode)));
+      modeNext.disabled = !mode;
+      modeHint.hidden = !!mode;
+      const incognito = mode === 'incognito';
+      // Sync & Privacy features: not in Incognito.
+      document.querySelectorAll('#featuresList .feature-category').forEach(block => {
+        const t = block.querySelector('.category-title');
+        if (t && t.textContent === 'Sync & Privacy') {
+          block.hidden = incognito;
+          if (incognito) block.querySelectorAll('input[type="checkbox"]').forEach(c => { c.checked = false; });
+        }
+      });
+      // Email: not in Incognito.
+      const emailBlock = document.getElementById('emailBlock');
+      if (emailBlock) {
+        emailBlock.hidden = incognito;
+        if (incognito) { emailInput.value = ''; emailError.classList.remove('show'); emailInput.dispatchEvent(new Event('input')); }
+      }
+    }
+    if (!IS_13_PLUS) {
+      document.querySelector('.mode-option[data-mode="classic"]').hidden = true;
+      setMode('incognito');
+    } else {
+      setMode(null);
+    }
+    modeButtons.forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
+    document.getElementById('modeOptions').addEventListener('keydown', e => {
+      if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) return;
+      const shown = [...modeButtons].filter(b => !b.hidden);
+      const i = shown.indexOf(document.activeElement);
+      if (i === -1) return;
+      e.preventDefault();
+      const next = shown[(i + (e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 1) + shown.length) % shown.length];
+      next.focus(); setMode(next.dataset.mode);
+    });
+    // Theme and later steps need a mode first.
+    stepTabs.forEach(t => t.addEventListener('click', e => {
+      if (!accountMode && t.dataset.step !== 'mode') { e.stopImmediatePropagation(); goToStep('mode'); modeHint.hidden = false; }
+    }, true));
 
     // Same "good enough for a mock" validation as the Email field in
     // Settings > Account — optional here, but if something's typed it
@@ -2243,6 +2396,15 @@
       // already respects, instead of vanishing the instant onboarding
       // ends.
       try {
+        localStorage.setItem('schoolagy_account_mode', accountMode || 'incognito');   // 2026-10-04
+        // Potato PC Mode chosen here now carries into the app (it was never saved before).
+        const potatoPick = document.querySelector('[data-key="potatoMode"]');
+        if (potatoPick) {
+          let opts = {};
+          try { opts = JSON.parse(localStorage.getItem('schoolagy_settings_options') || '{}') || {}; } catch {}
+          opts.potatoMode = potatoPick.checked;
+          localStorage.setItem('schoolagy_settings_options', JSON.stringify(opts));
+        }
         localStorage.setItem('schoolagy_profile', JSON.stringify({
           name: nameInput.value.trim(),
           email: emailVal,

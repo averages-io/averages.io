@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Averages — Files</title>
+<link rel="stylesheet" href="https://use.typekit.net/gsk6off.css">
+<style>
+  /* ---------- Shared design system — copied verbatim from the other
+     top-level pages (home.html/courses.html/assignments.html) so this
+     reads as the same app. See architecture-decisions.md re: promoting
+     this to an actual shared stylesheet once there's a build step. ---------- */
+  :root {
+    --accent: #d94a2b;
+    --accent-dark: #a8331a;
+    --accent-ring: rgb(from var(--accent) r g b / 0.35);
+    --page-bg-start: #f17b53;
+    --page-bg-end: #930500;
+    --panel-bg: #eaeaec;
+    --panel-inner: #dcdce0;
+    --text-dark: #14151f;
+    --text-muted: #4b4d63;
+    --text-faint: #83849a;
+    --border: #cfcfd6;
+    --window-radius-lg: 22px;
+    --window-radius-md: 14px;
+    --window-radius-sm: 10px;
+    --grade-good: #2f7d54;
+    --grade-mid: #a67a22;
+    --grade-bad: #b6432f;
+  }
+
+  * { box-sizing: border-box; }
+
+  /* Scrollbars app-wide: a slim, permanently-visible, rounded gray bar
+     sitting slightly inset from the true edge of its scrollable area --
+     like a normal OS/Gmail-style scrollbar, not hidden and not
+     hover-gated. (An earlier hover-only version turned out unreliable:
+     the outer page counts as "hovered" almost the entire time you're
+     using it, so it either showed constantly or never, depending on the
+     browser -- not the meaningful hover signal it needed to be.)
+     Scrolling itself always works via wheel/trackpad/touch/keys either
+     way. One universal rule (the `*` selector) so it covers every
+     scrollable element automatically — the outer page scroll, every
+     popup/modal, every internal list — without repeating it per
+     element. (The bottom nav's own horizontal scroll strip is a
+     deliberate exception — see .app-nav-inner further down — that one
+     stays permanently hidden as a mobile overflow safety net.) */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(20, 21, 31, 0.28) transparent;
+  }
+  *::-webkit-scrollbar { width: 10px; height: 10px; }
+  *::-webkit-scrollbar-track { background: transparent; }
+  *::-webkit-scrollbar-thumb {
+    background-color: rgba(20, 21, 31, 0.28);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: padding-box; /* the transparent border creates the
+      inset gap around the thumb, so it reads as sitting inside the
+      window rather than flush against the very edge */
+  }
+  *::-webkit-scrollbar-thumb:hover { background-color: rgba(20, 21, 31, 0.45); }
+  *::-webkit-scrollbar-corner { background: transparent; }
+
+  /* Declared so the browser themes ITS OWN chrome — scrollbars, the
+
+     overscroll gutter, form controls — against this page rather than
+
+     guessing. Without it Firefox drew a light-theme scrollbar over the
+
+     dark canvas and tinted it (Martin saw it as pink on a blue
+
+     background). LegacyPage's applyStoredTheme() updates both of these
+
+     to match whatever background the user actually saved. */
+
+  html {
+
+    color-scheme: dark;
+
+    background-color: #0c0c0e;
+
+  }
+
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+    font-family: "puffin", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  body {
+    height: 100vh; /* fixed, not min -- body itself no longer scrolls */
+    overflow: hidden; /* scrolling now happens inside .page (see below), so
+      the scrollbar sits at the edge of the app's own window/card instead of
+      out at the browser's outer edge, over the wallpaper margin */
+    /* Neutral black instead of a baked-in accent gradient here —
+       2026-09-11, per Martin. This is only ever visible for a split
+       second on reload/navigation, before applyStoredTheme() (or this
+       page's own appearance-reading script) sets the user's actual
+       saved background over it. The old default was the sample
+       red-orange gradient baked into this file, which read as a real
+       glitch flashing in between pages; a neutral black reads as
+       "still loading" instead, and matches the app's own Black
+       preset (#0c0c0e) so it's not a color that appears nowhere else
+       in the app. */
+    background-color: #0c0c0e;
+    background-image: none;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    padding: 40px 24px 100px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .page {
+    width: 100%;
+    max-width: 980px;
+    align-self: stretch; /* fill body's available height regardless of
+      whatever align-items body declares, so there's a bounded box to
+      scroll within */
+    min-height: 0; /* flexbox gotcha: without this, a flex item won't
+      shrink below its content size, which breaks overflow scrolling */
+    overflow-y: auto; /* the actual scroll happens here -- .card grows to
+      its natural content height and .page scrolls as a whole */
+    overflow-x: hidden;
+  }
+
+  /* ---------- Top bar ---------- */
+  .topbar {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin: 0 4px 18px;
+  }
+
+  h1.title {
+    color: #ffffff;
+    font-size: clamp(1.6rem, 3.4vw, 2.1rem);
+    font-weight: 900;
+    font-style: italic;
+    letter-spacing: -0.01em;
+    margin: 0;
+    transform: skewX(-2deg);
+    display: inline-block;
+  }
+  .subtitle {
+    color: rgba(255,255,255,0.85);
+    font-weight: 700;
+    font-style: italic;
+    font-size: 0.9rem;
+    margin: 2px 0 0 2px;
+  }
+
+  .profile-menu-wrap { position: relative; flex-shrink: 0; }
+  .profile-btn {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    border: 2px solid rgba(255,255,255,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 800;
+    font-size: 0.95rem;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .profile-menu {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    min-width: 160px;
+    background: var(--panel-bg);
+    border-radius: var(--window-radius-md);
+    box-shadow: 0 20px 45px -16px rgba(0,0,0,0.5);
+    padding: 6px;
+    z-index: 25;
+  }
+  .profile-menu-item {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    border-radius: var(--window-radius-sm);
+    font: inherit;
+    font-weight: 700;
+    font-size: 0.86rem;
+    color: var(--text-dark);
+    padding: 9px 12px;
+    cursor: pointer;
+  }
+  .profile-menu-item:hover { background: var(--panel-inner); }
+  .profile-menu-item.signout { color: var(--grade-bad); }
+
+  /* ---------- One card, same as every other page ---------- */
+  .card {
+    background: var(--panel-bg);
+    border-radius: var(--window-radius-lg);
+    padding: 6px;
+  }
+  .card-inner {
+    padding: 22px 24px 20px;
+  }
+
+  .section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+  }
+  .section-head h2 {
+    font-size: 1rem;
+    font-weight: 800;
+    font-style: italic;
+    color: var(--text-dark);
+    margin: 0;
+  }
+  .contacts-total {
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: var(--text-faint);
+  }
+
+  /* ---------- Search bar — same pill input treatment used across the
+     app (messages.html's search, the color-swatch popups, etc.). ---------- */
+  .contacts-search-wrap { position: relative; margin: 14px 0 4px; }
+  .contacts-search-wrap svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 15px; height: 15px; stroke: var(--text-faint); fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
+  #contactsSearch {
+    width: 100%;
+    border: none;
+    border-radius: 999px;
+    background: var(--panel-inner);
+    padding: 9px 14px 9px 34px;
+    font: inherit;
+    font-size: 0.82rem;
+    color: var(--text-dark);
+  }
+  #contactsSearch::placeholder { color: var(--text-faint); }
+  #contactsSearch:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
+
+  /* ---------- Contact row — flat, alphabetical, no role/category
+     filters (2026-09-02, per Martin: real faculty records don't
+     consistently have a title/role filled in, so filtering or grouping
+     by it isn't reliable — a plain searchable list, same idea as
+     PowerSchool's own Faculty directory, works for everyone whether or
+     not their role happens to be on file). ---------- */
+  .contact-row { display: flex; align-items: center; gap: 10px; padding: 9px 6px; border-bottom: 1px solid var(--border); cursor: pointer; border-radius: var(--window-radius-sm); }
+  .contact-row:last-child { border-bottom: none; }
+  .contact-row:hover { background: var(--panel-inner); }
+  .contact-row:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring) inset; }
+  .contact-avatar {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    color: #fff;
+    font-weight: 800;
+    font-size: 0.82rem;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .contact-text { flex: 1; min-width: 0; }
+  .contact-name { font-weight: 800; font-style: italic; font-size: 0.86rem; color: var(--text-dark); margin: 0; letter-spacing: -0.005em; }
+  .contact-role { font-weight: 500; font-size: 0.78rem; color: var(--text-muted); margin: 1px 0 0; }
+  .contact-meta { font-size: 0.68rem; color: var(--text-faint); margin: 2px 0 0; text-transform: uppercase; letter-spacing: 0.03em; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  /* Row-level Email quick-action (2026-09-02, per Martin) — a mailto:
+     link, so it works without opening the contact card at all; clicking
+     it stops the row's own click (which opens the card) from firing. */
+  .contact-email-btn {
+    flex-shrink: 0;
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: var(--panel-bg);
+    color: var(--accent);
+    border: none;
+    display: flex; align-items: center; justify-content: center;
+    text-decoration: none;
+  }
+  .contact-email-btn:hover { background: var(--accent); color: #fff; }
+  .contact-email-btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
+  .contact-email-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+  .contacts-empty { font-size: 0.8rem; color: var(--text-faint); font-style: italic; padding: 10px 0; }
+
+  /* ---------- Contact detail modal — same .modal-overlay/.modal-box
+     component as course-home.html's course-info pop-out: dark full-page
+     backdrop, click on the backdrop (not the box) closes it, Escape
+     closes it. Standing popup convention for the whole app. ---------- */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(10, 8, 6, 0.55);
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px; z-index: 60;
+    opacity: 0; visibility: hidden; transition: opacity 0.15s ease;
+  }
+  .modal-overlay.show { opacity: 1; visibility: visible; }
+  .modal-box {
+    background: var(--panel-bg);
+    border-radius: var(--window-radius-lg);
+    max-width: 380px; width: 100%;
+    padding: 22px 24px;
+    box-shadow: 0 30px 70px -20px rgba(0,0,0,0.6);
+    transform: translateY(8px);
+    transition: transform 0.15s ease;
+  }
+  .modal-overlay.show .modal-box { transform: translateY(0); }
+  .modal-close {
+    float: right;
+    background: var(--panel-inner);
+    border: none;
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 0.9rem;
+    line-height: 1;
+  }
+  .modal-close:hover { color: var(--text-dark); }
+  .contact-modal-head { display: flex; align-items: center; gap: 12px; clear: both; padding-top: 4px; }
+  .contact-modal-avatar {
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    color: #fff;
+    font-weight: 800;
+    font-size: 1.05rem;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .modal-box h3 { margin: 0; font-size: 1.1rem; font-weight: 900; font-style: italic; color: var(--text-dark); }
+  .modal-code { font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin: 2px 0 0; }
+  .modal-row { display: flex; justify-content: space-between; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 0.8rem; }
+  .modal-row:last-of-type { border-bottom: none; }
+  .modal-row .k { color: var(--text-faint); font-weight: 700; }
+  .modal-row .v { color: var(--text-dark); font-weight: 700; text-align: right; }
+  .modal-rows { margin-top: 14px; }
+  /* Message + Email actions — always both present now (2026-09-02, per
+     Martin: every contact's card should offer a working Send Message
+     button alongside their email, not just current teachers). */
+  .contact-modal-actions { display: flex; gap: 8px; margin-top: 16px; }
+  .contact-modal-btn {
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+    flex: 1;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    padding: 10px;
+    font: inherit;
+    font-weight: 800;
+    font-size: 0.82rem;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .contact-modal-btn:hover { background: var(--accent-dark); }
+  .contact-modal-btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
+  .contact-modal-btn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2.3; stroke-linecap: round; stroke-linejoin: round; }
+  .contact-modal-btn.secondary { background: var(--panel-inner); color: var(--text-dark); }
+  .contact-modal-btn.secondary:hover { background: var(--border); }
+
+  /* ---------- Bottom nav — verbatim from every other page ---------- */
+  .app-nav {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 20px;
+    display: flex;
+    justify-content: center;
+    padding: 0 20px;
+    z-index: 10;
+    pointer-events: none;
+  }
+  .app-nav-inner {
+    display: flex;
+    gap: 4px;
+    width: 100%;
+    max-width: 940px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    background: var(--panel-bg);
+    border-radius: var(--window-radius-md);
+    padding: 0 8px;
+    pointer-events: auto;
+  }
+  .app-nav-inner::-webkit-scrollbar { display: none; }
+  .nav-link {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    flex: 1;
+    min-width: 0;
+    padding: 12px 6px 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+  }
+  .nav-link .label { display: block; max-width: 100%; font-size: 0.72rem; font-weight: 800; color: var(--text-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; }
+  .nav-link:hover .label { color: var(--text-muted); }
+  .nav-link .dot { width: 4px; height: 4px; border-radius: 50%; background: transparent; }
+  .nav-link.active .label { color: var(--text-dark); }
+  .nav-link.active .dot { background: var(--accent); }
+  /* ---------- "More" overflow (2026-10-01, per Martin: "if the text has
+     to get ... we should add a more button on the far right side with a
+     list of the other options"). Labels never truncate: when they would,
+     the rightmost pages move into the More menu instead. ---------- */
+  .nav-link[hidden], .nav-more[hidden], .nav-more-menu[hidden] { display: none; }
+  /* While the More menu is open the whole bar sits above everything else on
+     the page (sticky headers, pop-ups, the edit button go up to z-index 90),
+     so the menu is never drawn underneath them. */
+  .app-nav.more-open { z-index: 1000; }
+  .nav-more {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    flex: 0 0 auto;
+    position: relative;
+    margin-left: 4px;
+    padding: 12px 16px 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+  }
+  .nav-more .label { display: flex; align-items: center; height: 1.2em; font-size: 0.72rem; color: var(--text-faint); }
+  .nav-more .label svg { display: block; fill: currentColor; }
+  /* thin divider between the pages and the dots */
+  .nav-more::before { content: ""; position: absolute; left: 0; top: 12px; bottom: 12px; width: 1px; background: var(--border, #cfcfd6); }
+  .nav-more:hover .label, .nav-more[aria-expanded="true"] .label { color: var(--text-dark); }
+  .nav-more .dot { width: 4px; height: 4px; border-radius: 50%; background: transparent; }
+  .nav-more.has-active .label { color: var(--text-dark); }
+  .nav-more.has-active .dot { background: var(--accent); }
+  .nav-more:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring) inset; }
+  .nav-more-menu {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    right: 20px;
+    min-width: 168px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    background: var(--panel-bg);
+    border-radius: var(--window-radius-md);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+    pointer-events: auto;
+  }
+  .nav-more-item {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: var(--text-faint);
+    text-align: left;
+    padding: 12px 12px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .nav-more-item:hover, .nav-more-item:focus-visible { outline: none; color: var(--text-dark); box-shadow: 0 0 0 3px var(--accent-ring) inset; }
+  .nav-more-item.active { color: var(--text-dark); }
+  .nav-more-item.active span { position: relative; display: inline-block; padding-bottom: 6px; margin-bottom: -6px; }
+  .nav-more-item.active span::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; border-radius: 999px; background: var(--accent); }
+  /* Labels sit centered in the bar; the active page is underlined in the
+     accent color instead of marked with a dot (2026-10-01, per Martin). */
+  .app-nav-inner .nav-link, .app-nav-inner .nav-more { justify-content: center; gap: 0; padding-top: 10px; padding-bottom: 10px; }
+  .app-nav-inner .nav-link .dot, .app-nav-inner .nav-more .dot { display: none; }
+  .app-nav-inner .nav-link .label, .app-nav-inner .nav-more .label { position: relative; padding: 6px 0; }
+  .app-nav-inner .nav-link.active .label::after, .app-nav-inner .nav-more.has-active .label::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; border-radius: 999px; background: var(--accent); }
+  @media (max-width: 520px) {
+    .nav-more { padding: 10px 12px 8px; }
+    .nav-more::before { top: 10px; bottom: 10px; }
+    .app-nav-inner .nav-link, .app-nav-inner .nav-more { padding-top: 8px; padding-bottom: 8px; }
+    .nav-more .label { font-size: 0.58rem; }
+  }
+  .nav-link:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring) inset; }
+  @media (max-width: 520px) {
+    .nav-link { min-width: 0; padding: 10px 3px 8px; }
+    .nav-link .label { font-size: 0.58rem; }
+  }
+  /* ---------- Files (2026-10-04): every course's files, plus Google Drive and Canva ---------- */
+  .fx-card-outer { padding: 4px; }
+  .fx { display: grid; grid-template-columns: 236px minmax(0, 1fr); min-height: 0; }
+  .fx-side { padding: 18px 14px; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .fx-search { display: flex; align-items: center; gap: 8px; background: var(--panel-inner); border-radius: 999px; padding: 0 14px; color: var(--text-faint); margin-bottom: 12px; }
+  .fx-search svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; flex: none; }
+  .fx-search input { flex: 1; min-width: 0; border: none; background: none; font: inherit; font-size: 0.84rem; font-weight: 600; color: var(--text-dark); padding: 10px 0; outline: none; }
+  .fx-search:focus-within { box-shadow: 0 0 0 2px var(--accent-ring); }
+  .fx-nav { display: flex; flex-direction: column; gap: 2px; }
+  .fx-label { font-size: 0.66rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-faint); margin: 14px 10px 6px; }
+  .fx-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 9px 12px; border: none; border-radius: 12px; background: none; font: inherit; font-size: 0.86rem; font-weight: 700; color: var(--text-dark); text-align: left; cursor: pointer; }
+  .fx-item:hover { background: var(--panel-inner); }
+  .fx-item:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
+  .fx-item .n { margin-left: auto; font-size: 0.74rem; color: var(--text-faint); font-weight: 800; }
+  .fx-item.on { background: var(--accent); color: #fff; }
+  .fx-item.on .n { color: rgba(255,255,255,0.85); }
+  .fx-item .nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fx-dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+  .fx-main { padding: 22px 26px 26px; min-width: 0; }
+  .fx-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .fx-head h2 { margin: 0; font-size: 1.3rem; font-weight: 900; color: var(--text-dark); }
+  .fx-meta { font-size: 0.78rem; font-weight: 700; color: var(--text-faint); }
+  .fx-tools { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+  .fx-seg { display: flex; background: var(--panel-inner); border-radius: 999px; padding: 3px; }
+  .fx-seg button { border: none; background: none; font: inherit; padding: 6px 14px; border-radius: 999px; font-size: 0.78rem; font-weight: 800; color: var(--text-muted); cursor: pointer; }
+  .fx-seg button[aria-pressed="true"] { background: var(--accent); color: #fff; }
+  .fx-seg button:focus-visible, .fx-add:focus-visible, .fx-chip:focus-visible, .fx-more:focus-visible, .fx-row:focus-visible, .fx-tile:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
+  .fx-add { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--panel-bg); border-radius: 999px; padding: 8px 16px; font: inherit; font-size: 0.8rem; font-weight: 800; color: var(--text-dark); cursor: pointer; white-space: nowrap; }
+  .fx-add:hover { background: var(--panel-inner); }
+  .fx-add svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2.4; stroke-linecap: round; }
+  .fx-chips { display: none; }
+  .fx-sec { font-size: 0.7rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-faint); margin: 22px 0 10px; }
+  .fx-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+  .fx-tile { display: block; width: 100%; border: none; text-align: left; font: inherit; background: var(--panel-inner); border-radius: 14px; padding: 8px; min-width: 0; cursor: pointer; }
+  .fx-tile:hover { filter: brightness(0.98); }
+  .fx-thumb { height: 92px; border-radius: 9px; display: grid; place-items: center; overflow: hidden; }
+  .fx-thumb .page { width: 52px; height: 66px; background: #fff; border-radius: 4px; box-shadow: 0 4px 10px -4px rgba(0,0,0,0.3); padding: 8px 6px; box-sizing: border-box; display: flex; flex-direction: column; gap: 4px; }
+  .fx-thumb .page i { display: block; height: 3px; border-radius: 2px; background: #d6d7de; }
+  .fx-thumb .page i:first-child { width: 70%; background: #b9bbc6; }
+  .fx-thumb.canva .page { background: rgba(255,255,255,0.55); }
+  .fx-tile-name { display: block; margin: 8px 4px 2px; font-size: 0.8rem; font-weight: 800; color: var(--text-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .fx-tile-src { display: flex; align-items: center; gap: 6px; margin: 0 4px 2px; font-size: 0.7rem; font-weight: 700; color: var(--text-faint); white-space: nowrap; overflow: hidden; }
+  .fx-list { background: var(--panel-inner); border-radius: 14px; overflow: hidden; }
+  .fx-row { display: grid; grid-template-columns: 34px minmax(0, 1fr) 170px 90px 36px; gap: 12px; align-items: center; padding: 9px 14px; cursor: pointer; }
+  .fx-row:hover { background: rgba(0,0,0,0.03); }
+  .fx-row + .fx-row { border-top: 1px solid var(--border); }
+  .fx-row.head { padding: 8px 14px; font-size: 0.66rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-faint); cursor: default; }
+  .fx-row.head:hover { background: none; }
+  .fx-badge { width: 34px; height: 34px; border-radius: 7px; display: grid; place-items: center; color: #fff; font-size: 0.5rem; font-weight: 900; letter-spacing: 0.02em; }
+  .fx-badge.canva { background: var(--panel-bg); }
+  .fx-badge .cm, .fx-tile-src .cm { width: 18px; height: 18px; border-radius: 50%; background: center / contain no-repeat url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCA2NCA2NCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTMyIDY0QzQ5LjY3MzEgNjQgNjQgNDkuNjczMSA2NCAzMkM2NCAxNC4zMjY5IDQ5LjY3MzEgMCAzMiAwQzE0LjMyNjkgMCAwIDE0LjMyNjkgMCAzMkMwIDQ5LjY3MzEgMTQuMzI2OSA2NCAzMiA2NFoiIGZpbGw9IiM3RDJBRTciLz4KPHBhdGggZD0iTTMyIDY0QzQ5LjY3MzEgNjQgNjQgNDkuNjczMSA2NCAzMkM2NCAxNC4zMjY5IDQ5LjY3MzEgMCAzMiAwQzE0LjMyNjkgMCAwIDE0LjMyNjkgMCAzMkMwIDQ5LjY3MzEgMTQuMzI2OSA2NCAzMiA2NFoiIGZpbGw9InVybCgjcGFpbnQwX3JhZGlhbF8xXzQwKSIvPgo8cGF0aCBkPSJNMzIgNjRDNDkuNjczMSA2NCA2NCA0OS42NzMxIDY0IDMyQzY0IDE0LjMyNjkgNDkuNjczMSAwIDMyIDBDMTQuMzI2OSAwIDAgMTQuMzI2OSAwIDMyQzAgNDkuNjczMSAxNC4zMjY5IDY0IDMyIDY0WiIgZmlsbD0idXJsKCNwYWludDFfcmFkaWFsXzFfNDApIi8+CjxwYXRoIGQ9Ik0zMiA2NEM0OS42NzMxIDY0IDY0IDQ5LjY3MzEgNjQgMzJDNjQgMTQuMzI2OSA0OS42NzMxIDAgMzIgMEMxNC4zMjY5IDAgMCAxNC4zMjY5IDAgMzJDMCA0OS42NzMxIDE0LjMyNjkgNjQgMzIgNjRaIiBmaWxsPSJ1cmwoI3BhaW50Ml9yYWRpYWxfMV80MCkiLz4KPHBhdGggZD0iTTMyIDY0QzQ5LjY3MzEgNjQgNjQgNDkuNjczMSA2NCAzMkM2NCAxNC4zMjY5IDQ5LjY3MzEgMCAzMiAwQzE0LjMyNjkgMCAwIDE0LjMyNjkgMCAzMkMwIDQ5LjY3MzEgMTQuMzI2OSA2NCAzMiA2NFoiIGZpbGw9InVybCgjcGFpbnQzX3JhZGlhbF8xXzQwKSIvPgo8cGF0aCBkPSJNNDUuODE1MiAzOC41NjQ0QzQ1LjU1MTEgMzguNTY0NCA0NS4zMTg3IDM4Ljc4NzQgNDUuMDc2OSAzOS4yNzQ1QzQyLjM0NTggNDQuODEyNSAzNy42Mjg2IDQ4LjczMSAzMi4xNyA0OC43MzFDMjUuODU4MiA0OC43MzEgMjEuOTQ5NSA0My4wMzMzIDIxLjk0OTUgMzUuMTYxOUMyMS45NDk1IDIxLjgyODYgMjkuMzc4NSAxNC4xMTk1IDM1LjkwMzcgMTQuMTE5NUMzOC45NTI3IDE0LjExOTUgNDAuODE0OCAxNi4wMzU3IDQwLjgxNDggMTkuMDg0OUM0MC44MTQ4IDIyLjcwMzkgMzguNzU4NyAyNC42MiAzOC43NTg3IDI1Ljg5NjRDMzguNzU4NyAyNi40NjkzIDM5LjExNTEgMjYuODE2MiAzOS44MjE4IDI2LjgxNjJDNDIuNjYxIDI2LjgxNjIgNDUuOTkzNCAyMy41NTM4IDQ1Ljk5MzQgMTguOTQ0OUM0NS45OTM0IDE0LjQ3NiA0Mi4xMDM5IDExLjE5MTIgMzUuNTc4OSAxMS4xOTEyQzI0Ljc5NTEgMTEuMTkxMiAxNS4yMTEzIDIxLjE4ODggMTUuMjExMyAzNS4wMjE4QzE1LjIxMTMgNDUuNzI5NCAyMS4zMjU3IDUyLjgwNTEgMzAuNzU5OSA1Mi44MDUxQzQwLjc3MzQgNTIuODA1MSA0Ni41NjM0IDQyLjg0MjMgNDYuNTYzNCAzOS42MDg2QzQ2LjU2MzQgMzguODkyNSA0Ni4xOTcyIDM4LjU2NDQgNDUuODE1MiAzOC41NjQ0WiIgZmlsbD0id2hpdGUiLz4KPGRlZnM+CjxyYWRpYWxHcmFkaWVudCBpZD0icGFpbnQwX3JhZGlhbF8xXzQwIiBjeD0iMCIgY3k9IjAiIHI9IjEiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIiBncmFkaWVudFRyYW5zZm9ybT0idHJhbnNsYXRlKDEyLjM2MjEgNTYuNzI0Mikgcm90YXRlKC00OS40MTU2KSBzY2FsZSg0OS40OTg2KSI+CjxzdG9wIHN0b3AtY29sb3I9IiM2NDIwRkYiLz4KPHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjNjQyMEZGIiBzdG9wLW9wYWNpdHk9IjAiLz4KPC9yYWRpYWxHcmFkaWVudD4KPHJhZGlhbEdyYWRpZW50IGlkPSJwYWludDFfcmFkaWFsXzFfNDAiIGN4PSIwIiBjeT0iMCIgcj0iMSIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiIGdyYWRpZW50VHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTYuOTQzMiA3LjI3NTc5KSByb3RhdGUoNTQuNzAzNSkgc2NhbGUoNTUuODE4OCkiPgo8c3RvcCBzdG9wLWNvbG9yPSIjMDBDNENDIi8+CjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzAwQzRDQyIgc3RvcC1vcGFjaXR5PSIwIi8+CjwvcmFkaWFsR3JhZGllbnQ+CjxyYWRpYWxHcmFkaWVudCBpZD0icGFpbnQyX3JhZGlhbF8xXzQwIiBjeD0iMCIgY3k9IjAiIHI9IjEiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIiBncmFkaWVudFRyYW5zZm9ybT0idHJhbnNsYXRlKDEyLjM2MjEgNTYuNzI0Mikgcm90YXRlKC00NS4xOTU0KSBzY2FsZSg0OC44OTk0IDIyLjQ4OTUpIj4KPHN0b3Agc3RvcC1jb2xvcj0iIzY0MjBGRiIvPgo8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiM2NDIwRkYiIHN0b3Atb3BhY2l0eT0iMCIvPgo8L3JhZGlhbEdyYWRpZW50Pgo8cmFkaWFsR3JhZGllbnQgaWQ9InBhaW50M19yYWRpYWxfMV80MCIgY3g9IjAiIGN5PSIwIiByPSIxIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgZ3JhZGllbnRUcmFuc2Zvcm09InRyYW5zbGF0ZSgyNi4xNzI2IDguNjIzMTYpIHJvdGF0ZSg2Ni41MTk4KSBzY2FsZSg1MC4zODY5IDg0LjQwOTMpIj4KPHN0b3Agc3RvcC1jb2xvcj0iIzAwQzRDQyIgc3RvcC1vcGFjaXR5PSIwLjcyNTkxNiIvPgo8c3RvcCBvZmZzZXQ9IjAuMDAwMSIgc3RvcC1jb2xvcj0iIzAwQzRDQyIvPgo8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiMwMEM0Q0MiIHN0b3Atb3BhY2l0eT0iMCIvPgo8L3JhZGlhbEdyYWRpZW50Pgo8L2RlZnM+Cjwvc3ZnPgo="); }
+  .fx-name { font-size: 0.82rem; font-weight: 700; color: var(--text-dark); min-width: 0; }
+  .fx-name > span { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .fx-name small { display: none; font-size: 0.7rem; color: var(--text-faint); font-weight: 700; margin-top: 2px; }
+  .fx-src { font-size: 0.74rem; font-weight: 700; color: var(--text-muted); display: flex; align-items: center; gap: 7px; white-space: nowrap; overflow: hidden; }
+  .fx-date { font-size: 0.74rem; font-weight: 700; color: var(--text-faint); }
+  .fx-more { width: 32px; height: 32px; border: none; background: none; border-radius: 50%; display: grid; place-items: center; color: var(--text-faint); cursor: pointer; }
+  .fx-more:hover { background: var(--border); color: var(--text-dark); }
+  .fx-more svg { width: 16px; height: 16px; fill: currentColor; }
+  .fx-note { margin: 10px 2px 0; font-size: 0.74rem; font-weight: 600; color: var(--text-faint); }
+  .fx-empty { margin: 24px 0 8px; padding: 26px; border-radius: 14px; background: var(--panel-inner); text-align: center; font-size: 0.86rem; font-weight: 600; color: var(--text-muted); }
+  .fx-empty strong { display: block; font-size: 1rem; color: var(--text-dark); margin-bottom: 4px; }
+  .fx-menu { position: fixed; z-index: 300; min-width: 220px; max-width: calc(100vw - 16px); background: var(--panel-bg); border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 18px 44px -14px rgba(0,0,0,0.45); padding: 6px; }
+  .fx-menu[hidden] { display: none; }
+  .fx-menu-label { padding: 4px 10px 8px; font-size: 0.72rem; font-weight: 700; color: var(--text-muted); overflow-wrap: anywhere; }
+  .fx-menu-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; padding: 9px 10px; border: none; background: none; border-radius: 9px; font: inherit; font-size: 0.82rem; font-weight: 700; color: var(--text-dark); text-align: left; cursor: pointer; }
+  .fx-menu-item:hover, .fx-menu-item:focus-visible { background: var(--panel-inner); outline: none; }
+  .fx-menu-item:disabled { color: var(--text-faint); cursor: default; background: none; }
+  .fx-menu-item small { display: block; margin-top: 2px; font-size: 0.7rem; font-weight: 600; color: var(--text-muted); }
+  .fx-menu-item > span:first-child { min-width: 0; }
+  .fx-next { display: inline-flex; flex-shrink: 0; }
+  .fx-next svg { width: 14px; height: 14px; fill: none; stroke: var(--text-muted); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+  .fx-soon { font-size: 0.66rem; font-weight: 800; color: var(--text-faint); white-space: nowrap; }
+  @media (min-width: 761px) and (max-width: 1100px) { .fx-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } .fx-row { grid-template-columns: 34px minmax(0, 1fr) 140px 76px 36px; } }
+  @media (max-width: 760px) {
+    .fx { grid-template-columns: minmax(0, 1fr); }
+    .fx-side { border-right: none; padding: 14px 16px 0; }
+    .fx-nav { display: none; }
+    .fx-search { margin-bottom: 0; }
+    .fx-main { padding: 14px 16px 20px; }
+    .fx-tools { margin-left: 0; width: 100%; flex-wrap: wrap; }
+    .fx-add { flex: 1 1 auto; justify-content: center; }   /* drops under List/Grid when there's no room */
+    .fx-chips { display: flex; gap: 6px; margin-top: 14px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+    .fx-chips::-webkit-scrollbar { display: none; }
+    .fx-chip { flex: none; border: none; font: inherit; padding: 7px 14px; border-radius: 999px; background: var(--panel-inner); font-size: 0.78rem; font-weight: 800; color: var(--text-muted); white-space: nowrap; cursor: pointer; }
+    .fx-chip[aria-pressed="true"] { background: var(--accent); color: #fff; }
+    .fx-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .fx-row { grid-template-columns: 34px minmax(0, 1fr) 32px; }
+    .fx-row .fx-src, .fx-row .fx-date, .fx-row.head { display: none; }
+    .fx-name small { display: block; }
+  }
+</style>
+</head>
+<body>
+  <div class="page">
+    <div class="topbar">
+      <div>
+        <h1 class="title">Files</h1>
+        <p class="subtitle" id="filesSub"></p>
+      </div>
+      <div class="profile-menu-wrap">
+        <button class="profile-btn" id="profileBtn" type="button" aria-haspopup="menu" aria-expanded="false" aria-label="Profile and settings">M</button>
+        <div class="profile-menu" id="profileMenu" role="menu" hidden>
+          <button class="profile-menu-item" type="button" role="menuitem" data-action="settings">Settings</button>
+          <button class="profile-menu-item signout" type="button" role="menuitem" data-action="signout">Sign out</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card fx-card-outer">
+      <div class="fx" id="fx">
+        <aside class="fx-side" id="fxSide">
+          <label class="fx-search">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+            <input type="search" id="fxSearch" placeholder="Search all files" autocomplete="off" aria-label="Search all files">
+          </label>
+          <nav class="fx-nav" id="fxNav" aria-label="Show files from"></nav>
+        </aside>
+        <section class="fx-main" id="fxMain" aria-live="polite"></section>
+      </div>
+    </div>
+    <div class="fx-menu" id="fxMenu" role="menu" hidden></div>
+  </div>
+
+  <nav class="app-nav" aria-label="Main navigation">
+    <div class="app-nav-inner" id="dock">
+      <button class="nav-link" type="button" data-page="home" data-href="home.html">
+        <span class="label">Home</span>
+        <span class="dot"></span>
+      </button>
+      <button class="nav-link" type="button" data-page="courses" data-href="courses.html">
+        <span class="label">Courses</span>
+        <span class="dot"></span>
+      </button>
+      <button class="nav-link" type="button" data-page="grades" data-href="grades.html">
+        <span class="label">Grades</span>
+        <span class="dot"></span>
+      </button>
+      <button class="nav-link" type="button" data-page="assignments" data-href="assignments.html">
+        <span class="label">Assignments</span>
+        <span class="dot"></span>
+      </button>
+      <button class="nav-link active" type="button" data-page="files">
+        <span class="label">Files</span>
+        <span class="dot"></span>
+      </button>
+      <button class="nav-link" type="button" data-page="calendar" data-href="calendar.html">
+        <span class="label">Calendar</span>
+        <span class="dot"></span>
+      </button>
+      <button class="nav-link" type="button" data-page="messages" data-href="messages.html">
+        <span class="label">Messages</span>
+        <span class="dot"></span>
+      </button>
+      <button class="nav-link" type="button" data-page="contacts" data-href="contacts.html">
+        <span class="label">Contacts</span>
+        <span class="dot"></span>
+      </button>
+      <button class="nav-link" type="button" data-page="settings" data-href="settings.html">
+        <span class="label">Settings</span>
+        <span class="dot"></span>
+      </button>
+      <button class="nav-more" type="button" id="navMore" aria-haspopup="menu" aria-expanded="false" aria-controls="navMoreMenu" aria-label="More pages" hidden>
+        <span class="label"><svg viewBox="0 0 16 4" width="16" height="4" aria-hidden="true"><circle cx="2" cy="2" r="1.75"/><circle cx="8" cy="2" r="1.75"/><circle cx="14" cy="2" r="1.75"/></svg></span>
+        <span class="dot"></span>
+      </button>
+    </div>
+    <div class="nav-more-menu" id="navMoreMenu" role="menu" aria-label="More pages" hidden></div>
+  </nav>
+
+  <script>
+    // Potato PC Mode on every page (2026-10-04, per Martin). The saved
+    // setting turns off all CSS animations and transitions, makes animate()
+    // calls and smooth scrolling instant, and drops the slanted page title.
+    // Same code as app/lib/theme-boot.ts, which runs it before first paint in
+    // the app; this copy covers the preview and pages theme-boot skips.
+    (function () {
+    var POTATO_CSS = "body.potato-mode,body.potato-mode *,body.potato-mode *::before,body.potato-mode *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important;filter:none!important;text-shadow:none!important}html:has(body.potato-mode){scroll-behavior:auto!important}body.potato-mode,body.potato-mode *{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif!important}body.potato-mode h1.title{font-style:normal!important;transform:none!important}body.potato-mode .trend.has-popup:focus-visible{outline:2px solid currentColor;outline-offset:2px}";
+    function potatoOn() { return !!(document.body && document.body.classList.contains("potato-mode")); }
+    function applyPotato() {
+      var on = false;
+      try { on = (JSON.parse(localStorage.getItem("schoolagy_settings_options") || "{}") || {}).potatoMode === true; } catch (e) {}
+      if (document.body) document.body.classList.toggle("potato-mode", on);
+      if (!document.getElementById("potatoStyle")) {
+        var st = document.createElement("style");
+        st.id = "potatoStyle";
+        st.textContent = POTATO_CSS;
+        (document.head || document.documentElement).appendChild(st);
+      }
+      var EP = window.Element && Element.prototype;
+      if (EP && !EP.__potatoPatched) {
+        EP.__potatoPatched = true;
+        var anim = EP.animate;
+        if (anim) EP.animate = function (frames, opts) {
+          if (potatoOn()) opts = (typeof opts === "number" || opts == null) ? { duration: 0 } : Object.assign({}, opts, { duration: 0, delay: 0, endDelay: 0, iterations: 1 });
+          return anim.call(this, frames, opts);
+        };
+        var siv = EP.scrollIntoView;
+        if (siv) EP.scrollIntoView = function (arg) {
+          if (potatoOn() && arg && typeof arg === "object") arg = Object.assign({}, arg, { behavior: "auto" });
+          return siv.call(this, arg);
+        };
+        ["scrollTo", "scrollBy"].forEach(function (name) {
+          [EP, window].forEach(function (target) {
+            var fn = target[name];
+            if (!fn) return;
+            target[name] = function (a, b) {
+              if (potatoOn() && a && typeof a === "object") a = Object.assign({}, a, { behavior: "auto" });
+              return b === undefined ? fn.call(this, a) : fn.call(this, a, b);
+            };
+          });
+        });
+      }
+    }
+      applyPotato();
+      window.addEventListener('storage', function (e) { if (e.key === 'schoolagy_settings_options') applyPotato(); });
+    })();
+
+    // Bottom nav "More" overflow. Shows as many pages as fit without
+    // cutting a label off ("Cour..."); the rest go in the More menu.
+    // The current page always stays in the bar.
+    (function () {
+      const nav = document.querySelector('.app-nav');
+      const inner = nav && nav.querySelector('.app-nav-inner');
+      const more = document.getElementById('navMore');
+      const menu = document.getElementById('navMoreMenu');
+      if (!inner || !more || !menu) return;
+      const links = Array.from(inner.querySelectorAll('.nav-link'));
+
+      const cut = () =>
+        inner.scrollWidth > inner.clientWidth + 1 ||
+        links.some(l => !l.hidden && l.querySelector('.label').scrollWidth > l.querySelector('.label').clientWidth + 1);
+
+      function fit() {
+        closeMenu();
+        links.forEach(l => { l.hidden = false; });
+        more.hidden = true;
+        if (!cut()) return;
+        more.hidden = false;
+        // Hide from the right, but never the current page.
+        for (let i = links.length - 1; i >= 1 && cut(); i--) {
+          if (!links[i].classList.contains('active')) links[i].hidden = true;
+        }
+        const hidden = links.filter(l => l.hidden);
+        more.classList.toggle('has-active', hidden.some(l => l.classList.contains('active')));
+        menu.textContent = '';
+        hidden.forEach(l => {
+          const item = document.createElement('button');
+          item.type = 'button';
+          item.className = 'nav-more-item' + (l.classList.contains('active') ? ' active' : '');
+          item.setAttribute('role', 'menuitem');
+          const text = document.createElement('span'); text.textContent = l.querySelector('.label').textContent; item.appendChild(text);
+          item.addEventListener('click', () => { closeMenu(); l.click(); });
+          menu.appendChild(item);
+        });
+      }
+
+      function openMenu() {
+        const navBox = nav.getBoundingClientRect();
+        const innerBox = inner.getBoundingClientRect();
+        menu.style.right = Math.max(0, navBox.right - innerBox.right) + 'px';
+        menu.hidden = false;
+        nav.classList.add('more-open');
+        more.setAttribute('aria-expanded', 'true');
+        const first = menu.querySelector('.nav-more-item');
+        if (first) first.focus();
+      }
+      function closeMenu() {
+        if (menu.hidden) return;
+        menu.hidden = true;
+        nav.classList.remove('more-open');
+        more.setAttribute('aria-expanded', 'false');
+      }
+
+      more.addEventListener('click', e => {
+        e.stopPropagation();
+        menu.hidden ? openMenu() : closeMenu();
+      });
+      document.addEventListener('click', e => { if (!menu.contains(e.target)) closeMenu(); });
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && !menu.hidden) { closeMenu(); more.focus(); }
+        if (!menu.hidden && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+          const items = Array.from(menu.querySelectorAll('.nav-more-item'));
+          const i = items.indexOf(document.activeElement);
+          const next = items[(i + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length];
+          if (next) { e.preventDefault(); next.focus(); }
+        }
+      });
+
+      fit();
+      if (window.ResizeObserver) new ResizeObserver(fit).observe(nav);
+      else window.addEventListener('resize', fit);
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
+    })();
+  </script>
+
+
+  <script>
+    // ------------------------------------------------------------------
+    // Shared appearance (accent + background) — 2026-09-08, per Martin:
+    // "wallpapers + accent colors don't save across pages." Settings'
+    // Appearance section (and onboarding's Theme step) are the only
+    // writers of schoolagy_appearance; every other real app page,
+    // including this one, applies whatever's saved there, read-only, on
+    // its own load — same shared-localStorage-record pattern already
+    // used for schoolagy_dark_mode/schoolagy_profile.
+    // ------------------------------------------------------------------
+    (function () {
+      function darken(hex, amount) {
+        const n = parseInt(hex.slice(1), 16);
+        const r = Math.max(0, ((n >> 16) & 255) * (1 - amount));
+        const g = Math.max(0, ((n >> 8) & 255) * (1 - amount));
+        const b = Math.max(0, (n & 255) * (1 - amount));
+        return '#' + [r, g, b].map(v => Math.round(v).toString(16).padStart(2, '0')).join('');
+      }
+      function applyAppearance() {
+        let saved = null;
+        try {
+          const raw = localStorage.getItem('schoolagy_appearance');
+          if (raw) saved = JSON.parse(raw);
+        } catch {}
+        if (!saved) return;
+        const root = document.documentElement.style;
+        if (saved.accent) {
+          root.setProperty('--accent', saved.accent);
+          root.setProperty('--accent-dark', saved.accentDark || darken(saved.accent, 0.22));
+        }
+        if (saved.background === 'white') {
+          document.body.style.backgroundImage = 'none';
+          document.body.style.backgroundColor = '#f4f4f6';
+        } else if (saved.background === 'black') {
+          document.body.style.backgroundImage = 'none';
+          document.body.style.backgroundColor = '#0c0c0e';
+        } else if (saved.background) {
+          document.body.style.backgroundImage = `url("${saved.background}")`;
+          document.body.style.backgroundColor = '';
+        }
+      }
+      applyAppearance();
+      window.addEventListener('storage', e => {
+        if (e.key === 'schoolagy_appearance') applyAppearance();
+      });
+    })();
+
+    // ------------------------------------------------------------------
+    // Files (2026-10-04, per Martin). Every course's files in one place,
+    // plus the Google Drive files a student added or made with Averages
+    // (drive.file only, never their whole Drive) and their Canva designs.
+    //
+    // Sample data for the preview only. Signed in (LegacyPage.tsx sets
+    // window.__SCHOOLAGY_MODE__), nothing here is real yet: course files
+    // need an API route that lists every course's materials, Drive needs the
+    // Picker + drive.file, Canva needs GET /canva/designs. Until then a
+    // signed-in student sees a "coming soon" note, never these samples.
+    // FILE_COURSES (not COURSES) on purpose, so scripts/port-pages.mjs
+    // doesn't swap in live course data next to sample files.
+    // ------------------------------------------------------------------
+    const FILES_SIGNED_IN = !!window.__SCHOOLAGY_MODE__;
+    const FILE_COURSES = [
+      { id: 'apchem', name: 'AP Chemistry', color: '#a67a22' },
+      { id: 'algebra2', name: 'Algebra II', color: '#5b6ea3' },
+      { id: 'english10', name: 'English 10', color: '#6b8f5e' },
+      { id: 'ushistory', name: 'U.S. History', color: '#a15c4f' },
+      { id: 'spanish3', name: 'Spanish III', color: '#8a6ba1' },
+    ];
+    // date: when it last changed. src: 'course' | 'gdrive' | 'canva'.
+    const FILES = [
+      { name: 'Molarity Worksheet.docx', type: 'docx', src: 'course', course: 'apchem', date: '2026-08-22' },
+      { name: 'Lab Report #4.pdf', type: 'pdf', src: 'course', course: 'apchem', date: '2026-08-18' },
+      { name: 'Mole Conversions Slides.pptx', type: 'pptx', src: 'course', course: 'apchem', date: '2026-08-14' },
+      { name: 'Lab Safety Contract.pdf', type: 'pdf', src: 'course', course: 'apchem', date: '2026-08-03' },
+      { name: 'Syllabus.pdf', type: 'pdf', src: 'course', course: 'apchem', date: '2026-08-01' },
+      { name: 'Factoring Review Slides.pptx', type: 'pptx', src: 'course', course: 'algebra2', date: '2026-08-21' },
+      { name: 'Elimination Method Practice.docx', type: 'docx', src: 'course', course: 'algebra2', date: '2026-08-14' },
+      { name: 'Formula Sheet.pdf', type: 'pdf', src: 'course', course: 'algebra2', date: '2026-08-01' },
+      { name: 'Discussion Questions.pdf', type: 'pdf', src: 'course', course: 'english10', date: '2026-08-23' },
+      { name: 'The Lottery.pdf', type: 'pdf', src: 'course', course: 'english10', date: '2026-08-10' },
+      { name: 'MLA Format Guide.pdf', type: 'pdf', src: 'course', course: 'english10', date: '2026-08-01' },
+      { name: 'Timeline Project Instructions.pdf', type: 'pdf', src: 'course', course: 'ushistory', date: '2026-08-18' },
+      { name: 'Jamestown Reading.pdf', type: 'pdf', src: 'course', course: 'ushistory', date: '2026-08-05' },
+      { name: 'Unit 3 Vocab List.pdf', type: 'pdf', src: 'course', course: 'spanish3', date: '2026-08-20' },
+      { name: 'Verb Conjugation Chart.pdf', type: 'pdf', src: 'course', course: 'spanish3', date: '2026-08-01' },
+      { name: 'History Essay Draft', type: 'doc', src: 'gdrive', date: '2026-08-23', kind: 'Docs' },
+      { name: 'Lab Report Template', type: 'doc', src: 'gdrive', date: '2026-08-18', kind: 'Docs', made: true },
+      { name: 'Titration Lab Data', type: 'sheet', src: 'gdrive', date: '2026-08-17', kind: 'Sheets' },
+      { name: 'Spanish Presentation', type: 'slides', src: 'gdrive', date: '2026-08-15', kind: 'Slides' },
+      { name: 'Study Schedule', type: 'sheet', src: 'gdrive', date: '2026-08-09', kind: 'Sheets' },
+      { name: 'Essay Outline.docx', type: 'docx', src: 'onedrive', date: '2026-08-20' },
+      { name: 'Science Fair Data.xlsx', type: 'xlsx', src: 'onedrive', date: '2026-08-13' },
+      { name: 'Spanish Project.pptx', type: 'pptx', src: 'onedrive', date: '2026-08-07' },
+      { name: 'Molarity Practice Set', type: 'canva', src: 'canva', date: '2026-08-24' },
+      { name: 'Spanish Vocab Flashcards', type: 'canva', src: 'canva', date: '2026-08-16' },
+      { name: 'Colonial Timeline Poster', type: 'canva', src: 'canva', date: '2026-08-12' },
+      { name: 'Science Fair Board', type: 'canva', src: 'canva', date: '2026-08-08' },
+    ];
+    const FILES_TODAY = new Date(2026, 7, 24);   // the demo's Monday, Aug 24
+    const BADGE = { pdf: ['PDF', '#c1443a'], docx: ['DOCX', '#3b6fd1'], pptx: ['PPTX', '#d1852f'], doc: ['DOC', '#3b6fd1'], sheet: ['SHEET', '#2f7d54'], slides: ['SLIDES', '#d1852f'], xlsx: ['XLSX', '#2f7d54'] };
+    const THUMB = { pdf: '#f1dcd9', docx: '#dbe4f7', doc: '#dbe4f7', pptx: '#f6e6d2', slides: '#f6e6d2', sheet: '#dcebe1', xlsx: '#dcebe1' };
+    const SRC_NAME = { course: 'Course Files', gdrive: 'Google Drive', onedrive: 'OneDrive', canva: 'Canva' };
+    // Assignments a file can be attached to (sample: assignment.html's
+    // overdue, upcoming and returned work; tests are turned in on Schoology
+    // and discussions are posts, so neither is listed).
+    const ATTACH_TARGETS = [
+      { title: 'Lab Report #4', course: 'apchem', when: 'Late' },
+      { title: 'Titration Lab Prep', course: 'apchem', when: 'Due Mon, Aug 24' },
+      { title: 'Vocab Worksheet', course: 'spanish3', when: 'Due Tue, Aug 25' },
+      { title: 'Problem Set 7', course: 'algebra2', when: 'Due Wed, Aug 26' },
+      { title: 'Periodic Trends Worksheet', course: 'apchem', when: 'Returned' },
+    ];
+    const CHEV_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
+    const MORE_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>';
+    const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+    const courseOf = id => FILE_COURSES.find(c => c.id === id);
+    function ymdDate(s) { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); }
+    function daysAgo(f) { return Math.round((FILES_TODAY - ymdDate(f.date)) / 86400000); }
+    function whenLabel(f) {
+      const n = daysAgo(f);
+      if (n <= 0) return 'Today';
+      if (n === 1) return 'Yesterday';
+      return ymdDate(f.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+    function fromLabel(f) {
+      if (f.src === 'course') { const c = courseOf(f.course); return c ? c.name : 'Course'; }
+      return SRC_NAME[f.src];
+    }
+    function fromHTML(f) {
+      if (f.src === 'course') { const c = courseOf(f.course); return `<span class="fx-dot" style="background:${esc(c ? c.color : '#888')}"></span>${esc(c ? c.name : 'Course')}`; }
+      return esc(SRC_NAME[f.src]);
+    }
+    function badgeHTML(f) {
+      if (f.type === 'canva') return '<span class="fx-badge canva" aria-hidden="true"><span class="cm"></span></span>';
+      const b = BADGE[f.type] || ['FILE', '#83849a'];
+      return `<span class="fx-badge" aria-hidden="true" style="background:${b[1]}">${b[0]}</span>`;
+    }
+
+    let fxFilter = 'all';
+    let fxQuery = '';
+    let fxView = 'list';
+    try { if (localStorage.getItem('schoolagy_files_view') === 'grid') fxView = 'grid'; } catch {}
+    FILES.forEach((f, i) => { f.id = 'f' + i; });
+
+    function inFilter(f, filter) {
+      if (filter === 'all') return true;
+      if (filter === 'recent') return daysAgo(f) <= 7;
+      if (filter === 'course' || filter === 'gdrive' || filter === 'onedrive' || filter === 'canva') return f.src === filter;
+      if (filter.startsWith('c:')) return f.src === 'course' && f.course === filter.slice(2);
+      return true;
+    }
+    function matches(f) {
+      if (!fxQuery) return true;
+      const hay = `${f.name} ${fromLabel(f)} ${f.kind || ''}`.toLowerCase();
+      return hay.includes(fxQuery);
+    }
+    function filterTitle() {
+      if (fxFilter === 'all') return 'All Files';
+      if (fxFilter === 'recent') return 'Recents';
+      if (fxFilter.startsWith('c:')) { const c = courseOf(fxFilter.slice(2)); return c ? c.name : 'Course'; }
+      return SRC_NAME[fxFilter];
+    }
+    const byNewest = (a, b) => b.date.localeCompare(a.date) || a.name.localeCompare(b.name);
+
+    function renderNav() {
+      const count = filter => FILES.filter(f => inFilter(f, filter)).length;
+      const item = (filter, label, extra) => `<button class="fx-item${fxFilter === filter ? ' on' : ''}" type="button" data-filter="${esc(filter)}" aria-current="${fxFilter === filter ? 'true' : 'false'}">${extra || ''}<span class="nm">${esc(label)}</span><span class="n">${count(filter)}</span></button>`;
+      document.getElementById('fxNav').innerHTML =
+        item('all', 'All Files') + item('recent', 'Recents') +
+        '<p class="fx-label">Sources</p>' + item('course', 'Course Files') + item('gdrive', 'Google Drive') + item('onedrive', 'OneDrive') + item('canva', 'Canva') +
+        '<p class="fx-label">Courses</p>' + FILE_COURSES.map(c => item('c:' + c.id, c.name, `<span class="fx-dot" style="background:${esc(c.color)}"></span>`)).join('');
+    }
+    function tileHTML(f) {
+      const thumb = f.type === 'canva'
+        ? '<span class="fx-thumb canva" style="background:linear-gradient(135deg,#7d2ae7,#00c4cc)"><span class="page"><i></i><i></i><i></i></span></span>'
+        : `<span class="fx-thumb" style="background:${THUMB[f.type] || '#e4e4e8'}"><span class="page"><i></i><i></i><i></i><i></i><i></i></span></span>`;
+      const src = f.src === 'canva' ? 'Canva' : f.src === 'gdrive' ? `Google Drive · ${esc(f.kind || 'File')}` : fromHTML(f);
+      return `<button class="fx-tile" type="button" data-file="${f.id}" aria-label="${esc(f.name)}, ${esc(fromLabel(f))}">${thumb}<span class="fx-tile-name">${esc(f.name)}</span><span class="fx-tile-src">${src}</span></button>`;
+    }
+    function rowHTML(f) {
+      return `<div class="fx-row" role="row" tabindex="0" data-file="${f.id}" aria-label="${esc(f.name)}, ${esc(fromLabel(f))}, changed ${esc(whenLabel(f))}">
+          ${badgeHTML(f)}
+          <span class="fx-name"><span>${esc(f.name)}</span><small>${esc(fromLabel(f))} · ${esc(whenLabel(f))}</small></span>
+          <span class="fx-src">${fromHTML(f)}</span>
+          <span class="fx-date">${esc(whenLabel(f))}</span>
+          <button class="fx-more" type="button" data-more="${f.id}" aria-label="More for ${esc(f.name)}" aria-haspopup="menu">${MORE_ICON}</button>
+        </div>`;
+    }
+    function render() {
+      renderNav();
+      const main = document.getElementById('fxMain');
+      const chips = [['all', 'All'], ['recent', 'Recents'], ['course', 'Courses'], ['gdrive', 'Google Drive'], ['onedrive', 'OneDrive'], ['canva', 'Canva']]
+        .map(([k, l]) => `<button class="fx-chip" type="button" data-filter="${k}" aria-pressed="${fxFilter === k}">${l}</button>`).join('');
+      const list = FILES.filter(f => inFilter(f, fxFilter) && matches(f)).sort(byNewest);
+      const showRecent = fxFilter === 'all' && !fxQuery && fxView === 'list';
+      let body = '';
+      if (!list.length) {
+        body = `<div class="fx-empty"><strong>Nothing here</strong>${fxQuery ? `No files match "${esc(fxQuery)}".` : 'No files yet.'}</div>`;
+      } else {
+        if (showRecent) body += `<p class="fx-sec">Recent</p><div class="fx-grid">${list.slice(0, 4).map(tileHTML).join('')}</div>`;
+        body += `<p class="fx-sec">${showRecent ? 'All files' : (fxQuery ? 'Results' : 'Files')}</p>`;
+        body += fxView === 'grid'
+          ? `<div class="fx-grid">${list.map(tileHTML).join('')}</div>`
+          : `<div class="fx-list" role="table" aria-label="${esc(filterTitle())}"><div class="fx-row head" role="row"><span></span><span>Name</span><span>From</span><span>Changed</span><span></span></div>${list.map(rowHTML).join('')}</div>`;
+      }
+      if (fxFilter === 'all' || fxFilter === 'gdrive' || fxFilter === 'onedrive') body += '<p class="fx-note">Google Drive and OneDrive show the files you add here or make with Averages, not your whole drive.</p>';
+      main.innerHTML = `
+        <div class="fx-head">
+          <h2>${esc(filterTitle())}</h2><span class="fx-meta">${list.length} file${list.length === 1 ? '' : 's'}</span>
+          <div class="fx-tools">
+            <div class="fx-seg" role="group" aria-label="View">
+              <button type="button" data-view="list" aria-pressed="${fxView === 'list'}">List</button>
+              <button type="button" data-view="grid" aria-pressed="${fxView === 'grid'}">Grid</button>
+            </div>
+            <button class="fx-add" type="button" id="fxAddDrive" aria-haspopup="menu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add files</button>
+          </div>
+        </div>
+        <div class="fx-chips" role="group" aria-label="Show files from">${chips}</div>
+        ${body}`;
+      document.getElementById('filesSub').textContent = `${FILES.length} files from ${FILE_COURSES.length} courses, Google Drive, OneDrive and Canva`;
+    }
+
+    // Menus: a file's actions, and Add from Google Drive.
+    const fxMenu = document.getElementById('fxMenu');
+    let fxMenuFor = null;
+    let fxLast = null;   // where the last menu opened, so a submenu opens in the same spot
+    function closeFxMenu(focusBack) {
+      if (fxMenu.hidden) return;
+      fxMenu.hidden = true;
+      if (fxMenuFor) { fxMenuFor.setAttribute('aria-expanded', 'false'); if (focusBack && document.body.contains(fxMenuFor)) fxMenuFor.focus(); }
+      fxMenuFor = null;
+    }
+    // `at` is an optional { x, y } point: a right-click opens the menu at the
+    // cursor instead of under the anchor.
+    function openFxMenu(anchor, label, items, at) {
+      if (fxMenuFor === anchor && !at) { closeFxMenu(true); return; }
+      closeFxMenu(false);
+      fxMenu.innerHTML = `<div class="fx-menu-label">${esc(label)}</div>` + items.map((it, i) =>
+        `<button class="fx-menu-item" type="button" role="menuitem" data-i="${i}"${it.soon ? ' disabled' : ''}><span>${esc(it.label)}${it.sub ? `<small>${esc(it.sub)}</small>` : ''}</span>${it.soon ? '<span class="fx-soon">Coming soon</span>' : it.next ? `<span class="fx-next">${CHEV_ICON}</span>` : ''}</button>`).join('');
+      fxMenu.querySelectorAll('.fx-menu-item').forEach(b => b.addEventListener('click', () => { const it = items[+b.dataset.i]; closeFxMenu(false); if (it.run) it.run(); }));
+      fxMenu.hidden = false;
+      fxMenu.style.left = '0px'; fxMenu.style.top = '0px';
+      const r = anchor.getBoundingClientRect(), w = fxMenu.offsetWidth, h = fxMenu.offsetHeight;
+      const nav = document.querySelector('.app-nav');
+      const floor = Math.min(window.innerHeight, nav ? nav.getBoundingClientRect().top : window.innerHeight) - 8;
+      if (at) {
+        fxMenu.style.left = Math.max(8, Math.min(at.x, window.innerWidth - w - 8)) + 'px';
+        fxMenu.style.top = Math.max(8, at.y + h > floor ? at.y - h : at.y) + 'px';
+      } else {
+        fxMenu.style.left = Math.max(8, Math.min(r.right - w, window.innerWidth - w - 8)) + 'px';
+        fxMenu.style.top = (r.bottom + 6 + h > floor ? Math.max(8, r.top - h - 6) : r.bottom + 6) + 'px';
+      }
+      anchor.setAttribute('aria-expanded', 'true');
+      fxMenuFor = anchor;
+      fxLast = { anchor, x: parseFloat(fxMenu.style.left), y: parseFloat(fxMenu.style.top) };
+      const first = fxMenu.querySelector('.fx-menu-item:not(:disabled)');
+      if (first) first.focus();
+    }
+    function downloadPlaceholder(f) {
+      const blob = new Blob([`${f.name}\n\nSample file from the Averages.io preview.`], { type: 'text/plain' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob); a.download = f.name;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    }
+    // Materials opens the folder the file is in and highlights it (?file=).
+    function materialsHref(f) {
+      return `course-materials.html?course=${encodeURIComponent(f.course)}&file=${encodeURIComponent(f.name)}`;
+    }
+    // Attach to an assignment (2026-10-05): a second menu, in the same spot,
+    // lists open assignments (the file's own course first). Picking one opens
+    // that assignment with the file in Drafts, ready to Submit.
+    const DRIVE_EXT = { doc: 'docx', sheet: 'xlsx', slides: 'pptx' };
+    function fileExt(f) {
+      if (f.src === 'canva') return 'pdf';
+      if (f.src === 'gdrive') return DRIVE_EXT[f.type] || 'docx';
+      const m = f.name.match(/\.([a-z0-9]+)$/i);
+      return m ? m[1].toLowerCase() : f.type;
+    }
+    function attachHref(f, t) {
+      return `assignment.html?course=${encodeURIComponent(t.course)}&title=${encodeURIComponent(t.title)}`
+        + `&attach=${encodeURIComponent(f.name)}&src=${encodeURIComponent(f.src)}&ext=${encodeURIComponent(fileExt(f))}`;
+    }
+    function attachItems(f) {
+      const list = ATTACH_TARGETS.slice().sort((a, b) => (b.course === f.course) - (a.course === f.course));
+      return list.map(t => {
+        const c = courseOf(t.course);
+        return { label: t.title, sub: `${c ? c.name : 'Course'} · ${t.when}`, run: () => { window.location.href = attachHref(f, t); } };
+      });
+    }
+    const attachItem = f => ({ label: 'Attach to an assignment', next: true, run: () => {
+      if (fxLast) openFxMenu(fxLast.anchor, `Attach "${f.name}" to`, attachItems(f), { x: fxLast.x, y: fxLast.y });
+    } });
+    function fileItems(f) {
+      if (f.src === 'course') return [
+        { label: 'Show in Materials', run: () => { window.location.href = materialsHref(f); } },
+        attachItem(f),
+        { label: 'Download', run: () => downloadPlaceholder(f) },
+      ];
+      if (f.src === 'gdrive') return [{ label: 'Open in Google Drive', soon: true }, attachItem(f)];
+      if (f.src === 'onedrive') return [{ label: 'Open in OneDrive', soon: true }, attachItem(f)];
+      return [{ label: 'Open in Canva', soon: true }, attachItem(f)];
+    }
+    function openFile(f, anchor) {
+      if (f.src === 'course') { window.location.href = materialsHref(f); return; }
+      openFxMenu(anchor, f.name, fileItems(f));
+    }
+
+    if (FILES_SIGNED_IN) {
+      document.getElementById('fxSide').hidden = true;
+      document.getElementById('fx').style.gridTemplateColumns = 'minmax(0, 1fr)';
+      document.getElementById('fxMain').innerHTML = '<div class="fx-empty"><strong>Files is on the way</strong>Your course files, Google Drive and OneDrive files, and Canva designs will all show up here.</div>';
+      document.getElementById('filesSub').textContent = 'Coming soon';
+    } else {
+      render();
+      document.getElementById('fxSearch').addEventListener('input', e => { fxQuery = e.target.value.trim().toLowerCase(); render(); });
+      document.getElementById('fx').addEventListener('click', e => {
+        const filt = e.target.closest('[data-filter]');
+        if (filt) { fxFilter = filt.dataset.filter; render(); return; }
+        const view = e.target.closest('[data-view]');
+        if (view) { fxView = view.dataset.view; try { localStorage.setItem('schoolagy_files_view', fxView); } catch {} render(); return; }
+        if (e.target.closest('#fxAddDrive')) {
+          openFxMenu(e.target.closest('#fxAddDrive'), 'Add files', [
+            { label: 'From Google Drive', soon: true },
+            { label: 'From OneDrive', soon: true },
+            { label: 'Connected apps settings', run: () => { window.location.href = 'settings.html'; } },
+          ]);
+          return;
+        }
+        const more = e.target.closest('[data-more]');
+        if (more) { const f = FILES.find(x => x.id === more.dataset.more); if (f) openFxMenu(more, f.name, fileItems(f)); return; }
+        const row = e.target.closest('[data-file]');
+        if (row) { const f = FILES.find(x => x.id === row.dataset.file); if (f) openFile(f, row); }
+      });
+      // Right-click a file (row or tile) for the same menu as its ... button,
+      // opened at the cursor. The keyboard menu key / Shift+F10 has no cursor
+      // point, so it falls back to opening under the file.
+      document.getElementById('fx').addEventListener('contextmenu', e => {
+        const row = e.target.closest('[data-file]');
+        if (!row) return;
+        const f = FILES.find(x => x.id === row.dataset.file);
+        if (!f) return;
+        e.preventDefault();
+        const fromKeyboard = e.clientX === 0 && e.clientY === 0;
+        openFxMenu(row, f.name, fileItems(f), fromKeyboard ? null : { x: e.clientX, y: e.clientY });
+      });
+      document.addEventListener('contextmenu', e => { if (!fxMenu.hidden && !fxMenu.contains(e.target) && !(fxMenuFor && fxMenuFor.contains(e.target))) closeFxMenu(false); });
+      document.getElementById('fx').addEventListener('keydown', e => {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        const row = e.target.closest('.fx-row[data-file]');
+        if (!row || e.target !== row) return;
+        e.preventDefault();
+        const f = FILES.find(x => x.id === row.dataset.file); if (f) openFile(f, row);
+      });
+      document.addEventListener('click', e => { if (!fxMenu.hidden && e.target.isConnected && !fxMenu.contains(e.target) && !(fxMenuFor && fxMenuFor.contains(e.target))) closeFxMenu(false); });
+      document.addEventListener('keydown', e => { if (e.key === 'Escape') closeFxMenu(true); });
+      window.addEventListener('resize', () => closeFxMenu(false));
+      window.addEventListener('scroll', () => closeFxMenu(false), true);
+    }
+
+    // ------------------------------------------------------------------
+    // Profile menu — same behavior as every other page.
+    // ------------------------------------------------------------------
+    const profileBtn = document.getElementById('profileBtn');
+    // Shared profile photo/name (2026-09-07) — settings.html's Edit
+    // Profile modal is the only place this is ever set, but every other
+    // page's top-right profile button used to just show a fixed "M" no
+    // matter what was saved there: the button never read anything back,
+    // so a photo you set in Settings was invisible the moment you left
+    // it. schoolagy_profile is the same localStorage record
+    // settings.html writes on every save; this is read-only here.
+    (function () {
+      var profile = null;
+      try {
+        var raw = localStorage.getItem('schoolagy_profile');
+        if (raw) profile = JSON.parse(raw);
+      } catch (e) {}
+      if (!profile) return;
+      if (profile.photo) {
+        profileBtn.style.backgroundImage = 'url("' + profile.photo + '")';
+        profileBtn.style.backgroundSize = 'cover';
+        profileBtn.style.backgroundPosition = 'center';
+        profileBtn.textContent = '';
+      } else if (profile.name) {
+        profileBtn.textContent = profile.name.trim().charAt(0).toUpperCase() || 'M';
+      }
+    })();
+    const profileMenu = document.getElementById('profileMenu');
+    function openProfileMenu() { profileMenu.hidden = false; profileBtn.setAttribute('aria-expanded', 'true'); }
+    function closeProfileMenu() { profileMenu.hidden = true; profileBtn.setAttribute('aria-expanded', 'false'); }
+    profileBtn.addEventListener('click', () => { if (profileMenu.hidden) openProfileMenu(); else closeProfileMenu(); });
+    document.addEventListener('click', e => { if (!profileMenu.hidden && !e.target.closest('.profile-menu-wrap')) closeProfileMenu(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && !profileMenu.hidden) { closeProfileMenu(); profileBtn.focus(); } });
+    profileMenu.querySelectorAll('.profile-menu-item').forEach(item => {
+      item.addEventListener('click', () => {
+        if (item.dataset.action === 'settings') { window.location.href = 'settings.html'; return; }
+        closeProfileMenu();
+      });
+    });
+  </script>
+  <script>
+    // Back link (2026-10-01, per Martin: "where it returns to ... is always
+    // wrong"). Every page records itself in a short per-tab trail; a page's
+    // back link then says and goes to the page before it ("Back to AP
+    // Chemistry Hub", "Back to Grades"...). With no trail (the page was
+    // opened directly) the page's own default back link is left alone.
+    (function () {
+      const SELF = 'files.html';
+      const KEY = 'averages_nav_trail';
+      const here = SELF + location.search;
+      const label = (document.title || '').replace(/^Averages\s*[—-]\s*/, '') || 'Files';
+      let trail = [];
+      try { trail = JSON.parse(sessionStorage.getItem(KEY) || '[]'); } catch {}
+      if (!Array.isArray(trail)) trail = [];
+      const last = trail[trail.length - 1];
+      if (last && last.href === here) last.label = label;                 // reload
+      else if (trail.length > 1 && trail[trail.length - 2].href === here) { trail.pop(); trail[trail.length - 1].label = label; } // went back
+      else trail.push({ href: here, label });
+      trail = trail.slice(-20);
+      try { sessionStorage.setItem(KEY, JSON.stringify(trail)); } catch {}
+
+      const btn = document.querySelector('.back-link');
+      const prev = trail[trail.length - 2];
+      if (!btn || !prev) return;
+      const fresh = btn.cloneNode(false);          // same button, minus old click handlers
+      fresh.removeAttribute('onclick');
+      const icon = btn.querySelector('svg');
+      if (icon) fresh.appendChild(icon.cloneNode(true));
+      const text = document.createElement('span');
+      text.textContent = 'Back to ' + prev.label;
+      fresh.appendChild(text);
+      fresh.addEventListener('click', () => { window.location.href = prev.href; });
+      btn.replaceWith(fresh);
+    })();
+  </script>
+</body>
+</html>

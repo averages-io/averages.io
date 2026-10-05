@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Schoolagy — Sign In</title>
+<title>Averages — Sign In</title>
 <link rel="stylesheet" href="https://use.typekit.net/gsk6off.css">
 <style>
   :root {
@@ -116,104 +116,6 @@
     justify-content: space-between;
     gap: 48px;
     flex-wrap: wrap;
-  }
-
-  .login-col {
-    flex: 0 1 460px;
-    min-width: 300px;
-  }
-
-  h1.welcome {
-    color: #ffffff;
-    font-size: clamp(2.25rem, 5vw, 3.25rem);
-    font-weight: 800;
-    margin: 0 0 20px 4px;
-    letter-spacing: -0.02em;
-  }
-
-  /* "What's New" card (added 2026-09-03, clamped to the page's right edge
-     and enlarged the same day, then redesigned 2026-09-03 later the same
-     day to match Martin's `loginupdates.pdf` Illustrator reference — see
-     architecture-decisions.md). Back to the sign-in card's own light
-     `--card-bg` treatment (the accent-gradient color tried earlier that
-     same day is gone) — the reference card is plain and light, not a
-     colored "announcement" surface. Content follows the reference
-     exactly: a version-anchored welcome heading at the top, a large
-     deliberately empty middle (this is Beta 0.1.0 — the very first
-     release, so there's no feature-diff list to show, just a welcome),
-     and a "Notes from the developer" block pinned to the bottom. Sits
-     opposite the sign-in card (`.page`'s `justify-content: space-between`
-     pins one to each edge). Wraps to sit below the sign-in card on
-     narrower viewports instead of squeezing sideways — see the media
-     query below. */
-  .whats-new {
-    background: var(--card-bg);
-    border-radius: var(--radius-lg);
-    padding: 30px 32px;
-    width: 360px;
-    max-width: 360px;
-    min-height: 320px;
-    flex: 0 0 360px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-  }
-
-  .whats-new-header h3 {
-    margin: 0 0 4px 0;
-    font-size: 1.7rem;
-    font-weight: 800;
-    color: var(--text-dark);
-    letter-spacing: -0.01em;
-    line-height: 1.25;
-  }
-
-  .whats-new-date {
-    display: block;
-    margin: 0 0 6px 0;
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: var(--text-dark);
-  }
-
-  .whats-new-version {
-    display: block;
-    font-size: 0.95rem;
-    font-style: italic;
-    font-weight: 600;
-    color: var(--text-muted);
-  }
-
-  .whats-new-notes h4 {
-    margin: 0 0 10px 0;
-    font-size: 1rem;
-    font-weight: 800;
-    color: var(--text-dark);
-  }
-
-  .whats-new-notes p {
-    margin: 0;
-    font-size: 0.85rem;
-    line-height: 1.55;
-    color: var(--text-muted);
-    font-weight: 500;
-  }
-
-  .whats-new-notes a {
-    color: var(--accent);
-    font-weight: 700;
-    text-decoration: underline;
-  }
-
-  @media (max-width: 900px) {
-    .whats-new {
-      margin-top: 0;
-      width: 100%;
-      max-width: 360px;
-      flex: 0 1 360px;
-      min-height: 0;
-      gap: 32px;
-    }
   }
 
   .card {
@@ -486,33 +388,54 @@
   }
   .tooltip.show { display: block; }
 
-  /* Non-affiliation notice. Sits under both cards rather than inside either
-     one, because it's a statement about the whole product, not about signing
-     in or about what's new. Deliberately quiet — it has to be legible and
-     present on first impression without competing with the sign-in card,
-     which is the actual job of this screen. White at low opacity because
-     this page sits on the dark blue gradient, not the light card surface. */
-  .legal-note {
-    margin: 28px auto 0;
-    max-width: 620px;
-    text-align: center;
-    font-size: 0.72rem;
-    font-weight: 500;
-    line-height: 1.5;
-    color: rgba(255, 255, 255, 0.62);
-  }
+  /* ---------- Sign-in redo (2026-10-04): one centered card ---------- */
+  .page { justify-content: center; align-items: center; flex-direction: column; gap: 14px; }
+  .signin-card { width: 100%; max-width: 400px; background: var(--card-bg); border-radius: 24px; padding: 36px 32px 28px; text-align: center; box-shadow: 0 30px 70px -30px rgba(0,0,0,0.55); }
+  .signin-logo { width: 56px; height: 56px; display: block; margin: 0 auto 18px; }
+  .signin-title { margin: 0; font-size: 1.75rem; font-weight: 800; color: var(--text-dark); letter-spacing: -0.02em; }
+  .signin-sub { margin: 6px 0 24px; font-size: 0.95rem; font-weight: 600; color: var(--text-muted); }
+  .signin-buttons { display: flex; flex-direction: column; gap: 12px; }
+  .age-check { display: flex; align-items: center; justify-content: center; gap: 10px; margin: -6px 0 18px; font-size: 0.9rem; font-weight: 700; color: var(--text-dark); cursor: pointer; user-select: none; }
+  .age-check input { appearance: none; -webkit-appearance: none; flex: none; width: 22px; height: 22px; margin: 0; border-radius: 50%; border: 2px solid #b9bbc8; background: #ffffff; cursor: pointer; display: grid; place-items: center; transition: background-color 0.15s ease, border-color 0.15s ease; }
+  .age-check input:checked { background: var(--accent-dark); border-color: var(--accent-dark); }
+  .age-check input:hover:not(:checked) { border-color: #8e90a3; }
+  @media (prefers-reduced-motion: reduce) { .age-check input { transition: none; } }
+  .age-check input:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring); border-radius: 4px; }
+  .btn.sso { margin: 0; display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 52px; border-radius: 999px; font-size: 0.98rem; }
+  .btn.sso.light { background: #ffffff; color: #1f1f1f; border: 1px solid #c9cad3; }
+  .btn.sso.light:hover { filter: none; background: #f6f6f8; }
+  .btn.sso:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring); }
+  .btn.sso.busy { pointer-events: none; opacity: 0.8; }
+  .sso-caption { margin: -4px 0 0; font-size: 0.76rem; font-weight: 600; color: var(--text-muted); }
+  .signin-note { margin: 16px 0 0; padding: 10px 14px; border-radius: 12px; background: rgb(from var(--accent) r g b / 0.10); color: var(--text-dark); font-size: 0.82rem; font-weight: 700; line-height: 1.4; }
+  .signin-note[hidden] { display: none; }
+  .signin-legal { margin: 22px 0 0; font-size: 0.74rem; font-weight: 600; color: var(--text-muted); line-height: 1.5; }
+  .signin-legal a, .signin-foot a { color: inherit; font-weight: 800; text-decoration: underline; text-underline-offset: 2px; }
+  .signin-foot { margin: 0; font-size: 0.78rem; font-weight: 700; color: rgba(255,255,255,0.82); text-align: center; }
+  .dev-keys { margin-top: 22px; padding-top: 18px; border-top: 1px solid rgba(20,21,31,0.12); text-align: left; }
+  .dev-keys[hidden] { display: none; }
+  .dev-keys-label { margin: 0 0 10px; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); text-align: center; }
+  .dev-keys .btn { border-radius: 999px; }
+  @media (max-width: 480px) { .signin-card { padding: 30px 22px 24px; } .signin-title { font-size: 1.55rem; } }
 </style>
 </head>
 <body>
   <div class="scroll-frame">
   <div class="page">
-    <div class="login-col">
-    <h1 class="welcome">Welcome back!</h1>
-
-    <div class="card">
-      <h2>Sign into Schoolagy</h2>
-
-      <button class="btn" id="apiKeyToggle" type="button">Continue with API keys</button>
+    <main class="signin-card" aria-labelledby="signinTitle">
+      <svg class="signin-logo" aria-hidden="true" focusable="false" viewBox="-8 -8 470 470"><defs><linearGradient id="signinLogoGrad" x1="0" y1="0" x2="0" y2="454" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FF7A50"/><stop offset="1" stop-color="#E5484D"/></linearGradient></defs><path fill="url(#signinLogoGrad)" fill-rule="evenodd" d="M0.02 452.75C0.15 442.97 5.78 407.10 10.02 389.00C11.63 382.12 15.00 367.50 17.51 356.50C28.03 310.27 40.89 265.53 58.60 213.50C77.33 158.47 85.57 136.89 103.25 96.50C118.88 60.79 129.55 39.21 141.04 20.00C144.17 14.78 147.92 8.14 149.38 5.25L152.03 0.00L226.00 0.00L299.97 0.00L302.62 5.25C304.08 8.14 307.83 14.78 310.96 20.00C322.28 38.92 336.94 68.63 348.06 95.18C350.75 101.61 354.55 110.26 356.49 114.41C367.49 137.90 397.74 222.92 410.96 267.50C419.09 294.91 429.04 332.52 434.49 356.50C437.00 367.50 440.37 382.12 441.98 389.00C446.22 407.10 451.85 442.97 451.98 452.75C452.00 453.74 436.27 454.00 376.64 454.00L301.28 454.00L299.60 442.75C296.88 424.51 291.11 392.27 288.63 381.50L286.34 371.50L223.34 371.24L160.34 370.99L158.19 380.33C155.44 392.33 149.65 424.19 147.53 439.00C146.63 445.32 145.66 451.29 145.38 452.25C144.90 453.90 140.55 454.00 72.43 454.00C15.14 454.00 0.00 453.74 0.02 452.75ZM184.00 348.25C189.69 345.41 191.44 335.66 187.41 329.29C184.35 324.47 172.42 324.01 167.19 328.51C164.78 330.58 164.50 331.51 164.50 337.31C164.50 344.14 166.09 347.25 170.50 349.05C173.93 350.46 180.35 350.07 184.00 348.25ZM274.28 347.02C284.17 342.33 288.64 332.80 287.74 318.33C286.79 303.07 279.66 295.00 265.16 292.75C256.25 291.37 245.93 293.01 240.22 296.71C232.38 301.79 228.36 311.77 229.23 323.96C230.09 335.93 235.58 344.50 244.50 347.78C249.77 349.72 251.32 349.90 260.50 349.59C267.31 349.35 270.66 348.73 274.28 347.02ZM220.00 325.25L220.00 301.50L209.50 301.50L199.00 301.50L199.00 325.25L199.00 349.00L209.50 349.00L220.00 349.00L220.00 325.25ZM252.40 330.90C250.89 329.22 250.50 327.26 250.50 321.31C250.50 314.35 250.70 313.66 253.31 311.41C256.89 308.33 260.44 308.35 263.55 311.45C265.70 313.61 266.00 314.79 266.00 321.23C266.00 330.70 264.56 333.00 258.60 333.00C255.51 333.00 253.78 332.41 252.40 330.90ZM218.38 292.67C221.03 290.93 222.25 286.49 221.33 281.90C220.47 277.58 215.94 275.01 209.18 275.00C200.42 275.00 197.08 277.76 197.03 285.08C197.01 288.68 197.53 290.15 199.48 291.98C203.75 295.99 212.81 296.32 218.38 292.67ZM258.58 254.35C258.23 253.44 256.13 245.45 253.90 236.60C244.34 198.58 227.57 140.97 224.09 134.18L222.37 130.84L216.22 150.67C207.52 178.73 204.15 190.56 195.49 223.50C191.29 239.45 187.63 253.29 187.36 254.25C186.90 255.89 189.07 256.00 223.04 256.00C256.26 256.00 259.16 255.87 258.58 254.35Z"/></svg>
+      <h1 class="signin-title" id="signinTitle">Welcome back</h1>
+      <p class="signin-sub">Sign in with your school account.</p>
+      <label class="age-check"><input type="checkbox" id="age13"> I'm 13 or older</label>
+      <div class="signin-buttons">
+        <button class="btn sso" type="button" data-provider="schoology"><span class="sso-label">Continue with Schoology</span></button>
+        <button class="btn sso light" type="button" data-provider="google"><span class="sso-label">Continue with Google</span></button>
+        <p class="sso-caption">Use Google if your school uses Google Classroom.</p>
+      </div>
+      <p class="signin-note" id="ssoNote" role="status" hidden></p>
+      <section class="dev-keys" id="devKeys" aria-label="Sign in with an API key" hidden>
+        <p class="dev-keys-label">API key sign-in</p>
+      <button class="btn" id="apiKeyToggle" type="button">Sign in with an API key</button>
 
       <div class="key-form" id="apiKeyForm">
         <div class="key-form-inner">
@@ -547,37 +470,94 @@
         </div>
       </div>
 
-      <button class="btn secondary" id="appAuthBtn" type="button" disabled>
-        Continue with appAuth<span class="badge">Coming soon</span>
-      </button>
-      <div class="tooltip" id="appAuthTooltip">Pending Schoology App Center approval — not available yet.</div>
-    </div>
-    </div>
-
-    <div class="whats-new">
-      <div class="whats-new-header">
-        <h3>Welcome to Schoolagy.io</h3>
-        <span class="whats-new-date">September 16, 2026</span>
-        <span class="whats-new-version">Beta 0.1.1a</span>
-      </div>
-      <div class="whats-new-notes">
-        <h4>Notes from the developer</h4>
-        <p>This is a beta release, please note that some features could function differently than expected. You can report bugs on <a href="https://github.com/MartinnLe0/schoolagy/issues" target="_blank" rel="noopener noreferrer">GitHub</a></p>
-      </div>
-    </div>
+      </section>
+      <p class="signin-legal">Averages.io only sees what your school account lets it. Read the <a href="https://averages.io/privacy-policy" target="_blank" rel="noopener">Privacy Policy</a>.</p>
+    </main>
+    <p class="signin-foot">Beta 0.1.1a · <a href="https://github.com/averages-io/averages.io/issues" target="_blank" rel="noopener">Report a bug on GitHub</a></p>
   </div>
-
-  <p class="legal-note">
-    Schoolagy is an independent project and is not affiliated with, endorsed by, or
-    sponsored by PowerSchool or Schoology. Schoology is a trademark of PowerSchool Group LLC.
-  </p>
   </div>
 
   <script>
+    // Potato PC Mode on every page (2026-10-04, per Martin). The saved
+    // setting turns off all CSS animations and transitions, makes animate()
+    // calls and smooth scrolling instant, and drops the slanted page title.
+    // Same code as app/lib/theme-boot.ts, which runs it before first paint in
+    // the app; this copy covers the preview and pages theme-boot skips.
+    (function () {
+    var POTATO_CSS = "body.potato-mode,body.potato-mode *,body.potato-mode *::before,body.potato-mode *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important;filter:none!important;text-shadow:none!important}html:has(body.potato-mode){scroll-behavior:auto!important}body.potato-mode,body.potato-mode *{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif!important}body.potato-mode h1.title{font-style:normal!important;transform:none!important}body.potato-mode .trend.has-popup:focus-visible{outline:2px solid currentColor;outline-offset:2px}";
+    function potatoOn() { return !!(document.body && document.body.classList.contains("potato-mode")); }
+    function applyPotato() {
+      var on = false;
+      try { on = (JSON.parse(localStorage.getItem("schoolagy_settings_options") || "{}") || {}).potatoMode === true; } catch (e) {}
+      if (document.body) document.body.classList.toggle("potato-mode", on);
+      if (!document.getElementById("potatoStyle")) {
+        var st = document.createElement("style");
+        st.id = "potatoStyle";
+        st.textContent = POTATO_CSS;
+        (document.head || document.documentElement).appendChild(st);
+      }
+      var EP = window.Element && Element.prototype;
+      if (EP && !EP.__potatoPatched) {
+        EP.__potatoPatched = true;
+        var anim = EP.animate;
+        if (anim) EP.animate = function (frames, opts) {
+          if (potatoOn()) opts = (typeof opts === "number" || opts == null) ? { duration: 0 } : Object.assign({}, opts, { duration: 0, delay: 0, endDelay: 0, iterations: 1 });
+          return anim.call(this, frames, opts);
+        };
+        var siv = EP.scrollIntoView;
+        if (siv) EP.scrollIntoView = function (arg) {
+          if (potatoOn() && arg && typeof arg === "object") arg = Object.assign({}, arg, { behavior: "auto" });
+          return siv.call(this, arg);
+        };
+        ["scrollTo", "scrollBy"].forEach(function (name) {
+          [EP, window].forEach(function (target) {
+            var fn = target[name];
+            if (!fn) return;
+            target[name] = function (a, b) {
+              if (potatoOn() && a && typeof a === "object") a = Object.assign({}, a, { behavior: "auto" });
+              return b === undefined ? fn.call(this, a) : fn.call(this, a, b);
+            };
+          });
+        });
+      }
+    }
+      applyPotato();
+      window.addEventListener('storage', function (e) { if (e.key === 'schoolagy_settings_options') applyPotato(); });
+    })();
+
+    // Sign-in buttons (2026-10-04). Schoology appAuth and Google sign-in
+    // (for Google Classroom schools) aren't built yet. In the preview they
+    // walk on to onboarding like the old mock; in the built app
+    // (window.__schoolagySignIn exists) they say what's coming instead.
+    const ssoNote = document.getElementById('ssoNote');
+    const SSO_SOON = {
+      schoology: "Sign in with Schoology is waiting on Schoology's approval. It's coming soon.",
+      google: 'Sign in with Google, for Google Classroom schools, is coming soon.',
+    };
+    // 13+ (2026-10-04): decides which modes onboarding offers (Classic is
+    // 13+; Incognito is for everyone). Kept on this device only.
+    const age13 = document.getElementById('age13');
+    function saveAge() { try { localStorage.setItem('schoolagy_13plus', age13.checked ? 'yes' : 'no'); } catch {} }
+    age13.addEventListener('change', saveAge);
+    document.getElementById('connectBtn').addEventListener('click', saveAge, true);
+    document.querySelectorAll('[data-provider]').forEach(b => b.addEventListener('click', () => {
+      saveAge();
+      if (window.__schoolagySignIn) {
+        ssoNote.textContent = SSO_SOON[b.dataset.provider];
+        ssoNote.hidden = false;
+        return;
+      }
+      b.classList.add('busy');
+      b.querySelector('.sso-label').textContent = 'Signing in…';
+      window.setTimeout(() => { window.location.href = 'onboarding.html'; }, 700);
+    }));
+    // Hidden API-key sign-in: login.html?keys (or ?demo). Not linked anywhere.
+    const devKeys = document.getElementById('devKeys');
+    const q = new URLSearchParams(location.search);
+    if (q.has('keys') || q.has('demo')) devKeys.hidden = false;
+
     const apiKeyToggle = document.getElementById('apiKeyToggle');
     const apiKeyForm = document.getElementById('apiKeyForm');
-    const appAuthBtn = document.getElementById('appAuthBtn');
-    const appAuthTooltip = document.getElementById('appAuthTooltip');
     const connectBtn = document.getElementById('connectBtn');
     apiKeyToggle.addEventListener('click', () => {
       const isOpen = apiKeyForm.classList.contains('open');
@@ -587,6 +567,7 @@
         apiKeyForm.classList.remove('open');
       } else {
         apiKeyForm.classList.add('open');
+        if (document.body.classList.contains('potato-mode')) apiKeyForm.style.overflow = 'visible';   // no transitionend with Potato mode on
       }
     });
 
@@ -598,9 +579,6 @@
       }
     });
 
-    appAuthBtn.addEventListener('click', () => {
-      appAuthTooltip.classList.toggle('show');
-    });
 
     const apiKeyInput = document.getElementById('apiKey');
     const apiSecretInput = document.getElementById('apiSecret');

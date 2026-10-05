@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Schoolagy — Assignment</title>
+<title>Averages — Assignment</title>
 <link rel="stylesheet" href="https://use.typekit.net/gsk6off.css">
 <style>
   /* ---------- Shared design system — copied verbatim from the other
@@ -261,12 +261,12 @@
      page (calendar.html, home.html, etc.), just one level deeper. ---------- */
   .assign-detail-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);   /* minmax(0,…): a long file name can't push a card past the page edge (2026-10-04) */
     gap: 18px;
     align-items: start;
   }
   @media (max-width: 720px) {
-    .assign-detail-grid { grid-template-columns: 1fr; }
+    .assign-detail-grid { grid-template-columns: minmax(0, 1fr); }
   }
 
   .card {
@@ -328,6 +328,55 @@
   }
   .material-icon-btn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
   .material-icon-btn:hover { background: var(--border); color: var(--text-dark); }
+
+  /* ---------- Attached Materials file bars (2026-10-04, per Martin) — the
+     landing page's Connections card: Edit in Canva, Save to cloud, Download.
+     Canva's rules for the button: their icon inside it, always with text. ---------- */
+  .material-row.file-bar { background: var(--panel-inner); border-radius: var(--window-radius-sm); padding: 8px 8px 8px 12px; margin-top: 8px; border-bottom: none; flex-wrap: wrap; row-gap: 8px; }
+  .file-bar .material-name { flex: 1 1 0; min-width: 110px; font-weight: 700; overflow-wrap: anywhere; }   /* buttons drop to their own line only when the name would get squeezed */
+  .file-bar .material-actions { margin-left: auto; align-items: center; gap: 4px; }
+  .canva-mark { width: 20px; height: 20px; flex: none; display: block; border-radius: 50%; background: center / contain no-repeat url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCA2NCA2NCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTMyIDY0QzQ5LjY3MzEgNjQgNjQgNDkuNjczMSA2NCAzMkM2NCAxNC4zMjY5IDQ5LjY3MzEgMCAzMiAwQzE0LjMyNjkgMCAwIDE0LjMyNjkgMCAzMkMwIDQ5LjY3MzEgMTQuMzI2OSA2NCAzMiA2NFoiIGZpbGw9IiM3RDJBRTciLz4KPHBhdGggZD0iTTMyIDY0QzQ5LjY3MzEgNjQgNjQgNDkuNjczMSA2NCAzMkM2NCAxNC4zMjY5IDQ5LjY3MzEgMCAzMiAwQzE0LjMyNjkgMCAwIDE0LjMyNjkgMCAzMkMwIDQ5LjY3MzEgMTQuMzI2OSA2NCAzMiA2NFoiIGZpbGw9InVybCgjcGFpbnQwX3JhZGlhbF8xXzQwKSIvPgo8cGF0aCBkPSJNMzIgNjRDNDkuNjczMSA2NCA2NCA0OS42NzMxIDY0IDMyQzY0IDE0LjMyNjkgNDkuNjczMSAwIDMyIDBDMTQuMzI2OSAwIDAgMTQuMzI2OSAwIDMyQzAgNDkuNjczMSAxNC4zMjY5IDY0IDMyIDY0WiIgZmlsbD0idXJsKCNwYWludDFfcmFkaWFsXzFfNDApIi8+CjxwYXRoIGQ9Ik0zMiA2NEM0OS42NzMxIDY0IDY0IDQ5LjY3MzEgNjQgMzJDNjQgMTQuMzI2OSA0OS42NzMxIDAgMzIgMEMxNC4zMjY5IDAgMCAxNC4zMjY5IDAgMzJDMCA0OS42NzMxIDE0LjMyNjkgNjQgMzIgNjRaIiBmaWxsPSJ1cmwoI3BhaW50Ml9yYWRpYWxfMV80MCkiLz4KPHBhdGggZD0iTTMyIDY0QzQ5LjY3MzEgNjQgNjQgNDkuNjczMSA2NCAzMkM2NCAxNC4zMjY5IDQ5LjY3MzEgMCAzMiAwQzE0LjMyNjkgMCAwIDE0LjMyNjkgMCAzMkMwIDQ5LjY3MzEgMTQuMzI2OSA2NCAzMiA2NFoiIGZpbGw9InVybCgjcGFpbnQzX3JhZGlhbF8xXzQwKSIvPgo8cGF0aCBkPSJNNDUuODE1MiAzOC41NjQ0QzQ1LjU1MTEgMzguNTY0NCA0NS4zMTg3IDM4Ljc4NzQgNDUuMDc2OSAzOS4yNzQ1QzQyLjM0NTggNDQuODEyNSAzNy42Mjg2IDQ4LjczMSAzMi4xNyA0OC43MzFDMjUuODU4MiA0OC43MzEgMjEuOTQ5NSA0My4wMzMzIDIxLjk0OTUgMzUuMTYxOUMyMS45NDk1IDIxLjgyODYgMjkuMzc4NSAxNC4xMTk1IDM1LjkwMzcgMTQuMTE5NUMzOC45NTI3IDE0LjExOTUgNDAuODE0OCAxNi4wMzU3IDQwLjgxNDggMTkuMDg0OUM0MC44MTQ4IDIyLjcwMzkgMzguNzU4NyAyNC42MiAzOC43NTg3IDI1Ljg5NjRDMzguNzU4NyAyNi40NjkzIDM5LjExNTEgMjYuODE2MiAzOS44MjE4IDI2LjgxNjJDNDIuNjYxIDI2LjgxNjIgNDUuOTkzNCAyMy41NTM4IDQ1Ljk5MzQgMTguOTQ0OUM0NS45OTM0IDE0LjQ3NiA0Mi4xMDM5IDExLjE5MTIgMzUuNTc4OSAxMS4xOTEyQzI0Ljc5NTEgMTEuMTkxMiAxNS4yMTEzIDIxLjE4ODggMTUuMjExMyAzNS4wMjE4QzE1LjIxMTMgNDUuNzI5NCAyMS4zMjU3IDUyLjgwNTEgMzAuNzU5OSA1Mi44MDUxQzQwLjc3MzQgNTIuODA1MSA0Ni41NjM0IDQyLjg0MjMgNDYuNTYzNCAzOS42MDg2QzQ2LjU2MzQgMzguODkyNSA0Ni4xOTcyIDM4LjU2NDQgNDUuODE1MiAzOC41NjQ0WiIgZmlsbD0id2hpdGUiLz4KPGRlZnM+CjxyYWRpYWxHcmFkaWVudCBpZD0icGFpbnQwX3JhZGlhbF8xXzQwIiBjeD0iMCIgY3k9IjAiIHI9IjEiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIiBncmFkaWVudFRyYW5zZm9ybT0idHJhbnNsYXRlKDEyLjM2MjEgNTYuNzI0Mikgcm90YXRlKC00OS40MTU2KSBzY2FsZSg0OS40OTg2KSI+CjxzdG9wIHN0b3AtY29sb3I9IiM2NDIwRkYiLz4KPHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjNjQyMEZGIiBzdG9wLW9wYWNpdHk9IjAiLz4KPC9yYWRpYWxHcmFkaWVudD4KPHJhZGlhbEdyYWRpZW50IGlkPSJwYWludDFfcmFkaWFsXzFfNDAiIGN4PSIwIiBjeT0iMCIgcj0iMSIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiIGdyYWRpZW50VHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTYuOTQzMiA3LjI3NTc5KSByb3RhdGUoNTQuNzAzNSkgc2NhbGUoNTUuODE4OCkiPgo8c3RvcCBzdG9wLWNvbG9yPSIjMDBDNENDIi8+CjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzAwQzRDQyIgc3RvcC1vcGFjaXR5PSIwIi8+CjwvcmFkaWFsR3JhZGllbnQ+CjxyYWRpYWxHcmFkaWVudCBpZD0icGFpbnQyX3JhZGlhbF8xXzQwIiBjeD0iMCIgY3k9IjAiIHI9IjEiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIiBncmFkaWVudFRyYW5zZm9ybT0idHJhbnNsYXRlKDEyLjM2MjEgNTYuNzI0Mikgcm90YXRlKC00NS4xOTU0KSBzY2FsZSg0OC44OTk0IDIyLjQ4OTUpIj4KPHN0b3Agc3RvcC1jb2xvcj0iIzY0MjBGRiIvPgo8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiM2NDIwRkYiIHN0b3Atb3BhY2l0eT0iMCIvPgo8L3JhZGlhbEdyYWRpZW50Pgo8cmFkaWFsR3JhZGllbnQgaWQ9InBhaW50M19yYWRpYWxfMV80MCIgY3g9IjAiIGN5PSIwIiByPSIxIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgZ3JhZGllbnRUcmFuc2Zvcm09InRyYW5zbGF0ZSgyNi4xNzI2IDguNjIzMTYpIHJvdGF0ZSg2Ni41MTk4KSBzY2FsZSg1MC4zODY5IDg0LjQwOTMpIj4KPHN0b3Agc3RvcC1jb2xvcj0iIzAwQzRDQyIgc3RvcC1vcGFjaXR5PSIwLjcyNTkxNiIvPgo8c3RvcCBvZmZzZXQ9IjAuMDAwMSIgc3RvcC1jb2xvcj0iIzAwQzRDQyIvPgo8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiMwMEM0Q0MiIHN0b3Atb3BhY2l0eT0iMCIvPgo8L3JhZGlhbEdyYWRpZW50Pgo8L2RlZnM+Cjwvc3ZnPgo="); }
+  /* Canva's guidelines: 8px around their icon inside a button. 40px tall, same as every other file-bar button. */
+  .canva-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; box-sizing: border-box; padding: 8px 16px 8px 8px; border: 2px solid var(--border); border-radius: 999px; background: var(--panel-bg); color: var(--text-dark); font-family: inherit; font-size: 0.74rem; font-weight: 800; white-space: nowrap; cursor: pointer; transition: border-color 0.14s ease, transform 0.14s ease; }
+  .canva-btn:hover { border-color: var(--text-dark); transform: translateY(-1px); }
+  .canva-btn.drive-btn { padding: 8px 16px; }   /* text only, same 40px height */
+  .draft-badge.drive { color: #fff; font-size: 0.5rem; font-weight: 900; letter-spacing: 0.02em; }
+  .canva-btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
+  .file-bar .material-icon-btn { width: 40px; height: 40px; background: var(--panel-bg); color: var(--text-muted); }
+  .file-bar .material-icon-btn:hover { background: var(--border); color: var(--text-dark); }
+  .file-bar .material-icon-btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
+  .tipwrap { position: relative; display: inline-flex; }
+  .tip { position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); z-index: 5; background: var(--text-dark); color: var(--panel-bg); border-radius: 7px; padding: 4px 8px; font-size: 0.68rem; font-weight: 800; white-space: nowrap; pointer-events: none; opacity: 0; visibility: hidden; transition: opacity 0.14s ease, visibility 0.14s; }
+  .tip::after { content: ""; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 5px solid transparent; border-top-color: var(--text-dark); }
+  .tipwrap:hover .tip, .tipwrap:focus-within .tip { opacity: 1; visibility: visible; }
+  .file-menu { position: fixed; z-index: 300; min-width: 224px; max-width: calc(100vw - 16px); background: var(--panel-bg); border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 20px 50px -12px rgba(0,0,0,0.55); padding: 6px; }
+  .file-menu[hidden] { display: none; }
+  .file-menu-label { padding: 4px 10px 8px; font-size: 0.72rem; font-weight: 700; color: var(--text-muted); overflow-wrap: anywhere; }
+  .file-menu-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; padding: 8px 10px; border: none; background: none; border-radius: 6px; font-family: inherit; font-size: 0.8rem; font-weight: 700; color: var(--text-dark); text-align: left; }
+  .file-menu-item:disabled { color: var(--text-faint); cursor: default; }
+  .soon { font-size: 0.66rem; font-weight: 800; color: var(--text-faint); white-space: nowrap; }
+  /* Add Submission: other places to add a file from */
+  .upload-sources { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .upload-sources-label { font-size: 0.74rem; font-weight: 700; color: var(--text-muted); margin-right: 2px; }
+  .upload-source { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px 8px 8px; border: 1px solid var(--border); border-radius: 999px; background: var(--panel-inner); font-family: inherit; font-size: 0.74rem; font-weight: 800; color: var(--text-faint); cursor: default; }
+  .upload-source .canva-mark { width: 16px; height: 16px; opacity: 0.6; }
+  @media (prefers-reduced-motion: reduce) { .canva-btn, .tip { transition: none; } .canva-btn:hover { transform: none; } }
+
+  /* ---------- Drafts (2026-10-04): Canva edits waiting to be turned in ---------- */
+  .drafts { margin-bottom: 22px; }
+  .drafts[hidden] { display: none; }
+  .drafts .material-row.file-bar:first-child { margin-top: 0; }
+  .draft-badge { width: 36px; height: 36px; flex-shrink: 0; border-radius: 7px; background: var(--panel-bg); display: grid; place-items: center; }
+  .draft-text { flex: 1 1 0; min-width: 110px; display: flex; flex-direction: column; gap: 1px; }
+  .draft-text .material-name { flex: none; min-width: 0; }
+  .draft-meta { font-size: 0.68rem; font-weight: 700; color: var(--text-faint); }
+  .draft-submit { border: none; border-radius: 999px; background: var(--accent); color: #fff; font-family: inherit; font-size: 0.74rem; font-weight: 800; min-height: 40px; padding: 8px 18px; cursor: pointer; white-space: nowrap; }
+  .draft-submit:hover { filter: brightness(1.08); }
+  .draft-submit:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
+  .draft-submit:disabled { background: var(--border); color: var(--text-faint); cursor: default; filter: none; }
+  .draft-ghost { position: fixed; z-index: 400; margin: 0; pointer-events: none; box-shadow: 0 18px 40px -14px rgba(0,0,0,0.5); overflow: hidden; background: var(--panel-inner); border-radius: var(--window-radius-sm); }
+  .draft-ghost .material-actions { transform-origin: right center; }
+  .draft-row.leaving { overflow: hidden; }
   .material-icon-btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
 
   /* ---------- Shared small modal — Add Submission and the file-action
@@ -609,6 +658,9 @@
   .modal-btn.secondary:hover { background: var(--border); }
   .modal-btn.primary { background: var(--accent); color: #fff; }
   .modal-btn.primary:hover { background: var(--accent-dark); }
+  .modal-btn.danger { background: #b6432f; color: #fff; }   /* same red as Sign out */
+  .modal-btn.danger:hover { filter: brightness(1.08); }
+  .modal-btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
 
   /* ---------- Add Submission button + submission history — an
      assignment can be submitted more than once (2026-08-29, per
@@ -792,11 +844,98 @@
   .nav-link .dot { width: 4px; height: 4px; border-radius: 50%; background: transparent; }
   .nav-link.active .label { color: var(--text-dark); }
   .nav-link.active .dot { background: var(--accent); }
+  /* ---------- "More" overflow (2026-10-01, per Martin: "if the text has
+     to get ... we should add a more button on the far right side with a
+     list of the other options"). Labels never truncate: when they would,
+     the rightmost pages move into the More menu instead. ---------- */
+  .nav-link[hidden], .nav-more[hidden], .nav-more-menu[hidden] { display: none; }
+  /* While the More menu is open the whole bar sits above everything else on
+     the page (sticky headers, pop-ups, the edit button go up to z-index 90),
+     so the menu is never drawn underneath them. */
+  .app-nav.more-open { z-index: 1000; }
+  .nav-more {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    flex: 0 0 auto;
+    position: relative;
+    margin-left: 4px;
+    padding: 12px 16px 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+  }
+  .nav-more .label { display: flex; align-items: center; height: 1.2em; font-size: 0.72rem; color: var(--text-faint); }
+  .nav-more .label svg { display: block; fill: currentColor; }
+  /* thin divider between the pages and the dots */
+  .nav-more::before { content: ""; position: absolute; left: 0; top: 12px; bottom: 12px; width: 1px; background: var(--border, #cfcfd6); }
+  .nav-more:hover .label, .nav-more[aria-expanded="true"] .label { color: var(--text-dark); }
+  .nav-more .dot { width: 4px; height: 4px; border-radius: 50%; background: transparent; }
+  .nav-more.has-active .label { color: var(--text-dark); }
+  .nav-more.has-active .dot { background: var(--accent); }
+  .nav-more:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring) inset; }
+  .nav-more-menu {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    right: 20px;
+    min-width: 168px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    background: var(--panel-bg);
+    border-radius: var(--window-radius-md);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+    pointer-events: auto;
+  }
+  .nav-more-item {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: var(--text-faint);
+    text-align: left;
+    padding: 12px 12px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .nav-more-item:hover, .nav-more-item:focus-visible { outline: none; color: var(--text-dark); box-shadow: 0 0 0 3px var(--accent-ring) inset; }
+  .nav-more-item.active { color: var(--text-dark); }
+  .nav-more-item.active span { position: relative; display: inline-block; padding-bottom: 6px; margin-bottom: -6px; }
+  .nav-more-item.active span::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; border-radius: 999px; background: var(--accent); }
+  /* Labels sit centered in the bar; the active page is underlined in the
+     accent color instead of marked with a dot (2026-10-01, per Martin). */
+  .app-nav-inner .nav-link, .app-nav-inner .nav-more { justify-content: center; gap: 0; padding-top: 10px; padding-bottom: 10px; }
+  .app-nav-inner .nav-link .dot, .app-nav-inner .nav-more .dot { display: none; }
+  .app-nav-inner .nav-link .label, .app-nav-inner .nav-more .label { position: relative; padding: 6px 0; }
+  .app-nav-inner .nav-link.active .label::after, .app-nav-inner .nav-more.has-active .label::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; border-radius: 999px; background: var(--accent); }
+  @media (max-width: 520px) {
+    .nav-more { padding: 10px 12px 8px; }
+    .nav-more::before { top: 10px; bottom: 10px; }
+    .app-nav-inner .nav-link, .app-nav-inner .nav-more { padding-top: 8px; padding-bottom: 8px; }
+    .nav-more .label { font-size: 0.58rem; }
+  }
   .nav-link:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring) inset; }
   @media (max-width: 520px) {
     .nav-link { min-width: 0; padding: 10px 3px 8px; }
     .nav-link .label { font-size: 0.58rem; }
   }
+  /* Emoji icons (2026-10-01, per Martin): icons that show a thing are emoji;
+     buttons and action icons stay line icons. */
+  /* Each emoji is an inline SVG sized by font-size (1em box), so it is
+     exactly as big as its box and sits dead center. The svg rule undoes
+     the line-icon styles (stroke, fill:none, opacity) that the parent
+     rows still set for their other icons. */
+  .emo { display: inline-block; width: 1em; height: 1em; line-height: 0; flex-shrink: 0; vertical-align: middle; }
+  .emo svg { display: block; width: 100%; height: 100%; fill: initial; stroke: none; opacity: 1; }
+  .emo.submission-comment-icon { width: 15px; height: 15px; }
 </style>
 </head>
 <body>
@@ -836,6 +975,10 @@
 
       <div class="card">
         <div class="card-inner">
+          <section class="drafts" id="draftsSec" aria-labelledby="draftsTitle" hidden>
+            <h2 id="draftsTitle">Drafts</h2>
+            <div id="draftsList"></div>
+          </section>
           <h2>Submissions</h2>
           <div id="submissionBanner"></div>
           <div id="submissionBody"></div>
@@ -862,6 +1005,10 @@
         <span class="label">Assignments</span>
         <span class="dot"></span>
       </button>
+      <button class="nav-link" type="button" data-page="files" data-href="files.html">
+        <span class="label">Files</span>
+        <span class="dot"></span>
+      </button>
       <button class="nav-link" type="button" data-page="calendar" data-href="calendar.html">
         <span class="label">Calendar</span>
         <span class="dot"></span>
@@ -878,8 +1025,140 @@
         <span class="label">Settings</span>
         <span class="dot"></span>
       </button>
+      <button class="nav-more" type="button" id="navMore" aria-haspopup="menu" aria-expanded="false" aria-controls="navMoreMenu" aria-label="More pages" hidden>
+        <span class="label"><svg viewBox="0 0 16 4" width="16" height="4" aria-hidden="true"><circle cx="2" cy="2" r="1.75"/><circle cx="8" cy="2" r="1.75"/><circle cx="14" cy="2" r="1.75"/></svg></span>
+        <span class="dot"></span>
+      </button>
     </div>
+    <div class="nav-more-menu" id="navMoreMenu" role="menu" aria-label="More pages" hidden></div>
   </nav>
+
+  <script>
+    // Potato PC Mode on every page (2026-10-04, per Martin). The saved
+    // setting turns off all CSS animations and transitions, makes animate()
+    // calls and smooth scrolling instant, and drops the slanted page title.
+    // Same code as app/lib/theme-boot.ts, which runs it before first paint in
+    // the app; this copy covers the preview and pages theme-boot skips.
+    (function () {
+    var POTATO_CSS = "body.potato-mode,body.potato-mode *,body.potato-mode *::before,body.potato-mode *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important;filter:none!important;text-shadow:none!important}html:has(body.potato-mode){scroll-behavior:auto!important}body.potato-mode,body.potato-mode *{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif!important}body.potato-mode h1.title{font-style:normal!important;transform:none!important}body.potato-mode .trend.has-popup:focus-visible{outline:2px solid currentColor;outline-offset:2px}";
+    function potatoOn() { return !!(document.body && document.body.classList.contains("potato-mode")); }
+    function applyPotato() {
+      var on = false;
+      try { on = (JSON.parse(localStorage.getItem("schoolagy_settings_options") || "{}") || {}).potatoMode === true; } catch (e) {}
+      if (document.body) document.body.classList.toggle("potato-mode", on);
+      if (!document.getElementById("potatoStyle")) {
+        var st = document.createElement("style");
+        st.id = "potatoStyle";
+        st.textContent = POTATO_CSS;
+        (document.head || document.documentElement).appendChild(st);
+      }
+      var EP = window.Element && Element.prototype;
+      if (EP && !EP.__potatoPatched) {
+        EP.__potatoPatched = true;
+        var anim = EP.animate;
+        if (anim) EP.animate = function (frames, opts) {
+          if (potatoOn()) opts = (typeof opts === "number" || opts == null) ? { duration: 0 } : Object.assign({}, opts, { duration: 0, delay: 0, endDelay: 0, iterations: 1 });
+          return anim.call(this, frames, opts);
+        };
+        var siv = EP.scrollIntoView;
+        if (siv) EP.scrollIntoView = function (arg) {
+          if (potatoOn() && arg && typeof arg === "object") arg = Object.assign({}, arg, { behavior: "auto" });
+          return siv.call(this, arg);
+        };
+        ["scrollTo", "scrollBy"].forEach(function (name) {
+          [EP, window].forEach(function (target) {
+            var fn = target[name];
+            if (!fn) return;
+            target[name] = function (a, b) {
+              if (potatoOn() && a && typeof a === "object") a = Object.assign({}, a, { behavior: "auto" });
+              return b === undefined ? fn.call(this, a) : fn.call(this, a, b);
+            };
+          });
+        });
+      }
+    }
+      applyPotato();
+      window.addEventListener('storage', function (e) { if (e.key === 'schoolagy_settings_options') applyPotato(); });
+    })();
+
+    // Bottom nav "More" overflow. Shows as many pages as fit without
+    // cutting a label off ("Cour..."); the rest go in the More menu.
+    // The current page always stays in the bar.
+    (function () {
+      const nav = document.querySelector('.app-nav');
+      const inner = nav && nav.querySelector('.app-nav-inner');
+      const more = document.getElementById('navMore');
+      const menu = document.getElementById('navMoreMenu');
+      if (!inner || !more || !menu) return;
+      const links = Array.from(inner.querySelectorAll('.nav-link'));
+
+      const cut = () =>
+        inner.scrollWidth > inner.clientWidth + 1 ||
+        links.some(l => !l.hidden && l.querySelector('.label').scrollWidth > l.querySelector('.label').clientWidth + 1);
+
+      function fit() {
+        closeMenu();
+        links.forEach(l => { l.hidden = false; });
+        more.hidden = true;
+        if (!cut()) return;
+        more.hidden = false;
+        // Hide from the right, but never the current page.
+        for (let i = links.length - 1; i >= 1 && cut(); i--) {
+          if (!links[i].classList.contains('active')) links[i].hidden = true;
+        }
+        const hidden = links.filter(l => l.hidden);
+        more.classList.toggle('has-active', hidden.some(l => l.classList.contains('active')));
+        menu.textContent = '';
+        hidden.forEach(l => {
+          const item = document.createElement('button');
+          item.type = 'button';
+          item.className = 'nav-more-item' + (l.classList.contains('active') ? ' active' : '');
+          item.setAttribute('role', 'menuitem');
+          const text = document.createElement('span'); text.textContent = l.querySelector('.label').textContent; item.appendChild(text);
+          item.addEventListener('click', () => { closeMenu(); l.click(); });
+          menu.appendChild(item);
+        });
+      }
+
+      function openMenu() {
+        const navBox = nav.getBoundingClientRect();
+        const innerBox = inner.getBoundingClientRect();
+        menu.style.right = Math.max(0, navBox.right - innerBox.right) + 'px';
+        menu.hidden = false;
+        nav.classList.add('more-open');
+        more.setAttribute('aria-expanded', 'true');
+        const first = menu.querySelector('.nav-more-item');
+        if (first) first.focus();
+      }
+      function closeMenu() {
+        if (menu.hidden) return;
+        menu.hidden = true;
+        nav.classList.remove('more-open');
+        more.setAttribute('aria-expanded', 'false');
+      }
+
+      more.addEventListener('click', e => {
+        e.stopPropagation();
+        menu.hidden ? openMenu() : closeMenu();
+      });
+      document.addEventListener('click', e => { if (!menu.contains(e.target)) closeMenu(); });
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && !menu.hidden) { closeMenu(); more.focus(); }
+        if (!menu.hidden && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+          const items = Array.from(menu.querySelectorAll('.nav-more-item'));
+          const i = items.indexOf(document.activeElement);
+          const next = items[(i + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length];
+          if (next) { e.preventDefault(); next.focus(); }
+        }
+      });
+
+      fit();
+      if (window.ResizeObserver) new ResizeObserver(fit).observe(nav);
+      else window.addEventListener('resize', fit);
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
+    })();
+  </script>
+
 
   <div class="modal-overlay" id="modalOverlay" hidden>
     <div class="modal-box" id="modalBox"></div>
@@ -971,6 +1250,47 @@
       } catch {}
       return null;
     }
+    // Subject table (2026-10-01, per Martin): each course gets a color that
+    // fits its subject, picked from its name. First match wins, so specific
+    // subjects come before broad ones ("Computer Science" before "Science",
+    // "Physical Education" before "Physics"). A color the student picked in
+    // the course's info pop-up still wins over this. No match keeps the
+    // course's own color. All colors pass 4.5:1 with white text.
+    const COURSE_SUBJECTS = [
+      [/\bchem/, '🧪', '#1b7f67'],
+      [/\bbio|anatom|physiolog/, '🧬', '#387f33'],
+      [/\bphysical ed|(^|[^a-z])p\.?e\.?($|[^a-z])|fitness|\bweight/, '🏃', '#c2562b'],
+      [/\bhealth/, '🩺', '#c0404a'],
+      [/\bphysics/, '⚛️', '#4a56b8'],
+      [/astronom/, '🔭', '#3b3f8f'],
+      [/environment|\bearth|geolog/, '🌍', '#2f7f63'],
+      [/robotic/, '🤖', '#55697d'],
+      [/computer|programming|coding|\bcs[ap]?\b|software/, '💻', '#2d6f8f'],
+      [/engineer/, '⚙️', '#6a6478'],
+      [/government|civics|politic/, '🏛️', '#2f4f8a'],
+      [/econ/, '📈', '#2e7d4f'],
+      [/psych/, '🧠', '#9a4583'],
+      [/geograph/, '🗺️', '#4c7a5a'],
+      [/histor/, '📜', '#9a5a2a'],
+      [/statistic|\bstats?\b/, '📊', '#2f72a8'],
+      [/geometr|\btrig/, '📐', '#3e64b0'],
+      [/calc|algebra|\bmath/, '🧮', '#2f5fb3'],
+      [/english|literature|\blit\b|writing|composition|language arts|reading/, '📖', '#a63a4f'],
+      [/spanish|french|german|chinese|mandarin|japanese|korean|latin|italian|\basl\b|sign language|language/, '🗣️', '#7a4fae'],
+      [/theat|drama/, '🎭', '#a3364b'],
+      [/music|band|choir|orchestra|chorus/, '🎵', '#6b48a8'],
+      [/photo/, '📷', '#4f5d6e'],
+      [/culinary|cooking|\bfoods?\b|nutrition/, '🍳', '#b05a26'],
+      [/\barts?\b|drawing|painting|ceramic|sculpt|design/, '🎨', '#b03f7a'],
+      [/business|marketing|accounting|financ/, '💼', '#3d5f6e'],
+      [/journalism|yearbook|newspaper/, '📰', '#5c5c6e'],
+      [/science/, '🔬', '#2b7b8c'],
+    ];
+    function courseSubject(name) {
+      const n = String(name || '').toLowerCase();
+      return COURSE_SUBJECTS.find(([re]) => re.test(n)) || null;
+    }
+
     function applyCourseCustomizationsInPlace(courses) {
       const custom = loadCourseCustom();
       // Mutates each course object's own fields in place (never clones,
@@ -979,7 +1299,11 @@
       // for scripts/port-pages.mjs's data-overrides transform to match
       // and rewrite for live Schoology data. This function only edits
       // the array's contents/order after that binding already exists.
-      courses.forEach(c => Object.assign(c, custom[c.id] || {}));
+      courses.forEach(c => {
+        const subject = courseSubject(c.name);
+        if (subject) c.color = subject[2];
+        Object.assign(c, custom[c.id] || {});
+      });
       const order = loadCourseOrder();
       if (order && order.length) {
         const byId = new Map(courses.map(c => [c.id, c]));
@@ -993,7 +1317,7 @@
     const COURSES = [
       { id: 'apchem', name: 'AP Chemistry', color: '#a67a22', teacher: 'Mr. Alvarez' },
       { id: 'algebra2', name: 'Algebra II', color: '#5b6ea3', teacher: 'Ms. Whitfield' },
-      { id: 'english10', name: 'English 10', color: '#6b8f5e', teacher: 'Ms. Cho' },
+      { id: 'english10', name: 'English 10', color: '#6b8f5e', teacher: 'Mr. Cho' },
       { id: 'ushistory', name: 'U.S. History', color: '#a15c4f', teacher: 'Mr. Bennett' },
       { id: 'spanish3', name: 'Spanish III', color: '#8a6ba1', teacher: 'Ms. Ortiz' },
       { id: 'pe', name: 'PE', color: '#4f8c8a', teacher: 'Coach Reyes' },
@@ -1121,7 +1445,8 @@
       if (found) return found;
       const generic = { description: 'No description provided by your teacher yet.', materials: [] };
       if (item.status === 'submitted' || item.status === 'graded' || item.status === 'returned') {
-        generic.submissions = [{ name: `${item.title}.pdf`, ext: 'pdf', timestamp: item.status === 'graded' ? item.due : (item.submittedOn || item.returnedOn) }];
+        const ts = item.status === 'graded' ? item.due : (item.submittedOn || item.returnedOn);
+        if (ts) generic.submissions = [{ name: `${item.title}.pdf`, ext: 'pdf', timestamp: ts }];
         if (item.status === 'graded') generic.feedback = 'No additional feedback yet.';
         if (item.status === 'returned') generic.comment = 'No comment yet.';
       }
@@ -1138,7 +1463,7 @@
     // Small speech-bubble flag shown on a submission-history row when it
     // has a student-entered comment attached (2026-08-31) — a hint that
     // there's more to see before the row is actually clicked open.
-    const COMMENT_ICON = '<svg class="submission-comment-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-8.9 8.4A8.5 8.5 0 1 1 21 11.5z"/></svg>';
+    const COMMENT_ICON = '<span class="submission-comment-icon emo" aria-hidden="true"><svg aria-hidden="true" focusable="false" viewBox="0 0 36 36"><path fill="#BDDDF4" d="M18 1C8.059 1 0 7.268 0 15c0 4.368 2.574 8.268 6.604 10.835C6.08 28.144 4.859 31.569 2 35c5.758-.96 9.439-3.761 11.716-6.416 1.376.262 2.805.416 4.284.416 9.941 0 18-6.268 18-14S27.941 1 18 1z"/><circle cx="18" cy="15" r="2" fill="#2A6797"/><circle cx="26" cy="15" r="2" fill="#2A6797"/><circle cx="10" cy="15" r="2" fill="#2A6797"/></svg></span>';
     // Used on the quiz redirect notice (2026-09-03) — an "external link"
     // glyph, distinct from the upload-arrow icon the dropzone normally
     // shows, so it reads as "this happens somewhere else" rather than
@@ -1186,6 +1511,17 @@
         // with generic fallback content rather than silently swapping in
         // an unrelated default assignment.
         item = { status: 'upcoming', type: 'assignment', title: decodeURIComponent(qTitle), courseId: qCourse, due: null };
+        // Opened from a course's Grades tab (2026-10-04): use that row's own
+        // graded state and score instead of calling it upcoming.
+        if (qFrom === 'gradebook') {
+          let gb = null;
+          try { gb = JSON.parse(sessionStorage.getItem('schoolagy_gb_open') || 'null'); } catch {}
+          if (gb && gb.courseId === qCourse && gb.title === item.title) {
+            const cat = String(gb.category || '');
+            item.type = /test|quiz|exam|assessment/i.test(cat) ? 'assessment' : /discussion/i.test(cat) ? 'discussion' : 'assignment';
+            if (gb.graded && typeof gb.score === 'number' && gb.points > 0) { item.status = 'graded'; item.score = Math.round(gb.score / gb.points * 100); }
+          }
+        }
       }
     } else {
       item = findAssignment('apchem', 'Molarity Practice Set');
@@ -1193,7 +1529,7 @@
     const course = findCourse(item.courseId) || COURSES[0];
     const detail = buildDetail(item);
 
-    document.title = `Schoolagy — ${item.title}`;
+    document.title = `Averages — ${item.title}`;
     document.getElementById('assignTitle').textContent = item.title;
     document.getElementById('classLink').textContent = course.name;
     document.getElementById('classLink').addEventListener('click', () => {
@@ -1215,9 +1551,10 @@
     // genuinely where the user came from and assignments.html would be a
     // dead end back to a page they didn't start on.
     const cameFromMaterials = qFrom === 'materials';
-    document.getElementById('backLabel').textContent = cameFromMaterials ? 'Back to Course Materials' : 'Back to Assignments';
+    const cameFromGradebook = qFrom === 'gradebook';   // 2026-10-04
+    document.getElementById('backLabel').textContent = cameFromMaterials ? 'Back to Course Materials' : cameFromGradebook ? 'Back to Grades' : 'Back to Assignments';
     document.getElementById('backBtn').addEventListener('click', () => {
-      window.location.href = cameFromMaterials ? `course-materials.html?course=${course.id}` : 'assignments.html';
+      window.location.href = cameFromMaterials ? `course-materials.html?course=${course.id}` : cameFromGradebook ? `gradebook.html?course=${course.id}` : 'assignments.html';
     });
 
     document.getElementById('descText').textContent = detail.description;
@@ -1234,16 +1571,49 @@
     // action Schoolagy offers for now — see the click handler below,
     // which now triggers a real file download instead of another
     // placeholder modal.
+    // Attached Materials rows (2026-10-04, per Martin): `actions === 'full'`
+    // draws the landing page's file bar, with Edit in Canva (file types Canva
+    // can open), Save to cloud and Download. `true` is the plain Download-only
+    // row the Submission Preview popup uses.
+    const CANVA_EXTS = ['pdf', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'key', 'numbers', 'pages', 'odt', 'odp', 'ods', 'png', 'jpg', 'jpeg', 'gif', 'heic', 'ai', 'psd'];
+    // Canva isn't connected yet: in the preview, Edit in Canva runs the Drafts
+    // flow below; signed in, it opens the Coming soon menu.
+    const CANVA_PREVIEW = !(window.__SCHOOLAGY__ && window.__SCHOOLAGY__.data);
+    // Edit in Google Drive (2026-10-04): Word/PowerPoint/Excel use Google Drive
+    // when Settings > Integrations > Open files in says so.
+    const DRIVE_EXTS = ['doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx'];
+    const DRIVE_KIND = { doc: ['DOC', '#3b6fd1'], docx: ['DOC', '#3b6fd1'], ppt: ['SLIDES', '#d1852f'], pptx: ['SLIDES', '#d1852f'], xls: ['SHEET', '#2f7d54'], xlsx: ['SHEET', '#2f7d54'] };
+    let EDITOR_PREF = 'canva';
+    try { if (localStorage.getItem('schoolagy_default_editor') === 'gdrive') EDITOR_PREF = 'gdrive'; } catch {}
+    const CLOUD_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18H6.5a4.5 4.5 0 0 1-.6-8.96A6 6 0 0 1 17.6 8.1 4.5 4.5 0 0 1 17.5 18H17"/><path d="M12 20v-8M9 15l3-3 3 3"/></svg>';
     function materialRowHTML(m, actions) {
       const color = EXT_COLOR[m.ext] || '#83849a';
-      const btns = actions ? `
+      const nm = escapeHtml(m.name), ex = escapeHtml(m.ext);
+      const tip = (label, inner) => `<span class="tipwrap">${inner}<span class="tip" role="tooltip">${label}</span></span>`;
+      const download = `<button class="material-icon-btn" type="button" data-file-action="download" data-file-name="${nm}" data-file-ext="${ex}" aria-label="Download ${nm}">${DOWNLOAD_ICON}</button>`;
+      let btns = '';
+      if (actions === 'full') {
+        const ext = String(m.ext || '').toLowerCase();
+        const canva = (EDITOR_PREF === 'gdrive' && DRIVE_EXTS.includes(ext))
+          ? `<button class="canva-btn drive-btn" type="button" data-file-action="gdrive" data-file-name="${nm}" data-file-ext="${ex}"${CANVA_PREVIEW ? '' : ' aria-haspopup="menu"'}><span>Edit in Google Drive</span></button>`
+          : CANVA_EXTS.includes(ext)
+          ? `<button class="canva-btn" type="button" data-file-action="canva" data-file-name="${nm}"${CANVA_PREVIEW ? '' : ' aria-haspopup="menu"'}><span class="canva-mark" aria-hidden="true"></span><span>Edit in Canva</span></button>` : '';
+        btns = `
           <div class="material-actions">
-            <button class="material-icon-btn" type="button" data-file-action="download" data-file-name="${escapeHtml(m.name)}" data-file-ext="${escapeHtml(m.ext)}" aria-label="Download ${escapeHtml(m.name)}">${DOWNLOAD_ICON}</button>
-          </div>` : '';
+            ${canva}
+            ${tip('Save to cloud', `<button class="material-icon-btn" type="button" data-file-action="cloud" data-file-name="${nm}" aria-label="Save ${nm} to cloud" aria-haspopup="menu">${CLOUD_ICON}</button>`)}
+            ${tip('Download', download)}
+          </div>`;
+      } else if (actions) {
+        btns = `
+          <div class="material-actions">
+            ${download}
+          </div>`;
+      }
       return `
-        <div class="material-row">
-          <span class="material-badge" style="background:${escapeHtml(color)}">${escapeHtml(m.ext.toUpperCase())}</span>
-          <span class="material-name">${escapeHtml(m.name)}</span>
+        <div class="material-row${actions === 'full' ? ' file-bar' : ''}">
+          <span class="material-badge" style="background:${escapeHtml(color)}">${escapeHtml(String(m.ext || '').toUpperCase())}</span>
+          <span class="material-name">${nm}</span>
           ${btns}
         </div>`;
     }
@@ -1269,7 +1639,7 @@
     // stand-in, same honesty convention as Quick Look's own "no preview
     // available in this mock" note elsewhere in the app.
     function downloadPlaceholderFile(name, ext) {
-      const content = `${name}\n\nThis is a placeholder file from the Schoolagy mockup — no real file content is stored yet.\nReal file delivery is coming with the Drive/Canva integrations (Release 1.0.0).`;
+      const content = `${name}\n\nThis is a placeholder file from the Averages mockup — no real file content is stored yet.\nReal file delivery is coming with the Drive/Canva integrations (Release 1.0.0).`;
       const blob = new Blob([content], { type: 'text/plain' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -1282,7 +1652,7 @@
     }
     const materialsEl = document.getElementById('materialsList');
     materialsEl.innerHTML = (detail.materials && detail.materials.length)
-      ? detail.materials.map(m => materialRowHTML(m, true)).join('')
+      ? detail.materials.map(m => materialRowHTML(m, 'full')).join('')
       : '<p class="assign-empty">No materials attached to this assignment.</p>';
 
     // ------------------------------------------------------------------
@@ -1295,7 +1665,7 @@
     // Also strips the wider modal-box-lg modifier (see openAddSubmissionModal)
     // so the NEXT modal opened -- e.g. a small file-info popup -- isn't left
     // oversized from a previous Add Submission session.
-    function closeModal() { modalOverlay.hidden = true; modalBox.innerHTML = ''; modalBox.classList.remove('modal-box-lg'); }
+    function closeModal() { modalOverlay.hidden = true; modalBox.innerHTML = ''; modalBox.classList.remove('modal-box-lg'); modalBox.removeAttribute('role'); modalBox.removeAttribute('aria-modal'); }
     // Static popup (2026-08-29, per Martin's request) — clicking the dark
     // backdrop no longer dismisses the modal, so an accidental click outside
     // the box (easy to do on the Add Submission modal while picking a tab or
@@ -1303,10 +1673,46 @@
     // Cancel/Close buttons still close it.
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && !modalOverlay.hidden) closeModal(); });
 
+    // Edit in Canva / Save to cloud menus (2026-10-04). Not connected yet, so
+    // every choice says Coming soon, same as the Materials page.
+    const fileMenu = document.createElement('div');
+    fileMenu.className = 'file-menu';
+    fileMenu.setAttribute('role', 'menu');
+    fileMenu.hidden = true;
+    document.body.appendChild(fileMenu);
+    let fileMenuFor = null;
+    function closeFileMenu() {
+      if (fileMenu.hidden) return;
+      fileMenu.hidden = true;
+      if (fileMenuFor) { fileMenuFor.setAttribute('aria-expanded', 'false'); fileMenuFor = null; }
+    }
+    function openFileMenu(btn, kind) {
+      if (fileMenuFor === btn) { closeFileMenu(); return; }
+      closeFileMenu();
+      const name = btn.dataset.fileName || 'this file';
+      const items = kind === 'canva' ? ['Open in Canva'] : kind === 'gdrive' ? ['Open in Google Drive'] : ['Google Drive', 'OneDrive'];   // OneDrive back 2026-10-05
+      const editIn = kind === 'canva' ? 'Canva' : kind === 'gdrive' ? 'Google Drive' : '';
+      fileMenu.setAttribute('aria-label', editIn ? `Edit in ${editIn}` : 'Save to cloud');
+      fileMenu.innerHTML = `<div class="file-menu-label">${editIn ? 'Edit' : 'Save'} "${escapeHtml(name)}" ${editIn ? 'in ' + editIn : 'to'}</div>` +
+        items.map(n => `<button class="file-menu-item" type="button" role="menuitem" disabled><span>${n}</span><span class="soon">Coming soon</span></button>`).join('');
+      fileMenu.hidden = false;
+      const r = btn.getBoundingClientRect(), w = fileMenu.offsetWidth, h = fileMenu.offsetHeight;
+      fileMenu.style.left = Math.max(8, Math.min(r.right - w, window.innerWidth - w - 8)) + 'px';
+      fileMenu.style.top = (r.bottom + 6 + h > window.innerHeight - 8 ? Math.max(8, r.top - h - 6) : r.bottom + 6) + 'px';
+      btn.setAttribute('aria-expanded', 'true');
+      fileMenuFor = btn;
+    }
+    document.addEventListener('click', e => { if (!fileMenu.hidden && !fileMenu.contains(e.target) && !(fileMenuFor && fileMenuFor.contains(e.target))) closeFileMenu(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && !fileMenu.hidden) { const b = fileMenuFor; closeFileMenu(); if (b) b.focus(); } });
+    window.addEventListener('scroll', closeFileMenu, true);
+    window.addEventListener('resize', closeFileMenu);
+
     materialsEl.addEventListener('click', e => {
-      const btn = e.target.closest('[data-file-action="download"]');
+      const btn = e.target.closest('[data-file-action]');
       if (!btn) return;
-      downloadPlaceholderFile(btn.dataset.fileName, btn.dataset.fileExt);
+      if (btn.dataset.fileAction === 'download') downloadPlaceholderFile(btn.dataset.fileName, btn.dataset.fileExt);
+      else if ((btn.dataset.fileAction === 'canva' || btn.dataset.fileAction === 'gdrive') && CANVA_PREVIEW) { closeFileMenu(); editInCanvaPreview(btn); }
+      else openFileMenu(btn, btn.dataset.fileAction);
     });
     // Same download delegation as the Attached Materials list above, but
     // scoped to the modal itself -- covers the Submission Preview
@@ -1472,7 +1878,7 @@
         html += `
           <div class="submit-dropzone quiz-redirect-notice">
             ${EXTERNAL_LINK_ICON}
-            <div>Quizzes and tests are taken in Schoology, not in Schoolagy. Head to Schoology to complete this one — your grade will show up here once it's in.</div>
+            <div>Quizzes and tests are taken in Schoology, not in Averages. Head to Schoology to complete this one — your grade will show up here once it's in.</div>
             <a class="quiz-redirect-btn" href="https://www.schoology.com/" target="_blank" rel="noopener noreferrer">
               Open in Schoology
               ${EXTERNAL_LINK_ICON}
@@ -1557,6 +1963,13 @@
              per Martin -- at least one file is now required on this tab;
              see modalSubmitBtn's click handler). -->
         <p class="upload-required-note" id="uploadRequiredNote" hidden>Choose at least one file before submitting.</p>
+        <div class="upload-sources" role="group" aria-label="Add from another app (coming soon)">
+          <span class="upload-sources-label">Or add from</span>
+          <button class="upload-source" type="button" disabled><span class="canva-mark" aria-hidden="true"></span>Canva</button>
+          <button class="upload-source" type="button" disabled>Google Drive</button>
+          <button class="upload-source" type="button" disabled>OneDrive</button>
+          <span class="soon">Coming soon</span>
+        </div>
         <input type="file" id="submissionFileInput" multiple style="display:none;">`,
       // Rich-text answer area (2026-08-30, per Martin's request — a plain
       // textbox with Google-Docs-style formatting options) in place of the
@@ -1777,6 +2190,181 @@
 
     renderSubmissionsPanel();
 
+    // ------------------------------------------------------------------
+    // Drafts (2026-10-04, per Martin): Edit in Canva sends the file over to
+    // Drafts, above Submissions, with Submit and Delete. Canva isn't
+    // connected yet, so this only runs in the preview; signed in, Edit in
+    // Canva keeps its Coming soon menu. Real flow: POST /canva/edit opens
+    // Canva, Canva's return brings the student back here, and the drafts
+    // list comes from the API instead of this in-memory array.
+    // ------------------------------------------------------------------
+    const drafts = [];
+    let draftSeq = 0;
+    const draftsSec = document.getElementById('draftsSec');
+    const draftsList = document.getElementById('draftsList');
+    const TRASH_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg>';
+    const reduceMotion = () => window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const DRAFT_APP = { canva: 'Canva', gdrive: 'Google Drive', onedrive: 'OneDrive', course: 'Course file' };
+    const DRAFT_EXT_COLOR = Object.assign({ doc: '#3b6fd1', xlsx: '#2f7d54', xls: '#2f7d54', ppt: '#d1852f' }, EXT_COLOR);
+    function draftBadgeHTML(d) {
+      if (d.app === 'gdrive') return `<span class="draft-badge drive" aria-hidden="true" style="background:${(DRIVE_KIND[d.ext] || DRIVE_KIND.docx)[1]}">${(DRIVE_KIND[d.ext] || DRIVE_KIND.docx)[0]}</span>`;
+      if (d.app === 'canva') return '<span class="draft-badge" aria-hidden="true"><span class="canva-mark"></span></span>';
+      const ext = String(d.ext || 'file').toLowerCase();
+      return `<span class="draft-badge drive" aria-hidden="true" style="background:${escapeHtml(DRAFT_EXT_COLOR[ext] || '#83849a')}">${escapeHtml(ext.toUpperCase().slice(0, 4))}</span>`;
+    }
+    function draftRowHTML(d) {
+      const nm = escapeHtml(d.name);
+      const tip = (label, inner) => `<span class="tipwrap">${inner}<span class="tip" role="tooltip">${label}</span></span>`;
+      const testItem = item.type === 'assessment';
+      const submit = `<button class="draft-submit" type="button" data-draft-action="submit"${testItem ? ' disabled' : ''} aria-label="Submit ${nm}">Submit</button>`;
+      return `
+        <div class="material-row file-bar draft-row" data-draft="${escapeHtml(d.id)}">
+          ${draftBadgeHTML(d)}
+          <span class="draft-text">
+            <span class="material-name">${nm}</span>
+            <span class="draft-meta">${d.attached ? `${DRAFT_APP[d.app] || 'File'} · Added from Files` : `${DRAFT_APP[d.app] || 'Canva'} draft · Edited ${escapeHtml(d.edited)}`}</span>
+          </span>
+          <div class="material-actions">
+            ${testItem ? tip('Tests are turned in on Schoology', submit) : submit}
+            ${tip('Delete draft', `<button class="material-icon-btn" type="button" data-draft-action="delete" aria-label="Delete draft ${nm}">${TRASH_ICON}</button>`)}
+          </div>
+        </div>`;
+    }
+    function renderDrafts() {
+      draftsSec.hidden = drafts.length === 0;
+      draftsList.innerHTML = drafts.map(draftRowHTML).join('');
+    }
+    function pulse(el) {
+      if (!el || reduceMotion() || !el.animate) return;
+      el.animate([{ boxShadow: '0 0 0 2px var(--accent-ring)' }, { boxShadow: '0 0 0 0 transparent' }], { duration: 900, easing: 'ease-out' });
+    }
+    function editInCanvaPreview(btn) {
+      const source = btn.dataset.fileName || 'File';
+      const base = source.replace(/\.[^.]+$/, '');
+      const app = btn.dataset.fileAction === 'gdrive' ? 'gdrive' : 'canva';
+      const existing = drafts.find(d => d.source === source && d.app === app);
+      if (existing) {   // already a draft: same design, just edited again
+        existing.edited = 'just now';
+        renderDrafts();
+        const row = draftsList.querySelector(`[data-draft="${existing.id}"]`);
+        if (row) { row.scrollIntoView({ block: 'nearest', behavior: reduceMotion() ? 'auto' : 'smooth' }); pulse(row); }
+        return;
+      }
+      const fromEl = btn.closest('.file-bar');
+      const from = fromEl.getBoundingClientRect();
+      const d = { id: 'd' + (++draftSeq), source, name: base, edited: 'just now', app, ext: String(btn.dataset.fileExt || 'docx').toLowerCase() };
+      drafts.unshift(d);
+      renderDrafts();
+      const target = draftsList.querySelector(`[data-draft="${d.id}"]`);
+      const done = () => {
+        const r = target.getBoundingClientRect();
+        if (r.top < 0 || r.bottom > window.innerHeight) target.scrollIntoView({ block: 'center', behavior: reduceMotion() ? 'auto' : 'smooth' });
+        pulse(target);
+      };
+      if (reduceMotion() || !target.animate) { done(); return; }
+      // Slide: a copy of the file bar flies from Attached Materials into its
+      // new spot in Drafts, then the real draft row takes its place.
+      const to = target.getBoundingClientRect();
+      // The flying card holds both rows, each at its own width, so nothing
+      // squishes: the old buttons fade out first, the file bar fades out,
+      // then the draft row fades in, and Submit/Delete fade in last.
+      const layer = (el, w) => {
+        const c = el.cloneNode(true);
+        c.querySelectorAll('[id]').forEach(n => n.removeAttribute('id'));
+        Object.assign(c.style, { position: 'absolute', left: '0', top: '0', width: w + 'px', margin: '0', visibility: 'visible' });
+        return c;
+      };
+      const ghost = document.createElement('div');
+      ghost.className = 'draft-ghost';
+      ghost.setAttribute('aria-hidden', 'true');
+      const oldRow = layer(fromEl, from.width), newRow = layer(target, to.width);
+      ghost.append(oldRow, newRow);
+      Object.assign(ghost.style, { left: from.left + 'px', top: from.top + 'px', width: from.width + 'px', height: from.height + 'px' });
+      document.body.appendChild(ghost);
+      target.style.visibility = 'hidden';
+      const D = 640;
+      const fade = (el, frames) => el && el.animate(frames, { duration: D, fill: 'both' });
+      fade(oldRow.querySelector('.material-actions'), [{ opacity: 1, transform: 'scale(1)' }, { opacity: 0, transform: 'scale(0.94)', offset: 0.22 }, { opacity: 0, transform: 'scale(0.94)' }]);
+      fade(oldRow, [{ opacity: 1 }, { opacity: 1, offset: 0.22 }, { opacity: 0, offset: 0.44, easing: 'ease-in' }, { opacity: 0 }]);
+      fade(newRow, [{ opacity: 0 }, { opacity: 0, offset: 0.46 }, { opacity: 1, offset: 0.72 }, { opacity: 1 }]);   // starts once the old row is gone: no two names on top of each other
+      fade(newRow.querySelector('.material-actions'), [{ opacity: 0, transform: 'scale(0.94)' }, { opacity: 0, transform: 'scale(0.94)', offset: 0.72 }, { opacity: 1, transform: 'scale(1)' }]);
+      const anim = ghost.animate([
+        { left: from.left + 'px', top: from.top + 'px', width: from.width + 'px', height: from.height + 'px' },
+        { left: to.left + 'px', top: to.top + 'px', width: to.width + 'px', height: to.height + 'px' },
+      ], { duration: D, easing: 'cubic-bezier(.2,.8,.2,1)' });
+      anim.onfinish = anim.oncancel = () => { ghost.remove(); target.style.visibility = ''; done(); };
+    }
+    function removeDraftRow(id, then) {
+      const row = draftsList.querySelector(`[data-draft="${id}"]`);
+      const finish = () => { const i = drafts.findIndex(x => x.id === id); if (i !== -1) drafts.splice(i, 1); renderDrafts(); if (then) then(); };
+      if (!row || reduceMotion() || !row.animate) { finish(); return; }
+      row.classList.add('leaving');
+      const h = row.offsetHeight;
+      const a = row.animate([
+        { opacity: 1, height: h + 'px', marginTop: getComputedStyle(row).marginTop },
+        { opacity: 0, height: '0px', marginTop: '0px', paddingTop: '0px', paddingBottom: '0px' },
+      ], { duration: 220, easing: 'ease' });
+      a.onfinish = a.oncancel = finish;
+    }
+    // Are you sure? (2026-10-04, per Martin). Cancel is focused first, so a
+    // stray Enter doesn't delete anything; Escape also cancels.
+    function confirmDeleteDraft(d, fromBtn) {
+      openModal(`
+        <h3>Delete this draft?</h3>
+        <p>"${escapeHtml(d.name)}" will be removed from Drafts. This can't be undone. ${({ canva: 'Your design stays in your Canva account.', gdrive: 'The file stays in your Google Drive.', onedrive: 'The file stays in your OneDrive.', course: 'The file stays in Files.' })[d.app] || ''}</p>
+        <div class="modal-actions">
+          <button class="modal-btn secondary" type="button" id="draftDelCancel">Cancel</button>
+          <button class="modal-btn danger" type="button" id="draftDelOk">Delete</button>
+        </div>`);
+      modalBox.setAttribute('role', 'alertdialog'); modalBox.setAttribute('aria-modal', 'true');
+      const back = () => { if (fromBtn && document.body.contains(fromBtn)) fromBtn.focus(); };
+      document.getElementById('draftDelCancel').addEventListener('click', () => { closeModal(); back(); });
+      document.getElementById('draftDelOk').addEventListener('click', () => { closeModal(); removeDraftRow(d.id); });
+      document.getElementById('draftDelCancel').focus();
+    }
+    draftsList.addEventListener('click', e => {
+      const btn = e.target.closest('[data-draft-action]');
+      if (!btn || btn.disabled) return;
+      const id = btn.closest('[data-draft]').dataset.draft;
+      const d = drafts.find(x => x.id === id);
+      if (!d) return;
+      if (btn.dataset.draftAction === 'delete') { confirmDeleteDraft(d, btn); return; }
+      // Submit: the Canva design goes in as a PDF, like any other turn-in.
+      removeDraftRow(id, () => {
+        // Canva designs go in as a PDF; a Google Drive file in its own format.
+        // Files attached from the Files page go in as they are.
+        const outExt = d.app === 'canva' ? 'pdf' : (d.ext || 'docx');
+        submissionHistory.push({ files: [{ name: `${d.name}.${outExt}`, ext: outExt }], timestamp: 'Just now', fromCanva: d.app === 'canva', fromDrive: d.app === 'gdrive' });
+        currentStatus = 'submitted';
+        renderSubmissionsPanel();
+      });
+    });
+
+    // Attach from Files (2026-10-05, per Martin): Files' "Attach to an
+    // assignment" opens this page with ?attach=<file name>&src=course|gdrive|
+    // onedrive|canva&ext=, and the file lands in Drafts, ready to Submit or
+    // Delete. Preview only (no Files API yet). The three params are dropped
+    // from the address afterwards so a reload doesn't add it again.
+    (function attachFromFiles() {
+      const name = params.get('attach');
+      if (!name) return;
+      try {
+        const u = new URL(location.href);
+        ['attach', 'src', 'ext'].forEach(k => u.searchParams.delete(k));
+        window.history.replaceState(window.history.state, '', u.pathname + u.search + u.hash);
+      } catch (e) {}
+      if (!CANVA_PREVIEW) return;
+      const src = params.get('src');
+      const app = ['course', 'gdrive', 'onedrive', 'canva'].includes(src) ? src : 'course';
+      const ext = String(params.get('ext') || (name.match(/\.([a-z0-9]+)$/i) || [0, 'pdf'])[1]).toLowerCase();
+      if (drafts.some(d => d.source === name && d.app === app)) return;
+      const d = { id: 'd' + (++draftSeq), source: name, name: name.replace(/\.[a-z0-9]+$/i, ''), edited: 'just now', app, ext, attached: true };
+      drafts.unshift(d);
+      renderDrafts();
+      const row = draftsList.querySelector(`[data-draft="${d.id}"]`);
+      if (row) { row.scrollIntoView({ block: 'center' }); pulse(row); }
+    })();
+
     // Nav — Home/Courses/Assignments are real links between real pages;
     // the rest stay visual-only placeholders until those pages exist.
     document.querySelectorAll('.nav-link').forEach(link => {
@@ -1826,6 +2414,41 @@
         closeProfileMenu();
       });
     });
+  </script>
+  <script>
+    // Back link (2026-10-01, per Martin: "where it returns to ... is always
+    // wrong"). Every page records itself in a short per-tab trail; a page's
+    // back link then says and goes to the page before it ("Back to AP
+    // Chemistry Hub", "Back to Grades"...). With no trail (the page was
+    // opened directly) the page's own default back link is left alone.
+    (function () {
+      const SELF = 'assignment.html';
+      const KEY = 'averages_nav_trail';
+      const here = SELF + location.search;
+      const label = (document.title || '').replace(/^Averages\s*[—-]\s*/, '') || 'Assignment';
+      let trail = [];
+      try { trail = JSON.parse(sessionStorage.getItem(KEY) || '[]'); } catch {}
+      if (!Array.isArray(trail)) trail = [];
+      const last = trail[trail.length - 1];
+      if (last && last.href === here) last.label = label;                 // reload
+      else if (trail.length > 1 && trail[trail.length - 2].href === here) { trail.pop(); trail[trail.length - 1].label = label; } // went back
+      else trail.push({ href: here, label });
+      trail = trail.slice(-20);
+      try { sessionStorage.setItem(KEY, JSON.stringify(trail)); } catch {}
+
+      const btn = document.querySelector('.back-link');
+      const prev = trail[trail.length - 2];
+      if (!btn || !prev) return;
+      const fresh = btn.cloneNode(false);          // same button, minus old click handlers
+      fresh.removeAttribute('onclick');
+      const icon = btn.querySelector('svg');
+      if (icon) fresh.appendChild(icon.cloneNode(true));
+      const text = document.createElement('span');
+      text.textContent = 'Back to ' + prev.label;
+      fresh.appendChild(text);
+      fresh.addEventListener('click', () => { window.location.href = prev.href; });
+      btn.replaceWith(fresh);
+    })();
   </script>
 </body>
 </html>
