@@ -66,6 +66,9 @@ const OVERRIDABLE = [
   "CONTACTS",
 ];
 
+/** A page's own name for a bundle field: home.html's sample classes are RAW_COURSES. */
+const OVERRIDABLE_ALIASES = { RAW_COURSES: "COURSES" };
+
 class TransformError extends Error {}
 
 function assertReplaced(before, after, label, file) {
@@ -200,6 +203,19 @@ function wireDataOverrides(script, file) {
       out = out.replace(
         pattern,
         `$1const ${name} = (window.__AVERAGES__ && window.__AVERAGES__.data && window.__AVERAGES__.data.${name}) || $2`
+      );
+      hits++;
+    }
+  }
+  // Home keeps its sample courses as RAW_COURSES (COURSES is the same array
+  // after customizations), so the plain pattern above never matched there and
+  // signed-in students saw the sample classes on Home. Fixed 2026-10-05.
+  for (const [local, key] of Object.entries(OVERRIDABLE_ALIASES)) {
+    const pattern = new RegExp(`(^\\s*)const ${local} = ([\\[{])`, "m");
+    if (pattern.test(out)) {
+      out = out.replace(
+        pattern,
+        `$1const ${local} = (window.__AVERAGES__ && window.__AVERAGES__.data && window.__AVERAGES__.data.${key}) || $2`
       );
       hits++;
     }
@@ -378,7 +394,7 @@ function generatePage(name, route, data) {
 
   const loginExtras = isLogin
     ? `
-import { getSession, signIn } from "./lib/averages";
+import { forgetSession, getSession, googleSignInUrl, signIn } from "./lib/averages";
 
 const ERROR_MESSAGES: Record<string, string> = {
   invalid_credentials: "That API key and secret didn't work. Double-check you copied both from your school's Schoology /api page.",
@@ -419,6 +435,14 @@ const ERROR_MESSAGES: Record<string, string> = {
         message: ERROR_MESSAGES[result.error ?? ""] ?? "Something went wrong signing in. Please try again.",
       };
     };
+
+    // Continue with Google (2026-10-05): off to the API, then Google, then
+    // back here with ?google=ok (or why not). The login script calls this.
+    (window as any).__averagesGoogleSignIn = () => {
+      window.location.href = googleSignInUrl();
+    };
+    // Back from Google signed in: don't trust an older cached "signed out".
+    if (new URLSearchParams(window.location.search).get("google") === "ok") forgetSession();
 
     // Already signed in? Don't make them do it again.
     let cancelled = false;
