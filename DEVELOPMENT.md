@@ -81,11 +81,11 @@ Each page keeps its sample data as a literal, and the port script rewrites the
 declaration to prefer live data when it exists:
 
 ```js
-const COURSES = (window.__SCHOOLAGY__ && window.__SCHOOLAGY__.data.COURSES) || [ ...sample... ];
+const COURSES = (window.__AVERAGES__ && window.__AVERAGES__.data.COURSES) || [ ...sample... ];
 ```
 
 `LegacyPage` fetches `/data/bundle` from the API and populates
-`window.__SCHOOLAGY__` **before** injecting the page script, so the page reads
+`window.__AVERAGES__` **before** injecting the page script, so the page reads
 real data on its first synchronous pass. Anything the backend doesn't supply
 falls through to the sample literal, which is why mock mode and partially-mapped
 feeds both keep working.
