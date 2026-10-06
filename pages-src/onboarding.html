@@ -745,6 +745,34 @@
     box-shadow: 0 0 0 3px var(--accent-ring);
   }
 
+  /* ---------- Integrations (Features step, 2026-10-06) ---------- */
+  .integ-row { align-items: center; }
+  .integ-status { margin: 4px 0 0; font-size: 0.76rem; font-weight: 700; color: var(--text-muted); }
+  .integ-status.on { color: #2f7d54; }
+  .integ-btn {
+    flex-shrink: 0;
+    min-height: 34px;
+    padding: 0 16px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--accent);
+    color: #ffffff;
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: filter 0.15s ease;
+  }
+  .integ-btn:hover:not([disabled]) { filter: brightness(1.12); }
+  .integ-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring); }
+  .integ-btn[disabled] { opacity: 0.55; cursor: not-allowed; }
+  .integ-btn.secondary { background: rgba(20, 21, 31, 0.1); color: var(--text-dark); }
+  .integ-soon { flex-shrink: 0; font-size: 0.78rem; font-weight: 800; color: var(--text-muted); }
+  .integ-note { margin: 8px 2px 0; font-size: 0.78rem; color: var(--text-muted); line-height: 1.4; }
+  .integ-flash { margin: 0 0 8px; padding: 8px 12px; border-radius: 10px; background: rgba(255, 255, 255, 0.55); font-size: 0.8rem; font-weight: 700; color: var(--text-dark); }
+  .integ-flash.bad { color: #b3261e; }
+  .integ-flash[hidden] { display: none; }
+
   /* ---------- Profile step ---------- */
 
   .field-label {
@@ -2179,6 +2207,212 @@
       featuresList.appendChild(block);
     });
 
+    // ---------- Integrations (2026-10-06, per Martin) ----------
+    // Above Performance in the Features list. Same apps and wording as
+    // Settings > Integrations; see that page for the full story. Canva
+    // connects in a new tab so nothing picked here is lost.
+    const integrations = (function () {
+      const APPS = [
+        { id: 'canva', name: 'Canva', desc: 'Edit assignment files in Canva, then turn them in from Drafts.' },
+        { id: 'gdrive', name: 'Google Drive', desc: 'Edit Word, PowerPoint and Excel files in Google Docs, Slides and Sheets, and add files from Drive.' },
+        { id: 'onedrive', name: 'OneDrive', desc: 'Save course files to OneDrive and find them on the Files tab.' },
+      ];
+      const MODE = window.__AVERAGES_MODE__;          // undefined in the preview
+      const PREVIEW = !MODE;
+      const LIVE = MODE === 'live';
+      const INCOG = window.__AVERAGES_INCOGNITO__ || null;
+      const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+      const apiBase = () => (window.location.hostname.endsWith('averages.io') ? 'https://api.averages.io' : 'http://localhost:8787');
+
+      const block = document.createElement('div');
+      block.className = 'feature-category';
+      block.id = 'integrationsCategory';
+      block.innerHTML = '<div class="category-title">Integrations</div><p class="integ-flash" role="status" hidden></p><div class="integ-list"></div>'
+        + '<p class="integ-note">Averages only gets what you allow. You can connect or disconnect these any time in Settings.</p>';
+      // Above Performance (and below Sync & Privacy).
+      const perf = [...featuresList.querySelectorAll('.feature-category')].find(b => {
+        const title = b.querySelector('.category-title');
+        return title && title.textContent === 'Performance';
+      });
+      featuresList.insertBefore(block, perf || null);
+      const list = block.querySelector('.integ-list');
+      const flash = block.querySelector('.integ-flash');
+      function showFlash(text, bad) { flash.textContent = text; flash.classList.toggle('bad', !!bad); flash.hidden = false; }
+
+      const previewOn = new Set();
+      // Signed in. canva: loading | ready | unconfigured | error; cloud: loading | ready | error
+      const canva = { state: 'loading', connected: false, name: '', waiting: false };
+      const cloud = { state: 'loading', cfg: { google: null, microsoft: null }, busy: {} };
+      const connectedHere = new Set();   // connected during onboarding (undone if they switch to Incognito)
+      const C = () => window.AveragesCloud || null;
+
+      function row(a, status, action) {
+        return `<div class="feature-row integ-row" data-app="${a.id}">
+            <div class="feature-text">
+              <p class="feature-title">${esc(a.name)}</p>
+              <p class="feature-desc">${esc(a.desc)}</p>
+              ${status ? `<p class="integ-status${status.on ? ' on' : ''}">${esc(status.text)}</p>` : ''}
+            </div>
+            ${action}
+          </div>`;
+      }
+      const btn = (act, app, label, opts = {}) => `<button class="integ-btn${opts.secondary ? ' secondary' : ''}" type="button" data-integ-act="${act}" data-app="${app}" aria-label="${esc(label + ' ' + opts.name)}"${opts.disabled ? ' disabled' : ''}>${esc(label)}</button>`;
+      const SOON = '<span class="integ-soon">Coming soon</span>';
+
+      function rowFor(a) {
+        if (PREVIEW) {
+          const on = previewOn.has(a.id);
+          return row(a, { text: on ? 'Connected' : 'Not connected', on }, btn(on ? 'preview-off' : 'preview-on', a.id, on ? 'Disconnect' : 'Connect', { name: a.name, secondary: on }));
+        }
+        if (!LIVE) return row(a, null, SOON);   // demo
+        if (a.id === 'canva') {
+          if (canva.state === 'loading') return row(a, { text: 'Checking…' }, btn('none', a.id, 'Connect', { name: a.name, disabled: true }));
+          if (canva.state === 'unconfigured') return row(a, null, SOON);
+          if (canva.state === 'error') return row(a, { text: 'Couldn’t check right now' }, btn('canva-retry', a.id, 'Try again', { name: a.name, secondary: true }));
+          if (canva.connected) return row(a, { text: `Connected${canva.name ? ' as ' + canva.name : ''}`, on: true }, '');
+          if (canva.waiting) return row(a, { text: 'Finish in the Canva tab, then come back here.' }, btn('canva-check', a.id, 'I’m done', { name: a.name, secondary: true }));
+          return row(a, { text: 'Not connected' }, btn('canva-connect', a.id, 'Connect', { name: a.name }));
+        }
+        const configured = a.id === 'gdrive' ? !!cloud.cfg.google : !!cloud.cfg.microsoft;
+        if (cloud.state === 'loading') return row(a, { text: 'Checking…' }, btn('none', a.id, 'Connect', { name: a.name, disabled: true }));
+        if (cloud.state === 'error') return row(a, { text: 'Couldn’t check right now' }, btn('cloud-retry', a.id, 'Try again', { name: a.name, secondary: true }));
+        if (!configured) return row(a, null, SOON);
+        const acct = C() ? C().accounts()[a.id] : null;
+        if (acct) {
+          const who = acct.email || acct.username || acct.name || '';
+          return row(a, { text: `Connected${who ? ' as ' + who : ''}`, on: true }, '');
+        }
+        const busy = !!cloud.busy[a.id];
+        return row(a, { text: busy ? 'Connecting…' : 'Not connected' }, btn('cloud-connect', a.id, 'Connect', { name: a.name, disabled: busy }));
+      }
+      function render() { list.innerHTML = APPS.map(rowFor).join(''); }
+      function focusRow(app) { const b = list.querySelector(`[data-app="${app}"] .integ-btn`); if (b) b.focus(); }
+
+      async function loadCanva() {
+        canva.state = 'loading';
+        render();
+        try {
+          const res = await fetch(apiBase() + '/canva/status', { credentials: 'include' });
+          if (!res.ok) throw new Error('status ' + res.status);
+          const j = await res.json();
+          canva.state = j.configured === false ? 'unconfigured' : 'ready';
+          const was = canva.connected;
+          canva.connected = !!j.connected;
+          canva.name = String(j.name || '');
+          if (canva.connected) {
+            if (canva.waiting || (!was && connectedHere.has('canva-pending'))) { connectedHere.add('canva'); showFlash('Canva is connected.'); }
+            canva.waiting = false;
+          }
+        } catch {
+          canva.state = 'error';
+        }
+        render();
+      }
+      function loadCloudScript() {
+        return new Promise((resolve, reject) => {
+          if (window.AveragesCloud) { resolve(window.AveragesCloud); return; }
+          const sc = document.createElement('script');
+          sc.src = '/js/averages-cloud.js';
+          sc.onload = () => (window.AveragesCloud ? resolve(window.AveragesCloud) : reject(new Error('cloud')));
+          sc.onerror = () => reject(new Error('cloud'));
+          document.head.appendChild(sc);
+        });
+      }
+      async function loadCloud() {
+        cloud.state = 'loading';
+        render();
+        try {
+          const K = await loadCloudScript();
+          const cfg = await K.config();
+          if (cfg.failed) throw new Error('config');
+          cloud.cfg = cfg;
+          cloud.state = 'ready';
+          // Google's sign-in script loads now, so Connect can open its window straight away.
+          if (cfg.google) K.prepareGoogle().catch(() => {});
+        } catch {
+          cloud.state = 'error';
+        }
+        render();
+      }
+
+      list.addEventListener('click', e => {
+        const b = e.target.closest('[data-integ-act]');
+        if (!b || b.disabled) return;
+        const app = b.dataset.app, act = b.dataset.integAct;
+        if (act === 'preview-on' || act === 'preview-off') {
+          if (act === 'preview-on') previewOn.add(app); else previewOn.delete(app);
+          render();
+          focusRow(app);
+          return;
+        }
+        if (act === 'canva-retry' || act === 'canva-check') { loadCanva().then(() => focusRow('canva')); return; }
+        if (act === 'canva-connect') {
+          // A new tab, so this one keeps everything picked so far. It comes
+          // back to Settings when Canva is done; this tab re-checks on return.
+          const w = window.open(apiBase() + '/canva/connect?return_to=' + encodeURIComponent('/settings'), '_blank');
+          if (!w) { showFlash('Your browser blocked the Canva tab. Allow pop-ups for Averages, or connect Canva later in Settings.', true); return; }
+          canva.waiting = true;
+          connectedHere.add('canva-pending');
+          flash.hidden = true;
+          render();
+          focusRow('canva');
+          return;
+        }
+        if (act === 'cloud-retry') { loadCloud(); return; }
+        if (act !== 'cloud-connect') return;
+        const K = C();
+        if (!K) { showFlash('Still loading. Try again in a second.', true); return; }
+        if (app === 'gdrive' && !K.googleReady()) {
+          K.prepareGoogle().catch(() => {});
+          showFlash(K.messageFor('not_ready'), true);
+          return;
+        }
+        // Opens the sign-in window inside this click: nothing is awaited first.
+        const pending = app === 'gdrive' ? K.connectGoogle() : K.connectOneDrive();
+        cloud.busy[app] = true;
+        flash.hidden = true;
+        render();
+        pending
+          .then(() => { connectedHere.add(app); showFlash(`${app === 'gdrive' ? 'Google Drive' : 'OneDrive'} is connected.`); })
+          .catch(err => showFlash(K.messageFor(err), !err || err.code !== 'popup_closed'))
+          .finally(() => { cloud.busy[app] = false; render(); focusRow(app); });
+      });
+
+      let started = false;
+      function start() {
+        if (started) return;
+        started = true;
+        render();
+        if (!LIVE) return;
+        loadCanva();
+        loadCloud();
+        // Back from the Canva tab (or a drive changed in another tab): check again.
+        document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && canva.waiting) loadCanva(); });
+        window.addEventListener('focus', () => { if (canva.waiting) loadCanva(); });
+        window.addEventListener('averages-cloud-change', () => { if (cloud.state === 'ready') render(); });
+      }
+
+      // Incognito: connected apps are off. Hide the group, and undo anything
+      // connected during onboarding (Canva lives on our servers).
+      function setIncognito(on) {
+        block.hidden = on;
+        if (!on) { start(); render(); return; }
+        previewOn.clear();
+        if (!LIVE) return;
+        const K = C();
+        if (K && connectedHere.has('gdrive')) K.disconnectGoogle();
+        if (K && connectedHere.has('onedrive')) K.disconnectOneDrive();
+        if (connectedHere.has('canva') || canva.waiting) {
+          fetch(apiBase() + '/canva/connection', { method: 'DELETE', credentials: 'include' }).catch(() => {});
+          canva.connected = false;
+          canva.waiting = false;
+        }
+        connectedHere.clear();
+      }
+      if (INCOG && INCOG.locked) block.hidden = true;
+      return { setIncognito };
+    })();
+
     // Potato PC Mode is wired up for real (see body.potato-mode rules in
     // <style>) rather than just sitting there as a label, since this is
     // the one feature toggle whose whole point is something you can
@@ -2225,6 +2459,8 @@
           if (incognito) block.querySelectorAll('input[type="checkbox"]').forEach(c => { c.checked = false; });
         }
       });
+      // Integrations: not in Incognito either (2026-10-06).
+      integrations.setIncognito(incognito);
       // Email: not in Incognito.
       const emailBlock = document.getElementById('emailBlock');
       if (emailBlock) {

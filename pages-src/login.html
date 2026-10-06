@@ -6,6 +6,7 @@
 <title>Averages — Sign In</title>
 <link rel="stylesheet" href="https://use.typekit.net/gsk6off.css">
 <style>
+
   :root {
     /* Accent color system — swap this one value to re-theme the whole app */
     --accent: #3d3f9e;
@@ -388,52 +389,317 @@
   }
   .tooltip.show { display: block; }
 
-  /* ---------- Sign-in redo (2026-10-04): one centered card ---------- */
+
+  /* ---------- Sign-in by LMS (draft, 2026-10-06, from Martin's "Select your
+     LMS" mock): one card with a grey title band, three screens inside it.
+     1. Select your platform: Schoology, Canvas, Google Classroom (read only).
+     2. Schoology / Canvas: search your school on the left, the picked school
+        on the right with the 13+ check and Log in with Schoology / Canvas.
+        Not every school uses SSO: the button sends the student to their
+        school's own Schoology or Canvas sign-in page, which shows whatever
+        that school uses (its SSO, or a Schoology/Canvas password). The
+        password is never typed into Averages.io.
+     3. Google Classroom: the 13+ check and Continue with Google.
+     Screens are hash routes (#schoology, #canvas, #google) so the browser's
+     Back button walks back through them. ---------- */
+  :root {
+    --band-bg: #76777c;
+    --band-text: #0d0e14;
+    --sheet-bg: #c9d0da;
+    --sheet-text: #14151f;
+    --sheet-muted: #3a4260;
+    --lms-schoology: #0a1d9e;
+    --lms-canvas: #1e1d66;
+    --lms-classroom: #0619a8;
+    --sso-bg: #0a1d9e;
+  }
   .page { justify-content: center; align-items: center; flex-direction: column; gap: 14px; }
-  .signin-card { width: 100%; max-width: 400px; background: var(--card-bg); border-radius: 24px; padding: 36px 32px 28px; text-align: center; box-shadow: 0 30px 70px -30px rgba(0,0,0,0.55); }
-  .signin-logo { width: 56px; height: 56px; display: block; margin: 0 auto 18px; }
-  .signin-title { margin: 0; font-size: 1.75rem; font-weight: 800; color: var(--text-dark); letter-spacing: -0.02em; }
-  .signin-sub { margin: 6px 0 24px; font-size: 0.95rem; font-weight: 600; color: var(--text-muted); }
-  .signin-buttons { display: flex; flex-direction: column; gap: 12px; }
-  .age-check { display: flex; align-items: center; justify-content: center; gap: 10px; margin: -6px 0 18px; font-size: 0.9rem; font-weight: 700; color: var(--text-dark); cursor: pointer; user-select: none; }
-  .age-check input { appearance: none; -webkit-appearance: none; flex: none; width: 22px; height: 22px; margin: 0; border-radius: 50%; border: 2px solid #b9bbc8; background: #ffffff; cursor: pointer; display: grid; place-items: center; transition: background-color 0.15s ease, border-color 0.15s ease; }
-  .age-check input:checked { background: var(--accent-dark); border-color: var(--accent-dark); }
-  .age-check input:hover:not(:checked) { border-color: #8e90a3; }
-  @media (prefers-reduced-motion: reduce) { .age-check input { transition: none; } }
-  .age-check input:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring); border-radius: 4px; }
-  .btn.sso { margin: 0; display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 52px; border-radius: 999px; font-size: 0.98rem; }
-  .btn.sso.light { background: #ffffff; color: #1f1f1f; border: 1px solid #c9cad3; }
-  .btn.sso.light:hover { filter: none; background: #f6f6f8; }
-  .btn.sso:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring); }
-  .btn.sso.busy { pointer-events: none; opacity: 0.8; }
-  .sso-caption { margin: -4px 0 0; font-size: 0.76rem; font-weight: 600; color: var(--text-muted); }
-  .signin-note { margin: 16px 0 0; padding: 10px 14px; border-radius: 12px; background: rgb(from var(--accent) r g b / 0.10); color: var(--text-dark); font-size: 0.82rem; font-weight: 700; line-height: 1.4; }
+  .lms-card {
+    width: 100%;
+    max-width: 780px;
+    border-radius: 36px;
+    overflow: hidden;
+    background: var(--sheet-bg);
+    box-shadow: 0 34px 60px -34px rgba(0, 0, 20, 0.85);
+  }
+  .screen[hidden] { display: none; }
+  .screen { animation: screenIn 0.22s ease both; }
+  @keyframes screenIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { .screen { animation: none; } }
+
+  /* Title band */
+  .lms-band {
+    background: var(--band-bg);
+    color: var(--band-text);
+    padding: 22px 44px 18px;
+    min-height: 92px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 6px;
+  }
+  .lms-logo { width: 36px; height: 36px; display: block; margin-left: 2px; }
+  .lms-title { margin: 0; font-size: 1.05rem; font-weight: 800; letter-spacing: -0.01em; outline: none; }
+  .lms-band.big .lms-title { font-size: 1.85rem; letter-spacing: -0.02em; }
+  .lms-back {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 2px -6px;
+    padding: 4px 8px 4px 4px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--band-text);
+    font: inherit;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .lms-back svg { width: 20px; height: 20px; display: block; }
+  .lms-back:hover { background: rgba(255, 255, 255, 0.14); }
+  .lms-back:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.55); }
+
+  /* Body sheet */
+  .lms-sheet { padding: 28px 36px 34px; color: var(--sheet-text); min-height: 260px; }
+  .lms-prompt { margin: 6px 0 22px; text-align: center; font-size: 1.05rem; font-weight: 800; }
+  .lms-choices { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .lms-btn {
+    min-height: 54px;
+    padding: 8px 18px;
+    border: 0;
+    border-radius: 999px;
+    color: #ffffff;
+    font: inherit;
+    font-size: 1.05rem;
+    font-weight: 800;
+    line-height: 1.1;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: filter 0.15s ease, transform 0.08s ease;
+  }
+  .lms-btn small { font-size: 0.7rem; font-weight: 700; opacity: 0.92; margin-top: 2px; }
+  .lms-btn:hover { filter: brightness(1.15); }
+  .lms-btn:active { transform: scale(0.985); }
+  .lms-btn:focus-visible, .lms-sso:focus-visible { outline: none; box-shadow: 0 0 0 3px #ffffff, 0 0 0 6px var(--lms-schoology); }
+  .lms-btn[data-lms="schoology"] { background: var(--lms-schoology); }
+  .lms-btn[data-lms="canvas"] { background: var(--lms-canvas); }
+  .lms-btn[data-lms="google"] { background: var(--lms-classroom); }
+  .lms-legal { margin: 22px 8px 0; font-size: 0.92rem; font-weight: 700; color: var(--sheet-muted); }
+  .lms-legal a, .lms-missing a { color: #0b2fb8; font-weight: 800; text-decoration: underline; text-underline-offset: 2px; }
+
+  /* School screens: search left, picked school right */
+  .school-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 0.82fr); gap: 28px; align-items: start; }
+  .school-search { position: relative; }
+  .school-input {
+    width: 100%;
+    height: 50px;
+    padding: 0 18px;
+    border: 0;
+    border-radius: 999px;
+    background: #ffffff;
+    color: var(--sheet-text);
+    font: inherit;
+    font-size: 1rem;
+    font-weight: 700;
+  }
+  .school-input::placeholder { color: #14151f; opacity: 0.9; }
+  .school-input:focus { outline: none; box-shadow: 0 0 0 3px var(--accent-ring); }
+  .school-input::-webkit-search-cancel-button { cursor: pointer; }
+  .school-results { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; max-height: 236px; overflow-y: auto; }
+  .school-results:empty { display: none; }
+  .school-option {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 10px 16px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.55);
+    cursor: pointer;
+  }
+  .school-option:hover, .school-option.active { background: #ffffff; }
+  /* Picked = white with a check (selection is a tint plus a mark, never a colored border). */
+  .school-option { position: relative; padding-right: 44px; }
+  .school-option[aria-selected="true"] { background: #ffffff; }
+  .school-option[aria-selected="true"]::after { content: ""; position: absolute; right: 18px; top: 50%; width: 12px; height: 7px; border: solid var(--sso-bg); border-width: 0 0 3px 3px; transform: translateY(-70%) rotate(-45deg); }
+  .school-option .o-name { font-weight: 800; font-size: 0.95rem; }
+  .school-option mark { background: rgba(10, 29, 158, 0.13); color: inherit; border-radius: 4px; padding: 0 1px; }
+  .school-option .o-domain { font-weight: 600; font-size: 0.82rem; color: var(--sheet-muted); }
+  .school-hint { margin: 12px 4px 0; font-size: 0.86rem; font-weight: 600; color: var(--sheet-muted); line-height: 1.45; }
+  .school-hint:empty { display: none; }
+  .school-hint button { border: 0; background: none; padding: 0; font: inherit; color: #0b2fb8; font-weight: 800; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+  .age-row { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
+  .age-why { border: 0; background: rgba(255, 255, 255, 0.55); color: var(--sheet-text); font: inherit; font-size: 0.78rem; font-weight: 800; padding: 4px 10px; border-radius: 999px; cursor: pointer; }
+  .age-why:hover { background: #ffffff; }
+  .age-why:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring); }
+  .age-note { margin: 0; max-width: 320px; font-size: 0.82rem; font-weight: 600; color: var(--sheet-muted); line-height: 1.45; }
+  .age-note[hidden] { display: none; }
+
+  .school-pick { text-align: center; padding-top: 18px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .pick-name { margin: 0; font-size: 1rem; font-weight: 700; color: var(--sheet-muted); }
+  .pick-domain { margin: 0; font-size: 1.15rem; font-weight: 800; color: var(--sheet-text); word-break: break-all; }
+  .school-pick.empty .pick-domain { font-size: 0.92rem; font-weight: 600; color: var(--sheet-muted); }
+  .age-check { display: inline-flex; align-items: center; gap: 12px; margin: 6px 0 4px; font-size: 1rem; font-weight: 700; color: var(--sheet-text); cursor: pointer; user-select: none; }
+  .age-check input { appearance: none; -webkit-appearance: none; flex: none; width: 26px; height: 26px; margin: 0; border-radius: 50%; border: 2px solid #8b92a8; background: #ffffff; cursor: pointer; display: grid; place-items: center; transition: background-color 0.15s ease, border-color 0.15s ease; }
+  .age-check input:checked { background: var(--sso-bg); border-color: var(--sso-bg); }
+  .age-check input:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring); }
+  .lms-sso {
+    width: 100%;
+    max-width: 300px;
+    min-height: 50px;
+    padding: 10px 22px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--sso-bg);
+    color: #ffffff;
+    font: inherit;
+    font-size: 1.1rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: filter 0.15s ease, opacity 0.15s ease;
+  }
+  .lms-sso:hover:not([disabled]) { filter: brightness(1.15); }
+  .lms-sso[disabled] { opacity: 0.45; cursor: not-allowed; }
+  .lms-sso.busy { pointer-events: none; opacity: 0.8; }
+  .lms-sso.google { background: #ffffff; color: #1f1f1f; box-shadow: inset 0 0 0 1px #b9bdc9; }
+  .lms-sso.google:hover { filter: none; background: #f4f5f8; }
+  .signin-note { margin: 4px 0 0; padding: 10px 14px; border-radius: 14px; background: rgba(255, 255, 255, 0.6); color: var(--sheet-text); font-size: 0.86rem; font-weight: 700; line-height: 1.4; max-width: 320px; }
   .signin-note[hidden] { display: none; }
-  .signin-legal { margin: 22px 0 0; font-size: 0.74rem; font-weight: 600; color: var(--text-muted); line-height: 1.5; }
-  .signin-legal a, .signin-foot a { color: inherit; font-weight: 800; text-decoration: underline; text-underline-offset: 2px; }
+  .lms-missing { margin: 30px 8px 0; text-align: center; font-size: 0.95rem; font-weight: 700; color: var(--sheet-text); line-height: 1.5; }
+  .lms-missing[hidden] { display: none; }
+  .lms-missing button { border: 0; background: none; padding: 0; font: inherit; color: #0b2fb8; font-weight: 800; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+
+  /* Google Classroom screen */
+  .google-pane { max-width: 420px; margin: 0 auto; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 12px; padding-top: 6px; }
+  .google-pane p { margin: 0; font-size: 0.95rem; font-weight: 600; color: var(--sheet-muted); line-height: 1.5; }
+  .google-pane .ro { font-weight: 800; color: var(--sheet-text); }
+
+  /* Email Template sheet (Canvas) */
+  .tpl-overlay { position: fixed; inset: 0; background: rgba(5, 8, 40, 0.55); display: grid; place-items: center; padding: 20px; z-index: 50; }
+  .tpl-overlay[hidden] { display: none; }
+  .tpl-modal { width: 100%; max-width: 520px; background: #f2f2f4; border-radius: 24px; padding: 24px; box-shadow: 0 30px 70px -30px rgba(0, 0, 0, 0.6); }
+  .tpl-modal h2 { margin: 0 0 6px; font-size: 1.2rem; font-weight: 800; color: var(--text-dark); }
+  .tpl-modal p { margin: 0 0 12px; font-size: 0.88rem; font-weight: 600; color: var(--text-muted); line-height: 1.45; }
+  .tpl-text { width: 100%; min-height: 220px; padding: 12px 14px; border-radius: 14px; border: 1px solid #d3d3da; background: #ffffff; font: inherit; font-size: 0.88rem; line-height: 1.5; color: var(--text-dark); resize: vertical; }
+  .tpl-text:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-ring); }
+  .tpl-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 14px; flex-wrap: wrap; }
+  .tpl-actions button, .tpl-actions a { min-height: 42px; padding: 0 18px; border-radius: 999px; border: 0; font: inherit; font-size: 0.92rem; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; text-decoration: none; }
+  .tpl-close { background: #e2e3ea; color: var(--text-dark); }
+  .tpl-copy, .tpl-mail { background: var(--sso-bg); color: #ffffff; }
+
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
   .signin-foot { margin: 0; font-size: 0.78rem; font-weight: 700; color: rgba(255,255,255,0.82); text-align: center; }
-  .dev-keys { margin-top: 22px; padding-top: 18px; border-top: 1px solid rgba(20,21,31,0.12); text-align: left; }
+  .signin-foot a { color: inherit; font-weight: 800; text-decoration: underline; text-underline-offset: 2px; }
+  .dev-keys { margin-top: 26px; padding-top: 18px; border-top: 1px solid rgba(20,21,31,0.14); max-width: 420px; margin-left: auto; margin-right: auto; }
   .dev-keys[hidden] { display: none; }
-  .dev-keys-label { margin: 0 0 10px; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); text-align: center; }
+  .dev-keys-label { margin: 0 0 10px; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--sheet-muted); text-align: center; }
   .dev-keys .btn { border-radius: 999px; }
-  @media (max-width: 480px) { .signin-card { padding: 30px 22px 24px; } .signin-title { font-size: 1.55rem; } }
+
+  /* Bigger on computers (2026-10-06, per Martin): the card grows with the
+     window up to 1120px wide, and everything inside scales with it. */
+  @media (min-width: 900px) {
+    .scroll-frame { max-width: 1180px; }
+    .lms-card { max-width: min(1120px, 88vw); border-radius: 44px; }
+    .lms-band { padding: 30px 60px 24px; min-height: 128px; gap: 8px; }
+    .lms-logo { width: 48px; height: 48px; }
+    .lms-title { font-size: 1.4rem; }
+    .lms-band.big .lms-title { font-size: 2.5rem; }
+    .lms-back { font-size: 1.15rem; }
+    .lms-back svg { width: 24px; height: 24px; }
+    .lms-sheet { padding: 40px 52px 48px; min-height: 360px; }
+    .lms-prompt { font-size: 1.45rem; margin: 10px 0 32px; }
+    .lms-choices { gap: 16px; }
+    .lms-btn { min-height: 74px; font-size: 1.4rem; }
+    .lms-btn small { font-size: 0.85rem; }
+    .lms-legal { font-size: 1.12rem; margin-top: 30px; }
+    .school-grid { gap: 44px; }
+    .school-input { height: 64px; padding: 0 26px; font-size: 1.2rem; }
+    .school-results { gap: 8px; max-height: 320px; }
+    .school-option { padding: 14px 22px; padding-right: 52px; border-radius: 20px; }
+    .school-option .o-name { font-size: 1.1rem; }
+    .school-option .o-domain { font-size: 0.95rem; }
+    .school-hint { font-size: 1rem; }
+    .school-pick { gap: 14px; padding-top: 22px; }
+    .pick-name { font-size: 1.2rem; }
+    .pick-domain { font-size: 1.4rem; }
+    .school-pick.empty .pick-domain { font-size: 1.05rem; }
+    .age-check { font-size: 1.2rem; gap: 14px; }
+    .age-check input { width: 32px; height: 32px; }
+    .age-why { font-size: 0.9rem; padding: 6px 14px; }
+    .age-note { font-size: 0.95rem; max-width: 400px; }
+    .lms-sso { max-width: 380px; min-height: 64px; font-size: 1.3rem; }
+    .signin-note { font-size: 0.98rem; max-width: 400px; }
+    .lms-missing { font-size: 1.1rem; margin-top: 40px; }
+    .google-pane { max-width: 520px; gap: 16px; }
+    .google-pane p { font-size: 1.1rem; }
+    .signin-foot { font-size: 0.9rem; }
+  }
+  @media (min-width: 1600px) {
+    .scroll-frame { max-width: 1480px; }
+    .lms-card { max-width: min(1400px, 76vw); border-radius: 52px; }
+    .lms-band { padding: 36px 72px 28px; min-height: 150px; }
+    .lms-logo { width: 56px; height: 56px; }
+    .lms-title { font-size: 1.65rem; }
+    .lms-band.big .lms-title { font-size: 3rem; }
+    .lms-back { font-size: 1.3rem; }
+    .lms-sheet { padding: 48px 64px 56px; min-height: 420px; }
+    .lms-prompt { font-size: 1.7rem; margin-bottom: 38px; }
+    .lms-btn { min-height: 86px; font-size: 1.65rem; }
+    .lms-btn small { font-size: 0.95rem; }
+    .lms-legal { font-size: 1.3rem; }
+    .school-input { height: 74px; font-size: 1.4rem; padding: 0 30px; }
+    .school-option .o-name { font-size: 1.25rem; }
+    .school-option .o-domain { font-size: 1.05rem; }
+    .school-hint { font-size: 1.15rem; }
+    .pick-name { font-size: 1.4rem; }
+    .pick-domain { font-size: 1.65rem; }
+    .school-pick.empty .pick-domain { font-size: 1.2rem; }
+    .age-check { font-size: 1.4rem; }
+    .age-check input { width: 36px; height: 36px; }
+    .age-why { font-size: 1rem; }
+    .age-note { font-size: 1.08rem; max-width: 460px; }
+    .lms-sso { max-width: 440px; min-height: 74px; font-size: 1.5rem; }
+    .lms-missing { font-size: 1.28rem; }
+    .google-pane { max-width: 620px; }
+    .google-pane p { font-size: 1.28rem; }
+  }
+  @media (max-width: 680px) {
+    body { padding: 16px; }
+    .lms-card { border-radius: 28px; }
+    .lms-band { padding: 18px 24px 16px; min-height: 0; }
+    .lms-band.big .lms-title { font-size: 1.5rem; }
+    .lms-sheet { padding: 22px 20px 26px; min-height: 0; }
+    .lms-choices { grid-template-columns: 1fr; }
+    .school-grid { grid-template-columns: 1fr; gap: 18px; }
+    .school-pick { padding-top: 4px; }
+    .lms-missing { margin-top: 22px; }
+  }
 </style>
 </head>
 <body>
   <div class="scroll-frame">
   <div class="page">
-    <main class="signin-card" aria-labelledby="signinTitle">
-      <svg class="signin-logo" aria-hidden="true" focusable="false" viewBox="-8 -8 470 470"><defs><linearGradient id="signinLogoGrad" x1="0" y1="0" x2="0" y2="454" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FF7A50"/><stop offset="1" stop-color="#E5484D"/></linearGradient></defs><path fill="url(#signinLogoGrad)" fill-rule="evenodd" d="M0.02 452.75C0.15 442.97 5.78 407.10 10.02 389.00C11.63 382.12 15.00 367.50 17.51 356.50C28.03 310.27 40.89 265.53 58.60 213.50C77.33 158.47 85.57 136.89 103.25 96.50C118.88 60.79 129.55 39.21 141.04 20.00C144.17 14.78 147.92 8.14 149.38 5.25L152.03 0.00L226.00 0.00L299.97 0.00L302.62 5.25C304.08 8.14 307.83 14.78 310.96 20.00C322.28 38.92 336.94 68.63 348.06 95.18C350.75 101.61 354.55 110.26 356.49 114.41C367.49 137.90 397.74 222.92 410.96 267.50C419.09 294.91 429.04 332.52 434.49 356.50C437.00 367.50 440.37 382.12 441.98 389.00C446.22 407.10 451.85 442.97 451.98 452.75C452.00 453.74 436.27 454.00 376.64 454.00L301.28 454.00L299.60 442.75C296.88 424.51 291.11 392.27 288.63 381.50L286.34 371.50L223.34 371.24L160.34 370.99L158.19 380.33C155.44 392.33 149.65 424.19 147.53 439.00C146.63 445.32 145.66 451.29 145.38 452.25C144.90 453.90 140.55 454.00 72.43 454.00C15.14 454.00 0.00 453.74 0.02 452.75ZM184.00 348.25C189.69 345.41 191.44 335.66 187.41 329.29C184.35 324.47 172.42 324.01 167.19 328.51C164.78 330.58 164.50 331.51 164.50 337.31C164.50 344.14 166.09 347.25 170.50 349.05C173.93 350.46 180.35 350.07 184.00 348.25ZM274.28 347.02C284.17 342.33 288.64 332.80 287.74 318.33C286.79 303.07 279.66 295.00 265.16 292.75C256.25 291.37 245.93 293.01 240.22 296.71C232.38 301.79 228.36 311.77 229.23 323.96C230.09 335.93 235.58 344.50 244.50 347.78C249.77 349.72 251.32 349.90 260.50 349.59C267.31 349.35 270.66 348.73 274.28 347.02ZM220.00 325.25L220.00 301.50L209.50 301.50L199.00 301.50L199.00 325.25L199.00 349.00L209.50 349.00L220.00 349.00L220.00 325.25ZM252.40 330.90C250.89 329.22 250.50 327.26 250.50 321.31C250.50 314.35 250.70 313.66 253.31 311.41C256.89 308.33 260.44 308.35 263.55 311.45C265.70 313.61 266.00 314.79 266.00 321.23C266.00 330.70 264.56 333.00 258.60 333.00C255.51 333.00 253.78 332.41 252.40 330.90ZM218.38 292.67C221.03 290.93 222.25 286.49 221.33 281.90C220.47 277.58 215.94 275.01 209.18 275.00C200.42 275.00 197.08 277.76 197.03 285.08C197.01 288.68 197.53 290.15 199.48 291.98C203.75 295.99 212.81 296.32 218.38 292.67ZM258.58 254.35C258.23 253.44 256.13 245.45 253.90 236.60C244.34 198.58 227.57 140.97 224.09 134.18L222.37 130.84L216.22 150.67C207.52 178.73 204.15 190.56 195.49 223.50C191.29 239.45 187.63 253.29 187.36 254.25C186.90 255.89 189.07 256.00 223.04 256.00C256.26 256.00 259.16 255.87 258.58 254.35Z"/></svg>
-      <h1 class="signin-title" id="signinTitle">Welcome back</h1>
-      <p class="signin-sub">Sign in with your school account.</p>
-      <label class="age-check"><input type="checkbox" id="age13"> I'm 13 or older</label>
-      <div class="signin-buttons">
-        <button class="btn sso" type="button" data-provider="schoology"><span class="sso-label">Continue with Schoology</span></button>
-        <button class="btn sso light" type="button" data-provider="google"><span class="sso-label">Continue with Google</span></button>
-        <p class="sso-caption">Use Google if your school uses Google Classroom.</p>
-      </div>
-      <p class="signin-note" id="ssoNote" role="status" hidden></p>
-      <section class="dev-keys" id="devKeys" aria-label="Sign in with an API key" hidden>
+    <main class="lms-card">
+
+      <!-- 1. Select your platform -->
+      <section class="screen" id="screenChoose" aria-labelledby="chooseTitle">
+        <header class="lms-band">
+          <svg class="lms-logo" aria-hidden="true" focusable="false" viewBox="-8 -8 470 470"><defs><linearGradient id="lmsLogoGrad" x1="0" y1="0" x2="0" y2="454" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FF7A50"/><stop offset="1" stop-color="#E5484D"/></linearGradient></defs><path fill="url(#lmsLogoGrad)" fill-rule="evenodd" d="M0.02 452.75C0.15 442.97 5.78 407.10 10.02 389.00C11.63 382.12 15.00 367.50 17.51 356.50C28.03 310.27 40.89 265.53 58.60 213.50C77.33 158.47 85.57 136.89 103.25 96.50C118.88 60.79 129.55 39.21 141.04 20.00C144.17 14.78 147.92 8.14 149.38 5.25L152.03 0.00L226.00 0.00L299.97 0.00L302.62 5.25C304.08 8.14 307.83 14.78 310.96 20.00C322.28 38.92 336.94 68.63 348.06 95.18C350.75 101.61 354.55 110.26 356.49 114.41C367.49 137.90 397.74 222.92 410.96 267.50C419.09 294.91 429.04 332.52 434.49 356.50C437.00 367.50 440.37 382.12 441.98 389.00C446.22 407.10 451.85 442.97 451.98 452.75C452.00 453.74 436.27 454.00 376.64 454.00L301.28 454.00L299.60 442.75C296.88 424.51 291.11 392.27 288.63 381.50L286.34 371.50L223.34 371.24L160.34 370.99L158.19 380.33C155.44 392.33 149.65 424.19 147.53 439.00C146.63 445.32 145.66 451.29 145.38 452.25C144.90 453.90 140.55 454.00 72.43 454.00C15.14 454.00 0.00 453.74 0.02 452.75ZM184.00 348.25C189.69 345.41 191.44 335.66 187.41 329.29C184.35 324.47 172.42 324.01 167.19 328.51C164.78 330.58 164.50 331.51 164.50 337.31C164.50 344.14 166.09 347.25 170.50 349.05C173.93 350.46 180.35 350.07 184.00 348.25ZM274.28 347.02C284.17 342.33 288.64 332.80 287.74 318.33C286.79 303.07 279.66 295.00 265.16 292.75C256.25 291.37 245.93 293.01 240.22 296.71C232.38 301.79 228.36 311.77 229.23 323.96C230.09 335.93 235.58 344.50 244.50 347.78C249.77 349.72 251.32 349.90 260.50 349.59C267.31 349.35 270.66 348.73 274.28 347.02ZM220.00 325.25L220.00 301.50L209.50 301.50L199.00 301.50L199.00 325.25L199.00 349.00L209.50 349.00L220.00 349.00L220.00 325.25ZM252.40 330.90C250.89 329.22 250.50 327.26 250.50 321.31C250.50 314.35 250.70 313.66 253.31 311.41C256.89 308.33 260.44 308.35 263.55 311.45C265.70 313.61 266.00 314.79 266.00 321.23C266.00 330.70 264.56 333.00 258.60 333.00C255.51 333.00 253.78 332.41 252.40 330.90ZM218.38 292.67C221.03 290.93 222.25 286.49 221.33 281.90C220.47 277.58 215.94 275.01 209.18 275.00C200.42 275.00 197.08 277.76 197.03 285.08C197.01 288.68 197.53 290.15 199.48 291.98C203.75 295.99 212.81 296.32 218.38 292.67ZM258.58 254.35C258.23 253.44 256.13 245.45 253.90 236.60C244.34 198.58 227.57 140.97 224.09 134.18L222.37 130.84L216.22 150.67C207.52 178.73 204.15 190.56 195.49 223.50C191.29 239.45 187.63 253.29 187.36 254.25C186.90 255.89 189.07 256.00 223.04 256.00C256.26 256.00 259.16 255.87 258.58 254.35Z"/></svg>
+          <h1 class="lms-title" id="chooseTitle" tabindex="-1">Welcome back</h1>
+        </header>
+        <div class="lms-sheet">
+          <h2 class="lms-prompt">Select your platform</h2>
+          <div class="lms-choices">
+            <button class="lms-btn" type="button" data-lms="schoology">Schoology</button>
+            <button class="lms-btn" type="button" data-lms="canvas">Canvas</button>
+            <button class="lms-btn" type="button" data-lms="google" aria-label="Google Classroom, read only">Google Classroom<small>(read only)</small></button>
+          </div>
+          <p class="lms-legal">By selecting a platform login you agree to the <a href="https://averages.io/terms" target="_blank" rel="noopener">Terms of Use</a> and <a href="https://averages.io/privacy-policy" target="_blank" rel="noopener">Privacy Policy</a>.</p>
+          <section class="dev-keys" id="devKeys" aria-label="Sign in with an API key" hidden>
         <p class="dev-keys-label">API key sign-in</p>
       <button class="btn" id="apiKeyToggle" type="button">Sign in with an API key</button>
 
@@ -471,10 +737,71 @@
       </div>
 
       </section>
-      <p class="signin-legal">Averages.io only sees what your school account lets it. Read the <a href="https://averages.io/privacy-policy" target="_blank" rel="noopener">Privacy Policy</a>.</p>
+        </div>
+      </section>
+
+      <!-- 2. Schoology / Canvas: find your school -->
+      <section class="screen" id="screenSchool" aria-labelledby="schoolTitle" hidden>
+        <header class="lms-band big">
+          <button class="lms-back" type="button" data-back><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>back</button>
+          <h1 class="lms-title" id="schoolTitle" tabindex="-1">Schoology Log In</h1>
+        </header>
+        <div class="lms-sheet">
+          <div class="school-grid">
+            <div class="school-search">
+              <label class="sr-only" for="schoolSearch">Search for your school or district</label>
+              <input class="school-input" id="schoolSearch" type="search" placeholder="Search for your school/district" autocomplete="off" spellcheck="false"
+                     role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="schoolResults">
+              <ul class="school-results" id="schoolResults" role="listbox" aria-label="Schools"></ul>
+              <p class="school-hint" id="schoolHint" role="status"></p>
+            </div>
+            <div class="school-pick empty" id="schoolPick">
+              <p class="pick-name" id="pickName">Pick your school</p>
+              <p class="pick-domain" id="pickDomain">Search for it to get started.</p>
+              <div class="age-row"><label class="age-check"><input type="checkbox" data-age> I am 13+</label><button class="age-why" type="button" aria-expanded="false" data-age-why>Why?</button></div>
+              <p class="age-note" data-age-note hidden>If you're under 13, Averages.io runs in Incognito mode: nothing about you is stored on our servers, and Sync, connected apps and notifications stay off.</p>
+              <button class="lms-sso" id="ssoBtn" type="button" disabled>Log in with Schoology</button>
+              <p class="signin-note" id="schoolNote" role="status" hidden></p>
+            </div>
+          </div>
+          <p class="lms-missing" id="canvasMissing" hidden>If your school is not here, email your admin to get in touch with Averages.io<br><button type="button" id="emailTemplateBtn">Email Template</button></p>
+        </div>
+      </section>
+
+      <!-- 3. Google Classroom -->
+      <section class="screen" id="screenGoogle" aria-labelledby="googleTitle" hidden>
+        <header class="lms-band big">
+          <button class="lms-back" type="button" data-back><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>back</button>
+          <h1 class="lms-title" id="googleTitle" tabindex="-1">Google Classroom Log In</h1>
+        </header>
+        <div class="lms-sheet">
+          <div class="google-pane">
+            <p><span class="ro">Read only.</span> See your classes, grades and coursework here. You still turn in work on Google Classroom.</p>
+            <div class="age-row"><label class="age-check"><input type="checkbox" data-age> I am 13+</label><button class="age-why" type="button" aria-expanded="false" data-age-why>Why?</button></div>
+            <p class="age-note" data-age-note hidden>If you're under 13, Averages.io runs in Incognito mode: nothing about you is stored on our servers, and Sync, connected apps and notifications stay off.</p>
+            <button class="lms-sso google" id="googleBtn" type="button">Continue with Google</button>
+            <p class="signin-note" id="googleNote" role="status" hidden></p>
+          </div>
+        </div>
+      </section>
     </main>
     <p class="signin-foot">Beta 0.1.1a · <a href="https://github.com/averages-io/averages.io/issues" target="_blank" rel="noopener">Report a bug on GitHub</a></p>
   </div>
+  </div>
+
+  <!-- Canvas: an email a student can send their school's Canvas admin -->
+  <div class="tpl-overlay" id="tplOverlay" hidden>
+    <div class="tpl-modal" role="dialog" aria-modal="true" aria-labelledby="tplTitle">
+      <h2 id="tplTitle">Email your Canvas admin</h2>
+      <p>Your school's Canvas admin has to turn on Averages.io before you can sign in. Send them this, or change it however you like.</p>
+      <label class="sr-only" for="tplText">Email text</label>
+      <textarea class="tpl-text" id="tplText"></textarea>
+      <div class="tpl-actions">
+        <button class="tpl-close" type="button" id="tplClose">Close</button>
+        <button class="tpl-copy" type="button" id="tplCopy">Copy</button>
+        <a class="tpl-mail" id="tplMail" href="#">Open in email</a>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -525,17 +852,59 @@
       window.addEventListener('storage', function (e) { if (e.key === 'schoolagy_settings_options') applyPotato(); });
     })();
 
-    // Sign-in buttons (2026-10-04). Schoology appAuth isn't built yet: in
-    // the built app (window.__averagesSignIn exists) it says it's coming.
-    // Google (for Google Classroom schools) is live since 2026-10-05: the
-    // built app's __averagesGoogleSignIn sends the student to Google and
-    // back here with ?google=<outcome>. In the preview both walk on to
+    
+    // ------------------------------------------------------------------
+    // Sign in by LMS (draft, 2026-10-06). Same hooks as the current login
+    // page, so it can replace it as-is: window.__averagesGoogleSignIn (live
+    // since 2026-10-05) and window.__averagesSignIn (the API-key sign-in the
+    // built app wires in). Schoology and Canvas sign-in aren't built yet: the
+    // built app will provide window.__averagesLmsSignIn(lms, address) for them
+    // (it sends the browser to that school's own sign-in page); until then
+    // their button says it's coming. In the preview every button walks on to
     // onboarding like the old mock.
-    const ssoNote = document.getElementById('ssoNote');
-    const SSO_SOON = {
-      schoology: "Sign in with Schoology is waiting on Schoology's approval. It's coming soon.",
-      google: 'Sign in with Google, for Google Classroom schools, is coming soon.',
+    // ------------------------------------------------------------------
+    const SCREENS = { choose: 'screenChoose', schoology: 'screenSchool', canvas: 'screenSchool', google: 'screenGoogle' };
+    const LMS = {
+      // Schoology: any district, listed or not. Some use their own address
+      // (lms.yourdistrict.org) instead of yourdistrict.schoology.com, so any
+      // web address can be typed in.
+      schoology: { name: 'Schoology', title: 'Schoology Log In', button: 'Log in with Schoology', example: 'yourdistrict.schoology.com', anyAddress: true,
+        soon: "Sign in with Schoology is waiting on Schoology's approval. It's coming soon." },
+      // Canvas: only schools whose Canvas admin turned Averages.io on (each
+      // one gives us its own Canvas app key), so a typed address that isn't
+      // listed can't sign in yet.
+      canvas: { name: 'Canvas', title: 'Canvas Log In', button: 'Log in with Canvas', example: 'yourdistrict.instructure.com', anyAddress: false,
+        soon: 'Sign in with Canvas is coming soon.' },
     };
+    // SAMPLE schools, used only in the preview. Signed-in builds ask the API
+    // (GET /config/schools?lms=, not built yet): for Canvas, the schools whose
+    // admin turned Averages.io on; for Schoology, districts added over time
+    // (typing the address always works). `aliases` are other addresses the
+    // same school answers on.
+    const API = window.location.hostname.endsWith('averages.io') ? 'https://api.averages.io' : 'http://localhost:8787';
+    const SAMPLE_SCHOOLS = {
+      schoology: [
+        { name: 'Newport Mesa Unified School District', domain: 'nmusd.schoology.com' },
+        { name: 'Lincoln Unified School District', domain: 'lincolnusd.schoology.com' },
+        { name: 'Lincoln High School', domain: 'lincolnhs.schoology.com' },
+      ],
+      canvas: [
+        { name: 'Lincoln Unified School District', domain: 'lincolnusd.instructure.com', aliases: ['canvas.lincolnusd.org'] },
+      ],
+    };
+    const schoolLists = {};   // lms -> Promise of [{name, domain, aliases}]
+    function loadSchools(which) {
+      if (!schoolLists[which]) {
+        schoolLists[which] = !window.__averagesSignIn
+          ? Promise.resolve(SAMPLE_SCHOOLS[which])
+          : fetch(`${API}/config/schools?lms=${which}`)
+              .then(r => (r.ok ? r.json() : { schools: [] }))
+              .then(d => (Array.isArray(d && d.schools) ? d.schools : []).filter(s => s && typeof s.name === 'string' && typeof s.domain === 'string'))
+              .catch(() => []);
+      }
+      return schoolLists[which];
+    }
+    let schools = [];
     const GOOGLE_RESULT = {
       ok: 'Signed in with Google. Opening Averages.io…',
       cancelled: 'Google sign-in was cancelled. Try again whenever you’re ready.',
@@ -544,51 +913,263 @@
       failed: 'Something went wrong signing in with Google. Try again in a moment.',
       unavailable: 'Sign in with Google isn’t switched on yet.',
     };
-    // 13+ (2026-10-04): decides which modes onboarding offers (Classic is
-    // 13+; Incognito is for everyone). Kept on this device only.
-    const age13 = document.getElementById('age13');
-    function saveAge() { try { localStorage.setItem('schoolagy_13plus', age13.checked ? 'yes' : 'no'); } catch {} }
-    age13.addEventListener('change', saveAge);
-    document.getElementById('connectBtn').addEventListener('click', saveAge, true);
-    const googleOutcome = new URLSearchParams(location.search).get('google');
-    if (googleOutcome && Object.prototype.hasOwnProperty.call(GOOGLE_RESULT, googleOutcome)) {
-      ssoNote.textContent = GOOGLE_RESULT[googleOutcome];
-      ssoNote.hidden = false;
-      // Just back from Google: keep the 13+ answer they gave before leaving.
-      try { age13.checked = localStorage.getItem('schoolagy_13plus') === 'yes'; } catch {}
+    const SCHOOL_KEY = 'averages_login_school';   // last school picked, per LMS (this device only)
+
+    function esc(v) {
+      return String(v).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
     }
-    // Back from Google with the browser's Back button: undo "Opening Google…".
-    window.addEventListener('pageshow', (e) => {
-      if (!e.persisted) return;
-      document.querySelectorAll('[data-provider].busy').forEach(b => {
-        b.classList.remove('busy');
-        b.querySelector('.sso-label').textContent = b.dataset.label || b.querySelector('.sso-label').textContent;
+    function readJSON(key) { try { return JSON.parse(localStorage.getItem(key) || 'null'); } catch { return null; } }
+    function writeJSON(key, v) { try { localStorage.setItem(key, JSON.stringify(v)); } catch {} }
+
+    // 13+ (2026-10-04): decides which modes onboarding offers. One answer,
+    // shown on whichever screen you're on, kept on this device only.
+    const ageBoxes = [...document.querySelectorAll('[data-age]')];
+    function savedAge() { try { return localStorage.getItem('schoolagy_13plus') === 'yes'; } catch { return false; } }
+    function saveAge(on) { try { localStorage.setItem('schoolagy_13plus', on ? 'yes' : 'no'); } catch {} ageBoxes.forEach(b => { b.checked = on; }); }
+    ageBoxes.forEach(b => { b.checked = savedAge(); b.addEventListener('change', () => saveAge(b.checked)); });
+
+    // ---------- Screens ----------
+    let lms = null;
+    function show(route, focus) {
+      const id = SCREENS[route] || SCREENS.choose;
+      Object.values(SCREENS).forEach(s => { document.getElementById(s).hidden = s !== id; });
+      if (route === 'schoology' || route === 'canvas') setupSchool(route);
+      if (focus) {
+        const target = route === 'schoology' || route === 'canvas' ? document.getElementById('schoolSearch')
+          : document.querySelector('#' + id + ' .lms-title');
+        target && target.focus({ preventScroll: true });
+      }
+    }
+    function routeFromHash() { const h = location.hash.replace('#', ''); return SCREENS[h] ? h : 'choose'; }
+    window.addEventListener('hashchange', () => show(routeFromHash(), true));
+    document.querySelectorAll('[data-lms]').forEach(b => b.addEventListener('click', () => { location.hash = b.dataset.lms; }));
+    document.querySelectorAll('[data-back]').forEach(b => b.addEventListener('click', () => {
+      // Back to the list the way the browser's Back would, without leaving the page.
+      if (history.state && history.state.lmsPushed) history.back();
+      else { history.replaceState(null, '', location.pathname + location.search); show('choose', true); }
+    }));
+    // Mark hash steps we added, so "back" can use the real history entry.
+    window.addEventListener('hashchange', () => { if (location.hash && !(history.state && history.state.lmsPushed)) history.replaceState({ lmsPushed: true }, ''); });
+
+    // ---------- Schoology / Canvas school search ----------
+    const searchInput = document.getElementById('schoolSearch');
+    const resultsEl = document.getElementById('schoolResults');
+    const hintEl = document.getElementById('schoolHint');
+    const pickEl = document.getElementById('schoolPick');
+    const pickName = document.getElementById('pickName');
+    const pickDomain = document.getElementById('pickDomain');
+    const ssoBtn = document.getElementById('ssoBtn');
+    const schoolNote = document.getElementById('schoolNote');
+    let options = [], active = -1, picked = null;
+
+    function setupSchool(which) {
+      if (lms === which) return;
+      lms = which;
+      document.getElementById('schoolTitle').textContent = LMS[which].title;
+      document.getElementById('canvasMissing').hidden = which !== 'canvas';
+      searchInput.value = '';
+      schoolNote.hidden = true;
+      ssoBtn.classList.remove('busy');
+      ssoBtn.textContent = LMS[which].button;
+      schools = [];
+      resultsEl.innerHTML = '';
+      hintEl.textContent = 'Loading schools…';
+      const last = (readJSON(SCHOOL_KEY) || {})[which];
+      pick(last && last.name && last.domain ? last : null, false);
+      loadSchools(which).then(list => {
+        if (lms !== which) return;
+        schools = list;
+        // A Canvas school that has since left the list can't sign in anymore.
+        if (which === 'canvas' && picked && !findSchool(picked.domain)) pick(null, false);
+        renderResults();
       });
+    }
+    const HOST_RE = /^(?=.{4,253}$)([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,24}$/;
+    function findSchool(domain) {
+      return schools.find(s => s.domain === domain || (Array.isArray(s.aliases) && s.aliases.includes(domain))) || null;
+    }
+    function highlight(text, q) {
+      const i = q ? text.toLowerCase().indexOf(q) : -1;
+      if (i < 0) return esc(text);
+      return esc(text.slice(0, i)) + '<mark>' + esc(text.slice(i, i + q.length)) + '</mark>' + esc(text.slice(i + q.length));
+    }
+    function normalizeDomain(q) {
+      return q.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+    }
+    function renderResults() {
+      const q = searchInput.value.trim().toLowerCase();
+      const typed = normalizeDomain(searchInput.value);
+      const matches = s => s.name.toLowerCase().includes(q) || s.domain.includes(q)
+        || (Array.isArray(s.aliases) && s.aliases.some(a => a.includes(q) || a === typed));
+      // Canvas shows every school that's on Averages.io before you type.
+      options = q ? schools.filter(matches).slice(0, 6) : (lms === 'canvas' ? schools.slice(0, 6) : []);
+      const typedLooksLikeAddress = q && HOST_RE.test(typed);
+      // Schoology: typing your school's address works even when it isn't listed.
+      if (typedLooksLikeAddress && LMS[lms].anyAddress && !findSchool(typed)) {
+        options.push({ name: 'Use this address', domain: typed, custom: true });
+      }
+      active = options.length ? 0 : -1;
+      resultsEl.innerHTML = options.map((s, i) => `
+        <li class="school-option${i === active ? ' active' : ''}" role="option" id="schoolOpt${i}" data-i="${i}" aria-selected="${picked && picked.domain === s.domain ? 'true' : 'false'}">
+          <span class="o-name">${s.custom ? esc(s.name) : highlight(s.name, q)}</span><span class="o-domain">${esc(s.domain)}</span>
+        </li>`).join('');
+      searchInput.setAttribute('aria-expanded', options.length ? 'true' : 'false');
+      if (active >= 0) searchInput.setAttribute('aria-activedescendant', 'schoolOpt' + active); else searchInput.removeAttribute('aria-activedescendant');
+      if (lms === 'canvas') {
+        hintEl.innerHTML = !q && !schools.length
+          ? 'No schools have turned on Averages.io for Canvas yet. Ask your Canvas admin with the <button type="button" data-template>Email Template</button>.'
+          : q && !options.length
+          ? `${typedLooksLikeAddress ? esc(typed) + ' hasn’t' : 'If your school isn’t listed, it hasn’t'} turned on Averages.io for Canvas yet. Ask your Canvas admin with the <button type="button" data-template>Email Template</button>.`
+          : '';
+      } else {
+        hintEl.textContent = q && !options.length
+          ? `No schools match. You can also type the address you use for Schoology, like ${LMS[lms].example}.`
+          : '';
+      }
+    }
+    function moveActive(step) {
+      if (!options.length) return;
+      active = (active + step + options.length) % options.length;
+      resultsEl.querySelectorAll('.school-option').forEach((el, i) => el.classList.toggle('active', i === active));
+      searchInput.setAttribute('aria-activedescendant', 'schoolOpt' + active);
+      const el = document.getElementById('schoolOpt' + active);
+      el && el.scrollIntoView({ block: 'nearest' });
+    }
+    function pick(school, remember) {
+      picked = school;
+      pickEl.classList.toggle('empty', !school);
+      pickName.textContent = school ? (school.custom ? 'Your school' : school.name) : 'Pick your school';
+      pickEl.setAttribute('aria-label', school ? `Signing in to ${school.domain}` : 'No school picked yet');
+      pickDomain.textContent = school ? school.domain : 'Search for it to get started.';
+      ssoBtn.disabled = !school;
+      schoolNote.hidden = true;
+      if (school && remember) {
+        const all = readJSON(SCHOOL_KEY) || {};
+        all[lms] = { name: school.custom ? 'Your school' : school.name, domain: school.domain };
+        writeJSON(SCHOOL_KEY, all);
+      }
+      resultsEl.querySelectorAll('.school-option').forEach((el, i) => el.setAttribute('aria-selected', school && options[i] && options[i].domain === school.domain ? 'true' : 'false'));
+    }
+    searchInput.addEventListener('input', renderResults);
+    searchInput.addEventListener('keydown', e => {
+      if (e.key === 'ArrowDown') { e.preventDefault(); moveActive(1); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); moveActive(-1); }
+      else if (e.key === 'Enter' && active >= 0) { e.preventDefault(); pick(options[active], true); ssoBtn.focus(); }
+      else if (e.key === 'Escape' && searchInput.value) { e.preventDefault(); searchInput.value = ''; renderResults(); }
     });
-    document.querySelectorAll('[data-provider]').forEach(b => b.addEventListener('click', () => {
-      saveAge();
-      if (b.dataset.provider === 'google' && window.__averagesGoogleSignIn) {
-        if (b.classList.contains('busy')) return;
-        b.dataset.label = b.querySelector('.sso-label').textContent;
-        b.classList.add('busy');
-        b.querySelector('.sso-label').textContent = 'Opening Google…';
-        ssoNote.hidden = true;
-        window.__averagesGoogleSignIn();
+    resultsEl.addEventListener('click', e => {
+      const li = e.target.closest('.school-option');
+      if (!li) return;
+      pick(options[Number(li.dataset.i)], true);
+      ssoBtn.focus();
+    });
+    ssoBtn.addEventListener('click', () => {
+      if (!picked || ssoBtn.classList.contains('busy')) return;
+      saveAge(ageBoxes[0].checked);
+      if (window.__averagesLmsSignIn) {
+        // Off to that school's own Schoology/Canvas sign-in page.
+        ssoBtn.classList.add('busy');
+        ssoBtn.textContent = `Opening ${LMS[lms].name}…`;
+        window.__averagesLmsSignIn(lms, picked.domain);
         return;
       }
       if (window.__averagesSignIn) {
-        ssoNote.textContent = SSO_SOON[b.dataset.provider];
-        ssoNote.hidden = false;
+        // Built app: Schoology/Canvas sign-in isn't built yet.
+        schoolNote.textContent = LMS[lms].soon;
+        schoolNote.hidden = false;
         return;
       }
-      b.classList.add('busy');
-      b.querySelector('.sso-label').textContent = 'Signing in…';
+      ssoBtn.classList.add('busy');
+      ssoBtn.textContent = 'Signing in…';
       window.setTimeout(() => { window.location.href = 'onboarding.html'; }, 700);
+    });
+
+    // ---------- Canvas: email template ----------
+    const tplOverlay = document.getElementById('tplOverlay');
+    const tplText = document.getElementById('tplText');
+    const TPL_SUBJECT = 'Can our school turn on Averages.io for Canvas?';
+    const TPL_BODY = [
+      'Hi,',
+      '',
+      "I'd like to use Averages.io (https://averages.io) to see my Canvas classes, grades and assignments in one place. Students can only sign in with Canvas after a Canvas admin at our school turns it on.",
+      '',
+      'Could you get in touch with the Averages.io team at help@averages.io? They can walk you through it.',
+      '',
+      'Thank you,',
+      '',
+    ].join('\n');
+    function openTemplate() {
+      tplText.value = TPL_BODY;
+      document.getElementById('tplMail').href = 'mailto:?subject=' + encodeURIComponent(TPL_SUBJECT) + '&body=' + encodeURIComponent(TPL_BODY);
+      tplOverlay.hidden = false;
+      tplText.focus();
+      tplText.setSelectionRange(0, 0);
+      tplText.scrollTop = 0;
+    }
+    function closeTemplate() { tplOverlay.hidden = true; document.getElementById('emailTemplateBtn').focus(); }
+    // "Why?" next to the 13+ check.
+    document.querySelectorAll('[data-age-why]').forEach(b => b.addEventListener('click', () => {
+      const note = b.closest('.age-row').nextElementSibling;
+      note.hidden = !note.hidden;
+      b.setAttribute('aria-expanded', note.hidden ? 'false' : 'true');
     }));
+    document.getElementById('emailTemplateBtn').addEventListener('click', openTemplate);
+    hintEl.addEventListener('click', e => { if (e.target.closest('[data-template]')) openTemplate(); });
+    document.getElementById('tplClose').addEventListener('click', closeTemplate);
+    tplOverlay.addEventListener('click', e => { if (e.target === tplOverlay) closeTemplate(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && !tplOverlay.hidden) closeTemplate(); });
+    document.getElementById('tplCopy').addEventListener('click', async e => {
+      const btn = e.currentTarget;
+      const text = 'Subject: ' + TPL_SUBJECT + '\n\n' + tplText.value;
+      try { await navigator.clipboard.writeText(text); btn.textContent = 'Copied'; }
+      catch { tplText.select(); btn.textContent = 'Press Ctrl+C to copy'; }
+      window.setTimeout(() => { btn.textContent = 'Copy'; }, 1800);
+    });
+    document.getElementById('tplMail').addEventListener('click', () => {
+      // Keep any edits the student made.
+      document.getElementById('tplMail').href = 'mailto:?subject=' + encodeURIComponent(TPL_SUBJECT) + '&body=' + encodeURIComponent(tplText.value);
+    });
+
+    // ---------- Google Classroom ----------
+    const googleBtn = document.getElementById('googleBtn');
+    const googleNote = document.getElementById('googleNote');
+    googleBtn.addEventListener('click', () => {
+      if (googleBtn.classList.contains('busy')) return;
+      saveAge(ageBoxes[0].checked);
+      googleBtn.classList.add('busy');
+      googleNote.hidden = true;
+      if (window.__averagesGoogleSignIn) {
+        googleBtn.textContent = 'Opening Google…';
+        window.__averagesGoogleSignIn();
+        return;
+      }
+      googleBtn.textContent = 'Signing in…';
+      window.setTimeout(() => { window.location.href = 'onboarding.html'; }, 700);
+    });
+    // Back from Google with the browser's Back button: undo "Opening Google…".
+    window.addEventListener('pageshow', e => {
+      if (!e.persisted) return;
+      googleBtn.classList.remove('busy');
+      googleBtn.textContent = 'Continue with Google';
+      ssoBtn.classList.remove('busy');
+      if (lms) ssoBtn.textContent = LMS[lms].button;
+    });
+
+    // ---------- Start ----------
+    const q = new URLSearchParams(location.search);
+    const googleOutcome = q.get('google');
+    if (googleOutcome && Object.prototype.hasOwnProperty.call(GOOGLE_RESULT, googleOutcome)) {
+      // Just back from Google: show how it went on the Google screen.
+      history.replaceState(null, '', location.pathname + location.search + '#google');
+      googleNote.textContent = GOOGLE_RESULT[googleOutcome];
+      googleNote.hidden = false;
+    }
+    show(routeFromHash(), false);
+
     // Hidden API-key sign-in: login.html?keys (or ?demo). Not linked anywhere.
     const devKeys = document.getElementById('devKeys');
-    const q = new URLSearchParams(location.search);
     if (q.has('keys') || q.has('demo')) devKeys.hidden = false;
+    document.getElementById('connectBtn').addEventListener('click', () => saveAge(ageBoxes[0].checked), true);
 
     const apiKeyToggle = document.getElementById('apiKeyToggle');
     const apiKeyForm = document.getElementById('apiKeyForm');
@@ -673,6 +1254,7 @@
         }
       }, 900);
     });
+  
   </script>
 </body>
 </html>
