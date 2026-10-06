@@ -363,6 +363,56 @@
   .upload-sources-label { font-size: 0.74rem; font-weight: 700; color: var(--text-muted); margin-right: 2px; }
   .upload-source { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px 8px 8px; border: 1px solid var(--border); border-radius: 999px; background: var(--panel-inner); font-family: inherit; font-size: 0.74rem; font-weight: 800; color: var(--text-faint); cursor: default; }
   .upload-source .canva-mark { width: 16px; height: 16px; opacity: 0.6; }
+  /* Turning in, signed in with Schoology (2026-10-06): the "Or add from"
+     buttons work, a picked file says where it came from, and each file shows
+     its own progress while it's turned in. */
+  .upload-source:not(:disabled) { color: var(--text-dark); cursor: pointer; }
+  .upload-source:not(:disabled):hover { background: var(--border); }
+  .upload-source:not(:disabled) .canva-mark { opacity: 1; }
+  .upload-source:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
+  .upload-source[aria-busy="true"] { cursor: progress; opacity: 0.7; }
+  .modal-box .upload-source-note { margin: 8px 0 0; font-size: 0.74rem; font-weight: 700; color: var(--text-muted); line-height: 1.45; }
+  .upload-source-note[hidden], .submit-error[hidden], .upload-picked-progress[hidden], .upload-bar[hidden], .canva-pick[hidden] { display: none; }
+  .upload-source-note a, .submit-error a, .canva-pick-empty a { color: var(--accent-dark); font-weight: 800; text-underline-offset: 2px; }
+  .upload-picked-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .upload-picked-text .upload-picked-name { flex: none; }
+  .upload-picked-src { font-size: 0.66rem; font-weight: 700; color: var(--text-faint); }
+  .upload-picked-progress { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 0.68rem; font-weight: 700; color: var(--text-muted); }
+  .upload-progress-text { min-width: 0; overflow-wrap: anywhere; }
+  .upload-bar { flex: 1 1 60px; max-width: 140px; height: 4px; border-radius: 999px; background: var(--border); overflow: hidden; }
+  .upload-bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width 0.2s ease; }
+  .upload-picked-row.done .upload-picked-progress { color: var(--grade-good); }
+  .upload-picked-row.done .upload-bar i { background: var(--grade-good); }
+  .upload-picked-row.failed .upload-picked-progress { color: var(--grade-bad); }
+  .upload-picked-row.failed .upload-bar { display: none; }
+  .material-icon-btn:disabled, .upload-picker-btn:disabled, .upload-tab:disabled, .modal-btn:disabled { opacity: 0.55; cursor: default; }
+  .modal-box .submit-error { margin: 12px 0 0; font-size: 0.76rem; font-weight: 700; color: var(--grade-bad); line-height: 1.45; }
+  #draftSubProgress { margin-top: 12px; }
+  .canva-pick { margin-top: 10px; padding: 8px; border-radius: var(--window-radius-sm); background: var(--panel-inner); }
+  .canva-pick-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 0 4px 4px; font-size: 0.74rem; font-weight: 800; color: var(--text-dark); }
+  .canva-pick-list { max-height: 216px; overflow-y: auto; }
+  .canva-pick-label { padding: 8px 4px 4px; font-size: 0.64rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.03em; color: var(--text-faint); }
+  .canva-pick-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 6px; border: none; border-radius: 8px; background: none; font-family: inherit; text-align: left; cursor: pointer; color: var(--text-dark); }
+  .canva-pick-item:hover, .canva-pick-item:focus-visible { background: var(--panel-bg); outline: none; }
+  .canva-pick-thumb { width: 40px; height: 30px; flex: none; border-radius: 5px; background: var(--panel-bg); display: grid; place-items: center; overflow: hidden; }
+  .canva-pick-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .canva-pick-name { flex: 1; min-width: 0; font-size: 0.78rem; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .canva-pick-meta { flex-shrink: 0; font-size: 0.66rem; font-weight: 700; color: var(--text-faint); white-space: nowrap; }
+  .canva-pick-empty { margin: 0; padding: 6px 4px; font-size: 0.76rem; color: var(--text-muted); }
+  .canva-pick .assign-retry { margin: 6px 4px 2px; }
+  .submit-done-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .submit-done-head h3 { margin: 0; }
+  .submit-done-check { width: 28px; height: 28px; flex: none; border-radius: 50%; background: var(--grade-good); display: grid; place-items: center; }
+  .submit-done-check svg { width: 16px; height: 16px; stroke: #fff; fill: none; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+  .submit-dropzone.live-drop.dragging { background: var(--panel-inner); color: var(--text-dark); }
+  .rev-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .rev-main .material-name { flex: none; overflow-wrap: anywhere; }
+  .rev-when { color: var(--text-faint); font-weight: 600; }
+  .rev-snippet { font-size: 0.72rem; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .submission-latest-tag.late { color: var(--grade-bad); }
+  .submission-latest-tag.draft { color: var(--text-faint); }
+  .rev-size { flex-shrink: 0; font-size: 0.7rem; font-weight: 700; color: var(--text-faint); }
+  .rev-text { margin-top: 12px; padding: 10px 12px; max-height: 240px; overflow-y: auto; border-radius: var(--window-radius-sm); background: var(--panel-inner); font-size: 0.8rem; line-height: 1.5; color: var(--text-dark); white-space: pre-line; overflow-wrap: anywhere; }
   @media (prefers-reduced-motion: reduce) { .canva-btn, .tip { transition: none; } .canva-btn:hover { transform: none; } }
 
   /* ---------- Drafts (2026-10-04): Canva edits waiting to be turned in ---------- */
@@ -1716,6 +1766,25 @@
     }
     const ID_OK = v => /^\d{1,24}$/.test(String(v || ''));
     const LIVE_DETAIL = LIVE && ID_OK(item.id) && ID_OK(item.courseId);
+    // Turning in work, signed in with Schoology (2026-10-06): real uploads
+    // through our API with public/js/averages-submit.js. Classroom work is
+    // still turned in on Classroom; the preview and the demo keep the mock.
+    const SUBMIT_LIVE = LIVE_DETAIL && !CLASSROOM;
+    const SUBMIT_MAX_BYTES = 95 * 1024 * 1024;   // the API's limit per file
+    let submitScript = null;
+    function loadSubmitScript() {
+      if (!submitScript) {
+        submitScript = new Promise((resolve, reject) => {
+          if (window.AveragesSubmit) { resolve(window.AveragesSubmit); return; }
+          const sc = document.createElement('script');
+          sc.src = '/js/averages-submit.js';
+          sc.onload = () => (window.AveragesSubmit ? resolve(window.AveragesSubmit) : reject(new Error('submit')));
+          sc.onerror = () => reject(new Error('submit'));
+          document.head.appendChild(sc);
+        }).catch(e => { submitScript = null; throw e; });
+      }
+      return submitScript;
+    }
     /** This page's own path for Return / Connect, minus our one-off ?canva= message flag. */
     function currentAppPath() {
       const u = new URL(window.location.href);
@@ -1760,11 +1829,14 @@
       materialsEl.innerHTML = rows || '<p class="assign-empty">No materials attached to this assignment.</p>';
     }
     // Signed in: is Canva connected? (Google Drive is checked in this browser, see loadCloud.)
+    let canvaInfo = null;   // { configured, connected } once known (Add from Canva, 2026-10-06)
     async function loadCanvaReady() {
       try {
         const res = await fetch(averagesApiBase() + '/canva/status', { credentials: 'include' });
         if (!res.ok) return;
         const j = await res.json();
+        canvaInfo = { configured: j.configured !== false, connected: !!j.connected };
+        refreshUploadSources();
         if (!!j.connected !== EDIT_READY.canva) { EDIT_READY.canva = !!j.connected; renderLiveMaterials(); }
       } catch {
         /* no Edit in Canva button then */
@@ -1894,6 +1966,7 @@
         cloudCfg = cfg;
         if (cfg.google) C.prepareGoogle().catch(() => {});
         syncDriveReady();
+        refreshUploadSources();   // Add from Google Drive / OneDrive (2026-10-06)
         window.addEventListener('averages-cloud-change', syncDriveReady);
         mergeDrafts();
         if (await C.refreshDriveDrafts(String(item.courseId), String(item.id))) mergeDrafts();
@@ -2025,7 +2098,10 @@
     // Also strips the wider modal-box-lg modifier (see openAddSubmissionModal)
     // so the NEXT modal opened -- e.g. a small file-info popup -- isn't left
     // oversized from a previous Add Submission session.
-    function closeModal() { modalOverlay.hidden = true; modalBox.innerHTML = ''; modalBox.classList.remove('modal-box-lg'); modalBox.removeAttribute('role'); modalBox.removeAttribute('aria-modal'); }
+    // A turn-in still running when its popup closes (Cancel, Escape) is
+    // stopped (2026-10-06): nothing is turned in unless it got that far.
+    let activeSubmitAbort = null;
+    function closeModal() { if (activeSubmitAbort) { const stop = activeSubmitAbort; activeSubmitAbort = null; stop(); } modalOverlay.hidden = true; modalBox.innerHTML = ''; modalBox.classList.remove('modal-box-lg'); modalBox.removeAttribute('role'); modalBox.removeAttribute('aria-modal'); }
     // Static popup (2026-08-29, per Martin's request) — clicking the dark
     // backdrop no longer dismisses the modal, so an accidental click outside
     // the box (easy to do on the Add Submission modal while picking a tab or
@@ -2114,6 +2190,10 @@
     // attempt is added, rather than drawn once from static data.
     // ------------------------------------------------------------------
     let submissionHistory = (detail.submissions || []).slice();
+    // Signed in with Schoology (2026-10-06): the real turn-ins, newest first,
+    // from GET /submit/history. `pending` is a just-made turn-in kept on top
+    // until Schoology lists it too.
+    const liveHistory = { state: 'loading', revisions: [], pending: null, seq: 0 };
     let currentStatus = item.status;
     const previousScore = (item.status === 'graded' && typeof item.score === 'number') ? item.score : null;
 
@@ -2139,6 +2219,14 @@
       BANNER_COPY.submitted = () => ({ label: 'Turned in: awaiting grade', meta: classroomLate ? 'Turned in late' : '' });
       BANNER_COPY.graded = () => ({ label: 'Graded', meta: typeof item.score === 'number' ? `${item.score}%${item.points ? ' · ' + item.points + ' points' : ''}` : '' });
       BANNER_COPY.returned = () => ({ label: 'Returned by your teacher', meta: '' });
+    }
+    if (SUBMIT_LIVE) {
+      BANNER_COPY.submitted = () => {
+        const latest = liveHistory.revisions.find(r => !r.draft);
+        let meta = latest ? `Submitted ${revWhen(latest)}${latest.late ? ' · Late' : ''}` : '';
+        if (previousScore !== null) meta += meta ? ` · previously graded ${previousScore}%` : `Previously graded ${previousScore}%`;
+        return { label: 'Submitted: awaiting grade', meta };
+      };
     }
     /** The student's real state on Classroom, from /data/assignment. */
     function applyClassroomSubmission(d) {
@@ -2253,17 +2341,208 @@
 
     const submissionBodyEl = document.getElementById('submissionBody');
     submissionBodyEl.addEventListener('click', e => {
+      if (e.target.closest('[data-history-retry]')) { liveHistory.state = 'loading'; renderSubmissionsPanel(); loadLiveHistory(); return; }
+      const rev = e.target.closest('[data-rev-index]');
+      if (rev) { openRevisionPreview(Number(rev.dataset.revIndex)); return; }
       const row = e.target.closest('[data-sub-index]');
       if (!row) return;
       openSubmissionPreview(Number(row.dataset.subIndex));
     });
     submissionBodyEl.addEventListener('keydown', e => {
       if (e.key !== 'Enter' && e.key !== ' ') return;
+      const rev = e.target.closest('[data-rev-index]');
+      if (rev) { e.preventDefault(); openRevisionPreview(Number(rev.dataset.revIndex)); return; }
       const row = e.target.closest('[data-sub-index]');
       if (!row) return;
       e.preventDefault();
       openSubmissionPreview(Number(row.dataset.subIndex));
     });
+    // Signed in (2026-10-06): files dropped on "Nothing turned in yet" open
+    // Add Submission with them already picked.
+    const dropZoneOf = e => SUBMIT_LIVE && e.target.closest && e.target.closest('[data-dropzone]');
+    submissionBodyEl.addEventListener('dragover', e => {
+      const zone = dropZoneOf(e);
+      if (!zone || !e.dataTransfer || !Array.from(e.dataTransfer.types || []).includes('Files')) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'copy';
+      zone.classList.add('dragging');
+    });
+    submissionBodyEl.addEventListener('dragleave', e => {
+      const zone = dropZoneOf(e);
+      if (zone && !zone.contains(e.relatedTarget)) zone.classList.remove('dragging');
+    });
+    submissionBodyEl.addEventListener('drop', e => {
+      const zone = dropZoneOf(e);
+      if (!zone) return;
+      e.preventDefault();
+      zone.classList.remove('dragging');
+      const files = Array.from((e.dataTransfer && e.dataTransfer.files) || []);
+      if (files.length) openAddSubmissionModal({ files });
+    });
+
+    // ------------------------------------------------------------------
+    // Submission History, signed in with Schoology (2026-10-06). Every
+    // field comes from Schoology through our API, so all of it is escaped.
+    // ------------------------------------------------------------------
+    const fmtSize = n => n < 1024 ? `${n} B` : n < 1048576 ? `${Math.round(n / 1024)} KB` : `${(n / 1048576).toFixed(1)} MB`;
+    function revWhen(r) {
+      if (r && typeof r.when === 'string' && r.when.trim()) return r.when.trim().slice(0, 60);
+      const t = Number(r && r.created) || 0;
+      if (!t) return 'just now';
+      return new Date(t < 1e12 ? t * 1000 : t).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+    }
+    function revFiles(r) {
+      return (Array.isArray(r.files) ? r.files : [])
+        .filter(f => f && (typeof f.name === 'string' || typeof f.name === 'number') && String(f.name).trim())
+        .map(f => {
+          const name = String(f.name).trim().slice(0, 300);
+          return { name, ext: ((name.match(/\.([a-z0-9]{1,5})$/i) || [])[1] || '').toLowerCase(), size: Number(f.size) > 0 ? Number(f.size) : 0 };
+        });
+    }
+    function revisionRowHTML(r, idx) {
+      const files = revFiles(r);
+      const text = typeof r.text === 'string' ? r.text.trim() : '';
+      const first = files[0];
+      const badge = files.length > 1 ? String(files.length) : first ? (first.ext || 'file').toUpperCase().slice(0, 4) : 'TEXT';
+      const color = files.length === 1 ? (EXT_COLOR[first.ext] || '#83849a') : files.length ? '#83849a' : '#4f6b8c';
+      const label = files.length > 1 ? `${files.length} files` : first ? first.name : 'Written answer';
+      const when = revWhen(r);
+      const tags = (idx === 0 && liveHistory.revisions.length > 1 ? '<span class="submission-latest-tag">Latest</span>' : '')
+        + (r.late === true ? '<span class="submission-latest-tag late">Late</span>' : '')
+        + (r.draft === true ? '<span class="submission-latest-tag draft">Draft</span>' : '');
+      return `
+          <div class="material-row submission-row" tabindex="0" role="button" data-rev-index="${idx}" aria-label="${escapeHtml(`${label}, ${r.draft === true ? 'saved' : 'turned in'} ${when}${r.late === true ? ', late' : ''}`)}">
+            <span class="material-badge" style="background:${color}">${escapeHtml(badge)}</span>
+            <span class="rev-main">
+              <span class="material-name">${escapeHtml(label)} <span class="rev-when">· ${escapeHtml(when)}</span></span>
+              ${text && !files.length ? `<span class="rev-snippet">${escapeHtml(text.slice(0, 160))}</span>` : ''}
+            </span>
+            ${tags}
+          </div>`;
+    }
+    function liveHistoryHTML() {
+      if (liveHistory.state === 'loading') return '<p class="assign-empty">Loading your submissions…</p>';
+      if (liveHistory.state === 'error') return '<p class="assign-empty">Couldn’t load your submissions.<button class="assign-retry" type="button" data-history-retry>Try again</button></p>';
+      if (!liveHistory.revisions.length) return `
+          <div class="submit-dropzone live-drop" data-dropzone>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M12 4l-5 5M12 4l5 5"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
+            <div>Nothing turned in yet. Drop files here, or use Add Submission to upload a file or write your answer.</div>
+          </div>`;
+      return `<h2 style="margin-top:0;">Submission History</h2>${liveHistory.revisions.map(revisionRowHTML).join('')}`;
+    }
+    function openRevisionPreview(idx) {
+      const r = liveHistory.revisions[idx];
+      if (!r) return;
+      const files = revFiles(r);
+      const text = typeof r.text === 'string' ? r.text.trim() : '';
+      const title = files.length > 1 ? `${files.length} files` : files[0] ? files[0].name : 'Written answer';
+      openModal(`
+        <h3>${escapeHtml(title)}</h3>
+        <p>${r.draft === true ? 'Saved as a draft' : 'Turned in'} ${escapeHtml(revWhen(r))}${r.late === true ? ' · Late' : ''}</p>
+        ${files.length ? `<div class="modal-file-list">${files.map(f => `
+          <div class="material-row">
+            <span class="material-badge" style="background:${EXT_COLOR[f.ext] || '#83849a'}">${escapeHtml((f.ext || 'file').toUpperCase().slice(0, 4))}</span>
+            <span class="material-name">${escapeHtml(f.name)}</span>
+            ${f.size ? `<span class="rev-size">${escapeHtml(fmtSize(f.size))}</span>` : ''}
+          </div>`).join('')}</div>` : ''}
+        ${text ? `<div class="rev-text">${escapeHtml(text)}</div>` : ''}
+        <div class="modal-actions">
+          <button class="modal-btn primary" type="button" id="modalCloseBtn">Close</button>
+        </div>`);
+      document.getElementById('modalCloseBtn').addEventListener('click', closeModal);
+      document.getElementById('modalCloseBtn').focus();
+    }
+    async function loadLiveHistory() {
+      const seq = ++liveHistory.seq;
+      let S;
+      try {
+        S = await loadSubmitScript();
+      } catch {
+        if (seq === liveHistory.seq && liveHistory.state === 'loading') { liveHistory.state = 'error'; renderSubmissionsPanel(); }
+        return;
+      }
+      try {
+        const revs = await S.history({ section: String(item.courseId), assignment: String(item.id) });
+        if (seq !== liveHistory.seq) return;
+        const p = liveHistory.pending;
+        if (p && !revs.some(r => String(r.id) === String(p.id))) revs.unshift(p);
+        else liveHistory.pending = null;
+        liveHistory.revisions = revs;
+        liveHistory.state = 'ready';
+        if (revs.some(r => r.draft !== true) && (currentStatus === 'overdue' || currentStatus === 'upcoming')) currentStatus = 'submitted';
+      } catch (e) {
+        if (seq !== liveHistory.seq) return;
+        if (e && e.code === 'signed_out') { window.location.href = '/'; return; }
+        if (liveHistory.state === 'loading') liveHistory.state = 'error';
+      }
+      renderSubmissionsPanel();
+    }
+    /** After a turn-in: show it at once, mark the work submitted (as the preview's mock does), then reload the real list. */
+    function afterTurnIn(revision) {
+      if (revision && typeof revision === 'object' && revision.id != null && String(revision.id)) {
+        liveHistory.pending = revision;
+        liveHistory.revisions = [revision].concat(liveHistory.revisions.filter(r => String(r.id) !== String(revision.id)));
+        liveHistory.state = 'ready';
+      }
+      currentStatus = 'submitted';
+      renderSubmissionsPanel();
+      pulse(submissionBodyEl.querySelector('[data-rev-index="0"]'));
+      loadLiveHistory();
+    }
+
+    // ------------------------------------------------------------------
+    // Turning in, signed in with Schoology (2026-10-06): shared by Add
+    // Submission and Submit on a draft.
+    // ------------------------------------------------------------------
+    function submitMessage(err) {
+      const S = window.AveragesSubmit, C = window.AveragesCloud;
+      if (S) return S.messageFor(err);
+      if (C) return C.messageFor(err);
+      return 'Something went wrong. Try again in a moment.';
+    }
+    function submitErrorHTML(err, short) {
+      const code = err && err.code ? err.code : '';
+      // `short`: the failing file's row already says why.
+      let html = short ? 'Nothing was turned in.' : escapeHtml(submitMessage(err));
+      if (code === 'canva_reconnect_needed') html += ' <a href="settings.html?section=integrations">Reconnect Canva</a>';
+      if (code === 'canva_not_connected') html += ' <a href="settings.html?section=integrations">Connect Canva</a>';
+      if (code === 'signed_out') html += ' <a href="/">Sign in</a>';
+      return html;
+    }
+    /** Tokens to download picked files. Not async: a sign-in window may open, so call inside the click, before any await. */
+    function driveReadToken(C) {
+      if (!C || typeof C.googleSession !== 'function') return Promise.reject({ code: 'not_configured' });
+      if (!C.googleReady()) { C.prepareGoogle().catch(() => {}); return Promise.reject({ code: 'not_ready' }); }
+      return C.googleSession({ interactive: true });
+    }
+    function oneDriveReadToken(C) {
+      if (!C || typeof C.oneDriveToken !== 'function') return Promise.reject({ code: 'not_configured' });
+      return C.oneDriveToken({ interactive: true, read: true });
+    }
+    const driveDownloadReady = () => !!(window.AveragesCloud && cloudCfg && cloudCfg.google && typeof window.AveragesCloud.googleDownload === 'function');
+    const CHECK_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+    /** The "Turned in" state, in whichever popup did the turning in. */
+    function showTurnedIn(names, sentence) {
+      activeSubmitAbort = null;
+      modalBox.removeAttribute('aria-busy');
+      const list = names.filter(Boolean);
+      const what = sentence || `${list.length === 1 ? `"${escapeHtml(list[0])}" is` : `${list.length} files are`} turned in on Schoology.`;
+      modalBox.innerHTML = `
+        <div class="submit-done-head"><span class="submit-done-check" aria-hidden="true">${CHECK_ICON}</span><h3>Turned in</h3></div>
+        <p>${what} You’ll find it in Submission History.</p>
+        ${list.length > 1 ? `<div class="modal-file-list">${list.map(n => {
+          const ext = ((String(n).match(/\.([a-z0-9]{1,5})$/i) || [])[1] || '').toLowerCase();
+          return `<div class="material-row"><span class="material-badge" style="background:${EXT_COLOR[ext] || '#83849a'}">${escapeHtml((ext || 'file').toUpperCase().slice(0, 4))}</span><span class="material-name">${escapeHtml(n)}</span></div>`;
+        }).join('')}</div>` : ''}
+        <div class="modal-actions">
+          <button class="modal-btn primary" type="button" id="modalDoneBtn">Done</button>
+        </div>`;
+      modalBox.setAttribute('role', 'dialog');
+      const done = document.getElementById('modalDoneBtn');
+      done.addEventListener('click', closeModal);
+      done.focus();
+    }
+
 
     function renderSubmissionsPanel() {
       const banner = BANNER_COPY[currentStatus]();
@@ -2334,7 +2613,9 @@
         bodyEl.innerHTML = html;
         return;
       }
-      if (currentStatus === 'overdue' || currentStatus === 'upcoming') {
+      if (SUBMIT_LIVE) {
+        html += liveHistoryHTML();
+      } else if (currentStatus === 'overdue' || currentStatus === 'upcoming') {
         html += `
           <div class="submit-dropzone">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M12 4l-5 5M12 4l5 5"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
@@ -2360,7 +2641,7 @@
           Add Submission
         </button>`;
       bodyEl.innerHTML = html;
-      document.getElementById('addSubmissionBtn').addEventListener('click', openAddSubmissionModal);
+      document.getElementById('addSubmissionBtn').addEventListener('click', () => openAddSubmissionModal());
     }
 
     // Add Submission — Upload / Create, mirroring the real Schoology upload
@@ -2391,13 +2672,7 @@
              per Martin -- at least one file is now required on this tab;
              see modalSubmitBtn's click handler). -->
         <p class="upload-required-note" id="uploadRequiredNote" hidden>Choose at least one file before submitting.</p>
-        <div class="upload-sources" role="group" aria-label="Add from another app (coming soon)">
-          <span class="upload-sources-label">Or add from</span>
-          <button class="upload-source" type="button" disabled><span class="canva-mark" aria-hidden="true"></span>Canva</button>
-          <button class="upload-source" type="button" disabled>Google Drive</button>
-          <button class="upload-source" type="button" disabled>OneDrive</button>
-          <span class="soon">Coming soon</span>
-        </div>
+        ${uploadSourcesHTML()}
         <input type="file" id="submissionFileInput" multiple style="display:none;">`,
       // Rich-text answer area (2026-08-30, per Martin's request — a plain
       // textbox with Google-Docs-style formatting options) in place of the
@@ -2431,7 +2706,77 @@
         <div class="modal-textarea answer-textarea rte-editor" id="submissionAnswerText" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Answer" data-placeholder="Type your answer here…"></div>`,
     };
 
-    function openAddSubmissionModal() {
+    // "Or add from" (2026-10-06): the preview keeps its Coming soon row.
+    // Signed in with Schoology, each app works once it's set up: Canva when
+    // it's connected (else a Connect hint), Google Drive and OneDrive when
+    // their app ids are set and averages-cloud.js has the download helpers.
+    const SOURCE_NAME = { canva: 'Canva', gdrive: 'Google Drive', onedrive: 'OneDrive' };
+    const PICK_SOURCE = { course: 'Course file', gdrive: 'Google Drive', onedrive: 'OneDrive', canva: 'Canva, turned in as a PDF' };
+    const PICK_ID_OK = {
+      course: id => /^\d{1,20}$/.test(id),
+      gdrive: id => /^[A-Za-z0-9_-]{1,200}$/.test(id),
+      onedrive: id => /^[A-Za-z0-9!._-]{1,200}$/.test(id),
+      canva: id => /^[A-Za-z0-9_-]{1,64}$/.test(id),
+    };
+    function sourceState(app) {
+      if (INCOGNITO) return 'off';
+      if (app === 'canva') return !canvaInfo || !canvaInfo.configured ? 'soon' : canvaInfo.connected ? 'ready' : 'connect';
+      const C = window.AveragesCloud;
+      if (!C || !cloudCfg) return 'soon';
+      if (app === 'gdrive') return cloudCfg.google && typeof C.googlePick === 'function' && typeof C.googleDownload === 'function' ? 'ready' : 'soon';
+      return cloudCfg.microsoft && typeof C.oneDrivePick === 'function' && typeof C.oneDriveDownload === 'function' ? 'ready' : 'soon';
+    }
+    function uploadSourcesRowHTML() {
+      const off = ['canva', 'gdrive', 'onedrive'].filter(a => ['soon', 'off'].includes(sourceState(a)));
+      const btn = (app, inner) => `<button class="upload-source" type="button" data-source="${app}"${off.includes(app) ? ' disabled' : ''}>${inner}</button>`;
+      const soon = INCOGNITO ? 'Off in Incognito' : off.length === 3 ? 'Coming soon' : off.length ? `${off.map(a => SOURCE_NAME[a]).join(' and ')} coming soon` : '';
+      return `<div class="upload-sources" id="uploadSources" role="group" aria-label="Add from another app">
+          <span class="upload-sources-label">Or add from</span>
+          ${btn('canva', '<span class="canva-mark" aria-hidden="true"></span>Canva')}
+          ${btn('gdrive', 'Google Drive')}
+          ${btn('onedrive', 'OneDrive')}
+          ${soon ? `<span class="soon">${soon}</span>` : ''}
+        </div>`;
+    }
+    function uploadSourcesHTML() {
+      if (!SUBMIT_LIVE) return `
+        <div class="upload-sources" role="group" aria-label="Add from another app (coming soon)">
+          <span class="upload-sources-label">Or add from</span>
+          <button class="upload-source" type="button" disabled><span class="canva-mark" aria-hidden="true"></span>Canva</button>
+          <button class="upload-source" type="button" disabled>Google Drive</button>
+          <button class="upload-source" type="button" disabled>OneDrive</button>
+          <span class="soon">Coming soon</span>
+        </div>`;
+      return `
+        ${uploadSourcesRowHTML()}
+        <p class="upload-source-note" id="uploadSourceNote" role="status" hidden></p>
+        <div class="canva-pick" id="canvaPick" hidden></div>`;
+    }
+    /** Redraws the row in an open Add Submission when Canva / the cloud setup becomes known. */
+    function refreshUploadSources() {
+      const row = document.getElementById('uploadSources');
+      if (!row || !SUBMIT_LIVE || modalBox.getAttribute('aria-busy') === 'true') return;
+      const tmp = document.createElement('div');
+      tmp.innerHTML = uploadSourcesRowHTML();
+      row.replaceWith(tmp.firstElementChild);
+    }
+    /** A file from the Files page (?attach=), as an Add Submission pick. */
+    function pickFromAttach(a) {
+      if (a.src === 'course') return { src: 'course', id: a.id, name: a.name, kind: a.kind, parent: a.parent, course: a.course };
+      if (a.src === 'canva') {
+        const title = a.name.replace(/\.pdf$/i, '') || 'Canva design';
+        return { src: 'canva', id: a.id, designId: a.id, title, name: title + '.pdf' };
+      }
+      return { src: a.src, id: a.id, name: a.name };
+    }
+    function pickExt(f) {
+      const ext = ((String(f.name || '').match(/\.([a-z0-9]{1,5})$/i) || [])[1] || '').toLowerCase();
+      if (f.src === 'canva') return 'pdf';
+      return ext || (f.src === 'gdrive' ? 'pdf' : '');
+    }
+
+    function openAddSubmissionModal(opts) {
+      opts = opts || {};
       let activeTab = 'upload';
       // Every file picked on the Upload tab so far this modal session
       // (2026-09-04, per Martin's multi-file request) -- lives here, not
@@ -2442,6 +2787,13 @@
       // Also survives switching to the Create tab and back, since it's
       // closed over here rather than living in the (regenerated) DOM.
       let pickedFiles = [];
+      // Each pick is { name, src }: 'device' with its File, or, signed in
+      // (2026-10-06), 'course' | 'gdrive' | 'onedrive' | 'canva' with an id,
+      // fetched as a Blob only once Submit is clicked.
+      (opts.files || []).forEach(f => pickedFiles.push({ name: f.name, src: 'device', file: f, size: f.size }));
+      if (opts.attach) pickedFiles.push(pickFromAttach(opts.attach));
+      let renderPicked = () => {};
+      let running = false;
 
       openModal(`
         <h3>Add Submission</h3>
@@ -2450,8 +2802,11 @@
           <button class="upload-tab" type="button" role="tab" aria-selected="false" data-tab="create">Create</button>
         </div>
         <div class="upload-tab-panel" id="uploadTabPanel">${UPLOAD_TAB_PANEL.upload()}</div>
-        <label class="modal-field-label" for="submissionComment">Add a comment (optional)</label>
-        <textarea class="modal-textarea" id="submissionComment" placeholder="Add a comment (optional)"></textarea>
+        ${SUBMIT_LIVE
+          // Signed in: Schoology's turn-in has no comment field, so there's no box that would go nowhere.
+          ? '<p class="submit-error" id="submitError" role="alert" hidden></p>'
+          : `<label class="modal-field-label" for="submissionComment">Add a comment (optional)</label>
+        <textarea class="modal-textarea" id="submissionComment" placeholder="Add a comment (optional)"></textarea>`}
         <div class="modal-actions">
           <button class="modal-btn secondary" type="button" id="modalCancelBtn">Cancel</button>
           <button class="modal-btn primary" type="button" id="modalSubmitBtn">Submit</button>
@@ -2484,16 +2839,21 @@
           nameEl.textContent = pickedFiles.length === 1 ? pickedFiles[0].name : `${pickedFiles.length} files chosen`;
           nameEl.classList.remove('empty');
           listEl.innerHTML = pickedFiles.map((f, i) => {
-            const ext = (f.name.split('.').pop() || '').toLowerCase();
+            const ext = SUBMIT_LIVE ? pickExt(f) : (f.name.split('.').pop() || '').toLowerCase();
             const color = EXT_COLOR[ext] || '#83849a';
+            const name = `<span class="upload-picked-name">${escapeHtml(f.name)}</span>`;
+            // Signed in: where it's from (cloud files), and a line for its progress.
+            const tooBig = SUBMIT_LIVE && f.size > SUBMIT_MAX_BYTES;
+            const live = SUBMIT_LIVE ? `<span class="upload-picked-text">${name}${PICK_SOURCE[f.src] ? `<span class="upload-picked-src">${PICK_SOURCE[f.src]}</span>` : ''}<span class="upload-picked-progress"${tooBig ? '' : ' hidden'}><span class="upload-progress-text">${tooBig ? 'Too big to turn in (95 MB max)' : ''}</span><span class="upload-bar" aria-hidden="true"><i></i></span></span></span>` : '';
             return `
-              <div class="upload-picked-row">
-                <span class="material-badge" style="background:${escapeHtml(color)}">${escapeHtml((ext || '?').toUpperCase())}</span>
-                <span class="upload-picked-name">${escapeHtml(f.name)}</span>
+              <div class="upload-picked-row${tooBig ? ' failed' : ''}" data-pick="${i}">
+                <span class="material-badge" style="background:${escapeHtml(color)}">${escapeHtml(SUBMIT_LIVE ? (ext || '?').toUpperCase().slice(0, 4) : (ext || '?').toUpperCase())}</span>
+                ${SUBMIT_LIVE ? live : name}
                 <button class="material-icon-btn" type="button" data-index="${i}" aria-label="Remove ${escapeHtml(f.name)}">${REMOVE_ICON}</button>
               </div>`;
           }).join('');
         }
+        renderPicked = renderPickedList;
         renderPickedList(); // re-bound after a Create->Upload tab switch, with files already picked this session
 
         chooseBtn.addEventListener('click', () => fileInput.click());
@@ -2501,7 +2861,7 @@
           const newFiles = Array.from(fileInput.files);
           fileInput.value = ''; // so picking the same file(s) again still fires "change"
           if (!newFiles.length) return;
-          pickedFiles.push(...newFiles);
+          pickedFiles.push(...newFiles.map(f => ({ name: f.name, src: 'device', file: f, size: f.size })));
           renderPickedList();
           // Picking file(s) clears a validation error from a previous
           // failed Submit attempt (see modalSubmitBtn's click handler).
@@ -2511,7 +2871,7 @@
         // Delegated (not per-row) since the list is rebuilt on every add/remove.
         listEl.addEventListener('click', e => {
           const btn = e.target.closest('.material-icon-btn[data-index]');
-          if (!btn) return;
+          if (!btn || running) return;
           pickedFiles.splice(Number(btn.dataset.index), 1);
           renderPickedList();
         });
@@ -2567,6 +2927,242 @@
       }
       bindActiveTab();
 
+      // ---------- Signed in with Schoology (2026-10-06) ----------
+      const sec = String(item.courseId), asg = String(item.id);
+      function sourceNote(html) {
+        const note = document.getElementById('uploadSourceNote');
+        if (note) { note.innerHTML = html; note.hidden = !html; }
+      }
+      function clearRequired() {
+        const picker = document.getElementById('uploadPicker'), req = document.getElementById('uploadRequiredNote');
+        if (picker) picker.classList.remove('error');
+        if (req) req.hidden = true;
+      }
+      /** Adds a pick unless that same file is already in the list. */
+      function addPick(f) {
+        if (f.src !== 'device' && pickedFiles.some(x => x.src === f.src && x.id === f.id)) return false;
+        pickedFiles.push(f);
+        renderPicked();
+        clearRequired();
+        return true;
+      }
+      // Add from Canva: this assignment's Canva drafts, then the student's designs (GET /canva/designs, as on Files).
+      let canvaPickItems = [], canvaPickNext = null;
+      const httpsUrl = u => /^https:\/\//i.test(String(u || ''));
+      const canvaPickHead = `<div class="canva-pick-head"><span>Pick a design. It’s turned in as a PDF.</span><button class="material-icon-btn" type="button" data-canva-close aria-label="Close Canva designs">${REMOVE_ICON}</button></div>`;
+      function renderCanvaPick() {
+        const box = document.getElementById('canvaPick');
+        if (!box || box.hidden) return;
+        const row = (id, title, meta, thumb) => `<button class="canva-pick-item" type="button" data-pick-design="${escapeHtml(id)}" data-pick-title="${escapeHtml(title)}">`
+          + `<span class="canva-pick-thumb">${httpsUrl(thumb) ? `<img src="${escapeHtml(thumb)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : '<span class="canva-mark" aria-hidden="true"></span>'}</span>`
+          + `<span class="canva-pick-name">${escapeHtml(title)}</span><span class="canva-pick-meta">${escapeHtml(meta)}</span></button>`;
+        const draftIds = new Set(canvaDrafts.map(d => d.designId));
+        const drafts = canvaDrafts.map(d => row(d.designId, d.name, `Edited ${d.edited}`, ''));
+        const designs = canvaPickItems.filter(d => !draftIds.has(String(d.id))).map(d => row(String(d.id), String(d.title || 'Untitled design'), d.updatedAt ? editedLabel(d.updatedAt) : '', d.thumbnailUrl));
+        box.innerHTML = canvaPickHead + `<div class="canva-pick-list">`
+          + (drafts.length ? '<div class="canva-pick-label">Drafts for this assignment</div>' + drafts.join('') : '')
+          + (designs.length ? '<div class="canva-pick-label">Your designs</div>' + designs.join('') : '')
+          + (!drafts.length && !designs.length ? '<p class="canva-pick-empty">No Canva designs yet.</p>' : '')
+          + (canvaPickNext ? '<button class="assign-retry" type="button" data-canva-more>Show more</button>' : '')
+          + '</div>';
+      }
+      async function loadCanvaPick(more) {
+        const box = document.getElementById('canvaPick');
+        if (!box) return;
+        box.hidden = false;
+        if (!more) {
+          canvaPickItems = []; canvaPickNext = null;
+          box.innerHTML = canvaPickHead + '<p class="canva-pick-empty">Loading your Canva designs…</p>';
+        }
+        try {
+          const res = await fetch(`${averagesApiBase()}/canva/designs${more && canvaPickNext ? '?continuation=' + encodeURIComponent(canvaPickNext) : ''}`, { credentials: 'include' });
+          const j = await res.json().catch(() => ({}));
+          if (j.connected === false || j.error === 'canva_not_connected' || j.error === 'canva_reconnect_needed') {
+            box.innerHTML = canvaPickHead + '<p class="canva-pick-empty">Connect Canva first in <a href="settings.html?section=integrations">Settings</a>, then add your designs here.</p>';
+            return;
+          }
+          if (!res.ok) throw new Error('status ' + res.status);
+          canvaPickItems = canvaPickItems.concat((Array.isArray(j.items) ? j.items : []).filter(d => d && PICK_ID_OK.canva(String(d.id || ''))));
+          canvaPickNext = typeof j.continuation === 'string' && j.continuation ? j.continuation : null;
+          renderCanvaPick();
+        } catch {
+          if (canvaPickItems.length || canvaDrafts.length) { renderCanvaPick(); return; }
+          box.innerHTML = canvaPickHead + '<p class="canva-pick-empty">Couldn’t load your Canva designs.<button class="assign-retry" type="button" data-canva-retry>Try again</button></p>';
+        }
+      }
+      // Google Drive / OneDrive: the sign-in window (if any) opens inside the click, before anything is awaited.
+      function addFromCloud(app, btn) {
+        const C = window.AveragesCloud;
+        if (!C) return;
+        const pending = app === 'gdrive'
+          ? driveReadToken(C).then(t => C.googlePick(t)).then(docs => (docs || []).map(d => ({ id: String(d.id || ''), name: String(d.name || 'Google Drive file'), mimeType: String(d.mimeType || ''), size: Number(d.sizeBytes) || 0 })))
+          : oneDriveReadToken(C).then(t => C.oneDrivePick(t)).then(items => (items || []).map(f => ({ id: String(f.id || ''), name: String(f.name || 'OneDrive file'), mimeType: String(f.mimeType || ''), size: Number(f.size) || 0 })));
+        btn.setAttribute('aria-busy', 'true');
+        pending
+          .then(list => {
+            list.forEach(f => {
+              if (!PICK_ID_OK[app](f.id)) return;
+              // Google Docs, Sheets and Slides come down as PDFs.
+              const google = app === 'gdrive' && /^application\/vnd\.google-apps\./.test(f.mimeType) && !/\.pdf$/i.test(f.name);
+              addPick({ src: app, id: f.id, name: (google ? f.name + '.pdf' : f.name).slice(0, 200), mimeType: f.mimeType, size: f.size });
+            });
+          })
+          .catch(err => { if (!err || err.code !== 'popup_closed') sourceNote(escapeHtml(submitMessage(err))); })
+          .then(() => btn.removeAttribute('aria-busy'));
+      }
+      panelEl.addEventListener('click', e => {
+        if (!SUBMIT_LIVE || running) return;
+        const src = e.target.closest('[data-source]');
+        if (src && !src.disabled) {
+          if (src.getAttribute('aria-busy') === 'true') return;
+          sourceNote('');
+          if (src.dataset.source !== 'canva') { addFromCloud(src.dataset.source, src); return; }
+          if (sourceState('canva') === 'connect') { sourceNote('Connect Canva first in <a href="settings.html?section=integrations">Settings</a>, then add your designs here.'); return; }
+          const box = document.getElementById('canvaPick');
+          if (box && !box.hidden) box.hidden = true; else loadCanvaPick(false);
+          return;
+        }
+        if (e.target.closest('[data-canva-close]')) { document.getElementById('canvaPick').hidden = true; return; }
+        if (e.target.closest('[data-canva-more]')) { loadCanvaPick(true); return; }
+        if (e.target.closest('[data-canva-retry]')) { loadCanvaPick(false); return; }
+        const d = e.target.closest('[data-pick-design]');
+        if (d) {
+          const title = (d.dataset.pickTitle || 'Canva design').replace(/\.pdf$/i, '').slice(0, 190) || 'Canva design';
+          addPick({ src: 'canva', id: d.dataset.pickDesign, designId: d.dataset.pickDesign, title, name: title + '.pdf' });
+          document.getElementById('canvaPick').hidden = true;
+        }
+      });
+
+      function setPickProgress(i, text, fraction, state) {
+        const row = modalBox.querySelector(`.upload-picked-row[data-pick="${i}"]`);
+        const line = row && row.querySelector('.upload-picked-progress');
+        if (!line) return;
+        line.hidden = false;
+        line.querySelector('.upload-progress-text').textContent = text;
+        const bar = line.querySelector('.upload-bar');
+        bar.hidden = fraction == null;
+        if (fraction != null) bar.firstElementChild.style.width = Math.round(Math.max(0, Math.min(1, fraction)) * 100) + '%';
+        row.classList.toggle('done', state === 'done');
+        row.classList.toggle('failed', state === 'failed');
+      }
+      function setRunning(on) {
+        running = on;
+        if (on) modalBox.setAttribute('aria-busy', 'true'); else modalBox.removeAttribute('aria-busy');
+        modalBox.querySelectorAll('.upload-tab, #chooseFileBtn, .upload-picked-row .material-icon-btn').forEach(b => { b.disabled = on; });
+        if (on) {
+          modalBox.querySelectorAll('.upload-source').forEach(b => { b.disabled = true; });
+          const box = document.getElementById('canvaPick');
+          if (box) box.hidden = true;
+          sourceNote('');
+        } else refreshUploadSources();
+        const editor = document.getElementById('submissionAnswerText');
+        if (editor) editor.setAttribute('contenteditable', on ? 'false' : 'true');
+        const btn = document.getElementById('modalSubmitBtn');
+        btn.disabled = on;
+        btn.textContent = on ? 'Turning in…' : 'Submit';
+      }
+      function showSubmitError(err) {
+        const onRow = !!err && typeof err.index === 'number' && err.index >= 0 && !!modalBox.querySelector(`.upload-picked-row[data-pick="${err.index}"]`);
+        if (onRow) setPickProgress(err.index, submitMessage(err), null, 'failed');
+        const el = document.getElementById('submitError');
+        if (el) { el.innerHTML = submitErrorHTML(err, onRow); el.hidden = false; }
+      }
+      /** One pick as { blob, name }. Cloud and Canva files are only fetched now. */
+      async function pickBlob(S, C, f, i, tokens, signal) {
+        if (f.src === 'device') return { blob: f.file, name: f.name };
+        if (f.src === 'course') {
+          setPickProgress(i, 'Getting it from your class…', null);
+          const blob = await S.courseFile({ section: f.course, [f.kind === 'document' ? 'document' : 'assignment']: f.parent, fileId: f.id, name: f.name }, signal);
+          return { blob, name: f.name };
+        }
+        if (f.src === 'canva') {
+          setPickProgress(i, `Making a PDF of ${f.title}…`, null);
+          return S.exportCanva(f.designId, { title: f.title, signal });
+        }
+        const download = C && (f.src === 'gdrive' ? C.googleDownload : C.oneDriveDownload);
+        if (typeof download !== 'function') throw { code: 'not_configured' };
+        setPickProgress(i, `Getting it from ${SOURCE_NAME[f.src]}…`, null);
+        const r = await download.call(C, await tokens[f.src], f.id);
+        if (!r || !r.blob) throw { code: 'download_failed' };
+        return { blob: r.blob, name: String(r.name || f.name) };
+      }
+      /** Runs one turn-in: `run(S, signal)` resolves { revision }; names are what the done state lists. */
+      function go(run, names, sentence) {
+        const ctl = new AbortController();
+        activeSubmitAbort = () => ctl.abort();
+        const err = document.getElementById('submitError');
+        if (err) err.hidden = true;
+        setRunning(true);
+        loadSubmitScript()
+          .then(S => run(S, ctl.signal))
+          .then(r => {
+            if (ctl.signal.aborted) return;
+            showTurnedIn(names(), sentence);
+            afterTurnIn(r && r.revision);
+          })
+          .catch(e => {
+            // Closed mid-way (Cancel or Escape): the popup is gone; the list may have changed.
+            if (ctl.signal.aborted || (e && e.code === 'aborted')) { loadLiveHistory(); return; }
+            activeSubmitAbort = null;
+            setRunning(false);
+            if (e && e.code === 'popup_closed') { renderPicked(); return; }
+            showSubmitError(e && typeof e === 'object' ? e : { code: String(e) });
+          });
+      }
+      function liveSubmit() {
+        if (running) return;
+        if (activeTab === 'create') {
+          const editor = document.getElementById('submissionAnswerText');
+          if (!editor.textContent.trim()) { showSubmitError({ code: 'empty_text' }); editor.focus(); return; }
+          const html = editor.innerHTML;
+          go((S, signal) => S.submitText({ section: sec, assignment: asg, html, signal }), () => [], 'Your answer is turned in on Schoology.');
+          return;
+        }
+        if (!pickedFiles.length) {
+          document.getElementById('uploadPicker').classList.add('error');
+          document.getElementById('uploadRequiredNote').hidden = false;
+          document.getElementById('chooseFileBtn').focus();
+          return;
+        }
+        const C = window.AveragesCloud;
+        // Sign-in windows have to open inside this click, so tokens are asked for before anything is awaited.
+        const tokens = {};
+        if (pickedFiles.some(f => f.src === 'gdrive')) tokens.gdrive = driveReadToken(C);
+        const oneDriveFiles = pickedFiles.filter(f => f.src === 'onedrive');
+        if (oneDriveFiles.length) {
+          const needsRead = typeof C.oneDrivePicked !== 'function' || oneDriveFiles.some(f => C.oneDrivePicked(f.id));
+          tokens.onedrive = needsRead ? oneDriveReadToken(C)
+            : (typeof C.oneDriveToken === 'function' ? C.oneDriveToken({ interactive: true }) : Promise.reject({ code: 'not_configured' }));
+        }
+        Object.values(tokens).forEach(t => t.catch(() => {}));
+        const picks = pickedFiles.slice();
+        const names = picks.map(f => f.name);
+        renderPicked();
+        picks.forEach((f, i) => setPickProgress(i, 'Waiting…', null));
+        go(async (S, signal) => {
+          const files = [];
+          for (let i = 0; i < picks.length; i++) {
+            try {
+              files.push(await pickBlob(S, C, picks[i], i, tokens, signal));
+            } catch (e) {
+              throw Object.assign(e && typeof e === 'object' ? e : { code: String(e) }, { index: i });
+            }
+            if (signal.aborted) throw { code: 'aborted' };
+            names[i] = files[i].name;
+            if (picks[i].src !== 'device') setPickProgress(i, 'Waiting…', null);
+          }
+          return S.submitFiles({
+            section: sec, assignment: asg, files, signal,
+            onProgress: p => {
+              const pct = Math.round((p.fraction || 0) * 100);
+              if (p.phase === 'hashing') setPickProgress(p.index, `Getting ready ${pct}%`, p.fraction);
+              else if (p.phase === 'uploading') setPickProgress(p.index, `Uploading ${pct}%`, p.fraction);
+              else if (p.phase === 'done') setPickProgress(p.index, 'Uploaded', 1, 'done');
+            },
+          });
+        }, () => names);
+      }
+
       modalBox.querySelectorAll('.upload-tab').forEach(tabBtn => {
         tabBtn.addEventListener('click', () => {
           activeTab = tabBtn.dataset.tab;
@@ -2582,6 +3178,7 @@
 
       document.getElementById('modalCancelBtn').addEventListener('click', closeModal);
       document.getElementById('modalSubmitBtn').addEventListener('click', () => {
+        if (SUBMIT_LIVE) { liveSubmit(); return; }
         let files;
         if (activeTab === 'upload') {
           // At least one file is required on this tab (2026-09-04, per
@@ -2617,6 +3214,9 @@
     }
 
     renderSubmissionsPanel();
+    // Signed in with Schoology: the real Submission History (2026-10-06).
+    // Quizzes are taken on Schoology and show no history here.
+    if (SUBMIT_LIVE && item.type !== 'assessment') loadLiveHistory();
 
     // ------------------------------------------------------------------
     // Drafts (2026-10-04, per Martin): Edit in Canva sends the file over to
@@ -2647,7 +3247,10 @@
       if (d.live && d.drive) {
         // Signed in (2026-10-05): a Google Doc/Slides/Sheet made by Edit in
         // Google Drive. Remembered in this browser; the file is in their Drive.
-        const submitDrive = `<button class="draft-submit" type="button" data-draft-action="submit" disabled aria-label="Submit ${nm}">Submit</button>`;
+        // Since 2026-10-06 Submit turns in a PDF of it, once averages-cloud.js
+        // can download from Google Drive.
+        const driveCan = SUBMIT_LIVE && !testItem && driveDownloadReady();
+        const submitDrive = `<button class="draft-submit" type="button" data-draft-action="submit"${driveCan ? '' : ' disabled'} aria-label="Submit ${nm}">Submit</button>`;
         return `
         <div class="material-row file-bar draft-row" data-draft="${escapeHtml(d.id)}">
           ${draftBadgeHTML(d)}
@@ -2657,16 +3260,17 @@
           </span>
           <div class="material-actions">
             <button class="canva-btn drive-btn" type="button" data-draft-action="open" aria-label="Open ${nm} in Google Drive"><span>Open in Google Drive</span></button>
-            ${tip(testItem ? 'Tests are turned in on Schoology' : 'Turning in from Averages.io is coming soon', submitDrive)}
+            ${driveCan ? submitDrive : tip(testItem ? 'Tests are turned in on Schoology' : 'Turning in from Averages.io is coming soon', submitDrive)}
             ${tip('Delete draft', `<button class="material-icon-btn" type="button" data-draft-action="delete" aria-label="Delete draft ${nm}">${TRASH_ICON}</button>`)}
           </div>
         </div>`;
       }
       if (d.live) {
-        // Signed in (2026-10-05): a real Canva design. Turning it in from
-        // Averages.io isn't built yet (it needs a PDF export from Canva), so
-        // Submit stays greyed out and says so.
-        const submitLive = `<button class="draft-submit" type="button" data-draft-action="submit" disabled aria-label="Submit ${nm}">Submit</button>`;
+        // Signed in (2026-10-05): a real Canva design. Since 2026-10-06 Submit
+        // turns in a PDF that Canva makes (our API exports it). Until the
+        // Canva app has that permission, the API says to reconnect.
+        const canvaCan = SUBMIT_LIVE && !testItem;
+        const submitLive = `<button class="draft-submit" type="button" data-draft-action="submit"${canvaCan ? '' : ' disabled'} aria-label="Submit ${nm}">Submit</button>`;
         return `
         <div class="material-row file-bar draft-row" data-draft="${escapeHtml(d.id)}">
           ${draftBadgeHTML(d)}
@@ -2676,7 +3280,7 @@
           </span>
           <div class="material-actions">
             <button class="canva-btn" type="button" data-draft-action="open" aria-label="Open ${nm} in Canva"><span class="canva-mark" aria-hidden="true"></span><span>Open in Canva</span></button>
-            ${tip(testItem ? 'Tests are turned in on Schoology' : 'Turning in from Averages.io is coming soon', submitLive)}
+            ${canvaCan ? submitLive : tip(testItem ? 'Tests are turned in on Schoology' : 'Turning in from Averages.io is coming soon', submitLive)}
             ${tip('Delete draft', `<button class="material-icon-btn" type="button" data-draft-action="delete" aria-label="Delete draft ${nm}">${TRASH_ICON}</button>`)}
           </div>
         </div>`;
@@ -2840,6 +3444,89 @@
       ], { duration: 220, easing: 'ease' });
       a.onfinish = a.oncancel = finish;
     }
+    // Submit on a draft, signed in (2026-10-06): "Turn in ... as a PDF?", then
+    // the PDF (Canva exports it; Google Drive exports a Doc/Slides/Sheet) goes
+    // through the same turn-in as Add Submission. The draft stays in Drafts.
+    function confirmSubmitDraft(d, fromBtn) {
+      openModal(`
+        <h3>Turn in "${escapeHtml(d.name)}" as a PDF?</h3>
+        <p>${d.drive ? 'Averages.io gets a PDF of it from your Google Drive and turns it in on Schoology.' : 'Canva makes a PDF of your design, and Averages.io turns it in on Schoology.'}</p>
+        <div class="upload-picked-progress" id="draftSubProgress" hidden><span class="upload-progress-text"></span><span class="upload-bar" aria-hidden="true"><i></i></span></div>
+        <p class="submit-error" id="submitError" role="alert" hidden></p>
+        <div class="modal-actions">
+          <button class="modal-btn secondary" type="button" id="draftSubCancel">Cancel</button>
+          <button class="modal-btn primary" type="button" id="draftSubOk">Turn in</button>
+        </div>`);
+      modalBox.setAttribute('role', 'dialog'); modalBox.setAttribute('aria-modal', 'true');
+      const back = () => { if (fromBtn && document.body.contains(fromBtn)) fromBtn.focus(); };
+      const ok = document.getElementById('draftSubOk');
+      const errEl = document.getElementById('submitError');
+      const prog = document.getElementById('draftSubProgress');
+      const line = (text, fraction) => {
+        prog.hidden = false;
+        prog.querySelector('.upload-progress-text').textContent = text;
+        const bar = prog.querySelector('.upload-bar');
+        bar.hidden = fraction == null;
+        if (fraction != null) bar.firstElementChild.style.width = Math.round(fraction * 100) + '%';
+      };
+      document.getElementById('draftSubCancel').addEventListener('click', () => { closeModal(); back(); });
+      ok.addEventListener('click', () => {
+        if (ok.disabled) return;
+        const C = window.AveragesCloud;
+        const token = d.drive ? driveReadToken(C) : null;   // inside the click: it may open Google's window
+        if (token) token.catch(() => {});
+        const ctl = new AbortController();
+        activeSubmitAbort = () => ctl.abort();
+        ok.disabled = true;
+        ok.textContent = 'Turning in…';
+        errEl.hidden = true;
+        modalBox.setAttribute('aria-busy', 'true');
+        let name = d.name + '.pdf';
+        loadSubmitScript()
+          .then(async S => {
+            let file;
+            if (d.drive) {
+              line('Getting a PDF from Google Drive…', null);
+              if (!C || typeof C.googleDownload !== 'function') throw { code: 'not_configured' };
+              const r = await C.googleDownload(await token, d.driveId);
+              if (!r || !r.blob) throw { code: 'download_failed' };
+              file = { blob: r.blob, name: String(r.name || name) };
+            } else {
+              line(`Making a PDF of ${d.name}…`, null);
+              file = await S.exportCanva(d.designId, { title: d.name, signal: ctl.signal });
+            }
+            if (ctl.signal.aborted) throw { code: 'aborted' };
+            name = file.name;
+            return S.submitFiles({
+              section: String(item.courseId), assignment: String(item.id), files: [file], signal: ctl.signal,
+              onProgress: p => {
+                const pct = Math.round((p.fraction || 0) * 100);
+                if (p.phase === 'hashing') line(`Getting ready ${pct}%`, p.fraction);
+                else if (p.phase === 'uploading') line(`Uploading ${pct}%`, p.fraction);
+                else if (p.phase === 'finishing') line('Turning it in…', 1);
+              },
+            });
+          })
+          .then(r => {
+            if (ctl.signal.aborted) return;
+            showTurnedIn([name]);
+            afterTurnIn(r && r.revision);
+          })
+          .catch(err => {
+            if (ctl.signal.aborted || (err && err.code === 'aborted')) { loadLiveHistory(); return; }
+            activeSubmitAbort = null;
+            modalBox.removeAttribute('aria-busy');
+            prog.hidden = true;
+            ok.disabled = false;
+            ok.textContent = err && err.code === 'popup_closed' ? 'Turn in' : 'Try again';
+            if (err && err.code === 'popup_closed') return;
+            errEl.innerHTML = submitErrorHTML(err);
+            errEl.hidden = false;
+            if (err && err.code === 'canva_design_gone') removeDraftRow(d.id);
+          });
+      });
+      ok.focus();
+    }
     // Are you sure? (2026-10-04, per Martin). Cancel is focused first, so a
     // stray Enter doesn't delete anything; Escape also cancels.
     function confirmDeleteDraft(d, fromBtn) {
@@ -2891,6 +3578,8 @@
         if (d.live) openLiveDraft(d, btn);
         return;
       }
+      // Signed in (2026-10-06): a PDF of it is turned in for real, after a confirm.
+      if (d.live) { confirmSubmitDraft(d, btn); return; }
       // Submit: the Canva design goes in as a PDF, like any other turn-in.
       removeDraftRow(id, () => {
         // Canva designs go in as a PDF; a Google Drive file in its own format.
@@ -2930,16 +3619,43 @@
     // onedrive|canva&ext=, and the file lands in Drafts, ready to Submit or
     // Delete. Preview only (no Files API yet). The three params are dropped
     // from the address afterwards so a reload doesn't add it again.
+    //
+    // Signed in (2026-10-06): ?attach= is JSON, { src, id, name, kind?, parent?,
+    // course? } (WAVES-CONTRACT.md), and opens Add Submission with that file
+    // already picked. Every field is checked: a bad one means nothing opens.
+    function parseAttach(raw) {
+      let j;
+      try { j = JSON.parse(raw); } catch { return null; }
+      if (!j || typeof j !== 'object' || Array.isArray(j)) return null;
+      const src = String(j.src || '');
+      const id = typeof j.id === 'string' || typeof j.id === 'number' ? String(j.id) : '';
+      const name = typeof j.name === 'string' ? j.name.replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, 200) : '';
+      if (!name || !PICK_ID_OK[src] || !PICK_ID_OK[src](id)) return null;
+      if (src !== 'course') return { src, id, name };
+      const kind = j.kind === undefined || j.kind === 'assignment' ? 'assignment' : j.kind === 'document' ? 'document' : '';
+      const parent = typeof j.parent === 'string' || typeof j.parent === 'number' ? String(j.parent) : '';
+      const course = typeof j.course === 'string' || typeof j.course === 'number' ? String(j.course) : '';
+      if (!kind || !/^\d{1,20}$/.test(parent) || !/^\d{1,20}$/.test(course)) return null;
+      return { src, id, name, kind, parent, course };
+    }
     (function attachFromFiles() {
-      const name = params.get('attach');
-      if (!name) return;
+      const raw = params.get('attach');
+      if (!raw) return;
       try {
         const u = new URL(location.href);
         ['attach', 'src', 'ext'].forEach(k => u.searchParams.delete(k));
         window.history.replaceState(window.history.state, '', u.pathname + u.search + u.hash);
       } catch (e) {}
+      const parsed = /^\s*\{/.test(raw) ? parseAttach(raw) : null;
+      if (SUBMIT_LIVE) {
+        if (parsed && item.type !== 'assessment') openAddSubmissionModal({ attach: parsed });
+        return;
+      }
       if (!CANVA_PREVIEW) return;
-      const src = params.get('src');
+      // The preview: the file lands in Drafts, from either form of the link.
+      if (/^\s*\{/.test(raw) && !parsed) return;
+      const name = parsed ? parsed.name : raw;
+      const src = parsed ? parsed.src : params.get('src');
       const app = ['course', 'gdrive', 'onedrive', 'canva'].includes(src) ? src : 'course';
       const ext = String(params.get('ext') || (name.match(/\.([a-z0-9]+)$/i) || [0, 'pdf'])[1]).toLowerCase();
       if (drafts.some(d => d.source === name && d.app === app)) return;

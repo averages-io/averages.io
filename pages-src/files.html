@@ -581,6 +581,17 @@
   .fx-next { display: inline-flex; flex-shrink: 0; }
   .fx-next svg { width: 14px; height: 14px; fill: none; stroke: var(--text-muted); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
   .fx-soon { font-size: 0.66rem; font-weight: 800; color: var(--text-faint); white-space: nowrap; }
+  /* 2026-10-06: Drive, OneDrive and Canva tiles have their own ... menu, and
+     the Attach chooser can be long (every class), so the menu scrolls. */
+  .lf-tile { position: relative; min-width: 0; }
+  .lf-tile .fx-tile { height: 100%; }
+  .lf-tile-more { position: absolute; top: 12px; right: 12px; width: 28px; height: 28px; background: var(--panel-bg); color: var(--text-muted); box-shadow: 0 2px 8px -3px rgba(0,0,0,0.3); }
+  .lf-tile-more:hover { background: var(--panel-bg); color: var(--text-dark); }
+  .lf-tile-more svg { width: 14px; height: 14px; }
+  .fx-menu { max-height: min(480px, calc(100vh - 120px)); overflow-y: auto; }
+  .fx-menu-group { display: flex; align-items: center; gap: 8px; padding: 12px 10px 4px; font-size: 0.68rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-faint); }
+  .fx-menu-group span:last-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fx-menu-note { padding: 4px 10px 10px; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); }
   @media (min-width: 761px) and (max-width: 1100px) { .fx-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } .fx-row { grid-template-columns: 34px minmax(0, 1fr) 140px 76px 36px; } }
   @media (max-width: 760px) {
     .fx { grid-template-columns: minmax(0, 1fr); }
@@ -1042,8 +1053,11 @@
     function openFxMenu(anchor, label, items, at) {
       if (fxMenuFor === anchor && !at) { closeFxMenu(true); return; }
       closeFxMenu(false);
+      // The Attach chooser (2026-10-06): `group` heads each class, `note` says there's nothing to pick.
       fxMenu.innerHTML = `<div class="fx-menu-label">${esc(label)}</div>` + items.map((it, i) =>
-        `<button class="fx-menu-item" type="button" role="menuitem" data-i="${i}"${it.soon ? ' disabled' : ''}><span>${esc(it.label)}${it.sub ? `<small>${esc(it.sub)}</small>` : ''}</span>${it.soon ? '<span class="fx-soon">Coming soon</span>' : it.next ? `<span class="fx-next">${CHEV_ICON}</span>` : ''}</button>`).join('');
+        it.group ? `<div class="fx-menu-group" role="presentation">${it.color ? `<span class="fx-dot" style="background:${esc(it.color)}"></span>` : ''}<span>${esc(it.group)}</span></div>`
+        : it.note ? `<div class="fx-menu-note" role="presentation">${esc(it.note)}</div>`
+        : `<button class="fx-menu-item" type="button" role="menuitem" data-i="${i}"${it.soon ? ' disabled' : ''}><span>${esc(it.label)}${it.sub ? `<small>${esc(it.sub)}</small>` : ''}</span>${it.soon ? '<span class="fx-soon">Coming soon</span>' : it.next ? `<span class="fx-next">${CHEV_ICON}</span>` : ''}</button>`).join('');
       fxMenu.querySelectorAll('.fx-menu-item').forEach(b => b.addEventListener('click', () => { const it = items[+b.dataset.i]; closeFxMenu(false); if (it.run) it.run(); }));
       fxMenu.hidden = false;
       fxMenu.style.left = '0px'; fxMenu.style.top = '0px';
@@ -1118,28 +1132,34 @@
       function normalize(app, f) {
         if (app === 'gdrive') {
           const [type, kind] = typeOf(f.name, f.mimeType);
-          return { name: String(f.name || 'Untitled'), type, kind, url: String(f.webViewLink || ''), t: Date.parse(f.modifiedTime) || 0 };
+          return { id: String(f.id || ''), name: String(f.name || 'Untitled'), type, kind, url: String(f.webViewLink || ''), t: Date.parse(f.modifiedTime) || 0 };
         }
         const [type, kind] = typeOf(f.name, '');
-        return { name: String(f.name || 'Untitled'), type, kind, url: String(f.webUrl || ''), t: Date.parse(f.lastModifiedDateTime) || 0 };
+        return { id: String(f.id || ''), name: String(f.name || 'Untitled'), type, kind, url: String(f.webUrl || ''), t: Date.parse(f.lastModifiedDateTime) || 0, picked: !!f.picked };
       }
       function cloudTile(app, f, i) {
         const thumb = `<span class="fx-thumb" style="background:${THUMB[f.type] || '#e4e4e8'}"><span class="page"><i></i><i></i><i></i><i></i><i></i></span></span>`;
         const when = dayLabel(f.t);
-        return `<button class="fx-tile" type="button" data-open-cloud="${app}" data-i="${i}" aria-label="Open ${esc(f.name)} in ${esc(CLOUD[app].name)}">${thumb}<span class="fx-tile-name">${esc(f.name)}</span><span class="fx-tile-src">${esc(f.kind)}${when ? ' · ' + esc(when) : ''}</span></button>`;
+        return `<div class="lf-tile"><button class="fx-tile" type="button" data-open-cloud="${app}" data-i="${i}" aria-label="Open ${esc(f.name)} in ${esc(CLOUD[app].name)}">${thumb}<span class="fx-tile-name">${esc(f.name)}</span><span class="fx-tile-src">${esc(f.kind)}${when ? ' · ' + esc(when) : ''}</span></button>${tileMore(`data-tile-more="${app}" data-i="${i}"`, f.name)}</div>`;
+      }
+      // A tile's ... button (2026-10-06). Classroom tiles have none: their only
+      // action would be Open, which the tile itself already does.
+      function tileMore(attrs, name) {
+        return isClassroom() ? '' : `<button class="fx-more lf-tile-more" type="button" ${attrs} aria-label="More for ${esc(name)}" aria-haspopup="menu" aria-expanded="false">${MORE_ICON}</button>`;
       }
       function drawCloud(app) {
         const c = CLOUD[app];
         const acct = C() ? C().accounts()[app] : null;
-        const canPick = app === 'gdrive' && cfg && cfg.google && cfg.google.apiKey && cfg.google.appId;
-        const addBtn = canPick ? `<button class="fx-add" type="button" data-pick-drive${c.busy ? ' disabled' : ''}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add from Google Drive</button>` : '';
+        // Add from OneDrive (2026-10-06): its first click asks Microsoft for read access, in Microsoft's window.
+        const canPick = app === 'gdrive' ? !!(cfg && cfg.google && cfg.google.apiKey && cfg.google.appId) : !!(cfg && cfg.microsoft);
+        const addBtn = canPick ? `<button class="fx-add" type="button" ${app === 'gdrive' ? 'data-pick-drive' : 'data-pick-onedrive'}${c.busy ? ' disabled' : ''}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add from ${esc(c.name)}</button>` : '';
         let body;
         if (c.state === 'loading') body = `<div class="fx-empty"><strong>Loading your ${esc(c.name)} files…</strong></div>`;
         else if (c.state === 'soon') body = `<div class="fx-empty"><strong>${esc(c.name)} is coming soon</strong>Files you save to ${esc(c.name)} with Averages.io will show up here.</div>`;
         else if (c.state === 'error') body = `<div class="fx-empty"><strong>Couldn’t load your ${esc(c.name)} files</strong>${esc(c.message || 'Try again in a moment.')}<br><button class="fx-more-designs" type="button" data-cloud-retry="${app}">Try again</button></div>`;
-        else if (c.state === 'connect') body = `<div class="fx-empty"><strong>Connect ${esc(c.name)} to see your files here</strong>Averages.io only sees the files it saves there or that you add, never the rest of your drive.<br><button class="fx-connect" type="button" data-cloud-connect="${app}"${c.busy ? ' disabled' : ''}>Connect ${esc(c.name)}</button></div>`;
+        else if (c.state === 'connect') body = `<div class="fx-empty"><strong>Connect ${esc(c.name)} to see your files here</strong>${app === 'onedrive' ? 'Averages.io saves into its own Apps/Averages.io folder. Add from OneDrive asks to read your files, and only the ones you pick show up here.' : 'Averages.io only sees the files it saves there or that you add, never the rest of your drive.'}<br><button class="fx-connect" type="button" data-cloud-connect="${app}"${c.busy ? ' disabled' : ''}>Connect ${esc(c.name)}</button></div>`;
         else if (c.state === 'click') body = `<div class="fx-empty"><strong>Your ${esc(c.name)} files</strong>${acct && (acct.email || acct.username) ? 'Connected as ' + esc(acct.email || acct.username) + '. ' : ''}${esc(c.name)} may ask you to confirm it’s you.<br><button class="fx-connect" type="button" data-cloud-show="${app}"${c.busy ? ' disabled' : ''}>Show files</button></div>`;
-        else if (!c.files.length) body = `<div class="fx-empty"><strong>No files yet</strong>${app === 'gdrive' ? 'Save to cloud or Edit in Google Drive on an assignment file, or add files from your Drive.' : 'Save to cloud on an assignment file and it shows up here, in your OneDrive’s Apps/Averages.io folder.'}</div>`;
+        else if (!c.files.length) body = `<div class="fx-empty"><strong>No files yet</strong>${app === 'gdrive' ? 'Save to cloud or Edit in Google Drive on an assignment file, or add files from your Drive.' : 'Save to cloud on an assignment file and it shows up here, in your OneDrive’s Apps/Averages.io folder. You can also add files from your OneDrive.'}</div>`;
         else body = `<div class="fx-grid">${c.files.map((f, i) => cloudTile(app, f, i)).join('')}</div>`;
         const count = c.state === 'ready' ? `${c.files.length} file${c.files.length === 1 ? '' : 's'}` : null;
         c.box.innerHTML = head(c.name, count, c.state === 'ready' || c.state === 'click' ? addBtn : '') + body;
@@ -1180,6 +1200,9 @@
             return;
           }
           pending = how === 'connect' ? K.connectGoogle().then(() => K.googleToken({})) : K.googleSession({ interactive: true });
+        } else if (how === 'pick') {
+          // Read-only access is asked for here (the first time) and nowhere else.
+          pending = K.oneDriveToken({ interactive: true, read: true });
         } else {
           pending = how === 'connect' ? K.connectOneDrive().then(() => K.oneDriveToken({})) : K.oneDriveToken({ interactive: true });
         }
@@ -1188,7 +1211,7 @@
         pending
           .then(async token => {
             if (how === 'pick') {
-              const picked = await K.googlePick(token);
+              const picked = app === 'gdrive' ? await K.googlePick(token) : await K.oneDrivePick(token);
               if (!picked.length && c.state === 'ready') return;
             }
             await listCloud(app, token);
@@ -1198,7 +1221,14 @@
             c.state = 'error';
             c.message = K.messageFor(err);
           })
-          .finally(() => { c.busy = false; drawCloud(app); });
+          .finally(() => {
+            c.busy = false;
+            drawCloud(app);
+            // After a picker, focus goes back to its Add button (the old one was redrawn away).
+            const lost = !document.activeElement || document.activeElement === document.body;
+            const add = how === 'pick' && lost && c.box.querySelector('[data-pick-drive], [data-pick-onedrive]');
+            if (add) add.focus();
+          });
       }
       function loadCloudScript() {
         return new Promise((resolve, reject) => {
@@ -1353,14 +1383,85 @@
           })
           .catch(err => flash(K.messageFor(err), !err || err.code !== 'popup_closed'));
       }
+      // ---------- Attach to an assignment (2026-10-06) ----------
+      // Opens the assignment with the file already in Add Submission
+      // (assignment.html reads ?attach=). Assignments only (tests are taken on
+      // Schoology, discussions are posts): the open ones and the overdue ones,
+      // from the bundle's UPCOMING and OVERDUE, the latest due date first.
+      // Google Classroom work is turned in on Classroom, so Classroom students
+      // don't get Attach.
+      const LIVE_DATA = (window.__AVERAGES__ && window.__AVERAGES__.data) || {};
+      function isClassroom() { return LIVE_DATA.platform === 'classroom' || !!CF.classroom; }
+      const DUE_MONTH = /\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s+(\d{1,2})\b/i;
+      const MONTH_N = { jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5, jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11 };
+      // "Fri Oct 9" has no year: open work is due ahead of today, overdue work behind it.
+      function dueAt(x, overdue) {
+        const exact = Date.parse(String(x.dueAt || ''));
+        if (exact) return exact;
+        const m = String(x.due || '').match(DUE_MONTH);
+        if (!m) return -Infinity;   // no due date: last
+        const now = new Date();
+        const d = new Date(now.getFullYear(), MONTH_N[m[1].toLowerCase()], Number(m[2]));
+        if (overdue && d - now > 2 * 86400000) d.setFullYear(d.getFullYear() - 1);
+        if (!overdue && now - d > 2 * 86400000) d.setFullYear(d.getFullYear() + 1);
+        return d.getTime();
+      }
+      function attachTargets(courseId) {
+        const out = [];
+        const seen = new Set();
+        const add = (list, overdue) => (Array.isArray(list) ? list : []).forEach(x => {
+          if (!x || !ID_OK(x.id) || !ID_OK(x.courseId) || (x.type && x.type !== 'assignment')) return;
+          if (courseId && String(x.courseId) !== courseId) return;
+          const key = `${x.courseId}:${x.id}`;
+          if (seen.has(key)) return;
+          seen.add(key);
+          out.push({ id: String(x.id), course: String(x.courseId), title: String(x.title || 'Assignment'), due: String(x.due || ''), overdue, at: dueAt(x, overdue) });
+        });
+        add(LIVE_DATA.UPCOMING, false);
+        add(LIVE_DATA.OVERDUE, true);
+        return out.sort((a, b) => (a.at === b.at ? a.title.localeCompare(b.title) : b.at > a.at ? 1 : -1));
+      }
+      function attachCourse(id) {
+        const c = (Array.isArray(LIVE_DATA.COURSES) ? LIVE_DATA.COURSES : []).find(x => x && String(x.id) === id) || CF.courses.find(x => x.id === id) || {};
+        return { name: String(c.name || 'Class'), color: cfColor(c) };
+      }
+      function attachTo(file, t) {
+        window.location.href = `assignment.html?course=${encodeURIComponent(t.course)}&id=${encodeURIComponent(t.id)}&title=${encodeURIComponent(t.title)}&attach=${encodeURIComponent(JSON.stringify(file))}`;
+      }
+      // A second menu in the same spot: one class's assignments (a course
+      // file), or every class's, grouped by class (Drive, OneDrive, Canva).
+      function openAttach(file, courseId) {
+        const targets = attachTargets(courseId);
+        const row = t => ({ label: t.title, sub: t.overdue ? `Late${t.due ? ' · was due ' + t.due : ''}` : (t.due ? `Due ${t.due}` : 'No due date'), run: () => attachTo(file, t) });
+        let list;
+        if (courseId) list = targets.map(row);
+        else {
+          const order = (Array.isArray(LIVE_DATA.COURSES) ? LIVE_DATA.COURSES : []).map(c => String(c && c.id));
+          const rank = id => (order.indexOf(id) === -1 ? 1e9 : order.indexOf(id));
+          list = [];
+          [...new Set(targets.map(t => t.course))].sort((a, b) => rank(a) - rank(b)).forEach(id => {
+            const c = attachCourse(id);
+            list.push({ group: c.name, color: c.color });
+            targets.filter(t => t.course === id).forEach(t => list.push(row(t)));
+          });
+        }
+        if (!list.length) list = [{ note: courseId ? 'No assignments to turn in for this class right now.' : 'No assignments to turn in right now.' }];
+        if (fxLast) openFxMenu(fxLast.anchor, `Attach "${file.name}" to`, list, { x: fxLast.x, y: fxLast.y });
+      }
+
       function cfItems(f) {
         const items = [];
         if (f.kind === 'assignment') items.push({ label: 'Open assignment', sub: f.parentTitle, run: () => { window.location.href = `assignment.html?course=${encodeURIComponent(f.course)}&id=${encodeURIComponent(f.parent)}&title=${encodeURIComponent(f.parentTitle)}`; } });
+        // Show in Materials (2026-10-06): the class's Materials, open at the teacher's folder holding it.
+        const show = { label: 'Show in Materials', run: () => { window.location.href = `course-materials.html?course=${encodeURIComponent(f.course)}&show=${encodeURIComponent(`${f.kind}:${f.parent}:${f.id}`)}`; } };
         // Classroom files are already in Google Drive: they open there.
         if (f.url) {
           items.push({ label: 'Open in Google Drive', run: () => { if (DRIVE_URL_OK(f.url)) window.open(f.url, '_blank', 'noopener,noreferrer'); } });
+          items.push(show);
           return items;
         }
+        items.push(show);
+        if (!isClassroom()) items.push({ label: 'Attach to an assignment', next: true, run: () => openAttach({ src: 'course', id: f.id, name: f.name, kind: f.kind, parent: f.parent, course: f.course }, f.course) });
         items.push({ label: 'Download', run: () => { window.location.href = cfDownloadUrl(f); } });
         if (cfg && cfg.google) items.push({ label: 'Save to Google Drive', run: () => cfSave('gdrive', f) });
         if (cfg && cfg.microsoft) items.push({ label: 'Save to OneDrive', run: () => cfSave('onedrive', f) });
@@ -1407,7 +1508,7 @@
         const thumb = thumbOk(d.thumbnailUrl)
           ? `<span class="fx-thumb canva"><img src="${esc(d.thumbnailUrl)}" alt="" loading="lazy" referrerpolicy="no-referrer"></span>`
           : '<span class="fx-thumb canva" style="background:linear-gradient(135deg,#7d2ae7,#00c4cc)"><span class="page"><i></i><i></i><i></i></span></span>';
-        return `<button class="fx-tile" type="button" data-design="${esc(d.id)}" aria-label="Open ${esc(d.title || 'Untitled design')} in Canva">${thumb}<span class="fx-tile-name">${esc(d.title || 'Untitled design')}</span><span class="fx-tile-src">Canva${d.updatedAt ? ' · ' + esc(dayLabel(d.updatedAt)) : ''}</span></button>`;
+        return `<div class="lf-tile"><button class="fx-tile" type="button" data-design="${esc(d.id)}" aria-label="Open ${esc(d.title || 'Untitled design')} in Canva">${thumb}<span class="fx-tile-name">${esc(d.title || 'Untitled design')}</span><span class="fx-tile-src">Canva${d.updatedAt ? ' · ' + esc(dayLabel(d.updatedAt)) : ''}</span></button>${tileMore(`data-tile-more="canva" data-tile-design="${esc(d.id)}"`, d.title || 'Untitled design')}</div>`;
       }
       function draw() {
         canvaBox.innerHTML = `
@@ -1437,7 +1538,34 @@
           canvaBox.innerHTML = head('Canva') + '<div class="fx-empty"><strong>Couldn’t load your Canva designs</strong>Try again in a moment.<br><button class="fx-more-designs" type="button" data-retry-designs>Try again</button></div>';
         }
       }
+      // ---------- A Drive, OneDrive or Canva tile's ... menu (2026-10-06) ----------
+      function tileMenu(el, at) {
+        const wrap = el.closest('.lf-tile');
+        const more = wrap && wrap.querySelector('[data-tile-more]');
+        if (!more) return;
+        const app = more.dataset.tileMore;
+        let f = null;
+        if (app === 'canva') {
+          const d = items.find(x => String(x.id) === more.dataset.tileDesign);
+          if (d) f = { id: String(d.id), name: String(d.title || 'Untitled design') };
+        } else if (CLOUD[app]) f = CLOUD[app].files[+more.dataset.i] || null;
+        if (!f) return;
+        const tileBtn = wrap.querySelector('.fx-tile');
+        const list = [app === 'canva'
+          ? { label: 'Open in Canva', run: () => tileBtn.click() }
+          : { label: `Open in ${CLOUD[app].name}`, run: () => { if (C() && C().linkOk(f.url)) window.open(f.url, '_blank', 'noopener,noreferrer'); } }];
+        list.push({ label: 'Attach to an assignment', next: true, run: () => openAttach({ src: app, id: f.id, name: f.name }, null) });
+        openFxMenu(at ? wrap : more, f.name, list, at);
+      }
+      main.addEventListener('contextmenu', e => {
+        const wrap = e.target.closest('.lf-tile');
+        if (!wrap || !wrap.querySelector('[data-tile-more]')) return;
+        e.preventDefault();
+        tileMenu(wrap, e.clientX === 0 && e.clientY === 0 ? null : { x: e.clientX, y: e.clientY });
+      });
       main.addEventListener('click', async e => {
+        const tm = e.target.closest('[data-tile-more]');
+        if (tm) { tileMenu(tm, null); return; }
         // Google Drive / OneDrive first: each opens a window, so nothing is awaited before it.
         const open = e.target.closest('[data-open-cloud]');
         if (open) {
@@ -1451,6 +1579,8 @@
         if (show && !show.disabled) { askCloud(show.dataset.cloudShow, 'show'); return; }
         const pick = e.target.closest('[data-pick-drive]');
         if (pick && !pick.disabled) { askCloud('gdrive', 'pick'); return; }
+        const pickOne = e.target.closest('[data-pick-onedrive]');
+        if (pickOne && !pickOne.disabled) { askCloud('onedrive', 'pick'); return; }
         const retry = e.target.closest('[data-cloud-retry]');
         if (retry) { if (cfg) startCloud(retry.dataset.cloudRetry); else loadCloud(); return; }
 

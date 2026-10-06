@@ -664,6 +664,8 @@
   }
   .calc-category-name { font-weight: 800; font-size: 0.82rem; color: var(--text-dark); }
   .calc-category-weight { font-size: 0.7rem; font-weight: 700; color: var(--text-faint); }
+  /* Signed in with nothing to list (2026-10-06). */
+  .calc-empty { margin: 14px 0 4px; font-size: 0.8rem; font-weight: 700; color: var(--text-faint); }
   .calc-assign-row {
     display: flex;
     align-items: center;
@@ -1340,6 +1342,36 @@
     // good/mid/bad grouping. GRADE_COLOR is the single source of truth
     // for both the CSS class (gradeBand) and the Calculator hero
     // letter's inline-style color.
+    // Signed in with real data (2026-10-06). A demo sign-in also has
+    // __AVERAGES__ (with an empty bundle) and shows the samples, like the preview.
+    const AV_LIVE = !!(window.__AVERAGES__ && window.__AVERAGES__.data) && window.__AVERAGES__.mode !== 'demo';
+    const AV_DATA = AV_LIVE ? window.__AVERAGES__.data : {};
+    // GRADEBOOK signed in is the bundle's, never the samples; each entry is
+    // tidied once so nothing below meets a missing number.
+    if (AV_LIVE) {
+      if (!AV_DATA.GRADEBOOK || typeof AV_DATA.GRADEBOOK !== 'object') Object.keys(GRADEBOOK).forEach(k => { delete GRADEBOOK[k]; });
+      Object.keys(GRADEBOOK).forEach(k => {
+        const entry = GRADEBOOK[k];
+        const cats = entry && Array.isArray(entry.categories) ? entry.categories : [];
+        GRADEBOOK[k] = { categories: cats.filter(c => c && typeof c === 'object').map(c => ({
+          name: String(c.name || 'Category'),
+          weight: Number(c.weight) > 0 ? Number(c.weight) : 0,
+          assignments: (Array.isArray(c.assignments) ? c.assignments : []).filter(a => a && typeof a === 'object').map(a => {
+            const n = a.score === '' || a.score === null || a.score === undefined ? NaN : Number(a.score);
+            const score = isFinite(n) ? n : undefined;
+            return { title: String(a.title || 'Untitled'), score, points: Number(a.points) > 0 ? Number(a.points) : 0, graded: !!a.graded && score !== undefined, id: a.id };
+          }),
+        })) };
+      });
+    }
+    // A weighted class leaves 0-weight categories out ("No category", say);
+    // a class with no weights at all counts every point (2026-10-06).
+    function gbWeighted(gb) { return !!gb && Array.isArray(gb.categories) && gb.categories.some(c => Number(c.weight) > 0); }
+    function gbWeightLabel(cat, weighted) {
+      if (Number(cat.weight) > 0) return `${cat.weight}% of grade`;
+      return weighted ? 'Not counted' : 'Counts by points';
+    }
+
     const GRADE_COLOR = { a: 'var(--grade-good)', b: 'var(--grade-b)', c: 'var(--grade-mid)', d: 'var(--grade-d)', f: 'var(--grade-bad)' };
     function gradeBand(letter) {
       const l = letter[0];
@@ -1386,9 +1418,12 @@
       'D+': 1.3, 'D': 1.0, 'D-': 0.7,
       'F': 0.0,
     };
+    // Only classes with a letter grade count: a class with nothing graded
+    // ("—") isn't an F. None at all: no GPA (2026-10-06).
     function computeGPA() {
-      const total = COURSES.reduce((sum, c) => sum + (GPA_SCALE[c.grade] ?? 0), 0);
-      return total / COURSES.length;
+      const graded = COURSES.filter(c => GPA_SCALE[c.grade] !== undefined);
+      if (!graded.length) return null;
+      return graded.reduce((sum, c) => sum + GPA_SCALE[c.grade], 0) / graded.length;
     }
     function gpaColor(gpa) {
       if (gpa >= 3.7) return 'var(--grade-good)';
@@ -1400,8 +1435,8 @@
     function renderGPA() {
       const gpa = computeGPA();
       const gpaValueEl = document.getElementById('gpaValue');
-      gpaValueEl.textContent = gpa.toFixed(2);
-      gpaValueEl.style.color = gpaColor(gpa);
+      gpaValueEl.textContent = gpa === null ? '—' : gpa.toFixed(2);
+      gpaValueEl.style.color = gpa === null ? '' : gpaColor(gpa);
     }
 
     // ------------------------------------------------------------------
@@ -1684,6 +1719,8 @@
     // real grade exactly.
     function renderCalcCategories() {
       const gb = GRADEBOOK[calcCourse.id];
+      if (!gb || !Array.isArray(gb.categories) || !gb.categories.length) { calcCategories.innerHTML = '<p class="calc-empty">Nothing graded in this class yet.</p>'; return; }
+      const weighted = gbWeighted(gb);
       calcCategories.innerHTML = gb.categories.map(cat => {
         const rows = cat.assignments.map(a => {
           const key = assignKey(cat.name, a.title);
@@ -1702,7 +1739,7 @@
           <div class="calc-category">
             <div class="calc-category-head">
               <span class="calc-category-name">${escapeHtml(cat.name)}</span>
-              <span class="calc-category-weight" data-base-weight="${escapeHtml(cat.weight)}">${escapeHtml(cat.weight)}% of grade</span>
+              <span class="calc-category-weight" data-base-weight="${escapeHtml(cat.weight)}">${escapeHtml(gbWeightLabel(cat, weighted))}</span>
             </div>
             ${rows}
           </div>
@@ -1719,8 +1756,10 @@
     // feed back into the category list above.
     function recomputeCalc() {
       const gb = GRADEBOOK[calcCourse.id];
-      let overall = 0, weightUsed = 0;
-      gb.categories.forEach(cat => {
+      const cats = gb && Array.isArray(gb.categories) ? gb.categories : [];
+      const weighted = gbWeighted(gb);
+      let overall = 0, weightUsed = 0, allEarned = 0, allPossible = 0;
+      cats.forEach(cat => {
         let earned = 0, possible = 0;
         cat.assignments.forEach(a => {
           const key = assignKey(cat.name, a.title);
@@ -1737,11 +1776,31 @@
         });
         // A category with nothing counted yet is left out and the other
         // weights scale up (2026-10-05), as in Google Classroom.
-        if (possible > 0) { overall += (earned / possible) * 100 * cat.weight; weightUsed += cat.weight; }
+        if (possible > 0) {
+          const w = Number(cat.weight) > 0 ? Number(cat.weight) : 0;
+          overall += (earned / possible) * 100 * w; weightUsed += w;
+          allEarned += earned; allPossible += possible;
+        }
       });
-      overall = weightUsed > 0 ? overall / weightUsed : 0;
+      // Weighted: the categories with work, scaled. No weights at all (a
+      // total-points class): every point counts. Nothing counted yet: "—",
+      // not an F (2026-10-06).
+      const raw = weighted ? (weightUsed > 0 ? overall / weightUsed : null) : (allPossible > 0 ? (allEarned / allPossible) * 100 : null);
+      if (raw === null || !isFinite(raw)) {
+        calcHeroLetter.textContent = '—';
+        calcHeroLetter.style.color = '';
+        calcHeroPct.textContent = '';
+        calcHeroLabel.textContent = Object.keys(calcEdits).length > 0 ? 'Projected grade' : 'Current grade';
+        calcCategories.querySelectorAll('.calc-category').forEach((box, i) => {
+          const cat = cats[i];
+          if (cat) box.querySelector('.calc-category-weight').textContent = gbWeightLabel(cat, weighted);
+        });
+        if (!calcFinalCurrentTouched) calcFinalCurrent.value = '';
+        updateFinalAnswer();
+        return;
+      }
 
-      const pct = Math.max(0, Math.min(100, overall));
+      const pct = Math.max(0, Math.min(100, raw));
       const letter = letterFromPct(pct);
       calcHeroLetter.textContent = letter;
       calcHeroLetter.style.color = GRADE_COLOR[gradeBand(letter)];
@@ -1753,8 +1812,8 @@
       calcHeroLabel.textContent = Object.keys(calcEdits).length > 0 ? 'Projected grade' : 'Current grade';
 
       calcCategories.querySelectorAll('.calc-category').forEach((box, i) => {
-        const cat = gb.categories[i];
-        box.querySelector('.calc-category-weight').textContent = `${cat.weight}% of grade`;
+        const cat = cats[i];
+        if (cat) box.querySelector('.calc-category-weight').textContent = gbWeightLabel(cat, weighted);
       });
 
       // Keep "Current grade" synced to the live projected grade above

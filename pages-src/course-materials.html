@@ -1052,6 +1052,7 @@
   .tc-rows { margin-top: 14px; }
   .tc-row { display: flex; justify-content: space-between; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 0.8rem; }
   .tc-row:last-child { border-bottom: none; }
+  .tc-row[hidden] { display: none; }
   .tc-row .k { color: var(--text-faint); font-weight: 700; }
   .tc-row .v { color: var(--text-dark); font-weight: 700; text-align: right; overflow-wrap: anywhere; }
   .tc-actions { display: flex; gap: 8px; margin-top: 16px; }
@@ -1619,26 +1620,50 @@
       { id: 'ortiz', name: 'Sra. Ortiz', role: 'Teacher', dept: 'World Languages Department', school: 'Lincoln High School', email: 'm.ortiz@lincolnusd.org', phone: '(555) 201-4515', color: '#8a6ba1', category: 'myTeachers' },
       { id: 'reyes', name: 'Coach Reyes', role: 'Teacher', dept: 'Physical Education Department', school: 'Lincoln High School', email: 'd.reyes@lincolnusd.org', phone: '(555) 201-4526', color: '#4f8c8a', category: 'myTeachers' }
     ];
+    // Signed in with real data (2026-10-06). A demo sign-in also has
+    // __AVERAGES__ (with an empty bundle) and shows the samples, like the preview.
+    const TC_LIVE = !!(window.__AVERAGES__ && window.__AVERAGES__.data) && window.__AVERAGES__.mode !== 'demo';
+    const TC_DATA = TC_LIVE ? window.__AVERAGES__.data : {};
+    const TC_CLASSROOM = TC_LIVE && (TC_DATA.platform === 'classroom' || TC_DATA.PEOPLE_PLATFORM === 'classroom');
+    // The directory comes from the people extra; if that failed, nobody's
+    // card is filled from the sample teachers above.
+    if (TC_LIVE && !Array.isArray(TC_DATA.CONTACTS)) CONTACTS.length = 0;
     const TC_TITLE = /^(Mr\.|Mrs\.|Ms\.|Mx\.|Dr\.|Sra\.|Sr\.|Coach|Nurse)\s+/i;
     function tcEsc(v) { return String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
     function tcLastName(n) { const p = String(n || '').replace(TC_TITLE, '').trim().split(/\s+/); return p[p.length - 1].toLowerCase(); }
     // Full name first, then last name (a teacher in the directory first).
-    function findTeacherContact(name) {
+    function findTeacherContact(name, courseId) {
       const list = Array.isArray(CONTACTS) ? CONTACTS : [];
       const exact = list.find(c => c && String(c.name).toLowerCase() === String(name).toLowerCase());
       if (exact) return exact;
+      // Live contacts list the classes they teach (2026-10-06): this class's
+      // one teacher, when the name on the class doesn't match exactly.
+      const teaching = courseId ? list.filter(c => c && Array.isArray(c.courses) && c.courses.map(String).includes(String(courseId))) : [];
+      if (teaching.length === 1) return teaching[0];
       const last = tcLastName(name);
       const byLast = list.filter(c => c && tcLastName(c.name) === last);
       return byLast.find(c => c.category === 'myTeachers') || byLast[0] || null;
     }
     function tcInitials(n) { return String(n).replace(TC_TITLE, '').split(/\s+/).map(p => p[0] || '').join('').slice(0, 2).toUpperCase(); }
     function openTeacherCard(name, courseName) {
-      const c = findTeacherContact(name) || { id: tcLastName(name), name, role: 'Teacher', dept: courseName || '', school: '', email: '', phone: '' };
+      const c = findTeacherContact(name, course.id) || { id: tcLastName(name), name, role: 'Teacher', dept: courseName || '', school: '', email: '', phone: '' };
       const color = getComputedStyle(document.documentElement).getPropertyValue('--course-color').trim() || c.color;
       const set = (id, v) => { document.getElementById(id).textContent = v || '—'; };
       const avatar = document.getElementById('tcAvatar');
       avatar.textContent = tcInitials(c.name); avatar.style.background = color;
       set('tcName', c.name); set('tcRole', c.role || c.dept); set('tcDept', c.dept); set('tcSchool', c.school); set('tcEmail', c.email); set('tcPhone', c.phone);
+      // Signed in (2026-10-06): rows the school doesn't share are left out,
+      // "Department" is the classes they teach here, and Message is only for
+      // a Schoology teacher with a real id.
+      if (TC_LIVE) {
+        [['tcDept', c.dept], ['tcSchool', c.school], ['tcEmail', c.email], ['tcPhone', c.phone]].forEach(([id, v]) => {
+          const row = document.getElementById(id).closest('.tc-row');
+          if (row) row.hidden = !String(v || '').trim();
+        });
+        const deptKey = document.getElementById('tcDept').closest('.tc-row').querySelector('.k');
+        if (deptKey) deptKey.textContent = String(c.dept || '').includes(',') ? 'Classes' : 'Class';
+        document.getElementById('tcMessage').hidden = TC_CLASSROOM || !/^\d{1,20}$/.test(String(c.id || ''));
+      }
       document.getElementById('tcMessage').onclick = () => {
         window.location.href = `messages.html?compose=${encodeURIComponent(c.id)}&name=${encodeURIComponent(c.name)}&dept=${encodeURIComponent(c.dept || '')}&color=${encodeURIComponent(color)}`;
       };
@@ -3248,14 +3273,25 @@
           infoCloseBtn.focus();
           return;
         }
+        // Teachers' names can hold "/" or ".." (2026-10-06): each item is one
+        // plain entry, and a name that's already there gets " (2)".
+        const zipName = (name, used) => {
+          let n = String(name || 'File').replace(/[\\/\u0000-\u001f]/g, '_').replace(/^\.+/, '_').trim().slice(0, 180) || 'File';
+          const dot = n.lastIndexOf('.');
+          const base = dot > 0 ? n.slice(0, dot) : n, ext = dot > 0 ? n.slice(dot) : '';
+          for (let i = 2; used.has(n.toLowerCase()); i++) n = `${base} (${i})${ext}`;
+          used.add(n.toLowerCase());
+          return n;
+        };
         async function addLive(zipFolder, node) {
+          const used = new Set();
           for (const f of node.files) {
             if (!f.live || f.url) continue;
             const res = await fetch(liveFileUrl(f), { credentials: 'include' });
             if (!res.ok) throw new Error('download_failed');
-            zipFolder.file(f.name, await res.blob());
+            zipFolder.file(zipName(f.name, used), await res.blob());
           }
-          for (const sub of node.folders) await addLive(zipFolder.folder(sub.name), sub);
+          for (const sub of node.folders) await addLive(zipFolder.folder(zipName(sub.name, used)), sub);
         }
         try {
           await addLive(zip, folder);
@@ -3918,35 +3954,46 @@
     // folder that file is in (Back goes up through its parents), selects it
     // and scrolls to it. The first file with that name wins. ?file= is then
     // dropped from the address so a reload doesn't jump again.
-    (function showRequestedFile() {
-      const want = new URLSearchParams(location.search).get('file');
-      if (!want) return;
+    // Signed in (2026-10-06) it's ?show=<kind>:<parent>:<fileId>, the exact
+    // file, once the class's files and folders have loaded (liveMaterials).
+    function dropParam(name) {
+      try {
+        const u = new URL(location.href);
+        if (!u.searchParams.has(name)) return;
+        u.searchParams.delete(name);
+        window.history.replaceState(window.history.state, '', u.pathname + u.search + u.hash);
+      } catch (e) {}
+    }
+    function revealFile(match) {
       let found = null;
       (function walk(node, trail) {
         if (found) return;
-        const hit = node.files.find(x => x.name === want);
+        const hit = node.files.find(match);
         if (hit) { found = { file: hit, trail }; return; }
         node.folders.forEach(sub => walk(sub, trail.concat(sub)));
       })(root, []);
-      try {
-        const u = new URL(location.href);
-        u.searchParams.delete('file');
-        window.history.replaceState(window.history.state, '', u.pathname + u.search + u.hash);
-      } catch (e) {}
-      if (!found) return;
+      if (!found) return false;
       history = [root].concat(found.trail);
       pointer = history.length - 1;
       mode = 'browse';
       setActiveSidebar('all');
+      if (searchInput.value) { searchInput.value = ''; searchClearBtn.hidden = true; }
       selectedId = found.file._id;
       render();
       renderUnitList();
       syncSelectionButtons();
       const el = document.querySelector(`.item-tile[data-id="${found.file._id}"], .item-list tbody tr[data-id="${found.file._id}"]`);
-      if (!el) return;
+      if (!el) return true;
       el.scrollIntoView({ block: 'center' });
       el.classList.add('cm-found');
       setTimeout(() => el.classList.remove('cm-found'), 1900);
+      return true;
+    }
+    (function showRequestedFile() {
+      const want = new URLSearchParams(location.search).get('file');
+      if (!want) return;
+      dropParam('file');
+      revealFile(x => x.name === want);
     })();
 
     // ------------------------------------------------------------------
@@ -4163,7 +4210,8 @@
     // never appears. Same 5-minute cache as the Files page. Google Classroom
     // files are Google Drive links. Teacher files can't be renamed or deleted
     // (they aren't the student's); the student's own folders work as before,
-    // on this page only.
+    // on this page only. Since 2026-10-06 the teachers' own folders show too
+    // (teacherFolders below).
     // ------------------------------------------------------------------
     function liveApiBase() { return window.location.hostname.endsWith('averages.io') ? 'https://api.averages.io' : 'http://localhost:8787'; }
     function liveFileUrl(f) {
@@ -4195,6 +4243,52 @@
       const dueById = new Map();
       [].concat(Array.isArray(data.OVERDUE) ? data.OVERDUE : [], Array.isArray(data.UPCOMING) ? data.UPCOMING : []).forEach(x => { if (x && x.id) dueById.set(String(x.id), String(x.due || '')); });
       const label = ms => (ms ? new Date(ms).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '');
+      // Teachers' folders (2026-10-06): FOLDERS (GET /data/folders, loaded by
+      // LegacyPage for this page) lists this class's folders and which folder
+      // each item is in, keyed "<kind>:<parent>" like the items themselves.
+      // Folders nest by `parent`; a folder whose parent is missing (or that
+      // loops back on itself) and any item that isn't placed sit at the top.
+      // Without FOLDERS for this class the list stays flat, as before.
+      // Google Classroom's topics come the same way.
+      const FOLDER_ID = /^[A-Za-z0-9_-]{1,64}$/;
+      // Schoology names its folder colours; anything else must be a hex colour.
+      const NAMED_COLOR = { red: '#ff453a', orange: '#ff9f0a', yellow: '#ffd60a', green: '#32d74b', blue: '#0a84ff', purple: '#bf5af2', pink: '#ff375f', gray: '#98989d', grey: '#98989d', black: '#3a3a3c' };
+      function folderColor(v) {
+        const c = String(v || '').trim().toLowerCase();
+        if (/^#[0-9a-f]{6}$/.test(c)) return c;
+        if (/^#[0-9a-f]{3}$/.test(c)) return '#' + c.slice(1).split('').map(ch => ch + ch).join('');
+        return NAMED_COLOR[c] || undefined;   // undefined: the class colour
+      }
+      function teacherFolders(items) {
+        const F = data.FOLDERS;
+        if (!F || typeof F !== 'object' || String(F.course) !== String(course.id) || !Array.isArray(F.folders) || !F.folders.length) return { folders: [], files: items };
+        const byId = new Map();
+        const parentOf = new Map();
+        F.folders.slice(0, 300).forEach(x => {
+          const id = x && String(x.id);
+          if (!x || !FOLDER_ID.test(id) || byId.has(id)) return;
+          byId.set(id, { name: String(x.title || '').trim().slice(0, 200) || 'Folder', folders: [], files: [], created: '', tagColor: folderColor(x.color), teacherFolder: id });
+          parentOf.set(id, String(x.parent || ''));
+        });
+        const top = [];
+        byId.forEach((node, id) => {
+          const parent = parentOf.get(id);
+          let up = parent, loops = false;
+          for (let hops = 0; up && byId.has(up) && hops < 64; hops++) {
+            if (up === id) { loops = true; break; }
+            up = parentOf.get(up);
+          }
+          (parent && byId.has(parent) && !loops ? byId.get(parent).folders : top).push(node);
+        });
+        const placement = F.placement && typeof F.placement === 'object' ? F.placement : {};
+        const loose = [];
+        items.forEach(f => {
+          const key = `${f.live.kind}:${f.live.parent}`;
+          const where = Object.prototype.hasOwnProperty.call(placement, key) ? String(placement[key]) : '';
+          (where && byId.has(where) ? byId.get(where).files : loose).push(f);
+        });
+        return { folders: top, files: loose };
+      }
       async function load() {
         render();
         try {
@@ -4224,8 +4318,10 @@
             if (classroom) { item.url = String(f.url); item.drive = true; }
             return item;
           });
-          root.folders = [];
-          root.files = items;   // newest first, as the API sends them
+          const tree = teacherFolders(items);
+          root.folders = tree.folders;
+          root.files = tree.files;   // newest first, as the API sends them
+          teacherLockIds = null;     // which items are the teacher's, worked out again for the real folders
           (function assignLiveIds(node) {
             node._id = node._id || 'n' + (idCounter++);
             node.folders.forEach(assignLiveIds);
@@ -4239,6 +4335,19 @@
         undoStack.length = 0;   // the empty "loading" tree isn't something to undo back to
         renderUnitList();
         render();
+        showLiveFile();
+      }
+      // Show in Materials from Files (2026-10-06): ?show=<kind>:<parent>:<fileId>.
+      // Read now and dropped right away; used once the files have loaded.
+      const pendingShow = new URLSearchParams(location.search).get('show');
+      if (pendingShow) dropParam('show');
+      function showLiveFile() {
+        const want = pendingShow;
+        if (!want) return;
+        const [kind, parent, ...rest] = want.split(':');
+        const id = rest.join(':');
+        if (!kind || !parent || !id) return;
+        revealFile(f => !!f.live && f.live.kind === kind && f.live.parent === parent && f.live.id === id);
       }
       load();
     })();

@@ -486,6 +486,16 @@
     .nav-link { min-width: 0; padding: 10px 3px 8px; }
     .nav-link .label { font-size: 0.58rem; }
   }
+
+  /* ---------- Signed in: the student's teachers (2026-10-06) ---------- */
+  .modal-row[hidden], .modal-rows[hidden], .contact-modal-btn[hidden], .contact-modal-actions[hidden], .contacts-search-wrap[hidden] { display: none; }
+  .modal-row.is-last { border-bottom: none; }
+  .contacts-state { padding: 24px 8px 12px; text-align: center; font-size: 0.82rem; font-weight: 600; color: var(--text-faint); line-height: 1.45; }
+  .contacts-state p { margin: 0 0 8px; }
+  .contacts-state .contacts-state-title { color: var(--text-dark); font-weight: 800; font-size: 0.9rem; }
+  .contacts-state-btn { border: none; border-radius: 999px; background: var(--accent); color: #fff; font: inherit; font-weight: 800; font-size: 0.8rem; padding: 8px 16px; cursor: pointer; }
+  .contacts-state-btn:hover { background: var(--accent-dark); }
+  .contacts-state-btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
 </style>
 </head>
 <body>
@@ -507,10 +517,10 @@
     <div class="card">
       <div class="card-inner">
         <div class="section-head">
-          <h2>District Directory</h2>
+          <h2 id="contactsHeading">District Directory</h2>
           <span class="contacts-total" id="contactsTotal"></span>
         </div>
-        <div class="contacts-search-wrap">
+        <div class="contacts-search-wrap" id="contactsSearchWrap">
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
           <input type="search" id="contactsSearch" placeholder="Search by name, role, subject, or school" autocomplete="off" aria-label="Search contacts">
         </div>
@@ -530,7 +540,7 @@
         </div>
       </div>
       <div class="modal-rows">
-        <div class="modal-row"><span class="k">Department</span><span class="v" id="modalDept"></span></div>
+        <div class="modal-row"><span class="k" id="modalDeptLabel">Department</span><span class="v" id="modalDept"></span></div>
         <div class="modal-row"><span class="k">School</span><span class="v" id="modalSchool"></span></div>
         <div class="modal-row"><span class="k">Email</span><span class="v" id="modalEmail"></span></div>
         <div class="modal-row"><span class="k">Phone</span><span class="v" id="modalPhone"></span></div>
@@ -769,6 +779,114 @@
     })();
 
     // ------------------------------------------------------------------
+    // Signed in (2026-10-06): CONTACTS comes from the "people" extra, which
+    // is the student's own teachers (there's no district directory to read
+    // on Schoology or Google Classroom). When that extra didn't arrive, the
+    // const below falls back to the sample directory, which must never
+    // show as real people, so ctSetContacts empties it and the list offers
+    // Try again. Demo sessions keep the sample directory, like the preview.
+    // Google Classroom teachers can't be messaged, so their cards have no
+    // Message button.
+    // ------------------------------------------------------------------
+    const CT_AV = window.__AVERAGES__;
+    const CT_LIVE = !!(CT_AV && CT_AV.data && CT_AV.mode === 'live');
+    const CT_DATA = CT_LIVE ? CT_AV.data : {};
+    const CT_API = window.location.hostname.endsWith('averages.io') ? 'https://api.averages.io' : 'http://localhost:8787';
+    let ctState = CT_LIVE && !Array.isArray(CT_DATA.CONTACTS) ? 'error' : 'ready'; // 'ready' | 'loading' | 'error'
+    let ctClassroom = CT_LIVE && (CT_DATA.platform === 'classroom' || CT_DATA.PEOPLE_PLATFORM === 'classroom');
+    let ctNeedsPermission = CT_LIVE && CT_DATA.PEOPLE_NEEDS_PERMISSION === true;
+
+    function ctText(value, max) {
+      return (value == null ? '' : String(value)).trim().slice(0, max);
+    }
+    function ctSetContacts(list) {
+      const next = (Array.isArray(list) ? list : []).filter(c => c && c.id != null && String(c.id) !== '').map(c => {
+        const color = ctText(c.color, 16);
+        return {
+          id: String(c.id),
+          name: ctText(c.name, 120) || 'Your teacher',
+          role: ctText(c.role, 80),
+          dept: ctText(c.dept, 200),
+          school: ctText(c.school, 120),
+          email: ctText(c.email, 254),
+          phone: ctText(c.phone, 40),
+          // Lands in a style attribute: only a plain hex color gets through.
+          color: /^#[0-9a-f]{6}$/i.test(color) ? color : '#83849a',
+          category: 'myTeachers',
+        };
+      });
+      CONTACTS.length = 0;
+      next.forEach(c => CONTACTS.push(c));
+    }
+    function ctStateHtml() {
+      if (ctState === 'loading') return '<p class="contacts-state" role="status">Loading your teachers…</p>';
+      if (ctState === 'error') {
+        return `<div class="contacts-state" role="alert">
+            <p class="contacts-state-title">We couldn't load your teachers.</p>
+            <p>Check your connection and try again.</p>
+            <button type="button" class="contacts-state-btn" data-action="retry-people">Try again</button>
+          </div>`;
+      }
+      if (CONTACTS.length) return '';
+      if (ctNeedsPermission) {
+        return `<div class="contacts-state">
+            <p class="contacts-state-title">Your teachers aren't showing yet.</p>
+            <p>To see your teachers here, sign out and sign in with Google again and allow Averages to see your class rosters.</p>
+          </div>`;
+      }
+      return `<div class="contacts-state">
+          <p class="contacts-state-title">No teachers yet</p>
+          <p>When your classes list their teachers, they show up here.</p>
+        </div>`;
+    }
+    function ctRenderHeader() {
+      if (!CT_LIVE) {
+        document.getElementById('contactsTotal').textContent = `${CONTACTS.length} people`;
+        document.getElementById('contactsSub').textContent = 'Staff & teachers · Lincoln Unified School District';
+        return;
+      }
+      document.getElementById('contactsHeading').textContent = 'Your teachers';
+      document.getElementById('contactsTotal').textContent = ctState === 'ready' && CONTACTS.length
+        ? `${CONTACTS.length} ${CONTACTS.length === 1 ? 'teacher' : 'teachers'}` : '';
+      document.getElementById('contactsSub').textContent = ctClassroom ? 'From your Google Classroom classes' : 'From your Schoology classes';
+      contactsSearchInput.placeholder = 'Search by name or class';
+    }
+    // The card leaves out lines with nothing on file instead of showing an
+    // empty value, and only offers what works for this teacher.
+    function ctTidyModal(c) {
+      let last = null;
+      [['modalDept', c.dept], ['modalSchool', c.school], ['modalEmail', c.email], ['modalPhone', c.phone]].forEach(([id, value]) => {
+        const row = document.getElementById(id).parentElement;
+        row.hidden = !value;
+        row.classList.remove('is-last');
+        if (value) last = row;
+      });
+      if (last) last.classList.add('is-last');
+      document.querySelector('#contactModal .modal-rows').hidden = !last;
+      document.getElementById('modalDeptLabel').textContent = c.dept.includes(',') ? 'Classes' : 'Class';
+      modalMessageBtn.hidden = ctClassroom;
+      modalEmailBtn.hidden = !c.email;
+      modalMessageBtn.parentElement.hidden = modalMessageBtn.hidden && modalEmailBtn.hidden;
+    }
+    function ctRetry() {
+      ctState = 'loading';
+      renderContactList();
+      ctRenderHeader();
+      fetch(CT_API + '/data/people', { credentials: 'include' })
+        .then(r => { if (!r.ok) throw new Error('http ' + r.status); return r.json(); })
+        .then(data => {
+          if (!data || !Array.isArray(data.CONTACTS)) throw new Error('no contacts');
+          ctSetContacts(data.CONTACTS);
+          if (data.platform) ctClassroom = data.platform === 'classroom';
+          ctNeedsPermission = data.needsPermission === true;
+          ctResort();
+          ctState = 'ready';
+        })
+        .catch(() => { ctState = 'error'; })
+        .then(() => { renderContactList(); ctRenderHeader(); });
+    }
+
+    // ------------------------------------------------------------------
     // Sample data — district directory (2026-09-02, per Martin: "I need
     // to add a contact list of people in the district"). The six "My
     // Teachers" entries intentionally reuse the exact same id/name/color
@@ -815,6 +933,8 @@
       { id: 'alvarado', name: 'Ms. Alvarado', role: 'IT Help Desk', dept: 'District Office', school: 'Lincoln Unified School District', email: 'helpdesk@lincolnusd.org', phone: '(555) 201-1002', color: '#4f7d8f', category: 'district' },
       { id: 'chen', name: 'Mr. Chen', role: 'Director of Special Education', dept: 'District Office', school: 'Lincoln Unified School District', email: 'w.chen@lincolnusd.org', phone: '(555) 201-1003', color: '#8f6b4f', category: 'district' },
     ];
+    // Signed in: real teachers only, never the sample directory (2026-10-06).
+    if (CT_LIVE) ctSetContacts(CT_DATA.CONTACTS);
 
     /**
      * Escapes a value for interpolation into an HTML string.
@@ -849,6 +969,12 @@
       return parts[parts.length - 1].toLowerCase();
     }
     const CONTACTS_SORTED = [...CONTACTS].sort((a, b) => lastNameKey(a.name).localeCompare(lastNameKey(b.name)));
+    // After Try again brings the teachers in (2026-10-06).
+    function ctResort() {
+      const sorted = [...CONTACTS].sort((a, b) => lastNameKey(a.name).localeCompare(lastNameKey(b.name)));
+      CONTACTS_SORTED.length = 0;
+      sorted.forEach(c => CONTACTS_SORTED.push(c));
+    }
 
     function contactRowHTML(c) {
       return `
@@ -857,11 +983,11 @@
           <div class="contact-text">
             <p class="contact-name">${escapeHtml(c.name)}</p>
             ${c.role ? `<p class="contact-role">${escapeHtml(c.role)}</p>` : ''}
-            <p class="contact-meta">${escapeHtml(c.dept)} · ${escapeHtml(c.school)}</p>
+            ${c.dept || c.school ? `<p class="contact-meta">${[c.dept, c.school].filter(Boolean).map(v => escapeHtml(v)).join(' · ')}</p>` : ''}
           </div>
-          <a class="contact-email-btn" href="mailto:${escapeHtml(c.email)}" aria-label="Email ${escapeHtml(c.name)}" onclick="event.stopPropagation()">
+          ${c.email ? `<a class="contact-email-btn" href="mailto:${escapeHtml(c.email)}" aria-label="Email ${escapeHtml(c.name)}" onclick="event.stopPropagation()">
             <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
-          </a>
+          </a>` : ''}
         </div>`;
     }
 
@@ -874,6 +1000,13 @@
     function renderContactList() {
       const q = contactsSearchInput.value.trim().toLowerCase();
       const body = document.getElementById('contactsListBody');
+      // Signed in (2026-10-06): loading, couldn't load, needs the rosters
+      // permission, or no teachers yet.
+      if (CT_LIVE) {
+        const state = ctStateHtml();
+        document.getElementById('contactsSearchWrap').hidden = !!state;
+        if (state) { body.innerHTML = state; return; }
+      }
       const items = CONTACTS_SORTED.filter(c => matchesQuery(c, q));
       body.innerHTML = items.length
         ? items.map(contactRowHTML).join('')
@@ -884,8 +1017,7 @@
     contactsSearchInput.addEventListener('input', renderContactList);
 
     renderContactList();
-    document.getElementById('contactsTotal').textContent = `${CONTACTS.length} people`;
-    document.getElementById('contactsSub').textContent = 'Staff & teachers · Lincoln Unified School District';
+    ctRenderHeader();
 
     // ------------------------------------------------------------------
     // Contact detail modal — same .modal-overlay/.modal-box open/close
@@ -918,6 +1050,7 @@
         window.location.href = url;
       };
       modalEmailBtn.href = `mailto:${c.email}`;
+      if (CT_LIVE) ctTidyModal(c);
       contactModal.classList.add('show');
       document.getElementById('modalCloseBtn').focus();
     }
@@ -938,6 +1071,11 @@
       if (c) openContactModal(c);
     });
     document.getElementById('modalCloseBtn').addEventListener('click', closeContactModal);
+    if (CT_LIVE) {
+      document.getElementById('contactsListBody').addEventListener('click', e => {
+        if (e.target.closest('[data-action="retry-people"]')) ctRetry();
+      });
+    }
     contactModal.addEventListener('click', e => { if (e.target === contactModal) closeContactModal(); });
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && contactModal.classList.contains('show')) closeContactModal(); });
 

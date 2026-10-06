@@ -928,6 +928,12 @@
       { type: 'assignment', title: 'Composición 2', courseId: 'spanish3', submittedOn: 'Fri Aug 21' },
     ];
 
+    // Signed in with real data (2026-10-06); a demo sign-in shows the samples.
+    // Schoology can't say what's turned in, so its bundle has no SUBMITTED:
+    // empty, never the sample list.
+    const AV_LIVE = !!(window.__AVERAGES__ && window.__AVERAGES__.data) && window.__AVERAGES__.mode !== 'demo';
+    if (AV_LIVE && !Array.isArray(window.__AVERAGES__.data.SUBMITTED)) SUBMITTED.length = 0;
+
     const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     function fmtAug(day) { return `${DOW[new Date(2026, 7, day).getDay()]} Aug ${day}`; }
     function dayNum(dateStr) { const parts = dateStr.trim().split(/\s+/); return parseInt(parts[parts.length - 1], 10); }
@@ -972,11 +978,12 @@
     const gradedRecent = gradedItems.slice(0, 8);
 
     function assignRowHTML(item) {
-      const course = findCourse(item.courseId);
-      const dueText = item.status === 'graded' ? `Graded · ${item.score}%`
-        : item.status === 'overdue' ? `Missing · ${item.due}`
-        : item.status === 'submitted' ? `Submitted · ${item.due}`
-        : `Due ${item.due}`;
+      // A class that isn't in the list (2026-10-06): a neutral row, not an error.
+      const course = findCourse(item.courseId) || { name: '', color: 'var(--text-faint)' };
+      const dueText = item.status === 'graded' ? (typeof item.score === 'number' && isFinite(item.score) ? `Graded · ${item.score}%` : 'Graded')
+        : item.status === 'overdue' ? (item.due ? `Missing · ${item.due}` : 'Missing')
+        : item.status === 'submitted' ? (item.due ? `Submitted · ${item.due}` : 'Submitted')
+        : (item.due ? `Due ${item.due}` : 'Upcoming');
       const dest = `assignment.html?course=${encodeURIComponent(item.courseId)}&title=${encodeURIComponent(item.title)}${/^\d{1,24}$/.test(String(item.id || '')) ? `&id=${encodeURIComponent(item.id)}` : ''}`;
       return `
         <div class="assign-row ${escapeHtml(item.status)}" style="--row-course-color: ${escapeHtml(course.color)}" role="link" tabindex="0" data-href="${escapeHtml(dest)}" aria-label="${escapeHtml(item.title)}, ${escapeHtml(course.name)}">
@@ -984,7 +991,7 @@
           <div class="assign-text">
             <p class="assign-course" style="color: ${escapeHtml(course.color)}">${escapeHtml(course.name)}</p>
             <p class="assign-title">${escapeHtml(item.title)}</p>
-            <p class="assign-meta">${TYPE_LABEL[item.type]}</p>
+            <p class="assign-meta">${TYPE_LABEL[item.type] || 'Assignment'}</p>
           </div>
           <span class="assign-due">${escapeHtml(dueText)}</span>
         </div>`;

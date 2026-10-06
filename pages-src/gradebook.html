@@ -767,6 +767,9 @@
   .tc-btn.secondary { background: var(--panel-inner); color: var(--text-dark); }
   .tc-btn.secondary:hover { background: var(--border); }
   .tc-btn[hidden] { display: none; }
+  .tc-row[hidden] { display: none; }
+  /* Signed in with nothing to list (2026-10-06). */
+  .gb-empty, .calc-empty { margin: 14px 0 4px; font-size: 0.8rem; font-weight: 700; color: var(--text-faint); }
   /* Back link (2026-10-03): same as every other page, plain text with the arrow, no bubble */
   .topbar .back-link { gap: 5px; padding: 0; background: none; border-radius: 0; color: rgba(255,255,255,0.82); font-size: 0.76rem; font-weight: 800; }
   .topbar .back-link:hover { background: none; color: #fff; }
@@ -1248,26 +1251,50 @@
       { id: 'ortiz', name: 'Sra. Ortiz', role: 'Teacher', dept: 'World Languages Department', school: 'Lincoln High School', email: 'm.ortiz@lincolnusd.org', phone: '(555) 201-4515', color: '#8a6ba1', category: 'myTeachers' },
       { id: 'reyes', name: 'Coach Reyes', role: 'Teacher', dept: 'Physical Education Department', school: 'Lincoln High School', email: 'd.reyes@lincolnusd.org', phone: '(555) 201-4526', color: '#4f8c8a', category: 'myTeachers' }
     ];
+    // Signed in with real data (2026-10-06). A demo sign-in also has
+    // __AVERAGES__ (with an empty bundle) and shows the samples, like the preview.
+    const AV_LIVE = !!(window.__AVERAGES__ && window.__AVERAGES__.data) && window.__AVERAGES__.mode !== 'demo';
+    const AV_DATA = AV_LIVE ? window.__AVERAGES__.data : {};
+    const AV_CLASSROOM = AV_LIVE && (AV_DATA.platform === 'classroom' || AV_DATA.PEOPLE_PLATFORM === 'classroom');
+    // The directory comes from the people extra; if that failed, nobody's
+    // card is filled from the sample teachers above.
+    if (AV_LIVE && !Array.isArray(AV_DATA.CONTACTS)) CONTACTS.length = 0;
     const TC_TITLE = /^(Mr\.|Mrs\.|Ms\.|Mx\.|Dr\.|Sra\.|Sr\.|Coach|Nurse)\s+/i;
     function tcEsc(v) { return String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
     function tcLastName(n) { const p = String(n || '').replace(TC_TITLE, '').trim().split(/\s+/); return p[p.length - 1].toLowerCase(); }
     // Full name first, then last name (a teacher in the directory first).
-    function findTeacherContact(name) {
+    function findTeacherContact(name, courseId) {
       const list = Array.isArray(CONTACTS) ? CONTACTS : [];
       const exact = list.find(c => c && String(c.name).toLowerCase() === String(name).toLowerCase());
       if (exact) return exact;
+      // Live contacts list the classes they teach (2026-10-06): this class's
+      // one teacher, when the name on the class doesn't match exactly.
+      const teaching = courseId ? list.filter(c => c && Array.isArray(c.courses) && c.courses.map(String).includes(String(courseId))) : [];
+      if (teaching.length === 1) return teaching[0];
       const last = tcLastName(name);
       const byLast = list.filter(c => c && tcLastName(c.name) === last);
       return byLast.find(c => c.category === 'myTeachers') || byLast[0] || null;
     }
     function tcInitials(n) { return String(n).replace(TC_TITLE, '').split(/\s+/).map(p => p[0] || '').join('').slice(0, 2).toUpperCase(); }
     function openTeacherCard(name, courseName) {
-      const c = findTeacherContact(name) || { id: tcLastName(name), name, role: 'Teacher', dept: courseName || '', school: '', email: '', phone: '' };
+      const c = findTeacherContact(name, course.id) || { id: tcLastName(name), name, role: 'Teacher', dept: courseName || '', school: '', email: '', phone: '' };
       const color = getComputedStyle(document.documentElement).getPropertyValue('--course-color').trim() || c.color;
       const set = (id, v) => { document.getElementById(id).textContent = v || '—'; };
       const avatar = document.getElementById('tcAvatar');
       avatar.textContent = tcInitials(c.name); avatar.style.background = color;
       set('tcName', c.name); set('tcRole', c.role || c.dept); set('tcDept', c.dept); set('tcSchool', c.school); set('tcEmail', c.email); set('tcPhone', c.phone);
+      // Signed in (2026-10-06): rows the school doesn't share are left out,
+      // "Department" is the classes they teach here, and Message is only for
+      // a Schoology teacher (Classroom teachers can't be messaged).
+      if (AV_LIVE) {
+        [['tcDept', c.dept], ['tcSchool', c.school], ['tcEmail', c.email], ['tcPhone', c.phone]].forEach(([id, v]) => {
+          const row = document.getElementById(id).closest('.tc-row');
+          if (row) row.hidden = !String(v || '').trim();
+        });
+        const deptKey = document.getElementById('tcDept').closest('.tc-row').querySelector('.k');
+        if (deptKey) deptKey.textContent = String(c.dept || '').includes(',') ? 'Classes' : 'Class';
+        document.getElementById('tcMessage').hidden = AV_CLASSROOM || !/^\d{1,20}$/.test(String(c.id || ''));
+      }
       document.getElementById('tcMessage').onclick = () => {
         window.location.href = `messages.html?compose=${encodeURIComponent(c.id)}&name=${encodeURIComponent(c.name)}&dept=${encodeURIComponent(c.dept || '')}&color=${encodeURIComponent(color)}`;
       };
@@ -1465,6 +1492,32 @@
       ]},
     };
 
+    // Signed in (2026-10-06): GRADEBOOK is the bundle's, with this class's
+    // exact one from the gradebook extra when it came; never the samples.
+    // Each entry is tidied once so nothing below meets a missing number.
+    if (AV_LIVE) {
+      if (!AV_DATA.GRADEBOOK || typeof AV_DATA.GRADEBOOK !== 'object') Object.keys(GRADEBOOK).forEach(k => { delete GRADEBOOK[k]; });
+      Object.keys(GRADEBOOK).forEach(k => {
+        const entry = GRADEBOOK[k];
+        const cats = entry && Array.isArray(entry.categories) ? entry.categories : [];
+        GRADEBOOK[k] = { categories: cats.filter(c => c && typeof c === 'object').map(c => ({
+          name: String(c.name || 'Category'),
+          weight: Number(c.weight) > 0 ? Number(c.weight) : 0,
+          assignments: (Array.isArray(c.assignments) ? c.assignments : []).filter(a => a && typeof a === 'object').map(a => {
+            const n = a.score === '' || a.score === null || a.score === undefined ? NaN : Number(a.score);
+            const score = isFinite(n) ? n : undefined;
+            return { title: String(a.title || 'Untitled'), score, points: Number(a.points) > 0 ? Number(a.points) : 0, graded: !!a.graded && score !== undefined, id: a.id };
+          }),
+        })) };
+      });
+    }
+    // A weighted class leaves 0-weight categories out ("No category", say);
+    // a class with no weights at all counts every point (2026-10-06).
+    function gbWeighted(gb) { return !!gb && Array.isArray(gb.categories) && gb.categories.some(c => Number(c.weight) > 0); }
+    function gbWeightLabel(cat, weighted) {
+      if (Number(cat.weight) > 0) return `${cat.weight}% of grade`;
+      return weighted ? 'Not counted' : 'Counts by points';
+    }
     const GRADING_PERIOD = 'HS-Fall: 2026-08-17 - 2026-12-18';
 
     // A/B/C/D/F color coding (2026-08-31, per Martin's request) — each
@@ -1548,10 +1601,12 @@
       window.location.href = `course-home.html?course=${course.id}`;
     });
 
-    document.getElementById('curVal').innerHTML = `<span class="${gradeBand(course.grade)}">${escapeHtml(course.grade)}</span>${course.grade === '—' ? '' : `<span class="grade-hero-pct">${escapeHtml(course.pct)}%</span>`}`;
+    document.getElementById('curVal').innerHTML = `<span class="${course.grade === '—' ? '' : gradeBand(course.grade)}">${escapeHtml(course.grade)}</span>${course.grade === '—' ? '' : `<span class="grade-hero-pct">${escapeHtml(course.pct)}%</span>`}`;
     document.getElementById('predVal').innerHTML = course.predicted === '—' ? '<span class="grade-hero-trend flat">—</span>' : `<span class="grade-hero-trend ${escapeHtml(course.trend)}"><span class="arrow">${TREND_ARROW[course.trend]}</span>${escapeHtml(course.predicted)}</span><span class="grade-hero-pct">${escapeHtml(course.predictedPct)}%</span>`;
     document.getElementById('predBlock').setAttribute('aria-label', `Why is ${course.name} predicted ${course.predicted}, ${course.predictedPct} percent? Show reasoning.`);
-    document.getElementById('gradingPeriodNote').textContent = `Grading period: ${GRADING_PERIOD}`;
+    // The grading period is sample text: the API doesn't send one (2026-10-06).
+    if (AV_LIVE) document.getElementById('gradingPeriodNote').style.display = 'none';
+    else document.getElementById('gradingPeriodNote').textContent = `Grading period: ${GRADING_PERIOD}`;
 
     // Assignments — the same read-only category/weight/progress-bar/
     // assignment-row breakdown as grades.html's Gradebook pop-out,
@@ -1579,12 +1634,18 @@
     function renderCategories() {
       const gb = GRADEBOOK[course.id];
       document.getElementById('gradeSummaryTotal').textContent = course.grade === '—' ? 'No overall grade yet' : `${course.pct}% overall`;
+      // No gradebook for this class (signed in, nothing graded or listed yet).
+      const hasGb = !!gb && Array.isArray(gb.categories) && gb.categories.length > 0;
+      document.getElementById('openCalcBtn').style.display = hasGb ? '' : 'none';
+      if (!hasGb) { document.getElementById('gbCategories').innerHTML = '<p class="gb-empty">Nothing graded in this class yet.</p>'; return; }
+      const weighted = gbWeighted(gb);
       document.getElementById('gbCategories').innerHTML = gb.categories.map((cat, ci) => {
         const avg = categoryAverage(cat.assignments);
         const barColor = avg !== null ? barColorForPct(avg) : 'var(--border)';
         const rows = cat.assignments.map((a, ai) => {
+          // Worth 0 points (extra credit): the score alone, no letter.
           const scoreDisplay = a.graded
-            ? (() => { const letter = letterFromPct((a.score / a.points) * 100); return `<span class="${gradeBand(letter)}">${letter}</span> ${escapeHtml(a.score)}/${escapeHtml(a.points)}`; })()
+            ? (a.points > 0 ? (() => { const letter = letterFromPct((a.score / a.points) * 100); return `<span class="${gradeBand(letter)}">${letter}</span> ${escapeHtml(a.score)}/${escapeHtml(a.points)}`; })() : `${escapeHtml(a.score)} pts`)
             : 'Not yet graded';
           return `
             <button type="button" class="gb-assign-row ${a.graded ? '' : 'ungraded'}" data-cat="${ci}" data-idx="${ai}" aria-label="Open ${escapeHtml(a.title)}">
@@ -1597,7 +1658,7 @@
           <div class="gb-category">
             <div class="gb-category-head">
               <span class="gb-category-name">${escapeHtml(cat.name)}</span>
-              <span class="gb-category-weight">${escapeHtml(cat.weight)}% of grade${avg !== null ? ` · ${Math.round(avg)}% avg` : ''}</span>
+              <span class="gb-category-weight">${escapeHtml(gbWeightLabel(cat, weighted))}${avg !== null ? ` · ${Math.round(avg)}% avg` : ''}</span>
             </div>
             <div class="gb-bar"><div class="gb-bar-fill" style="width:${avg !== null ? Math.min(100, Math.round(avg)) : 0}%; background:${barColor}"></div></div>
             ${rows}
@@ -1651,6 +1712,7 @@
       });
     }
     function buildGradeChartSVG(c) {
+      if (!HISTORY[c.id] || !Array.isArray(HISTORY[c.id].points) || !HISTORY[c.id].points.length) return '<p class="popup-foot">No graded work yet. The trend shows up after the first grades.</p>';
       const hist = groupSameDay(HISTORY[c.id]);
       const allLabels = hist.dates.concat(['Predicted']);
       const allValues = hist.points.concat([c.predictedPct]);
@@ -1698,6 +1760,7 @@
     }
     function renderGradePopup(c) {
       const hist = HISTORY[c.id];
+      if (!hist || !Array.isArray(hist.points) || !hist.points.length) return `<h3>${escapeHtml(c.name)}</h3><p class="popup-sub">No graded work yet. The trend and predicted grade show up after the first grades.</p>`;
       const first = hist.points[0], lastGraded = hist.points[hist.points.length - 1];
       return `
         <h3>${escapeHtml(c.name)}</h3>
@@ -1781,6 +1844,8 @@
     // touching anything reproduces the real grade exactly.
     function renderCalcCategories() {
       const gb = GRADEBOOK[course.id];
+      if (!gb || !Array.isArray(gb.categories) || !gb.categories.length) { calcCategories.innerHTML = '<p class="calc-empty">Nothing graded in this class yet.</p>'; return; }
+      const weighted = gbWeighted(gb);
       calcCategories.innerHTML = gb.categories.map(cat => {
         const rows = cat.assignments.map(a => {
           const key = assignKey(cat.name, a.title);
@@ -1799,7 +1864,7 @@
           <div class="calc-category">
             <div class="calc-category-head">
               <span class="calc-category-name">${escapeHtml(cat.name)}</span>
-              <span class="calc-category-weight" data-base-weight="${escapeHtml(cat.weight)}">${escapeHtml(cat.weight)}% of grade</span>
+              <span class="calc-category-weight" data-base-weight="${escapeHtml(cat.weight)}">${escapeHtml(gbWeightLabel(cat, weighted))}</span>
             </div>
             ${rows}
           </div>
@@ -1816,8 +1881,10 @@
     // feed back into the category list above.
     function recomputeCalc() {
       const gb = GRADEBOOK[course.id];
-      let overall = 0, weightUsed = 0;
-      gb.categories.forEach(cat => {
+      const cats = gb && Array.isArray(gb.categories) ? gb.categories : [];
+      const weighted = gbWeighted(gb);
+      let overall = 0, weightUsed = 0, allEarned = 0, allPossible = 0;
+      cats.forEach(cat => {
         let earned = 0, possible = 0;
         cat.assignments.forEach(a => {
           const key = assignKey(cat.name, a.title);
@@ -1834,11 +1901,31 @@
         });
         // A category with nothing counted yet is left out and the other
         // weights scale up (2026-10-05), as in Google Classroom.
-        if (possible > 0) { overall += (earned / possible) * 100 * cat.weight; weightUsed += cat.weight; }
+        if (possible > 0) {
+          const w = Number(cat.weight) > 0 ? Number(cat.weight) : 0;
+          overall += (earned / possible) * 100 * w; weightUsed += w;
+          allEarned += earned; allPossible += possible;
+        }
       });
-      overall = weightUsed > 0 ? overall / weightUsed : 0;
+      // Weighted: the categories with work, scaled. No weights at all (a
+      // total-points class): every point counts. Nothing counted yet: "—",
+      // not an F (2026-10-06).
+      const raw = weighted ? (weightUsed > 0 ? overall / weightUsed : null) : (allPossible > 0 ? (allEarned / allPossible) * 100 : null);
+      if (raw === null || !isFinite(raw)) {
+        calcHeroLetter.textContent = '—';
+        calcHeroLetter.style.color = '';
+        calcHeroPct.textContent = '';
+        calcHeroLabel.textContent = Object.keys(calcEdits).length > 0 ? 'Projected grade' : 'Current grade';
+        calcCategories.querySelectorAll('.calc-category').forEach((box, i) => {
+          const cat = cats[i];
+          if (cat) box.querySelector('.calc-category-weight').textContent = gbWeightLabel(cat, weighted);
+        });
+        if (!calcFinalCurrentTouched) calcFinalCurrent.value = '';
+        updateFinalAnswer();
+        return;
+      }
 
-      const pct = Math.max(0, Math.min(100, overall));
+      const pct = Math.max(0, Math.min(100, raw));
       const letter = letterFromPct(pct);
       calcHeroLetter.textContent = letter;
       calcHeroLetter.style.color = GRADE_COLOR[gradeBand(letter)];
@@ -1850,8 +1937,8 @@
       calcHeroLabel.textContent = Object.keys(calcEdits).length > 0 ? 'Projected grade' : 'Current grade';
 
       calcCategories.querySelectorAll('.calc-category').forEach((box, i) => {
-        const cat = gb.categories[i];
-        box.querySelector('.calc-category-weight').textContent = `${cat.weight}% of grade`;
+        const cat = cats[i];
+        if (cat) box.querySelector('.calc-category-weight').textContent = gbWeightLabel(cat, weighted);
       });
 
       // Keep "Current grade" synced to the live projected grade above

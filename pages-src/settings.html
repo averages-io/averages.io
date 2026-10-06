@@ -388,6 +388,8 @@
   .integ-status::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--border); flex: none; }
   .integ-status.on { color: var(--grade-good, #2f7d54); }
   .integ-status.on::before { background: var(--grade-good, #2f7d54); }
+  .integ-status.integ-reconnect { display: block; }
+  .integ-status.integ-reconnect::before { content: none; }
   .integ-btn { min-width: 104px; }
   .integ-btn.disconnect { color: var(--grade-bad, #b6432f); }
   .integ-soon { font-size: 0.72rem; font-weight: 800; color: var(--text-faint); white-space: nowrap; flex-shrink: 0; }
@@ -559,6 +561,11 @@
   .notif-blocked { margin: 10px 2px 0; color: var(--grade-bad); font-weight: 700; }
   .notif-test { margin-top: 12px; }
   #notifTypesWrap > .settings-subhead { margin-top: 22px; }
+  /* Live (2026-10-05): one short line saying what just happened (turning on,
+     a failed change, the test). Plain text, red only when it's a problem. */
+  .notif-msg[hidden] { display: none; }
+  .notif-msg { margin: 10px 2px 0; font-weight: 700; }
+  .notif-msg.bad { color: var(--grade-bad); }
   select.settings-select {
     font: inherit;
     font-weight: 700;
@@ -1147,9 +1154,11 @@
 
             <!-- Browser notifications are back (2026-10-04, per Martin), now
                  requiring Sync Across Devices, and the Weekly Grade Summary
-                 email is gone. Sending still isn't built (see the comment
-                 above), so the toggle only works in the preview; signed in it
-                 says Coming soon until the API side exists. -->
+                 email is gone. Live for signed-in students since 2026-10-05:
+                 public/sw.js shows them, public/js/averages-push.js subscribes
+                 this browser, and averages-api's /push routes check for
+                 changes (see the script's Browser notifications block). Signed
+                 in, the row says Coming soon until the API has its push keys. -->
             <p class="settings-subhead">This browser</p>
             <div class="settings-group">
               <div class="settings-row">
@@ -1161,6 +1170,7 @@
               </div>
             </div>
             <p class="settings-row-desc notif-blocked" id="notifBlockedNote" hidden>Notifications are blocked for this site. Allow them in your browser's site settings, then turn this on again.</p>
+            <p class="settings-row-desc notif-msg" id="notifMsg" role="status" hidden></p>
             <div id="notifTypesWrap" hidden>
               <p class="settings-subhead">Notify me about</p>
               <div class="settings-group">
@@ -1201,6 +1211,7 @@
               </div>
               </div>
               <button class="btn-secondary notif-test" type="button" id="notifTestBtn">Send a Test Notification</button>
+              <p class="settings-row-desc notif-msg" id="notifTestMsg" role="status" hidden></p>
             </div>
           </div>
 
@@ -1252,9 +1263,9 @@
             <div class="settings-group" id="integrationList">
               <div class="settings-row"><div class="settings-row-text"><p class="settings-row-label">Canva</p><p class="settings-row-desc">Edit assignment files in Canva, then turn them in from Drafts.</p></div></div>
               <div class="settings-row"><div class="settings-row-text"><p class="settings-row-label">Google Drive</p><p class="settings-row-desc">Edit Word, PowerPoint and Excel files in Google Docs, Slides and Sheets, and add files from Drive.</p></div></div>
-              <div class="settings-row"><div class="settings-row-text"><p class="settings-row-label">OneDrive</p><p class="settings-row-desc">Save course files to OneDrive and find them on the Files tab.</p></div></div>
+              <div class="settings-row"><div class="settings-row-text"><p class="settings-row-label">OneDrive</p><p class="settings-row-desc">Save course files to OneDrive, add files from it, and find them on the Files tab.</p></div></div>
             </div>
-            <p class="settings-row-desc integ-note">Averages only gets what you allow: your Canva designs, and just the Google Drive or OneDrive files you open with Averages, never the rest. Disconnecting removes Averages' access right away. To remove it completely, also remove Averages.io in that app's own account settings.</p>
+            <p class="settings-row-desc integ-note">Averages only gets what you allow: your Canva designs, the Google Drive files you open or add with Averages, and its own Apps/Averages.io folder in OneDrive. Add from OneDrive asks to read your OneDrive, and Averages only lists and opens the files you pick. Disconnecting removes Averages' access right away. To remove it completely, also remove Averages.io in that app's own account settings.</p>
             <p class="settings-subhead">Editing</p>
             <div class="settings-group">
               <div class="settings-row">
@@ -1349,33 +1360,13 @@
     </div>
   </div>
 
-  <!-- ---------- "Add your email" / "verify your email" nudge — shown
-       when Weekly Grade Summary is switched on but the account isn't
-       ready for it yet. Text/button swap between the two cases in JS
-       (openEmailNudge) rather than being two separate modals. ---------- -->
-  <div class="editor-overlay" id="emailNudgeOverlay">
-    <div class="editor-modal" role="dialog" aria-modal="true" aria-labelledby="emailNudgeTitle" style="max-width: 340px;">
-      <div class="editor-head">
-        <h2 id="emailNudgeTitle">Add your email</h2>
-        <button class="editor-close" id="emailNudgeClose" type="button" aria-label="Close">&times;</button>
-      </div>
-      <div class="editor-body" style="padding-bottom: 16px;">
-        <p class="settings-row-desc" id="emailNudgeBody" style="font-size: 0.86rem;">Add your email to get updates like the Weekly Grade Summary — Averages doesn't have one on file yet.</p>
-      </div>
-      <div class="editor-actions">
-        <button class="editor-reset" id="emailNudgeCancel" type="button">Not now</button>
-        <button class="editor-done" id="emailNudgeAddEmail" type="button">Add Email</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ---------- "Turn on sync first" nudge (2026-09-08) — shown when
-       Weekly Grade Summary is switched on but Sync Across Devices isn't.
-       The weekly email is generated server-side with no browser open to
-       ask, so it needs a synced per-user record both to know who's opted
-       in and to hold the GPA history the email's own "vs last week" line
-       reads from. Same shape as the email nudge above, one action button
-       instead of two states. ---------- -->
+  <!-- ---------- "Turn on sync first" nudge (2026-09-08; for Browser
+       Notifications since 2026-10-04, when the Weekly Grade Summary email
+       it was made for went away). Shown when notifications are switched on
+       but Sync Across Devices isn't: both keep something for the student on
+       our server, so notifications are only for students who opted into
+       that already. Turning sync on from here carries straight on to the
+       consent popup below. ---------- -->
   <div class="editor-overlay" id="syncRequiredOverlay">
     <div class="editor-modal" role="dialog" aria-modal="true" aria-labelledby="syncRequiredTitle" style="max-width: 340px;">
       <div class="editor-head">
@@ -1383,7 +1374,7 @@
         <button class="editor-close" id="syncRequiredClose" type="button" aria-label="Close">&times;</button>
       </div>
       <div class="editor-body" style="padding-bottom: 16px;">
-        <p class="settings-row-desc" style="font-size: 0.86rem;">Browser Notifications needs Sync Across Devices turned on. That's how Averages knows this browser wants notifications and where to send them while Averages is closed.</p>
+        <p class="settings-row-desc" style="font-size: 0.86rem;">Browser Notifications needs Sync Across Devices turned on first. Both keep something for you on the Averages server, so they go together.</p>
       </div>
       <div class="editor-actions">
         <button class="editor-reset" id="syncRequiredCancel" type="button">Not now</button>
@@ -1392,31 +1383,31 @@
     </div>
   </div>
 
-  <!-- ---------- "What turning this on means" consent (2026-09-12) — the
-       last step before Weekly Grade Summary actually turns on, once the
-       email/sync gates above already pass. Unlike those two, this isn't
-       unblocking a missing prerequisite — it's disclosure: turning this
-       on means Averages.io stores a real, reusable school sign-in
-       credential server-side (encrypted, using a separate locked-down key
-       it keeps elsewhere) so it can check grades even while the person is
-       signed out. That's a meaningfully bigger thing to store than
-       anything else this app keeps, so it gets its own explicit
-       confirmation rather than a line in the row's one-line description.
-       See openWeeklyEmailConsent below for how this slots into the
-       existing email/sync gate chain. ---------- -->
-  <div class="editor-overlay" id="weeklyEmailConsentOverlay">
-    <div class="editor-modal" role="dialog" aria-modal="true" aria-labelledby="weeklyEmailConsentTitle" style="max-width: 380px;">
+  <!-- ---------- "What turning this on means" consent (2026-09-12; for
+       Browser Notifications since 2026-10-04, copy made exact 2026-10-05
+       when sending went live). The last step before notifications turn on,
+       once sync is on. It isn't unblocking anything, it's disclosure:
+       turning this on means the Averages server keeps a real, reusable
+       school sign-in (encrypted with a separate key, PUSH_SECRET in
+       averages-api) so it can check about every 20 minutes with Averages
+       closed. That's a bigger thing to store than anything else this app
+       keeps, so it gets its own confirmation. Every sentence here is what
+       averages-api's PushStore actually does: deleted when the last
+       browser turns it off (or on sign-out), notifications carry only the
+       kind of change. See openNotifConsent below. ---------- -->
+  <div class="editor-overlay" id="notifConsentOverlay">
+    <div class="editor-modal" role="dialog" aria-modal="true" aria-labelledby="notifConsentTitle" style="max-width: 380px;">
       <div class="editor-head">
-        <h2 id="weeklyEmailConsentTitle">What turning this on means</h2>
-        <button class="editor-close" id="weeklyEmailConsentClose" type="button" aria-label="Close">&times;</button>
+        <h2 id="notifConsentTitle">What turning this on means</h2>
+        <button class="editor-close" id="notifConsentClose" type="button" aria-label="Close">&times;</button>
       </div>
       <div class="editor-body" style="padding-bottom: 16px;">
-        <p class="settings-row-desc" style="font-size: 0.86rem;">To notify you while Averages is closed, it checks for changes every so often, even when you're not signed in. To do that it stores your school sign-in key, encrypted, using a separate locked-down key it keeps elsewhere, so nothing can read it with just one or the other.</p>
-        <p class="settings-row-desc" style="font-size: 0.86rem; margin-top: 10px;">Notifications only say what kind of thing changed, like "A new grade was posted." The details stay in Averages. Turn this off any time and the stored key is deleted right away.</p>
+        <p class="settings-row-desc" style="font-size: 0.86rem;">To tell you about changes while Averages is closed, Averages checks your classes about every 20 minutes. To do that it stores your school sign-in key on its server, encrypted with a separate key that's only used for notifications. It keeps it only while notifications are on in one of your browsers.</p>
+        <p class="settings-row-desc" style="font-size: 0.86rem; margin-top: 10px;">Notifications only say what kind of thing changed, like "A new grade was posted." The details stay in Averages. Turn this off or sign out and the stored key is deleted right away.</p>
       </div>
       <div class="editor-actions">
-        <button class="editor-reset" id="weeklyEmailConsentCancel" type="button">Not now</button>
-        <button class="editor-done" id="weeklyEmailConsentConfirm" type="button">Turn It On</button>
+        <button class="editor-reset" id="notifConsentCancel" type="button">Not now</button>
+        <button class="editor-done" id="notifConsentConfirm" type="button">Turn It On</button>
       </div>
     </div>
   </div>
@@ -1859,7 +1850,7 @@
       const APPS = [
         { id: 'canva', name: 'Canva', desc: 'Edit assignment files in Canva, then turn them in from Drafts.' },
         { id: 'gdrive', name: 'Google Drive', desc: 'Edit Word, PowerPoint and Excel files in Google Docs, Slides and Sheets, and add files from Drive.' },
-        { id: 'onedrive', name: 'OneDrive', desc: 'Save course files to OneDrive and find them on the Files tab.' },   // back 2026-10-05
+        { id: 'onedrive', name: 'OneDrive', desc: 'Save course files to OneDrive, add files from it, and find them on the Files tab.' },   // back 2026-10-05
       ];
       const connected = new Set();
       const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
@@ -1868,7 +1859,7 @@
       const INCOG = window.__AVERAGES_INCOGNITO__ || null;
       const INCOGNITO = !!(INCOG && INCOG.on);
       // state: loading | ready | error | unconfigured (the API has no Canva app credentials)
-      const canvaLive = { state: 'loading', connected: false, name: '', busy: false };
+      const canvaLive = { state: 'loading', connected: false, name: '', busy: false, turnIn: 'off' };
       function canvaRowHTML(a) {
         const s = canvaLive;
         let status, action;
@@ -1881,6 +1872,10 @@
         } else if (s.state === 'error') {
           status = '<span class="integ-status">Couldn’t check right now</span>';
           action = '<button class="btn-secondary integ-btn" type="button" data-canva="retry">Try again</button>';
+        } else if (s.connected && s.turnIn === 'reconnect') {
+          // Connected before turning in Canva designs was switched on (2026-10-06).
+          status = `<span class="integ-status on">Connected${s.name ? ' as ' + esc(s.name) : ''}</span><span class="integ-status integ-reconnect">Reconnect to turn in Canva designs as PDFs.</span>`;
+          action = `<button class="btn-secondary integ-btn" type="button" data-canva="connect" aria-label="Reconnect Canva"${s.busy ? ' disabled' : ''}>Reconnect</button>`;
         } else if (s.connected) {
           status = `<span class="integ-status on">Connected${s.name ? ' as ' + esc(s.name) : ''}</span>`;
           action = `<button class="btn-secondary integ-btn disconnect" type="button" data-canva="disconnect" aria-label="Disconnect Canva"${s.busy ? ' disabled' : ''}>Disconnect</button>`;
@@ -2064,6 +2059,7 @@
           canvaLive.state = j.configured === false ? 'unconfigured' : 'ready';
           canvaLive.connected = !!j.connected;
           canvaLive.name = String(j.name || '');
+          canvaLive.turnIn = j.turnIn === 'reconnect' || j.turnIn === 'ready' ? j.turnIn : 'off';
         } catch {
           canvaLive.state = 'error';
         }
@@ -2090,7 +2086,7 @@
       const DISC_TEXT = {
         canva: ['Disconnect Canva?', 'Averages.io stops using your Canva account and forgets your Drafts list. Your designs stay in your Canva account. To remove Averages.io completely, also remove it in Canva\'s own settings.'],
         gdrive: ['Disconnect Google Drive?', 'Averages.io stops using your Google Drive in this browser and forgets your Google Drive drafts. Files it saved stay in your Drive, in the Averages.io folder. To remove Averages.io completely, also remove it in your Google Account\'s third-party connections.'],
-        onedrive: ['Disconnect OneDrive?', 'Averages.io stops using your OneDrive in this browser. Files it saved stay in your OneDrive, in Apps/Averages.io. To remove Averages.io completely, also remove it in your Microsoft account\'s app permissions.'],
+        onedrive: ['Disconnect OneDrive?', 'Averages.io stops using your OneDrive in this browser and forgets the files you added. Files it saved stay in your OneDrive, in Apps/Averages.io. To remove Averages.io completely, also remove it in your Microsoft account\'s app permissions.'],
       };
       let discApp = 'canva';
       function openDisc(app) {
@@ -2180,7 +2176,7 @@
         flash.hidden = true;
         render();
         pending
-          .then(() => showFlash(app === 'gdrive' ? 'Google Drive is connected. Use Save to cloud or Edit in Google Drive on an assignment file.' : 'OneDrive is connected. Use Save to cloud on an assignment file.'))
+          .then(() => showFlash(app === 'gdrive' ? 'Google Drive is connected. Use Save to cloud or Edit in Google Drive on an assignment file.' : 'OneDrive is connected. Use Save to cloud on an assignment file, or Add from OneDrive on the Files tab.'))
           .catch(err => showFlash(C.messageFor(err), !err || err.code !== 'popup_closed'))
           .finally(() => { cloud.busy[app] = false; render(); focusRow(app); });
       });
@@ -2382,7 +2378,8 @@
     // this page's own script runs, from the server's own answer to
     // /auth/me. Read once, here, near the top, because it gates two things
     // below that both need to know it before they render: the Sync Across
-    // Devices / Weekly Grade Summary toggles (2026-09-08, real server sync —
+    // Devices toggle (2026-09-08, real server sync, and Browser Notifications,
+    // which needs it —
     // see the block near the bottom of this script) can't work for a demo
     // session, which has no real Schoology uid for the API to key a stored
     // record on. This is the same server-verified signal every other
@@ -3199,7 +3196,8 @@
 
     // ------------------------------------------------------------------
     // Account: profile state, Edit Profile modal, email validation +
-    // mock verification, and the Weekly Grade Summary gate.
+    // mock verification. (The Weekly Grade Summary gate that used to live
+    // here went with the email, 2026-10-05.)
     // profileState.email starts empty and profileState.emailVerified
     // starts false — Averages.io doesn't assume an address, and doesn't
     // trust one until it's "verified"
@@ -3282,7 +3280,6 @@
     const profileEditPhotoBtn = document.getElementById('profileEditPhotoBtn');
     const profileEditPhotoInput = document.getElementById('profileEditPhotoInput');
     let editingPhoto = null; // staged in the modal, only committed to profileState on Save
-    let pendingWeeklySummaryEnable = false; // set when the edit/verify flow was triggered by the toggle gate below
 
     function openProfileEditor(focusEmail) {
       profileEditNameInput.value = profileState.name;
@@ -3343,98 +3340,280 @@
       if (emailChanged) profileState.emailVerified = false; // a new/changed address always needs re-verifying
       renderProfileCard();
       closeProfileEditor();
-      if (email && !profileState.emailVerified) {
-        openEmailVerifyModal();
-      } else if (!email) {
-        pendingWeeklySummaryEnable = false; // nothing to verify — drop any pending toggle intent
-      }
+      if (email && !profileState.emailVerified) openEmailVerifyModal();
     });
 
     // ------------------------------------------------------------------
     // Browser notifications (2026-10-04, per Martin; replaces the Weekly
-    // Grade Summary email). Same gate chain the email used, minus the email
-    // steps: Sync Across Devices on -> consent popup -> the browser's own
-    // permission prompt. Sending isn't built yet, so only the preview runs
-    // it; signed in (live or demo) it says Coming soon.
+    // Grade Summary email). Gate chain: Sync Across Devices on -> consent
+    // popup -> the browser's own permission prompt.
+    //
+    // Live for signed-in students since 2026-10-05. public/js/averages-push.js
+    // registers /sw.js and subscribes this browser; averages-api (/push/*)
+    // keeps the student's sign-in, encrypted with a separate key, only while
+    // notifications are on in at least one browser, checks about every 20
+    // minutes, and deletes it as soon as the last browser turns them off or
+    // the student signs out. Whether they're on comes from the API and this
+    // browser's own subscription, never from schoolagy_settings_options:
+    // that record syncs to other devices, which each have their own
+    // subscription. The kinds (notifyTypes) do live there: they're the
+    // student's, the same everywhere, and the API keeps a copy.
+    //   Demo: off, with a short reason. Incognito: off, and anything left on
+    //   from before is turned off. API without push keys: Coming soon.
+    // The preview (no __AVERAGES_MODE__) works as it did: the browser's
+    // permission only, remembered on this device, nothing sent anywhere.
     // ------------------------------------------------------------------
     const browserNotifToggle = document.getElementById('browserNotifToggle');
     const notifTypesWrap = document.getElementById('notifTypesWrap');
     const notifBlockedNote = document.getElementById('notifBlockedNote');
+    const notifDesc = document.getElementById('browserNotifDesc');
+    const notifMsg = document.getElementById('notifMsg');
+    const notifTestMsg = document.getElementById('notifTestMsg');
+    const notifTestBtn = document.getElementById('notifTestBtn');
     const NOTIF_PREVIEW = !window.__AVERAGES_MODE__;
+    const NOTIF_DEMO = window.__AVERAGES_MODE__ === 'demo';
+    const NOTIF_LIVE = window.__AVERAGES_MODE__ === 'live' && !AVERAGES_INCOGNITO;
     const NOTIF_SUPPORTED = 'Notification' in window;
+    const NOTIF_COMING_SOON = 'Coming soon: notifications in your browser when grades, assignments or messages change. Will need Sync Across Devices.';
+    let notifPush = null;            // window.AveragesPush once loaded (live only)
+    let notifLiveReady = false;      // live: the API is set up and this browser can do it
+    let pendingNotifEnable = false;  // set when "Turn on sync first" was shown on the way to turning this on
     // The email is gone: a saved "on" goes back to off, which also makes the
     // API stop keeping its two GPA snapshots for this student.
     if (settingsOptions.weeklyGradeSummary === true) saveSettingsOption('weeklyGradeSummary', false);
-    function notifPermission() { return NOTIF_SUPPORTED ? Notification.permission : 'denied'; }
+    // The browser's answer from navigator.permissions once known (it can be
+    // more accurate than Notification.permission, which headless Chromium
+    // always reports as denied), and kept current: unblocking in the site
+    // settings hides the "blocked" note without a reload.
+    let notifPermState = null;
+    function notifPermission() { return notifPermState || (NOTIF_SUPPORTED ? Notification.permission : 'denied'); }
+    const notifPermReady = (async () => {
+      if (!NOTIF_SUPPORTED || !navigator.permissions || !navigator.permissions.query) return;
+      try {
+        const status = await navigator.permissions.query({ name: 'notifications' });
+        const read = () => {
+          notifPermState = status.state === 'prompt' ? 'default' : status.state;
+          if (typeof renderNotifState === 'function') renderNotifState();
+        };
+        read();
+        status.onchange = read;
+      } catch {}
+    })();
     function renderNotifState() {
       const on = browserNotifToggle.checked;
       notifTypesWrap.hidden = !on;
-      notifBlockedNote.hidden = on || notifPermission() !== 'denied' || !NOTIF_PREVIEW;
+      notifBlockedNote.hidden = on || notifPermission() !== 'denied' || !(NOTIF_PREVIEW || notifLiveReady);
     }
+    // One short line under the toggle (or under the test button).
+    function showNotifMsg(el, text, bad) {
+      el.textContent = text || '';
+      el.classList.toggle('bad', !!bad);
+      el.hidden = !text;
+    }
+    const NOTIF_ERRORS = {
+      network: 'Couldn’t reach Averages. Try again in a moment.',
+      failed: 'Something went wrong. Try again in a moment.',
+      push_unavailable: 'Something went wrong. Try again in a moment.',
+      push_not_configured: 'Notifications aren’t available yet.',
+      unsupported: 'This browser doesn’t support notifications.',
+      permission: 'Notifications weren’t allowed, so nothing changed.',
+      service_worker: 'This browser couldn’t set up notifications. Try again, or use another browser.',
+      subscribe_failed: 'This browser couldn’t set up notifications. Try again, or use another browser.',
+      not_available_in_demo: 'Not available on the demo account.',
+      incognito_mode: 'Off in Incognito mode.',
+      not_authenticated: 'You’ve been signed out. Sign in again.',
+      session_expired: 'You’ve been signed out. Sign in again.',
+      not_subscribed: 'Notifications aren’t on in this browser any more. Turn them on again.',
+      subscription_gone: 'This browser stopped accepting notifications. Turn them on again.',
+      too_soon: 'Wait a few seconds, then try again.',
+      push_failed: 'The test couldn’t be sent. Try again in a moment.',
+    };
+    function notifError(code) { return NOTIF_ERRORS[code] || NOTIF_ERRORS.failed; }
+
+    // The preview: remembered on this device only, as before.
     browserNotifToggle.checked = NOTIF_PREVIEW
       && settingsOptions.browserNotifications === true
       && settingsOptions.syncAcrossDevices === true
       && notifPermission() === 'granted';
     if (!NOTIF_PREVIEW || !NOTIF_SUPPORTED) {
+      // Signed in: off until the API and this browser say otherwise (startLiveNotifications).
       browserNotifToggle.disabled = true;
-      const desc = document.getElementById('browserNotifDesc');
-      if (desc) desc.textContent = !NOTIF_SUPPORTED
+      if (notifDesc && (!NOTIF_SUPPORTED || !NOTIF_LIVE)) notifDesc.textContent = !NOTIF_SUPPORTED
         ? "This browser doesn't support notifications."
         : AVERAGES_INCOGNITO
         ? 'Off in Incognito mode: notifications need Sync Across Devices.'
-        : 'Coming soon: notifications in your browser when grades, assignments or messages change. Will need Sync Across Devices.';
+        : NOTIF_DEMO
+        ? 'Not available on the demo account.'
+        : NOTIF_COMING_SOON;
     }
     // Which kinds of notifications (all on unless turned off).
     const notifyTypes = Object.assign({ grades: true, assignments: true, due: true, messages: true, announcements: true }, settingsOptions.notifyTypes || {});
-    document.querySelectorAll('[data-notify-type]').forEach(t => {
+    const notifTypeToggles = document.querySelectorAll('[data-notify-type]');
+    notifTypeToggles.forEach(t => {
       t.checked = notifyTypes[t.dataset.notifyType] !== false;
-      t.addEventListener('change', () => { notifyTypes[t.dataset.notifyType] = t.checked; saveSettingsOption('notifyTypes', { ...notifyTypes }); });
+      t.addEventListener('change', async () => {
+        const type = t.dataset.notifyType;
+        notifyTypes[type] = t.checked;
+        saveSettingsOption('notifyTypes', { ...notifyTypes });
+        if (!notifLiveOn()) return;
+        // Only this switch is sent; the API keeps the others as they are.
+        const r = await notifPush.setTypes({ [type]: t.checked });
+        if (r.ok) { showNotifMsg(notifMsg, ''); return; }
+        t.checked = !t.checked;
+        notifyTypes[type] = t.checked;
+        saveSettingsOption('notifyTypes', { ...notifyTypes });
+        showNotifMsg(notifMsg, notifError(r.code), true);
+      });
     });
-    function setBrowserNotif(on) {
+    // The API's kinds are what's actually being sent: show those (another
+    // device may have changed them).
+    function adoptNotifTypes(types) {
+      if (!types || typeof types !== 'object') return;
+      let changed = false;
+      notifTypeToggles.forEach(t => {
+        const v = types[t.dataset.notifyType];
+        if (typeof v !== 'boolean' || t.checked === v) return;
+        t.checked = v;
+        notifyTypes[t.dataset.notifyType] = v;
+        changed = true;
+      });
+      if (changed) saveSettingsOption('notifyTypes', { ...notifyTypes });
+    }
+    function setNotifUi(on) {
       browserNotifToggle.checked = on;
-      saveSettingsOption('browserNotifications', on);
       renderNotifState();
     }
-    // Last step, after sync and consent: the browser's own prompt.
+    // The preview's on/off, remembered on this device.
+    function setBrowserNotif(on) {
+      setNotifUi(on);
+      saveSettingsOption('browserNotifications', on);
+    }
+    function notifLiveOn() { return NOTIF_LIVE && notifLiveReady && !!notifPush && browserNotifToggle.checked; }
+
+    let pushScriptPromise = null;
+    function loadPushScript() {
+      if (window.AveragesPush) return Promise.resolve(window.AveragesPush);
+      if (!pushScriptPromise) {
+        pushScriptPromise = new Promise((resolve, reject) => {
+          const sc = document.createElement('script');
+          sc.src = '/js/averages-push.js';
+          sc.onload = () => (window.AveragesPush ? resolve(window.AveragesPush) : reject(new Error('push')));
+          sc.onerror = () => { pushScriptPromise = null; reject(new Error('push')); };
+          document.head.appendChild(sc);
+        });
+      }
+      return pushScriptPromise;
+    }
+
+    // Signed in: is the API set up, and is this browser on?
+    async function startLiveNotifications() {
+      let P;
+      try { P = await loadPushScript(); } catch {
+        showNotifMsg(notifMsg, 'Couldn’t load notifications. Reload the page to try again.', true);
+        return;
+      }
+      notifPush = P;
+      await notifPermReady;
+      if (!P.supported()) { notifDesc.textContent = "This browser doesn't support notifications."; return; }
+      const c = await P.config();
+      if (c.failed) { showNotifMsg(notifMsg, 'Couldn’t check notifications right now. Reload the page to try again.', true); return; }
+      if (!c.publicKey) { notifDesc.textContent = NOTIF_COMING_SOON; return; }
+      const st = await P.status();
+      notifLiveReady = true;
+      browserNotifToggle.disabled = false;
+      if (st.here && (!isSyncOn() || notifPermission() !== 'granted')) {
+        // No sync, no notifications (sync went off somewhere this page didn't
+        // see); and with permission taken back in the browser, nothing could
+        // show anyway. Either way: off, and the API told.
+        await P.disable();
+        setNotifUi(false);
+        if (!isSyncOn()) showNotifMsg(notifMsg, 'Turned off because Sync Across Devices is off.');
+        return;
+      }
+      if (st.here) adoptNotifTypes(st.types);
+      setNotifUi(!!st.here);
+    }
+    if (NOTIF_LIVE && NOTIF_SUPPORTED) startLiveNotifications();
+    // Incognito: anything left on from before it was picked is turned off,
+    // and a turn-off the API never heard about is sent again.
+    if (AVERAGES_INCOGNITO && window.__AVERAGES_MODE__ === 'live') {
+      let leftOn = false;
+      try { leftOn = !!(localStorage.getItem('averages_push_endpoint') || localStorage.getItem('averages_push_pending_delete')); } catch {}
+      if (leftOn) loadPushScript().then(P => P.disable().then(() => P.touchIfDue())).catch(() => {});
+    }
+
+    // Turning it off (the toggle, or turning Sync Across Devices off).
+    async function turnNotifOff() {
+      if (!NOTIF_LIVE || !notifPush) { setBrowserNotif(false); return; }
+      setNotifUi(false);
+      browserNotifToggle.disabled = true;
+      const r = await notifPush.disable();
+      browserNotifToggle.disabled = !notifLiveReady;
+      showNotifMsg(notifMsg, r.ok ? '' : 'Turned off in this browser. Averages couldn’t reach its server, so it will finish deleting the next time you open Averages.', !r.ok);
+    }
+    // Switching to Incognito: off, and the stored sign-in deleted. Awaited
+    // by the mode switch before the page reloads.
+    async function notifForget() {
+      setNotifUi(false);
+      if (NOTIF_PREVIEW) { saveSettingsOption('browserNotifications', false); return; }
+      if (window.__AVERAGES_MODE__ !== 'live') return;
+      try {
+        const P = notifPush || await loadPushScript();
+        await P.disable();
+      } catch {}
+    }
+
+    // Last step, after sync and consent: the browser's own prompt, asked
+    // inside the consent button's click (browsers only show it for a click),
+    // then, signed in, this browser subscribed and the API told.
     function enableBrowserNotifAfterConsent() {
       if (!NOTIF_SUPPORTED) return;
       const ask = notifPermission() === 'granted' ? Promise.resolve('granted') : Notification.requestPermission();
-      Promise.resolve(ask).then(result => {
-        if (result === 'granted') { setBrowserNotif(true); return; }
-        setBrowserNotif(false);
-        notifBlockedNote.hidden = result !== 'denied';
-      }).catch(() => setBrowserNotif(false));
+      Promise.resolve(ask).then(async result => {
+        if (result === 'granted' || result === 'denied') notifPermState = result;
+        if (result !== 'granted') {
+          if (NOTIF_PREVIEW) setBrowserNotif(false); else setNotifUi(false);
+          notifBlockedNote.hidden = result !== 'denied';
+          return;
+        }
+        if (!NOTIF_LIVE) { setBrowserNotif(true); return; }
+        if (!notifPush || !notifLiveReady) return;
+        browserNotifToggle.disabled = true;
+        showNotifMsg(notifMsg, 'Turning on…');
+        const r = await notifPush.enable({ ...notifyTypes });
+        browserNotifToggle.disabled = false;
+        if (r.ok) {
+          adoptNotifTypes(r.types);
+          setNotifUi(true);
+          showNotifMsg(notifMsg, '');
+          return;
+        }
+        setNotifUi(false);
+        if (r.code === 'blocked') { showNotifMsg(notifMsg, ''); notifBlockedNote.hidden = false; return; }
+        showNotifMsg(notifMsg, notifError(r.code), true);
+      }).catch(() => { setNotifUi(false); showNotifMsg(notifMsg, notifError('failed'), true); });
     }
-    document.getElementById('notifTestBtn').addEventListener('click', () => {
-      if (!NOTIF_SUPPORTED || notifPermission() !== 'granted') return;
-      try { new Notification('Averages.io', { body: 'A new grade was posted. Open Averages to see it.', tag: 'averages-test' }); } catch {}
+    notifTestBtn.addEventListener('click', async () => {
+      if (NOTIF_PREVIEW) {
+        // The preview: a notification from this page, nothing sent anywhere.
+        if (!NOTIF_SUPPORTED || notifPermission() !== 'granted') return;
+        try { new Notification('Averages.io', { body: 'A new grade was posted. Open Averages to see it.', tag: 'averages-test' }); } catch {}
+        return;
+      }
+      if (!notifLiveOn() || notifTestBtn.disabled) return;
+      notifTestBtn.disabled = true;
+      showNotifMsg(notifTestMsg, 'Sending…');
+      const r = await notifPush.test();
+      notifTestBtn.disabled = false;
+      if (r.ok) { showNotifMsg(notifTestMsg, 'Sent. It can take a few seconds to show up.'); return; }
+      showNotifMsg(notifTestMsg, notifError(r.code), true);
+      if (r.code === 'subscription_gone' || r.code === 'not_subscribed') {
+        // The API no longer has this browser: show it as off, and let go of it here too.
+        await notifPush.forgetLocal();
+        setNotifUi(false);
+      }
     });
     renderNotifState();
-    const emailNudgeOverlay = document.getElementById('emailNudgeOverlay');
-    const emailNudgeTitle = document.getElementById('emailNudgeTitle');
-    const emailNudgeBody = document.getElementById('emailNudgeBody');
-    const emailNudgeAddEmail = document.getElementById('emailNudgeAddEmail');
-    function openEmailNudge() {
-      pendingWeeklySummaryEnable = true;
-      const hasEmail = !!profileState.email;
-      emailNudgeTitle.textContent = hasEmail ? 'Verify your email' : 'Add your email';
-      emailNudgeBody.textContent = hasEmail
-        ? `Verify ${profileState.email} to turn on the Weekly Grade Summary — Averages needs to confirm it's really you first.`
-        : "Add your email to get updates like the Weekly Grade Summary — Averages doesn't have one on file yet.";
-      emailNudgeAddEmail.textContent = hasEmail ? 'Verify Email' : 'Add Email';
-      emailNudgeOverlay.classList.add('show');
-    }
-    function closeEmailNudge() { emailNudgeOverlay.classList.remove('show'); }
-    document.getElementById('emailNudgeClose').addEventListener('click', closeEmailNudge);
-    document.getElementById('emailNudgeCancel').addEventListener('click', () => {
-      pendingWeeklySummaryEnable = false;
-      closeEmailNudge();
-    });
-    emailNudgeOverlay.addEventListener('click', e => { if (e.target === emailNudgeOverlay) closeEmailNudge(); });
-    emailNudgeAddEmail.addEventListener('click', () => {
-      closeEmailNudge();
-      if (profileState.email) openEmailVerifyModal(); else openProfileEditor(true);
-    });
 
     // ---------- Mock email verification ----------
     const emailVerifyOverlay = document.getElementById('emailVerifyOverlay');
@@ -3456,10 +3635,6 @@
       profileState.emailVerified = true;
       renderProfileCard();
       closeEmailVerifyModal();
-      // "Good to go" — per Martin, once the email clears verification
-      // during the weekly-summary flow, the toggle should flip on by
-      // itself rather than making the user go turn it on again.
-      pendingWeeklySummaryEnable = false;   // email no longer gates anything (2026-10-04)
     }
     function openEmailVerifyModal() {
       emailVerifyAddress.textContent = profileState.email;
@@ -3502,19 +3677,20 @@
 
     browserNotifToggle.addEventListener('change', () => {
       if (browserNotifToggle.disabled) return;
-      if (!browserNotifToggle.checked) { setBrowserNotif(false); return; }   // turning it off never needs gating
+      showNotifMsg(notifMsg, '');
+      if (!browserNotifToggle.checked) { turnNotifOff(); return; }   // turning it off never needs gating
       browserNotifToggle.checked = false;   // hold off until every step below says yes
       if (!isSyncOn()) { openSyncRequiredNudge(); return; }
-      openWeeklyEmailConsent();
+      openNotifConsent();
     });
 
     document.addEventListener('keydown', e => {
       if (e.key !== 'Escape') return;
       if (profileEditOverlay.classList.contains('show')) closeProfileEditor();
-      if (emailNudgeOverlay.classList.contains('show')) closeEmailNudge();
       if (emailVerifyOverlay.classList.contains('show')) closeEmailVerifyModal();
       if (syncOffConfirmOverlay.classList.contains('show')) closeSyncOffConfirm();
-      if (syncRequiredOverlay.classList.contains('show')) { pendingWeeklySummaryEnable = false; closeSyncRequiredNudge(); }
+      if (syncRequiredOverlay.classList.contains('show')) { pendingNotifEnable = false; closeSyncRequiredNudge(); }
+      if (notifConsentOverlay.classList.contains('show')) closeNotifConsent();
     });
 
 
@@ -3545,8 +3721,9 @@
     // Turning it OFF is confirmed first, same as before — still a "your
     // other devices stop matching this one" change, not a cosmetic toggle
     // — but the confirmation now also has to cover a second consequence:
-    // Weekly Grade Summary requires this to be on (see the toggle above),
-    // so turning sync off turns that off too if it was on. The confirm
+    // Browser Notifications requires this to be on (see the toggle above;
+    // it was the Weekly Grade Summary email until 2026-10-04), so turning
+    // sync off turns notifications off too if they were on. The confirm
     // body's copy is rewritten right before showing it, to actually say so
     // when it applies, rather than only ever showing the generic version.
     // ------------------------------------------------------------------
@@ -3554,7 +3731,7 @@
     const syncOffConfirmOverlay = document.getElementById('syncOffConfirmOverlay');
     const syncOffConfirmBody = document.getElementById('syncOffConfirmBody');
     const SYNC_OFF_BODY_DEFAULT = syncOffConfirmBody.textContent;
-    const SYNC_OFF_BODY_WITH_WEEKLY = SYNC_OFF_BODY_DEFAULT + ' Browser Notifications needs sync to be on, so that turns off too.';
+    const SYNC_OFF_BODY_WITH_NOTIF = SYNC_OFF_BODY_DEFAULT + ' Browser Notifications needs sync to be on, so that turns off too.';
 
     if (!AVERAGES_SYNC_UNAVAILABLE && AVERAGES_INCOGNITO) {
       // Incognito (2026-10-05): nothing about the student is stored on our
@@ -3787,7 +3964,7 @@
     syncAcrossDevicesToggle.addEventListener('change', () => {
       if (syncAcrossDevicesToggle.checked) { saveSettingsOption('syncAcrossDevices', true); return; } // turning on never needs confirming
       syncAcrossDevicesToggle.checked = true; // hold it on until the user actually confirms
-      syncOffConfirmBody.textContent = browserNotifToggle.checked ? SYNC_OFF_BODY_WITH_WEEKLY : SYNC_OFF_BODY_DEFAULT;
+      syncOffConfirmBody.textContent = browserNotifToggle.checked ? SYNC_OFF_BODY_WITH_NOTIF : SYNC_OFF_BODY_DEFAULT;
       syncOffConfirmOverlay.classList.add('show');
     });
     document.getElementById('syncOffConfirmClose').addEventListener('click', closeSyncOffConfirm);
@@ -3803,9 +3980,10 @@
       syncAcrossDevicesToggle.checked = false;
       saveSettingsOption('syncAcrossDevices', false);
       // The rule: no sync, no browser notifications (2026-10-04; was the
-      // weekly email). Turn it off with sync rather than leave it on with
-      // nowhere to send from.
-      if (browserNotifToggle.checked) setBrowserNotif(false);
+      // weekly email). Signed in, that also unsubscribes this browser and
+      // tells the API, which deletes the stored sign-in once no browser is
+      // left (2026-10-05).
+      if (browserNotifToggle.checked) turnNotifOff();
       closeSyncOffConfirm();
     });
 
@@ -3813,13 +3991,13 @@
     // handler above, and the syncRequiredOverlay markup's own comment.
     const syncRequiredOverlay = document.getElementById('syncRequiredOverlay');
     function openSyncRequiredNudge() {
-      pendingWeeklySummaryEnable = true; // same "resume once unblocked" flag the email nudge uses
+      pendingNotifEnable = true; // "resume once unblocked": turning sync on from here carries on to the consent popup
       syncRequiredOverlay.classList.add('show');
     }
     function closeSyncRequiredNudge() { syncRequiredOverlay.classList.remove('show'); }
     document.getElementById('syncRequiredClose').addEventListener('click', closeSyncRequiredNudge);
     document.getElementById('syncRequiredCancel').addEventListener('click', () => {
-      pendingWeeklySummaryEnable = false;
+      pendingNotifEnable = false;
       closeSyncRequiredNudge();
     });
     syncRequiredOverlay.addEventListener('click', e => { if (e.target === syncRequiredOverlay) closeSyncRequiredNudge(); });
@@ -3827,37 +4005,32 @@
       syncAcrossDevicesToggle.checked = true;
       saveSettingsOption('syncAcrossDevices', true);
       closeSyncRequiredNudge();
-      // "Good to go" — same pattern as finishEmailVerify(): once the thing
-      // that was blocking Weekly Grade Summary clears, flip it on right
-      // away rather than making the user go turn it on a second time. Email
-      // still has to already be verified for this to actually take —
-      // saveSettingsOption alone doesn't re-check that, so re-run the real
-      // gate by simulating the toggle click instead of calling
-      // saveSettingsOption directly.
-      if (pendingWeeklySummaryEnable) {
-        pendingWeeklySummaryEnable = false;
-        openWeeklyEmailConsent();   // sync is on now: next is the consent popup, then the browser's prompt
+      // "Good to go": once sync (the thing that was blocking notifications)
+      // is on, carry straight on rather than making the student turn the
+      // toggle on a second time. Still through the consent popup, never
+      // straight to on.
+      if (pendingNotifEnable) {
+        pendingNotifEnable = false;
+        openNotifConsent();   // sync is on now: next is the consent popup, then the browser's prompt
       }
     });
 
     // ---------- "What turning this on means" consent (2026-09-12) ----------
-    // The last step before Weekly Grade Summary actually turns on, reached
-    // from three places once the email/sync gates above are satisfied: the
-    // toggle's own change handler, finishEmailVerify()'s "good to go"
-    // resume, and syncRequiredEnable's own resume just above. All three
-    // used to flip the toggle straight to true; now they all funnel
-    // through here instead, so there's exactly one place that actually
-    // turns this on, and it's the one place that's shown the person what
-    // that means.
-    const weeklyEmailConsentOverlay = document.getElementById('weeklyEmailConsentOverlay');
-    function openWeeklyEmailConsent() { weeklyEmailConsentOverlay.classList.add('show'); }
-    function closeWeeklyEmailConsent() { weeklyEmailConsentOverlay.classList.remove('show'); }
-    document.getElementById('weeklyEmailConsentClose').addEventListener('click', closeWeeklyEmailConsent);
-    document.getElementById('weeklyEmailConsentCancel').addEventListener('click', closeWeeklyEmailConsent);
-    weeklyEmailConsentOverlay.addEventListener('click', e => { if (e.target === weeklyEmailConsentOverlay) closeWeeklyEmailConsent(); });
-    document.getElementById('weeklyEmailConsentConfirm').addEventListener('click', () => {
-      closeWeeklyEmailConsent();
-      enableBrowserNotifAfterConsent();
+    // The last step before Browser Notifications turn on (the Weekly Grade
+    // Summary email's until 2026-10-04), reached from two places once sync
+    // is on: the toggle's own change handler, and syncRequiredEnable's
+    // resume just above. Both funnel through here, so there's exactly one
+    // place that turns this on, and it's the one place that's shown the
+    // student what that means.
+    const notifConsentOverlay = document.getElementById('notifConsentOverlay');
+    function openNotifConsent() { notifConsentOverlay.classList.add('show'); }
+    function closeNotifConsent() { notifConsentOverlay.classList.remove('show'); }
+    document.getElementById('notifConsentClose').addEventListener('click', closeNotifConsent);
+    document.getElementById('notifConsentCancel').addEventListener('click', closeNotifConsent);
+    notifConsentOverlay.addEventListener('click', e => { if (e.target === notifConsentOverlay) closeNotifConsent(); });
+    document.getElementById('notifConsentConfirm').addEventListener('click', () => {
+      closeNotifConsent();
+      enableBrowserNotifAfterConsent();   // synchronously inside this click: the permission prompt needs it
     });
 
     // ------------------------------------------------------------------
@@ -3915,7 +4088,8 @@
         clearTimeout(syncPushTimer);
         if (isSyncOn()) { await deleteSyncSettingsNow(); clearSyncMeta(); }
         saveSettingsOption('syncAcrossDevices', false);
-        if (browserNotifToggle.checked) setBrowserNotif(false);
+        // Notifications off, this browser unsubscribed, the stored sign-in deleted (2026-10-05).
+        await notifForget();
         if (window.__AVERAGES_MODE__ === 'live') {
           // Canva: tokens and Drafts list deleted on our server (designs stay in Canva).
           try { await fetch(averagesApiBase() + '/canva/connection', { method: 'DELETE', credentials: 'include' }); } catch {}
@@ -3938,11 +4112,14 @@
     syncResponsiveView();
     // No initializer on purpose: the Integrations code above may already have set it.
     var settingsStartSection;
-    // ?section=account after switching modes (the page reloads to apply it everywhere).
+    // ?section=<name>: ?section=account after switching modes (the page reloads
+    // to apply it everywhere), ?section=integrations from the assignment page's
+    // Reconnect Canva link (2026-10-06), and so on for any section.
     (function () {
       const u = new URL(window.location.href);
-      if (u.searchParams.get('section') === 'account') {
-        if (!settingsStartSection) settingsStartSection = 'account';
+      const wanted = u.searchParams.get('section');
+      if (wanted && ['general', 'account', 'integrations', 'notifications', 'privacy', 'about'].includes(wanted)) {
+        if (!settingsStartSection) settingsStartSection = wanted;
         u.searchParams.delete('section');
         try { window.history.replaceState(window.history.state, '', u.pathname + u.search + u.hash); } catch (e) {}
       }

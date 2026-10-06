@@ -1179,7 +1179,7 @@
     <div class="topbar">
       <div>
         <h1 class="title" id="greetingTitle">Hey, Martin</h1>
-        <p class="subtitle">Monday, August 24</p>
+        <p class="subtitle" id="homeDate">Monday, August 24</p>
       </div>
       <div class="profile-menu-wrap">
         <button class="profile-btn" id="profileBtn" type="button" aria-haspopup="menu" aria-expanded="false" aria-label="Profile and settings">M</button>
@@ -1213,7 +1213,7 @@
 
           <div class="today-block widget-block" id="block-today" data-widget="today">
             <div class="today-head">
-              <div class="today-date">Mon, Aug 24</div>
+              <div class="today-date" id="todayDate">Mon, Aug 24</div>
               <span class="see-all" role="link" tabindex="0" data-href="calendar.html">See calendar</span>
             </div>
             <div id="todayList"></div>
@@ -1786,8 +1786,21 @@
     // (window.__AVERAGES__.data) and are empty until it sends them; the
     // samples below are only for the demo, never shown as real grades.
     // ------------------------------------------------------------------
-    const HOME_LIVE = !!(window.__AVERAGES__ && window.__AVERAGES__.data);
+    // A demo sign-in has __AVERAGES__ too, with an empty bundle: it shows the
+    // samples, like the preview (2026-10-06).
+    const HOME_LIVE = !!(window.__AVERAGES__ && window.__AVERAGES__.data) && window.__AVERAGES__.mode !== 'demo';
     const HOME_DATA = HOME_LIVE ? window.__AVERAGES__.data : {};
+    // Google Classroom has no messages, and its announcements come with the
+    // bundle. Schoology's teacher updates are a page extra (2026-10-06): when
+    // it's missing it failed, which the widget says rather than "none yet".
+    const HOME_CLASSROOM = HOME_LIVE && (HOME_DATA.platform === 'classroom' || HOME_DATA.PEOPLE_PLATFORM === 'classroom');
+    const UPDATES_FAILED = HOME_LIVE && !Array.isArray(HOME_DATA.COURSE_UPDATES);
+    // Today's date, signed in: the markup's "Monday, August 24" is the sample's (2026-10-06).
+    if (HOME_LIVE) {
+      const now = new Date();
+      document.getElementById('homeDate').textContent = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+      document.getElementById('todayDate').textContent = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    }
     // "Now" for due math: real time when signed in; the demo's own Monday, Aug 24.
     const REF_NOW = HOME_LIVE ? new Date() : new Date(2026, 7, 24, 8, 0);
     const RECENT_GRADES = HOME_LIVE ? (Array.isArray(HOME_DATA.RECENT_GRADES) ? HOME_DATA.RECENT_GRADES : []) : [
@@ -2006,15 +2019,22 @@
     // nav tab already goes to).
     const messagesList = document.getElementById('messagesList');
     function renderMessagesWidget() {
+      // Signed in with nothing to show (2026-10-06): say so. Classroom has no messages at all.
+      if (HOME_LIVE && !(Array.isArray(MESSAGES) && MESSAGES.length)) {
+        messagesList.innerHTML = HOME_CLASSROOM
+          ? '<p class="widget-empty">Google Classroom doesn’t have messages.</p>'
+          : '<p class="widget-empty">No messages yet.</p>';
+        return;
+      }
       messagesList.innerHTML = MESSAGES.map(m => `
-        <div class="message-item" role="link" tabindex="0" data-href="messages.html" aria-label="Message from ${escapeHtml(m.from)}: ${escapeHtml(m.preview)}">
+        <div class="message-item" role="link" tabindex="0" data-href="messages.html" aria-label="Message from ${escapeHtml(m.from)}: ${escapeHtml(m.preview || m.subject || '')}">
           <span class="message-tick" style="background:${escapeHtml(courseColor(m.courseId))}"></span>
           <div class="message-item-text">
             <div class="message-item-top">
               <p class="message-item-from">${escapeHtml(m.from)}</p>
               <p class="message-item-time">${escapeHtml(m.time)}</p>
             </div>
-            <p class="message-item-preview">${escapeHtml(m.preview)}</p>
+            <p class="message-item-preview">${escapeHtml(m.preview || m.subject || '')}</p>
           </div>
         </div>
       `).join('');
@@ -2028,14 +2048,14 @@
     const recentList = document.getElementById('recentList');
     function renderRecentGrades() {
       recentList.innerHTML = RECENT_GRADES.length ? RECENT_GRADES.map(r => `
-        <div class="rg-item" role="link" tabindex="0" data-href="gradebook.html?course=${encodeURIComponent(r.courseId)}" aria-label="${escapeHtml(r.title)}, ${escapeHtml(courseName(r.courseId))}, ${escapeHtml(r.letter)} ${escapeHtml(r.pct)} percent">
+        <div class="rg-item" role="link" tabindex="0" data-href="gradebook.html?course=${encodeURIComponent(r.courseId)}" aria-label="${escapeHtml([r.title, courseName(r.courseId), [r.letter, typeof r.pct === 'number' ? `${r.pct} percent` : ''].filter(v => v !== undefined && v !== null && v !== '').join(' ')].filter(Boolean).join(', '))}">
           <span class="assign-tick" style="background:${escapeHtml(courseColor(r.courseId))}"></span>
           <div class="rg-text">
             <p class="rg-title">${escapeHtml(r.title)}${r.isNew ? '<span class="new-dot" title="New"></span>' : ''}</p>
-            <p class="rg-meta">${escapeHtml(courseName(r.courseId))} · ${escapeHtml(r.when)}</p>
+            <p class="rg-meta">${escapeHtml([courseName(r.courseId), r.when].filter(Boolean).join(' · '))}</p>
           </div>
           <div class="rg-score">
-            <span class="grade-val ${gradeBand(String(r.letter))}">${escapeHtml(r.letter)}<span class="rg-pct">${escapeHtml(r.pct)}%</span></span>
+            <span class="grade-val ${gradeBand(String(r.letter || ''))}">${escapeHtml(r.letter || '—')}${typeof r.pct === 'number' && isFinite(r.pct) ? `<span class="rg-pct">${escapeHtml(r.pct)}%</span>` : ''}</span>
             ${r.pts ? `<span class="rg-pts">${escapeHtml(r.pts)}</span>` : ''}
           </div>
         </div>`).join('') : '<p class="widget-empty">No new grades yet.</p>';
@@ -2043,17 +2063,26 @@
     const updatesList = document.getElementById('updatesList');
     function renderCourseUpdates() {
       const initial = n => String(n).replace(/^(Mr\.|Mrs\.|Ms\.|Mx\.|Dr\.|Sra\.|Sr\.|Coach)\s*/i, '').charAt(0).toUpperCase();
-      updatesList.innerHTML = COURSE_UPDATES.length ? COURSE_UPDATES.map(u => `
+      // Classroom sends "Announcement" (it doesn't say who posted): the class's
+      // teacher when there's exactly one, else as sent (2026-10-06).
+      const poster = u => {
+        const from = String(u.from || '');
+        if (from && from !== 'Announcement') return from;
+        const c = findCourse(u.courseId);
+        const t = c && typeof c.teacher === 'string' ? c.teacher.trim() : '';
+        return t && !t.includes(',') ? t : (from || 'Your teacher');
+      };
+      updatesList.innerHTML = COURSE_UPDATES.length ? COURSE_UPDATES.map(u => ({ ...u, from: poster(u) })).map(u => `
         <div class="tu-item" role="link" tabindex="0" data-href="course-home.html?course=${encodeURIComponent(u.courseId)}" aria-label="${escapeHtml(u.from)}, ${escapeHtml(courseName(u.courseId))}: ${escapeHtml(u.body)}">
           <span class="tu-avatar" style="background:${escapeHtml(courseColor(u.courseId))}" aria-hidden="true">${escapeHtml(initial(u.from))}</span>
           <div class="tu-text">
             <div class="tu-top">
-              <p><span class="tu-from">${escapeHtml(u.from)}</span> <span class="tu-course">· ${escapeHtml(courseName(u.courseId))}</span></p>
+              <p><span class="tu-from">${escapeHtml(u.from)}</span>${courseName(u.courseId) ? ` <span class="tu-course">· ${escapeHtml(courseName(u.courseId))}</span>` : ''}</p>
               <span class="tu-time">${escapeHtml(u.when)}${u.unread ? '<span class="new-dot" title="New"></span>' : ''}</span>
             </div>
             <p class="tu-body">${escapeHtml(u.body)}</p>
           </div>
-        </div>`).join('') : '<p class="widget-empty">No updates from your teachers yet.</p>';
+        </div>`).join('') : (UPDATES_FAILED ? '<p class="widget-empty">Teacher updates didn’t load this time.</p>' : '<p class="widget-empty">No updates from your teachers yet.</p>');
       const unread = COURSE_UPDATES.filter(u => u.unread).length;
       const tag = document.getElementById('updatesNew');
       tag.hidden = !unread; tag.textContent = `${unread} new`;

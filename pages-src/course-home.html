@@ -1078,6 +1078,7 @@
   .tc-btn.secondary { background: var(--panel-inner); color: var(--text-dark); }
   .tc-btn.secondary:hover { background: var(--border); }
   .tc-btn[hidden] { display: none; }
+  .tc-row[hidden], .modal-row[hidden] { display: none; }
   /* Back link (2026-10-03): same as every other page, plain text with the arrow, no bubble */
   .topbar .back-link { gap: 5px; padding: 0; background: none; border-radius: 0; color: rgba(255,255,255,0.82); font-size: 0.76rem; font-weight: 800; }
   .topbar .back-link:hover { background: none; color: #fff; }
@@ -1717,26 +1718,50 @@
       { id: 'ortiz', name: 'Sra. Ortiz', role: 'Teacher', dept: 'World Languages Department', school: 'Lincoln High School', email: 'm.ortiz@lincolnusd.org', phone: '(555) 201-4515', color: '#8a6ba1', category: 'myTeachers' },
       { id: 'reyes', name: 'Coach Reyes', role: 'Teacher', dept: 'Physical Education Department', school: 'Lincoln High School', email: 'd.reyes@lincolnusd.org', phone: '(555) 201-4526', color: '#4f8c8a', category: 'myTeachers' }
     ];
+    // Signed in with real data (2026-10-06). A demo sign-in also has
+    // __AVERAGES__ (with an empty bundle) and shows the samples, like the preview.
+    const AV_LIVE = !!(window.__AVERAGES__ && window.__AVERAGES__.data) && window.__AVERAGES__.mode !== 'demo';
+    const AV_DATA = AV_LIVE ? window.__AVERAGES__.data : {};
+    const AV_CLASSROOM = AV_LIVE && (AV_DATA.platform === 'classroom' || AV_DATA.PEOPLE_PLATFORM === 'classroom');
+    // The directory comes from the people extra; if that failed, nobody's
+    // card is filled from the sample teachers above.
+    if (AV_LIVE && !Array.isArray(AV_DATA.CONTACTS)) CONTACTS.length = 0;
     const TC_TITLE = /^(Mr\.|Mrs\.|Ms\.|Mx\.|Dr\.|Sra\.|Sr\.|Coach|Nurse)\s+/i;
     function tcEsc(v) { return String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
     function tcLastName(n) { const p = String(n || '').replace(TC_TITLE, '').trim().split(/\s+/); return p[p.length - 1].toLowerCase(); }
     // Full name first, then last name (a teacher in the directory first).
-    function findTeacherContact(name) {
+    function findTeacherContact(name, courseId) {
       const list = Array.isArray(CONTACTS) ? CONTACTS : [];
       const exact = list.find(c => c && String(c.name).toLowerCase() === String(name).toLowerCase());
       if (exact) return exact;
+      // Live contacts list the classes they teach (2026-10-06): this class's
+      // one teacher, when the name on the class doesn't match exactly.
+      const teaching = courseId ? list.filter(c => c && Array.isArray(c.courses) && c.courses.map(String).includes(String(courseId))) : [];
+      if (teaching.length === 1) return teaching[0];
       const last = tcLastName(name);
       const byLast = list.filter(c => c && tcLastName(c.name) === last);
       return byLast.find(c => c.category === 'myTeachers') || byLast[0] || null;
     }
     function tcInitials(n) { return String(n).replace(TC_TITLE, '').split(/\s+/).map(p => p[0] || '').join('').slice(0, 2).toUpperCase(); }
     function openTeacherCard(name, courseName) {
-      const c = findTeacherContact(name) || { id: tcLastName(name), name, role: 'Teacher', dept: courseName || '', school: '', email: '', phone: '' };
+      const c = findTeacherContact(name, course.id) || { id: tcLastName(name), name, role: 'Teacher', dept: courseName || '', school: '', email: '', phone: '' };
       const color = getComputedStyle(document.documentElement).getPropertyValue('--course-color').trim() || c.color;
       const set = (id, v) => { document.getElementById(id).textContent = v || '—'; };
       const avatar = document.getElementById('tcAvatar');
       avatar.textContent = tcInitials(c.name); avatar.style.background = color;
       set('tcName', c.name); set('tcRole', c.role || c.dept); set('tcDept', c.dept); set('tcSchool', c.school); set('tcEmail', c.email); set('tcPhone', c.phone);
+      // Signed in (2026-10-06): rows the school doesn't share are left out,
+      // "Department" is the classes they teach here, and Message is only for
+      // a Schoology teacher (Classroom teachers can't be messaged).
+      if (AV_LIVE) {
+        [['tcDept', c.dept], ['tcSchool', c.school], ['tcEmail', c.email], ['tcPhone', c.phone]].forEach(([id, v]) => {
+          const row = document.getElementById(id).closest('.tc-row');
+          if (row) row.hidden = !String(v || '').trim();
+        });
+        const deptKey = document.getElementById('tcDept').closest('.tc-row').querySelector('.k');
+        if (deptKey) deptKey.textContent = String(c.dept || '').includes(',') ? 'Classes' : 'Class';
+        document.getElementById('tcMessage').hidden = AV_CLASSROOM || !/^\d{1,20}$/.test(String(c.id || ''));
+      }
       document.getElementById('tcMessage').onclick = () => {
         window.location.href = `messages.html?compose=${encodeURIComponent(c.id)}&name=${encodeURIComponent(c.name)}&dept=${encodeURIComponent(c.dept || '')}&color=${encodeURIComponent(color)}`;
       };
@@ -1883,10 +1908,19 @@
       ],
     };
     // Signed in: Google Classroom announcements come with the bundle (2026-10-05).
-    const LIVE_UPDATES = window.__AVERAGES__ && window.__AVERAGES__.data && window.__AVERAGES__.data.COURSE_UPDATES;
-    if (Array.isArray(LIVE_UPDATES)) {
-      ANNOUNCEMENTS[course.id] = LIVE_UPDATES.filter(u => u && u.courseId === course.id)
-        .map((u, i) => ({ id: 'live' + i, text: String(u.body || ''), time: String(u.when || ''), pinned: false, unread: !!u.unread, author: 'Your teacher' }));
+    // Schoology's come from the updates extra (2026-10-06), with who posted
+    // them; Classroom's say "Announcement", shown as the class's teacher when
+    // there's exactly one. Missing means the extra failed: no samples, a note.
+    const LIVE_UPDATES = AV_LIVE ? AV_DATA.COURSE_UPDATES : undefined;
+    const UPDATES_FAILED = AV_LIVE && !Array.isArray(LIVE_UPDATES);
+    if (AV_LIVE) {
+      const teacherName = String(course.teacher || '').trim();
+      const fallback = teacherName && !teacherName.includes(',') ? teacherName : 'Your teacher';
+      ANNOUNCEMENTS[course.id] = (Array.isArray(LIVE_UPDATES) ? LIVE_UPDATES : []).filter(u => u && String(u.courseId) === String(course.id))
+        .map((u, i) => {
+          const from = String(u.from || '').trim();
+          return { id: 'live' + i, text: String(u.body || ''), time: String(u.when || ''), pinned: false, unread: !!u.unread, author: from && from !== 'Announcement' ? from : fallback };
+        });
     }
     const announceItems = (ANNOUNCEMENTS[course.id] || []).slice().sort((a, b) => (b.pinned - a.pinned));
     function announceRowHTML(item) {
@@ -1916,12 +1950,13 @@
     const ANNOUNCE_WIDGET_CAP = 3;
     function renderAnnouncements() {
       const capped = announceItems.slice(0, ANNOUNCE_WIDGET_CAP);
+      const none = UPDATES_FAILED ? '<p class="announce-empty">Announcements didn’t load this time.</p>' : '<p class="announce-empty">No announcements yet.</p>';
       document.getElementById('announceList').innerHTML = capped.length
         ? capped.map(announceRowHTML).join('')
-        : '<p class="announce-empty">No announcements yet.</p>';
+        : none;
       document.getElementById('announceModalList').innerHTML = announceItems.length
         ? announceItems.map(announceRowHTML).join('')
-        : '<p class="announce-empty">No announcements yet.</p>';
+        : none;
       document.getElementById('announceSeeAllBtn').hidden = announceItems.length === 0;
       renderAnnounceCount();
     }
@@ -2060,6 +2095,25 @@
       { courseId: 'spanish3', title: 'Conversation Partners', due: 'Thu Aug 27', time: '11:30 AM' },
       { courseId: 'pe', title: 'Mile Run', due: 'Wed Aug 26', time: '7:45 AM' },
     ];
+    // Signed in (2026-10-06): this class's teacher-made events from the events
+    // extra, from today on (assignments are already in UPCOMING, and a past
+    // event isn't "coming up"). The samples above are the preview's only.
+    if (AV_LIVE) {
+      COURSE_EVENTS.length = 0;
+      const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const WD = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      (Array.isArray(AV_DATA.EVENTS) ? AV_DATA.EVENTS : []).forEach(e => {
+        if (!e || e.type !== 'teacher' || String(e.source) !== String(course.id)) return;
+        const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(e.date || ''));
+        if (!m) return;
+        const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+        if (isNaN(d) || d < today) return;
+        const time = e.allDay ? '' : String(e.time || '');
+        COURSE_EVENTS.push({ courseId: course.id, id: String(e.id || ''), title: String(e.title || '') || 'Class event', due: `${WD[d.getDay()]} ${MON[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`, time, allDay: !time });
+      });
+    }
     const UP_TYPE_EMOJI = { assignment: '📝', discussion: '💬', assessment: '📋', event: '🗓️' };
     const FULL_MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
     const FULL_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -2073,11 +2127,11 @@
       return new Date(m[3] ? Number(m[3]) : 2026, mi, Number(m[2]));
     }
     function upDayLabel(d) { return `${FULL_DAYS[d.getDay()]}, ${FULL_MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`; }
-    function upTime(item) { return item.time ? item.time.toLowerCase() : '11:59 pm'; }
+    function upTime(item) { if (item.type === 'event' && item.allDay) return 'All day'; return item.time ? item.time.toLowerCase() : '11:59 pm'; }
     // Overdue rows: "Due 3 days ago" / "Due 5 hours ago" (11:59 PM unless a time is given).
     // "Now" for due math: the real time with live data; with the sample data
     // (August 2026) the mock's own today, Aug 24 2026 8:00 AM.
-    const IS_SAMPLE = !(window.__AVERAGES__ && window.__AVERAGES__.data);
+    const IS_SAMPLE = !AV_LIVE;
     const REF_NOW = IS_SAMPLE ? new Date(2026, 7, 24, 8, 0) : new Date();
     // Exact due moment: `dueAt`, or the date + time (11:59 PM if none given).
     function dueMoment(item) {
@@ -2137,7 +2191,7 @@
       const d = upDate(item);
       if (!d) return 'calendar.html';
       const ymd = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-      return `calendar.html?date=${ymd}&event=${encodeURIComponent(item.title)}&course=${encodeURIComponent(item.courseId)}`;
+      return `calendar.html?date=${ymd}&event=${encodeURIComponent(item.title)}&course=${encodeURIComponent(item.courseId)}${item.id ? `&id=${encodeURIComponent(item.id)}` : ''}`;
     }
     function weekItemHTML(item, late, whenFn) {
       const href = item.type === 'event' ? eventHref(item) : assignmentHref(item);
@@ -2430,8 +2484,13 @@
     linkTeacherIn(document.getElementById('modalTeacher'), course.teacher, course.name);
     document.getElementById('modalPeriod').textContent = course.period;
     document.getElementById('modalSection').textContent = course.section;
-    document.getElementById('modalGrade').textContent = `${course.grade} (${course.pct}%)`;
-    document.getElementById('modalDesc').textContent = course.desc;
+    document.getElementById('modalGrade').textContent = course.grade === '—' ? '—' : `${course.grade} (${course.pct}%)`;
+    document.getElementById('modalDesc').textContent = course.desc || '';
+    // Signed in (2026-10-06): a row with nothing to show is left out.
+    if (AV_LIVE) ['modalTeacher', 'modalPeriod', 'modalSection'].forEach(id => {
+      const v = document.getElementById(id);
+      if (!String(v.textContent || '').trim()) v.closest('.modal-row').hidden = true;
+    });
     const modalColorBtn = document.getElementById('modalColorBtn');
     const modalColorPopup = document.getElementById('modalColorPopup');
     modalColorBtn.style.background = course.color;

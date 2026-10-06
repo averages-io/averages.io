@@ -1185,6 +1185,40 @@
   .msgs-bubble-attachment .msgs-media-chip .emo { font-size: 14px; }
   .msgs-pin-icon .emo { font-size: 11px; }
   .msgs-thread-empty .emo { font-size: 40px; margin-bottom: 4px; }
+
+  /* ---------- Signed in: real Schoology messages (2026-10-06) ---------- */
+  /* Inbox states in the list: loading, couldn't load (Try again), empty. */
+  .msgs-list-state { padding: 32px 16px; text-align: center; color: var(--text-faint); font-size: 0.8rem; font-weight: 600; line-height: 1.45; }
+  .msgs-list-state p { margin: 0 0 8px; }
+  .msgs-list-state .msgs-list-state-title { color: var(--text-dark); font-weight: 800; font-size: 0.88rem; }
+  .msgs-list-state .msgs-state-btn { margin-top: 4px; }
+  /* A thread that couldn't load, in the bubbles area. */
+  .msgs-thread-state { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 24px 12px; }
+  .msgs-thread-state .msgs-empty-hint { padding: 0; }
+  .msgs-thread-state.compact { padding: 8px 12px; }
+  .msgs-state-btn { display: inline-block; border: none; border-radius: 999px; background: var(--accent); color: #fff; font: inherit; font-weight: 800; font-size: 0.8rem; padding: 8px 16px; cursor: pointer; text-decoration: none; }
+  .msgs-state-btn:hover { background: var(--accent-dark); }
+  .msgs-state-btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
+  /* A message that didn't go through: says so under the bubble, with Retry. */
+  .msgs-bubble-failed { display: flex; align-items: center; justify-content: flex-end; gap: 8px; max-width: 80%; text-align: right; font-size: 0.7rem; font-weight: 700; color: #b6432f; }
+  .msgs-subject-input[aria-invalid="true"] { border-color: #b6432f; }
+  .msgs-retry-btn { border: none; border-radius: 999px; background: var(--panel-inner); color: var(--text-dark); font: inherit; font-weight: 800; font-size: 0.7rem; padding: 4px 12px; cursor: pointer; }
+  .msgs-retry-btn:hover { background: var(--border); }
+  .msgs-retry-btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
+  /* Group threads: who wrote each incoming message. */
+  .msgs-bubble-author { font-size: 0.66rem; font-weight: 800; color: var(--text-faint); margin: 0 0 -2px 4px; }
+  /* Real messages keep their line breaks, and a long link wraps instead of
+     stretching the bubble past the panel. */
+  .msgs-shell.live .msgs-bubble { white-space: pre-wrap; overflow-wrap: anywhere; }
+  .msgs-row-context-menu-item[hidden], .modal-row[hidden] { display: none; }
+  /* Google Classroom has no messages: one panel with a note, no list and
+     no composer. After the 720px rule above on purpose, so this wins on
+     phones too. */
+  .msgs-shell.no-messaging .msgs-list-panel { display: none; }
+  .msgs-shell.no-messaging .msgs-thread-panel { display: flex; }
+  .msgs-shell.no-messaging .msgs-thread-empty p { max-width: 340px; }
+  .msgs-shell.no-messaging .msgs-thread-empty .msgs-no-messaging-title { color: var(--text-dark); }
+  .msgs-shell.no-messaging .msgs-thread-empty .msgs-state-btn { margin-top: 4px; }
 </style>
 </head>
 <body>
@@ -1321,6 +1355,9 @@
                disabled (see setComposerEnabled) until a specific subject is
                chosen from the dropdown above. -->
           <p class="msgs-composer-hint" id="composerHint" hidden>Select a specific subject above to reply.</p>
+          <!-- Signed in (2026-10-06): short notes such as "Attachments aren't
+               supported yet" (see showComposerNote). -->
+          <p class="msgs-composer-hint" id="composerNote" role="status" hidden></p>
           <div class="msgs-composer" id="composerForm">
             <div class="msgs-composer-box" id="composerBox">
               <div class="msgs-pending-attachment" id="pendingAttachmentBar" hidden></div>
@@ -1591,6 +1628,451 @@
     })();
 
     // ------------------------------------------------------------------
+    // Signed in: real Schoology messages (2026-10-06). TEACHERS and
+    // CONTACTS come from the "people" extra and CONVERSATIONS from the
+    // "messages" extra (LegacyPage merges both into window.__AVERAGES__.data
+    // before this runs; see scripts/port-pages.mjs). A thread arrives as a
+    // summary with an empty `messages` list and loads when it's opened
+    // (GET /messages/thread). When an extra didn't arrive, the consts below
+    // fall back to their sample literals, which must never pass for a real
+    // student's inbox, so liveSetupPeople/liveSetConversations empty them.
+    // Demo sessions have no live fields and keep the samples, like the
+    // preview. Google Classroom has no messaging at all (see liveInit).
+    // ------------------------------------------------------------------
+    const MSG_AV = window.__AVERAGES__;
+    const MSG_LIVE = !!(MSG_AV && MSG_AV.data && MSG_AV.mode === 'live');
+    const MSG_DATA = MSG_LIVE ? MSG_AV.data : {};
+    const MSG_CLASSROOM = MSG_LIVE && (MSG_DATA.platform === 'classroom' || MSG_DATA.PEOPLE_PLATFORM === 'classroom');
+    const MSG_API = window.location.hostname.endsWith('averages.io') ? 'https://api.averages.io' : 'http://localhost:8787';
+    // Anyone who isn't one of the student's teachers gets this grey.
+    const MSG_NEUTRAL = '#83849a';
+    // The student's teachers, as the people extra sent them. The To search
+    // lists them first; everyone else comes from GET /messages/recipients.
+    const MSG_TEACHER_IDS = new Set(MSG_DATA.TEACHERS && typeof MSG_DATA.TEACHERS === 'object' ? Object.keys(MSG_DATA.TEACHERS) : []);
+    let MSG_PEOPLE = MSG_DATA.MESSAGE_PEOPLE && typeof MSG_DATA.MESSAGE_PEOPLE === 'object' ? MSG_DATA.MESSAGE_PEOPLE : {};
+    let liveInboxState = Array.isArray(MSG_DATA.CONVERSATIONS) ? 'ready' : 'error'; // 'ready' | 'loading' | 'error'
+    let liveRecipientIds = [];
+    let liveRecipientsState = 'idle'; // 'idle' | 'loading' | 'ready' | 'error'
+    let liveRecipientsPromise = Promise.resolve();
+    let liveLocalSeq = 0;
+    let liveNoteTimer = null;
+    let MSG_ME = MSG_DATA.MESSAGES_ME != null ? String(MSG_DATA.MESSAGES_ME) : '';
+
+    function liveText(value, max) {
+      return (value == null ? '' : String(value)).trim().slice(0, max);
+    }
+    // Colors land in style attributes: only a plain hex color gets through.
+    function liveColor(value) {
+      const v = String(value || '').trim();
+      return /^#[0-9a-f]{6}$/i.test(v) ? v : MSG_NEUTRAL;
+    }
+
+    // The people extra's TEACHERS[id].course is a course id, so the line
+    // under a teacher's name is their classes from CONTACTS (or that
+    // course's name from the bundle).
+    function liveSetupPeople() {
+      if (!MSG_DATA.TEACHERS || typeof MSG_DATA.TEACHERS !== 'object') Object.keys(TEACHERS).forEach(k => { delete TEACHERS[k]; });
+      if (!Array.isArray(MSG_DATA.CONTACTS)) CONTACTS.length = 0;
+      const courses = Array.isArray(MSG_DATA.COURSES) ? MSG_DATA.COURSES : [];
+      const contacts = CONTACTS.filter(c => c && c.id != null && String(c.id) !== '').map(c => ({
+        id: String(c.id),
+        name: liveText(c.name, 120) || 'Schoology user',
+        role: liveText(c.role, 80),
+        dept: liveText(c.dept, 200),
+        color: liveColor(c.color),
+      }));
+      CONTACTS.length = 0;
+      contacts.forEach(c => CONTACTS.push(c));
+      Object.keys(TEACHERS).forEach(id => {
+        const t = TEACHERS[id] || {};
+        const contact = contacts.find(c => c.id === id);
+        const course = courses.find(c => c && String(c.id) === String(t.course));
+        TEACHERS[id] = {
+          name: liveText(t.name, 120) || (contact && contact.name) || 'Schoology user',
+          course: (contact && contact.dept) || (course ? liveText(course.name, 200) : ''),
+          color: liveColor(t.color),
+        };
+      });
+    }
+
+    // Every thread's person has an entry in TEACHERS, this page's one lookup
+    // for names and colors: the teacher's own, else the name the messages
+    // extra sent, else "Schoology user". Returns the id as a string.
+    function livePerson(id) {
+      const key = id == null ? '' : String(id);
+      if (!TEACHERS[key]) {
+        const known = MSG_PEOPLE[key];
+        const name = known ? liveText(known.name, 120) : '';
+        TEACHERS[key] = { name: name || 'Schoology user', course: '', color: MSG_NEUTRAL, unnamed: !name };
+      }
+      return key;
+    }
+    function personName(id) {
+      return (TEACHERS[id] && TEACHERS[id].name) || 'Schoology user';
+    }
+
+    function liveSetConversations(list) {
+      const next = (Array.isArray(list) ? list : []).filter(c => c && c.id != null && String(c.id) !== '').map(c => {
+        const participants = Array.isArray(c.participants) ? c.participants.map(String) : [];
+        const convo = {
+          id: String(c.id),
+          personId: livePerson(c.personId != null && c.personId !== '' ? c.personId : participants[0]),
+          subject: liveText(c.subject, 200) || 'No subject',
+          unread: !!c.unread,
+          preview: liveText(c.preview, 280),
+          time: liveText(c.time, 40),
+          at: Number(c.at) || 0,
+          participants,
+          messages: [],
+        };
+        Object.assign(convo, deriveMedia(convo));
+        return convo;
+      });
+      CONVERSATIONS.length = 0;
+      next.forEach(c => CONVERSATIONS.push(c));
+    }
+
+    // The newest message, or for a thread that hasn't been opened yet a
+    // stand-in built from its preview.
+    function lastMessageOf(c) {
+      return c.messages[c.messages.length - 1] || { from: 'them', text: c.preview || '', time: c.time || '' };
+    }
+    function rowTimeLabel(c, last) {
+      if (last.sentAt) return relativeTime(last.sentAt);
+      if (MSG_LIVE && c.time) return c.time;
+      return String(last.time || '').split(' · ')[0];
+    }
+    // What search can see of a thread: its loaded messages, else its preview.
+    function searchableMessages(c) {
+      if (c.messages.length) return c.messages.map((m, i) => ({ c, i, m }));
+      return c.preview ? [{ c, i: -1, m: lastMessageOf(c) }] : [];
+    }
+    function threadHasSeveralAuthors(c) {
+      return new Set(c.messages.filter(m => m.from === 'them' && m.authorId).map(m => m.authorId)).size > 1;
+    }
+
+    function liveFetch(path, body) {
+      const init = { method: body ? 'POST' : 'GET', credentials: 'include' };
+      if (body) {
+        init.headers = { 'Content-Type': 'application/json' };
+        init.body = JSON.stringify(body);
+      }
+      return fetch(MSG_API + path, init).then(r => {
+        if (r.ok) return r.json();
+        // The API's reason (e.g. "recipient_not_allowed") decides what a
+        // failed send tells the student.
+        return r.json().catch(() => ({})).then(j => {
+          throw Object.assign(new Error('http ' + r.status), { status: r.status, code: j && typeof j.error === 'string' ? j.error : '' });
+        });
+      });
+    }
+
+    // What a failed send says. Retry only where trying again can help: no
+    // connection, Schoology busy or down, or too many messages at once.
+    const LIVE_SEND_ERRORS = {
+      bad_recipients: "Schoology didn't accept who this is to.",
+      empty_subject: 'Add a subject first.',
+      subject_too_long: 'The subject is too long (200 characters at most).',
+      empty_message: 'Type a message first.',
+      message_too_long: 'The message is too long (10,000 characters at most).',
+      recipient_not_allowed: "Your school doesn't let you message this person.",
+      no_recipients: 'No one is left in this conversation to reply to.',
+      too_many_recipients: 'Too many people are in this conversation to reply here.',
+      rate_limited: 'Too many messages at once. Wait a minute, then retry.',
+    };
+    function liveSendError(err) {
+      const status = err && err.status;
+      if (status === 404) return { text: 'This conversation is gone from Schoology.', retry: false };
+      return {
+        text: LIVE_SEND_ERRORS[err && err.code] || "Couldn't send.",
+        retry: !status || status >= 500 || status === 429,
+      };
+    }
+    // Replies go to everyone in the thread (like Schoology's own reply), so
+    // a group thread's composer says so.
+    function liveComposerPlaceholder(c) {
+      const others = c ? (c.participants || []).filter(id => id && id !== MSG_ME).length : 0;
+      composerInput.placeholder = others > 1 ? 'Reply to everyone…' : 'Type a message…';
+    }
+    // Schoology refuses a new message without a subject (400 empty_subject).
+    function liveNeedSubject() {
+      subjectInput.setAttribute('aria-invalid', 'true');
+      subjectInput.focus();
+      showComposerNote('Add a subject first.');
+    }
+
+    function liveInboxStateHtml() {
+      if (liveInboxState === 'loading') return '<p class="msgs-empty-hint" role="status">Loading your messages…</p>';
+      return `<div class="msgs-list-state" role="alert">
+          <p class="msgs-list-state-title">We couldn't load your messages.</p>
+          <p>Schoology didn't answer. Check your connection and try again.</p>
+          <button type="button" class="msgs-state-btn" data-action="retry-inbox">Try again</button>
+        </div>`;
+    }
+    function emptyListHtml() {
+      if (pendingThread) return '';
+      if (MSG_LIVE && !CONVERSATIONS.length) {
+        return `<div class="msgs-list-state">
+            <p class="msgs-list-state-title">No messages yet</p>
+            <p>When a teacher messages you, it shows up here. Use the + button to write to one of your teachers.</p>
+          </div>`;
+      }
+      return `<p class="msgs-empty-hint">No conversations match.</p>`;
+    }
+    function liveRetryInbox() {
+      liveInboxState = 'loading';
+      renderThreadList();
+      liveFetch('/messages').then(data => {
+        if (!data || !Array.isArray(data.CONVERSATIONS)) throw new Error('no conversations');
+        if (data.PEOPLE && typeof data.PEOPLE === 'object') MSG_PEOPLE = data.PEOPLE;
+        if (data.me != null) MSG_ME = String(data.me);
+        // A thread started here that Schoology hasn't confirmed yet stays.
+        const unconfirmed = CONVERSATIONS.filter(c => c.localThread);
+        liveSetConversations(data.CONVERSATIONS);
+        unconfirmed.reverse().forEach(c => CONVERSATIONS.unshift(c));
+        liveInboxState = 'ready';
+      }).catch(() => { liveInboxState = 'error'; }).then(renderThreadList);
+    }
+
+    function liveThreadStateHtml(c, compact) {
+      if (c.load === 'error') {
+        return `<div class="msgs-thread-state${compact ? ' compact' : ''}" role="alert"><p class="msgs-empty-hint">We couldn't load this conversation.</p><button type="button" class="msgs-state-btn" data-action="retry-thread" data-id="${escapeHtml(c.id)}">Try again</button></div>`;
+      }
+      return '<p class="msgs-empty-hint" role="status">Loading messages…</p>';
+    }
+    // Loads a thread's messages once; opening it again uses this copy.
+    // Opening it also marks it read on Schoology (the API does that).
+    function liveLoadThread(c) {
+      if (c.load === 'ready' || c.localThread) return Promise.resolve();
+      if (c.load === 'loading' && c.loading) return c.loading;
+      c.load = 'loading';
+      c.loading = liveFetch('/messages/thread?id=' + encodeURIComponent(c.id)).then(data => {
+        const list = Array.isArray(data && data.messages) ? data.messages : [];
+        const loaded = list.filter(m => m && typeof m === 'object').map(m => {
+          const mine = m.from === 'me';
+          return {
+            from: mine ? 'me' : 'them',
+            authorId: !mine && m.authorId != null && m.authorId !== '' ? livePerson(m.authorId) : '',
+            text: liveText(m.text, 10000),
+            time: liveText(m.time, 60),
+            at: Number(m.at) || 0,
+          };
+        });
+        c.messages = loaded.concat(c.messages.filter(m => m.local));
+        if (Array.isArray(data.participants)) c.participants = data.participants.map(String);
+        c.load = 'ready';
+      }, () => { c.load = 'error'; }).then(() => {
+        c.loading = null;
+        Object.assign(c, deriveMedia(c));
+        liveRefreshThreadView(c);
+        renderThreadList();
+      });
+      return c.loading;
+    }
+    // "All subjects" with one person: load their threads one after another.
+    function liveLoadThreads(threads) {
+      threads.reduce((chain, t) => chain.then(() => liveLoadThread(t)), Promise.resolve());
+    }
+    function liveRetryThread(id) {
+      const c = CONVERSATIONS.find(x => x.id === id);
+      if (!c || c.load !== 'error') return;
+      c.load = undefined;
+      liveLoadThread(c);
+      liveRefreshThreadView(c);
+    }
+    // Redraws a thread if it's the one on screen (alone or in All subjects).
+    function liveRefreshThreadView(c) {
+      if (pendingThread) return;
+      if (activeConvoId === c.id) {
+        renderSubjectDropdown(c.personId, c.id);
+        setComposerEnabled(c.load === 'ready', false);
+        liveComposerPlaceholder(c);
+        renderBubbles(c);
+      } else if (viewingAllSubjectsFor && viewingAllSubjectsFor === c.personId) {
+        renderMergedBubbles(threadsForPerson(c.personId));
+      }
+    }
+
+    // Who the student may message (Schoology's own list, already filtered
+    // by the district's rules). Loaded the first time New Message opens;
+    // after a failure the next New Message tries again. Never rejects.
+    function liveLoadRecipients() {
+      if (liveRecipientsState === 'ready' || liveRecipientsState === 'loading') return liveRecipientsPromise;
+      liveRecipientsState = 'loading';
+      liveRecipientsPromise = liveFetch('/messages/recipients').then(data => {
+        const list = Array.isArray(data && data.recipients) ? data.recipients : [];
+        let renamed = false;
+        liveRecipientIds = [];
+        list.forEach(r => {
+          const id = r && r.id != null ? String(r.id) : '';
+          const name = r ? liveText(r.name, 120) : '';
+          if (!/^\d+$/.test(id) || !name) return;
+          liveRecipientIds.push(id);
+          const t = TEACHERS[id];
+          if (!t) TEACHERS[id] = { name, course: '', color: MSG_NEUTRAL };
+          else if (t.unnamed) { t.name = name; t.unnamed = false; renamed = true; }
+        });
+        liveRecipientsState = 'ready';
+        if (renamed) renderThreadList();
+      }, () => { liveRecipientsState = 'error'; }).then(() => {
+        // The To results were open while this loaded: show the new matches.
+        if (!toResults.hidden && pendingThread && !pendingThread.personId) renderToResults(toInput.value);
+      });
+      return liveRecipientsPromise;
+    }
+    function liveDirectoryMatches(q) {
+      const ids = new Set([...MSG_TEACHER_IDS, ...liveRecipientIds]);
+      return [...ids]
+        .filter(id => TEACHERS[id] && TEACHERS[id].name.toLowerCase().includes(q))
+        .sort((a, b) => ((MSG_TEACHER_IDS.has(b) ? 1 : 0) - (MSG_TEACHER_IDS.has(a) ? 1 : 0)) || TEACHERS[a].name.localeCompare(TEACHERS[b].name))
+        .slice(0, MAX_TO_RESULTS)
+        .map(id => [id, TEACHERS[id]]);
+    }
+    function liveNoMatchText(query) {
+      if (liveRecipientsState === 'loading') return 'Looking for people you can message…';
+      return `No one you can message matches "${escapeHtml(query)}".`;
+    }
+    function livePersonIdByName(name) {
+      const want = name.trim().toLowerCase();
+      return [...MSG_TEACHER_IDS, ...liveRecipientIds].find(id => TEACHERS[id] && TEACHERS[id].name.toLowerCase() === want) || '';
+    }
+    // ?compose=<id>&name=&dept=&color= from a course page or Contacts. A
+    // real Schoology id is digits; a course page that couldn't match the
+    // teacher sends a made-up id with their name, so they're found by name.
+    function liveComposeDeepLink(composeId, params) {
+      if (MSG_CLASSROOM) return;
+      const name = liveText(params.get('name'), 120);
+      const realId = /^\d+$/.test(composeId) ? composeId : '';
+      const known = () => (realId && TEACHERS[realId] ? realId : (name ? livePersonIdByName(name) : ''));
+      const id = known();
+      if (id) { startNewThreadWith(id); return; }
+      // Not known yet: only the recipients list can vouch for an id. The
+      // link's name/dept/color are never trusted as the recipient (2026-10-06 review).
+      liveLoadRecipients().then(() => {
+        if (pendingThread || activeConvoId) return; // they've moved on
+        const found = known();
+        if (found) { startNewThreadWith(found); return; }
+        startComposeMode();
+        if (name) { toInput.value = name; renderToResults(name); }
+      });
+    }
+
+    function showComposerNote(text) {
+      const note = document.getElementById('composerNote');
+      if (!note) return;
+      note.textContent = text;
+      note.hidden = false;
+      clearTimeout(liveNoteTimer);
+      liveNoteTimer = setTimeout(() => { note.hidden = true; }, 4000);
+    }
+
+    // Sending, signed in. The message shows right away as "Sending…", then
+    // "Just now", or "Not sent" with Retry. A pasted link still shows as a
+    // link here but goes to Schoology as plain text, exactly as typed.
+    function liveSendComposerMessage() {
+      const raw = composerInput.value.trim().slice(0, 10000);
+      if (!raw) return;
+      if (pendingThread && !pendingThread.personId) { toInput.focus(); return; }
+      const { text, linkAttachment } = extractLinkAttachment(raw);
+      const msg = { from: 'me', text, time: 'Sending…', body: raw, local: true, localId: `m${++liveLocalSeq}` };
+      if (linkAttachment) msg.attachments = [linkAttachment];
+      let c;
+      if (pendingThread) {
+        const personId = pendingThread.personId;
+        const subject = (pendingThread.subject || '').trim().slice(0, 200);
+        if (!subject) { liveNeedSubject(); return; }
+        c = { id: `local-${Date.now()}`, personId, subject, unread: false, preview: '', time: '', at: Date.now(), participants: [personId], messages: [msg], load: 'ready', localThread: true };
+        msg.create = { recipientIds: [personId], subject };
+        CONVERSATIONS.unshift(c);
+        pendingThread = null;
+        activeConvoId = c.id;
+      } else {
+        c = CONVERSATIONS.find(x => x.id === activeConvoId);
+        if (!c || c.load !== 'ready') return;
+        c.messages.push(msg);
+        // Newest first, like the inbox.
+        CONVERSATIONS.splice(CONVERSATIONS.indexOf(c), 1);
+        CONVERSATIONS.unshift(c);
+      }
+      Object.assign(c, deriveMedia(c));
+      composerInput.value = '';
+      composerInput.classList.remove('msgs-composer-link-active');
+      showThread(c);
+      renderThreadList();
+      liveDeliver(c, msg);
+    }
+    function liveDeliver(c, msg) {
+      msg.status = 'sending';
+      msg.time = 'Sending…';
+      msg.sentAt = undefined;
+      msg.error = '';
+      liveRefreshThreadView(c);
+      let request;
+      if (msg.create) {
+        request = c.creating = liveFetch('/messages', { recipientIds: msg.create.recipientIds, subject: msg.create.subject, message: msg.body }).then(res => {
+          if (!res || res.ok === false) throw new Error('not sent');
+          delete msg.create;
+          // With Schoology's id, replies in this thread go to that thread.
+          const id = res.id != null ? String(res.id) : '';
+          if (/^\d+$/.test(id)) {
+            if (activeConvoId === c.id) activeConvoId = id;
+            c.id = id;
+            c.localThread = false;
+          }
+        });
+      } else {
+        // A reply in a thread started here waits for the thread to exist.
+        request = (c.creating || Promise.resolve()).catch(() => {}).then(() => {
+          if (c.localThread) throw new Error('thread not created');
+          return liveFetch('/messages/reply', { id: c.id, message: msg.body });
+        }).then(res => { if (!res || res.ok === false) throw new Error('not sent'); });
+      }
+      request.then(() => {
+        msg.status = 'sent';
+        msg.sentAt = Date.now();
+        msg.time = 'Just now';
+      }, err => {
+        const why = liveSendError(err);
+        msg.status = 'failed';
+        msg.time = 'Not sent';
+        msg.error = why.text;
+        msg.canRetry = why.retry;
+      }).then(() => {
+        liveRefreshThreadView(c);
+        renderThreadList();
+      });
+    }
+    function liveRetryMessage(localId) {
+      for (const c of CONVERSATIONS) {
+        const msg = c.messages.find(m => m.localId === localId);
+        if (msg && msg.status === 'failed') { liveDeliver(c, msg); return; }
+      }
+    }
+
+    function liveInit() {
+      msgsShell.classList.add('live');
+      composerInput.maxLength = 10000;
+      subjectInput.maxLength = 200;
+      subjectInput.required = true;
+      subjectInput.placeholder = 'Subject (required)';
+      subjectInput.addEventListener('input', () => subjectInput.removeAttribute('aria-invalid'));
+      threadList.addEventListener('click', e => {
+        if (e.target.closest('[data-action="retry-inbox"]')) liveRetryInbox();
+      });
+      if (MSG_CLASSROOM) {
+        msgsShell.classList.add('no-messaging');
+        const emo = threadEmpty.querySelector('.emo');
+        threadEmpty.textContent = '';
+        if (emo) threadEmpty.appendChild(emo);
+        threadEmpty.insertAdjacentHTML('beforeend', `
+          <p class="msgs-no-messaging-title">Google Classroom doesn't have messages.</p>
+          <p class="hint">Your teachers' announcements are on Home and each class page.</p>
+          <a class="msgs-state-btn" href="home.html">Go to Home</a>`);
+        updateSubtitle();
+      }
+    }
+
+    // ------------------------------------------------------------------
     // Sample data — same six teachers/course colors as grades.html's
     // COURSES array, duplicated locally per this project's established
     // cross-page convention (see architecture-decisions.md's
@@ -1649,6 +2131,8 @@
       { id: 'alvarado', name: 'Ms. Alvarado', role: 'IT Help Desk', dept: 'District Office', color: '#4f7d8f' },
       { id: 'chen', name: 'Mr. Chen', role: 'Director of Special Education', dept: 'District Office', color: '#8f6b4f' },
     ];
+    // Signed in: real people only, never the sample directory (2026-10-06).
+    if (MSG_LIVE) liveSetupPeople();
     CONTACTS.forEach(c => {
       if (!TEACHERS[c.id]) TEACHERS[c.id] = { name: c.name, course: c.dept, color: c.color };
     });
@@ -1739,13 +2223,17 @@
       });
       return { docs, links, video, audio };
     }
+    // Signed in: the real inbox, or nothing (it failed, see
+    // liveInboxState), never the sample threads (2026-10-06).
+    if (MSG_LIVE) liveSetConversations(Array.isArray(MSG_DATA.CONVERSATIONS) ? MSG_DATA.CONVERSATIONS : null);
     CONVERSATIONS.forEach(c => Object.assign(c, deriveMedia(c)));
 
     function person(c) { return TEACHERS[c.personId]; }
 
     function avatarInitial(name) {
-      const parts = name.trim().split(' ');
-      return parts[parts.length - 1][0].toUpperCase();
+      const parts = String(name).trim().split(' ');
+      // A blank live name has no letter to show (2026-10-06).
+      return (parts[parts.length - 1][0] || '?').toUpperCase();
     }
     /**
      * Escapes a value for interpolation into an HTML string.
@@ -1846,7 +2334,9 @@
     let searchQuery = '';
 
     function convoTextMatches(c, q) {
-      return c.messages.some(m => m.text.toLowerCase().includes(q));
+      // Signed in, a thread that hasn't been opened yet only has its
+      // preview to search (2026-10-06).
+      return c.messages.some(m => m.text.toLowerCase().includes(q)) || (!!c.preview && c.preview.toLowerCase().includes(q));
     }
 
     function filteredConversations() {
@@ -1911,8 +2401,8 @@
 
     function combinedRowHtml(row) {
       const p = person(row.primary);
-      const last = row.primary.messages[row.primary.messages.length - 1];
-      const lastTimeLabel = last.sentAt ? relativeTime(last.sentAt) : last.time.split(' · ')[0];
+      const last = lastMessageOf(row.primary);
+      const lastTimeLabel = rowTimeLabel(row.primary, last);
       const isMulti = row.threads.length > 1;
       // A person with only one thread shows their real subject, same as a
       // normal row -- only an actual merge gets the "N conversations"
@@ -1937,6 +2427,12 @@
     }
 
     function updateSubtitle() {
+      // Nothing to count while the live inbox is loading or failed, or on
+      // Google Classroom (2026-10-06).
+      if (MSG_LIVE && (MSG_CLASSROOM || liveInboxState !== 'ready')) {
+        document.getElementById('msgsSubtitle').textContent = '';
+        return;
+      }
       const n = CONVERSATIONS.filter(c => c.unread).length;
       document.getElementById('msgsSubtitle').textContent = n > 0 ? `${n} unread` : 'All caught up';
     }
@@ -1968,13 +2464,19 @@
       `;
     }
     function renderThreadList() {
+      // Signed in, the inbox can still be loading, or have failed (2026-10-06).
+      if (MSG_LIVE && liveInboxState !== 'ready') {
+        threadList.innerHTML = newMessageRowHtml() + liveInboxStateHtml();
+        updateSubtitle();
+        return;
+      }
       // "Combined" (2026-09-05, per Martin) takes a completely different
       // shape -- one row per person instead of one row per thread -- so it
       // gets its own render path via combinedRows()/combinedRowHtml()
       // rather than being squeezed into the per-thread list below.
       if (currentFilter === 'combined') {
         const rows = combinedRows();
-        const body = rows.length ? rows.map(combinedRowHtml).join('') : (pendingThread ? '' : `<p class="msgs-empty-hint">No conversations match.</p>`);
+        const body = rows.length ? rows.map(combinedRowHtml).join('') : emptyListHtml();
         threadList.innerHTML = newMessageRowHtml() + body;
         updateSubtitle();
         return;
@@ -1982,8 +2484,8 @@
       const list = filteredConversations();
       const body = list.length ? list.map(c => {
         const p = person(c);
-        const last = c.messages[c.messages.length - 1];
-        const lastTimeLabel = last.sentAt ? relativeTime(last.sentAt) : last.time.split(' · ')[0];
+        const last = lastMessageOf(c);
+        const lastTimeLabel = rowTimeLabel(c, last);
         return `
           <div class="msgs-thread-row ${c.unread ? 'unread' : ''} ${c.id === activeConvoId ? 'active' : ''}" data-id="${escapeHtml(c.id)}" tabindex="0" role="button" aria-label="Open ${escapeHtml(c.subject)} with ${escapeHtml(p.name)}${c.pinned ? ' (pinned)' : ''}">
             <span class="msgs-avatar" style="background:${escapeHtml(avatarBg(p))}">${escapeHtml(avatarInitial(p.name))}</span>
@@ -1998,7 +2500,7 @@
             ${c.unread ? '<span class="msgs-unread-dot" aria-hidden="true"></span>' : ''}
           </div>
         `;
-      }).join('') : (pendingThread ? '' : `<p class="msgs-empty-hint">No conversations match.</p>`);
+      }).join('') : emptyListHtml();
       threadList.innerHTML = newMessageRowHtml() + body;
       updateSubtitle();
     }
@@ -2087,7 +2589,12 @@
       pendingAttachments.splice(Number(btn.dataset.index), 1);
       renderPendingAttachments();
     });
-    attachBtn.addEventListener('click', () => attachFileInput.click());
+    attachBtn.addEventListener('click', () => {
+      // Signed in, messages are text only for now (2026-10-06): say so and
+      // add nothing.
+      if (MSG_LIVE) { showComposerNote("Attachments aren't supported yet. Paste a link instead."); return; }
+      attachFileInput.click();
+    });
     attachFileInput.addEventListener('change', () => {
       const files = Array.from(attachFileInput.files);
       attachFileInput.value = ''; // so picking the same file(s) again still fires "change"
@@ -2168,6 +2675,11 @@
     // (both render into this same container) without needing to rewire
     // anything on every re-render.
     threadBubbles.addEventListener('click', e => {
+      // Signed in (2026-10-06): resend a message, or reload a thread.
+      const retry = e.target.closest('.msgs-retry-btn');
+      if (retry) { liveRetryMessage(retry.dataset.localId); return; }
+      const again = e.target.closest('[data-action="retry-thread"]');
+      if (again) { liveRetryThread(again.dataset.id); return; }
       const el = e.target.closest('.msgs-bubble-attachment');
       if (el) openBubbleAttachment(el);
     });
@@ -2182,7 +2694,7 @@
     // One message's markup -- shared by the normal single-thread view
     // (renderBubbles) and the merged "All subjects" timeline
     // (renderMergedBubbles below), so both stay in sync automatically.
-    function renderBubbleRowHtml(m, i) {
+    function renderBubbleRowHtml(m, i, showAuthor) {
       const atts = attachmentsOf(m);
       const timeLabel = m.sentAt ? relativeTime(m.sentAt) : m.time;
       const bubbleHtml = m.text ? `<div class="msgs-bubble">${escapeHtml(m.text)}${timeSpanHtml(timeLabel, m.sentAt, 'msgs-bubble-time')}</div>` : '';
@@ -2190,16 +2702,25 @@
         const isLast = ai === atts.length - 1;
         return renderBubbleAttachment(a, (!m.text && isLast) ? timeLabel : '', (!m.text && isLast) ? m.sentAt : undefined);
       }).join('');
+      // Signed in (2026-10-06): who wrote it in a group thread, and a
+      // message that didn't go through gets a Retry.
+      const authorHtml = showAuthor && m.from === 'them' && m.authorId ? `<span class="msgs-bubble-author">${escapeHtml(personName(m.authorId))}</span>` : '';
+      const failedHtml = m.status === 'failed' ? `<div class="msgs-bubble-failed" role="alert"><span>${escapeHtml(m.error || "Couldn't send.")}</span>${m.canRetry === false ? '' : `<button type="button" class="msgs-retry-btn" data-local-id="${escapeHtml(m.localId)}">Retry</button>`}</div>` : '';
       return `
         <div class="msgs-bubble-row ${escapeHtml(m.from)}" data-msg-index="${i}">
+          ${authorHtml}
           ${bubbleHtml}
           ${attsHtml}
+          ${failedHtml}
         </div>
       `;
     }
 
     function renderBubbles(c) {
-      threadBubbles.innerHTML = c.messages.map((m, i) => renderBubbleRowHtml(m, i)).join('');
+      // Signed in, a thread's messages load when it's opened (2026-10-06).
+      if (MSG_LIVE && c.load !== 'ready') { threadBubbles.innerHTML = liveThreadStateHtml(c); return; }
+      const showAuthors = MSG_LIVE && threadHasSeveralAuthors(c);
+      threadBubbles.innerHTML = c.messages.map((m, i) => renderBubbleRowHtml(m, i, showAuthors)).join('');
       threadBubbles.scrollTop = threadBubbles.scrollHeight;
     }
 
@@ -2213,7 +2734,7 @@
     function renderMergedBubbles(threads) {
       threadBubbles.innerHTML = threads.map(c => `
         <div class="msgs-subject-divider"><span>${escapeHtml(c.subject)}</span></div>
-        ${c.messages.map((m, i) => renderBubbleRowHtml(m, i)).join('')}
+        ${MSG_LIVE && c.load !== 'ready' ? liveThreadStateHtml(c, true) : c.messages.map((m, i) => renderBubbleRowHtml(m, i, MSG_LIVE && threadHasSeveralAuthors(c))).join('')}
       `).join('');
       threadBubbles.scrollTop = threadBubbles.scrollHeight;
     }
@@ -2235,7 +2756,9 @@
       threadCourse.textContent = p.course;
       viewingAllSubjectsFor = null;
       renderSubjectDropdown(c.personId, c.id);
-      setComposerEnabled(true);
+      // Signed in, replying waits until the thread has loaded (2026-10-06).
+      setComposerEnabled(!MSG_LIVE || c.load === 'ready', false);
+      if (MSG_LIVE) liveComposerPlaceholder(c);
       renderBubbles(c);
     }
 
@@ -2276,11 +2799,13 @@
     // -- there's no single thread to append a reply to (sendComposerMessage
     // already no-ops with activeConvoId left null, this just makes that
     // visible instead of the composer silently doing nothing).
-    function setComposerEnabled(enabled) {
+    // showHint (2026-10-06): false keeps the All-subjects hint hidden while
+    // the composer waits for a live thread to load.
+    function setComposerEnabled(enabled, showHint) {
       composerInput.disabled = !enabled;
       attachBtn.disabled = !enabled;
       sendBtn.disabled = !enabled;
-      composerHint.hidden = enabled;
+      composerHint.hidden = showHint === undefined ? enabled : !showHint;
     }
 
     function showAllSubjectsFor(personId) {
@@ -2301,6 +2826,7 @@
       threadName.textContent = p.name;
       threadCourse.textContent = p.course;
       renderSubjectDropdown(personId, null);
+      if (MSG_LIVE) liveLoadThreads(threads);
       renderMergedBubbles(threads);
       setComposerEnabled(false);
       renderThreadList();
@@ -2337,6 +2863,7 @@
       pendingThread = null;
       activeConvoId = id;
       if (c.unread) c.unread = false;
+      if (MSG_LIVE) liveLoadThread(c);
       showThread(c);
       renderThreadList();
       msgsShell.classList.add('thread-open');
@@ -2380,6 +2907,8 @@
     function directoryMatches(query) {
       const q = query.trim().toLowerCase();
       if (!q) return [];
+      // Signed in: teachers, then whoever else Schoology lets them message.
+      if (MSG_LIVE) return liveDirectoryMatches(q);
       return Object.entries(TEACHERS)
         .filter(([, p]) => p.name.toLowerCase().includes(q))
         .sort((a, b) => a[1].name.localeCompare(b[1].name))
@@ -2406,7 +2935,7 @@
               ${p.course ? `<span class="msgs-to-result-course">${escapeHtml(p.course)}</span>` : ''}
             </button>
           `).join('')
-        : `<p class="msgs-to-no-results">No one in the district matches "${escapeHtml(query.trim())}".</p>`;
+        : `<p class="msgs-to-no-results">${MSG_LIVE ? liveNoMatchText(query.trim()) : `No one in the district matches "${escapeHtml(query.trim())}".`}</p>`;
       toResults.hidden = false;
       toInput.setAttribute('aria-expanded', 'true');
     }
@@ -2437,6 +2966,8 @@
       document.getElementById('toContactModalName').textContent = (c || t).name;
       document.getElementById('toContactModalRole').textContent = c ? (c.role || c.dept) : t.course;
       document.getElementById('toContactModalDept').textContent = c ? c.dept : t.course;
+      // Signed in, someone who isn't a teacher has no class to show (2026-10-06).
+      if (MSG_LIVE) document.getElementById('toContactModalDept').parentElement.hidden = !(c ? c.dept : t.course);
       // Only someone in the full district directory has a real record on
       // contacts.html to deep-link to — a one-off recipient that arrived
       // via a compose deep-link with no matching CONTACTS entry doesn't.
@@ -2468,6 +2999,7 @@
     }
 
     function startComposeMode() {
+      if (MSG_LIVE) { liveLoadRecipients(); liveComposerPlaceholder(null); }
       activeConvoId = null;
       viewingAllSubjectsFor = null;
       pendingThread = { personId: null, subject: '' };
@@ -2493,6 +3025,7 @@
     function startNewThreadWith(personId) {
       const p = TEACHERS[personId];
       if (!p) return;
+      if (MSG_LIVE) liveComposerPlaceholder(null);
       activeConvoId = null;
       viewingAllSubjectsFor = null;
       pendingThread = { personId, subject: '' };
@@ -2508,7 +3041,7 @@
       threadAvatar.textContent = avatarInitial(p.name);
       threadAvatar.style.background = avatarBg(p);
       threadName.textContent = p.name;
-      threadCourse.textContent = `${p.course} · New message`;
+      threadCourse.textContent = p.course ? `${p.course} · New message` : 'New message';
       threadBubbles.innerHTML = draftBubblesPlaceholder();
       renderThreadList();
       msgsShell.classList.add('thread-open');
@@ -2518,6 +3051,7 @@
 
     function resumeComposeMode() {
       if (!pendingThread) return;
+      if (MSG_LIVE) { liveLoadRecipients(); liveComposerPlaceholder(null); }
       activeConvoId = null;
       viewingAllSubjectsFor = null;
       threadEmpty.hidden = true;
@@ -2640,6 +3174,9 @@
     const rowContextPinLabel = document.getElementById('rowContextPinLabel');
     const rowContextDeleteBtn = document.getElementById('rowContextDeleteBtn');
     let contextMenuConvoId = null;
+    // Signed in, Delete would only hide the thread here (Schoology keeps it
+    // and it'd be back next time), so it's not offered (2026-10-06).
+    if (MSG_LIVE) rowContextDeleteBtn.hidden = true;
 
     function closeRowContextMenu() {
       rowContextMenu.hidden = true;
@@ -2758,6 +3295,7 @@
     // harmless fallback/label for anything that doesn't know about
     // sentAt, but every render path here prefers sentAt when present.
     function sendComposerMessage() {
+      if (MSG_LIVE) { liveSendComposerMessage(); return; } // the real thing, 2026-10-06
       const raw = composerInput.value.trim();
       const { text, linkAttachment } = extractLinkAttachment(raw);
       if (!text && pendingAttachments.length === 0 && !linkAttachment) return; // attachment(s)/link alone are a valid send, same as most messaging apps
@@ -2832,8 +3370,8 @@
     function messageMatches(q) {
       const results = [];
       CONVERSATIONS.forEach(c => {
-        c.messages.forEach((m, i) => {
-          if (m.text.toLowerCase().includes(q)) results.push({ c, i, m });
+        searchableMessages(c).forEach(item => {
+          if (item.m.text.toLowerCase().includes(q)) results.push(item);
         });
       });
       return results;
@@ -2846,7 +3384,9 @@
 
     function matchedPersonId(q) {
       if (!q) return null;
-      const hit = Object.entries(TEACHERS).find(([, t]) => t.name.toLowerCase().includes(q));
+      // Signed in, only someone with a thread here (2026-10-06): the
+      // directory also holds everyone the student could message.
+      const hit = Object.entries(TEACHERS).find(([id, t]) => t.name.toLowerCase().includes(q) && (!MSG_LIVE || CONVERSATIONS.some(c => c.personId === id)));
       return hit ? hit[0] : null;
     }
 
@@ -2857,7 +3397,7 @@
         const scope = CONVERSATIONS.filter(c => c.personId === personId);
         return {
           personId, q,
-          messages: scope.flatMap(c => c.messages.map((m, i) => ({ c, i, m }))).slice(-6).reverse(),
+          messages: scope.flatMap(c => searchableMessages(c)).slice(-6).reverse(),
           docs: scope.flatMap(c => c.docs.map(d => ({ ...d, c }))),
           links: scope.flatMap(c => c.links.map(l => ({ ...l, c }))),
           video: scope.flatMap(c => c.video.map(v => ({ ...v, c }))),
@@ -2867,7 +3407,7 @@
       if (!q) {
         return {
           personId: null, q,
-          messages: CONVERSATIONS.map(c => ({ c, i: c.messages.length - 1, m: c.messages[c.messages.length - 1] })).slice(0, 6),
+          messages: CONVERSATIONS.map(c => searchableMessages(c).slice(-1)[0]).filter(Boolean).slice(0, 6),
           docs: allDocs().slice(0, 4),
           links: allLinks().slice(0, 4),
           video: allVideo().slice(0, 4),
@@ -3053,6 +3593,10 @@
     // block comment above startComposeMode).
     document.getElementById('composeBtn').addEventListener('click', startComposeMode);
 
+    // Signed in (2026-10-06): limits, the inbox's Try again, and Google
+    // Classroom's no-messages note.
+    if (MSG_LIVE) liveInit();
+
     // ------------------------------------------------------------------
     // Deep-link from contacts.html (2026-09-02, per Martin's district
     // directory — every contact gets a working Message button, not just
@@ -3073,6 +3617,8 @@
       const params = new URLSearchParams(window.location.search);
       const composeId = params.get('compose');
       if (!composeId) return;
+      // Signed in, ids are Schoology's (2026-10-06): see liveComposeDeepLink.
+      if (MSG_LIVE) { liveComposeDeepLink(composeId, params); return; }
       if (!TEACHERS[composeId]) {
         const name = params.get('name');
         if (!name) return; // not a known teacher and no fallback info to build one from

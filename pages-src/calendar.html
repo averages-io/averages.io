@@ -554,6 +554,9 @@
   .cal-mini-day.has-selected { box-shadow: 0 0 0 1.5px var(--accent); border-radius: 50%; }
 
   .cal-empty-note { font-size: 0.8rem; color: var(--text-faint); font-style: italic; padding: 18px; text-align: center; }
+  /* Signed in, when the events didn't (all) load (2026-10-06). */
+  .cal-live-note { margin: 0; font-size: 0.78rem; font-weight: 700; color: var(--text-faint); }
+  .cal-live-note[hidden] { display: none; }
   .cal-week-empty { font-size: 0.66rem; color: var(--text-faint); font-style: italic; padding: 6px 0 0; text-align: center; overflow-wrap: break-word; }
 
   /* ---------- Search results (flat list, replaces the grid while a
@@ -826,6 +829,7 @@
                 </div>
               </div>
             </div>
+            <p class="cal-live-note" id="calLiveNote" role="status" hidden></p>
             <div id="calBody"></div>
           </div>
         </div>
@@ -1265,6 +1269,40 @@
     // ever round-trips through a UTC-parsed Date (that's the usual
     // source of off-by-one-day calendar bugs).
     // ------------------------------------------------------------------
+    // ------------------------------------------------------------------
+    // Signed in (2026-10-06): EVENTS is the events extra's answer, never the
+    // samples above. A demo sign-in (which also has __AVERAGES__, with an
+    // empty bundle) shows the samples, like the preview. Each event is
+    // tidied once here; one from a class that isn't the student's (or the
+    // school's) shows as School & District rather than being filtered away.
+    // ------------------------------------------------------------------
+    const AV_LIVE = !!(window.__AVERAGES__ && window.__AVERAGES__.data) && window.__AVERAGES__.mode !== 'demo';
+    const AV_DATA = AV_LIVE ? window.__AVERAGES__.data : {};
+    if (AV_LIVE) {
+      const known = new Set(COURSES.map(c => String(c.id)));
+      const seen = new Set();
+      const tidy = (Array.isArray(AV_DATA.EVENTS) ? AV_DATA.EVENTS : []).filter(e => e && /^\d{4}-\d{2}-\d{2}$/.test(String(e.date || ''))).map((e, i) => {
+        let id = String(e.id || '') || `ev${i}`;
+        if (seen.has(id)) id = `${id}-${i}`;
+        seen.add(id);
+        const source = known.has(String(e.source)) ? String(e.source) : 'school';
+        const time = e.allDay ? '' : String(e.time || '');
+        return {
+          id, title: String(e.title || '') || 'Event', date: String(e.date), source,
+          type: TYPES.includes(e.type) ? e.type : 'assignment',
+          time, allDay: !!e.allDay || (e.type === 'teacher' && !time),
+          points: Number(e.points) > 0 ? Number(e.points) : 0,
+          desc: String(e.desc || ''), createdBy: String(e.createdBy || ''),
+          assignmentId: /^\d{1,24}$/.test(String(e.assignmentId || '')) ? String(e.assignmentId) : '',
+          assignmentTitle: String(e.assignmentTitle || ''),
+        };
+      });
+      EVENTS.splice(0, EVENTS.length, ...tidy);
+      const note = document.getElementById('calLiveNote');
+      if (!Array.isArray(AV_DATA.EVENTS)) { note.textContent = 'Your calendar events didn’t load this time. Try again in a bit.'; note.hidden = false; }
+      else if (AV_DATA.EVENTS_PARTIAL) { note.textContent = 'Some classes’ events didn’t load this time.'; note.hidden = false; }
+    }
+
     function ymd(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
     function isSameDay(a, b) { return ymd(a) === ymd(b); }
     function startOfDay(d) { const n = new Date(d); n.setHours(0, 0, 0, 0); return n; }
@@ -1359,7 +1397,14 @@
       // generic content instead of erroring), so this is safe to link
       // for every Assignment-category event, not just the flagged ones.
       let actionHTML = '';
-      if (event.type !== 'teacher') {
+      if (AV_LIVE && event.assignmentId) {
+        // Signed in: the exact assignment (2026-10-06).
+        const linkTitle = event.assignmentTitle || event.title;
+        actionHTML = `<div class="cal-selected-actions"><a class="cal-selected-view-btn" href="assignment.html?course=${encodeURIComponent(event.source)}&id=${encodeURIComponent(event.assignmentId)}&title=${encodeURIComponent(linkTitle)}">Open Assignment</a></div>`;
+      } else if (AV_LIVE) {
+        // Not something to turn in (or not one we can open): its class.
+        if (event.source !== 'school') actionHTML = `<div class="cal-selected-actions"><a class="cal-selected-view-btn" href="course-home.html?course=${encodeURIComponent(event.source)}">View Course</a></div>`;
+      } else if (event.type !== 'teacher') {
         const linkTitle = event.assignmentTitle || event.title;
         actionHTML = `<div class="cal-selected-actions"><a class="cal-selected-view-btn" href="assignment.html?course=${encodeURIComponent(event.source)}&title=${encodeURIComponent(linkTitle)}">Open Assignment</a></div>`;
       } else if (event.source !== 'school') {
@@ -1374,7 +1419,7 @@
         <div class="cal-selected-row"><span class="k">Date</span><span class="v">${escapeHtml(dateLabel)}</span></div>
         <div class="cal-selected-row"><span class="k">Time</span><span class="v">${event.allDay ? 'All day' : escapeHtml(event.time || 'Due 11:59 PM')}</span></div>
         ${event.points ? `<div class="cal-selected-row"><span class="k">Points</span><span class="v">${escapeHtml(event.points)} pts</span></div>` : ''}
-        <p class="cal-selected-desc">${escapeHtml(event.desc)}</p>
+        ${event.desc ? `<p class="cal-selected-desc">${escapeHtml(event.desc)}</p>` : ''}
         ${actionHTML}
       `;
     }
@@ -1780,8 +1825,9 @@
       const when = new Date(y, m - 1, d);
       if (isNaN(when)) return;
       focusDate = when;
-      const title = q.get('event'), src = q.get('course');
-      const ev = title && EVENTS.find(e => e.date === date && e.title === title && (!src || e.source === src));
+      const title = q.get('event'), src = q.get('course'), id = q.get('id');
+      // The exact event when the hub sent its id (2026-10-06), else by title.
+      const ev = (id && EVENTS.find(e => e.id === id && e.date === date)) || (title && EVENTS.find(e => e.date === date && e.title === title && (!src || e.source === src)));
       if (ev) {
         activeSources.add(ev.source);
         activeTypes.add(categoryOf(ev.type));
