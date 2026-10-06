@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Averages — Sign In</title>
+<title>Averages.io Sign In</title>
 <link rel="stylesheet" href="https://use.typekit.net/gsk6off.css">
 <style>
 
@@ -390,313 +390,416 @@
   .tooltip.show { display: block; }
 
 
-  /* ---------- Sign-in by LMS (draft, 2026-10-06, from Martin's "Select your
-     LMS" mock): one card with a grey title band, three screens inside it.
+  /* ---------- Sign-in (redone 2026-10-06, same flow as Martin's "Select
+     your LMS" mock, per Martin: "it just looks kind of funky").
+     One card in two parts on computers: a navy side with the logo and the
+     three steps (Platform, School, Log in; Google skips School), and the
+     light main side with the screens. Phones get the main side only, with
+     the logo on top. Screens are unchanged:
      1. Select your platform: Schoology, Canvas, Google Classroom (read only).
-     2. Schoology / Canvas: search your school on the left, the picked school
-        on the right with the 13+ check and Log in with Schoology / Canvas.
-        Not every school uses SSO: the button sends the student to their
-        school's own Schoology or Canvas sign-in page, which shows whatever
-        that school uses (its SSO, or a Schoology/Canvas password). The
-        password is never typed into Averages.io.
+     2. Schoology / Canvas: search your school, the 13+ check, Log in with
+        Schoology / Canvas. The button sends the student to their school's
+        own sign-in page (its SSO or a password); the password is never
+        typed into Averages.io.
      3. Google Classroom: the 13+ check and Continue with Google.
      Screens are hash routes (#schoology, #canvas, #google) so the browser's
-     Back button walks back through them. ---------- */
+     Back button walks back through them. No colored borders, no glass, no
+     fades on hover; spacing on the 4px scale. ---------- */
   :root {
-    --band-bg: #76777c;
-    --band-text: #0d0e14;
-    --sheet-bg: #c9d0da;
-    --sheet-text: #14151f;
-    --sheet-muted: #3a4260;
-    --lms-schoology: #0a1d9e;
-    --lms-canvas: #1e1d66;
-    --lms-classroom: #0619a8;
-    --sso-bg: #0a1d9e;
+    --side-bg: #0b1150;
+    --side-text: #ffffff;
+    --side-muted: #c3c8ea;
+    --main-bg: #f2f2f4;
+    --row-bg: #ffffff;
+    --row-hover: #e8ebfa;
+    --ink: #14151f;
+    --ink-muted: #4b4d63;
+    --line: #dcdde4;
+    --blue: #0a1d9e;
+    --blue-hover: #1a2fbf;
+    --link: #0b2fb8;
+    --ring: rgba(10, 29, 158, 0.32);
   }
-  .page { justify-content: center; align-items: center; flex-direction: column; gap: 14px; }
+  .page { justify-content: center; align-items: center; flex-direction: column; gap: 16px; }
   .lms-card {
     width: 100%;
-    max-width: 780px;
-    border-radius: 36px;
+    max-width: 1040px;
+    min-height: 580px;
+    display: grid;
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    border-radius: 32px;
     overflow: hidden;
-    background: var(--sheet-bg);
-    box-shadow: 0 34px 60px -34px rgba(0, 0, 20, 0.85);
+    background: var(--main-bg);
+    box-shadow: 0 40px 80px -40px rgba(0, 0, 20, 0.9);
   }
-  .screen[hidden] { display: none; }
-  .screen { animation: screenIn 0.22s ease both; }
-  @keyframes screenIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
-  @media (prefers-reduced-motion: reduce) { .screen { animation: none; } }
 
-  /* Title band */
-  .lms-band {
-    background: var(--band-bg);
-    color: var(--band-text);
-    padding: 22px 44px 18px;
-    min-height: 92px;
+  /* ---- Side ---- */
+  .lms-side {
+    background: var(--side-bg);
+    color: var(--side-text);
+    padding: 48px 40px 40px;
     display: flex;
     flex-direction: column;
-    justify-content: flex-end;
-    gap: 6px;
+    gap: 32px;
   }
-  .lms-logo { width: 36px; height: 36px; display: block; margin-left: 2px; }
-  .lms-title { margin: 0; font-size: 1.05rem; font-weight: 800; letter-spacing: -0.01em; outline: none; }
-  .lms-band.big .lms-title { font-size: 1.85rem; letter-spacing: -0.02em; }
+  .lms-brand { display: flex; align-items: center; gap: 12px; }
+  .lms-logo { width: 48px; height: 48px; display: block; flex: none; }
+  .lms-brand-name { font-size: 1.3rem; font-weight: 800; letter-spacing: -0.01em; }
+  .side-lede { margin: 0; font-size: 1.15rem; font-weight: 700; line-height: 1.45; color: var(--side-text); max-width: 300px; }
+  .side-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+  .side-step {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 16px 12px 12px;
+    border-radius: 16px;
+    font-size: 1.02rem;
+    font-weight: 700;
+    color: var(--side-muted);
+  }
+  .side-step .num {
+    flex: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: 0.9rem;
+    font-weight: 800;
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--side-muted);
+  }
+  .side-step .num svg { width: 14px; height: 14px; display: block; }
+  .side-step .num .check { display: none; }
+  .side-step.current { background: rgba(255, 255, 255, 0.1); color: var(--side-text); }
+  .side-step.current .num { background: #ffffff; color: var(--side-bg); }
+  .side-step.done { color: var(--side-text); }
+  .side-step.done .num { background: #ffffff; color: var(--side-bg); }
+  .side-step.done .n { display: none; }
+  .side-step.done .num .check { display: block; }
+  .side-step.skip { display: none; }
+  .side-safe { margin: auto 0 0; font-size: 0.9rem; font-weight: 600; line-height: 1.5; color: var(--side-muted); max-width: 300px; }
+
+  /* ---- Main ---- */
+  .lms-main { padding: 48px 56px 44px; display: flex; flex-direction: column; color: var(--ink); min-width: 0; }
+  .lms-mobile-brand { display: none; }
+  .screen { display: flex; flex-direction: column; flex: 1; }
+  .screen[hidden] { display: none; }
+  .screen { animation: screenIn 0.2s ease both; }
+  @keyframes screenIn { from { transform: translateY(4px); } to { transform: none; } }
+  @media (prefers-reduced-motion: reduce) { .screen { animation: none; } }
+
   .lms-back {
     align-self: flex-start;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    margin: 0 0 2px -6px;
-    padding: 4px 8px 4px 4px;
+    gap: 8px;
+    margin: -8px 0 16px -12px;
+    padding: 8px 16px 8px 12px;
     border: 0;
     border-radius: 999px;
     background: transparent;
-    color: var(--band-text);
+    color: var(--ink-muted);
     font: inherit;
-    font-size: 0.95rem;
-    font-weight: 700;
+    font-size: 0.98rem;
+    font-weight: 800;
     cursor: pointer;
   }
-  .lms-back svg { width: 20px; height: 20px; display: block; }
-  .lms-back:hover { background: rgba(255, 255, 255, 0.14); }
-  .lms-back:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.55); }
+  .lms-back svg { width: 10px; height: 12px; display: block; }
+  .lms-back:hover { background: #e4e5ec; color: var(--ink); }
+  .lms-back:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--ring); }
+  .lms-title { margin: 0; font-size: 2.1rem; font-weight: 800; letter-spacing: -0.02em; line-height: 1.15; outline: none; }
+  .lms-sub { margin: 8px 0 0; font-size: 1.05rem; font-weight: 600; color: var(--ink-muted); line-height: 1.5; }
+  .lms-body { margin-top: 32px; display: flex; flex-direction: column; gap: 12px; }
 
-  /* Body sheet */
-  .lms-sheet { padding: 28px 36px 34px; color: var(--sheet-text); min-height: 260px; }
-  .lms-prompt { margin: 6px 0 22px; text-align: center; font-size: 1.05rem; font-weight: 800; }
-  .lms-choices { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  /* Platform rows */
+  .lms-choices { display: flex; flex-direction: column; gap: 12px; }
   .lms-btn {
-    min-height: 54px;
-    padding: 8px 18px;
+    width: 100%;
+    min-height: 76px;
+    padding: 16px 20px 16px 24px;
     border: 0;
-    border-radius: 999px;
-    color: #ffffff;
+    border-radius: 20px;
+    background: var(--row-bg);
+    color: var(--ink);
     font: inherit;
-    font-size: 1.05rem;
-    font-weight: 800;
-    line-height: 1.1;
+    text-align: left;
     cursor: pointer;
     display: flex;
-    flex-direction: column;
     align-items: center;
-    justify-content: center;
-    transition: filter 0.15s ease, transform 0.08s ease;
+    gap: 16px;
+    box-shadow: 0 1px 2px rgba(20, 21, 31, 0.06);
+    transition: background-color 0.15s ease, transform 0.08s ease;
   }
-  .lms-btn small { font-size: 0.7rem; font-weight: 700; opacity: 0.92; margin-top: 2px; }
-  .lms-btn:hover { filter: brightness(1.15); }
-  .lms-btn:active { transform: scale(0.985); }
-  .lms-btn:focus-visible, .lms-sso:focus-visible { outline: none; box-shadow: 0 0 0 3px #ffffff, 0 0 0 6px var(--lms-schoology); }
-  .lms-btn[data-lms="schoology"] { background: var(--lms-schoology); }
-  .lms-btn[data-lms="canvas"] { background: var(--lms-canvas); }
-  .lms-btn[data-lms="google"] { background: var(--lms-classroom); }
-  .lms-legal { margin: 22px 8px 0; font-size: 0.92rem; font-weight: 700; color: var(--sheet-muted); }
-  .lms-legal a, .lms-missing a { color: #0b2fb8; font-weight: 800; text-decoration: underline; text-underline-offset: 2px; }
+  .lms-btn .t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+  .lms-btn .name { font-size: 1.2rem; font-weight: 800; line-height: 1.2; }
+  .lms-btn small { font-size: 0.92rem; font-weight: 600; color: var(--ink-muted); line-height: 1.3; }
+  .lms-btn .go { flex: none; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: #eef0f8; color: var(--blue); transition: background-color 0.15s ease, color 0.15s ease; }
+  .lms-btn .go svg { width: 10px; height: 12px; display: block; }
+  .lms-btn:hover { background: var(--row-hover); }
+  .lms-btn:hover .go { background: var(--blue); color: #ffffff; }
+  .lms-btn:active { transform: scale(0.99); }
+  .lms-btn:focus-visible, .lms-sso:focus-visible, .lms-link-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--main-bg), 0 0 0 6px var(--blue); }
+  .lms-legal { margin: auto 0 0; padding-top: 32px; font-size: 0.92rem; font-weight: 600; color: var(--ink-muted); line-height: 1.5; }
+  .lms-legal a, .lms-missing a { color: var(--link); font-weight: 800; text-decoration: underline; text-underline-offset: 2px; }
 
-  /* School screens: search left, picked school right */
-  .school-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 0.82fr); gap: 28px; align-items: start; }
+  /* School search */
   .school-search { position: relative; }
+  .school-label { display: block; margin: 0 0 8px 4px; font-size: 0.9rem; font-weight: 800; color: var(--ink-muted); }
+  .school-field { position: relative; }
+  .school-field svg { position: absolute; left: 20px; top: 50%; width: 20px; height: 20px; transform: translateY(-50%); color: var(--ink-muted); pointer-events: none; }
   .school-input {
     width: 100%;
-    height: 50px;
-    padding: 0 18px;
+    height: 60px;
+    padding: 0 20px 0 52px;
     border: 0;
-    border-radius: 999px;
+    border-radius: 18px;
     background: #ffffff;
-    color: var(--sheet-text);
+    color: var(--ink);
     font: inherit;
-    font-size: 1rem;
+    font-size: 1.08rem;
     font-weight: 700;
+    box-shadow: inset 0 0 0 1px var(--line);
   }
-  .school-input::placeholder { color: #14151f; opacity: 0.9; }
-  .school-input:focus { outline: none; box-shadow: 0 0 0 3px var(--accent-ring); }
+  .school-input::placeholder { color: #6b6d80; opacity: 1; }
+  .school-input:focus { outline: none; box-shadow: inset 0 0 0 1px #b7bbcc, 0 0 0 4px var(--ring); }
   .school-input::-webkit-search-cancel-button { cursor: pointer; }
-  .school-results { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; max-height: 236px; overflow-y: auto; }
+  .school-results {
+    list-style: none;
+    margin: 8px 0 0;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 264px;
+    overflow-y: auto;
+    background: #ffffff;
+    border-radius: 18px;
+    box-shadow: 0 1px 2px rgba(20, 21, 31, 0.06), inset 0 0 0 1px var(--line);
+  }
   .school-results:empty { display: none; }
   .school-option {
+    position: relative;
     display: flex;
     flex-direction: column;
     gap: 2px;
-    padding: 10px 16px;
-    border-radius: 16px;
-    background: rgba(255, 255, 255, 0.55);
+    padding: 12px 48px 12px 16px;
+    border-radius: 12px;
     cursor: pointer;
   }
-  .school-option:hover, .school-option.active { background: #ffffff; }
-  /* Picked = white with a check (selection is a tint plus a mark, never a colored border). */
-  .school-option { position: relative; padding-right: 44px; }
-  .school-option[aria-selected="true"] { background: #ffffff; }
-  .school-option[aria-selected="true"]::after { content: ""; position: absolute; right: 18px; top: 50%; width: 12px; height: 7px; border: solid var(--sso-bg); border-width: 0 0 3px 3px; transform: translateY(-70%) rotate(-45deg); }
-  .school-option .o-name { font-weight: 800; font-size: 0.95rem; }
+  .school-option:hover, .school-option.active { background: #f0f1f6; }
+  /* Picked: a tint plus a mark, never a colored border. */
+  .school-option[aria-selected="true"] { background: var(--row-hover); }
+  .school-option[aria-selected="true"]::after { content: ""; position: absolute; right: 20px; top: 50%; width: 12px; height: 7px; border: solid var(--blue); border-width: 0 0 3px 3px; transform: translateY(-70%) rotate(-45deg); }
+  .school-option .o-name { font-weight: 800; font-size: 1rem; line-height: 1.3; }
   .school-option mark { background: rgba(10, 29, 158, 0.13); color: inherit; border-radius: 4px; padding: 0 1px; }
-  .school-option .o-domain { font-weight: 600; font-size: 0.82rem; color: var(--sheet-muted); }
-  .school-hint { margin: 12px 4px 0; font-size: 0.86rem; font-weight: 600; color: var(--sheet-muted); line-height: 1.45; }
+  .school-option .o-domain { font-weight: 600; font-size: 0.88rem; color: var(--ink-muted); }
+  .school-hint { margin: 8px 4px 0; font-size: 0.92rem; font-weight: 600; color: var(--ink-muted); line-height: 1.5; }
   .school-hint:empty { display: none; }
-  .school-hint button { border: 0; background: none; padding: 0; font: inherit; color: #0b2fb8; font-weight: 800; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
-  .age-row { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
-  .age-why { border: 0; background: rgba(255, 255, 255, 0.55); color: var(--sheet-text); font: inherit; font-size: 0.78rem; font-weight: 800; padding: 4px 10px; border-radius: 999px; cursor: pointer; }
-  .age-why:hover { background: #ffffff; }
-  .age-why:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring); }
-  .age-note { margin: 0; max-width: 320px; font-size: 0.82rem; font-weight: 600; color: var(--sheet-muted); line-height: 1.45; }
-  .age-note[hidden] { display: none; }
+  .school-hint button, .lms-missing button.inline { border: 0; background: none; padding: 0; font: inherit; color: var(--link); font-weight: 800; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
 
-  .school-pick { text-align: center; padding-top: 18px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
-  .pick-name { margin: 0; font-size: 1rem; font-weight: 700; color: var(--sheet-muted); }
-  .pick-domain { margin: 0; font-size: 1.15rem; font-weight: 800; color: var(--sheet-text); word-break: break-all; }
-  .school-pick.empty .pick-domain { font-size: 0.92rem; font-weight: 600; color: var(--sheet-muted); }
-  .age-check { display: inline-flex; align-items: center; gap: 12px; margin: 6px 0 4px; font-size: 1rem; font-weight: 700; color: var(--sheet-text); cursor: pointer; user-select: none; }
-  .age-check input { appearance: none; -webkit-appearance: none; flex: none; width: 26px; height: 26px; margin: 0; border-radius: 50%; border: 2px solid #8b92a8; background: #ffffff; cursor: pointer; display: grid; place-items: center; transition: background-color 0.15s ease, border-color 0.15s ease; }
-  .age-check input:checked { background: var(--sso-bg); border-color: var(--sso-bg); }
-  .age-check input:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring); }
+  /* The picked school, above the button */
+  .school-pick {
+    margin-top: 12px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    border-radius: 18px;
+    background: #ffffff;
+    box-shadow: 0 1px 2px rgba(20, 21, 31, 0.06);
+  }
+  .school-pick .pin { flex: none; width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: #eef0f8; color: var(--blue); }
+  .school-pick .pin svg { width: 20px; height: 20px; display: block; }
+  .school-pick .t { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .pick-name { margin: 0; font-size: 0.9rem; font-weight: 700; color: var(--ink-muted); }
+  .pick-domain { margin: 0; font-size: 1.1rem; font-weight: 800; color: var(--ink); word-break: break-all; }
+  .school-pick.empty { background: #e7e8ee; box-shadow: none; }
+  .school-pick.empty .pin { background: #dcdde5; color: #6b6d80; }
+  .school-pick.empty .pick-name { color: var(--ink); font-weight: 800; font-size: 1rem; }
+  .school-pick.empty .pick-domain { font-size: 0.92rem; font-weight: 600; color: var(--ink-muted); }
+
+  /* 13+ and the log in button */
+  .lms-finish { margin-top: 24px; display: flex; flex-direction: column; gap: 16px; }
+  .age-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .age-check { display: inline-flex; align-items: center; gap: 12px; font-size: 1.05rem; font-weight: 800; color: var(--ink); cursor: pointer; user-select: none; }
+  .age-check input { appearance: none; -webkit-appearance: none; flex: none; width: 28px; height: 28px; margin: 0; border-radius: 50%; border: 2px solid #8b92a8; background: #ffffff; cursor: pointer; transition: background-color 0.15s ease, border-color 0.15s ease; }
+  .age-check input:checked { background: var(--blue); border-color: var(--blue); box-shadow: inset 0 0 0 4px #ffffff; }
+  .age-check input:focus-visible { outline: none; box-shadow: 0 0 0 4px var(--ring); }
+  .age-check input:checked:focus-visible { box-shadow: inset 0 0 0 4px #ffffff, 0 0 0 4px var(--ring); }
+  .age-why { border: 0; background: #e4e5ec; color: var(--ink); font: inherit; font-size: 0.85rem; font-weight: 800; padding: 4px 12px; border-radius: 999px; cursor: pointer; }
+  .age-why:hover { background: #d8dae3; }
+  .age-why:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--ring); }
+  .age-note { margin: -4px 0 0; font-size: 0.92rem; font-weight: 600; color: var(--ink-muted); line-height: 1.5; }
+  .age-note[hidden] { display: none; }
   .lms-sso {
     width: 100%;
-    max-width: 300px;
-    min-height: 50px;
-    padding: 10px 22px;
+    min-height: 60px;
+    padding: 12px 24px;
     border: 0;
-    border-radius: 999px;
-    background: var(--sso-bg);
+    border-radius: 18px;
+    background: var(--blue);
     color: #ffffff;
     font: inherit;
-    font-size: 1.1rem;
+    font-size: 1.15rem;
     font-weight: 800;
     cursor: pointer;
-    transition: filter 0.15s ease, opacity 0.15s ease;
+    transition: background-color 0.15s ease, transform 0.08s ease;
   }
-  .lms-sso:hover:not([disabled]) { filter: brightness(1.15); }
-  .lms-sso[disabled] { opacity: 0.45; cursor: not-allowed; }
-  .lms-sso.busy { pointer-events: none; opacity: 0.8; }
+  .lms-sso:hover:not([disabled]) { background: var(--blue-hover); }
+  .lms-sso:active:not([disabled]) { transform: scale(0.99); }
+  .lms-sso[disabled] { background: #c5c8d6; color: #ffffff; cursor: not-allowed; }
+  .lms-sso.busy { pointer-events: none; background: #3a49b5; }
   .lms-sso.google { background: #ffffff; color: #1f1f1f; box-shadow: inset 0 0 0 1px #b9bdc9; }
-  .lms-sso.google:hover { filter: none; background: #f4f5f8; }
-  .signin-note { margin: 4px 0 0; padding: 10px 14px; border-radius: 14px; background: rgba(255, 255, 255, 0.6); color: var(--sheet-text); font-size: 0.86rem; font-weight: 700; line-height: 1.4; max-width: 320px; }
+  .lms-sso.google:hover { background: #f4f5f8; }
+  .signin-note { margin: 0; padding: 12px 16px; border-radius: 14px; background: #e4e5ec; color: var(--ink); font-size: 0.92rem; font-weight: 700; line-height: 1.45; }
   .signin-note[hidden] { display: none; }
-  .lms-missing { margin: 30px 8px 0; text-align: center; font-size: 0.95rem; font-weight: 700; color: var(--sheet-text); line-height: 1.5; }
-  .lms-missing[hidden] { display: none; }
-  .lms-missing button { border: 0; background: none; padding: 0; font: inherit; color: #0b2fb8; font-weight: 800; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
 
-  /* Google Classroom screen */
-  .google-pane { max-width: 420px; margin: 0 auto; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 12px; padding-top: 6px; }
-  .google-pane p { margin: 0; font-size: 0.95rem; font-weight: 600; color: var(--sheet-muted); line-height: 1.5; }
-  .google-pane .ro { font-weight: 800; color: var(--sheet-text); }
+  /* Canvas: school not listed */
+  .lms-missing {
+    margin: auto 0 0;
+    padding-top: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--ink-muted);
+    line-height: 1.5;
+  }
+  .lms-missing > span { flex: 1 1 240px; }
+  .lms-missing[hidden] { display: none; }
+  .lms-missing::before { content: ""; flex-basis: 100%; height: 1px; background: var(--line); margin-bottom: 8px; }
+  .lms-link-btn { border: 0; border-radius: 999px; padding: 10px 20px; background: #e4e5ec; color: var(--ink); font: inherit; font-size: 0.95rem; font-weight: 800; cursor: pointer; white-space: nowrap; }
+  .lms-link-btn:hover { background: #d8dae3; }
+
+  /* Google Classroom */
+  .google-pane { display: flex; flex-direction: column; gap: 16px; }
+  .ro-card { display: flex; gap: 16px; align-items: flex-start; padding: 16px 20px; border-radius: 18px; background: #ffffff; box-shadow: 0 1px 2px rgba(20, 21, 31, 0.06); }
+  .ro-card .pin { flex: none; width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: #eef0f8; color: var(--blue); }
+  .ro-card .pin svg { width: 20px; height: 20px; display: block; }
+  .ro-card p { margin: 0; font-size: 1rem; font-weight: 600; color: var(--ink-muted); line-height: 1.5; }
+  .ro-card .ro { display: block; font-weight: 800; color: var(--ink); font-size: 1.05rem; }
 
   /* Email Template sheet (Canvas) */
-  .tpl-overlay { position: fixed; inset: 0; background: rgba(5, 8, 40, 0.55); display: grid; place-items: center; padding: 20px; z-index: 50; }
+  .tpl-overlay { position: fixed; inset: 0; background: rgba(5, 8, 40, 0.6); display: grid; place-items: center; padding: 20px; z-index: 50; }
   .tpl-overlay[hidden] { display: none; }
-  .tpl-modal { width: 100%; max-width: 520px; background: #f2f2f4; border-radius: 24px; padding: 24px; box-shadow: 0 30px 70px -30px rgba(0, 0, 0, 0.6); }
-  .tpl-modal h2 { margin: 0 0 6px; font-size: 1.2rem; font-weight: 800; color: var(--text-dark); }
-  .tpl-modal p { margin: 0 0 12px; font-size: 0.88rem; font-weight: 600; color: var(--text-muted); line-height: 1.45; }
-  .tpl-text { width: 100%; min-height: 220px; padding: 12px 14px; border-radius: 14px; border: 1px solid #d3d3da; background: #ffffff; font: inherit; font-size: 0.88rem; line-height: 1.5; color: var(--text-dark); resize: vertical; }
-  .tpl-text:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-ring); }
-  .tpl-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 14px; flex-wrap: wrap; }
-  .tpl-actions button, .tpl-actions a { min-height: 42px; padding: 0 18px; border-radius: 999px; border: 0; font: inherit; font-size: 0.92rem; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; text-decoration: none; }
-  .tpl-close { background: #e2e3ea; color: var(--text-dark); }
-  .tpl-copy, .tpl-mail { background: var(--sso-bg); color: #ffffff; }
+  .tpl-modal { width: 100%; max-width: 560px; background: var(--main-bg); border-radius: 28px; padding: 32px; box-shadow: 0 30px 70px -30px rgba(0, 0, 0, 0.6); }
+  .tpl-modal h2 { margin: 0 0 8px; font-size: 1.4rem; font-weight: 800; color: var(--ink); letter-spacing: -0.01em; }
+  .tpl-modal p { margin: 0 0 16px; font-size: 0.95rem; font-weight: 600; color: var(--ink-muted); line-height: 1.5; }
+  .tpl-text { width: 100%; min-height: 232px; padding: 16px; border-radius: 16px; border: 0; box-shadow: inset 0 0 0 1px var(--line); background: #ffffff; font: inherit; font-size: 0.95rem; line-height: 1.5; color: var(--ink); resize: vertical; }
+  .tpl-text:focus { outline: none; box-shadow: inset 0 0 0 1px #b7bbcc, 0 0 0 4px var(--ring); }
+  .tpl-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; flex-wrap: wrap; }
+  .tpl-actions button, .tpl-actions a { min-height: 44px; padding: 0 20px; border-radius: 999px; border: 0; font: inherit; font-size: 0.95rem; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; text-decoration: none; transition: background-color 0.15s ease; }
+  .tpl-actions :focus-visible { outline: none; box-shadow: 0 0 0 3px var(--main-bg), 0 0 0 6px var(--blue); }
+  .tpl-close { background: #e2e3ea; color: var(--ink); }
+  .tpl-close:hover { background: #d8dae3; }
+  .tpl-copy, .tpl-mail { background: var(--blue); color: #ffffff; }
+  .tpl-copy:hover, .tpl-mail:hover { background: var(--blue-hover); }
 
   .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
-  .signin-foot { margin: 0; font-size: 0.78rem; font-weight: 700; color: rgba(255,255,255,0.82); text-align: center; }
+  .signin-foot { margin: 0; font-size: 0.85rem; font-weight: 700; color: rgba(255, 255, 255, 0.85); text-align: center; }
   .signin-foot a { color: inherit; font-weight: 800; text-decoration: underline; text-underline-offset: 2px; }
-  .dev-keys { margin-top: 26px; padding-top: 18px; border-top: 1px solid rgba(20,21,31,0.14); max-width: 420px; margin-left: auto; margin-right: auto; }
+  .dev-keys { margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--line); }
   .dev-keys[hidden] { display: none; }
-  .dev-keys-label { margin: 0 0 10px; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--sheet-muted); text-align: center; }
+  .dev-keys-label { margin: 0 0 8px; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-muted); text-align: center; }
   .dev-keys .btn { border-radius: 999px; }
 
-  /* Bigger on computers (2026-10-06, per Martin): the card grows with the
-     window up to 1120px wide, and everything inside scales with it. */
-  @media (min-width: 900px) {
-    .scroll-frame { max-width: 1180px; }
-    .lms-card { max-width: min(1120px, 88vw); border-radius: 44px; }
-    .lms-band { padding: 30px 60px 24px; min-height: 128px; gap: 8px; }
-    .lms-logo { width: 48px; height: 48px; }
-    .lms-title { font-size: 1.4rem; }
-    .lms-band.big .lms-title { font-size: 2.5rem; }
-    .lms-back { font-size: 1.15rem; }
-    .lms-back svg { width: 24px; height: 24px; }
-    .lms-sheet { padding: 40px 52px 48px; min-height: 360px; }
-    .lms-prompt { font-size: 1.45rem; margin: 10px 0 32px; }
-    .lms-choices { gap: 16px; }
-    .lms-btn { min-height: 74px; font-size: 1.4rem; }
-    .lms-btn small { font-size: 0.85rem; }
-    .lms-legal { font-size: 1.12rem; margin-top: 30px; }
-    .school-grid { gap: 44px; }
-    .school-input { height: 64px; padding: 0 26px; font-size: 1.2rem; }
-    .school-results { gap: 8px; max-height: 320px; }
-    .school-option { padding: 14px 22px; padding-right: 52px; border-radius: 20px; }
-    .school-option .o-name { font-size: 1.1rem; }
-    .school-option .o-domain { font-size: 0.95rem; }
-    .school-hint { font-size: 1rem; }
-    .school-pick { gap: 14px; padding-top: 22px; }
-    .pick-name { font-size: 1.2rem; }
-    .pick-domain { font-size: 1.4rem; }
-    .school-pick.empty .pick-domain { font-size: 1.05rem; }
-    .age-check { font-size: 1.2rem; gap: 14px; }
-    .age-check input { width: 32px; height: 32px; }
-    .age-why { font-size: 0.9rem; padding: 6px 14px; }
-    .age-note { font-size: 0.95rem; max-width: 400px; }
-    .lms-sso { max-width: 380px; min-height: 64px; font-size: 1.3rem; }
-    .signin-note { font-size: 0.98rem; max-width: 400px; }
-    .lms-missing { font-size: 1.1rem; margin-top: 40px; }
-    .google-pane { max-width: 520px; gap: 16px; }
-    .google-pane p { font-size: 1.1rem; }
-    .signin-foot { font-size: 0.9rem; }
-  }
+  /* Big screens: everything a size up. */
   @media (min-width: 1600px) {
-    .scroll-frame { max-width: 1480px; }
-    .lms-card { max-width: min(1400px, 76vw); border-radius: 52px; }
-    .lms-band { padding: 36px 72px 28px; min-height: 150px; }
+    .scroll-frame { max-width: 1400px; }
+    .lms-card { max-width: 1240px; min-height: 680px; border-radius: 40px; }
+    .lms-side { padding: 64px 56px 48px; gap: 40px; }
     .lms-logo { width: 56px; height: 56px; }
-    .lms-title { font-size: 1.65rem; }
-    .lms-band.big .lms-title { font-size: 3rem; }
-    .lms-back { font-size: 1.3rem; }
-    .lms-sheet { padding: 48px 64px 56px; min-height: 420px; }
-    .lms-prompt { font-size: 1.7rem; margin-bottom: 38px; }
-    .lms-btn { min-height: 86px; font-size: 1.65rem; }
-    .lms-btn small { font-size: 0.95rem; }
-    .lms-legal { font-size: 1.3rem; }
-    .school-input { height: 74px; font-size: 1.4rem; padding: 0 30px; }
-    .school-option .o-name { font-size: 1.25rem; }
-    .school-option .o-domain { font-size: 1.05rem; }
-    .school-hint { font-size: 1.15rem; }
-    .pick-name { font-size: 1.4rem; }
-    .pick-domain { font-size: 1.65rem; }
-    .school-pick.empty .pick-domain { font-size: 1.2rem; }
-    .age-check { font-size: 1.4rem; }
-    .age-check input { width: 36px; height: 36px; }
-    .age-why { font-size: 1rem; }
-    .age-note { font-size: 1.08rem; max-width: 460px; }
-    .lms-sso { max-width: 440px; min-height: 74px; font-size: 1.5rem; }
-    .lms-missing { font-size: 1.28rem; }
-    .google-pane { max-width: 620px; }
-    .google-pane p { font-size: 1.28rem; }
+    .lms-brand-name { font-size: 1.5rem; }
+    .side-lede { font-size: 1.35rem; max-width: 360px; }
+    .side-step { font-size: 1.15rem; padding: 16px 20px 16px 16px; }
+    .side-step .num { width: 36px; height: 36px; font-size: 1rem; }
+    .side-safe { font-size: 1rem; max-width: 360px; }
+    .lms-main { padding: 64px 72px 56px; }
+    .lms-title { font-size: 2.6rem; }
+    .lms-sub { font-size: 1.2rem; }
+    .lms-body { margin-top: 40px; }
+    .lms-btn { min-height: 88px; padding: 20px 24px 20px 28px; border-radius: 24px; }
+    .lms-btn .name { font-size: 1.4rem; }
+    .lms-btn small { font-size: 1.02rem; }
+    .lms-btn .go { width: 40px; height: 40px; }
+    .lms-legal, .lms-missing { font-size: 1.05rem; }
+    .school-input { height: 68px; font-size: 1.2rem; }
+    .school-option .o-name { font-size: 1.12rem; }
+    .school-option .o-domain { font-size: 0.98rem; }
+    .school-hint, .age-note { font-size: 1.02rem; }
+    .pick-name { font-size: 1rem; }
+    .pick-domain { font-size: 1.25rem; }
+    .age-check { font-size: 1.2rem; }
+    .lms-sso { min-height: 68px; font-size: 1.3rem; }
+    .ro-card p { font-size: 1.1rem; }
+    .ro-card .ro { font-size: 1.15rem; }
+    .signin-foot { font-size: 0.95rem; }
   }
-  @media (max-width: 680px) {
-    body { padding: 16px; }
-    .lms-card { border-radius: 28px; }
-    .lms-band { padding: 18px 24px 16px; min-height: 0; }
-    .lms-band.big .lms-title { font-size: 1.5rem; }
-    .lms-sheet { padding: 22px 20px 26px; min-height: 0; }
-    .lms-choices { grid-template-columns: 1fr; }
-    .school-grid { grid-template-columns: 1fr; gap: 18px; }
-    .school-pick { padding-top: 4px; }
-    .lms-missing { margin-top: 22px; }
+  /* Tablets and phones: one column, the logo on top, no steps. */
+  @media (max-width: 860px) {
+    .lms-card { grid-template-columns: 1fr; max-width: 600px; min-height: 0; border-radius: 28px; }
+    .lms-side { display: none; }
+    .lms-mobile-brand { display: flex; align-items: center; gap: 12px; margin: 0 0 24px; }
+    .lms-mobile-brand .lms-logo { width: 40px; height: 40px; }
+    .lms-mobile-brand .lms-brand-name { font-size: 1.15rem; }
+    .lms-main { padding: 32px 32px 32px; }
+    .lms-legal, .lms-missing { margin-top: 0; }
+  }
+  @media (max-width: 520px) {
+    body { padding: 12px; }
+    .lms-card { border-radius: 24px; }
+    .lms-main { padding: 24px 20px 24px; }
+    .lms-mobile-brand { margin-bottom: 20px; }
+    .lms-title { font-size: 1.7rem; }
+    .lms-sub { font-size: 0.98rem; }
+    .lms-body { margin-top: 24px; }
+    .lms-btn { min-height: 68px; padding: 12px 16px 12px 20px; border-radius: 18px; }
+    .lms-btn .name { font-size: 1.1rem; }
+    .lms-btn small { font-size: 0.86rem; }
+    .lms-legal { padding-top: 24px; font-size: 0.86rem; }
+    .school-input { height: 56px; font-size: 1rem; }
+    .school-pick { padding: 12px 16px; }
+    .lms-sso { min-height: 56px; font-size: 1.08rem; }
+    .lms-missing { font-size: 0.9rem; }
+    .lms-link-btn { width: 100%; }
+    .tpl-modal { padding: 24px 20px; border-radius: 24px; }
   }
 </style>
 </head>
 <body>
   <div class="scroll-frame">
   <div class="page">
-    <main class="lms-card">
+    <main class="lms-card" id="lmsCard" data-step="choose">
 
-      <!-- 1. Select your platform -->
-      <section class="screen" id="screenChoose" aria-labelledby="chooseTitle">
-        <header class="lms-band">
-          <svg class="lms-logo" aria-hidden="true" focusable="false" viewBox="-8 -8 470 470"><defs><linearGradient id="lmsLogoGrad" x1="0" y1="0" x2="0" y2="454" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FF7A50"/><stop offset="1" stop-color="#E5484D"/></linearGradient></defs><path fill="url(#lmsLogoGrad)" fill-rule="evenodd" d="M0.02 452.75C0.15 442.97 5.78 407.10 10.02 389.00C11.63 382.12 15.00 367.50 17.51 356.50C28.03 310.27 40.89 265.53 58.60 213.50C77.33 158.47 85.57 136.89 103.25 96.50C118.88 60.79 129.55 39.21 141.04 20.00C144.17 14.78 147.92 8.14 149.38 5.25L152.03 0.00L226.00 0.00L299.97 0.00L302.62 5.25C304.08 8.14 307.83 14.78 310.96 20.00C322.28 38.92 336.94 68.63 348.06 95.18C350.75 101.61 354.55 110.26 356.49 114.41C367.49 137.90 397.74 222.92 410.96 267.50C419.09 294.91 429.04 332.52 434.49 356.50C437.00 367.50 440.37 382.12 441.98 389.00C446.22 407.10 451.85 442.97 451.98 452.75C452.00 453.74 436.27 454.00 376.64 454.00L301.28 454.00L299.60 442.75C296.88 424.51 291.11 392.27 288.63 381.50L286.34 371.50L223.34 371.24L160.34 370.99L158.19 380.33C155.44 392.33 149.65 424.19 147.53 439.00C146.63 445.32 145.66 451.29 145.38 452.25C144.90 453.90 140.55 454.00 72.43 454.00C15.14 454.00 0.00 453.74 0.02 452.75ZM184.00 348.25C189.69 345.41 191.44 335.66 187.41 329.29C184.35 324.47 172.42 324.01 167.19 328.51C164.78 330.58 164.50 331.51 164.50 337.31C164.50 344.14 166.09 347.25 170.50 349.05C173.93 350.46 180.35 350.07 184.00 348.25ZM274.28 347.02C284.17 342.33 288.64 332.80 287.74 318.33C286.79 303.07 279.66 295.00 265.16 292.75C256.25 291.37 245.93 293.01 240.22 296.71C232.38 301.79 228.36 311.77 229.23 323.96C230.09 335.93 235.58 344.50 244.50 347.78C249.77 349.72 251.32 349.90 260.50 349.59C267.31 349.35 270.66 348.73 274.28 347.02ZM220.00 325.25L220.00 301.50L209.50 301.50L199.00 301.50L199.00 325.25L199.00 349.00L209.50 349.00L220.00 349.00L220.00 325.25ZM252.40 330.90C250.89 329.22 250.50 327.26 250.50 321.31C250.50 314.35 250.70 313.66 253.31 311.41C256.89 308.33 260.44 308.35 263.55 311.45C265.70 313.61 266.00 314.79 266.00 321.23C266.00 330.70 264.56 333.00 258.60 333.00C255.51 333.00 253.78 332.41 252.40 330.90ZM218.38 292.67C221.03 290.93 222.25 286.49 221.33 281.90C220.47 277.58 215.94 275.01 209.18 275.00C200.42 275.00 197.08 277.76 197.03 285.08C197.01 288.68 197.53 290.15 199.48 291.98C203.75 295.99 212.81 296.32 218.38 292.67ZM258.58 254.35C258.23 253.44 256.13 245.45 253.90 236.60C244.34 198.58 227.57 140.97 224.09 134.18L222.37 130.84L216.22 150.67C207.52 178.73 204.15 190.56 195.49 223.50C191.29 239.45 187.63 253.29 187.36 254.25C186.90 255.89 189.07 256.00 223.04 256.00C256.26 256.00 259.16 255.87 258.58 254.35Z"/></svg>
+      <aside class="lms-side" aria-label="Averages.io">
+        <div class="lms-brand"><svg class="lms-logo" aria-hidden="true" focusable="false" viewBox="-8 -8 470 470"><defs><linearGradient id="lmsLogoGrad" x1="0" y1="0" x2="0" y2="454" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FF7A50"/><stop offset="1" stop-color="#E5484D"/></linearGradient></defs><path fill="url(#lmsLogoGrad)" fill-rule="evenodd" d="M0.02 452.75C0.15 442.97 5.78 407.10 10.02 389.00C11.63 382.12 15.00 367.50 17.51 356.50C28.03 310.27 40.89 265.53 58.60 213.50C77.33 158.47 85.57 136.89 103.25 96.50C118.88 60.79 129.55 39.21 141.04 20.00C144.17 14.78 147.92 8.14 149.38 5.25L152.03 0.00L226.00 0.00L299.97 0.00L302.62 5.25C304.08 8.14 307.83 14.78 310.96 20.00C322.28 38.92 336.94 68.63 348.06 95.18C350.75 101.61 354.55 110.26 356.49 114.41C367.49 137.90 397.74 222.92 410.96 267.50C419.09 294.91 429.04 332.52 434.49 356.50C437.00 367.50 440.37 382.12 441.98 389.00C446.22 407.10 451.85 442.97 451.98 452.75C452.00 453.74 436.27 454.00 376.64 454.00L301.28 454.00L299.60 442.75C296.88 424.51 291.11 392.27 288.63 381.50L286.34 371.50L223.34 371.24L160.34 370.99L158.19 380.33C155.44 392.33 149.65 424.19 147.53 439.00C146.63 445.32 145.66 451.29 145.38 452.25C144.90 453.90 140.55 454.00 72.43 454.00C15.14 454.00 0.00 453.74 0.02 452.75ZM184.00 348.25C189.69 345.41 191.44 335.66 187.41 329.29C184.35 324.47 172.42 324.01 167.19 328.51C164.78 330.58 164.50 331.51 164.50 337.31C164.50 344.14 166.09 347.25 170.50 349.05C173.93 350.46 180.35 350.07 184.00 348.25ZM274.28 347.02C284.17 342.33 288.64 332.80 287.74 318.33C286.79 303.07 279.66 295.00 265.16 292.75C256.25 291.37 245.93 293.01 240.22 296.71C232.38 301.79 228.36 311.77 229.23 323.96C230.09 335.93 235.58 344.50 244.50 347.78C249.77 349.72 251.32 349.90 260.50 349.59C267.31 349.35 270.66 348.73 274.28 347.02ZM220.00 325.25L220.00 301.50L209.50 301.50L199.00 301.50L199.00 325.25L199.00 349.00L209.50 349.00L220.00 349.00L220.00 325.25ZM252.40 330.90C250.89 329.22 250.50 327.26 250.50 321.31C250.50 314.35 250.70 313.66 253.31 311.41C256.89 308.33 260.44 308.35 263.55 311.45C265.70 313.61 266.00 314.79 266.00 321.23C266.00 330.70 264.56 333.00 258.60 333.00C255.51 333.00 253.78 332.41 252.40 330.90ZM218.38 292.67C221.03 290.93 222.25 286.49 221.33 281.90C220.47 277.58 215.94 275.01 209.18 275.00C200.42 275.00 197.08 277.76 197.03 285.08C197.01 288.68 197.53 290.15 199.48 291.98C203.75 295.99 212.81 296.32 218.38 292.67ZM258.58 254.35C258.23 253.44 256.13 245.45 253.90 236.60C244.34 198.58 227.57 140.97 224.09 134.18L222.37 130.84L216.22 150.67C207.52 178.73 204.15 190.56 195.49 223.50C191.29 239.45 187.63 253.29 187.36 254.25C186.90 255.89 189.07 256.00 223.04 256.00C256.26 256.00 259.16 255.87 258.58 254.35Z"/></svg><span class="lms-brand-name">Averages.io</span></div>
+        <p class="side-lede">Your classes, grades and assignments in one place.</p>
+        <ol class="side-steps" aria-label="Steps">
+          <li class="side-step" data-side-step="platform"><span class="num"><span class="n">1</span><svg class="check" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7.5l3.2 3L12 3.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="butt" stroke-linejoin="miter"/></svg></span>Pick your platform</li>
+          <li class="side-step" data-side-step="school"><span class="num"><span class="n">2</span><svg class="check" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7.5l3.2 3L12 3.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="butt" stroke-linejoin="miter"/></svg></span>Find your school</li>
+          <li class="side-step" data-side-step="login"><span class="num"><span class="n" data-login-num>3</span><svg class="check" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7.5l3.2 3L12 3.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="butt" stroke-linejoin="miter"/></svg></span>Log in with your school account</li>
+        </ol>
+        <p class="side-safe">You log in on Schoology, Canvas or Google itself, so your password never goes to Averages.io.</p>
+      </aside>
+
+      <div class="lms-main">
+        <div class="lms-mobile-brand" aria-hidden="true"><svg class="lms-logo" aria-hidden="true" focusable="false" viewBox="-8 -8 470 470"><defs><linearGradient id="lmsLogoGrad2" x1="0" y1="0" x2="0" y2="454" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FF7A50"/><stop offset="1" stop-color="#E5484D"/></linearGradient></defs><path fill="url(#lmsLogoGrad2)" fill-rule="evenodd" d="M0.02 452.75C0.15 442.97 5.78 407.10 10.02 389.00C11.63 382.12 15.00 367.50 17.51 356.50C28.03 310.27 40.89 265.53 58.60 213.50C77.33 158.47 85.57 136.89 103.25 96.50C118.88 60.79 129.55 39.21 141.04 20.00C144.17 14.78 147.92 8.14 149.38 5.25L152.03 0.00L226.00 0.00L299.97 0.00L302.62 5.25C304.08 8.14 307.83 14.78 310.96 20.00C322.28 38.92 336.94 68.63 348.06 95.18C350.75 101.61 354.55 110.26 356.49 114.41C367.49 137.90 397.74 222.92 410.96 267.50C419.09 294.91 429.04 332.52 434.49 356.50C437.00 367.50 440.37 382.12 441.98 389.00C446.22 407.10 451.85 442.97 451.98 452.75C452.00 453.74 436.27 454.00 376.64 454.00L301.28 454.00L299.60 442.75C296.88 424.51 291.11 392.27 288.63 381.50L286.34 371.50L223.34 371.24L160.34 370.99L158.19 380.33C155.44 392.33 149.65 424.19 147.53 439.00C146.63 445.32 145.66 451.29 145.38 452.25C144.90 453.90 140.55 454.00 72.43 454.00C15.14 454.00 0.00 453.74 0.02 452.75ZM184.00 348.25C189.69 345.41 191.44 335.66 187.41 329.29C184.35 324.47 172.42 324.01 167.19 328.51C164.78 330.58 164.50 331.51 164.50 337.31C164.50 344.14 166.09 347.25 170.50 349.05C173.93 350.46 180.35 350.07 184.00 348.25ZM274.28 347.02C284.17 342.33 288.64 332.80 287.74 318.33C286.79 303.07 279.66 295.00 265.16 292.75C256.25 291.37 245.93 293.01 240.22 296.71C232.38 301.79 228.36 311.77 229.23 323.96C230.09 335.93 235.58 344.50 244.50 347.78C249.77 349.72 251.32 349.90 260.50 349.59C267.31 349.35 270.66 348.73 274.28 347.02ZM220.00 325.25L220.00 301.50L209.50 301.50L199.00 301.50L199.00 325.25L199.00 349.00L209.50 349.00L220.00 349.00L220.00 325.25ZM252.40 330.90C250.89 329.22 250.50 327.26 250.50 321.31C250.50 314.35 250.70 313.66 253.31 311.41C256.89 308.33 260.44 308.35 263.55 311.45C265.70 313.61 266.00 314.79 266.00 321.23C266.00 330.70 264.56 333.00 258.60 333.00C255.51 333.00 253.78 332.41 252.40 330.90ZM218.38 292.67C221.03 290.93 222.25 286.49 221.33 281.90C220.47 277.58 215.94 275.01 209.18 275.00C200.42 275.00 197.08 277.76 197.03 285.08C197.01 288.68 197.53 290.15 199.48 291.98C203.75 295.99 212.81 296.32 218.38 292.67ZM258.58 254.35C258.23 253.44 256.13 245.45 253.90 236.60C244.34 198.58 227.57 140.97 224.09 134.18L222.37 130.84L216.22 150.67C207.52 178.73 204.15 190.56 195.49 223.50C191.29 239.45 187.63 253.29 187.36 254.25C186.90 255.89 189.07 256.00 223.04 256.00C256.26 256.00 259.16 255.87 258.58 254.35Z"/></svg><span class="lms-brand-name">Averages.io</span></div>
+
+        <!-- 1. Select your platform -->
+        <section class="screen" id="screenChoose" aria-labelledby="chooseTitle">
           <h1 class="lms-title" id="chooseTitle" tabindex="-1">Welcome back</h1>
-        </header>
-        <div class="lms-sheet">
-          <h2 class="lms-prompt">Select your platform</h2>
-          <div class="lms-choices">
-            <button class="lms-btn" type="button" data-lms="schoology">Schoology</button>
-            <button class="lms-btn" type="button" data-lms="canvas">Canvas</button>
-            <button class="lms-btn" type="button" data-lms="google" aria-label="Google Classroom, read only">Google Classroom<small>(read only)</small></button>
+          <p class="lms-sub">Select your platform to log in.</p>
+          <div class="lms-body">
+            <h2 class="sr-only">Select your platform</h2>
+            <div class="lms-choices">
+              <button class="lms-btn" type="button" data-lms="schoology"><span class="t"><span class="name">Schoology</span><small>Log in with your school</small></span><span class="go" aria-hidden="true"><svg viewBox="0 0 10 12"><path d="M1 0l9 6-9 6z" fill="currentColor"/></svg></span></button>
+              <button class="lms-btn" type="button" data-lms="canvas"><span class="t"><span class="name">Canvas</span><small>Log in with your school</small></span><span class="go" aria-hidden="true"><svg viewBox="0 0 10 12"><path d="M1 0l9 6-9 6z" fill="currentColor"/></svg></span></button>
+              <button class="lms-btn" type="button" data-lms="google" aria-label="Google Classroom, read only"><span class="t"><span class="name">Google Classroom</span><small>Read only</small></span><span class="go" aria-hidden="true"><svg viewBox="0 0 10 12"><path d="M1 0l9 6-9 6z" fill="currentColor"/></svg></span></button>
+            </div>
           </div>
           <p class="lms-legal">By selecting a platform login you agree to the <a href="https://averages.io/terms" target="_blank" rel="noopener">Terms of Use</a> and <a href="https://averages.io/privacy-policy" target="_blank" rel="noopener">Privacy Policy</a>.</p>
           <section class="dev-keys" id="devKeys" aria-label="Sign in with an API key" hidden>
@@ -737,53 +840,57 @@
       </div>
 
       </section>
-        </div>
-      </section>
+        </section>
 
-      <!-- 2. Schoology / Canvas: find your school -->
-      <section class="screen" id="screenSchool" aria-labelledby="schoolTitle" hidden>
-        <header class="lms-band big">
-          <button class="lms-back" type="button" data-back><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>back</button>
+        <!-- 2. Schoology / Canvas: find your school -->
+        <section class="screen" id="screenSchool" aria-labelledby="schoolTitle" hidden>
+          <button class="lms-back" type="button" data-back><svg viewBox="0 0 10 12" aria-hidden="true"><path d="M9 0L0 6l9 6z" fill="currentColor"/></svg>Back</button>
           <h1 class="lms-title" id="schoolTitle" tabindex="-1">Schoology Log In</h1>
-        </header>
-        <div class="lms-sheet">
-          <div class="school-grid">
+          <p class="lms-sub">Find your school, then log in on its own sign-in page.</p>
+          <div class="lms-body">
             <div class="school-search">
-              <label class="sr-only" for="schoolSearch">Search for your school or district</label>
-              <input class="school-input" id="schoolSearch" type="search" placeholder="Search for your school/district" autocomplete="off" spellcheck="false"
-                     role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="schoolResults">
+              <label class="school-label" for="schoolSearch">Search for your school/district</label>
+              <div class="school-field">
+                <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="8.5" cy="8.5" r="6" stroke="currentColor" stroke-width="1.9"/><path d="M13 13l5 5" stroke="currentColor" stroke-width="1.9" stroke-linecap="butt"/></svg>
+                <input class="school-input" id="schoolSearch" type="search" placeholder="Search for your school/district" autocomplete="off" spellcheck="false"
+                       role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="schoolResults">
+              </div>
               <ul class="school-results" id="schoolResults" role="listbox" aria-label="Schools"></ul>
               <p class="school-hint" id="schoolHint" role="status"></p>
             </div>
             <div class="school-pick empty" id="schoolPick">
-              <p class="pick-name" id="pickName">Pick your school</p>
-              <p class="pick-domain" id="pickDomain">Search for it to get started.</p>
+              <span class="pin" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none"><path d="M2.5 8.5L10 3.5l7.5 5M4.5 8v8.5h11V8M8.5 16.5v-4h3v4" stroke="currentColor" stroke-width="1.75" stroke-linecap="butt" stroke-linejoin="miter"/></svg></span>
+              <span class="t"><span class="pick-name" id="pickName">Pick your school</span><span class="pick-domain" id="pickDomain">Search for it to get started.</span></span>
+            </div>
+            <div class="lms-finish">
               <div class="age-row"><label class="age-check"><input type="checkbox" data-age> I am 13+</label><button class="age-why" type="button" aria-expanded="false" data-age-why>Why?</button></div>
               <p class="age-note" data-age-note hidden>If you're under 13, Averages.io runs in Incognito mode: nothing about you is stored on our servers, and Sync, connected apps and notifications stay off.</p>
               <button class="lms-sso" id="ssoBtn" type="button" disabled>Log in with Schoology</button>
               <p class="signin-note" id="schoolNote" role="status" hidden></p>
             </div>
           </div>
-          <p class="lms-missing" id="canvasMissing" hidden>If your school is not here, email your admin to get in touch with Averages.io<br><button type="button" id="emailTemplateBtn">Email Template</button></p>
-        </div>
-      </section>
+          <p class="lms-missing" id="canvasMissing" hidden><span>If your school is not here, email your admin to get in touch with Averages.io.</span><button class="lms-link-btn" type="button" id="emailTemplateBtn">Email Template</button></p>
+        </section>
 
-      <!-- 3. Google Classroom -->
-      <section class="screen" id="screenGoogle" aria-labelledby="googleTitle" hidden>
-        <header class="lms-band big">
-          <button class="lms-back" type="button" data-back><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>back</button>
+        <!-- 3. Google Classroom -->
+        <section class="screen" id="screenGoogle" aria-labelledby="googleTitle" hidden>
+          <button class="lms-back" type="button" data-back><svg viewBox="0 0 10 12" aria-hidden="true"><path d="M9 0L0 6l9 6z" fill="currentColor"/></svg>Back</button>
           <h1 class="lms-title" id="googleTitle" tabindex="-1">Google Classroom Log In</h1>
-        </header>
-        <div class="lms-sheet">
-          <div class="google-pane">
-            <p><span class="ro">Read only.</span> See your classes, grades and coursework here. You still turn in work on Google Classroom.</p>
-            <div class="age-row"><label class="age-check"><input type="checkbox" data-age> I am 13+</label><button class="age-why" type="button" aria-expanded="false" data-age-why>Why?</button></div>
-            <p class="age-note" data-age-note hidden>If you're under 13, Averages.io runs in Incognito mode: nothing about you is stored on our servers, and Sync, connected apps and notifications stay off.</p>
-            <button class="lms-sso google" id="googleBtn" type="button">Continue with Google</button>
-            <p class="signin-note" id="googleNote" role="status" hidden></p>
+          <p class="lms-sub">Log in with the Google account you use for school.</p>
+          <div class="lms-body google-pane">
+            <div class="ro-card">
+              <span class="pin" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none"><path d="M1.5 10S4.5 4.5 10 4.5 18.5 10 18.5 10 15.5 15.5 10 15.5 1.5 10 1.5 10z" stroke="currentColor" stroke-width="1.75" stroke-linejoin="miter"/><circle cx="10" cy="10" r="2.6" stroke="currentColor" stroke-width="1.75"/></svg></span>
+              <p><span class="ro">Read only</span>See your classes, grades and coursework here. You still turn in work on Google Classroom.</p>
+            </div>
+            <div class="lms-finish">
+              <div class="age-row"><label class="age-check"><input type="checkbox" data-age> I am 13+</label><button class="age-why" type="button" aria-expanded="false" data-age-why>Why?</button></div>
+              <p class="age-note" data-age-note hidden>If you're under 13, Averages.io runs in Incognito mode: nothing about you is stored on our servers, and Sync, connected apps and notifications stay off.</p>
+              <button class="lms-sso google" id="googleBtn" type="button">Continue with Google</button>
+              <p class="signin-note" id="googleNote" role="status" hidden></p>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </div>
     </main>
     <p class="signin-foot">Beta 0.1.1a · <a href="https://github.com/averages-io/averages.io/issues" target="_blank" rel="noopener">Report a bug on GitHub</a></p>
   </div>
@@ -934,11 +1041,28 @@
       const id = SCREENS[route] || SCREENS.choose;
       Object.values(SCREENS).forEach(s => { document.getElementById(s).hidden = s !== id; });
       if (route === 'schoology' || route === 'canvas') setupSchool(route);
+      currentRoute = SCREENS[route] ? route : 'choose';
+      updateSteps();
       if (focus) {
         const target = route === 'schoology' || route === 'canvas' ? document.getElementById('schoolSearch')
           : document.querySelector('#' + id + ' .lms-title');
         target && target.focus({ preventScroll: true });
       }
+    }
+    // Side steps (computers): Platform, School, Log in. Google has no School step.
+    let currentRoute = 'choose';
+    function updateSteps() {
+      const isSchool = currentRoute === 'schoology' || currentRoute === 'canvas';
+      const state = {
+        platform: currentRoute === 'choose' ? 'current' : 'done',
+        school: currentRoute === 'google' ? 'skip' : isSchool ? (picked ? 'done' : 'current') : '',
+        login: currentRoute === 'google' || (isSchool && picked) ? 'current' : '',
+      };
+      document.querySelectorAll('[data-side-step]').forEach(li => {
+        li.className = 'side-step' + (state[li.dataset.sideStep] ? ' ' + state[li.dataset.sideStep] : '');
+        if (state[li.dataset.sideStep] === 'current') li.setAttribute('aria-current', 'step'); else li.removeAttribute('aria-current');
+      });
+      document.querySelector('[data-login-num]').textContent = currentRoute === 'google' ? '2' : '3';
     }
     function routeFromHash() { const h = location.hash.replace('#', ''); return SCREENS[h] ? h : 'choose'; }
     window.addEventListener('hashchange', () => show(routeFromHash(), true));
@@ -1042,8 +1166,14 @@
       pickEl.setAttribute('aria-label', school ? `Signing in to ${school.domain}` : 'No school picked yet');
       pickDomain.textContent = school ? school.domain : 'Search for it to get started.';
       ssoBtn.disabled = !school;
+      if (typeof updateSteps === 'function') updateSteps();
       schoolNote.hidden = true;
       if (school && remember) {
+        resultsEl.innerHTML = '';
+        options = []; active = -1;
+        hintEl.textContent = '';
+        searchInput.setAttribute('aria-expanded', 'false');
+        searchInput.removeAttribute('aria-activedescendant');
         const all = readJSON(SCHOOL_KEY) || {};
         all[lms] = { name: school.custom ? 'Your school' : school.name, domain: school.domain };
         writeJSON(SCHOOL_KEY, all);
@@ -1051,6 +1181,7 @@
       resultsEl.querySelectorAll('.school-option').forEach((el, i) => el.setAttribute('aria-selected', school && options[i] && options[i].domain === school.domain ? 'true' : 'false'));
     }
     searchInput.addEventListener('input', renderResults);
+    searchInput.addEventListener('focus', () => { if (!options.length) renderResults(); });
     searchInput.addEventListener('keydown', e => {
       if (e.key === 'ArrowDown') { e.preventDefault(); moveActive(1); }
       else if (e.key === 'ArrowUp') { e.preventDefault(); moveActive(-1); }
