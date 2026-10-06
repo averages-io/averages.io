@@ -177,6 +177,7 @@ expect("Live-data hooks", wiring.liveData, [
   "course-home/page.tsx",
   "course-materials/page.tsx",
   "courses/page.tsx",
+  "files/page.tsx",
   "gradebook/page.tsx",
   "grades/page.tsx",
   "home/page.tsx",

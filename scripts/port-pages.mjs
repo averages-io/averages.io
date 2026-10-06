@@ -43,7 +43,12 @@ const ROUTES = {
   contacts: "contacts",
   files: "files",
   settings: "settings",
+  // School application (2026-10-06): public, for a school's IT team.
+  "schools-apply": "schools/apply",
 };
+
+/** Pages anyone can open without signing in (2026-10-06). They also keep their own fixed look. */
+const PUBLIC_PAGES = new Set(["login", "schools-apply"]);
 
 /**
  * Sample-data constants that live data can override.
@@ -64,6 +69,8 @@ const OVERRIDABLE = [
   "CONVERSATIONS",
   "TEACHERS",
   "CONTACTS",
+  // The calendar's events (2026-10-06): the events extra, see app/lib/extras.ts.
+  "EVENTS",
 ];
 
 /** A page's own name for a bundle field: home.html's sample classes are RAW_COURSES. */
@@ -239,7 +246,7 @@ function wireDataOverrides(script, file) {
  *                      Drive files and Canva designs (2026-10-04)
  * Anything NOT listed here must have overridable data, or the build fails.
  */
-const NO_DATA_PAGES = new Set(["login", "onboarding", "settings", "files"]);
+const NO_DATA_PAGES = new Set(["login", "onboarding", "settings", "files", "schools-apply"]);
 
 /**
  * Replaces login's simulated credential check with the real one.
@@ -388,7 +395,9 @@ const EXTERNAL_SCRIPTS = {
 function generatePage(name, route, data) {
   const isLogin = name === "login";
   const outDir = route === "" ? APP_DIR : path.join(APP_DIR, route);
-  const importPath = route === "" ? "./components/LegacyPage" : "../components/LegacyPage";
+  // Relative to the page's own folder, so nested routes ("schools/apply") work too.
+  let importPath = path.relative(outDir, path.join(APP_DIR, "components/LegacyPage")).split(path.sep).join("/");
+  if (!importPath.startsWith(".")) importPath = "./" + importPath;
 
   fs.mkdirSync(outDir, { recursive: true });
 
@@ -478,8 +487,8 @@ export default function Page() {${loginEffect}
       styleCss={STYLE_CSS}
       bodyHtml={BODY_HTML}
       scriptJs={SCRIPT_JS}
-      requiresAuth={${!isLogin}}
-      usesSavedTheme={${!isLogin}}
+      requiresAuth={${!PUBLIC_PAGES.has(name)}}
+      usesSavedTheme={${!PUBLIC_PAGES.has(name)}}
       hasUploads={${UPLOAD_PAGES.has(name)}}
       externalScripts={${JSON.stringify(EXTERNAL_SCRIPTS[name] || [])}}
       pageId={${JSON.stringify(name)}}
