@@ -462,7 +462,8 @@
     return id;
   }
 
-  const DRIVE_FIELDS = 'id,name,mimeType,webViewLink,modifiedTime';
+  // size (2026-10-06): the Files page adds up its files' sizes. Google Docs, Sheets and Slides have none.
+  const DRIVE_FIELDS = 'id,name,mimeType,webViewLink,modifiedTime,size';
 
   /** Uploads into the Averages.io folder. `convertTo` turns an Office file into a Google Doc/Slides/Sheet. */
   async function googleUpload(token, file) {
