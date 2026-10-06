@@ -20,6 +20,15 @@
  * before it renders anything.
  */
 
+import {
+  EXTRAS_CACHE_MS,
+  EXTRAS_PREFIX,
+  EXTRAS_WAIT_MS,
+  extrasFor,
+  type ExtraName,
+  type ExtraRequest,
+} from "./extras";
+
 export type Mode = "live" | "demo" | "out";
 
 /** Short-lived cache of the API's answer, so navigating doesn't re-ask every time. */
@@ -58,6 +67,33 @@ function cacheClear(key: string): void {
   }
 }
 
+/**
+ * Drops every page extra (people, updates, events...) cached in this tab.
+ * Called wherever the bundle cache is dropped (2026-10-06): they're the same
+ * student's data and go stale together.
+ */
+/**
+ * Bumped by clearExtras(). An extra that's still in flight when the student
+ * signs out (it ran past the 4 s wait) lands after the wipe; it's only cached
+ * if this hasn't moved since it started (2026-10-06 review).
+ */
+let extrasGeneration = 0;
+
+export function clearExtras(): void {
+  extrasGeneration++;
+  try {
+    const store = window.sessionStorage;
+    const keys: string[] = [];
+    for (let i = 0; i < store.length; i++) {
+      const key = store.key(i);
+      if (key && key.startsWith(EXTRAS_PREFIX)) keys.push(key);
+    }
+    keys.forEach((key) => store.removeItem(key));
+  } catch {
+    /* storage blocked: nothing was cached either */
+  }
+}
+
 export interface SessionState {
   mode: Mode;
   name?: string;
@@ -65,6 +101,11 @@ export interface SessionState {
   incognito?: boolean;
   /** Which sign-in this is: Schoology, or Google (for Google Classroom, 2026-10-05). */
   provider?: "schoology" | "google";
+  /**
+   * The account id (2026-10-06). Page extras are cached under it, so one
+   * student's cached teachers or events are never shown to another.
+   */
+  uid?: string;
 }
 
 /**
@@ -98,6 +139,7 @@ export async function getSession(): Promise<SessionState> {
         name: data?.name,
         incognito: data?.incognito === true,
         provider: data?.provider === "google" ? "google" : "schoology",
+        uid: data?.uid != null ? String(data.uid) : undefined,
       };
       if (!data?.demo && data?.uid != null) claimCloudConnections(String(data.uid));
     }
@@ -149,6 +191,7 @@ export function forgetSession(): void {
   cacheClear(SESSION_CACHE);
   cacheClear(BUNDLE_CACHE);
   cacheClear(FILES_CACHE);
+  clearExtras();
 }
 
 export async function signIn(key: string, secret: string): Promise<SignInResult> {
@@ -169,6 +212,7 @@ export async function signIn(key: string, secret: string): Promise<SignInResult>
     cacheClear(SESSION_CACHE);
     cacheClear(BUNDLE_CACHE);
     cacheClear(FILES_CACHE);
+    clearExtras();
     return { ok: true, demo: !!data?.demo };
   } catch {
     return { ok: false, error: "network_error" };
@@ -192,6 +236,8 @@ export function clearCloudConnections(): void {
   try {
     window.localStorage.removeItem("averages_cloud_accounts");
     window.localStorage.removeItem("averages_drive_drafts");
+    // Files picked from OneDrive (names and ids) for Add from OneDrive (2026-10-06).
+    window.localStorage.removeItem("averages_onedrive_picked");
     window.localStorage.removeItem(CLOUD_OWNER_KEY);
   } catch {
     /* same */
@@ -214,11 +260,51 @@ function claimCloudConnections(uid: string): void {
   }
 }
 
+/** Browser notifications' notes on this device (public/js/averages-push.js). */
+const PUSH_KEYS = ["averages_push_endpoint", "averages_push_touched", "averages_push_pending_delete"];
+
+/**
+ * Sign-out stops browser notifications on this device (2026-10-06). The API
+ * deletes the stored sign-in itself when DELETE /auth/session lands; this
+ * unsubscribes the browser and forgets it was on, so the next person on a
+ * shared Chromebook doesn't get this student's notifications.
+ *
+ * averages-push.js has forgetLocal() for exactly this, but it's only loaded
+ * on some pages; without it, the same steps inline. Never throws, and never
+ * makes sign-out wait more than its own 3 seconds.
+ */
+function forgetPushOnThisDevice(): Promise<void> {
+  // The notes go first and synchronously: they're what the next page load
+  // reads, and navigating away can cut the async part off.
+  try {
+    PUSH_KEYS.forEach((key) => window.localStorage.removeItem(key));
+  } catch {
+    /* storage blocked: nothing was saved there either */
+  }
+  return (async () => {
+    try {
+      const push = (window as unknown as { AveragesPush?: { forgetLocal?: () => Promise<unknown> } }).AveragesPush;
+      if (push && typeof push.forgetLocal === "function") {
+        await push.forgetLocal();
+        return;
+      }
+      if (!("serviceWorker" in navigator)) return;
+      const registration = await navigator.serviceWorker.getRegistration("/");
+      const subscription = registration ? await registration.pushManager.getSubscription() : null;
+      if (subscription) await subscription.unsubscribe();
+    } catch {
+      /* best effort: the API has already stopped sending to it */
+    }
+  })();
+}
+
 export async function signOut(): Promise<void> {
   cacheClear(SESSION_CACHE);
   cacheClear(BUNDLE_CACHE);
   cacheClear(FILES_CACHE);
+  clearExtras();
   clearCloudConnections();
+  const pushForgotten = forgetPushOnThisDevice();
   // The DELETE below is what actually clears the httpOnly session cookie —
   // the API responds with a Set-Cookie that expires it; nothing on this side
   // can touch that cookie directly (that's the point of httpOnly). It has to
@@ -244,7 +330,7 @@ export async function signOut(): Promise<void> {
     /* the cookie expires on its own in 30 days either way */
   });
   await Promise.race([
-    deleteRequest,
+    Promise.all([deleteRequest, pushForgotten]),
     new Promise((resolve) => setTimeout(resolve, 3000)),
   ]);
 }
@@ -309,4 +395,115 @@ export async function loadBundle(): Promise<Bundle | null | "signed_out"> {
 
 export function invalidateBundle(): void {
   cacheClear(BUNDLE_CACHE);
+  clearExtras();
+}
+
+/**
+ * Drops expired extras (2026-10-06 review). Event keys carry their date
+ * window, so yesterday's never get read again; without this a tab left open
+ * for weeks would fill sessionStorage and every later save would fail.
+ */
+function sweepExtras(): void {
+  try {
+    const store = window.sessionStorage;
+    const stale: string[] = [];
+    for (let i = 0; i < store.length; i++) {
+      const key = store.key(i);
+      if (!key || !key.startsWith(EXTRAS_PREFIX)) continue;
+      let at = 0;
+      try {
+        at = Number(JSON.parse(store.getItem(key) || "{}").at) || 0;
+      } catch {
+        /* unreadable: stale */
+      }
+      if (!(Date.now() - at < EXTRAS_CACHE_MS && at <= Date.now())) stale.push(key);
+    }
+    stale.forEach((key) => store.removeItem(key));
+  } catch {
+    /* storage blocked: nothing to sweep */
+  }
+}
+
+export interface ExtrasResult {
+  /** The calls this page made (or found cached). */
+  requests: ExtraRequest[];
+  /**
+   * Answers by extra, filled in as each one lands. loadExtras() resolves at
+   * the 4 s mark at the latest; anything that lands after that but before
+   * the bundle does is still here when LegacyPage merges, and anything later
+   * still fills the cache for the next page.
+   */
+  answers: Partial<Record<ExtraName, unknown>>;
+  /** An extra got a 401: the session died, same as loadBundle's "signed_out". */
+  signedOut: boolean;
+}
+
+/**
+ * Loads one page's extras (2026-10-06; which ones: EXTRAS_BY_PAGE in
+ * ./extras.ts). Live sessions only: demo pages run on sample data and the
+ * API answers these with 403 there anyway.
+ *
+ *   - All in parallel, each cached in sessionStorage for 5 minutes under a
+ *     key starting "averages_extras_", tagged with the student (`who`): a
+ *     cached answer from another account is ignored.
+ *   - Waits at most EXTRAS_WAIT_MS (4 s). A slow extra doesn't hold the page:
+ *     it renders without that one (its signed-in empty state), and the call
+ *     keeps going and fills the cache, so the next page has it.
+ *   - A failed call (network, 5xx, 403, 404) is simply absent. Never cached.
+ */
+export async function loadExtras(pageId: string, search: string, who = ""): Promise<ExtrasResult> {
+  sweepExtras();
+  const generation = extrasGeneration;
+  const requests = extrasFor(pageId, search, new Date());
+  const result: ExtrasResult = { requests, answers: {}, signedOut: false };
+  const pending: Promise<void>[] = [];
+
+  for (const req of requests) {
+    const cached = cacheGet(req.cacheKey);
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached);
+        const fresh = Date.now() - parsed.at < EXTRAS_CACHE_MS && parsed.at <= Date.now();
+        if (fresh && parsed.who === who && "data" in parsed) {
+          result.answers[req.name] = parsed.data;
+          continue;
+        }
+      } catch {
+        /* unreadable: ask again */
+      }
+      cacheClear(req.cacheKey);
+    }
+
+    pending.push(
+      (async () => {
+        try {
+          const response = await fetch(`${API_BASE}${req.path}`, { credentials: "include" });
+          if (response.status === 401) {
+            cacheClear(SESSION_CACHE);
+            result.signedOut = true;
+            return;
+          }
+          if (!response.ok) return;
+          const data = await response.json();
+          // Signed out (or in as someone else) while this was in flight: don't cache it.
+          if (generation === extrasGeneration) cacheSet(req.cacheKey, JSON.stringify({ at: Date.now(), who, data }));
+          result.answers[req.name] = data;
+        } catch {
+          /* network or JSON error: this extra is just absent */
+        }
+      })()
+    );
+  }
+
+  if (pending.length) {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    await Promise.race([
+      Promise.all(pending),
+      new Promise<void>((resolve) => {
+        timer = setTimeout(resolve, EXTRAS_WAIT_MS);
+      }),
+    ]);
+    if (timer !== undefined) clearTimeout(timer);
+  }
+  return result;
 }

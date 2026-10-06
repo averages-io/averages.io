@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { clearCloudConnections, getSession, loadBundle, signOut, type Mode } from "../lib/averages";
+import { clearCloudConnections, getSession, loadBundle, loadExtras, signOut, type Mode } from "../lib/averages";
+import { mergeExtras } from "../lib/extras";
 import { installNsfwGlobal, preloadNsfwModel } from "../lib/nsfw";
 import { SKELETON_CSS, skeletonHtml, revealContent } from "./PageSkeleton";
 import { THEME_BOOT_JS } from "../lib/theme-boot";
@@ -17,6 +18,42 @@ import { THEME_BOOT_JS } from "../lib/theme-boot";
  */
 function reapplyStoredTheme(): void {
   (window as unknown as { __averagesApplyTheme?: () => void }).__averagesApplyTheme?.();
+}
+
+/**
+ * Keeps browser notifications' stored sign-in in step with this session
+ * (2026-10-06). public/js/averages-push.js does the work, at most once a day
+ * (touchIfDue); this only loads it when this device has notifications on, or
+ * a turn-off the API hasn't heard about yet. Loaded on demand rather than on
+ * every page: most students never turn notifications on.
+ */
+const PUSH_SCRIPT = "/js/averages-push.js";
+type PushApi = { touchIfDue?: () => Promise<unknown> };
+
+function touchPushIfOn(): void {
+  try {
+    const store = window.localStorage;
+    if (!store.getItem("averages_push_endpoint") && !store.getItem("averages_push_pending_delete")) return;
+  } catch {
+    return;
+  }
+  const run = () => {
+    const push = (window as unknown as { AveragesPush?: PushApi }).AveragesPush;
+    // touchIfDue never rejects, but a script error must not surface here.
+    push?.touchIfDue?.().catch(() => {});
+  };
+  if ((window as unknown as { AveragesPush?: PushApi }).AveragesPush) {
+    run();
+    return;
+  }
+  let script = document.querySelector<HTMLScriptElement>(`script[src="${PUSH_SCRIPT}"]`);
+  if (!script) {
+    script = document.createElement("script");
+    script.src = PUSH_SCRIPT;
+    script.async = true;
+    document.head.appendChild(script);
+  }
+  script.addEventListener("load", run, { once: true });
 }
 
 /**
@@ -169,11 +206,20 @@ export default function LegacyPage({
       // Live mode returns the student's real data mapped into the shapes the
       // page renders; demo mode returns an empty bundle so each page falls
       // through to its own sample data.
-      const bundle = requiresAuth ? await loadBundle() : null;
+      //
+      // Page extras (2026-10-06): what this page shows beyond the bundle
+      // (teachers, updates, events...), asked for at the same time as the
+      // bundle, not after it. Live sessions only. loadExtras waits at most 4 s;
+      // see app/lib/extras.ts for which page gets what.
+      const wantsExtras = requiresAuth && session.mode === "live" && !!pageId;
+      const [bundle, extras] = await Promise.all([
+        requiresAuth ? loadBundle() : Promise.resolve(null),
+        wantsExtras ? loadExtras(pageId!, window.location.search, session.uid ?? "") : Promise.resolve(null),
+      ]);
       if (cancelled) return;
 
-      // The session died between the check above and the data request.
-      if (bundle === "signed_out") {
+      // The session died between the check above and the data requests.
+      if (bundle === "signed_out" || extras?.signedOut) {
         window.location.href = "/";
         return;
       }
@@ -190,7 +236,10 @@ export default function LegacyPage({
 
       (window as any).__AVERAGES__ = {
         mode: session.mode,
-        data: bundle ?? {},
+        // Extras land as fields of the same data object (EVENTS, CONTACTS,
+        // COURSE_UPDATES...), so a page reads them like any bundle field. One
+        // that failed or ran out of time is simply missing.
+        data: extras ? mergeExtras(bundle ?? {}, extras.requests, extras.answers) : bundle ?? {},
       };
       // Separate from __AVERAGES__ above on purpose: settings.html only
       // needs to know demo-vs-live to gate the sync toggles, not consume real
@@ -223,7 +272,16 @@ export default function LegacyPage({
     return () => {
       cancelled = true;
     };
-  }, [requiresAuth]);
+    // pageId is fixed for a route; listed so the extras follow it if it ever changes.
+  }, [requiresAuth, pageId]);
+
+  // Browser notifications: on a signed-in page, once it's on screen. Never
+  // in the way of the page: deferred, async, and silent on failure.
+  useEffect(() => {
+    if (phase !== "ready" || mode !== "live" || !requiresAuth) return;
+    const timer = window.setTimeout(touchPushIfOn, 1500);
+    return () => window.clearTimeout(timer);
+  }, [phase, mode, requiresAuth]);
 
   /**
    * Sign-out, wired once for the whole app.
