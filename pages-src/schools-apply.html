@@ -104,6 +104,23 @@
   /* Cloudflare Turnstile (2026-10-07): its own box, shown only when it's set up. */
   .ts-box { margin-top: 20px; min-height: 65px; }
   .ts-box[hidden] { display: none; }
+  /* Verify your email (2026-10-07): under the email field. */
+  .verify { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+  .verify[hidden], .verify-row[hidden], .verify-done[hidden] { display: none; }
+  .verify-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .verify-btn {
+    height: 44px; padding: 0 20px; border: 0; border-radius: 999px;
+    background: var(--blue); color: #ffffff; font: inherit; font-size: 0.95rem; font-weight: 800;
+    cursor: pointer; transition: filter 0.15s ease;
+  }
+  .verify-btn:hover:not([disabled]) { filter: brightness(1.15); }
+  .verify-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px #ffffff, 0 0 0 6px var(--blue); }
+  .verify-btn[disabled] { opacity: 0.6; cursor: progress; }
+  .field input.code-input { width: 168px; height: 44px; padding: 0 18px; text-align: center; letter-spacing: 0.22em; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .link-btn { border: 0; background: none; padding: 0; font: inherit; font-weight: 800; color: #0b2fb8; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+  .link-btn[disabled] { color: var(--sheet-muted); text-decoration: none; cursor: default; }
+  .verify-done { margin: 0 4px; display: flex; align-items: center; gap: 6px; font-size: 0.92rem; font-weight: 800; color: #1a7f50; }
+  .verify-done svg { width: 18px; height: 18px; flex: none; }
   @media (max-width: 680px) {
     body { padding: 16px; }
     .apply-card { border-radius: 28px; }
@@ -140,6 +157,18 @@
             <input id="fEmail" name="email" type="email" maxlength="254" autocomplete="email" spellcheck="false" placeholder="it@yourdistrict.org" required aria-describedby="hEmail eEmail">
             <p class="hint" id="hEmail">We'll write here when your school is approved.</p>
             <p class="err" id="eEmail" hidden></p>
+            <div class="verify" id="verifyBox" hidden>
+              <div class="verify-row" id="verifyAsk">
+                <button class="verify-btn" id="sendCodeBtn" type="button">Verify your email</button>
+              </div>
+              <div class="verify-row" id="verifyEnter" hidden>
+                <input class="code-input" id="fCode" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="7" placeholder="6-digit code" aria-label="Verification code" aria-describedby="hCode eCode">
+                <button class="verify-btn" id="checkCodeBtn" type="button">Verify</button>
+              </div>
+              <p class="hint" id="hCode" hidden></p>
+              <p class="verify-done" id="verifyDone" hidden><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><circle cx="10" cy="10" r="9" fill="currentColor"/><path d="M5.8 10.4l2.7 2.7 5.7-6" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Email verified</span></p>
+              <p class="err" id="eCode" role="alert" hidden></p>
+            </div>
           </div>
           <div class="field wide">
             <label for="fName">Your name <span class="opt">(optional)</span></label>
@@ -194,7 +223,7 @@
     const MESSAGES = {
       school: { missing: 'Add your school or district name.', too_long: 'Keep it under 120 characters.' },
       canvas: { missing: 'Add your Canvas address.', invalid: 'That doesn’t look like a web address. Try something like yourdistrict.instructure.com.' },
-      email: { missing: 'Add an email address.', invalid: 'That doesn’t look like an email address.' },
+      email: { missing: 'Add an email address.', invalid: 'That doesn’t look like an email address.', ending: 'Use your school or district email.' },
       name: { too_long: 'Keep it under 80 characters.' },
       note: { too_long: 'Keep it under 1000 characters.' },
     };
@@ -209,13 +238,40 @@
     }
     const EMAIL_RE = /^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]{1,64}@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*\.[A-Za-z]{2,24}$/;
 
+    // ---------- Allowed email endings (2026-10-07) ----------
+    // From the API (GET /config/apply, SCHOOLS_EMAIL_ENDINGS); the API checks
+    // again. The preview shows the default list.
+    let ENDINGS = [];
+    function endingsText() {
+      const list = ENDINGS.map(e => '.' + e);
+      return list.length < 2 ? list.join('') : list.slice(0, -1).join(', ') + ' or ' + list.at(-1);
+    }
+    function endingOk(email) {
+      if (!ENDINGS.length) return true;
+      const domain = email.slice(email.lastIndexOf('@') + 1).toLowerCase();
+      return ENDINGS.includes(domain.slice(domain.lastIndexOf('.') + 1));
+    }
+    function setEndings(list) {
+      ENDINGS = Array.isArray(list) ? list.filter(e => typeof e === 'string' && /^[a-z]{2,24}$/.test(e)) : [];
+      if (!ENDINGS.length) return;
+      MESSAGES.email.ending = `Use your school or district email (ending in ${endingsText()}).`;
+      document.getElementById('hEmail').textContent = `Your school or district email, ending in ${endingsText()}. We'll write here when your school is approved.`;
+    }
+    function emailProblem(value) {
+      const email = String(value || '').trim();
+      if (!email) return 'missing';
+      if (email.length > 254 || !EMAIL_RE.test(email)) return 'invalid';
+      if (!endingOk(email)) return 'ending';
+      return '';
+    }
+
     function check() {
       const errs = {};
       const school = F.school.value.replace(/\s+/g, ' ').trim();
       if (school.length < 2) errs.school = 'missing'; else if (school.length > 120) errs.school = 'too_long';
       if (!F.canvas.value.trim()) errs.canvas = 'missing'; else if (!canvasHost(F.canvas.value)) errs.canvas = 'invalid';
-      const email = F.email.value.trim();
-      if (!email) errs.email = 'missing'; else if (email.length > 254 || !EMAIL_RE.test(email)) errs.email = 'invalid';
+      const emailBad = emailProblem(F.email.value);
+      if (emailBad) errs.email = emailBad;
       if (F.name.value.trim().length > 80) errs.name = 'too_long';
       if (F.note.value.trim().length > 1000) errs.note = 'too_long';
       return errs;
@@ -257,10 +313,14 @@
     // On when the API hands out a site key (GET /config/apply); the API then
     // checks the token before saving. Off in the preview and when not set up.
     const TS = { key: null, id: null, token: '', ready: null };
+    // One read of GET /config/apply for Turnstile, the email endings and
+    // whether the email needs verifying. The preview: default endings, verify on.
+    const CONFIG = PREVIEW
+      ? Promise.resolve({ turnstileSiteKey: null, emailEndings: ['edu', 'org', 'us', 'net'], verifyEmail: true })
+      : fetch(`${API}/config/apply`).then(r => (r.ok ? r.json() : {})).catch(() => ({}));
     function loadTurnstile() {
       if (PREVIEW) return Promise.resolve(false);
-      return fetch(`${API}/config/apply`)
-        .then(r => (r.ok ? r.json() : {}))
+      return CONFIG
         .then(j => {
           const key = j && typeof j.turnstileSiteKey === 'string' && /^[A-Za-z0-9_-]{8,100}$/.test(j.turnstileSiteKey) ? j.turnstileSiteKey : null;
           if (!key) return false;
@@ -294,6 +354,189 @@
       try { if (TS.id !== null && window.turnstile) window.turnstile.reset(TS.id); } catch {}
     }
 
+    // ---------- Verify your email (2026-10-07) ----------
+    // "Verify your email" sends a 6-digit code (POST /schools/apply/code, uses
+    // the Turnstile token when that's on); typing it checks it (POST
+    // /schools/apply/verify), which hands back a proof the application sends.
+    // Changing the email afterwards starts over. Off when the API says so.
+    const V = { on: false, proof: '', email: '', cooldown: 0, timer: null, busy: false };
+    const vBox = document.getElementById('verifyBox');
+    const vAsk = document.getElementById('verifyAsk');
+    const vEnter = document.getElementById('verifyEnter');
+    const vDone = document.getElementById('verifyDone');
+    const sendCodeBtn = document.getElementById('sendCodeBtn');
+    const checkCodeBtn = document.getElementById('checkCodeBtn');
+    const fCode = document.getElementById('fCode');
+    const hCode = document.getElementById('hCode');
+    const eCode = document.getElementById('eCode');
+    const key = e => String(e || '').trim().toLowerCase();
+
+    function codeError(text) {
+      eCode.textContent = text || '';
+      eCode.hidden = !text;
+      fCode.setAttribute('aria-invalid', text ? 'true' : 'false');
+    }
+    function showStep(step) {   // 'ask' | 'enter' | 'done'
+      vAsk.hidden = step !== 'ask';
+      vEnter.hidden = step !== 'enter';
+      vDone.hidden = step !== 'done';
+      if (step !== 'enter') hCode.hidden = true;
+    }
+    function sentHint(email) {
+      hCode.textContent = '';
+      hCode.append('We sent a code to ');
+      const b = document.createElement('strong'); b.textContent = email; hCode.append(b);
+      hCode.append('. It works for 10 minutes. ');
+      const again = document.createElement('button');
+      again.type = 'button'; again.className = 'link-btn'; again.id = 'resendBtn';
+      again.addEventListener('click', () => sendCode());
+      hCode.append(again);
+      hCode.hidden = false;
+      tickResend();
+    }
+    function tickResend() {
+      const again = document.getElementById('resendBtn');
+      if (!again) return;
+      const left = Math.ceil((V.cooldown - Date.now()) / 1000);
+      again.disabled = left > 0;
+      again.textContent = left > 0 ? `Send a new code in ${left}s` : 'Send a new code';
+      clearTimeout(V.timer);
+      if (left > 0) V.timer = setTimeout(tickResend, 1000);
+    }
+    function resetVerify() {
+      V.proof = ''; V.email = '';
+      fCode.value = '';
+      codeError('');
+      showStep('ask');
+    }
+    // A different address after verifying (or after a code went out): start over.
+    F.email.addEventListener('input', () => {
+      if (!V.on) return;
+      if ((V.proof || !vEnter.hidden) && key(F.email.value) !== V.email) resetVerify();
+    });
+
+    async function post(path, body) {
+      const res = await fetch(`${API}${path}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      let j = {};
+      try { j = await res.json(); } catch {}
+      return { res, j };
+    }
+
+    async function sendCode() {
+      if (V.busy) return;
+      codeError('');
+      const bad = emailProblem(F.email.value);
+      if (bad) { showErrors({ ...check(), email: bad }); F.email.focus(); return; }
+      const email = F.email.value.trim();
+      const body = { email };
+      if (TS.key) {
+        if (!TS.token) { codeError('Finish the quick check below the form first, then send the code.'); return; }
+        body.turnstileToken = TS.token;
+      }
+      V.busy = true;
+      sendCodeBtn.disabled = true;
+      const label = sendCodeBtn.textContent;
+      sendCodeBtn.textContent = 'Sending…';
+      try {
+        if (PREVIEW) {
+          await new Promise(r => setTimeout(r, 500));
+        } else {
+          const { res, j } = await post('/schools/apply/code', body);
+          if (TS.key) resetTurnstile();   // a token works once
+          if (!(res.ok && j.ok)) {
+            if (res.status === 404 && j.error === 'verify_off') { V.on = false; vBox.hidden = true; return; }
+            if (res.status === 400 && j.fields && j.fields.email) { showErrors({ ...check(), email: j.fields.email }); return; }
+            codeError(j.error === 'code_wait'
+              ? `Wait ${j.retryAfter || 45} seconds, then send a new code.`
+              : j.error === 'code_send_failed'
+              ? 'We couldn’t send a code to that address. Check it and try again.'
+              : j.error === 'captcha_failed'
+              ? 'The quick check didn’t go through. Do it again, then send the code.'
+              : j.error === 'captcha_unavailable'
+              ? 'We couldn’t run the quick check right now. Try again in a moment.'
+              : res.status === 429
+              ? 'Too many codes from this network. Try again in a few minutes.'
+              : 'We couldn’t send a code right now. Try again in a moment.');
+            return;
+          }
+        }
+        V.email = key(email);
+        V.cooldown = Date.now() + 45000;
+        fCode.value = '';
+        showStep('enter');
+        sentHint(email);
+        fCode.focus();
+      } catch {
+        codeError('We couldn’t reach Averages.io. Check your connection and try again.');
+      } finally {
+        V.busy = false;
+        sendCodeBtn.disabled = false;
+        sendCodeBtn.textContent = label;
+      }
+    }
+
+    async function checkCode() {
+      if (V.busy) return;
+      const code = fCode.value.replace(/\s+/g, '');
+      if (!/^\d{6}$/.test(code)) { codeError('Enter the 6-digit code from the email.'); fCode.focus(); return; }
+      codeError('');
+      V.busy = true;
+      checkCodeBtn.disabled = true;
+      checkCodeBtn.textContent = 'Checking…';
+      try {
+        let proof = '';
+        if (PREVIEW) {
+          await new Promise(r => setTimeout(r, 400));
+          proof = 'preview';
+        } else {
+          const { res, j } = await post('/schools/apply/verify', { email: F.email.value.trim(), code });
+          if (!(res.ok && j.ok && typeof j.emailProof === 'string')) {
+            if (j.error === 'code_wrong') {
+              const n = Number(j.triesLeft) || 0;
+              codeError(`That code isn’t right. ${n} ${n === 1 ? 'try' : 'tries'} left.`);
+              fCode.select();
+            } else if (j.error === 'code_too_many') {
+              codeError('Too many tries. Send a new code.');
+            } else if (j.error === 'code_expired') {
+              codeError('That code has expired. Send a new one.');
+            } else if (res.status === 429) {
+              codeError('Too many tries from this network. Wait a few minutes.');
+            } else {
+              codeError('We couldn’t check the code right now. Try again in a moment.');
+            }
+            return;
+          }
+          proof = j.emailProof;
+        }
+        V.proof = proof;
+        V.email = key(F.email.value);
+        clearTimeout(V.timer);
+        showStep('done');
+      } catch {
+        codeError('We couldn’t reach Averages.io. Check your connection and try again.');
+      } finally {
+        V.busy = false;
+        checkCodeBtn.disabled = false;
+        checkCodeBtn.textContent = 'Verify';
+      }
+    }
+
+    sendCodeBtn.addEventListener('click', () => sendCode());
+    checkCodeBtn.addEventListener('click', () => checkCode());
+    fCode.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); checkCode(); } });
+    // Typing (or pasting) the 6th digit checks it straight away.
+    fCode.addEventListener('input', () => {
+      if (!eCode.hidden) codeError('');
+      if (/^\d{6}$/.test(fCode.value.replace(/\s+/g, ''))) checkCode();
+    });
+
+    CONFIG.then(j => {
+      setEndings(j && j.emailEndings);
+      V.on = !!(j && j.verifyEmail);
+      vBox.hidden = !V.on;
+      if (V.on) showStep('ask');
+    });
+
     let sending = false;
     form.addEventListener('submit', async e => {
       e.preventDefault();
@@ -308,6 +551,14 @@
         note: F.note.value.trim(),
         website: document.getElementById('fWebsite').value,
       };
+      if (V.on) {
+        if (!V.proof || key(body.email) !== V.email) {
+          codeError(vEnter.hidden ? 'Verify your email before sending.' : 'Enter the code we emailed you before sending.');
+          (vEnter.hidden ? sendCodeBtn : fCode).focus();
+          return;
+        }
+        if (!PREVIEW) body.emailProof = V.proof;
+      }
       if (TS.key) {
         if (!TS.token) {
           formErr.textContent = 'Finish the quick check above the button first.';
@@ -332,6 +583,7 @@
         if (res.ok && j.ok) { done(body.school, body.email); return; }
         if (TS.key) resetTurnstile();   // a token works once
         if (res.status === 400 && j.fields) { showErrors(j.fields); return; }
+        if (j.error === 'email_unverified') { resetVerify(); codeError('Verify your email again, then send.'); sendCodeBtn.focus(); return; }
         formErr.textContent = j.error === 'captcha_failed'
           ? 'The quick check didn’t go through. Do it again, then send.'
           : j.error === 'captcha_unavailable'
