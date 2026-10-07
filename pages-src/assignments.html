@@ -594,6 +594,18 @@
   </nav>
 
   <script>
+    // ---- Links by id (2026-10-07, Martin) ----
+    // A real class (Schoology/Classroom ids are digits) links as
+    // assignment?id=<id> and course-home?id=<section id>; the sample classes
+    // (word ids like "apchem") keep ?course=&title=. Pages read both.
+    function avgIsId(v) { return /^\d{1,24}$/.test(String(v == null ? '' : v)); }
+    function avgCourseQ(course) { return (avgIsId(course) ? 'id=' : 'course=') + encodeURIComponent(course == null ? '' : course); }
+    function avgAssignHref(course, title, id, extra) {
+      extra = extra || '';
+      if (avgIsId(id) && avgIsId(course)) return `assignment.html?id=${id}${extra}`;
+      return `assignment.html?course=${encodeURIComponent(course == null ? '' : course)}&title=${encodeURIComponent(title || '')}${avgIsId(id) ? `&id=${id}` : ''}${extra}`;
+    }
+
     // Potato PC Mode on every page (2026-10-04, per Martin). The saved
     // setting turns off all CSS animations and transitions, makes animate()
     // calls and smooth scrolling instant, and drops the slanted page title.
@@ -984,7 +996,7 @@
         : item.status === 'overdue' ? (item.due ? `Missing · ${item.due}` : 'Missing')
         : item.status === 'submitted' ? (item.due ? `Submitted · ${item.due}` : 'Submitted')
         : (item.due ? `Due ${item.due}` : 'Upcoming');
-      const dest = `assignment.html?course=${encodeURIComponent(item.courseId)}&title=${encodeURIComponent(item.title)}${/^\d{1,24}$/.test(String(item.id || '')) ? `&id=${encodeURIComponent(item.id)}` : ''}`;
+      const dest = avgAssignHref(item.courseId, item.title, item.id);
       return `
         <div class="assign-row ${escapeHtml(item.status)}" style="--row-course-color: ${escapeHtml(course.color)}" role="link" tabindex="0" data-href="${escapeHtml(dest)}" aria-label="${escapeHtml(item.title)}, ${escapeHtml(course.name)}">
           <span class="assign-tick"></span>

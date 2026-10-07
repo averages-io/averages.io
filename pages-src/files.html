@@ -728,6 +728,18 @@
   </nav>
 
   <script>
+    // ---- Links by id (2026-10-07, Martin) ----
+    // A real class (Schoology/Classroom ids are digits) links as
+    // assignment?id=<id> and course-home?id=<section id>; the sample classes
+    // (word ids like "apchem") keep ?course=&title=. Pages read both.
+    function avgIsId(v) { return /^\d{1,24}$/.test(String(v == null ? '' : v)); }
+    function avgCourseQ(course) { return (avgIsId(course) ? 'id=' : 'course=') + encodeURIComponent(course == null ? '' : course); }
+    function avgAssignHref(course, title, id, extra) {
+      extra = extra || '';
+      if (avgIsId(id) && avgIsId(course)) return `assignment.html?id=${id}${extra}`;
+      return `assignment.html?course=${encodeURIComponent(course == null ? '' : course)}&title=${encodeURIComponent(title || '')}${avgIsId(id) ? `&id=${id}` : ''}${extra}`;
+    }
+
     // Potato PC Mode on every page (2026-10-04, per Martin). The saved
     // setting turns off all CSS animations and transitions, makes animate()
     // calls and smooth scrolling instant, and drops the slanted page title.
@@ -1405,7 +1417,7 @@
         return { name: String(c.name || 'Class'), color: cfColor(c) };
       }
       function attachTo(file, t) {
-        window.location.href = `assignment.html?course=${encodeURIComponent(t.course)}&id=${encodeURIComponent(t.id)}&title=${encodeURIComponent(t.title)}&attach=${encodeURIComponent(JSON.stringify(file))}`;
+        window.location.href = avgAssignHref(t.course, t.title, t.id, `&attach=${encodeURIComponent(JSON.stringify(file))}`);
       }
       // A second menu in the same spot: one class's assignments (a course
       // file), or every class's, grouped by class (Drive, OneDrive, Canva).
@@ -1829,9 +1841,9 @@
       // ---------- Menus ----------
       function cfItems(f) {
         const items = [];
-        if (f.kind === 'assignment') items.push({ label: 'Open assignment', sub: f.parentTitle, run: () => { window.location.href = `assignment.html?course=${encodeURIComponent(f.course)}&id=${encodeURIComponent(f.parent)}&title=${encodeURIComponent(f.parentTitle)}`; } });
+        if (f.kind === 'assignment') items.push({ label: 'Open assignment', sub: f.parentTitle, run: () => { window.location.href = avgAssignHref(f.course, f.parentTitle, f.parent); } });
         // Show in Materials (2026-10-06): the class's Materials, open at the teacher's folder holding it.
-        const show = { label: 'Show in Materials', run: () => { window.location.href = `course-materials.html?course=${encodeURIComponent(f.course)}&show=${encodeURIComponent(`${f.kind}:${f.parent}:${f.id}`)}`; } };
+        const show = { label: 'Show in Materials', run: () => { window.location.href = `course-materials.html?${avgCourseQ(f.course)}&show=${encodeURIComponent(`${f.kind}:${f.parent}:${f.id}`)}`; } };
         // Classroom files are already in Google Drive: they open there.
         if (f.url) {
           items.push({ label: 'Open in Google Drive', run: () => { if (DRIVE_URL_OK(f.url)) window.open(f.url, '_blank', 'noopener,noreferrer'); } });
@@ -1994,7 +2006,7 @@
     }
     // Materials opens the folder the file is in and highlights it (?file=).
     function materialsHref(f) {
-      return `course-materials.html?course=${encodeURIComponent(f.course)}&file=${encodeURIComponent(f.name)}`;
+      return `course-materials.html?${avgCourseQ(f.course)}&file=${encodeURIComponent(f.name)}`;
     }
     // Attach to an assignment (2026-10-05): a second menu, in the same spot,
     // lists open assignments (the file's own course first). Picking one opens
@@ -2007,8 +2019,7 @@
       return m ? m[1].toLowerCase() : f.type;
     }
     function attachHref(f, t) {
-      return `assignment.html?course=${encodeURIComponent(t.course)}&title=${encodeURIComponent(t.title)}`
-        + `&attach=${encodeURIComponent(f.name)}&src=${encodeURIComponent(f.src)}&ext=${encodeURIComponent(fileExt(f))}`;
+      return avgAssignHref(t.course, t.title, t.id, `&attach=${encodeURIComponent(f.name)}&src=${encodeURIComponent(f.src)}&ext=${encodeURIComponent(fileExt(f))}`);
     }
     function attachItems(f) {
       const list = ATTACH_TARGETS.slice().sort((a, b) => (b.course === f.course) - (a.course === f.course));

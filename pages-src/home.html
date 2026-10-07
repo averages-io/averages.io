@@ -1406,6 +1406,18 @@
   </nav>
 
   <script>
+    // ---- Links by id (2026-10-07, Martin) ----
+    // A real class (Schoology/Classroom ids are digits) links as
+    // assignment?id=<id> and course-home?id=<section id>; the sample classes
+    // (word ids like "apchem") keep ?course=&title=. Pages read both.
+    function avgIsId(v) { return /^\d{1,24}$/.test(String(v == null ? '' : v)); }
+    function avgCourseQ(course) { return (avgIsId(course) ? 'id=' : 'course=') + encodeURIComponent(course == null ? '' : course); }
+    function avgAssignHref(course, title, id, extra) {
+      extra = extra || '';
+      if (avgIsId(id) && avgIsId(course)) return `assignment.html?id=${id}${extra}`;
+      return `assignment.html?course=${encodeURIComponent(course == null ? '' : course)}&title=${encodeURIComponent(title || '')}${avgIsId(id) ? `&id=${id}` : ''}${extra}`;
+    }
+
     // Potato PC Mode on every page (2026-10-04, per Martin). The saved
     // setting turns off all CSS animations and transitions, makes animate()
     // calls and smooth scrolling instant, and drops the slanted page title.
@@ -1897,7 +1909,7 @@
         // way courses.html's courseRowNavTarget() does.
         tr.setAttribute('role', 'link');
         tr.tabIndex = 0;
-        tr.dataset.href = `course-home.html?course=${c.id}`;
+        tr.dataset.href = `course-home.html?${avgCourseQ(c.id)}`;
         tr.setAttribute('aria-label', `Open ${c.name}`);
         tr.innerHTML = `
           <td>
@@ -1940,7 +1952,7 @@
     // the real title with generic content even if a Home sample item
     // doesn't happen to match one of assignment.html's own entries.
     function assignmentHref(item) {
-      return `assignment.html?course=${encodeURIComponent(item.courseId)}&title=${encodeURIComponent(item.title)}`;
+      return avgAssignHref(item.courseId, item.title, item.id);
     }
     function renderAssignList(container, items, overdue) {
       container.innerHTML = items.map(item => `
@@ -2048,7 +2060,7 @@
     const recentList = document.getElementById('recentList');
     function renderRecentGrades() {
       recentList.innerHTML = RECENT_GRADES.length ? RECENT_GRADES.map(r => `
-        <div class="rg-item" role="link" tabindex="0" data-href="gradebook.html?course=${encodeURIComponent(r.courseId)}" aria-label="${escapeHtml([r.title, courseName(r.courseId), [r.letter, typeof r.pct === 'number' ? `${r.pct} percent` : ''].filter(v => v !== undefined && v !== null && v !== '').join(' ')].filter(Boolean).join(', '))}">
+        <div class="rg-item" role="link" tabindex="0" data-href="gradebook.html?${avgCourseQ(r.courseId)}" aria-label="${escapeHtml([r.title, courseName(r.courseId), [r.letter, typeof r.pct === 'number' ? `${r.pct} percent` : ''].filter(v => v !== undefined && v !== null && v !== '').join(' ')].filter(Boolean).join(', '))}">
           <span class="assign-tick" style="background:${escapeHtml(courseColor(r.courseId))}"></span>
           <div class="rg-text">
             <p class="rg-title">${escapeHtml(r.title)}${r.isNew ? '<span class="new-dot" title="New"></span>' : ''}</p>
@@ -2073,7 +2085,7 @@
         return t && !t.includes(',') ? t : (from || 'Your teacher');
       };
       updatesList.innerHTML = COURSE_UPDATES.length ? COURSE_UPDATES.map(u => ({ ...u, from: poster(u) })).map(u => `
-        <div class="tu-item" role="link" tabindex="0" data-href="course-home.html?course=${encodeURIComponent(u.courseId)}" aria-label="${escapeHtml(u.from)}, ${escapeHtml(courseName(u.courseId))}: ${escapeHtml(u.body)}">
+        <div class="tu-item" role="link" tabindex="0" data-href="course-home.html?${avgCourseQ(u.courseId)}" aria-label="${escapeHtml(u.from)}, ${escapeHtml(courseName(u.courseId))}: ${escapeHtml(u.body)}">
           <span class="tu-avatar" style="background:${escapeHtml(courseColor(u.courseId))}" aria-hidden="true">${escapeHtml(initial(u.from))}</span>
           <div class="tu-text">
             <div class="tu-top">

@@ -1330,6 +1330,18 @@
   </nav>
 
   <script>
+    // ---- Links by id (2026-10-07, Martin) ----
+    // A real class (Schoology/Classroom ids are digits) links as
+    // assignment?id=<id> and course-home?id=<section id>; the sample classes
+    // (word ids like "apchem") keep ?course=&title=. Pages read both.
+    function avgIsId(v) { return /^\d{1,24}$/.test(String(v == null ? '' : v)); }
+    function avgCourseQ(course) { return (avgIsId(course) ? 'id=' : 'course=') + encodeURIComponent(course == null ? '' : course); }
+    function avgAssignHref(course, title, id, extra) {
+      extra = extra || '';
+      if (avgIsId(id) && avgIsId(course)) return `assignment.html?id=${id}${extra}`;
+      return `assignment.html?course=${encodeURIComponent(course == null ? '' : course)}&title=${encodeURIComponent(title || '')}${avgIsId(id) ? `&id=${id}` : ''}${extra}`;
+    }
+
     // Potato PC Mode on every page (2026-10-04, per Martin). The saved
     // setting turns off all CSS animations and transitions, makes animate()
     // calls and smooth scrolling instant, and drops the slanted page title.
@@ -1701,10 +1713,10 @@
       { id: 'pe', name: 'PE', code: '76_P0300', period: 6, teacher: 'Coach Reyes', section: '1125', color: '#4f8c8a', grade: 'A', pct: 97, predicted: 'A', predictedPct: 97, trend: 'flat', updated: '2d ago', desc: 'Fitness training and team sports, graded on participation and fitness logs.' },
     ];
     applyCourseCustomizationsInPlace(COURSES);
-    const courseId = new URLSearchParams(location.search).get('course') || 'apchem';
+    const courseId = (q => q.get('course') || (avgIsId(q.get('id')) ? q.get('id') : '') || 'apchem')(new URLSearchParams(location.search));   // ?id= since 2026-10-07
     const course = COURSES.find(c => c.id === courseId) || COURSES[0];
     document.getElementById('backToHubBtn').addEventListener('click', () => {
-      window.location.href = `course-home.html?course=${course.id}`;
+      window.location.href = `course-home.html?${avgCourseQ(course.id)}`;
     });
     // Opens an assignment-flagged file's own detail page. `from=materials`
     // tells assignment.html to swap its "Back to Assignments" breadcrumb
@@ -1718,7 +1730,7 @@
     function openAssignmentDetail(f) {
       // Signed in: the exact assignment the file is attached to.
       if (f.live && f.live.parent) {
-        window.location.href = `assignment.html?course=${encodeURIComponent(f.live.course)}&id=${encodeURIComponent(f.live.parent)}&title=${encodeURIComponent(f.live.parentTitle || f.name)}&from=materials`;
+        window.location.href = avgAssignHref(f.live.course, f.live.parentTitle || f.name, f.live.parent, '&from=materials');
         return;
       }
       const title = f.name.replace(/\.[^.]+$/, '');
@@ -4195,7 +4207,7 @@
       const b = document.getElementById('curBlock');
       if (!b) return;
       if (course.grade) b.setAttribute('aria-label', `Current grade ${course.grade}, ${course.pct} percent. See grades`);
-      const go = () => { window.location.href = `gradebook.html?course=${encodeURIComponent(course.id)}`; };
+      const go = () => { window.location.href = `gradebook.html?${avgCourseQ(course.id)}`; };
       b.addEventListener('click', go);
       b.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
     })();

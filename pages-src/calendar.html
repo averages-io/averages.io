@@ -892,6 +892,18 @@
   </nav>
 
   <script>
+    // ---- Links by id (2026-10-07, Martin) ----
+    // A real class (Schoology/Classroom ids are digits) links as
+    // assignment?id=<id> and course-home?id=<section id>; the sample classes
+    // (word ids like "apchem") keep ?course=&title=. Pages read both.
+    function avgIsId(v) { return /^\d{1,24}$/.test(String(v == null ? '' : v)); }
+    function avgCourseQ(course) { return (avgIsId(course) ? 'id=' : 'course=') + encodeURIComponent(course == null ? '' : course); }
+    function avgAssignHref(course, title, id, extra) {
+      extra = extra || '';
+      if (avgIsId(id) && avgIsId(course)) return `assignment.html?id=${id}${extra}`;
+      return `assignment.html?course=${encodeURIComponent(course == null ? '' : course)}&title=${encodeURIComponent(title || '')}${avgIsId(id) ? `&id=${id}` : ''}${extra}`;
+    }
+
     // Potato PC Mode on every page (2026-10-04, per Martin). The saved
     // setting turns off all CSS animations and transitions, makes animate()
     // calls and smooth scrolling instant, and drops the slanted page title.
@@ -1400,15 +1412,15 @@
       if (AV_LIVE && event.assignmentId) {
         // Signed in: the exact assignment (2026-10-06).
         const linkTitle = event.assignmentTitle || event.title;
-        actionHTML = `<div class="cal-selected-actions"><a class="cal-selected-view-btn" href="assignment.html?course=${encodeURIComponent(event.source)}&id=${encodeURIComponent(event.assignmentId)}&title=${encodeURIComponent(linkTitle)}">Open Assignment</a></div>`;
+        actionHTML = `<div class="cal-selected-actions"><a class="cal-selected-view-btn" href="${avgAssignHref(event.source, linkTitle, event.assignmentId)}">Open Assignment</a></div>`;
       } else if (AV_LIVE) {
         // Not something to turn in (or not one we can open): its class.
-        if (event.source !== 'school') actionHTML = `<div class="cal-selected-actions"><a class="cal-selected-view-btn" href="course-home.html?course=${encodeURIComponent(event.source)}">View Course</a></div>`;
+        if (event.source !== 'school') actionHTML = `<div class="cal-selected-actions"><a class="cal-selected-view-btn" href="course-home.html?${avgCourseQ(event.source)}">View Course</a></div>`;
       } else if (event.type !== 'teacher') {
         const linkTitle = event.assignmentTitle || event.title;
         actionHTML = `<div class="cal-selected-actions"><a class="cal-selected-view-btn" href="assignment.html?course=${encodeURIComponent(event.source)}&title=${encodeURIComponent(linkTitle)}">Open Assignment</a></div>`;
       } else if (event.source !== 'school') {
-        actionHTML = `<div class="cal-selected-actions"><a class="cal-selected-view-btn" href="course-home.html?course=${encodeURIComponent(event.source)}">View Course</a></div>`;
+        actionHTML = `<div class="cal-selected-actions"><a class="cal-selected-view-btn" href="course-home.html?${avgCourseQ(event.source)}">View Course</a></div>`;
       }
       body.innerHTML = `
         <p class="cal-selected-title">${escapeHtml(event.title)}</p>

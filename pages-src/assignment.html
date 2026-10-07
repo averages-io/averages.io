@@ -1095,6 +1095,18 @@
   </nav>
 
   <script>
+    // ---- Links by id (2026-10-07, Martin) ----
+    // A real class (Schoology/Classroom ids are digits) links as
+    // assignment?id=<id> and course-home?id=<section id>; the sample classes
+    // (word ids like "apchem") keep ?course=&title=. Pages read both.
+    function avgIsId(v) { return /^\d{1,24}$/.test(String(v == null ? '' : v)); }
+    function avgCourseQ(course) { return (avgIsId(course) ? 'id=' : 'course=') + encodeURIComponent(course == null ? '' : course); }
+    function avgAssignHref(course, title, id, extra) {
+      extra = extra || '';
+      if (avgIsId(id) && avgIsId(course)) return `assignment.html?id=${id}${extra}`;
+      return `assignment.html?course=${encodeURIComponent(course == null ? '' : course)}&title=${encodeURIComponent(title || '')}${avgIsId(id) ? `&id=${id}` : ''}${extra}`;
+    }
+
     // Potato PC Mode on every page (2026-10-04, per Martin). The saved
     // setting turns off all CSS animations and transitions, makes animate()
     // calls and smooth scrolling instant, and drops the slanted page title.
@@ -1581,7 +1593,45 @@
     let item = null;
     const qId = params.get('id');
     const qIdOk = !!qId && /^\d{1,24}$/.test(qId);
-    if (qCourse && qTitle) {
+    // ?id= alone (2026-10-07): the class comes from the lists, else from the
+    // API's answer to "which class is this in?" (LegacyPage loads it with
+    // the page: LOCATED), else from a course's Grades tab.
+    let qCourseFromId = '';
+    let qTitleFromId = '';
+    if (qIdOk && !qCourse) {
+      const inLists = ALL_ITEMS.find(i => String(i.id || '') === qId);
+      const located = LIVE_DATA && LIVE_DATA.LOCATED;
+      let gbHint = null;
+      try { gbHint = JSON.parse(sessionStorage.getItem('schoolagy_gb_open') || 'null'); } catch {}
+      if (inLists) { qCourseFromId = inLists.courseId; qTitleFromId = inLists.title; }
+      else if (located && String(located.id) === qId && avgIsId(located.section)) { qCourseFromId = String(located.section); qTitleFromId = located.title || 'Assignment'; }
+      else if (gbHint && gbHint.id === qId) { qCourseFromId = gbHint.courseId; qTitleFromId = gbHint.title; }
+      else {
+        let hint = null;
+        try { hint = JSON.parse(sessionStorage.getItem('schoolagy_locate') || 'null'); } catch {}
+        if (hint && hint.id === qId && avgIsId(hint.section)) { qCourseFromId = hint.section; qTitleFromId = hint.title || 'Assignment'; }
+        else if (window.__AVERAGES_MODE__ === 'live') {
+          // Not loaded with the page (slow, or an old link): ask once, then reopen.
+          const api = window.location.hostname.endsWith('averages.io') ? 'https://api.averages.io' : 'http://localhost:8787';
+          fetch(`${api}/data/assignment/locate?id=${qId}`, { credentials: 'include' })
+            .then(r => (r.ok ? r.json() : null))
+            .then(j => {
+              if (j && avgIsId(j.section)) {
+                try { sessionStorage.setItem('schoolagy_locate', JSON.stringify({ id: qId, section: String(j.section), title: String(j.title || '') })); } catch {}
+                window.location.reload();
+              } else {
+                window.location.replace('assignments.html');
+              }
+            })
+            .catch(() => {});
+        }
+      }
+    }
+    const qCourseUse = qCourse || qCourseFromId;
+    const qTitleUse = qTitle || qTitleFromId;
+    if (qCourseUse && qTitleUse) {
+      const qCourse = qCourseUse;
+      const qTitle = qTitleUse;
       // The Schoology id, when given, picks the exact item (two can share a title).
       item = (qIdOk && ALL_ITEMS.find(i => i.courseId === qCourse && String(i.id || '') === qId)) || findAssignment(qCourse, qTitle);
       if (!item) {
@@ -1597,19 +1647,22 @@
         if (qFrom === 'gradebook') {
           let gb = null;
           try { gb = JSON.parse(sessionStorage.getItem('schoolagy_gb_open') || 'null'); } catch {}
-          if (gb && gb.courseId === qCourse && gb.title === item.title) {
+          if (gb && gb.courseId === qCourse && (gb.title === item.title || (qIdOk && gb.id === qId))) {
             const cat = String(gb.category || '');
             item.type = /test|quiz|exam|assessment/i.test(cat) ? 'assessment' : /discussion/i.test(cat) ? 'discussion' : 'assignment';
             if (gb.graded && typeof gb.score === 'number' && gb.points > 0) { item.status = 'graded'; item.score = Math.round(gb.score / gb.points * 100); }
           }
         }
       }
+    } else if (qIdOk && window.__AVERAGES_MODE__ === 'live') {
+      // ?id= we couldn't place yet: a blank page while it's looked up (never another assignment).
+      item = { status: 'upcoming', type: 'assignment', title: 'Assignment', courseId: '', due: null };
     } else {
       item = findAssignment('apchem', 'Molarity Practice Set');
     }
     if (!item) item = ALL_ITEMS[0] || { status: 'upcoming', type: 'assignment', title: 'Assignment', courseId: (COURSES[0] || {}).id, due: null };
     // An explicit ?id= (Schoology assignment id) wins when the lists didn't have one.
-    if (qIdOk && !item.id) item.id = qId;
+    if (qIdOk && !item.id && item.courseId) item.id = qId;
     const course = findCourse(item.courseId) || COURSES[0];
     const detail = buildDetail(item);
 
@@ -1617,7 +1670,7 @@
     document.getElementById('assignTitle').textContent = item.title;
     document.getElementById('classLink').textContent = course.name;
     document.getElementById('classLink').addEventListener('click', () => {
-      window.location.href = `course-home.html?course=${course.id}`;
+      window.location.href = `course-home.html?${avgCourseQ(course.id)}`;
     });
     // Links to gradebook.html scoped to this assignment's own course —
     // resolves the note that used to sit here about the breadcrumb
@@ -1626,7 +1679,7 @@
     // (2026-08-31, once gradebook.html existed to link to).
     document.getElementById('gradebookLink').textContent = GRADING_PERIOD;
     document.getElementById('gradebookLink').addEventListener('click', () => {
-      window.location.href = `gradebook.html?course=${course.id}`;
+      window.location.href = `gradebook.html?${avgCourseQ(course.id)}`;
     });
 
     // Back breadcrumb — "Back to Assignments" by default, but swapped for
@@ -1638,7 +1691,7 @@
     const cameFromGradebook = qFrom === 'gradebook';   // 2026-10-04
     document.getElementById('backLabel').textContent = cameFromMaterials ? 'Back to Course Materials' : cameFromGradebook ? 'Back to Grades' : 'Back to Assignments';
     document.getElementById('backBtn').addEventListener('click', () => {
-      window.location.href = cameFromMaterials ? `course-materials.html?course=${course.id}` : cameFromGradebook ? `gradebook.html?course=${course.id}` : 'assignments.html';
+      window.location.href = cameFromMaterials ? `course-materials.html?${avgCourseQ(course.id)}` : cameFromGradebook ? `gradebook.html?${avgCourseQ(course.id)}` : 'assignments.html';
     });
 
     document.getElementById('descText').textContent = detail.description;

@@ -257,11 +257,14 @@
       MESSAGES.email.ending = `Use your school or district email (ending in ${endingsText()}).`;
       document.getElementById('hEmail').textContent = `Your school or district email, ending in ${endingsText()}. We'll write here when your school is approved.`;
     }
+    // The ending is checked by the API, not here (2026-10-07): a few exact
+    // addresses are allowed whatever their ending, and that list is private.
+    // The preview has no API, so it checks the ending itself.
     function emailProblem(value) {
       const email = String(value || '').trim();
       if (!email) return 'missing';
       if (email.length > 254 || !EMAIL_RE.test(email)) return 'invalid';
-      if (!endingOk(email)) return 'ending';
+      if (PREVIEW && !endingOk(email)) return 'ending';
       return '';
     }
 

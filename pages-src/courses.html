@@ -788,6 +788,18 @@
   </nav>
 
   <script>
+    // ---- Links by id (2026-10-07, Martin) ----
+    // A real class (Schoology/Classroom ids are digits) links as
+    // assignment?id=<id> and course-home?id=<section id>; the sample classes
+    // (word ids like "apchem") keep ?course=&title=. Pages read both.
+    function avgIsId(v) { return /^\d{1,24}$/.test(String(v == null ? '' : v)); }
+    function avgCourseQ(course) { return (avgIsId(course) ? 'id=' : 'course=') + encodeURIComponent(course == null ? '' : course); }
+    function avgAssignHref(course, title, id, extra) {
+      extra = extra || '';
+      if (avgIsId(id) && avgIsId(course)) return `assignment.html?id=${id}${extra}`;
+      return `assignment.html?course=${encodeURIComponent(course == null ? '' : course)}&title=${encodeURIComponent(title || '')}${avgIsId(id) ? `&id=${id}` : ''}${extra}`;
+    }
+
     // Potato PC Mode on every page (2026-10-04, per Martin). The saved
     // setting turns off all CSS animations and transitions, makes animate()
     // calls and smooth scrolling instant, and drops the slanted page title.
@@ -1187,7 +1199,7 @@
     // Link to one assignment: same assignment.html?course=&title= deep link
     // home.html, assignments.html and course-home.html already use.
     function assignmentHref(item) {
-      return `assignment.html?course=${encodeURIComponent(item.courseId)}&title=${encodeURIComponent(item.title)}`;
+      return avgAssignHref(item.courseId, item.title, item.id);
     }
     // When an overdue item was due. Uses `dueAt` (a full timestamp) when the
     // data has one; otherwise reads the "Fri Aug 21" label as 11:59 PM that
@@ -1524,14 +1536,14 @@
     }
     coursesBody.addEventListener('click', e => {
       const id = courseRowNavTarget(e.target);
-      if (id) window.location.href = `course-home.html?course=${id}`;
+      if (id) window.location.href = `course-home.html?${avgCourseQ(id)}`;
     });
     coursesBody.addEventListener('keydown', e => {
       if (e.key !== 'Enter' && e.key !== ' ') return;
       const id = courseRowNavTarget(e.target);
       if (!id) return;
       e.preventDefault();
-      window.location.href = `course-home.html?course=${id}`;
+      window.location.href = `course-home.html?${avgCourseQ(id)}`;
     });
 
     // ------------------------------------------------------------------

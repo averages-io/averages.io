@@ -924,6 +924,18 @@
   </nav>
 
   <script>
+    // ---- Links by id (2026-10-07, Martin) ----
+    // A real class (Schoology/Classroom ids are digits) links as
+    // assignment?id=<id> and course-home?id=<section id>; the sample classes
+    // (word ids like "apchem") keep ?course=&title=. Pages read both.
+    function avgIsId(v) { return /^\d{1,24}$/.test(String(v == null ? '' : v)); }
+    function avgCourseQ(course) { return (avgIsId(course) ? 'id=' : 'course=') + encodeURIComponent(course == null ? '' : course); }
+    function avgAssignHref(course, title, id, extra) {
+      extra = extra || '';
+      if (avgIsId(id) && avgIsId(course)) return `assignment.html?id=${id}${extra}`;
+      return `assignment.html?course=${encodeURIComponent(course == null ? '' : course)}&title=${encodeURIComponent(title || '')}${avgIsId(id) ? `&id=${id}` : ''}${extra}`;
+    }
+
     // Potato PC Mode on every page (2026-10-04, per Martin). The saved
     // setting turns off all CSS animations and transitions, makes animate()
     // calls and smooth scrolling instant, and drops the slanted page title.
@@ -1580,7 +1592,7 @@
     // falling back to PE since that's this page's own wireframe example
     // (Gradebook.pdf was literally titled "PE Gradebook").
     // ------------------------------------------------------------------
-    const courseId = new URLSearchParams(location.search).get('course') || 'pe';
+    const courseId = (q => q.get('course') || (avgIsId(q.get('id')) ? q.get('id') : '') || 'pe')(new URLSearchParams(location.search));   // ?id= since 2026-10-07
     const course = findCourse(courseId) || COURSES[0];
 
     function setCourseVars() {
@@ -1598,7 +1610,7 @@
       document.getElementById('gbSubtitle').textContent = [has(course.code) ? course.code : '', meta].filter(Boolean).join(' · ');
     }
     document.getElementById('backToHubBtn').addEventListener('click', () => {
-      window.location.href = `course-home.html?course=${course.id}`;
+      window.location.href = `course-home.html?${avgCourseQ(course.id)}`;
     });
 
     document.getElementById('curVal').innerHTML = `<span class="${course.grade === '—' ? '' : gradeBand(course.grade)}">${escapeHtml(course.grade)}</span>${course.grade === '—' ? '' : `<span class="grade-hero-pct">${escapeHtml(course.pct)}%</span>`}`;
@@ -1676,9 +1688,8 @@
       const cat = GRADEBOOK[course.id].categories[+row.dataset.cat];
       const a = cat && cat.assignments[+row.dataset.idx];
       if (!a) return;
-      try { sessionStorage.setItem('schoolagy_gb_open', JSON.stringify({ courseId: course.id, title: a.title, category: cat.name, graded: !!a.graded, score: a.score, points: a.points })); } catch {}
-      const idPart = /^\d{1,24}$/.test(String(a.id || '')) ? `&id=${encodeURIComponent(a.id)}` : '';
-      window.location.href = `assignment.html?course=${encodeURIComponent(course.id)}&title=${encodeURIComponent(a.title)}${idPart}&from=gradebook`;
+      try { sessionStorage.setItem('schoolagy_gb_open', JSON.stringify({ courseId: course.id, id: avgIsId(a.id) ? String(a.id) : '', title: a.title, category: cat.name, graded: !!a.graded, score: a.score, points: a.points })); } catch {}
+      window.location.href = avgAssignHref(course.id, a.title, a.id, '&from=gradebook');
     });
 
     // ------------------------------------------------------------------
