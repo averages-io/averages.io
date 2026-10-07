@@ -1,8 +1,31 @@
 import type { Metadata } from "next";
 
+/**
+ * Link previews (2026-10-07, Martin): what iMessage, Discord, Slack, Gmail
+ * and so on show when someone shares an app.averages.io link. Every route
+ * gets this card unless it sets its own (app/schools/apply/layout.tsx does).
+ * The images live in public/ (og.png, og-schools.png), 1200 x 630.
+ */
+const DESCRIPTION = "Because schoolwork should be simple. Grades, assignments and class files in one place.";
+
 export const metadata: Metadata = {
-  title: "Averages",
-  description: "Because schoolwork should be simple.",
+  metadataBase: new URL("https://app.averages.io"),
+  title: "Averages.io",
+  description: DESCRIPTION,
+  openGraph: {
+    type: "website",
+    siteName: "Averages.io",
+    title: "Averages.io",
+    description: DESCRIPTION,
+    url: "/",
+    images: [{ url: "/og.png", width: 1200, height: 630, alt: "Averages.io: Do school, your way. The Averages.io home page with grades and assignments." }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Averages.io",
+    description: DESCRIPTION,
+    images: ["/og.png"],
+  },
 };
 
 /**
