@@ -621,6 +621,13 @@
   .lf-folder-badge svg, .lf-folder-thumb svg { width: 18px; height: 18px; fill: currentColor; }
   .lf-folder-thumb { background: #ede8fa; color: #7d55dc; }
   .lf-folder-thumb svg { width: 46px; height: 46px; }
+  .lf-reauth { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 16px; padding: 12px 12px 12px 16px; border-radius: 14px; background: var(--panel-inner); font-size: 0.84rem; font-weight: 700; color: var(--text-muted); }
+  .lf-reauth b { color: var(--text-dark); font-weight: 800; }
+  .lf-reauth span { flex: 1 1 220px; min-width: 0; }
+  .lf-reauth button { border: none; border-radius: 999px; background: var(--accent); color: #fff; font: inherit; font-size: 0.8rem; font-weight: 800; padding: 8px 16px; cursor: pointer; white-space: nowrap; }
+  .lf-reauth button:hover { background: var(--accent-dark); }
+  .lf-reauth button:disabled { opacity: 0.6; cursor: progress; }
+  .lf-reauth button:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
   @media (min-width: 761px) and (max-width: 1100px) { .fx-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } .fx-row { grid-template-columns: 34px minmax(0, 1fr) 140px 76px 36px; } }
   @media (max-width: 760px) {
     .fx { grid-template-columns: minmax(0, 1fr); }
@@ -1687,6 +1694,15 @@
         if (st === 'click') return `<div class="fx-empty"><strong>Your ${esc(c.name)} files</strong>${acct && (acct.email || acct.username) ? 'Connected as ' + esc(acct.email || acct.username) + '. ' : ''}${esc(c.name)} may ask you to confirm it’s you.<br><button class="fx-connect" type="button" data-cloud-show="${src}"${c.busy ? ' disabled' : ''}>Show files</button></div>`;
         return '';
       }
+      // A drive that needs its sign-in again (Martin, 10-6): one banner each,
+      // on every view except that drive's own (its panel already asks).
+      function reauthHTML() {
+        if (INCOGNITO) return '';
+        return ['gdrive', 'onedrive'].filter(app => CLOUD[app].state === 'click' && LV.filter !== app).map(app => {
+          const c = CLOUD[app];
+          return `<div class="lf-reauth" role="status"><span><b>${esc(c.name)}</b> needs you to sign in again to show your files.</span><button type="button" data-cloud-show="${app}"${c.busy ? ' disabled' : ''}>Sign in to ${esc(c.name)}</button></div>`;
+        }).join('');
+      }
       function navLive(all) {
         const count = filter => {
           if (['course', 'gdrive', 'onedrive', 'canva'].includes(filter)) {
@@ -1749,7 +1765,7 @@
         const canvaFolders = LV.filter === 'canva' && foldersOn();
         const list = all.filter(e => inFilterLive(e, LV.filter) && matchesLive(e)).sort(newest);
         shownByKey = new Map();
-        let body = flashHTML();
+        let body = flashHTML() + reauthHTML();
         let count = `${list.length} file${list.length === 1 ? '' : 's'}`;
         if (canvaFolders) {
           if (FD.state === 'idle') { FD.state = 'loading'; queueMicrotask(() => loadFolder(false)); }

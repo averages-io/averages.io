@@ -101,6 +101,9 @@
     .apply-sheet { padding: 36px 60px 42px; }
     .apply-intro { font-size: 1.1rem; }
   }
+  /* Cloudflare Turnstile (2026-10-07): its own box, shown only when it's set up. */
+  .ts-box { margin-top: 20px; min-height: 65px; }
+  .ts-box[hidden] { display: none; }
   @media (max-width: 680px) {
     body { padding: 16px; }
     .apply-card { border-radius: 28px; }
@@ -153,6 +156,7 @@
             <input id="fWebsite" name="website" type="text" tabindex="-1" autocomplete="off">
           </div>
         </div>
+        <div class="ts-box" id="tsBox" hidden></div>
         <p class="form-err" id="formErr" role="alert" hidden></p>
         <div class="apply-actions">
           <button class="apply-send" id="sendBtn" type="submit">Send application</button>
@@ -249,6 +253,47 @@
       document.getElementById('doneTitle').focus();
     }
 
+    // ---------- Cloudflare Turnstile (2026-10-07) ----------
+    // On when the API hands out a site key (GET /config/apply); the API then
+    // checks the token before saving. Off in the preview and when not set up.
+    const TS = { key: null, id: null, token: '', ready: null };
+    function loadTurnstile() {
+      if (PREVIEW) return Promise.resolve(false);
+      return fetch(`${API}/config/apply`)
+        .then(r => (r.ok ? r.json() : {}))
+        .then(j => {
+          const key = j && typeof j.turnstileSiteKey === 'string' && /^[A-Za-z0-9_-]{8,100}$/.test(j.turnstileSiteKey) ? j.turnstileSiteKey : null;
+          if (!key) return false;
+          TS.key = key;
+          return new Promise(resolve => {
+            window.onAveragesTurnstile = () => {
+              const box = document.getElementById('tsBox');
+              box.hidden = false;
+              TS.id = window.turnstile.render(box, {
+                sitekey: key,
+                action: 'school-apply',
+                theme: 'light',
+                callback: t => { TS.token = t; if (formErr.dataset.ts) { formErr.hidden = true; delete formErr.dataset.ts; } },
+                'expired-callback': () => { TS.token = ''; },
+                'error-callback': () => { TS.token = ''; },
+              });
+              resolve(true);
+            };
+            const sc = document.createElement('script');
+            sc.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onAveragesTurnstile';
+            sc.async = true;
+            sc.onerror = () => resolve(false);
+            document.head.appendChild(sc);
+          });
+        })
+        .catch(() => false);
+    }
+    TS.ready = loadTurnstile();
+    function resetTurnstile() {
+      TS.token = '';
+      try { if (TS.id !== null && window.turnstile) window.turnstile.reset(TS.id); } catch {}
+    }
+
     let sending = false;
     form.addEventListener('submit', async e => {
       e.preventDefault();
@@ -263,6 +308,15 @@
         note: F.note.value.trim(),
         website: document.getElementById('fWebsite').value,
       };
+      if (TS.key) {
+        if (!TS.token) {
+          formErr.textContent = 'Finish the quick check above the button first.';
+          formErr.dataset.ts = '1';
+          formErr.hidden = false;
+          return;
+        }
+        body.turnstileToken = TS.token;
+      }
       sending = true;
       sendBtn.disabled = true;
       sendBtn.textContent = 'Sending…';
@@ -276,8 +330,13 @@
         let j = {};
         try { j = await res.json(); } catch {}
         if (res.ok && j.ok) { done(body.school, body.email); return; }
+        if (TS.key) resetTurnstile();   // a token works once
         if (res.status === 400 && j.fields) { showErrors(j.fields); return; }
-        formErr.textContent = res.status === 429
+        formErr.textContent = j.error === 'captcha_failed'
+          ? 'The quick check didn’t go through. Do it again, then send.'
+          : j.error === 'captcha_unavailable'
+          ? 'We couldn’t run the quick check right now. Try again in a moment.'
+          : res.status === 429
           ? 'Too many applications from this network. Try again in a few minutes.'
           : 'We couldn’t send this right now. Try again in a moment, or email schools@averages.io.';
         formErr.hidden = false;
