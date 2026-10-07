@@ -10,7 +10,7 @@ const TITLE = "Bring Averages.io to your school";
 const DESCRIPTION = "For school and district IT teams using Canvas. Tell us about your school and we'll email you when it's approved.";
 
 export const metadata: Metadata = {
-  title: "Averages.io School Application",
+  // No `title`: the tab title comes from the page itself (see app/layout.tsx).
   description: DESCRIPTION,
   openGraph: {
     type: "website",
