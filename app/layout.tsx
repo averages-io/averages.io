@@ -10,7 +10,10 @@ const DESCRIPTION = "Because schoolwork should be simple. Grades, assignments an
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://app.averages.io"),
-  title: "Averages.io",
+  // No `title` on purpose (2026-10-07): each page sets its own tab title
+  // (LegacyPage's document.title). A metadata title is a React-managed
+  // <title> that wins over that and sticks across client navigation, which
+  // showed one page's title on every page. Link previews use og:title.
   description: DESCRIPTION,
   openGraph: {
     type: "website",
