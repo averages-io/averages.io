@@ -272,7 +272,9 @@
     if (Date.now() - last < DAY_MS && last <= Date.now()) return { ok: true, touched: false };
     // Noted first, so several tabs opening at once don't all post.
     setLocal(TOUCHED_KEY, String(Date.now()));
-    const r = await api('POST', '/push/touch', {});
+    let tz = '';
+    try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) {}
+    const r = await api('POST', '/push/touch', { tz: String(tz).slice(0, 64) });
     if (!r.ok) return fail(codeOf(r));
     if (r.data && r.data.on === false) {
       const sub = await currentSubscription();
