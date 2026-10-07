@@ -628,6 +628,8 @@
   .lf-reauth button:hover { background: var(--accent-dark); }
   .lf-reauth button:disabled { opacity: 0.6; cursor: progress; }
   .lf-reauth button:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
+  .lf-reauth .lf-reauth-x { width: 28px; height: 28px; padding: 0; flex: none; border-radius: 50%; background: none; color: var(--text-muted); font-size: 1.1rem; line-height: 1; }
+  .lf-reauth .lf-reauth-x:hover { background: var(--border); color: var(--text-dark); }
   @media (min-width: 761px) and (max-width: 1100px) { .fx-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } .fx-row { grid-template-columns: 34px minmax(0, 1fr) 140px 76px 36px; } }
   @media (max-width: 760px) {
     .fx { grid-template-columns: minmax(0, 1fr); }
@@ -1696,11 +1698,19 @@
       }
       // A drive that needs its sign-in again (Martin, 10-6): one banner each,
       // on every view except that drive's own (its panel already asks).
+      // Its x hides it for the rest of this tab's visit (Martin, 10-6).
+      const REAUTH_KEY = 'averages_files_reauth_hidden';
+      const reauthHidden = new Set((() => { try { const v = JSON.parse(sessionStorage.getItem(REAUTH_KEY) || '[]'); return Array.isArray(v) ? v : []; } catch { return []; } })());
+      function hideReauth(app) {
+        reauthHidden.add(app);
+        try { sessionStorage.setItem(REAUTH_KEY, JSON.stringify([...reauthHidden])); } catch {}
+        render();
+      }
       function reauthHTML() {
         if (INCOGNITO) return '';
-        return ['gdrive', 'onedrive'].filter(app => CLOUD[app].state === 'click' && LV.filter !== app).map(app => {
+        return ['gdrive', 'onedrive'].filter(app => CLOUD[app].state === 'click' && LV.filter !== app && !reauthHidden.has(app)).map(app => {
           const c = CLOUD[app];
-          return `<div class="lf-reauth" role="status"><span><b>${esc(c.name)}</b> needs you to sign in again to show your files.</span><button type="button" data-cloud-show="${app}"${c.busy ? ' disabled' : ''}>Sign in to ${esc(c.name)}</button></div>`;
+          return `<div class="lf-reauth" role="status"><span><b>${esc(c.name)}</b> needs you to sign in again to show your files.</span><button type="button" data-cloud-show="${app}"${c.busy ? ' disabled' : ''}>Sign in to ${esc(c.name)}</button><button class="lf-reauth-x" type="button" data-reauth-hide="${app}" aria-label="Hide this ${esc(c.name)} message">×</button></div>`;
         }).join('');
       }
       function navLive(all) {
@@ -1894,6 +1904,8 @@
         const view = t.closest('[data-view]');
         if (view) { fxView = view.dataset.view; try { localStorage.setItem('schoolagy_files_view', fxView); } catch {} render(); return; }
         if (t.closest('[data-flash-close]')) { flashState = null; render(); return; }
+        const hideRe = t.closest('[data-reauth-hide]');
+        if (hideRe) { hideReauth(hideRe.dataset.reauthHide); return; }
         // Google Drive / OneDrive: each opens a window, so nothing is awaited before it.
         const conn = t.closest('[data-cloud-connect]');
         if (conn && !conn.disabled) { askCloud(conn.dataset.cloudConnect, 'connect'); return; }
