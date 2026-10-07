@@ -51,6 +51,25 @@ await test("each page asks for what the contract lists", () => {
   assert.deepEqual(names("nope"), []);
 });
 
+await test("links by id (2026-10-07): class pages read ?id=, assignment?id= asks which class", () => {
+  const byName = (page, search) => Object.fromEntries(extrasFor(page, search, NOW).map((r) => [r.name, r]));
+  assert.equal(courseParam("?id=7000000001", "gradebook"), "7000000001");
+  assert.equal(courseParam("?id=7000000001", "course-home"), "7000000001");
+  assert.equal(courseParam("?id=7000000001", "assignment"), "");
+  assert.equal(courseParam("?id=abc", "gradebook"), "");
+  assert.equal(courseParam("?course=apchem&id=9", "gradebook"), "apchem");
+  assert.equal(byName("gradebook", "?id=7000000001").gradebook.path, "/data/gradebook?course=7000000001");
+  assert.equal(byName("course-materials", "?id=7000000001&show=x").folders.path, "/data/folders?course=7000000001");
+  const loc = byName("assignment", "?id=7100000106").locate;
+  assert.equal(loc.path, "/data/assignment/locate?id=7100000106");
+  assert.equal(loc.cacheKey, "averages_extras_locate_7100000106");
+  assert.deepEqual(extrasFor("assignment", "?id=abc", NOW), []);
+  assert.deepEqual(extrasFor("assignment", "?id=7100000106&course=7000000001", NOW), []);
+  const data = mergeExtras({}, [loc], { locate: { section: "7000000001", title: "Lab Report #4" } });
+  assert.deepEqual(data.LOCATED, { id: "7100000106", section: "7000000001", title: "Lab Report #4" });
+  assert.deepEqual(mergeExtras({}, [loc], { locate: { section: "x" } }).LOCATED, undefined);
+});
+
 await test("paths and cache keys", () => {
   const byName = (page, search) => Object.fromEntries(extrasFor(page, search, NOW).map((r) => [r.name, r]));
   const home = byName("home", "");
