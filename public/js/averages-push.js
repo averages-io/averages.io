@@ -192,7 +192,10 @@
       return fail(e && e.name === 'NotAllowedError' ? 'blocked' : 'subscribe_failed');
     }
     const json = sub.toJSON();
-    const r = await api('POST', '/push/subscribe', { subscription: { endpoint: json.endpoint, keys: json.keys }, types: cleanTypes(types) });
+    // Time zone (2026-10-07): Schoology due times are local, so "due within a day" needs it.
+    let tz = '';
+    try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) {}
+    const r = await api('POST', '/push/subscribe', { subscription: { endpoint: json.endpoint, keys: json.keys }, types: cleanTypes(types), tz: String(tz).slice(0, 64) });
     if (!r.ok) {
       try {
         await sub.unsubscribe();
