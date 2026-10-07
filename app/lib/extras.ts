@@ -19,7 +19,7 @@
  * then show their signed-in empty state, never their sample data.
  */
 
-export type ExtraName = "people" | "updates" | "events" | "gradebook" | "folders" | "messages";
+export type ExtraName = "people" | "updates" | "events" | "gradebook" | "folders" | "messages" | "locate";
 
 export interface ExtraRequest {
   name: ExtraName;
@@ -50,7 +50,15 @@ export const EXTRAS_BY_PAGE: Readonly<Record<string, readonly ExtraName[]>> = {
   calendar: ["events"],
   messages: ["people", "messages"],
   contacts: ["people"],
+  // Opened as assignment?id=<id> (2026-10-07): which class it's in, for work
+  // that isn't in the bundle (older, graded). Skipped when ?course= is there.
+  assignment: ["locate"],
 };
+
+/** The pages about one class: since 2026-10-07 a real class comes as ?id=<section id>. */
+const COURSE_PAGES = new Set(["course-home", "gradebook", "course-materials"]);
+/** An assignment or class id from Schoology or Classroom. */
+const LMS_ID = /^\d{1,24}$/;
 
 /**
  * Event windows, in days around today. The calendar browses a school year
@@ -77,15 +85,34 @@ function addDays(d: Date, days: number): Date {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate() + days);
 }
 
-/** The ?course= value when it's a usable id, else "". */
-export function courseParam(search: string): string {
+/**
+ * The class a page is about: ?course=, or on a class page ?id= (a real
+ * class's id, 2026-10-07). "" when there's no usable one.
+ */
+export function courseParam(search: string, pageId = ""): string {
   let value = "";
   try {
-    value = new URLSearchParams(search).get("course") ?? "";
+    const q = new URLSearchParams(search);
+    value = q.get("course") ?? "";
+    if (!value && COURSE_PAGES.has(pageId)) {
+      const id = q.get("id") ?? "";
+      if (LMS_ID.test(id)) value = id;
+    }
   } catch {
     return "";
   }
   return COURSE_ID.test(value) ? value : "";
+}
+
+/** The assignment page's ?id= when it came without its class, else "". */
+function bareAssignmentId(search: string): string {
+  try {
+    const q = new URLSearchParams(search);
+    const id = q.get("id") ?? "";
+    return !q.get("course") && !q.get("section") && LMS_ID.test(id) ? id : "";
+  } catch {
+    return "";
+  }
 }
 
 /**
@@ -100,7 +127,7 @@ export function courseParam(search: string): string {
  */
 export function extrasFor(pageId: string, search: string, now: Date): ExtraRequest[] {
   const names = EXTRAS_BY_PAGE[pageId] ?? [];
-  const course = courseParam(search);
+  const course = courseParam(search, pageId);
   const out: ExtraRequest[] = [];
   for (const name of names) {
     const key = (...parts: string[]) => EXTRAS_PREFIX + [name, ...parts].filter(Boolean).join("_");
@@ -121,6 +148,11 @@ export function extrasFor(pageId: string, search: string, now: Date): ExtraReque
         const forCourse = hub ? course : "";
         const query = `start=${start}&end=${end}${forCourse ? `&course=${encodeURIComponent(forCourse)}` : ""}`;
         out.push({ name, path: `/data/events?${query}`, cacheKey: key(start, end, forCourse), course: forCourse });
+        break;
+      }
+      case "locate": {
+        const id = bareAssignmentId(search);
+        if (id) out.push({ name, path: `/data/assignment/locate?id=${id}`, cacheKey: key(id), course: id });
         break;
       }
       case "gradebook":
@@ -201,6 +233,11 @@ export function mergeExtra(data: Data, req: Pick<ExtraRequest, "name" | "course"
         placement: isRecord(payload.placement) ? payload.placement : {},
         partial: payload.partial === true,
       };
+      return true;
+    case "locate":
+      // { section, title } for the id in `course` (the assignment's id here).
+      if (typeof payload.section !== "string" || !LMS_ID.test(payload.section)) return false;
+      data.LOCATED = { id: req.course, section: payload.section, title: typeof payload.title === "string" ? payload.title.slice(0, 200) : "" };
       return true;
     case "messages":
       if (!Array.isArray(payload.CONVERSATIONS)) return false;
