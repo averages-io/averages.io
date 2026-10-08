@@ -2199,6 +2199,19 @@
           if (cfg.failed) throw new Error('config');
           cloud.cfg = cfg;
           cloud.state = 'ready';
+          // Back from connecting through our server (2026-10-08): say how it went.
+          const back = typeof C.connectResult === 'function' ? C.connectResult() : null;
+          if (back) {
+            const name = back.app === 'gdrive' ? 'Google Drive' : 'OneDrive';
+            const said = {
+              connected: back.app === 'gdrive' ? 'Google Drive is connected. It stays connected until you disconnect it.' : 'OneDrive is connected. It stays connected until you disconnect it.',
+              cancelled: `${name} wasn’t connected.`,
+              drive_not_allowed: C.messageFor('drive_not_allowed'),
+              not_configured: `${name} isn’t switched on yet.`,
+              incognito: `${name} is off in Incognito mode.`,
+            }[back.result] || `Couldn’t connect ${name}. Try again in a moment.`;
+            setTimeout(() => showFlash(said, back.result !== 'connected'), 0);
+          }
           // Google's sign-in script loads now, so Connect can open its window straight away.
           if (cfg.google) C.prepareGoogle().catch(() => {});
         } catch {
@@ -4112,6 +4125,14 @@
     syncResponsiveView();
     // No initializer on purpose: the Integrations code above may already have set it.
     var settingsStartSection;
+    // Back from connecting Google Drive / OneDrive through our server (2026-10-08):
+    // open Integrations, where averages-cloud.js's message shows.
+    (function () {
+      try {
+        const q = new URLSearchParams(window.location.search);
+        if (q.get('cloud') && /^(gdrive|onedrive)$/.test(q.get('app') || '') && !settingsStartSection) settingsStartSection = 'integrations';
+      } catch (e) {}
+    })();
     // ?section=<name>: ?section=account after switching modes (the page reloads
     // to apply it everywhere), ?section=integrations from the assignment page's
     // Reconnect Canva link (2026-10-06), and so on for any section.
