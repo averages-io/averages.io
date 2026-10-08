@@ -38,6 +38,16 @@
  * Signing out of Averages.io clears all four (app/lib/averages.ts); a
  * different Microsoft account or Disconnect forgets the picked files too.
  *
+ * Staying connected (2026-10-08, Martin: "why can it not be like Canva"):
+ * when our API has the app set up (GET /cloud/status says `configured`), the
+ * Worker holds the student's Google / Microsoft sign-in (a refresh token in
+ * their own storage, like Canva) and hands this page short-lived access
+ * tokens (POST /cloud/:app/token). Connect is a page redirect through
+ * /cloud/:app/connect, and the connection lasts across tabs, visits and
+ * devices until they disconnect. The browser-only way below stays for an app
+ * the API hasn't set up yet. Either way the files themselves go straight
+ * between this browser and Google / Microsoft.
+ *
  * Shared by settings.html, assignment.html and files.html, which load it only
  * in a signed-in session. Popups must open inside the click that asked for
  * them, so googleToken / oneDriveToken / connect* are deliberately NOT async:
@@ -203,6 +213,138 @@
     if (e.key === null || e.key === OWNER_KEY || e.key === ACCOUNTS_KEY) window.dispatchEvent(new Event('averages-cloud-change'));
   });
 
+  /* ── connections our server keeps (2026-10-08) ──────────────────────── */
+
+  /*
+   * SRV.status is GET /cloud/status: { gdrive: { configured, connected,
+   * email, name, scopes }, onedrive: {...}, incognito? }, or null when the API
+   * doesn't have it (an older API: the browser-only way is used). Tokens the
+   * server hands out are kept in memory only, for this page, with the
+   * student they belong to.
+   */
+  const SRV = { status: null, statusAt: 0, pending: null, tok: {}, result: null };
+  const APPS = ['gdrive', 'onedrive'];
+  function serverOn(app) {
+    const st = SRV.status;
+    return !!(st && !st.incognito && st[app] && st[app].configured);
+  }
+  /** Our server is set up for `app` (also in Incognito: Disconnect still reaches it). */
+  function serverKnown(app) {
+    const st = SRV.status;
+    return !!(st && st[app] && st[app].configured);
+  }
+  function syncAccounts(st) {
+    for (const app of APPS) {
+      if (!st[app] || !st[app].configured) continue;
+      if (st.incognito || !st[app].connected) {
+        if (accounts()[app]) clearAccount(app);
+        continue;
+      }
+      const email = String(st[app].email || '');
+      const name = String(st[app].name || '');
+      setAccount(app, app === 'onedrive' ? { username: email, email, name, server: true } : { email, name, server: true });
+    }
+  }
+  function serverStatus(force) {
+    if (!force && SRV.status && Date.now() - SRV.statusAt < 60000) return Promise.resolve(SRV.status);
+    if (!force && SRV.pending) return SRV.pending;
+    SRV.pending = fetch(API + '/cloud/status', { credentials: 'include' })
+      .then((r) => (r.ok ? r.json() : null))
+      .catch(() => null)
+      .then((j) => {
+        SRV.pending = null;
+        if (j && typeof j === 'object' && j.gdrive && j.onedrive) {
+          SRV.status = j;
+          SRV.statusAt = Date.now();
+          syncAccounts(j);
+          try { window.dispatchEvent(new CustomEvent('averages-cloud-status')); } catch {}
+        }
+        return SRV.status;
+      });
+    return SRV.pending;
+  }
+  function hasScope(scopes, want) {
+    return Array.isArray(scopes) && scopes.some((x) => String(x).toLowerCase() === want.toLowerCase() || String(x).toLowerCase().endsWith('/' + want.toLowerCase()));
+  }
+  /** A token from our API for `app` (with Files.Read when `read`). Rejects needs_click when they must connect. */
+  async function serverToken(app, read) {
+    const me = owner();
+    const t = SRV.tok[app];
+    if (t && t.owner === me && t.exp - 60000 > Date.now() && (!read || hasScope(t.scopes, 'Files.Read'))) return t.token;
+    let r;
+    try {
+      r = await fetch(`${API}/cloud/${app}/token`, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+    } catch {
+      throw fail('network');
+    }
+    const j = await r.json().catch(() => ({}));
+    if (r.ok && j && typeof j.access_token === 'string') {
+      SRV.tok[app] = { token: j.access_token, exp: Date.now() + (Number(j.expires_in) || 3600) * 1000, scopes: Array.isArray(j.scopes) ? j.scopes : [], owner: me };
+      if (read && !hasScope(SRV.tok[app].scopes, 'Files.Read')) throw fail('needs_click');
+      return j.access_token;
+    }
+    if (r.status === 409) {
+      // Never connected, or Google / Microsoft took the sign-in back: they connect again.
+      delete SRV.tok[app];
+      if (SRV.status && SRV.status[app]) SRV.status[app].connected = false;
+      clearAccount(app);
+      throw fail('needs_click');
+    }
+    if (r.status === 503) throw fail('not_configured');
+    if (r.status === 403 && j && j.error === 'incognito_mode') throw fail('incognito');
+    throw fail('network');
+  }
+  /** This page, without our one-off ?cloud= / ?app= flags: where Connect comes back to. */
+  function returnPath() {
+    const u = new URL(window.location.href);
+    u.searchParams.delete('cloud');
+    u.searchParams.delete('app');
+    return u.pathname + u.search;
+  }
+  /** Connect through our API: the page goes to Google / Microsoft and comes back here. */
+  function goConnect(app, read) {
+    const acct = accounts()[app];
+    const hint = acct && (acct.email || acct.username) ? `&login_hint=${encodeURIComponent(acct.email || acct.username)}` : '';
+    window.location.assign(`${API}/cloud/${app}/connect?return_to=${encodeURIComponent(returnPath())}${read ? '&read=1' : ''}${hint}`);
+    // The page is leaving: nothing to show (callers stay quiet on popup_closed).
+    return Promise.reject(fail('popup_closed'));
+  }
+  /** Token, or (asked from a click) off to connect. */
+  function serverTokenOrConnect(app, opts) {
+    if (opts.prompt === 'select_account') return goConnect(app, !!opts.read);
+    return serverToken(app, !!opts.read).catch((e) => {
+      if (e && e.code === 'needs_click' && opts.interactive) return goConnect(app, !!opts.read);
+      throw e;
+    });
+  }
+  function serverDisconnect(app) {
+    delete SRV.tok[app];
+    if (SRV.status && SRV.status[app]) SRV.status[app].connected = false;
+    return fetch(`${API}/cloud/${app}/connection`, { method: 'DELETE', credentials: 'include' }).then(() => {}, () => {});
+  }
+  /*
+   * Back from Connect: ?cloud=connected|cancelled|failed|drive_not_allowed|
+   * not_configured|incognito&app=gdrive|onedrive. Read once, taken out of
+   * the address bar, and kept for the page to show (connectResult()).
+   */
+  (function readReturn() {
+    try {
+      const q = new URLSearchParams(window.location.search);
+      const result = q.get('cloud');
+      const app = q.get('app');
+      if (!result || !APPS.includes(app)) return;
+      SRV.result = { app, result: String(result).slice(0, 40) };
+      history.replaceState(history.state, '', returnPath() + window.location.hash);
+    } catch {}
+  })();
+  function connectResult() {
+    const r = SRV.result;
+    SRV.result = null;
+    return r;
+  }
+  // Learn what the server keeps as soon as this loads.
+  serverStatus();
+
   /* ── shared helpers ───────────────────────────────────────────────── */
 
   let configCache = null;
@@ -212,8 +354,8 @@
    * isn't cached, so the next call tries again.
    */
   function config() {
-    if (configCache) return Promise.resolve(configCache);
-    return fetch(API + '/config/cloud')
+    if (configCache) return serverStatus().then(() => configCache);
+    return Promise.all([fetch(API + '/config/cloud'), serverStatus()]).then(([r]) => r)
       .then((r) => (r.ok ? r.json() : null))
       .then((c) => {
         if (!c || typeof c !== 'object') return { google: null, microsoft: null, failed: true };
@@ -367,6 +509,9 @@
    */
   function googleToken(opts) {
     opts = opts || {};
+    if (serverOn('gdrive')) return serverTokenOrConnect('gdrive', opts);
+    // Not known yet: a call that can wait asks the server first.
+    if (!SRV.status && SRV.pending && !opts.interactive) return SRV.pending.then(() => googleToken(opts));
     const t = tokens().gdrive;
     if (!opts.prompt && t && t.token && t.exp - 60000 > Date.now()) return Promise.resolve(t.token);
     if (!opts.interactive) return Promise.reject(fail('needs_click'));
@@ -394,6 +539,7 @@
     }
     if (r.status === 401) {
       clearToken('gdrive');
+      delete SRV.tok.gdrive;
       throw fail('needs_click');
     }
     return r;
@@ -412,6 +558,7 @@
 
   /** Connect from Settings: consent (account chooser), then remember who it is. */
   function connectGoogle() {
+    if (serverOn('gdrive')) return goConnect('gdrive', false);
     return googleToken({ interactive: true, prompt: 'select_account' }).then(rememberGoogle);
   }
 
@@ -421,6 +568,8 @@
    * the first time. Not async: see googleToken.
    */
   function googleSession(opts) {
+    // Our server keeps it: who it is comes from GET /cloud/status.
+    if (serverOn('gdrive')) return googleToken(opts);
     const before = rawToken('gdrive');
     return googleToken(opts).then(async (token) => {
       // A sign-in window ran (new token), or nothing is remembered: check who it is.
@@ -431,6 +580,12 @@
 
   /** Forget Google here, and withdraw this token's access at Google when we still have one. */
   function disconnectGoogle() {
+    if (serverKnown('gdrive')) {
+      clearToken('gdrive');
+      clearAccount('gdrive');
+      writeJSON('local', DRAFTS_KEY, []);
+      return serverDisconnect('gdrive');
+    }
     const t = tokens().gdrive;
     try {
       if (t && t.token && window.google && window.google.accounts && window.google.accounts.oauth2) {
@@ -1003,6 +1158,8 @@
    */
   function oneDriveToken(opts) {
     opts = opts || {};
+    if (serverOn('onedrive')) return serverTokenOrConnect('onedrive', opts);
+    if (!SRV.status && SRV.pending && !opts.interactive) return SRV.pending.then(() => oneDriveToken(opts));
     if (opts.read) return oneDriveReadToken(opts);
     const t = tokens().onedrive;
     if (!opts.prompt && t && t.access && t.exp - 60000 > Date.now()) return Promise.resolve(t.access);
@@ -1076,6 +1233,8 @@
     });
   }
   function oneDriveReadToken(opts) {
+    opts = opts || {};
+    if (serverOn('onedrive')) return serverTokenOrConnect('onedrive', Object.assign({}, opts, { read: true }));
     const rd = tokens().onedriveRead;
     if (!opts.prompt && rd && rd.access && rd.exp - 60000 > Date.now()) return Promise.resolve(rd.access);
     const base = tokens().onedrive;
@@ -1110,11 +1269,19 @@
   }
 
   function connectOneDrive() {
+    if (serverOn('onedrive')) return goConnect('onedrive', false);
     return oneDriveToken({ interactive: true, prompt: 'select_account' }).then(() => accounts().onedrive || { username: '', name: '' });
   }
 
   /** Forget Microsoft here. (A single-page app can't revoke; its refresh token dies within a day.) */
   function disconnectOneDrive() {
+    if (serverKnown('onedrive')) {
+      clearToken('onedrive');
+      clearToken('onedriveRead');
+      clearAccount('onedrive');
+      clearPicked();
+      return serverDisconnect('onedrive');
+    }
     clearToken('onedrive');
     clearToken('onedriveRead');
     clearAccount('onedrive');
@@ -1685,6 +1852,9 @@
     popup_blocked: 'Your browser blocked the sign-in window. Allow pop-ups for this site, then try again.',
     popup_closed: 'The sign-in window closed before it finished. If it said your school blocks Averages.io, your school’s IT team has to allow it first.',
     denied: 'Access wasn’t allowed, so nothing was changed.',
+    incognito: 'Off in Incognito mode.',
+    connect_cancelled: 'Nothing was connected.',
+    connect_failed: 'Couldn’t connect right now. Try again in a moment.',
     picked_other_account: 'Those files are in a different Google account than the one connected. Open Google Drive again and choose the connected account in Google’s window, or connect the other account in Settings.',
     drive_not_allowed: 'Google Drive access wasn’t ticked. Connect again and leave “See, edit, create, and delete only the specific Google Drive files you use with this app” ticked.',
     too_large: 'This file is too big to copy (250 MB max).',
@@ -1707,6 +1877,8 @@
   }
 
   window.AveragesCloud = {
+    serverStatus,
+    connectResult,
     // shared
     config,
     accounts,
