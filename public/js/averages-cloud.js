@@ -544,31 +544,74 @@
     await loadScript('https://apis.google.com/js/api.js');
     await new Promise((resolve, reject) => window.gapi.load('picker', { callback: resolve, onerror: () => reject(fail('network')) }));
     const P = window.google.picker;
-    return new Promise((resolve) => {
+    const acct = accounts().gdrive || {};
+    const docs = await new Promise((resolve) => {
       /*
-       * Always closable (2026-10-07, Martin: "you can't close it"). Google's
-       * own window has no way out when it shows an error (a bad API key,
-       * say), so ours adds a Close button above it and closes on Escape too.
-       * However it ends, the picker is taken down and the promise answers once.
+       * Hardened 2026-10-07/08 (Martin: stuck on "Select an account", froze
+       * after picking, couldn't click out). Google's window can't be fixed
+       * from here, so ours is always escapable around it:
+       *   - a bar above it with the connected account and Close;
+       *   - Escape, or a click on the dimmed page, closes it;
+       *   - Google's layers are kept under our bar;
+       *   - a tip after a few seconds for the two usual causes: the browser
+       *     signed in to several Google accounts (Google's window uses its
+       *     own, not the connected one), or blocking Google's cookies.
+       * However it ends, the picker is taken down and this answers once.
        */
       let picker = null;
       let ended = false;
+      let loaded = false;
+      const Z = 2147483647;
+      const bar = document.createElement('div');
+      bar.setAttribute('role', 'region');
+      bar.setAttribute('aria-label', 'Google Drive');
+      bar.style.cssText = `position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:${Z};display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center;max-width:min(680px,calc(100vw - 24px));padding:8px 8px 8px 16px;border-radius:999px;background:#14151f;color:#fff;font:600 13px/1.35 -apple-system,system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.35)`;
+      const who = document.createElement('span');
+      who.textContent = acct.email ? `Pick files from ${acct.email}` : 'Pick files from your Google Drive';
       const close = document.createElement('button');
       close.type = 'button';
       close.textContent = 'Close';
       close.setAttribute('aria-label', 'Close Google Drive');
-      close.style.cssText = 'position:fixed;top:14px;right:14px;z-index:2147483647;padding:10px 18px;border:0;border-radius:999px;background:#14151f;color:#fff;font:700 14px -apple-system,system-ui,sans-serif;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.35)';
+      close.style.cssText = 'padding:8px 16px;border:0;border-radius:999px;background:#fff;color:#14151f;font:800 13px -apple-system,system-ui,sans-serif;cursor:pointer';
+      const help = document.createElement('button');
+      help.type = 'button';
+      help.textContent = 'Trouble?';
+      help.setAttribute('aria-expanded', 'false');
+      help.style.cssText = 'padding:8px 4px;border:0;background:none;color:#cfd3ff;font:700 13px -apple-system,system-ui,sans-serif;text-decoration:underline;cursor:pointer';
+      bar.append(who, help, close);
+      const tip = document.createElement('div');
+      tip.style.cssText = `position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:${Z};max-width:min(560px,calc(100vw - 24px));padding:12px 16px;border-radius:14px;background:#fff;color:#14151f;font:600 13px/1.45 -apple-system,system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.3)`;
+      tip.textContent = acct.email
+        ? `Stuck on “Select an account”? Choose ${acct.email} in Google’s window. If it isn’t listed, sign in to it at google.com in this browser (or use a browser window with only that account), then try again. Some school devices block Google here: use Upload instead.`
+        : 'Stuck on “Select an account”? Choose the Google account you connected. If this browser blocks Google here (some school devices do), use Upload instead.';
+      const keepUnder = () => {
+        document.querySelectorAll('.picker-dialog-bg, .picker-dialog, .picker.modal-dialog-bg, .picker.modal-dialog').forEach((el) => {
+          if (Number(getComputedStyle(el).zIndex) >= Z - 10) el.style.zIndex = String(Z - 20);
+        });
+      };
       const onKey = (e) => { if (e.key === 'Escape') finish([]); };
-      function finish(docs) {
+      const onBackdrop = (e) => { if (e.target && e.target.classList && (e.target.classList.contains('picker-dialog-bg') || e.target.classList.contains('modal-dialog-bg'))) finish([]); };
+      const timers = [];
+      function finish(list) {
         if (ended) return;
         ended = true;
-        close.remove();
+        timers.forEach(clearTimeout);
+        bar.remove();
+        tip.remove();
         document.removeEventListener('keydown', onKey, true);
+        document.removeEventListener('click', onBackdrop, true);
         try { if (picker) { picker.setVisible(false); picker.dispose(); } } catch { /* already gone */ }
-        resolve(docs);
+        resolve(list);
       }
       close.addEventListener('click', () => finish([]));
+      const showTip = (on) => {
+        if (ended) return;
+        if (on) document.body.append(tip); else tip.remove();
+        help.setAttribute('aria-expanded', on ? 'true' : 'false');
+      };
+      help.addEventListener('click', () => showTip(!tip.isConnected));
       document.addEventListener('keydown', onKey, true);
+      document.addEventListener('click', onBackdrop, true);
       const view = new P.DocsView(P.ViewId.DOCS).setIncludeFolders(false);
       picker = new P.PickerBuilder()
         .addView(view)
@@ -580,11 +623,31 @@
           const action = data[P.Response.ACTION];
           if (action === P.Action.PICKED) finish(data[P.Response.DOCUMENTS] || []);
           else if (action === P.Action.CANCEL) finish([]);
+          else if (action === 'loaded') loaded = true;
         })
         .build();
       picker.setVisible(true);
-      document.body.appendChild(close);
+      document.body.append(bar);
+      [0, 300, 1500].forEach((ms) => timers.push(setTimeout(keepUnder, ms)));
+      // On its own only when Google's window hasn't said it loaded after 6 s; "Trouble?" shows it any time.
+      timers.push(setTimeout(() => { if (!loaded) showTip(true); }, 6000));
     });
+    if (!docs.length) return docs;
+    /*
+     * Picked in a different Google account than the connected one (the usual
+     * "nothing got added"): drive.file only opens what the connected account
+     * picked, so those come back 404. Say so instead of doing nothing.
+     */
+    const ok = [];
+    for (const d of docs) {
+      const id = String((d && d.id) || '');
+      if (!id) continue;
+      let f = null;
+      try { f = await googleFile(token, id); } catch (e) { if (e && e.code !== 'network') throw e; f = { id }; }
+      if (f) ok.push(d);
+    }
+    if (!ok.length) throw fail('picked_other_account');
+    return ok;
   }
 
   /** A file name that's safe to hand on: no path separators or control characters. */
@@ -1622,6 +1685,7 @@
     popup_blocked: 'Your browser blocked the sign-in window. Allow pop-ups for this site, then try again.',
     popup_closed: 'The sign-in window closed before it finished. If it said your school blocks Averages.io, your school’s IT team has to allow it first.',
     denied: 'Access wasn’t allowed, so nothing was changed.',
+    picked_other_account: 'Those files are in a different Google account than the one connected. Open Google Drive again and choose the connected account in Google’s window, or connect the other account in Settings.',
     drive_not_allowed: 'Google Drive access wasn’t ticked. Connect again and leave “See, edit, create, and delete only the specific Google Drive files you use with this app” ticked.',
     too_large: 'This file is too big to copy (250 MB max).',
     not_editable: 'Only Word, PowerPoint and Excel files open in Google Docs, Slides and Sheets.',
