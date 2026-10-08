@@ -1193,7 +1193,8 @@
       function normalize(app, f) {
         if (app === 'gdrive') {
           const [type, kind] = typeOf(f.name, f.mimeType);
-          return { id: String(f.id || ''), name: String(f.name || 'Untitled'), type, kind, url: String(f.webViewLink || ''), t: Date.parse(f.modifiedTime) || 0, size: Number(f.size) || 0 };
+          // thumbnailLink (2026-10-07): Google's own short-lived preview image, when it has one.
+          return { id: String(f.id || ''), name: String(f.name || 'Untitled'), type, kind, url: String(f.webViewLink || ''), t: Date.parse(f.modifiedTime) || 0, size: Number(f.size) || 0, thumb: String(f.thumbnailLink || '') };
         }
         const [type, kind] = typeOf(f.name, '');
         return { id: String(f.id || ''), name: String(f.name || 'Untitled'), type, kind, url: String(f.webUrl || ''), t: Date.parse(f.lastModifiedDateTime) || 0, picked: !!f.picked, size: Number(f.size) || 0 };
@@ -1474,15 +1475,41 @@
         }
         render();
       }
+
+      // ---- Canva opens in a new tab (2026-10-07, Martin) ----
+      // The tab is opened on the click itself (a tab opened after waiting for
+      // our API would be blocked as a pop-up), shows "Opening Canva…", and is
+      // sent to Canva once the API answers. Blocked anyway: this tab goes.
+      function openCanvaTab() {
+        let tab = null;
+        try { tab = window.open('', '_blank'); } catch {}
+        if (!tab) return null;
+        try {
+          tab.opener = null;
+          tab.document.title = 'Opening Canva…';
+          tab.document.body.style.cssText = 'margin:0;display:grid;place-items:center;height:100vh;font:600 16px -apple-system,system-ui,sans-serif;color:#555;background:#f4f4f6';
+          tab.document.body.textContent = 'Opening Canva…';
+        } catch {}
+        return tab;
+      }
+      /** Sends the tab to Canva; true when it went there (this page stays). */
+      function sendToCanva(tab, url) {
+        if (tab && !tab.closed) { try { tab.location.replace(url); return true; } catch {} }
+        window.location.assign(url);
+        return false;
+      }
+      function closeCanvaTab(tab) { try { if (tab && !tab.closed) tab.close(); } catch {} }
       async function openDesign(id, el) {
         if (!id || (el && el.getAttribute('aria-busy') === 'true')) return;
         if (el) el.setAttribute('aria-busy', 'true');
+        const tab = openCanvaTab();
         try {
           const res = await fetch(`${api}/canva/designs/${encodeURIComponent(id)}/open`, {
             method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ returnTo: '/files' }),
           });
           const j = await res.json().catch(() => ({}));
-          if (res.ok && CANVA_EDIT_URL.test(String(j.editUrl || ''))) { window.location.assign(j.editUrl); return; }
+          if (res.ok && CANVA_EDIT_URL.test(String(j.editUrl || ''))) { sendToCanva(tab, j.editUrl); return; }
+          closeCanvaTab(tab);
           if (j.error === 'canva_design_gone') {
             CV.items = CV.items.filter(x => x.id !== id);
             FD.items = FD.items.filter(x => x.id !== id);
@@ -1492,6 +1519,7 @@
           if (j.error === 'canva_not_connected' || j.error === 'canva_reconnect_needed') { loadCanva(false); return; }
           flash('Couldn’t open that design in Canva. Try again in a moment.', true);
         } catch {
+          closeCanvaTab(tab);
           flash('Couldn’t open that design in Canva. Try again in a moment.', true);
         } finally {
           if (el && el.isConnected) el.removeAttribute('aria-busy');
@@ -1619,7 +1647,7 @@
         if (!INCOGNITO) {
           ['gdrive', 'onedrive'].forEach(app => {
             if (CLOUD[app].state !== 'ready') return;
-            CLOUD[app].files.forEach((f, i) => out.push({ key: `${app}:${i}`, src: app, name: f.name, ext: f.type, kind: f.kind, t: f.t, from: app === 'gdrive' ? `Google Drive · ${f.kind}` : 'OneDrive', size: f.size, raw: f }));
+            CLOUD[app].files.forEach((f, i) => out.push({ key: `${app}:${i}`, src: app, name: f.name, ext: f.type, kind: f.kind, t: f.t, from: app === 'gdrive' ? `Google Drive · ${f.kind}` : 'OneDrive', size: f.size, thumb: f.thumb || '', raw: f }));
           });
           if (CV.state === 'ready') CV.items.forEach(d => out.push({ key: 'cv:' + d.id, src: 'canva', name: String(d.title || 'Untitled design'), ext: 'canva', t: Number(d.updatedAt) || 0, from: 'Canva', thumb: d.thumbnailUrl, raw: d }));
         }
@@ -1660,8 +1688,23 @@
             ? `<span class="fx-thumb canva"><img src="${esc(e.thumb)}" alt="" loading="lazy" referrerpolicy="no-referrer"></span>`
             : '<span class="fx-thumb canva" style="background:linear-gradient(135deg,#7d2ae7,#00c4cc)"><span class="page"><i></i><i></i><i></i></span></span>';
         }
-        return `<span class="fx-thumb" style="background:${THUMB[e.ext] || '#e4e4e8'}"><span class="page"><i></i><i></i><i></i><i></i><i></i></span></span>`;
+        const plain = `<span class="fx-thumb" style="background:${THUMB[e.ext] || '#e4e4e8'}"><span class="page"><i></i><i></i><i></i><i></i><i></i></span></span>`;
+        // Google Drive previews (2026-10-07): Google's image, or the plain page if it won't load.
+        if (e.src === 'gdrive' && GDRIVE_THUMB_OK(e.thumb)) {
+          return `<span class="fx-thumb lf-gthumb" style="background:${THUMB[e.ext] || '#e4e4e8'}"><img src="${esc(e.thumb)}" alt="" loading="lazy" referrerpolicy="no-referrer" data-thumb-fallback></span>`;
+        }
+        return plain;
       }
+      // Only Google's own image host, over https.
+      const GDRIVE_THUMB_OK = u => /^https:\/\/[a-z0-9-]+\.googleusercontent\.com\//i.test(String(u || ''));
+      // A preview that won't load (they expire after a few hours) becomes the plain page.
+      document.addEventListener('error', ev => {
+        const img = ev.target;
+        if (!img || img.tagName !== 'IMG' || !img.hasAttribute('data-thumb-fallback')) return;
+        const box = img.parentElement;
+        img.remove();
+        if (box) box.insertAdjacentHTML('beforeend', '<span class="page"><i></i><i></i><i></i><i></i><i></i></span>');
+      }, true);
       const moreBtn = e => `<button class="fx-more" type="button" data-lv-more="${esc(e.key)}" aria-label="More for ${esc(e.name)}" aria-haspopup="menu" aria-expanded="false">${MORE_ICON}</button>`;
       function rowLive(e) {
         const when = dayLabel(e.t);
@@ -1851,7 +1894,8 @@
           return items;
         }
         items.push(show);
-        if (!isClassroom()) items.push({ label: 'Attach to an assignment', next: true, run: () => openAttach({ src: 'course', id: f.id, name: f.name, kind: f.kind, parent: f.parent, course: f.course }, f.course) });
+        // Not for a file that came with an assignment (2026-10-07, Martin): it's the teacher's, already on it.
+        if (!isClassroom() && f.kind !== 'assignment') items.push({ label: 'Attach to an assignment', next: true, run: () => openAttach({ src: 'course', id: f.id, name: f.name, kind: f.kind, parent: f.parent, course: f.course }, f.course) });
         items.push({ label: 'Download', run: () => { window.location.href = cfDownloadUrl(f); } });
         if (cfg && cfg.google) items.push({ label: 'Save to Google Drive', run: () => cfSave('gdrive', f) });
         if (cfg && cfg.microsoft) items.push({ label: 'Save to OneDrive', run: () => cfSave('onedrive', f) });

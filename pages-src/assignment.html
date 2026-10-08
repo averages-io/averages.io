@@ -1961,6 +1961,30 @@
       (go || document.getElementById('canvaProbCancel')).focus();
     }
     const CANVA_EDIT_URL = /^https:\/\/(www\.)?canva\.com\//i;
+
+    // ---- Canva opens in a new tab (2026-10-07, Martin) ----
+    // The tab is opened on the click itself (a tab opened after waiting for
+    // our API would be blocked as a pop-up), shows "Opening Canva…", and is
+    // sent to Canva once the API answers. Blocked anyway: this tab goes.
+    function openCanvaTab() {
+      let tab = null;
+      try { tab = window.open('', '_blank'); } catch {}
+      if (!tab) return null;
+      try {
+        tab.opener = null;
+        tab.document.title = 'Opening Canva…';
+        tab.document.body.style.cssText = 'margin:0;display:grid;place-items:center;height:100vh;font:600 16px -apple-system,system-ui,sans-serif;color:#555;background:#f4f4f6';
+        tab.document.body.textContent = 'Opening Canva…';
+      } catch {}
+      return tab;
+    }
+    /** Sends the tab to Canva; true when it went there (this page stays). */
+    function sendToCanva(tab, url) {
+      if (tab && !tab.closed) { try { tab.location.replace(url); return true; } catch {} }
+      window.location.assign(url);
+      return false;
+    }
+    function closeCanvaTab(tab) { try { if (tab && !tab.closed) tab.close(); } catch {} }
     async function liveEditInCanva(btn) {
       if (btn.getAttribute('aria-busy') === 'true') return;
       const label = btn.querySelector('span:last-child');
@@ -1968,6 +1992,7 @@
       btn.setAttribute('aria-busy', 'true');
       if (label) label.textContent = 'Opening Canva…';
       const done = () => { btn.removeAttribute('aria-busy'); if (label) label.textContent = was; };
+      const tab = openCanvaTab();
       try {
         const res = await fetch(averagesApiBase() + '/canva/edit', {
           method: 'POST',
@@ -1978,12 +2003,14 @@
         const j = await res.json().catch(() => ({}));
         if (res.ok && typeof j.editUrl === 'string' && CANVA_EDIT_URL.test(j.editUrl)) {
           if (j.draft) { upsertLiveDraft(j.draft); renderDrafts(); }
-          window.location.assign(j.editUrl);   // stays "Opening Canva…" while the page leaves
+          if (sendToCanva(tab, j.editUrl)) done();   // same tab only if pop-ups are blocked
           return;
         }
+        closeCanvaTab(tab);
         done();
         showCanvaProblem(j.error);
       } catch {
+        closeCanvaTab(tab);
         done();
         showCanvaProblem('network');
       }
@@ -3410,17 +3437,20 @@
       btn.setAttribute('aria-busy', 'true');
       if (label) label.textContent = 'Opening…';
       const done = () => { btn.removeAttribute('aria-busy'); if (label) label.textContent = 'Open in Canva'; };
+      const tab = openCanvaTab();
       try {
         const res = await fetch(`${averagesApiBase()}/canva/designs/${encodeURIComponent(d.designId)}/open`, {
           method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ returnTo: currentAppPath() }),
         });
         const j = await res.json().catch(() => ({}));
-        if (res.ok && typeof j.editUrl === 'string' && CANVA_EDIT_URL.test(j.editUrl)) { window.location.assign(j.editUrl); return; }
+        if (res.ok && typeof j.editUrl === 'string' && CANVA_EDIT_URL.test(j.editUrl)) { if (sendToCanva(tab, j.editUrl)) done(); return; }
+        closeCanvaTab(tab);
         done();
         if (j.error === 'canva_design_gone') removeDraftRow(d.id);
         showCanvaProblem(j.error);
       } catch {
+        closeCanvaTab(tab);
         done();
         showCanvaProblem('network');
       }
@@ -3662,6 +3692,13 @@
       }
       if (!INCOGNITO && !CLASSROOM) {
         loadLiveDrafts(back === 'saved');
+        // Canva works in its own tab now (2026-10-07): coming back here refreshes Drafts.
+        let draftsAt = Date.now();
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState !== 'visible' || Date.now() - draftsAt < 5000) return;
+          draftsAt = Date.now();
+          loadLiveDrafts(false);
+        });
         loadCloud();
         loadCanvaReady();
       }
