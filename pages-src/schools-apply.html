@@ -116,7 +116,9 @@
   .verify-btn:hover:not([disabled]) { filter: brightness(1.15); }
   .verify-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px #ffffff, 0 0 0 6px var(--blue); }
   .verify-btn[disabled] { opacity: 0.6; cursor: progress; }
-  .field input.code-input { width: 168px; height: 44px; padding: 0 18px; text-align: center; letter-spacing: 0.22em; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .field input.code-input { width: 176px; height: 44px; padding: 0 18px; text-align: center; letter-spacing: 0.22em; font-weight: 800; font-variant-numeric: tabular-nums; }
+  /* The hint uses normal spacing so "6-digit code" fits (2026-10-08); typed digits stay spaced. */
+  .field input.code-input::placeholder { letter-spacing: normal; font-weight: 600; }
   .link-btn { border: 0; background: none; padding: 0; font: inherit; font-weight: 800; color: #0b2fb8; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
   .link-btn[disabled] { color: var(--sheet-muted); text-decoration: none; cursor: default; }
   .verify-done { margin: 0 4px; display: flex; align-items: center; gap: 6px; font-size: 0.92rem; font-weight: 800; color: #1a7f50; }
