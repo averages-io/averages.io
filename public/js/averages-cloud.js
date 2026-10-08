@@ -463,7 +463,8 @@
   }
 
   // size (2026-10-06): the Files page adds up its files' sizes. Google Docs, Sheets and Slides have none.
-  const DRIVE_FIELDS = 'id,name,mimeType,webViewLink,modifiedTime,size';
+  // thumbnailLink (2026-10-07): Google's preview image for the Files page.
+  const DRIVE_FIELDS = 'id,name,mimeType,webViewLink,modifiedTime,size,thumbnailLink';
 
   /** Uploads into the Averages.io folder. `convertTo` turns an Office file into a Google Doc/Slides/Sheet. */
   async function googleUpload(token, file) {
@@ -544,8 +545,32 @@
     await new Promise((resolve, reject) => window.gapi.load('picker', { callback: resolve, onerror: () => reject(fail('network')) }));
     const P = window.google.picker;
     return new Promise((resolve) => {
+      /*
+       * Always closable (2026-10-07, Martin: "you can't close it"). Google's
+       * own window has no way out when it shows an error (a bad API key,
+       * say), so ours adds a Close button above it and closes on Escape too.
+       * However it ends, the picker is taken down and the promise answers once.
+       */
+      let picker = null;
+      let ended = false;
+      const close = document.createElement('button');
+      close.type = 'button';
+      close.textContent = 'Close';
+      close.setAttribute('aria-label', 'Close Google Drive');
+      close.style.cssText = 'position:fixed;top:14px;right:14px;z-index:2147483647;padding:10px 18px;border:0;border-radius:999px;background:#14151f;color:#fff;font:700 14px -apple-system,system-ui,sans-serif;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.35)';
+      const onKey = (e) => { if (e.key === 'Escape') finish([]); };
+      function finish(docs) {
+        if (ended) return;
+        ended = true;
+        close.remove();
+        document.removeEventListener('keydown', onKey, true);
+        try { if (picker) { picker.setVisible(false); picker.dispose(); } } catch { /* already gone */ }
+        resolve(docs);
+      }
+      close.addEventListener('click', () => finish([]));
+      document.addEventListener('keydown', onKey, true);
       const view = new P.DocsView(P.ViewId.DOCS).setIncludeFolders(false);
-      const picker = new P.PickerBuilder()
+      picker = new P.PickerBuilder()
         .addView(view)
         .enableFeature(P.Feature.MULTISELECT_ENABLED)
         .setOAuthToken(token)
@@ -553,11 +578,12 @@
         .setAppId(c.appId)
         .setCallback((data) => {
           const action = data[P.Response.ACTION];
-          if (action === P.Action.PICKED) resolve(data[P.Response.DOCUMENTS] || []);
-          else if (action === P.Action.CANCEL) resolve([]);
+          if (action === P.Action.PICKED) finish(data[P.Response.DOCUMENTS] || []);
+          else if (action === P.Action.CANCEL) finish([]);
         })
         .build();
       picker.setVisible(true);
+      document.body.appendChild(close);
     });
   }
 
