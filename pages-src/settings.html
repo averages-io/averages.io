@@ -2428,6 +2428,8 @@
     potatoModeToggle.addEventListener('change', () => {
       document.body.classList.toggle('potato-mode', potatoModeToggle.checked);
       saveSettingsOption('potatoMode', potatoModeToggle.checked);
+      // Potato mode skips the Adobe font (app/layout.tsx); turning it off brings it back without a reload.
+      if (!potatoModeToggle.checked && typeof window.__averagesLoadFonts === 'function') window.__averagesLoadFonts();
     });
 
     // ------------------------------------------------------------------
