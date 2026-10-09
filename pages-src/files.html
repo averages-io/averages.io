@@ -1204,8 +1204,9 @@
         const [type, kind] = typeOf(f.name, '');
         return { id: String(f.id || ''), name: String(f.name || 'Untitled'), type, kind, url: String(f.webUrl || ''), t: Date.parse(f.lastModifiedDateTime) || 0, picked: !!f.picked, size: Number(f.size) || 0 };
       }
-      // Add from Google Drive / OneDrive needs the Picker key (Google) or the app id (Microsoft).
-      const canPick = app => (app === 'gdrive' ? !!(cfg && cfg.google && cfg.google.apiKey && cfg.google.appId) : !!(cfg && cfg.microsoft));
+      // Add from OneDrive: our own picker (needs the app id). Google Drive has no picker any more
+      // (2026-10-09): files come in from Drive itself with "Open with → Averages.io" (driveOpenPending).
+      const canPick = app => (app === 'gdrive' ? false : !!(cfg && cfg.microsoft));
       async function listCloud(app, token) {
         const c = CLOUD[app];
         c.state = 'loading';
@@ -1214,6 +1215,7 @@
           const raw = app === 'gdrive' ? await C().googleList(token) : await C().oneDriveList(token);
           c.files = raw.map(f => normalize(app, f)).sort((a, b) => b.t - a.t);
           c.state = 'ready';
+          if (app === 'gdrive') setTimeout(() => driveOpenPending(token), 0);
         } catch (err) {
           c.state = err && err.code === 'needs_click' ? 'click' : 'error';
           c.message = C().messageFor(err);
@@ -1225,9 +1227,54 @@
         const c = CLOUD[app];
         const configured = app === 'gdrive' ? !!cfg.google : !!cfg.microsoft;
         if (!configured) { c.state = 'soon'; render(); return; }
-        if (!C().accounts()[app]) { c.state = 'connect'; render(); return; }
+        if (!C().accounts()[app]) {
+          c.state = 'connect';
+          if (app === 'gdrive' && window.AveragesDriveOpen && window.AveragesDriveOpen.pending()) flash('Connect Google Drive (Add files → Connect Google Drive) to open the file you chose in Google Drive.', true);
+          render();
+          return;
+        }
         const quiet = app === 'gdrive' ? C().googleToken({}) : C().oneDriveToken({});
         quiet.then(t => listCloud(app, t), () => { c.state = 'click'; render(); });
+      }
+      /*
+       * "Open with → Averages.io" in Google Drive (2026-10-09, replacing the Picker).
+       * public/js/averages-drive-open.js kept the file IDs; once Drive is listed,
+       * the file shows in Google Drive's list here with its menu open (Attach to
+       * an assignment, Open in Google Drive). A file from a different Google
+       * account than the connected one can't be opened (drive.file is per account).
+       */
+      let driveOpenBusy = false;
+      async function driveOpenPending(token) {
+        const D = window.AveragesDriveOpen;
+        const p = D && D.pending();
+        if (!p || driveOpenBusy || !C()) return;
+        driveOpenBusy = true;
+        D.clear();
+        try {
+          const got = [];
+          for (const id of p.ids) {
+            try { const f = await C().googleFile(token, id); if (f && f.id) got.push(f); } catch { /* not ours to open */ }
+          }
+          if (!got.length) {
+            flash('That file is in a different Google account than the one connected to Averages.io. Open it from the connected account, or connect the other account in Settings.', true);
+            return;
+          }
+          const c = CLOUD.gdrive;
+          const have = new Set(c.files.map(f => f.id));
+          got.forEach(f => { if (!have.has(String(f.id))) c.files.unshift(normalize('gdrive', f)); });
+          LV.filter = 'gdrive';
+          flash(got.length === 1 ? `Opened “${got[0].name}” from Google Drive.` : `Opened ${got.length} files from Google Drive.`);
+          render();
+          const e = entries().find(x => x.src === 'gdrive' && x.raw && x.raw.id === String(got[0].id));
+          if (!e) return;
+          const sel = `[data-lv="${CSS.escape(e.key)}"]`;
+          const el = document.querySelector(`.fx-row${sel}`) || document.querySelector(sel);
+          if (!el) return;
+          el.scrollIntoView({ block: 'center' });
+          openFxMenu(el, e.name, itemsFor(e, el));
+        } finally {
+          driveOpenBusy = false;
+        }
       }
       /** Connect / Show files / Add: asks for the token inside the click, then lists. */
       function askCloud(app, how) {
@@ -1253,7 +1300,8 @@
         pending
           .then(async token => {
             if (how === 'pick') {
-              const picked = app === 'gdrive' ? await K.googlePick(token) : await K.oneDrivePick(token);
+              if (app === 'gdrive') { window.open(K.driveHome || 'https://drive.google.com/', '_blank', 'noopener,noreferrer'); return; }   // no picker any more
+              const picked = await K.oneDrivePick(token);
               if (!picked.length && c.state === 'ready') return;
               await listCloud(app, token);
               // 2026-10-08: say what was added, and show a picked Google file
@@ -1812,6 +1860,8 @@
         else if (f === 'gdrive' || f === 'onedrive') {
           const st = CLOUD[f].state;
           if ((st === 'ready' || st === 'click') && canPick(f)) extra = `<button class="fx-add" type="button" ${f === 'gdrive' ? 'data-pick-drive' : 'data-pick-onedrive'}${CLOUD[f].busy ? ' disabled' : ''}>${PLUS_ICON}Add from ${esc(CLOUD[f].name)}</button>`;
+          // Google Drive (2026-10-09): opens Drive, where they choose Open with → Averages.io.
+          else if (f === 'gdrive' && (st === 'ready' || st === 'click')) extra = `<button class="fx-add" type="button" data-pick-drive title="In Google Drive, right-click a file → Open with → Averages.io">${PLUS_ICON}Add from Google Drive</button>`;
         } else if (f === 'canva') {
           if (foldersOn()) extra = `<button class="fx-add" type="button" data-folder-new${FD.formBusy ? ' disabled' : ''}>${PLUS_ICON}New folder</button>`;
         } else if (!INCOGNITO) extra = `<button class="fx-add" type="button" data-lv-add aria-haspopup="menu" aria-expanded="false">${PLUS_ICON}Add files</button>`;
@@ -1951,6 +2001,12 @@
         ['gdrive', 'onedrive'].forEach(app => {
           const c = CLOUD[app];
           if (c.state === 'connect') list.push({ label: `Connect ${c.name}`, run: () => askCloud(app, 'connect') });
+          else if (app === 'gdrive' && (c.state === 'ready' || c.state === 'click')) {
+            // No picker: Google Drive opens, and they choose Open with → Averages.io there.
+            const ow = C() && typeof C().googleOpenWith === 'function' ? C().googleOpenWith() : 'on';
+            if (ow === 'reconnect') list.push({ label: 'Reconnect Google Drive', sub: 'Adds Averages.io to Google Drive’s Open with menu', run: () => askCloud(app, 'connect') });
+            else list.push({ label: 'From Google Drive', sub: 'In Drive, right-click a file → Open with → Averages.io', run: () => { window.open((C() && C().driveHome) || 'https://drive.google.com/', '_blank', 'noopener,noreferrer'); } });
+          }
           else if ((c.state === 'ready' || c.state === 'click') && canPick(app)) list.push({ label: `From ${c.name}`, run: () => askCloud(app, 'pick') });
           else list.push({ label: `From ${c.name}`, soon: true });
         });
@@ -1988,7 +2044,7 @@
         const show = t.closest('[data-cloud-show]');
         if (show && !show.disabled) { askCloud(show.dataset.cloudShow, 'show'); return; }
         const pick = t.closest('[data-pick-drive]');
-        if (pick && !pick.disabled) { askCloud('gdrive', 'pick'); return; }
+        if (pick && !pick.disabled) { window.open((C() && C().driveHome) || 'https://drive.google.com/', '_blank', 'noopener,noreferrer'); flash('Google Drive opened in a new tab. Right-click a file there and choose Open with → Averages.io.'); return; }
         const pickOne = t.closest('[data-pick-onedrive]');
         if (pickOne && !pickOne.disabled) { askCloud('onedrive', 'pick'); return; }
         const retry = t.closest('[data-cloud-retry]');

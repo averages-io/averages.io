@@ -1849,7 +1849,7 @@
       const PREVIEW = !window.__AVERAGES_MODE__;   // set by LegacyPage.tsx when signed in (live or demo); missing in the preview
       const APPS = [
         { id: 'canva', name: 'Canva', desc: 'Edit assignment files in Canva, then turn them in from Drafts.' },
-        { id: 'gdrive', name: 'Google Drive', desc: 'Edit Word, PowerPoint and Excel files in Google Docs, Slides and Sheets, and add files from Drive.' },
+        { id: 'gdrive', name: 'Google Drive', desc: 'Edit Word, PowerPoint and Excel files in Google Docs, Slides and Sheets. To bring a file in, right-click it in Google Drive and choose Open with → Averages.io.' },
         { id: 'onedrive', name: 'OneDrive', desc: 'Save course files to OneDrive, add files from it, and find them on the Files tab.' },   // back 2026-10-05
       ];
       // Feature switches (2026-10-09): a row hides while its integration is off (public/js/averages-features.js).
@@ -1920,6 +1920,12 @@
           const who = acct.email || acct.username || acct.name || '';
           status = `<span class="integ-status on">Connected${who ? ' as ' + esc(who) : ''}</span>`;
           action = `<button class="btn-secondary integ-btn disconnect" type="button" data-cloud="disconnect" data-app="${a.id}" aria-label="Disconnect ${esc(a.name)}"${busy}>Disconnect</button>`;
+          // Connected before "Open with → Averages.io" existed (2026-10-09): Reconnect adds it.
+          const K = window.AveragesCloud;
+          if (a.id === 'gdrive' && K && typeof K.googleOpenWith === 'function' && K.googleOpenWith() === 'reconnect') {
+            status += '<span class="integ-status integ-reconnect">Reconnect to add Averages.io to Google Drive’s Open with menu.</span>';
+            action = `<button class="btn-secondary integ-btn" type="button" data-cloud="connect" data-app="${a.id}" aria-label="Reconnect ${esc(a.name)}"${busy}>Reconnect</button>`;
+          }
         } else {
           status = `<span class="integ-status">${cloud.busy[a.id] ? 'Connecting…' : 'Not connected'}</span>`;
           action = `<button class="btn-secondary integ-btn" type="button" data-cloud="connect" data-app="${a.id}" aria-label="Connect ${esc(a.name)}"${busy}>Connect</button>`;

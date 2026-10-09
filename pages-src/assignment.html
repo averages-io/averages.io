@@ -2806,7 +2806,7 @@
       if (app === 'canva') return !canvaInfo || !canvaInfo.configured ? 'soon' : canvaInfo.connected ? 'ready' : 'connect';
       const C = window.AveragesCloud;
       if (!C || !cloudCfg) return 'soon';
-      if (app === 'gdrive') return cloudCfg.google && typeof C.googlePick === 'function' && typeof C.googleDownload === 'function' ? 'ready' : 'soon';
+      if (app === 'gdrive') return cloudCfg.google && typeof C.googleDownload === 'function' ? 'ready' : 'soon';
       return cloudCfg.microsoft && typeof C.oneDrivePick === 'function' && typeof C.oneDriveDownload === 'function' ? 'ready' : 'soon';
     }
     function uploadSourcesRowHTML() {
@@ -3077,9 +3077,14 @@
       function addFromCloud(app, btn) {
         const C = window.AveragesCloud;
         if (!C) return;
-        const pending = app === 'gdrive'
-          ? driveReadToken(C).then(t => C.googlePick(t)).then(docs => (docs || []).map(d => ({ id: String(d.id || ''), name: String(d.name || 'Google Drive file'), mimeType: String(d.mimeType || ''), size: Number(d.sizeBytes) || 0 })))
-          : oneDriveReadToken(C).then(t => C.oneDrivePick(t)).then(items => (items || []).map(f => ({ id: String(f.id || ''), name: String(f.name || 'OneDrive file'), mimeType: String(f.mimeType || ''), size: Number(f.size) || 0 })));
+        // Google Drive (2026-10-09): no picker. Google Drive opens, the student chooses
+        // Open with → Averages.io on their file, and attaches it to this assignment from Files.
+        if (app === 'gdrive') {
+          window.open(C.driveHome || 'https://drive.google.com/', '_blank', 'noopener,noreferrer');
+          sourceNote('Google Drive opened in a new tab. Right-click your file, choose <strong>Open with → Averages.io</strong>, then <strong>Attach to an assignment</strong> and pick this one.');
+          return;
+        }
+        const pending = oneDriveReadToken(C).then(t => C.oneDrivePick(t)).then(items => (items || []).map(f => ({ id: String(f.id || ''), name: String(f.name || 'OneDrive file'), mimeType: String(f.mimeType || ''), size: Number(f.size) || 0 })));
         btn.setAttribute('aria-busy', 'true');
         pending
           .then(list => {
