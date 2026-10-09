@@ -430,6 +430,7 @@
   /* ── what to tell the student ──────────────────────────────────────── */
 
   const MESSAGES = {
+    feature_off: 'That’s turned off right now. Try again later.',
     file_too_large: 'This file is too big to turn in. Files can be up to 95 MB.',
     empty_file: 'This file is empty. Pick another one.',
     read_failed: 'Couldn’t read this file. Pick it again.',

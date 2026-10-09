@@ -1868,6 +1868,7 @@
   /* ── messages ─────────────────────────────────────────────────────── */
 
   const MESSAGES = {
+    feature_off: 'That’s turned off right now. Try again later.',
     not_configured: 'This isn’t switched on yet.',
     not_ready: 'Google sign-in is still loading. Try again in a second.',
     network: 'Couldn’t connect right now. Check your internet and try again.',
