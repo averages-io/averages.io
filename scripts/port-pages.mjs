@@ -411,6 +411,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   network_error: "Couldn't reach Averages. Check your connection and try again.",
   schoology_error: "Schoology isn't responding right now. Try again in a moment.",
   server_misconfigured: "The Averages server isn't set up correctly yet. Please let us know.",
+  feature_off: "Signing in this way is turned off right now. Try again later.",
 };
 `
     : "";
