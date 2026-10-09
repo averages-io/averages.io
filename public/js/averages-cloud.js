@@ -72,6 +72,9 @@
   const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
   const GOOGLE_SCOPES = DRIVE_SCOPE + ' https://www.googleapis.com/auth/drive.install openid email profile';
   const DRIVE = 'https://www.googleapis.com/drive/v3';
+  // Shared drives (2026-10-09): a school's shared-drive file opened with "Open with → Averages.io"
+  // needs this on every call that reads a file, or Drive answers 404. Harmless for My Drive files.
+  const ALL_DRIVES = 'supportsAllDrives=true';
   const DRIVE_UPLOAD = 'https://www.googleapis.com/upload/drive/v3';
   const MS_AUTH = 'https://login.microsoftonline.com/common/oauth2/v2.0';
   const MS_SCOPES = 'openid profile offline_access User.Read Files.ReadWrite.AppFolder';
@@ -677,7 +680,7 @@
 
   /** One file we can see, or null when it's gone (deleted, or in the trash). */
   async function googleFile(token, id) {
-    const r = await gfetch(token, `${DRIVE}/files/${encodeURIComponent(id)}?fields=${DRIVE_FIELDS},trashed`);
+    const r = await gfetch(token, `${DRIVE}/files/${encodeURIComponent(id)}?fields=${DRIVE_FIELDS},trashed&${ALL_DRIVES}`);
     if (r.status === 404) return null;
     if (!r.ok) throw fail('network');
     const f = await r.json();
@@ -687,7 +690,7 @@
   /** Files Averages.io can see in their Drive (drive.file: ones it made or they picked), newest first. */
   async function googleList(token) {
     const q = encodeURIComponent("trashed=false and mimeType != 'application/vnd.google-apps.folder'");
-    const r = await gfetch(token, `${DRIVE}/files?q=${q}&orderBy=modifiedTime desc&pageSize=50&fields=files(${DRIVE_FIELDS})`);
+    const r = await gfetch(token, `${DRIVE}/files?q=${q}&orderBy=modifiedTime desc&pageSize=50&fields=files(${DRIVE_FIELDS})&${ALL_DRIVES}&corpora=allDrives&includeItemsFromAllDrives=true`);
     if (!r.ok) throw fail('network');
     return ((await r.json()).files || []).filter((f) => f && f.id);
   }
@@ -734,7 +737,7 @@
   async function googleDownload(token, fileId) {
     const id = String(fileId || '');
     if (!/^[A-Za-z0-9_-]{10,200}$/.test(id)) throw fail('file_gone');
-    const meta = await gfetch(token, `${DRIVE}/files/${encodeURIComponent(id)}?fields=id,name,mimeType,size,trashed`);
+    const meta = await gfetch(token, `${DRIVE}/files/${encodeURIComponent(id)}?fields=id,name,mimeType,size,trashed&${ALL_DRIVES}`);
     if (meta.status === 404) throw fail('file_gone');
     if (!meta.ok) throw fail(meta.status === 403 ? 'download_blocked' : 'cloud_download_failed');
     const f = await meta.json().catch(() => ({}));
@@ -757,7 +760,7 @@
       throw fail('not_downloadable'); // Forms, Sites, folders, shortcuts...
     } else {
       if (Number(f.size) > MAX_ATTACH_BYTES) throw fail('file_too_large');
-      r = await gfetch(token, `${DRIVE}/files/${encodeURIComponent(id)}?alt=media`);
+      r = await gfetch(token, `${DRIVE}/files/${encodeURIComponent(id)}?alt=media&${ALL_DRIVES}`);
       if (r.status === 403) throw fail('download_blocked');
       type = mime || MIME[extOf(name)] || 'application/octet-stream';
     }
