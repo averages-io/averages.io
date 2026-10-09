@@ -722,7 +722,9 @@
       bar.setAttribute('aria-label', 'Google Drive');
       bar.style.cssText = `position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:${Z};display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center;max-width:min(680px,calc(100vw - 24px));padding:8px 8px 8px 16px;border-radius:999px;background:#14151f;color:#fff;font:600 13px/1.35 -apple-system,system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.35)`;
       const who = document.createElement('span');
-      who.textContent = acct.email ? `Pick files from ${acct.email}` : 'Pick files from your Google Drive';
+      // 2026-10-08 (Martin: "when I select a file it just doesn't do anything"):
+      // clicking a file only highlights it in Google's window; Select adds it.
+      who.textContent = acct.email ? `${acct.email}: click files, then Select` : 'Click files, then Select';
       const close = document.createElement('button');
       close.type = 'button';
       close.textContent = 'Close';
@@ -735,7 +737,7 @@
       help.style.cssText = 'padding:8px 4px;border:0;background:none;color:#cfd3ff;font:700 13px -apple-system,system-ui,sans-serif;text-decoration:underline;cursor:pointer';
       bar.append(who, help, close);
       const tip = document.createElement('div');
-      tip.style.cssText = `position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:${Z};max-width:min(560px,calc(100vw - 24px));padding:12px 16px;border-radius:14px;background:#fff;color:#14151f;font:600 13px/1.45 -apple-system,system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.3)`;
+      tip.style.cssText = `position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:${Z};max-width:min(560px,calc(100vw - 24px));padding:12px 16px;border-radius:14px;background:#fff;color:#14151f;font:600 13px/1.45 -apple-system,system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.3)`;
       tip.textContent = acct.email
         ? `Stuck on “Select an account”? Choose ${acct.email} in Google’s window. If it isn’t listed, sign in to it at google.com in this browser (or use a browser window with only that account), then try again. Some school devices block Google here: use Upload instead.`
         : 'Stuck on “Select an account”? Choose the Google account you connected. If this browser blocks Google here (some school devices do), use Upload instead.';
@@ -764,7 +766,7 @@
         if (on) document.body.append(tip); else tip.remove();
         help.setAttribute('aria-expanded', on ? 'true' : 'false');
       };
-      help.addEventListener('click', () => showTip(!tip.isConnected));
+      help.addEventListener('click', () => { help.setAttribute('data-asked', '1'); showTip(!tip.isConnected); });
       document.addEventListener('keydown', onKey, true);
       document.addEventListener('click', onBackdrop, true);
       const view = new P.DocsView(P.ViewId.DOCS).setIncludeFolders(false);
@@ -778,7 +780,7 @@
           const action = data[P.Response.ACTION];
           if (action === P.Action.PICKED) finish(data[P.Response.DOCUMENTS] || []);
           else if (action === P.Action.CANCEL) finish([]);
-          else if (action === 'loaded') loaded = true;
+          else if (action === 'loaded') { loaded = true; if (tip.isConnected && help.getAttribute('data-asked') !== '1') showTip(false); }
         })
         .build();
       picker.setVisible(true);
@@ -793,15 +795,36 @@
      * "nothing got added"): drive.file only opens what the connected account
      * picked, so those come back 404. Say so instead of doing nothing.
      */
+    /*
+     * 2026-10-08: a 403 used to count as "network" and pass, so a file Drive
+     * wouldn't open for us looked added and then never showed up. Now:
+     * 404 = picked in another account; 403 = Google didn't hand it to this
+     * app (Picker key or project number from a different Google Cloud
+     * project than the Drive client); only a real network error passes on
+     * trust. Each kept doc carries its Drive file as .file for the caller.
+     */
     const ok = [];
+    let other = 0;
+    let denied = 0;
     for (const d of docs) {
       const id = String((d && d.id) || '');
       if (!id) continue;
+      let r = null;
+      try {
+        r = await gfetch(token, `${DRIVE}/files/${encodeURIComponent(id)}?fields=${DRIVE_FIELDS},trashed`);
+      } catch (e) {
+        if (e && e.code !== 'network') throw e;
+      }
+      if (!r) { ok.push(d); continue; }
+      if (r.status === 404) { other++; continue; }
+      if (r.status === 403) { denied++; continue; }
+      if (!r.ok) { ok.push(d); continue; }
       let f = null;
-      try { f = await googleFile(token, id); } catch (e) { if (e && e.code !== 'network') throw e; f = { id }; }
-      if (f) ok.push(d);
+      try { f = await r.json(); } catch { /* keep the Picker's own details */ }
+      if (f && f.trashed) { other++; continue; }
+      ok.push(f && f.id ? Object.assign({}, d, { file: f }) : d);
     }
-    if (!ok.length) throw fail('picked_other_account');
+    if (!ok.length) throw fail(denied && !other ? 'picked_not_granted' : 'picked_other_account');
     return ok;
   }
 
@@ -1855,6 +1878,7 @@
     incognito: 'Off in Incognito mode.',
     connect_cancelled: 'Nothing was connected.',
     connect_failed: 'Couldn’t connect right now. Try again in a moment.',
+    picked_not_granted: 'Google didn’t give Averages.io access to that file. Try Google Drive again; if it keeps happening, the Picker key and the Drive sign-in are set up in different Google Cloud projects.',
     picked_other_account: 'Those files are in a different Google account than the one connected. Open Google Drive again and choose the connected account in Google’s window, or connect the other account in Settings.',
     drive_not_allowed: 'Google Drive access wasn’t ticked. Connect again and leave “See, edit, create, and delete only the specific Google Drive files you use with this app” ticked.',
     too_large: 'This file is too big to copy (250 MB max).',
