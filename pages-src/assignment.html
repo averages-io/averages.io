@@ -1533,6 +1533,9 @@
     }
 
     const EXT_COLOR = { pdf: '#c1443a', docx: '#3b6fd1', pptx: '#d1852f' };
+    // New file icons (2026-10-09, public/js/averages-file-icons.js): fileIcon(ext, oldBadge) is the
+    // icon when that script is loaded, else the old colored badge as before.
+    const fileIcon = (ext, fallback, size) => (window.AveragesFileIcons ? window.AveragesFileIcons.html(ext || 'file', { size: size || 34 }) : fallback);
 
     const DOWNLOAD_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3M12 15l-4-4M12 15l4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>';
     const PLUS_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
@@ -1764,7 +1767,7 @@
       }
       return `
         <div class="material-row${actions === 'full' ? ' file-bar' : ''}">
-          <span class="material-badge" style="background:${escapeHtml(color)}">${escapeHtml(String(m.ext || '').toUpperCase())}</span>
+          ${fileIcon(m.ext, `<span class="material-badge" style="background:${escapeHtml(color)}">${escapeHtml(String(m.ext || '').toUpperCase())}</span>`)}
           <span class="material-name">${nm}</span>
           ${btns}
         </div>`;
@@ -1847,7 +1850,7 @@
     function linkRowHTML(l) {
       return `
         <div class="material-row file-bar">
-          <span class="material-badge" style="background:#4f6b8c">LINK</span>
+          ${fileIcon('link', '<span class="material-badge" style="background:#4f6b8c">LINK</span>')}
           <a class="material-name material-link" href="${escapeHtml(l.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(l.title)}</a>
         </div>`;
     }
@@ -1866,7 +1869,7 @@
       const small = badge[0].length > 4 ? ';font-size:0.44rem;letter-spacing:0' : '';
       return `
         <div class="material-row file-bar">
-          <span class="material-badge" style="background:${badge[1]}${small}">${escapeHtml(badge[0])}</span>
+          ${fileIcon(m.kind === 'youtube' ? 'video' : m.kind === 'form' ? 'gform' : m.kind === 'link' ? 'link' : ext ? ext : ({ DOC: 'gdoc', SHEET: 'gsheet', SLIDES: 'gslide' })[badge[0]] || 'file', `<span class="material-badge" style="background:${badge[1]}${small}">${escapeHtml(badge[0])}</span>`)}
           <a class="material-name material-link" href="${escapeHtml(m.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(m.title)}</a>
         </div>`;
     }
@@ -2353,7 +2356,7 @@
         const nameLabel = files.length > 1 ? `${files.length} files` : first.name;
         return `
           <div class="material-row submission-row" tabindex="0" role="button" data-sub-index="${idx}" aria-label="Preview ${escapeHtml(nameLabel)}, submitted ${escapeHtml(s.timestamp)}">
-            <span class="material-badge" style="background:${escapeHtml(color)}">${escapeHtml(badgeLabel)}</span>
+            ${files.length > 1 ? `<span class="material-badge" style="background:${escapeHtml(color)}">${escapeHtml(badgeLabel)}</span>` : fileIcon(first.ext, `<span class="material-badge" style="background:${escapeHtml(color)}">${escapeHtml(badgeLabel)}</span>`)}
             <span class="material-name">${escapeHtml(nameLabel)} <span style="color:var(--text-faint); font-weight:600;">— ${escapeHtml(s.timestamp)}</span></span>
             ${isLatest && submissionHistory.length > 1 ? '<span class="submission-latest-tag">Latest</span>' : ''}
             ${s.comment ? COMMENT_ICON : ''}
@@ -2492,7 +2495,7 @@
         + (r.draft === true ? '<span class="submission-latest-tag draft">Draft</span>' : '');
       return `
           <div class="material-row submission-row" tabindex="0" role="button" data-rev-index="${idx}" aria-label="${escapeHtml(`${label}, ${r.draft === true ? 'saved' : 'turned in'} ${when}${r.late === true ? ', late' : ''}`)}">
-            <span class="material-badge" style="background:${color}">${escapeHtml(badge)}</span>
+            ${files.length > 1 ? `<span class="material-badge" style="background:${color}">${escapeHtml(badge)}</span>` : fileIcon(first ? first.ext : 'txt', `<span class="material-badge" style="background:${color}">${escapeHtml(badge)}</span>`)}
             <span class="rev-main">
               <span class="material-name">${escapeHtml(label)} <span class="rev-when">· ${escapeHtml(when)}</span></span>
               ${text && !files.length ? `<span class="rev-snippet">${escapeHtml(text.slice(0, 160))}</span>` : ''}
@@ -2521,7 +2524,7 @@
         <p>${r.draft === true ? 'Saved as a draft' : 'Turned in'} ${escapeHtml(revWhen(r))}${r.late === true ? ' · Late' : ''}</p>
         ${files.length ? `<div class="modal-file-list">${files.map(f => `
           <div class="material-row">
-            <span class="material-badge" style="background:${EXT_COLOR[f.ext] || '#83849a'}">${escapeHtml((f.ext || 'file').toUpperCase().slice(0, 4))}</span>
+            ${fileIcon(f.ext, `<span class="material-badge" style="background:${EXT_COLOR[f.ext] || '#83849a'}">${escapeHtml((f.ext || 'file').toUpperCase().slice(0, 4))}</span>`)}
             <span class="material-name">${escapeHtml(f.name)}</span>
             ${f.size ? `<span class="rev-size">${escapeHtml(fmtSize(f.size))}</span>` : ''}
           </div>`).join('')}</div>` : ''}
@@ -2612,7 +2615,7 @@
         <p>${what} You’ll find it in Submission History.</p>
         ${list.length > 1 ? `<div class="modal-file-list">${list.map(n => {
           const ext = ((String(n).match(/\.([a-z0-9]{1,5})$/i) || [])[1] || '').toLowerCase();
-          return `<div class="material-row"><span class="material-badge" style="background:${EXT_COLOR[ext] || '#83849a'}">${escapeHtml((ext || 'file').toUpperCase().slice(0, 4))}</span><span class="material-name">${escapeHtml(n)}</span></div>`;
+          return `<div class="material-row">${fileIcon(ext, `<span class="material-badge" style="background:${EXT_COLOR[ext] || '#83849a'}">${escapeHtml((ext || 'file').toUpperCase().slice(0, 4))}</span>`)}<span class="material-name">${escapeHtml(n)}</span></div>`;
         }).join('')}</div>` : ''}
         <div class="modal-actions">
           <button class="modal-btn primary" type="button" id="modalDoneBtn">Done</button>
@@ -2927,7 +2930,7 @@
             const live = SUBMIT_LIVE ? `<span class="upload-picked-text">${name}${PICK_SOURCE[f.src] ? `<span class="upload-picked-src">${PICK_SOURCE[f.src]}</span>` : ''}<span class="upload-picked-progress"${tooBig ? '' : ' hidden'}><span class="upload-progress-text">${tooBig ? 'Too big to turn in (95 MB max)' : ''}</span><span class="upload-bar" aria-hidden="true"><i></i></span></span></span>` : '';
             return `
               <div class="upload-picked-row${tooBig ? ' failed' : ''}" data-pick="${i}">
-                <span class="material-badge" style="background:${escapeHtml(color)}">${escapeHtml(SUBMIT_LIVE ? (ext || '?').toUpperCase().slice(0, 4) : (ext || '?').toUpperCase())}</span>
+                ${fileIcon(f.src === 'canva' ? 'canva' : ext, `<span class="material-badge" style="background:${escapeHtml(color)}">${escapeHtml(SUBMIT_LIVE ? (ext || '?').toUpperCase().slice(0, 4) : (ext || '?').toUpperCase())}</span>`)}
                 ${SUBMIT_LIVE ? live : name}
                 <button class="material-icon-btn" type="button" data-index="${i}" aria-label="Remove ${escapeHtml(f.name)}">${REMOVE_ICON}</button>
               </div>`;
@@ -3315,6 +3318,11 @@
     const DRAFT_APP = { canva: 'Canva', gdrive: 'Google Drive', onedrive: 'OneDrive', course: 'Course file' };
     const DRAFT_EXT_COLOR = Object.assign({ doc: '#3b6fd1', xlsx: '#2f7d54', xls: '#2f7d54', ppt: '#d1852f' }, EXT_COLOR);
     function draftBadgeHTML(d) {
+      if (window.AveragesFileIcons) {
+        const x = String(d.ext || '').toLowerCase();
+        const k = d.app === 'canva' ? 'canva' : d.app === 'gdrive' ? ({ doc: 'gdoc', docx: 'gdoc', ppt: 'gslide', pptx: 'gslide', xls: 'gsheet', xlsx: 'gsheet', csv: 'gsheet' })[x] || 'gdoc' : x || 'file';
+        return fileIcon(k, '', 36);
+      }
       if (d.app === 'gdrive') return `<span class="draft-badge drive" aria-hidden="true" style="background:${(DRIVE_KIND[d.ext] || DRIVE_KIND.docx)[1]}">${(DRIVE_KIND[d.ext] || DRIVE_KIND.docx)[0]}</span>`;
       if (d.app === 'canva') return '<span class="draft-badge" aria-hidden="true"><span class="canva-mark"></span></span>';
       const ext = String(d.ext || 'file').toLowerCase();
