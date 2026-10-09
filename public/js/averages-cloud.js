@@ -70,7 +70,7 @@
   const MAX_ATTACH_BYTES = 95 * 1024 * 1024;
 
   const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
-  const GOOGLE_SCOPES = DRIVE_SCOPE + ' openid email profile';
+  const GOOGLE_SCOPES = DRIVE_SCOPE + ' https://www.googleapis.com/auth/drive.install openid email profile';
   const DRIVE = 'https://www.googleapis.com/drive/v3';
   const DRIVE_UPLOAD = 'https://www.googleapis.com/upload/drive/v3';
   const MS_AUTH = 'https://login.microsoftonline.com/common/oauth2/v2.0';
@@ -692,141 +692,26 @@
     return ((await r.json()).files || []).filter((f) => f && f.id);
   }
 
-  /** Google Picker: the student picks files, which drive.file then lets us see. */
-  async function googlePick(token) {
-    const c = gConfig || (await prepareGoogle());
-    if (!c.apiKey || !c.appId) throw fail('not_configured');
-    await loadScript('https://apis.google.com/js/api.js');
-    await new Promise((resolve, reject) => window.gapi.load('picker', { callback: resolve, onerror: () => reject(fail('network')) }));
-    const P = window.google.picker;
-    const acct = accounts().gdrive || {};
-    const docs = await new Promise((resolve) => {
-      /*
-       * Hardened 2026-10-07/08 (Martin: stuck on "Select an account", froze
-       * after picking, couldn't click out). Google's window can't be fixed
-       * from here, so ours is always escapable around it:
-       *   - a bar above it with the connected account and Close;
-       *   - Escape, or a click on the dimmed page, closes it;
-       *   - Google's layers are kept under our bar;
-       *   - a tip after a few seconds for the two usual causes: the browser
-       *     signed in to several Google accounts (Google's window uses its
-       *     own, not the connected one), or blocking Google's cookies.
-       * However it ends, the picker is taken down and this answers once.
-       */
-      let picker = null;
-      let ended = false;
-      let loaded = false;
-      const Z = 2147483647;
-      const bar = document.createElement('div');
-      bar.setAttribute('role', 'region');
-      bar.setAttribute('aria-label', 'Google Drive');
-      bar.style.cssText = `position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:${Z};display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center;max-width:min(680px,calc(100vw - 24px));padding:8px 8px 8px 16px;border-radius:999px;background:#14151f;color:#fff;font:600 13px/1.35 -apple-system,system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.35)`;
-      const who = document.createElement('span');
-      // 2026-10-08 (Martin: "when I select a file it just doesn't do anything"):
-      // clicking a file only highlights it in Google's window; Select adds it.
-      who.textContent = acct.email ? `${acct.email}: click files, then Select` : 'Click files, then Select';
-      const close = document.createElement('button');
-      close.type = 'button';
-      close.textContent = 'Close';
-      close.setAttribute('aria-label', 'Close Google Drive');
-      close.style.cssText = 'padding:8px 16px;border:0;border-radius:999px;background:#fff;color:#14151f;font:800 13px -apple-system,system-ui,sans-serif;cursor:pointer';
-      const help = document.createElement('button');
-      help.type = 'button';
-      help.textContent = 'Trouble?';
-      help.setAttribute('aria-expanded', 'false');
-      help.style.cssText = 'padding:8px 4px;border:0;background:none;color:#cfd3ff;font:700 13px -apple-system,system-ui,sans-serif;text-decoration:underline;cursor:pointer';
-      bar.append(who, help, close);
-      const tip = document.createElement('div');
-      tip.style.cssText = `position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:${Z};max-width:min(560px,calc(100vw - 24px));padding:12px 16px;border-radius:14px;background:#fff;color:#14151f;font:600 13px/1.45 -apple-system,system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.3)`;
-      tip.textContent = acct.email
-        ? `Stuck on “Select an account”? Choose ${acct.email} in Google’s window. If it isn’t listed, sign in to it at google.com in this browser (or use a browser window with only that account), then try again. Some school devices block Google here: use Upload instead.`
-        : 'Stuck on “Select an account”? Choose the Google account you connected. If this browser blocks Google here (some school devices do), use Upload instead.';
-      const keepUnder = () => {
-        document.querySelectorAll('.picker-dialog-bg, .picker-dialog, .picker.modal-dialog-bg, .picker.modal-dialog').forEach((el) => {
-          if (Number(getComputedStyle(el).zIndex) >= Z - 10) el.style.zIndex = String(Z - 20);
-        });
-      };
-      const onKey = (e) => { if (e.key === 'Escape') finish([]); };
-      const onBackdrop = (e) => { if (e.target && e.target.classList && (e.target.classList.contains('picker-dialog-bg') || e.target.classList.contains('modal-dialog-bg'))) finish([]); };
-      const timers = [];
-      function finish(list) {
-        if (ended) return;
-        ended = true;
-        timers.forEach(clearTimeout);
-        bar.remove();
-        tip.remove();
-        document.removeEventListener('keydown', onKey, true);
-        document.removeEventListener('click', onBackdrop, true);
-        try { if (picker) { picker.setVisible(false); picker.dispose(); } } catch { /* already gone */ }
-        resolve(list);
-      }
-      close.addEventListener('click', () => finish([]));
-      const showTip = (on) => {
-        if (ended) return;
-        if (on) document.body.append(tip); else tip.remove();
-        help.setAttribute('aria-expanded', on ? 'true' : 'false');
-      };
-      help.addEventListener('click', () => { help.setAttribute('data-asked', '1'); showTip(!tip.isConnected); });
-      document.addEventListener('keydown', onKey, true);
-      document.addEventListener('click', onBackdrop, true);
-      const view = new P.DocsView(P.ViewId.DOCS).setIncludeFolders(false);
-      picker = new P.PickerBuilder()
-        .addView(view)
-        .enableFeature(P.Feature.MULTISELECT_ENABLED)
-        .setOAuthToken(token)
-        .setDeveloperKey(c.apiKey)
-        .setAppId(c.appId)
-        .setCallback((data) => {
-          const action = data[P.Response.ACTION];
-          if (action === P.Action.PICKED) finish(data[P.Response.DOCUMENTS] || []);
-          else if (action === P.Action.CANCEL) finish([]);
-          else if (action === 'loaded') { loaded = true; if (tip.isConnected && help.getAttribute('data-asked') !== '1') showTip(false); }
-        })
-        .build();
-      picker.setVisible(true);
-      document.body.append(bar);
-      [0, 300, 1500].forEach((ms) => timers.push(setTimeout(keepUnder, ms)));
-      // On its own only when Google's window hasn't said it loaded after 6 s; "Trouble?" shows it any time.
-      timers.push(setTimeout(() => { if (!loaded) showTip(true); }, 6000));
-    });
-    if (!docs.length) return docs;
-    /*
-     * Picked in a different Google account than the connected one (the usual
-     * "nothing got added"): drive.file only opens what the connected account
-     * picked, so those come back 404. Say so instead of doing nothing.
-     */
-    /*
-     * 2026-10-08: a 403 used to count as "network" and pass, so a file Drive
-     * wouldn't open for us looked added and then never showed up. Now:
-     * 404 = picked in another account; 403 = Google didn't hand it to this
-     * app (Picker key or project number from a different Google Cloud
-     * project than the Drive client); only a real network error passes on
-     * trust. Each kept doc carries its Drive file as .file for the caller.
-     */
-    const ok = [];
-    let other = 0;
-    let denied = 0;
-    for (const d of docs) {
-      const id = String((d && d.id) || '');
-      if (!id) continue;
-      let r = null;
-      try {
-        r = await gfetch(token, `${DRIVE}/files/${encodeURIComponent(id)}?fields=${DRIVE_FIELDS},trashed`);
-      } catch (e) {
-        if (e && e.code !== 'network') throw e;
-      }
-      if (!r) { ok.push(d); continue; }
-      if (r.status === 404) { other++; continue; }
-      if (r.status === 403) { denied++; continue; }
-      if (!r.ok) { ok.push(d); continue; }
-      let f = null;
-      try { f = await r.json(); } catch { /* keep the Picker's own details */ }
-      if (f && f.trashed) { other++; continue; }
-      ok.push(f && f.id ? Object.assign({}, d, { file: f }) : d);
+  /*
+   * The Google Picker is gone (2026-10-09, Martin: "it's so bad"). Students
+   * bring a Drive file in from Google Drive itself: right-click it, Open with,
+   * Averages.io (drive.install; see public/js/averages-drive-open.js and the
+   * Files page). Opening it that way grants drive.file for that one file.
+   */
+  const DRIVE_INSTALL = 'https://www.googleapis.com/auth/drive.install';
+  /** 'on': "Open with Averages.io" is in their Drive; 'reconnect': connected before it existed; 'off': not connected. */
+  function googleOpenWith() {
+    if (!accounts().gdrive) return 'off';
+    const st = SRV.status;
+    if (serverOn('gdrive')) {
+      const sc = st && st.gdrive && st.gdrive.scopes;
+      return Array.isArray(sc) && !hasScope(sc, DRIVE_INSTALL) ? 'reconnect' : 'on';
     }
-    if (!ok.length) throw fail(denied && !other ? 'picked_not_granted' : 'picked_other_account');
-    return ok;
+    const t = tokens().gdrive;
+    return t && Array.isArray(t.scopes) && !hasScope(t.scopes, DRIVE_INSTALL) ? 'reconnect' : 'on';
   }
+  /** Google Drive in a new tab, where they pick a file and choose Open with → Averages.io. */
+  const DRIVE_HOME = 'https://drive.google.com/drive/my-drive';
 
   /** A file name that's safe to hand on: no path separators or control characters. */
   function plainName(name) {
@@ -1926,7 +1811,8 @@
     googleUpload,
     googleFile,
     googleList,
-    googlePick,
+    googleOpenWith,
+    driveHome: DRIVE_HOME,
     googleDownload,
     editInGoogleDrive,
     listDriveDrafts,
