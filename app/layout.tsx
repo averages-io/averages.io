@@ -98,6 +98,8 @@ export default function RootLayout({
         <script src="/js/averages-features.js" />
         {/* File type icons (2026-10-09): AveragesFileIcons, used by Files, the assignment page and course materials. */}
         <script src="/js/averages-file-icons.js" />
+        {/* "Open with → Averages.io" from Google Drive (2026-10-09): keeps the chosen file for the Files page. */}
+        <script src="/js/averages-drive-open.js" />
       </head>
       {/*
         No inline style on <body>, deliberately.
