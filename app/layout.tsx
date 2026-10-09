@@ -45,7 +45,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         {/*
           Puffin, via Adobe Fonts. Every page's CSS asks for
@@ -60,6 +60,13 @@ export default function RootLayout({
           every subsequent route.
         */}
         <link rel="stylesheet" href="https://use.typekit.net/gsk6off.css" />
+        {/*
+          Feature switches (2026-10-09): hides what's switched off and shows
+          the maintenance banner (public/js/averages-features.js). Plain and
+          early on purpose, so a switched-off button never flashes. It sets
+          data-feature-off on <html>, hence suppressHydrationWarning there.
+        */}
+        <script src="/js/averages-features.js" />
       </head>
       {/*
         No inline style on <body>, deliberately.
