@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Averages.io Your Data</title>
+<link rel="icon" href="favicon.ico" sizes="48x48">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="description" content="See and control what Averages.io keeps about you.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Averages.io">
+<meta property="og:title" content="Averages.io Your Data">
+<meta property="og:description" content="See and control what Averages.io keeps about you.">
+<meta property="og:url" content="https://averages.io/your-data">
+<meta property="og:image" content="https://averages.io/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Averages.io: Do school, your way. The Averages.io home page with grades and assignments.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Averages.io Your Data">
+<meta name="twitter:description" content="See and control what Averages.io keeps about you.">
+<meta name="twitter:image" content="https://averages.io/og.png">
+<link rel="preload" href="/fonts/nunito/nunito-latin-900-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/fonts/nunito/nunito.css">
+<style>
+  :root {
+    color-scheme: light;
+    --paper: #fbfaf8; --surface: #ffffff; --card: #e8eaee; --panel: #ffffff;
+    --ink: #17171a; --ink-soft: #55535a; --ink-faint: #6b6870;
+    --rule: #e0ddd9; --band: #eef0f3;
+    --punch-top: #e5484d; --punch-mid: #ff7a50; --accent: #b8352f; --good: #1a7f50;
+    --shadow: 0 18px 48px -26px rgba(24,18,16,.42);
+    --shadow-soft: 0 8px 22px -16px rgba(24,18,16,.34);
+    --display: "Nunito", "Trebuchet MS", system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --paper: #111013; --surface: #1b1a1e; --card: #1e1d22; --panel: #26252b;
+      --ink: #f5f3f1; --ink-soft: #b6b2b1; --ink-faint: #999390;
+      --rule: #2d2b30; --band: #17161a; --accent: #ff6a4d; --good: #4cc38a;
+      --shadow: 0 18px 48px -26px rgba(0,0,0,.85);
+      --shadow-soft: 0 8px 22px -16px rgba(0,0,0,.7);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --paper: #111013; --surface: #1b1a1e; --card: #1e1d22; --panel: #26252b;
+    --ink: #f5f3f1; --ink-soft: #b6b2b1; --ink-faint: #999390;
+    --rule: #2d2b30; --band: #17161a; --accent: #ff6a4d; --good: #4cc38a;
+    --shadow: 0 18px 48px -26px rgba(0,0,0,.85);
+    --shadow-soft: 0 8px 22px -16px rgba(0,0,0,.7);
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink);
+    font-family: var(--display); font-weight: 700; -webkit-font-smoothing: antialiased; }
+  a { color: inherit; }
+  h1, h2, h3 { margin: 0; text-wrap: balance; }
+  p { margin: 0; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+  .wrap { width: min(1560px, 100%); margin-inline: auto; padding-inline: max(16px, 4vw); }
+
+  /* nav */
+  nav { border-bottom: 2px solid var(--ink); background: var(--paper); }
+  .nav-in { display: flex; align-items: center; gap: 24px; padding: 12px max(16px, 3vw); }
+  .brand { margin-right: auto; display: flex; align-items: baseline; gap: 1px; text-decoration: none; }
+  .brand svg { height: 34px; width: auto; display: block; }
+  .brand b { font-size: 23px; font-weight: 900; letter-spacing: -.9px; }
+  .nav-links { display: flex; gap: 24px; }
+  .nav-links a { text-decoration: none; font-size: 16px; font-weight: 800; }
+  .nav-links a:hover, .nav-links a[aria-current="page"] { color: var(--accent); }
+  .btn { text-decoration: none; font-size: 16px; font-weight: 900;
+    border: 2px solid var(--ink); background: var(--ink); color: var(--paper);
+    border-radius: 999px; padding: 8px 24px; transition: background .14s ease, border-color .14s ease; }
+  .btn:hover { background: var(--accent); border-color: var(--accent); }
+
+  /* page head */
+  .head { padding-block: clamp(40px, 6vw, 64px) 24px; }
+  .head h1 { font-size: clamp(44px, 8vw, 80px); font-weight: 900; letter-spacing: -2.6px; line-height: .98; }
+  .head .dated { margin-top: 12px; font-size: 14px; font-weight: 800; color: var(--ink-faint); }
+  .head p.lede { margin-top: 16px; font-size: clamp(16px, 2vw, 19px); font-weight: 700;
+    color: var(--ink-soft); line-height: 1.55; max-width: 62ch; }
+
+  /* the short version */
+  .short { background: var(--card); border-radius: 20px; padding: 24px; margin-top: 32px;
+    display: grid; gap: 16px; }
+  .short h2 { font-size: 13px; font-weight: 900; letter-spacing: .7px; text-transform: uppercase;
+    color: var(--ink-faint); }
+  .short ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+  .short li { position: relative; padding-left: 20px;
+    font-size: 16px; font-weight: 800; line-height: 1.5; }
+  .short li::before { content: ""; position: absolute; left: 0; top: 9px;
+    width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+
+  /* two-column body */
+  .doc { display: grid; grid-template-columns: 260px 1fr; gap: 56px;
+    padding-block: clamp(40px, 6vw, 56px); align-items: start; }
+  .doc > div { min-width: 0; }
+  .toc { position: sticky; top: 24px; }
+  .doc .toc h2 { font-size: 12px; font-weight: 900; letter-spacing: .7px; text-transform: uppercase;
+    color: var(--ink-faint); margin-bottom: 16px; }
+  .toc ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; counter-reset: s; }
+  .toc a { text-decoration: none; font-size: 15px; font-weight: 800; color: var(--ink-soft); }
+  .toc a:hover { color: var(--accent); }
+
+  section[id] { scroll-margin-top: 24px; }
+  .doc section + section { margin-top: 48px; }
+  .doc h2 { font-size: clamp(24px, 3.2vw, 32px); font-weight: 900; letter-spacing: -1px; }
+  .doc p { margin-top: 16px; font-size: 17px; font-weight: 700; color: var(--ink-soft);
+    line-height: 1.65; max-width: 68ch; }
+  .doc p strong, .doc li strong { color: var(--ink); font-weight: 900; }
+  .doc a { color: var(--accent); font-weight: 900; }
+  .doc section > ul { margin: 16px 0 0; padding: 0; list-style: none; display: grid; gap: 16px; }
+  .doc section > ul > li { font-size: 17px; font-weight: 700; color: var(--ink-soft);
+    line-height: 1.65; max-width: 68ch; padding-left: 20px; position: relative; }
+  .doc section > ul > li::before { content: ""; position: absolute; left: 0; top: 11px;
+    width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+
+  /* highlighted disclosure */
+  .note { margin-top: 24px; background: var(--card); border: 2px solid var(--rule);
+    border-radius: 16px; padding: 24px; }
+  .note h3 { font-size: 17px; font-weight: 900; letter-spacing: -.3px; }
+  .note p { margin-top: 12px; font-size: 16px; }
+
+  /* questions band */
+  .ask { background: var(--band); padding-block: clamp(40px, 6vw, 56px); text-align: center; }
+  .ask h2 { font-size: clamp(30px, 5vw, 44px); font-weight: 900; letter-spacing: -1.6px; }
+  .ask p { margin-top: 12px; font-size: 17px; font-weight: 700; color: var(--ink-soft); }
+  .ask a.mail { display: inline-block; margin-top: 20px; text-decoration: none;
+    background: var(--surface); border: 2px solid var(--ink); border-radius: 999px;
+    padding: 12px 32px; font-size: 17px; font-weight: 900; letter-spacing: -.3px;
+    transition: background .14s ease, color .14s ease; }
+  .ask a.mail:hover { background: var(--ink); color: var(--paper); }
+
+  /* footer */
+  footer { background: var(--paper); padding-block: 48px 24px; border-top: 2px solid var(--ink); }
+  .foot-grid { display: grid; grid-template-columns: 1.9fr repeat(3, 1fr); gap: 32px; }
+  .foot-brand svg { height: 34px; width: auto; display: block; }
+  .foot-tag { margin-top: 12px; font-size: 19px; font-weight: 900; font-style: italic;
+    letter-spacing: -.6px; color: var(--ink); }
+  .foot-brand p + p { margin-top: 8px; font-size: 13px; font-weight: 700; color: var(--ink-soft);
+    line-height: 1.5; max-width: 44ch; }
+  .foot-btns { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .foot-btns a { text-decoration: none; font-size: 13px; font-weight: 900; border: 2px solid var(--ink);
+    border-radius: 999px; padding: 8px 16px; }
+  .foot-btns a:hover { background: var(--ink); color: var(--paper); }
+  .fcol h4 { margin: 0 0 12px; font-size: 12px; font-weight: 900; letter-spacing: .7px;
+    text-transform: uppercase; color: var(--ink-faint); }
+  .fcol ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  .fcol a { text-decoration: none; font-size: 14px; font-weight: 700; color: var(--ink-soft); }
+  .fcol a:hover { color: var(--ink); }
+  .fcol .ftag { margin-left: 4px; font-size: 9.5px; font-weight: 900; letter-spacing: .4px;
+    color: #fff; background: #b8352f; border-radius: 4px; padding: 1px 5px; vertical-align: 1px; }
+  .legal { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--rule);
+    display: flex; flex-wrap: wrap; gap: 12px 24px; font-size: 12px; font-weight: 700;
+    color: var(--ink-faint); line-height: 1.55; }
+  .legal p { max-width: 62ch; }
+  .legal .copy { margin-left: auto; }
+
+  @media (max-width: 900px) {
+    .doc { grid-template-columns: 1fr; gap: 32px; }
+    .toc { position: static; }
+    .foot-grid { grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    .foot-brand { grid-column: 1 / -1; }
+  }
+  @media (max-width: 620px) {
+    .nav-links { display: none; }
+  }
+  @media (max-width: 560px) { .foot-grid { grid-template-columns: 1fr; } }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+  /* your data: the table is the page */
+  .block { padding-block: 24px 0; }
+  .block + .block { padding-top: 56px; }
+  .block > h2 { font-size: clamp(24px, 3.2vw, 32px); font-weight: 900; letter-spacing: -1px; }
+  .block > p.sub { margin-top: 8px; font-size: 16px; font-weight: 700; color: var(--ink-soft);
+    line-height: 1.55; max-width: 68ch; }
+  .tbl { margin-top: 24px; border: 2px solid var(--rule); border-radius: 16px; overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; }
+  thead { background: var(--band); }
+  th { text-align: left; font-size: 11.5px; font-weight: 900; letter-spacing: .6px;
+    text-transform: uppercase; color: var(--ink-faint); padding: 12px 16px; }
+  td { font-size: 14.5px; font-weight: 700; color: var(--ink-soft); padding: 16px;
+    border-top: 1px solid var(--rule); line-height: 1.5; vertical-align: top; }
+  td:first-child { color: var(--ink); font-weight: 800; }
+  td small { display: block; margin-top: 4px; font-size: 12.5px; font-weight: 700;
+    color: var(--ink-faint); }
+  th:nth-child(1), td:nth-child(1) { width: 26%; }
+  th:nth-child(2), td:nth-child(2) { width: 28%; }
+  th:nth-child(3), td:nth-child(3) { width: 18%; }
+  th:nth-child(4), td:nth-child(4) { width: 28%; }
+  td .pill { display: table; margin-bottom: 8px; font-size: 11px; font-weight: 900;
+    letter-spacing: .4px; text-transform: uppercase; color: var(--accent); background: var(--card);
+    border-radius: 999px; padding: 2px 8px; white-space: nowrap; }
+
+  .controls { margin-top: 24px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .control { background: var(--card); border-radius: 20px; padding: 24px;
+    display: flex; flex-direction: column; gap: 12px; }
+  .control .slot { width: 44px; height: 44px; border-radius: 12px; background: var(--panel);
+    display: grid; place-items: center; color: var(--ink); }
+  .control .slot svg { width: 22px; height: 22px; display: block; }
+  .control h3 { font-size: 19px; font-weight: 900; letter-spacing: -.5px; }
+  .control p { font-size: 14.5px; font-weight: 700; color: var(--ink-soft); line-height: 1.55; }
+  .control a.go { margin-top: auto; align-self: flex-start; text-decoration: none;
+    font-size: 13px; font-weight: 900; border: 2px solid var(--ink); border-radius: 999px;
+    padding: 8px 16px; }
+  .control a.go:hover { background: var(--ink); color: var(--paper); }
+  .data-main { padding-bottom: 56px; }
+
+  @media (max-width: 900px) { .controls { grid-template-columns: 1fr; } }
+  @media (max-width: 620px) {
+    .tbl { overflow-x: auto; overflow-y: hidden; }
+    table { min-width: 640px; }
+  }
+  .btn.soon-tag { cursor: default; }
+  .btn.soon-tag:hover { background: var(--ink); border-color: var(--ink); }
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-in">
+    <a class="brand" href="index.html" aria-label="Averages">
+      <svg viewBox="0 0 452 454" aria-hidden="true"><defs><linearGradient id="punchNav" x1="0" y1="0" x2="0" y2="454" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FF7A50"/><stop offset="1" stop-color="#E5484D"/></linearGradient></defs><path fill="url(#punchNav)" fill-rule="evenodd" d="M0.02 452.75C0.15 442.97 5.78 407.10 10.02 389.00C11.63 382.12 15.00 367.50 17.51 356.50C28.03 310.27 40.89 265.53 58.60 213.50C77.33 158.47 85.57 136.89 103.25 96.50C118.88 60.79 129.55 39.21 141.04 20.00C144.17 14.78 147.92 8.14 149.38 5.25L152.03 0.00L226.00 0.00L299.97 0.00L302.62 5.25C304.08 8.14 307.83 14.78 310.96 20.00C322.28 38.92 336.94 68.63 348.06 95.18C350.75 101.61 354.55 110.26 356.49 114.41C367.49 137.90 397.74 222.92 410.96 267.50C419.09 294.91 429.04 332.52 434.49 356.50C437.00 367.50 440.37 382.12 441.98 389.00C446.22 407.10 451.85 442.97 451.98 452.75C452.00 453.74 436.27 454.00 376.64 454.00L301.28 454.00L299.60 442.75C296.88 424.51 291.11 392.27 288.63 381.50L286.34 371.50L223.34 371.24L160.34 370.99L158.19 380.33C155.44 392.33 149.65 424.19 147.53 439.00C146.63 445.32 145.66 451.29 145.38 452.25C144.90 453.90 140.55 454.00 72.43 454.00C15.14 454.00 0.00 453.74 0.02 452.75ZM184.00 348.25C189.69 345.41 191.44 335.66 187.41 329.29C184.35 324.47 172.42 324.01 167.19 328.51C164.78 330.58 164.50 331.51 164.50 337.31C164.50 344.14 166.09 347.25 170.50 349.05C173.93 350.46 180.35 350.07 184.00 348.25ZM274.28 347.02C284.17 342.33 288.64 332.80 287.74 318.33C286.79 303.07 279.66 295.00 265.16 292.75C256.25 291.37 245.93 293.01 240.22 296.71C232.38 301.79 228.36 311.77 229.23 323.96C230.09 335.93 235.58 344.50 244.50 347.78C249.77 349.72 251.32 349.90 260.50 349.59C267.31 349.35 270.66 348.73 274.28 347.02ZM220.00 325.25L220.00 301.50L209.50 301.50L199.00 301.50L199.00 325.25L199.00 349.00L209.50 349.00L220.00 349.00L220.00 325.25ZM252.40 330.90C250.89 329.22 250.50 327.26 250.50 321.31C250.50 314.35 250.70 313.66 253.31 311.41C256.89 308.33 260.44 308.35 263.55 311.45C265.70 313.61 266.00 314.79 266.00 321.23C266.00 330.70 264.56 333.00 258.60 333.00C255.51 333.00 253.78 332.41 252.40 330.90ZM218.38 292.67C221.03 290.93 222.25 286.49 221.33 281.90C220.47 277.58 215.94 275.01 209.18 275.00C200.42 275.00 197.08 277.76 197.03 285.08C197.01 288.68 197.53 290.15 199.48 291.98C203.75 295.99 212.81 296.32 218.38 292.67ZM258.58 254.35C258.23 253.44 256.13 245.45 253.90 236.60C244.34 198.58 227.57 140.97 224.09 134.18L222.37 130.84L216.22 150.67C207.52 178.73 204.15 190.56 195.49 223.50C191.29 239.45 187.63 253.29 187.36 254.25C186.90 255.89 189.07 256.00 223.04 256.00C256.26 256.00 259.16 255.87 258.58 254.35Z"/></svg>
+      <b>verages</b>
+    </a>
+    <div class="nav-links">
+      <a href="features.html">Features</a>
+      <a href="index.html#github">Project</a>
+      <a href="support.html">Support</a>
+    </div>
+    <span class="btn soon-tag">Coming soon</span>
+  </div>
+</nav>
+
+<header class="wrap head">
+  <h1>Your data</h1>
+  <p class="dated">Last updated: October 7, 2026</p>
+  <p class="lede">Everything Averages.io keeps about you, where it lives, how long it stays and how
+  to remove it. Nothing is left off this list.</p>
+</header>
+
+<main class="wrap data-main">
+  <section class="block" id="you-store">
+    <h2>What you store</h2>
+    <p class="sub">Kept in your browser on this device, not on our servers.</p>
+    <div class="tbl">
+      <table>
+        <thead>
+          <tr><th>What</th><th>Where on your device</th><th>How long</th><th>How to remove it</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Grades, assignments and courses</td>
+            <td>Held in your browser for the current visit</td>
+            <td>Until you close the tab</td>
+            <td>Close the tab, or use Clear Cache in Settings</td>
+          </tr>
+          <tr>
+            <td>Your sign-in session</td>
+            <td>A cookie</td>
+            <td>Up to 30 days, or until you sign out</td>
+            <td>Sign out</td>
+          </tr>
+          <tr>
+            <td>Your profile, appearance and settings
+              <small>Your name, email address and photo if you set them, your colors and wallpaper,
+              your course nicknames and order, your mode (Incognito or Classic) and your answer to
+              "13 or older"</small></td>
+            <td>Your browser's local storage</td>
+            <td>Until you clear it</td>
+            <td>Clear site data for Averages.io in your browser. Signing out does not remove these.</td>
+          </tr>
+          <tr>
+            <td>Your class files list
+              <small>File names and which class they're from, for the Files page, and extra details
+              some pages load, like your teachers, events and folders</small></td>
+            <td>Held in your browser for the current visit</td>
+            <td>Up to 5 minutes</td>
+            <td>Close the tab, or use Refresh on the Files page</td>
+          </tr>
+          <tr>
+            <td>A short-lived Google Drive or OneDrive pass
+              <small>Classic mode, only if you connect them</small></td>
+            <td>Held in your browser while the page is open</td>
+            <td>An hour at most</td>
+            <td>Close the tab, or disconnect in Settings &gt; Integrations</td>
+          </tr>
+          <tr>
+            <td>Which Google Drive or OneDrive account is connected
+              <small>And your Google Drive drafts list (which assignment file became which Google
+              Doc), and the OneDrive files you picked with Add from OneDrive</small></td>
+            <td>Your browser's local storage</td>
+            <td>Until you sign out or disconnect</td>
+            <td>Disconnect in Settings &gt; Integrations, or sign out</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="block" id="we-store">
+    <h2>What we store</h2>
+    <p class="sub">Four features store things on our servers, in the United States. All four start
+    switched off, and all four are off in Incognito mode. Cloudflare, which runs our servers, also
+    keeps short technical logs.</p>
+    <div class="tbl">
+      <table>
+        <thead>
+          <tr><th>What</th><th>Stored when</th><th>How long</th><th>How to remove it</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Your user ID, profile, appearance and settings
+              <small>Not including course nicknames or order</small></td>
+            <td><span class="pill">Off by default</span>Sync Across Devices is on
+              <small>Carries your profile, appearance and settings to the other devices you sign
+              in on</small></td>
+            <td>While sync is on</td>
+            <td>Turn off Sync Across Devices. It is deleted immediately.</td>
+          </tr>
+          <tr>
+            <td>Your Canva sign-in (encrypted), Canva name and Drafts list
+              <small>And, for one day at most, which page Return in Canva sends you back to</small></td>
+            <td><span class="pill">Off by default</span>You connect Canva
+              <small>So Edit in Canva can copy assignment files into your Canva account</small></td>
+            <td>Until you disconnect</td>
+            <td>Disconnect Canva in Settings &gt; Integrations. It is deleted immediately. Your designs stay in Canva.</td>
+          </tr>
+          <tr>
+            <td>Your Google Drive and OneDrive sign-ins (encrypted), and the account's email and name
+              <small>Never your files: those go straight between your browser and Google or Microsoft</small></td>
+            <td><span class="pill">Off by default</span>You connect Google Drive or OneDrive
+              <small>So you only connect once, on any device</small></td>
+            <td>Until you disconnect</td>
+            <td>Disconnect in Settings &gt; Integrations. It is deleted immediately. Your files stay in your Drive or OneDrive.</td>
+          </tr>
+          <tr>
+            <td>Your browsers' notification addresses, the kinds you turned on, your sign-in (encrypted with its own key) and a fingerprint of what was last seen
+              <small>Short scrambled codes, never a grade, an assignment title or a name</small></td>
+            <td><span class="pill">Off by default</span>You turn on notifications
+              <small>So Averages.io can check about every 20 minutes and let you know when something is new</small></td>
+            <td>While notifications are on</td>
+            <td>Turn off notifications in Settings, switch to Incognito mode or sign out. It is deleted immediately.</td>
+          </tr>
+          <tr>
+            <td>Technical request logs
+              <small>The time, the address requested, your IP address and whether it worked. Never
+              your grades or files.</small></td>
+            <td>Every request to our server</td>
+            <td>7 days at most</td>
+            <td>Deleted automatically</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="block" id="controls">
+    <h2>Your controls</h2>
+    <div class="controls">
+      <div class="control">
+        <span class="slot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="butt" stroke-linejoin="miter" aria-hidden="true"><rect x="6" y="3" width="12" height="18" rx="2"/><path d="M10.5 18h3"/></svg></span>
+        <h3>Clear this device</h3>
+        <p>Clear Cache in Settings removes the grades held for your current visit. To remove your
+        saved profile and settings as well, clear site data for Averages.io in your browser.</p>
+      </div>
+      <div class="control">
+        <span class="slot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="butt" stroke-linejoin="miter" aria-hidden="true"><path d="M6 18a4 4 0 0 1 .6-7.96 5.5 5.5 0 0 1 10.6-1.3A4.2 4.2 0 0 1 18.5 18z"/><path d="m9.8 11.8 4.4 4.4M14.2 11.8l-4.4 4.4"/></svg></span>
+        <h3>Delete what we store</h3>
+        <p>Turn off Sync Across Devices and notifications, and disconnect Canva, Google Drive and
+        OneDrive, in Settings, or switch to Incognito mode, which does all of that. Everything they stored on our servers is
+        deleted straight away.</p>
+      </div>
+      <div class="control">
+        <span class="slot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="butt" stroke-linejoin="miter" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 6.5 8.5 7 8.5-7"/></svg></span>
+        <h3>Ask us</h3>
+        <p>Want a copy of what we hold about you, or confirmation that it has gone? Email us and a
+        person will reply.</p>
+        <a class="go" href="mailto:help@averages.io">help@averages.io</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<section class="ask">
+  <div class="wrap">
+    <h2>Still want something removed?</h2>
+    <p>Email us and a person will sort it out.</p>
+    <a class="mail" href="mailto:help@averages.io">help@averages.io</a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <svg viewBox="0 0 452 454" role="img" aria-label="Averages"><defs><linearGradient id="punchFoot" x1="0" y1="0" x2="0" y2="454" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FF7A50"/><stop offset="1" stop-color="#E5484D"/></linearGradient></defs><path fill="url(#punchFoot)" fill-rule="evenodd" d="M0.02 452.75C0.15 442.97 5.78 407.10 10.02 389.00C11.63 382.12 15.00 367.50 17.51 356.50C28.03 310.27 40.89 265.53 58.60 213.50C77.33 158.47 85.57 136.89 103.25 96.50C118.88 60.79 129.55 39.21 141.04 20.00C144.17 14.78 147.92 8.14 149.38 5.25L152.03 0.00L226.00 0.00L299.97 0.00L302.62 5.25C304.08 8.14 307.83 14.78 310.96 20.00C322.28 38.92 336.94 68.63 348.06 95.18C350.75 101.61 354.55 110.26 356.49 114.41C367.49 137.90 397.74 222.92 410.96 267.50C419.09 294.91 429.04 332.52 434.49 356.50C437.00 367.50 440.37 382.12 441.98 389.00C446.22 407.10 451.85 442.97 451.98 452.75C452.00 453.74 436.27 454.00 376.64 454.00L301.28 454.00L299.60 442.75C296.88 424.51 291.11 392.27 288.63 381.50L286.34 371.50L223.34 371.24L160.34 370.99L158.19 380.33C155.44 392.33 149.65 424.19 147.53 439.00C146.63 445.32 145.66 451.29 145.38 452.25C144.90 453.90 140.55 454.00 72.43 454.00C15.14 454.00 0.00 453.74 0.02 452.75ZM184.00 348.25C189.69 345.41 191.44 335.66 187.41 329.29C184.35 324.47 172.42 324.01 167.19 328.51C164.78 330.58 164.50 331.51 164.50 337.31C164.50 344.14 166.09 347.25 170.50 349.05C173.93 350.46 180.35 350.07 184.00 348.25ZM274.28 347.02C284.17 342.33 288.64 332.80 287.74 318.33C286.79 303.07 279.66 295.00 265.16 292.75C256.25 291.37 245.93 293.01 240.22 296.71C232.38 301.79 228.36 311.77 229.23 323.96C230.09 335.93 235.58 344.50 244.50 347.78C249.77 349.72 251.32 349.90 260.50 349.59C267.31 349.35 270.66 348.73 274.28 347.02ZM220.00 325.25L220.00 301.50L209.50 301.50L199.00 301.50L199.00 325.25L199.00 349.00L209.50 349.00L220.00 349.00L220.00 325.25ZM252.40 330.90C250.89 329.22 250.50 327.26 250.50 321.31C250.50 314.35 250.70 313.66 253.31 311.41C256.89 308.33 260.44 308.35 263.55 311.45C265.70 313.61 266.00 314.79 266.00 321.23C266.00 330.70 264.56 333.00 258.60 333.00C255.51 333.00 253.78 332.41 252.40 330.90ZM218.38 292.67C221.03 290.93 222.25 286.49 221.33 281.90C220.47 277.58 215.94 275.01 209.18 275.00C200.42 275.00 197.08 277.76 197.03 285.08C197.01 288.68 197.53 290.15 199.48 291.98C203.75 295.99 212.81 296.32 218.38 292.67ZM258.58 254.35C258.23 253.44 256.13 245.45 253.90 236.60C244.34 198.58 227.57 140.97 224.09 134.18L222.37 130.84L216.22 150.67C207.52 178.73 204.15 190.56 195.49 223.50C191.29 239.45 187.63 253.29 187.36 254.25C186.90 255.89 189.07 256.00 223.04 256.00C256.26 256.00 259.16 255.87 258.58 254.35Z"/></svg>
+        <p class="foot-tag">Do school your way.</p>
+        <p>Averages.io is a student-built companion web app for your school's learning management system
+        (LMS) that brings where you work to how you work. With Canva assignment editing built in, you
+        can edit and submit without ever leaving the app. Averages.io also adds the features students
+        ask for most, like projected grades, instant page loads and a customizable UI.</p>
+        <div class="foot-btns">
+          <a href="https://github.com/averages-io/averages.io" target="_blank" rel="noopener">GitHub</a>
+        </div>
+      </div>
+
+      <div class="fcol">
+        <h4>Product</h4>
+        <ul>
+          <li><a href="features.html">Features</a></li>
+          <li><a href="features.html#connections">Connections</a></li>
+          <li><a href="index.html#projected">Projected grades</a></li>
+          <li><a href="features.html#themes">Make it yours</a></li>
+        </ul>
+      </div>
+      <div class="fcol">
+        <h4>Help</h4>
+        <ul>
+          <li><a href="support.html">Support Hub</a></li>
+          <li><a href="https://github.com/averages-io/averages.io/issues" target="_blank" rel="noopener">Report a bug</a></li>
+          <li><a href="https://github.com/averages-io/averages.io/discussions/categories/ideas" target="_blank" rel="noopener">Request a feature</a></li>
+          <li><a href="mailto:help@averages.io">Contact</a></li>
+          <li><a href="https://github.com/averages-io/averages.io/releases" target="_blank" rel="noopener">Releases</a></li>
+        </ul>
+      </div>
+      <div class="fcol">
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="privacy-policy.html">Privacy</a></li>
+          <li><a href="terms.html">Terms</a></li>
+          <li><a href="your-data.html" aria-current="page">Your data</a></li>
+          <li><a href="https://drive.google.com/file/d/1h-kVmzQg9oJvHGsdLfwh402_p2SBpI8s/view?usp=sharing" target="_blank" rel="noopener">Breach policy<span class="ftag">PDF</span></a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="legal">
+      <p>
+        Averages.io is an independent app made by a student. It isn't made by, endorsed by or
+        affiliated with any school platform it connects to. Schoology and PowerSchool are trademarks
+        of PowerSchool Holdings, Inc. Google Drive is a trademark of Google LLC. Microsoft and
+        OneDrive are trademarks of the Microsoft group of companies. Canva is a trademark of
+        Canva Pty Ltd.
+      </p>
+      <p class="copy">&copy; 2026 Averages.io</p>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
