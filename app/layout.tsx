@@ -96,6 +96,8 @@ export default function RootLayout({
           data-feature-off on <html>, hence suppressHydrationWarning there.
         */}
         <script src="/js/averages-features.js" />
+        {/* File type icons (2026-10-09): AveragesFileIcons, used by Files, the assignment page and course materials. */}
+        <script src="/js/averages-file-icons.js" />
       </head>
       {/*
         No inline style on <body>, deliberately.
