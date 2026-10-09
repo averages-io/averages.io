@@ -1852,6 +1852,8 @@
         { id: 'gdrive', name: 'Google Drive', desc: 'Edit Word, PowerPoint and Excel files in Google Docs, Slides and Sheets, and add files from Drive.' },
         { id: 'onedrive', name: 'OneDrive', desc: 'Save course files to OneDrive, add files from it, and find them on the Files tab.' },   // back 2026-10-05
       ];
+      // Feature switches (2026-10-09): a row hides while its integration is off (public/js/averages-features.js).
+      const FEAT = { canva: 'canva-integration', gdrive: 'drive-integration', onedrive: 'onedrive-integration' };
       const connected = new Set();
       const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
       const LIVE = window.__AVERAGES_MODE__ === 'live';
@@ -1884,7 +1886,7 @@
           action = `<button class="btn-secondary integ-btn" type="button" data-canva="connect" aria-label="Connect Canva"${s.busy ? ' disabled' : ''}>Connect</button>`;
         }
         return `
-            <div class="settings-row">
+            <div class="settings-row" data-feature="${FEAT[a.id]}">
               <div class="settings-row-text">
                 <p class="settings-row-label">${esc(a.name)}</p>
                 <p class="settings-row-desc">${esc(a.desc)}</p>
@@ -1923,7 +1925,7 @@
           action = `<button class="btn-secondary integ-btn" type="button" data-cloud="connect" data-app="${a.id}" aria-label="Connect ${esc(a.name)}"${busy}>Connect</button>`;
         }
         return `
-            <div class="settings-row">
+            <div class="settings-row" data-feature="${FEAT[a.id]}">
               <div class="settings-row-text">
                 <p class="settings-row-label">${esc(a.name)}</p>
                 <p class="settings-row-desc">${esc(a.desc)}</p>
@@ -1934,7 +1936,7 @@
       }
       function incognitoRowHTML(a) {
         return `
-            <div class="settings-row">
+            <div class="settings-row" data-feature="${FEAT[a.id]}">
               <div class="settings-row-text">
                 <p class="settings-row-label">${esc(a.name)}</p>
                 <p class="settings-row-desc">${esc(a.desc)}</p>
@@ -1952,7 +1954,7 @@
             ? `<button class="btn-secondary integ-btn${on ? ' disconnect' : ''}" type="button" data-integ="${a.id}" aria-label="${on ? 'Disconnect' : 'Connect'} ${esc(a.name)}">${on ? 'Disconnect' : 'Connect'}</button>`
             : `<span class="integ-soon">Coming soon</span>`;
           return `
-            <div class="settings-row">
+            <div class="settings-row" data-feature="${FEAT[a.id]}">
               <div class="settings-row-text">
                 <p class="settings-row-label">${esc(a.name)}</p>
                 <p class="settings-row-desc">${esc(a.desc)}</p>
