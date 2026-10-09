@@ -1250,6 +1250,17 @@
             if (how === 'pick') {
               const picked = app === 'gdrive' ? await K.googlePick(token) : await K.oneDrivePick(token);
               if (!picked.length && c.state === 'ready') return;
+              await listCloud(app, token);
+              // 2026-10-08: say what was added, and show a picked Google file
+              // even if Drive's list hasn't caught up with it yet.
+              if (picked.length && c.state === 'ready') {
+                if (app === 'gdrive') {
+                  const have = new Set(c.files.map(f => f.id));
+                  picked.forEach(d => { if (d && d.file && d.file.id && !have.has(String(d.file.id))) c.files.unshift(normalize(app, d.file)); });
+                }
+                flash(`Added ${picked.length} file${picked.length === 1 ? '' : 's'} from ${c.name}.`);
+              }
+              return;
             }
             await listCloud(app, token);
           })
