@@ -6,6 +6,23 @@ import type { Metadata } from "next";
  * gets this card unless it sets its own (app/schools/apply/layout.tsx does).
  * The images live in public/ (og.png, og-schools.png), 1200 x 630.
  */
+const TYPEKIT_CSS = "https://use.typekit.net/gsk6off.css";
+const FONT_LOADER = `(function(){
+  function load(){
+    if (document.getElementById('avTypekit')) return;
+    var l = document.createElement('link');
+    l.id = 'avTypekit'; l.rel = 'stylesheet'; l.href = '${TYPEKIT_CSS}';
+    if (document.body === null) l.setAttribute('blocking', 'render');
+    document.head.appendChild(l);
+  }
+  window.__averagesLoadFonts = load;
+  try {
+    var o = JSON.parse(localStorage.getItem('schoolagy_settings_options') || '{}') || {};
+    if (o.potatoMode === true) return;
+  } catch (e) {}
+  load();
+})();`;
+
 const DESCRIPTION = "Because schoolwork should be simple. Grades, assignments and class files in one place.";
 
 export const metadata: Metadata = {
@@ -59,7 +76,19 @@ export default function RootLayout({
           whole app means the font is fetched once and is warm in cache for
           every subsequent route.
         */}
-        <link rel="stylesheet" href="https://use.typekit.net/gsk6off.css" />
+        {/*
+          Potato PC mode (2026-10-09, Martin: on a Chromebook most of the load
+          was fetching the font from Adobe). Potato mode already draws every
+          page in the system font, so with it on the Adobe stylesheet isn't
+          requested at all. Otherwise it loads as before, still holding the
+          first paint (blocking="render") so Puffin doesn't flash in late.
+          window.__averagesLoadFonts() adds it later, when Potato mode is
+          turned off in Settings. <noscript> keeps the font without scripts.
+        */}
+        <script dangerouslySetInnerHTML={{ __html: FONT_LOADER }} />
+        <noscript>
+          <link rel="stylesheet" href={TYPEKIT_CSS} />
+        </noscript>
         {/*
           Feature switches (2026-10-09): hides what's switched off and shows
           the maintenance banner (public/js/averages-features.js). Plain and
