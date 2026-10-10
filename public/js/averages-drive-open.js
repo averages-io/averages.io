@@ -51,9 +51,15 @@
     }
   } catch { /* nothing to keep */ }
 
-  // 2. Finish on Files. The sign-in page ("/"), onboarding and Files itself stay put.
+  // 2. Finish on Files. The sign-in page ("/"), onboarding, Settings and Files
+  //    itself stay put. Only once per file (2026-10-09, Martin: "it traps you
+  //    on the files page"): before, every other page sent the student back to
+  //    Files for 15 minutes, so leaving Files to connect Google Drive or to do
+  //    anything else bounced them straight back.
   const path = window.location.pathname.replace(/\.html$/, '').replace(/\/+$/, '') || '/';
-  if (pending() && path !== '/' && path !== '/files' && !/^\/onboard/.test(path)) {
+  const p = pending();
+  if (p && !p.bounced && path !== '/' && path !== '/files' && path !== '/settings' && !/^\/onboard/.test(path)) {
+    try { sessionStorage.setItem(KEY, JSON.stringify(Object.assign({}, p, { bounced: true }))); } catch { /* storage off */ }
     window.location.replace('/files');
   }
 

@@ -269,14 +269,42 @@
   function hasScope(scopes, want) {
     return Array.isArray(scopes) && scopes.some((x) => String(x).toLowerCase() === want.toLowerCase() || String(x).toLowerCase().endsWith('/' + want.toLowerCase()));
   }
-  /** A token from our API for `app` (with Files.Read when `read`). Rejects needs_click when they must connect. */
-  async function serverToken(app, read) {
+  /*
+   * Disconnected by Google / Microsoft (2026-10-09): the student removed
+   * Averages.io from their account, or the sign-in ran out. Our API then
+   * forgets the connection but remembers who it was (GET /cloud/status
+   * `lost: true`), so pages can say "got disconnected, reconnect" instead of
+   * quietly showing nothing. Null when that isn't the case.
+   */
+  function lost(app) {
+    const st = SRV.status;
+    const a = st && !st.incognito && st[app];
+    return a && a.configured && !a.connected && a.lost ? { email: String(a.email || ''), name: String(a.name || '') } : null;
+  }
+  function markLost(app) {
+    const acct = accounts()[app] || {};
+    if (SRV.status && SRV.status[app]) {
+      const a = SRV.status[app];
+      SRV.status[app] = Object.assign({}, a, { connected: false, lost: true, email: a.email || acct.email || acct.username || '', name: a.name || acct.name || '' });
+    }
+    delete SRV.tok[app];
+    clearAccount(app);
+    try { window.dispatchEvent(new CustomEvent('averages-cloud-status')); } catch {}
+  }
+  /**
+   * A token from our API for `app` (with Files.Read when `read`). Rejects
+   * needs_click when they must connect, and `reconnect` when Google /
+   * Microsoft took the connection back. `force` (after a 401 from the drive)
+   * asks the API for a new one even if the old one looks fresh: when access
+   * is removed in their Google account, the old one stops working at once.
+   */
+  async function serverToken(app, read, force) {
     const me = owner();
     const t = SRV.tok[app];
-    if (t && t.owner === me && t.exp - 60000 > Date.now() && (!read || hasScope(t.scopes, 'Files.Read'))) return t.token;
+    if (!force && t && t.owner === me && t.exp - 60000 > Date.now() && (!read || hasScope(t.scopes, 'Files.Read'))) return t.token;
     let r;
     try {
-      r = await fetch(`${API}/cloud/${app}/token`, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+      r = await fetch(`${API}/cloud/${app}/token`, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: force ? '{"refresh":true}' : '{}' });
     } catch {
       throw fail('network');
     }
@@ -287,7 +315,12 @@
       return j.access_token;
     }
     if (r.status === 409) {
-      // Never connected, or Google / Microsoft took the sign-in back: they connect again.
+      // Google / Microsoft took the sign-in back: Reconnect.
+      if ((j && j.error === 'cloud_reconnect_needed') || lost(app)) {
+        markLost(app);
+        throw fail('reconnect');
+      }
+      // Never connected: they connect.
       delete SRV.tok[app];
       if (SRV.status && SRV.status[app]) SRV.status[app].connected = false;
       clearAccount(app);
@@ -306,7 +339,8 @@
   }
   /** Connect through our API: the page goes to Google / Microsoft and comes back here. */
   function goConnect(app, read) {
-    const acct = accounts()[app];
+    // Disconnected by Google / Microsoft: their account chooser starts on the same account.
+    const acct = accounts()[app] || lost(app);
     const hint = acct && (acct.email || acct.username) ? `&login_hint=${encodeURIComponent(acct.email || acct.username)}` : '';
     window.location.assign(`${API}/cloud/${app}/connect?return_to=${encodeURIComponent(returnPath())}${read ? '&read=1' : ''}${hint}`);
     // The page is leaving: nothing to show (callers stay quiet on popup_closed).
@@ -316,7 +350,7 @@
   function serverTokenOrConnect(app, opts) {
     if (opts.prompt === 'select_account') return goConnect(app, !!opts.read);
     return serverToken(app, !!opts.read).catch((e) => {
-      if (e && e.code === 'needs_click' && opts.interactive) return goConnect(app, !!opts.read);
+      if (e && (e.code === 'needs_click' || e.code === 'reconnect') && opts.interactive) return goConnect(app, !!opts.read);
       throw e;
     });
   }
@@ -543,6 +577,12 @@
     if (r.status === 401) {
       clearToken('gdrive');
       delete SRV.tok.gdrive;
+      // Our server keeps the connection: ask it for a new token once (it
+      // answers `reconnect` if Google took the connection back), then retry.
+      if (serverOn('gdrive') && !init.retried) {
+        const fresh = await serverToken('gdrive', false, true);
+        return gfetch(fresh, url, Object.assign({}, init, { retried: true }));
+      }
       throw fail('needs_click');
     }
     return r;
@@ -685,6 +725,29 @@
     if (!r.ok) throw fail('network');
     const f = await r.json();
     return f.trashed ? null : f;
+  }
+
+  /*
+   * Turn in a view link (2026-10-09, Martin): gives the file "Anyone with the
+   * link: Viewer" and answers { url, name }. drive.file covers this for files
+   * Averages.io can see. School accounts often aren't allowed to share outside
+   * the school: Google says 403 and we say so (share_blocked).
+   */
+  async function googleShareLink(token, id) {
+    if (!/^[A-Za-z0-9_-]{10,128}$/.test(String(id || ''))) throw fail('file_gone');
+    const f = await googleFile(token, id);
+    if (!f) throw fail('file_gone');
+    const r = await gfetch(token, `${DRIVE}/files/${encodeURIComponent(id)}/permissions?${ALL_DRIVES}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role: 'reader', type: 'anyone', allowFileDiscovery: false }),
+    });
+    if (r.status === 404) throw fail('file_gone');
+    if (r.status === 403 || r.status === 400) throw fail('share_blocked');
+    if (!r.ok) throw fail('share_failed');
+    const url = String(f.webViewLink || `https://drive.google.com/file/d/${encodeURIComponent(id)}/view`);
+    if (!linkOk(url)) throw fail('share_failed');
+    return { url, name: String(f.name || 'Google Drive file') };
   }
 
   /** Files Averages.io can see in their Drive (drive.file: ones it made or they picked), newest first. */
@@ -1206,6 +1269,12 @@
       r = await fetch(url, Object.assign({}, init, { headers: Object.assign({ Authorization: 'Bearer ' + token }, init.headers || {}) }));
     } catch {
       throw fail('network');
+    }
+    if (r.status === 401 && serverOn('onedrive') && !init.retried) {
+      // Same as Google Drive: one new token from our server, then retry.
+      delete SRV.tok.onedrive;
+      const fresh = await serverToken('onedrive', false, true);
+      return mfetch(fresh, url, Object.assign({}, init, { retried: true }));
     }
     if (r.status === 401) {
       const rd = rawToken('onedriveRead');
@@ -1761,6 +1830,7 @@
     not_ready: 'Google sign-in is still loading. Try again in a second.',
     network: 'Couldn’t connect right now. Check your internet and try again.',
     needs_click: 'Your sign-in ran out. Click again to sign back in.',
+    reconnect: 'Your Google Drive or OneDrive got disconnected (access was removed or ran out). Reconnect it in Settings › Integrations.',
     popup_blocked: 'Your browser blocked the sign-in window. Allow pop-ups for this site, then try again.',
     popup_closed: 'The sign-in window closed before it finished. If it said your school blocks Averages.io, your school’s IT team has to allow it first.',
     denied: 'Access wasn’t allowed, so nothing was changed.',
@@ -1782,6 +1852,9 @@
     download_blocked: 'That file can’t be downloaded. Its owner may have turned downloading off.',
     not_downloadable: 'This kind of file can’t be attached. Try a document, slides, a spreadsheet, a PDF or a picture.',
     export_too_large: 'Google only turns files up to 10 MB into a PDF. Download it as a PDF in Google Drive, then attach that.',
+    share_blocked: 'Google Drive wouldn’t share that file with anyone who has the link. Your school may not allow it. Turn in the file instead, or share it with your teacher in Google Drive.',
+    share_failed: 'Couldn’t make a view link in Google Drive. Try again, or turn in the file instead.',
+    canva_link_needed: 'Paste the Canva view link (it starts with https://www.canva.com/design/). In Canva: Share → Anyone with the link → Can view → Copy link.',
     read_access_needed: 'Averages.io needs permission to read that file. Use Add from OneDrive on the Files tab, then try again.',
   };
   function messageFor(error) {
@@ -1792,6 +1865,8 @@
   window.AveragesCloud = {
     serverStatus,
     connectResult,
+    /** {email, name} when Google / Microsoft disconnected `app` and it should be reconnected; else null. */
+    lost,
     // shared
     config,
     accounts,
@@ -1813,6 +1888,7 @@
     disconnectGoogle,
     googleUpload,
     googleFile,
+    googleShareLink,
     googleList,
     googleOpenWith,
     driveHome: DRIVE_HOME,
