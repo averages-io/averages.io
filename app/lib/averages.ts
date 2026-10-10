@@ -38,6 +38,8 @@ const SESSION_CACHE_MS = 60 * 1000;
 const BUNDLE_CACHE = "schoolagy_bundle_cache";
 /** The Files page's course-file list (pages-src/files.html keeps it 5 minutes). */
 const FILES_CACHE = "averages_files_cache";
+/** The Files page's list of turned-in files (2026-10-09, also 5 minutes). Cleared with FILES_CACHE. */
+const SUBS_CACHE = "averages_subs_cache";
 
 export const API_BASE =
   typeof window !== "undefined" &&
@@ -191,6 +193,7 @@ export function forgetSession(): void {
   cacheClear(SESSION_CACHE);
   cacheClear(BUNDLE_CACHE);
   cacheClear(FILES_CACHE);
+  cacheClear(SUBS_CACHE);
   clearExtras();
 }
 
@@ -212,6 +215,7 @@ export async function signIn(key: string, secret: string): Promise<SignInResult>
     cacheClear(SESSION_CACHE);
     cacheClear(BUNDLE_CACHE);
     cacheClear(FILES_CACHE);
+    cacheClear(SUBS_CACHE);
     clearExtras();
     return { ok: true, demo: !!data?.demo };
   } catch {
@@ -254,6 +258,7 @@ function claimCloudConnections(uid: string): void {
     if (window.localStorage.getItem(CLOUD_OWNER_KEY) === uid) return;
     clearCloudConnections();
     cacheClear(FILES_CACHE);
+    cacheClear(SUBS_CACHE);
     window.localStorage.setItem(CLOUD_OWNER_KEY, uid);
   } catch {
     /* storage blocked: nothing can be connected on this device anyway */
@@ -302,6 +307,7 @@ export async function signOut(): Promise<void> {
   cacheClear(SESSION_CACHE);
   cacheClear(BUNDLE_CACHE);
   cacheClear(FILES_CACHE);
+  cacheClear(SUBS_CACHE);
   clearExtras();
   clearCloudConnections();
   const pushForgotten = forgetPushOnThisDevice();
