@@ -1926,6 +1926,11 @@
             status += '<span class="integ-status integ-reconnect">Reconnect to add Averages.io to Google Drive’s Open with menu.</span>';
             action = `<button class="btn-secondary integ-btn" type="button" data-cloud="connect" data-app="${a.id}" aria-label="Reconnect ${esc(a.name)}"${busy}>Reconnect</button>`;
           }
+        } else if (cloudApi() && typeof cloudApi().lost === 'function' && cloudApi().lost(a.id)) {
+          // Google / Microsoft disconnected it (2026-10-09): say so, and Reconnect.
+          const who = cloudApi().lost(a.id).email;
+          status = `<span class="integ-status integ-reconnect">${cloud.busy[a.id] ? 'Connecting…' : `Disconnected${who ? ' (' + esc(who) + ')' : ''}: access was removed in your ${a.id === 'gdrive' ? 'Google' : 'Microsoft'} account or ran out. Reconnect to keep using it.`}</span>`;
+          action = `<button class="btn-secondary integ-btn" type="button" data-cloud="connect" data-app="${a.id}" aria-label="Reconnect ${esc(a.name)}"${busy}>Reconnect</button>`;
         } else {
           status = `<span class="integ-status">${cloud.busy[a.id] ? 'Connecting…' : 'Not connected'}</span>`;
           action = `<button class="btn-secondary integ-btn" type="button" data-cloud="connect" data-app="${a.id}" aria-label="Connect ${esc(a.name)}"${busy}>Connect</button>`;
@@ -2249,6 +2254,7 @@
         loadCloud();
         // Signed in or out of a drive in another tab, or a sign-in finished late: show it.
         window.addEventListener('averages-cloud-change', () => { if (cloud.state === 'ready') render(); });
+        window.addEventListener('averages-cloud-status', () => { if (cloud.state === 'ready') render(); });
         const note = document.querySelector('.integ-note');
         if (note) note.textContent += ' Google Drive and OneDrive stay connected in this browser only, and signing out of Averages.io disconnects them.';
       }

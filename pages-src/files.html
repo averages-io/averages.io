@@ -607,6 +607,8 @@
   .lf-flash a { margin-left: 4px; }
   .lf-flash-x { margin-left: auto; width: 24px; height: 24px; flex: none; border: none; border-radius: 50%; background: none; font: inherit; font-size: 1rem; line-height: 1; color: var(--text-muted); cursor: pointer; }
   .lf-flash-x:hover { background: var(--border); color: var(--text-dark); }
+  .lf-flash-undo, .lf-link { border: none; background: none; padding: 0; font: inherit; font-weight: 800; color: var(--accent); text-decoration: underline; cursor: pointer; }
+  .lf-flash-undo:focus-visible, .lf-link:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); border-radius: 4px; }
   .lf-crumbs { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin: 18px 0 12px; font-size: 0.84rem; font-weight: 800; color: var(--text-dark); }
   .lf-crumbs .cm { width: 18px; height: 18px; border-radius: 50%; }
   .lf-crumbs button { border: none; background: none; font: inherit; color: var(--text-muted); padding: 4px 6px; border-radius: 8px; cursor: pointer; }
@@ -1217,7 +1219,7 @@
           c.state = 'ready';
           if (app === 'gdrive') setTimeout(() => driveOpenPending(token), 0);
         } catch (err) {
-          c.state = err && err.code === 'needs_click' ? 'click' : 'error';
+          c.state = err && err.code === 'reconnect' ? 'reconnect' : err && err.code === 'needs_click' ? 'click' : 'error';
           c.message = C().messageFor(err);
         }
         render();
@@ -1227,14 +1229,15 @@
         const c = CLOUD[app];
         const configured = app === 'gdrive' ? !!cfg.google : !!cfg.microsoft;
         if (!configured) { c.state = 'soon'; render(); return; }
+        // Google / Microsoft disconnected it (2026-10-09): ask to reconnect, don't just drop it.
+        if (C().lost && C().lost(app)) { c.state = 'reconnect'; render(); return; }
         if (!C().accounts()[app]) {
           c.state = 'connect';
-          if (app === 'gdrive' && window.AveragesDriveOpen && window.AveragesDriveOpen.pending()) flash('Connect Google Drive (Add files → Connect Google Drive) to open the file you chose in Google Drive.', true);
           render();
           return;
         }
         const quiet = app === 'gdrive' ? C().googleToken({}) : C().oneDriveToken({});
-        quiet.then(t => listCloud(app, t), () => { c.state = 'click'; render(); });
+        quiet.then(t => listCloud(app, t), err => { c.state = err && err.code === 'reconnect' ? 'reconnect' : 'click'; render(); });
       }
       /*
        * "Open with → Averages.io" in Google Drive (2026-10-09, replacing the Picker).
@@ -1262,6 +1265,8 @@
           const c = CLOUD.gdrive;
           const have = new Set(c.files.map(f => f.id));
           got.forEach(f => { if (!have.has(String(f.id))) c.files.unshift(normalize('gdrive', f)); });
+          // Opened again from Drive: back in Averages.io if it had been removed.
+          if (got.some(f => HIDDEN.delete('gdrive:' + String(f.id)))) saveHidden();
           LV.filter = 'gdrive';
           flash(got.length === 1 ? `Opened “${got[0].name}” from Google Drive.` : `Opened ${got.length} files from Google Drive.`);
           render();
@@ -1319,7 +1324,7 @@
           })
           .catch(err => {
             if (err && err.code === 'popup_closed') return;
-            c.state = 'error';
+            c.state = err && err.code === 'reconnect' ? 'reconnect' : 'error';
             c.message = K.messageFor(err);
           })
           .finally(() => { c.busy = false; render(); });
@@ -1367,14 +1372,14 @@
       const cfColor = c => (/^#[0-9a-f]{3,8}$/i.test(String(c.color || '')) ? c.color : '#83849a');
       // One status line under the header, for saves and Canva folder changes.
       let flashState = null;
-      function flash(text, bad, link) {
-        flashState = { text, bad: !!bad, link: link && C() && C().linkOk(link.url) ? link : null };
+      function flash(text, bad, link, undo) {
+        flashState = { text, bad: !!bad, link: link && C() && C().linkOk(link.url) ? link : null, undo: typeof undo === 'function' ? undo : null };
         render();
       }
       function flashHTML() {
         if (!flashState) return '';
         const f = flashState;
-        return `<p class="lf-flash${f.bad ? ' bad' : ''}" role="status">${esc(f.text)}${f.link ? `<a href="${esc(f.link.url)}" target="_blank" rel="noopener noreferrer">${esc(f.link.label)}</a>` : ''}<button class="lf-flash-x" type="button" data-flash-close aria-label="Dismiss">×</button></p>`;
+        return `<p class="lf-flash${f.bad ? ' bad' : ''}" role="status">${esc(f.text)}${f.link ? `<a href="${esc(f.link.url)}" target="_blank" rel="noopener noreferrer">${esc(f.link.label)}</a>` : ''}${f.undo ? '<button class="lf-flash-undo" type="button" data-flash-undo>Undo</button>' : ''}<button class="lf-flash-x" type="button" data-flash-close aria-label="Dismiss">×</button></p>`;
       }
       const CF_CACHE = 'averages_files_cache';
       const CF_CACHE_MS = 5 * 60 * 1000;
@@ -1412,6 +1417,76 @@
         if (LV.filter.startsWith('c:') && !CF.courses.some(c => 'c:' + c.id === LV.filter)) LV.filter = 'all';
         render();
       }
+      // ---------- Remove from Averages.io (2026-10-09, Martin) ----------
+      // Takes a Google Drive, OneDrive or Canva file off the Files page only:
+      // nothing is deleted or changed in Google Drive, OneDrive or Canva.
+      // Kept on this device for this student (file ids only). Opening the
+      // same file again with Drive's "Open with → Averages.io" brings it back.
+      const HIDE_KEY = 'averages_files_hidden';
+      const HIDDEN = (() => {
+        try {
+          const v = JSON.parse(localStorage.getItem(HIDE_KEY) || 'null');
+          if (v && v.owner && v.owner === cfOwner() && Array.isArray(v.keys)) return new Set(v.keys.map(String));
+        } catch {}
+        return new Set();
+      })();
+      function saveHidden() {
+        try { localStorage.setItem(HIDE_KEY, JSON.stringify({ owner: cfOwner(), keys: [...HIDDEN].slice(-2000) })); } catch {}
+      }
+      const hideKey = e => `${e.src}:${String(e.raw && e.raw.id)}`;
+      const canHide = e => !e.folder && (e.src === 'gdrive' || e.src === 'onedrive' || e.src === 'canva');
+      const SRC_HOME = { gdrive: 'Google Drive', onedrive: 'OneDrive', canva: 'Canva' };
+      function setHidden(e, hide) {
+        const k = hideKey(e);
+        if (hide) HIDDEN.add(k); else HIDDEN.delete(k);
+        saveHidden();
+        if (hide) flash(`Removed “${e.name}” from Averages.io. It’s still in ${SRC_HOME[e.src]}.`, false, null, () => setHidden(e, false));
+        else flash(`“${e.name}” is back in Averages.io.`);
+      }
+
+      // ---------- Turned in (2026-10-09, Martin) ----------
+      // Files the student turned in on Schoology (GET /data/submissions: the
+      // recent assignments' own revisions, ids and names only). Download goes
+      // through GET /data/submission-file. Kept 5 minutes in this tab like the
+      // course files; the assignment page clears it after turning something in.
+      const SUB = { state: 'loading', courses: [], files: [], partial: false };
+      const SUB_CACHE = 'averages_subs_cache';
+      async function loadSubs(fresh) {
+        SUB.state = 'loading';
+        render();
+        try {
+          let j = null;
+          if (!fresh) {
+            try {
+              const c = JSON.parse(sessionStorage.getItem(SUB_CACHE) || 'null');
+              if (c && c.owner === cfOwner() && Date.now() - c.at < CF_CACHE_MS && c.data) j = c.data;
+            } catch {}
+          }
+          if (!j) {
+            const res = await fetch(`${api}/data/submissions`, { credentials: 'include' });
+            if (res.status === 401) { window.location.href = '/'; return; }
+            // An API from before this existed: no Turned in source.
+            if (res.status === 404) { SUB.state = 'off'; render(); return; }
+            if (!res.ok) throw new Error('status ' + res.status);
+            j = await res.json();
+            if (!j.partial) { try { sessionStorage.setItem(SUB_CACHE, JSON.stringify({ at: Date.now(), owner: cfOwner(), data: j })); } catch {} }
+          }
+          // Google Classroom keeps turned-in work in Classroom.
+          if (j.platform === 'classroom') { SUB.state = 'off'; render(); return; }
+          SUB.courses = (Array.isArray(j.courses) ? j.courses : []).filter(c => c && ID_OK(c.id)).map(c => ({ id: String(c.id), name: String(c.name || 'Course'), color: String(c.color || '') }));
+          SUB.files = (Array.isArray(j.files) ? j.files : [])
+            .filter(f => f && ID_OK(f.id) && ID_OK(f.course) && ID_OK(f.assignment) && ID_OK(f.revision))
+            .map(f => ({ id: String(f.id), name: String(f.name || 'File'), ext: String(f.ext || '').toLowerCase(), course: String(f.course), assignment: String(f.assignment), assignmentTitle: String(f.assignmentTitle || 'Assignment'), revision: String(f.revision), at: Number(f.at) || 0, late: !!f.late, size: Number(f.size) > 0 ? Number(f.size) : 0 }));
+          SUB.partial = !!j.partial;
+          SUB.state = 'ready';
+        } catch {
+          SUB.state = 'error';
+        }
+        render();
+      }
+      const subCourse = id => CF.courses.find(c => c.id === id) || SUB.courses.find(c => c.id === id) || { id, name: 'Course', color: '#83849a' };
+      const subDownloadUrl = f => `${api}/data/submission-file?section=${encodeURIComponent(f.course)}&assignment=${encodeURIComponent(f.assignment)}&revision=${encodeURIComponent(f.revision)}&file=${encodeURIComponent(f.id)}`;
+
       const cfDownloadUrl = f => `${api}/data/attachment?section=${encodeURIComponent(f.course)}&${f.kind === 'document' ? 'document' : 'assignment'}=${encodeURIComponent(f.parent)}&file=${encodeURIComponent(f.id)}`;
       function cfSave(app, f) {
         const K = C();
@@ -1544,7 +1619,10 @@
       // The tab is opened on the click itself (a tab opened after waiting for
       // our API would be blocked as a pop-up), shows "Opening Canva…", and is
       // sent to Canva once the API answers. Blocked anyway: this tab goes.
+      // Canva opens in this tab again (2026-10-09, Martin); its Return button comes back to Files.
+      const CANVA_NEW_TAB = false;
       function openCanvaTab() {
+        if (!CANVA_NEW_TAB) return null;
         let tab = null;
         try { tab = window.open('', '_blank'); } catch {}
         if (!tab) return null;
@@ -1690,6 +1768,7 @@
       // ---------- One list: every source as entries ----------
       function sourceState(src) {
         if (src === 'course') return CF.state;
+        if (src === 'turnedin') return SUB.state;
         if (src === 'canva') return CV.state;
         return CLOUD[src].state;
       }
@@ -1698,8 +1777,10 @@
       // switched on yet, leaves the sidebar. Add files connects them.
       const HIDDEN_STATES = ['connect', 'soon', 'off'];
       function srcList() {
-        if (INCOGNITO) return ['course'];
-        return ['course', 'gdrive', 'onedrive', 'canva'].filter(src => src === 'course' || !HIDDEN_STATES.includes(sourceState(src)));
+        // Turned in comes from the school platform like course files, so Incognito keeps it.
+        const subs = SUB.state === 'off' ? [] : ['turnedin'];
+        if (INCOGNITO) return ['course'].concat(subs);
+        return ['course'].concat(subs, ['gdrive', 'onedrive', 'canva'].filter(src => !HIDDEN_STATES.includes(sourceState(src))));
       }
       function entries() {
         const out = [];
@@ -1708,6 +1789,11 @@
           out.push({ key: 'cf:' + i, src: 'course', name: f.name, ext: f.ext, t: f.at, course: f.course,
             from: `${c.name} · ${f.kind === 'assignment' ? f.parentTitle : 'Materials'}`, color: cfColor(c), size: f.size, raw: f });
         });
+        if (SUB.state === 'ready') SUB.files.forEach((f, i) => {
+          const c = subCourse(f.course);
+          out.push({ key: 'sub:' + i, src: 'turnedin', name: f.name, ext: f.ext, t: f.at, course: f.course,
+            from: `${c.name} · Turned in${f.late ? ' late' : ''} · ${f.assignmentTitle}`, color: cfColor(c), size: f.size, raw: f });
+        });
         if (!INCOGNITO) {
           ['gdrive', 'onedrive'].forEach(app => {
             if (CLOUD[app].state !== 'ready') return;
@@ -1715,22 +1801,36 @@
           });
           if (CV.state === 'ready') CV.items.forEach(d => out.push({ key: 'cv:' + d.id, src: 'canva', name: String(d.title || 'Untitled design'), ext: 'canva', t: Number(d.updatedAt) || 0, from: 'Canva', thumb: d.thumbnailUrl, raw: d }));
         }
-        return out;
+        // Removed from Averages.io: left out, unless "Show them" is on.
+        return out.filter(e => {
+          if (!canHide(e) || !HIDDEN.has(hideKey(e))) return true;
+          e.hidden = true;
+          e.from += ' · Removed';
+          return LV.showHidden;
+        });
+      }
+      /** How many files are removed from Averages.io in what the current view would show. */
+      function hiddenCount() {
+        const was = LV.showHidden;
+        LV.showHidden = true;
+        const n = entries().filter(e => e.hidden && inFilterLive(e, LV.filter) && matchesLive(e)).length;
+        LV.showHidden = was;
+        return n;
       }
       const isRecent = e => e.t > 0 && Date.now() - e.t <= RECENT_DAYS * DAY;
       function inFilterLive(e, filter) {
         if (filter === 'all') return true;
         if (filter === 'recent') return isRecent(e);
-        if (filter.startsWith('c:')) return e.src === 'course' && e.course === filter.slice(2);
+        if (filter.startsWith('c:')) return (e.src === 'course' || e.src === 'turnedin') && e.course === filter.slice(2);
         return e.src === filter;
       }
       const matchesLive = e => !LV.query || `${e.name} ${e.from}`.toLowerCase().includes(LV.query);
       const newest = (a, b) => (b.t - a.t) || a.name.localeCompare(b.name);
-      const LIVE_SRC_NAME = { course: 'Course Files', gdrive: 'Google Drive', onedrive: 'OneDrive', canva: 'Canva' };
+      const LIVE_SRC_NAME = { course: 'Course Files', turnedin: 'Turned In', gdrive: 'Google Drive', onedrive: 'OneDrive', canva: 'Canva' };
       function titleLive() {
         if (LV.filter === 'all') return 'All Files';
         if (LV.filter === 'recent') return 'Recents';
-        if (LV.filter.startsWith('c:')) return cfCourse(LV.filter.slice(2)).name;
+        if (LV.filter.startsWith('c:')) return subCourse(LV.filter.slice(2)).name;
         return LIVE_SRC_NAME[LV.filter] || 'Files';
       }
 
@@ -1745,7 +1845,7 @@
         return `<span class="fx-badge" aria-hidden="true" style="background:${esc(b[1])}">${esc(b[0])}</span>`;
       }
       function fromLive(e) {
-        if (e.src === 'course') return `<span class="fx-dot" style="background:${esc(e.color)}"></span><span class="lf-ell">${esc(e.from)}</span>`;
+        if (e.src === 'course' || e.src === 'turnedin') return `<span class="fx-dot" style="background:${esc(e.color)}"></span><span class="lf-ell">${esc(e.from)}</span>`;
         return `<span class="lf-ell">${esc(e.from)}</span>`;
       }
       function thumbLive(e) {
@@ -1786,7 +1886,7 @@
       }
       function tileLive(e) {
         const when = dayLabel(e.t);
-        const sub = e.folder ? 'Folder' : e.src === 'course' ? fromLive(e) : esc(e.from);
+        const sub = e.folder ? 'Folder' : (e.src === 'course' || e.src === 'turnedin') ? fromLive(e) : esc(e.from);
         return `<div class="lf-tile"><button class="fx-tile" type="button" data-lv="${esc(e.key)}" aria-label="${esc(e.name)}, ${esc(e.folder ? 'folder' : e.from)}">${thumbLive(e)}<span class="fx-tile-name">${esc(e.name)}</span><span class="fx-tile-src">${sub}${when ? ' · ' + esc(when) : ''}</span></button>${moreBtn(e).replace('class="fx-more"', 'class="fx-more lf-tile-more"')}</div>`;
       }
       function listHTML(list, label) {
@@ -1803,6 +1903,11 @@
           if (st === 'error') return '<div class="fx-empty"><strong>Couldn’t load your course files</strong>Try again in a moment.<br><button class="fx-more-designs" type="button" data-cf-retry>Try again</button></div>';
           return '';
         }
+        if (src === 'turnedin') {
+          if (st === 'loading') return '<div class="fx-empty"><strong>Loading what you’ve turned in…</strong>This checks your recent assignments, so it takes a moment.</div>';
+          if (st === 'error') return '<div class="fx-empty"><strong>Couldn’t load what you’ve turned in</strong>Try again in a moment.<br><button class="fx-more-designs" type="button" data-sub-refresh>Try again</button></div>';
+          return '';
+        }
         if (src === 'canva') {
           if (st === 'loading') return '<div class="fx-empty"><strong>Loading your Canva designs…</strong></div>';
           if (st === 'soon') return '<div class="fx-empty"><strong>Canva is coming soon</strong>Designs you edit in Canva from Averages.io will show up here.</div>';
@@ -1814,6 +1919,7 @@
         const acct = C() ? C().accounts()[src] : null;
         if (st === 'loading') return `<div class="fx-empty"><strong>Loading your ${esc(c.name)} files…</strong></div>`;
         if (st === 'soon') return `<div class="fx-empty"><strong>${esc(c.name)} is coming soon</strong>Files you save to ${esc(c.name)} with Averages.io will show up here.</div>`;
+        if (st === 'reconnect') return `<div class="fx-empty"><strong>${esc(c.name)} got disconnected</strong>${esc(lostText(src))}<br><button class="fx-connect" type="button" data-cloud-connect="${src}"${c.busy ? ' disabled' : ''}>Reconnect ${esc(c.name)}</button></div>`;
         if (st === 'error') return `<div class="fx-empty"><strong>Couldn’t load your ${esc(c.name)} files</strong>${esc(c.message || 'Try again in a moment.')}<br><button class="fx-more-designs" type="button" data-cloud-retry="${src}">Try again</button></div>`;
         if (st === 'connect') return `<div class="fx-empty"><strong>Connect ${esc(c.name)} to see your files here</strong>${src === 'onedrive' ? 'Averages.io saves into its own Apps/Averages.io folder. Add from OneDrive asks to read your files, and only the ones you pick show up here.' : 'Averages.io only sees the files it saves there or that you add, never the rest of your drive.'}<br><button class="fx-connect" type="button" data-cloud-connect="${src}"${c.busy ? ' disabled' : ''}>Connect ${esc(c.name)}</button></div>`;
         if (st === 'click') return `<div class="fx-empty"><strong>Your ${esc(c.name)} files</strong>${acct && (acct.email || acct.username) ? 'Connected as ' + esc(acct.email || acct.username) + '. ' : ''}${esc(c.name)} may ask you to confirm it’s you.<br><button class="fx-connect" type="button" data-cloud-show="${src}"${c.busy ? ' disabled' : ''}>Show files</button></div>`;
@@ -1829,16 +1935,31 @@
         try { sessionStorage.setItem(REAUTH_KEY, JSON.stringify([...reauthHidden])); } catch {}
         render();
       }
+      // Disconnected by Google / Microsoft (2026-10-09): who it was, and what to do.
+      function lostText(app) {
+        const who = C() && C().lost ? (C().lost(app) || {}) : {};
+        const name = CLOUD[app].name;
+        return `${who.email ? who.email + ' was disconnected from Averages.io' : `Averages.io can’t reach your ${name} anymore`}: access was removed in your ${app === 'gdrive' ? 'Google' : 'Microsoft'} account, or it ran out. Your files are still in ${name}. Reconnect to see them here again.`;
+      }
       function reauthHTML() {
         if (INCOGNITO) return '';
-        return ['gdrive', 'onedrive'].filter(app => CLOUD[app].state === 'click' && LV.filter !== app && !reauthHidden.has(app)).map(app => {
+        let out = '';
+        // Opened a file with "Open with → Averages.io" but Google Drive isn't connected here (2026-10-09).
+        const D = window.AveragesDriveOpen;
+        const g = CLOUD.gdrive;
+        if (D && D.pending() && (g.state === 'connect' || g.state === 'reconnect')) {
+          out += `<div class="lf-reauth" role="status"><span>To open the file you chose in Google Drive, ${g.state === 'reconnect' ? 'reconnect' : 'connect'} Google Drive first. You’ll come back here and it opens.</span><button type="button" data-cloud-connect="gdrive"${g.busy ? ' disabled' : ''}>${g.state === 'reconnect' ? 'Reconnect' : 'Connect'} Google Drive</button><button class="lf-reauth-x" type="button" data-drive-open-cancel aria-label="Don’t open the file from Google Drive">×</button></div>`;
+        }
+        out += ['gdrive', 'onedrive'].filter(app => (CLOUD[app].state === 'click' || CLOUD[app].state === 'reconnect') && LV.filter !== app && !reauthHidden.has(app)).map(app => {
           const c = CLOUD[app];
+          if (c.state === 'reconnect') return `<div class="lf-reauth" role="status"><span><b>${esc(c.name)} got disconnected.</b> ${esc(lostText(app))}</span><button type="button" data-cloud-connect="${app}"${c.busy ? ' disabled' : ''}>Reconnect ${esc(c.name)}</button><button class="lf-reauth-x" type="button" data-reauth-hide="${app}" aria-label="Hide this ${esc(c.name)} message">×</button></div>`;
           return `<div class="lf-reauth" role="status"><span><b>${esc(c.name)}</b> needs you to sign in again to show your files.</span><button type="button" data-cloud-show="${app}"${c.busy ? ' disabled' : ''}>Sign in to ${esc(c.name)}</button><button class="lf-reauth-x" type="button" data-reauth-hide="${app}" aria-label="Hide this ${esc(c.name)} message">×</button></div>`;
         }).join('');
+        return out;
       }
       function navLive(all) {
         const count = filter => {
-          if (['course', 'gdrive', 'onedrive', 'canva'].includes(filter)) {
+          if (['course', 'turnedin', 'gdrive', 'onedrive', 'canva'].includes(filter)) {
             const st = sourceState(filter);
             if (st === 'loading') return '…';
             if (st !== 'ready') return '';
@@ -1846,7 +1967,7 @@
           return String(all.filter(e => inFilterLive(e, filter)).length);
         };
         const item = (filter, label, extra) => `<button class="fx-item${LV.filter === filter ? ' on' : ''}" type="button" data-filter="${esc(filter)}" aria-current="${LV.filter === filter ? 'true' : 'false'}">${extra || ''}<span class="nm">${esc(label)}</span><span class="n">${esc(count(filter))}</span></button>`;
-        const withFiles = CF.courses.filter(c => CF.files.some(f => f.course === c.id));
+        const withFiles = CF.courses.filter(c => CF.files.some(f => f.course === c.id) || SUB.files.some(f => f.course === c.id));
         document.getElementById('fxNav').innerHTML =
           item('all', 'All Files') + item('recent', 'Recents') +
           '<p class="fx-label">Sources</p>' + srcList().map(src => item(src, LIVE_SRC_NAME[src])).join('') +
@@ -1857,6 +1978,7 @@
         let extra = '';
         const f = LV.filter;
         if (f === 'course' || f.startsWith('c:')) extra = '<button class="fx-add" type="button" data-cf-refresh>Refresh</button>';
+        else if (f === 'turnedin') extra = '<button class="fx-add" type="button" data-sub-refresh>Refresh</button>';
         else if (f === 'gdrive' || f === 'onedrive') {
           const st = CLOUD[f].state;
           if ((st === 'ready' || st === 'click') && canPick(f)) extra = `<button class="fx-add" type="button" ${f === 'gdrive' ? 'data-pick-drive' : 'data-pick-onedrive'}${CLOUD[f].busy ? ' disabled' : ''}>${PLUS_ICON}Add from ${esc(CLOUD[f].name)}</button>`;
@@ -1868,7 +1990,7 @@
         return seg + extra;
       }
       function chipsLive() {
-        return [['all', 'All'], ['recent', 'Recents']].concat(srcList().map(s => [s, s === 'course' ? 'Courses' : LIVE_SRC_NAME[s]]))
+        return [['all', 'All'], ['recent', 'Recents']].concat(srcList().map(s => [s, s === 'course' ? 'Courses' : s === 'turnedin' ? 'Turned in' : LIVE_SRC_NAME[s]]))
           .map(([k, l]) => `<button class="fx-chip" type="button" data-filter="${k}" aria-pressed="${LV.filter === k}">${l}</button>`).join('');
       }
       function folderBrowserHTML() {
@@ -1894,7 +2016,7 @@
       let shownByKey = new Map();
       function render() {
         if (!main.isConnected) return;
-        if (['gdrive', 'onedrive', 'canva'].includes(LV.filter) && !srcList().includes(LV.filter)) LV.filter = 'all';
+        if (['turnedin', 'gdrive', 'onedrive', 'canva'].includes(LV.filter) && !srcList().includes(LV.filter)) LV.filter = 'all';
         const all = entries();
         navLive(all);
         const canvaFolders = LV.filter === 'canva' && foldersOn();
@@ -1909,7 +2031,7 @@
           const n = FD.items.length;
           count = FD.state === 'ready' ? `${n} item${n === 1 ? '' : 's'}${FD.next ? '+' : ''}` : '';
         } else {
-          const single = ['course', 'gdrive', 'onedrive', 'canva'].includes(LV.filter) ? LV.filter : (LV.filter.startsWith('c:') ? 'course' : null);
+          const single = ['course', 'turnedin', 'gdrive', 'onedrive', 'canva'].includes(LV.filter) ? LV.filter : (LV.filter.startsWith('c:') ? 'course' : null);
           const panel = single ? sourcePanel(single) : '';
           if (panel) {
             body += panel;
@@ -1930,6 +2052,9 @@
             list.forEach(e => shownByKey.set(e.key, e));
           }
           if ((LV.filter === 'course' || LV.filter.startsWith('c:') || LV.filter === 'all') && CF.partial) body += '<p class="fx-note">Some classes didn’t answer, so a few course files may be missing. Use Refresh under Course Files to try again.</p>';
+          if ((LV.filter === 'turnedin' || LV.filter === 'all') && SUB.state === 'ready' && SUB.partial) body += '<p class="fx-note">Turned In shows what you turned in for your most recent assignments; older ones (or a class that didn’t answer) may be missing.</p>';
+          const nHidden = hiddenCount();
+          if (nHidden || LV.showHidden) body += `<p class="fx-note">${LV.showHidden ? 'Showing files you removed from Averages.io.' : `${nHidden} file${nHidden === 1 ? '' : 's'} removed from Averages.io.`} <button class="lf-link" type="button" data-show-hidden>${LV.showHidden ? 'Hide them' : 'Show them'}</button></p>`;
           if (!INCOGNITO && (LV.filter === 'all' || LV.filter === 'recent' || LV.filter === 'gdrive' || LV.filter === 'onedrive')) body += '<p class="fx-note">Google Drive and OneDrive show the files you save, edit or add with Averages.io, not your whole drive.</p>';
           if (INCOGNITO && (LV.filter === 'all' || LV.filter === 'recent')) body += '<p class="fx-note">Google Drive, OneDrive and Canva are off in Incognito mode: it stores nothing about you on our servers.</p>';
         }
@@ -1971,12 +2096,27 @@
         if (cfg && cfg.microsoft) items.push({ label: 'Save to OneDrive', run: () => cfSave('onedrive', f) });
         return items;
       }
+      /** Remove from / Put back in Averages.io, for Drive, OneDrive and Canva files. */
+      function hideItem(e) {
+        if (!canHide(e)) return null;
+        return e.hidden
+          ? { label: 'Put back in Averages.io', run: () => setHidden(e, false) }
+          : { label: 'Remove from Averages.io', sub: `Only here: it stays in ${SRC_HOME[e.src]}`, run: () => setHidden(e, true) };
+      }
+      function subItems(f) {
+        return [
+          { label: 'Open assignment', sub: f.assignmentTitle, run: () => { window.location.href = avgAssignHref(f.course, f.assignmentTitle, f.assignment); } },
+          { label: 'Download', run: () => { window.location.href = subDownloadUrl(f); } },
+        ];
+      }
       function itemsFor(e, anchor) {
         if (e.src === 'course') return cfItems(e.raw);
+        if (e.src === 'turnedin') return subItems(e.raw);
         if (e.src === 'gdrive' || e.src === 'onedrive') {
           const f = e.raw;
           const list = [{ label: `Open in ${CLOUD[e.src].name}`, run: () => { if (C() && C().linkOk(f.url)) window.open(f.url, '_blank', 'noopener,noreferrer'); } }];
-          if (!isClassroom()) list.push({ label: 'Attach to an assignment', next: true, run: () => openAttach({ src: e.src, id: f.id, name: f.name }, null) });
+          if (!isClassroom() && !e.hidden) list.push({ label: 'Attach to an assignment', next: true, run: () => openAttach({ src: e.src, id: f.id, name: f.name }, null) });
+          list.push(hideItem(e));
           return list;
         }
         // Canva: a folder, or a design (from the list or from a folder).
@@ -1986,12 +2126,14 @@
           { label: 'Rename', run: () => { FD.form = { mode: 'rename', id, value: e.name, focus: true }; render(); } },
         ];
         const list = [{ label: 'Open in Canva', run: () => openDesign(id, anchor && anchor.closest('[data-lv]')) }];
-        if (!isClassroom()) list.push({ label: 'Attach to an assignment', next: true, run: () => openAttach({ src: 'canva', id, name: e.name }, null) });
+        if (!isClassroom() && !e.hidden) list.push({ label: 'Attach to an assignment', next: true, run: () => openAttach({ src: 'canva', id, name: e.name }, null) });
         if (LV.filter === 'canva' && foldersOn()) list.push({ label: 'Move to folder', next: true, run: () => openMoveMenu({ id, name: e.name }) });
+        // Designs listed inside a Canva folder are Canva's own view: no Remove there.
+        if (!e.key.startsWith('fv:')) list.push(hideItem(e));
         return list;
       }
       function activate(e, el, at) {
-        if (e.src === 'course') { openFxMenu(el, e.name, itemsFor(e, el), at); return; }
+        if (e.src === 'course' || e.src === 'turnedin') { openFxMenu(el, e.name, itemsFor(e, el), at); return; }
         if (e.src === 'gdrive' || e.src === 'onedrive') { if (C() && C().linkOk(e.raw.url)) window.open(e.raw.url, '_blank', 'noopener,noreferrer'); return; }
         if (e.folder) { goFolder(0, { id: String(e.raw.id), name: e.name }); return; }
         openDesign(String(e.raw.id), el);
@@ -2001,6 +2143,7 @@
         ['gdrive', 'onedrive'].forEach(app => {
           const c = CLOUD[app];
           if (c.state === 'connect') list.push({ label: `Connect ${c.name}`, run: () => askCloud(app, 'connect') });
+          else if (c.state === 'reconnect') list.push({ label: `Reconnect ${c.name}`, sub: 'It got disconnected', run: () => askCloud(app, 'connect') });
           else if (app === 'gdrive' && (c.state === 'ready' || c.state === 'click')) {
             // No picker: Google Drive opens, and they choose Open with → Averages.io there.
             const ow = C() && typeof C().googleOpenWith === 'function' ? C().googleOpenWith() : 'on';
@@ -2036,6 +2179,10 @@
         const view = t.closest('[data-view]');
         if (view) { fxView = view.dataset.view; try { localStorage.setItem('schoolagy_files_view', fxView); } catch {} render(); return; }
         if (t.closest('[data-flash-close]')) { flashState = null; render(); return; }
+        if (t.closest('[data-flash-undo]')) { const u = flashState && flashState.undo; flashState = null; if (u) u(); else render(); return; }
+        if (t.closest('[data-show-hidden]')) { LV.showHidden = !LV.showHidden; render(); return; }
+        if (t.closest('[data-sub-refresh]')) { loadSubs(true); return; }
+        if (t.closest('[data-drive-open-cancel]')) { if (window.AveragesDriveOpen) window.AveragesDriveOpen.clear(); render(); return; }
         const hideRe = t.closest('[data-reauth-hide]');
         if (hideRe) { hideReauth(hideRe.dataset.reauthHide); return; }
         // Google Drive / OneDrive: each opens a window, so nothing is awaited before it.
@@ -2112,6 +2259,7 @@
       }
       render();
       loadCourse();
+      loadSubs(false);
       if (INCOGNITO) return;
       loadCloud();
       loadCanva(false);

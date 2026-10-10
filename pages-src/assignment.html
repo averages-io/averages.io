@@ -374,6 +374,15 @@
   .modal-box .upload-source-note { margin: 8px 0 0; font-size: 0.74rem; font-weight: 700; color: var(--text-muted); line-height: 1.45; }
   .upload-source-note[hidden], .submit-error[hidden], .upload-picked-progress[hidden], .upload-bar[hidden], .canva-pick[hidden] { display: none; }
   .upload-source-note a, .submit-error a, .canva-pick-empty a { color: var(--accent-dark); font-weight: 800; text-underline-offset: 2px; }
+  .upload-note-btn { border: none; background: none; padding: 0; font: inherit; font-weight: 800; color: var(--accent-dark); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+  .turnin-as { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; margin: 12px 0 0; padding: 0; border: none; font-size: 0.8rem; font-weight: 700; color: var(--text-dark); }
+  .turnin-as legend { float: left; margin-right: 4px; padding: 0; font-weight: 800; color: var(--text-muted); }
+  .turnin-as label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+  .turnin-as input { accent-color: var(--accent); margin: 0; }
+  .modal-box .turnin-as-note, .turnin-as-note { margin: 8px 0 0; font-size: 0.74rem; font-weight: 600; color: var(--text-muted); line-height: 1.45; }
+  .turnin-as-canva { display: grid; gap: 4px; margin-top: 10px; font-size: 0.76rem; font-weight: 800; color: var(--text-muted); }
+  .turnin-as-canva input { width: 100%; box-sizing: border-box; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--panel-bg, #fff); font: inherit; font-weight: 600; color: var(--text-dark); }
+  .turnin-as-canva input:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring); }
   .upload-picked-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
   .upload-picked-text .upload-picked-name { flex: none; }
   .upload-picked-src { font-size: 0.66rem; font-weight: 700; color: var(--text-faint); }
@@ -1965,11 +1974,13 @@
     }
     const CANVA_EDIT_URL = /^https:\/\/(www\.)?canva\.com\//i;
 
-    // ---- Canva opens in a new tab (2026-10-07, Martin) ----
-    // The tab is opened on the click itself (a tab opened after waiting for
-    // our API would be blocked as a pop-up), shows "Opening Canva…", and is
-    // sent to Canva once the API answers. Blocked anyway: this tab goes.
+    // ---- Canva opens in this tab again (2026-10-09, Martin: "can Canva not
+    // open in another tab anymore"). Canva's Return button brings the
+    // student back here. (2026-10-07 to 10-09 it opened in a new tab; the
+    // helpers stay so that's a one-line change: NEW_TAB.)
+    const CANVA_NEW_TAB = false;
     function openCanvaTab() {
+      if (!CANVA_NEW_TAB) return null;
       let tab = null;
       try { tab = window.open('', '_blank'); } catch {}
       if (!tab) return null;
@@ -2562,6 +2573,8 @@
     }
     /** After a turn-in: show it at once, mark the work submitted (as the preview's mock does), then reload the real list. */
     function afterTurnIn(revision) {
+      // Files' Turned In list (2026-10-09) asks Schoology again next time.
+      try { sessionStorage.removeItem('averages_subs_cache'); } catch {}
       if (revision && typeof revision === 'object' && revision.id != null && String(revision.id)) {
         liveHistory.pending = revision;
         liveHistory.revisions = [revision].concat(liveHistory.revisions.filter(r => String(r.id) !== String(revision.id)));
@@ -2751,6 +2764,7 @@
           <span class="upload-picker-filename empty" id="chooseFileName">No files chosen</span>
         </div>
         <div class="upload-picked-list" id="uploadPickedList"></div>
+        <div class="turnin-as-box" id="turnInAsBox"></div>
         <!-- Hidden until a Submit attempt with no file chosen (2026-09-04,
              per Martin -- at least one file is now required on this tab;
              see modalSubmitBtn's click handler). -->
@@ -2877,6 +2891,11 @@
       if (opts.attach) pickedFiles.push(pickFromAttach(opts.attach));
       let renderPicked = () => {};
       let running = false;
+      // Turn in a view link instead of the file (2026-10-09, Martin): Google
+      // Drive files are shared "Anyone with the link: Viewer" by Averages.io;
+      // Canva has no API for sharing, so the student pastes Canva's link.
+      let turnInAs = 'file';
+      const canvaLinks = {};
 
       openModal(`
         <h3>Add Submission</h3>
@@ -2911,10 +2930,12 @@
         const pickerEl = document.getElementById('uploadPicker');
         const noteEl = document.getElementById('uploadRequiredNote');
         const listEl = document.getElementById('uploadPickedList');
+        const asBox = document.getElementById('turnInAsBox');
 
         function renderPickedList() {
           if (!pickedFiles.length) {
             listEl.innerHTML = '';
+            if (asBox) asBox.innerHTML = linkChoiceWrap('');
             nameEl.textContent = 'No files chosen';
             nameEl.classList.add('empty');
             return;
@@ -2927,7 +2948,7 @@
             const name = `<span class="upload-picked-name">${escapeHtml(f.name)}</span>`;
             // Signed in: where it's from (cloud files), and a line for its progress.
             const tooBig = SUBMIT_LIVE && f.size > SUBMIT_MAX_BYTES;
-            const live = SUBMIT_LIVE ? `<span class="upload-picked-text">${name}${PICK_SOURCE[f.src] ? `<span class="upload-picked-src">${PICK_SOURCE[f.src]}</span>` : ''}<span class="upload-picked-progress"${tooBig ? '' : ' hidden'}><span class="upload-progress-text">${tooBig ? 'Too big to turn in (95 MB max)' : ''}</span><span class="upload-bar" aria-hidden="true"><i></i></span></span></span>` : '';
+            const live = SUBMIT_LIVE ? `<span class="upload-picked-text">${name}${PICK_SOURCE[f.src] ? `<span class="upload-picked-src">${turnInAs === 'link' && (f.src === 'canva' || f.src === 'gdrive') ? `${SOURCE_NAME[f.src]}, turned in as a view link` : PICK_SOURCE[f.src]}</span>` : ''}<span class="upload-picked-progress"${tooBig ? '' : ' hidden'}><span class="upload-progress-text">${tooBig ? 'Too big to turn in (95 MB max)' : ''}</span><span class="upload-bar" aria-hidden="true"><i></i></span></span></span>` : '';
             return `
               <div class="upload-picked-row${tooBig ? ' failed' : ''}" data-pick="${i}">
                 ${fileIcon(f.src === 'canva' ? 'canva' : ext, `<span class="material-badge" style="background:${escapeHtml(color)}">${escapeHtml(SUBMIT_LIVE ? (ext || '?').toUpperCase().slice(0, 4) : (ext || '?').toUpperCase())}</span>`)}
@@ -2935,8 +2956,21 @@
                 <button class="material-icon-btn" type="button" data-index="${i}" aria-label="Remove ${escapeHtml(f.name)}">${REMOVE_ICON}</button>
               </div>`;
           }).join('');
+          if (asBox) asBox.innerHTML = linkChoiceWrap('');
         }
         renderPicked = renderPickedList;
+        if (asBox) asBox.addEventListener('change', e => {
+          const r = e.target.closest('input[name="turnInAs"]');
+          if (!r || running) return;
+          turnInAs = r.value === 'link' ? 'link' : 'file';
+          renderPickedList();
+          const first = asBox.querySelector('[data-canva-link]');
+          if (turnInAs === 'link' && first && !first.value) first.focus();
+        });
+        if (asBox) asBox.addEventListener('input', e => {
+          const inp = e.target.closest('[data-canva-link]');
+          if (inp) canvaLinks[inp.dataset.canvaLink] = inp.value;
+        });
         renderPickedList(); // re-bound after a Create->Upload tab switch, with files already picked this session
 
         chooseBtn.addEventListener('click', () => fileInput.click());
@@ -3080,6 +3114,14 @@
         // Google Drive (2026-10-09): no picker. Google Drive opens, the student chooses
         // Open with → Averages.io on their file, and attaches it to this assignment from Files.
         if (app === 'gdrive') {
+          // Not connected (or Google disconnected it): connect first, here,
+          // and come back to this assignment. Opening Drive first sent them
+          // to Files with nothing able to open the file (2026-10-09).
+          const lost = typeof C.lost === 'function' ? C.lost('gdrive') : null;
+          if (lost || !C.accounts().gdrive) {
+            sourceNote(`${lost ? 'Google Drive got disconnected.' : 'Connect Google Drive first.'} Then open Google Drive, right-click your file and choose <strong>Open with → Averages.io</strong>. <button class="upload-note-btn" type="button" data-drive-connect>${lost ? 'Reconnect' : 'Connect'} Google Drive</button>`);
+            return;
+          }
           window.open(C.driveHome || 'https://drive.google.com/', '_blank', 'noopener,noreferrer');
           sourceNote('Google Drive opened in a new tab. Right-click your file, choose <strong>Open with → Averages.io</strong>, then <strong>Attach to an assignment</strong> and pick this one.');
           return;
@@ -3110,6 +3152,11 @@
           if (box && !box.hidden) box.hidden = true; else loadCanvaPick(false);
           return;
         }
+        if (e.target.closest('[data-drive-connect]')) {
+          const C = window.AveragesCloud;
+          if (C && typeof C.connectGoogle === 'function') C.connectGoogle().catch(err => { if (!err || err.code !== 'popup_closed') sourceNote(escapeHtml(submitMessage(err))); });
+          return;
+        }
         if (e.target.closest('[data-canva-close]')) { document.getElementById('canvaPick').hidden = true; return; }
         if (e.target.closest('[data-canva-more]')) { loadCanvaPick(true); return; }
         if (e.target.closest('[data-canva-retry]')) { loadCanvaPick(false); return; }
@@ -3121,6 +3168,76 @@
         }
       });
 
+      // Function declarations: the list is drawn (bindUploadTab) before this point runs.
+      function linkable(f) { return f.src === 'gdrive' || f.src === 'canva'; }
+      function CANVA_LINK_OK(u) { return /^https:\/\/(www\.)?canva\.com\/design\/[A-Za-z0-9_-]+\/[A-Za-z0-9_\-\/?=&.%]*$/.test(String(u || '').trim()); }
+      /** Rows, then "Turn in as: File / View link" when every pick is from Google Drive or Canva. */
+      function linkChoiceWrap(rows) {
+        if (!SUBMIT_LIVE || !pickedFiles.some(linkable)) { turnInAs = 'file'; return rows; }
+        if (!pickedFiles.every(linkable)) {
+          turnInAs = 'file';
+          return rows + '<p class="turnin-as-note">To turn in a view link instead of the file, pick only Google Drive or Canva files.</p>';
+        }
+        const link = turnInAs === 'link';
+        const drive = pickedFiles.some(f => f.src === 'gdrive');
+        const canva = pickedFiles.filter(f => f.src === 'canva');
+        let html = `<fieldset class="turnin-as"><legend>Turn in as</legend>
+            <label><input type="radio" name="turnInAs" value="file"${link ? '' : ' checked'}${running ? ' disabled' : ''}> The file</label>
+            <label><input type="radio" name="turnInAs" value="link"${link ? ' checked' : ''}${running ? ' disabled' : ''}> A view link</label>
+          </fieldset>`;
+        if (link) {
+          if (drive) html += '<p class="turnin-as-note">Averages.io changes the Google Drive file’s sharing to <strong>Anyone with the link: Viewer</strong>, then turns in the link. Anyone who gets the link can see the file; you can change this back in Google Drive.</p>';
+          canva.forEach(f => {
+            const id = escapeHtml(f.designId || f.id);
+            html += `<label class="turnin-as-canva"><span>Canva link for “${escapeHtml(f.title || f.name)}”</span>
+                <input type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://www.canva.com/design/…" data-canva-link="${id}" value="${escapeHtml(canvaLinks[f.designId || f.id] || '')}"${running ? ' disabled' : ''}></label>`;
+          });
+          if (canva.length) html += '<p class="turnin-as-note">Canva doesn’t let apps change sharing. In Canva, open the design, choose <strong>Share</strong>, set access to <strong>Anyone with the link: Can view</strong>, copy the link and paste it here.</p>';
+        }
+        return rows + html;
+      }
+      /** Turns in view links (one text answer on Schoology) instead of the files. */
+      function liveSubmitLinks() {
+        const C = window.AveragesCloud;
+        const picks = pickedFiles.slice();
+        for (const f of picks) {
+          if (f.src !== 'canva') continue;
+          const url = String(canvaLinks[f.designId || f.id] || '').trim();
+          if (!CANVA_LINK_OK(url)) {
+            showSubmitError({ code: 'canva_link_needed' });
+            const inp = modalBox.querySelector(`[data-canva-link="${CSS.escape(String(f.designId || f.id))}"]`);
+            if (inp) inp.focus();
+            return;
+          }
+        }
+        // A sign-in window may open: asked for inside this click.
+        const token = picks.some(f => f.src === 'gdrive') ? driveReadToken(C) : null;
+        if (token) token.catch(() => {});
+        const names = picks.map(f => f.src === 'canva' ? (f.title || f.name) : f.name);
+        renderPicked();
+        picks.forEach((f, i) => setPickProgress(i, 'Waiting…', null));
+        go(async (S, signal) => {
+          const parts = [];
+          for (let i = 0; i < picks.length; i++) {
+            const f = picks[i];
+            if (signal.aborted) throw { code: 'aborted' };
+            if (f.src === 'canva') {
+              parts.push({ url: String(canvaLinks[f.designId || f.id]).trim(), name: f.title || f.name });
+            } else {
+              setPickProgress(i, 'Making a view link in Google Drive…', null);
+              try {
+                if (!C || typeof C.googleShareLink !== 'function') throw { code: 'not_configured' };
+                parts.push(await C.googleShareLink(await token, f.id));
+              } catch (e) {
+                throw Object.assign(e && typeof e === 'object' ? e : { code: String(e) }, { index: i });
+              }
+            }
+            setPickProgress(i, 'Link ready', 1, 'done');
+          }
+          const html = parts.map(p => `<p><a href="${escapeHtml(p.url)}">${escapeHtml(p.name)}</a></p>`).join('');
+          return S.submitText({ section: sec, assignment: asg, html, signal });
+        }, () => names, picks.length === 1 ? `A view link to "${escapeHtml(names[0])}" is turned in on Schoology.` : `View links to ${picks.length} files are turned in on Schoology.`);
+      }
       function setPickProgress(i, text, fraction, state) {
         const row = modalBox.querySelector(`.upload-picked-row[data-pick="${i}"]`);
         const line = row && row.querySelector('.upload-picked-progress');
@@ -3136,7 +3253,7 @@
       function setRunning(on) {
         running = on;
         if (on) modalBox.setAttribute('aria-busy', 'true'); else modalBox.removeAttribute('aria-busy');
-        modalBox.querySelectorAll('.upload-tab, #chooseFileBtn, .upload-picked-row .material-icon-btn').forEach(b => { b.disabled = on; });
+        modalBox.querySelectorAll('.upload-tab, #chooseFileBtn, .upload-picked-row .material-icon-btn, input[name="turnInAs"], [data-canva-link]').forEach(b => { b.disabled = on; });
         if (on) {
           modalBox.querySelectorAll('.upload-source').forEach(b => { b.disabled = true; });
           const box = document.getElementById('canvaPick');
@@ -3212,6 +3329,7 @@
           document.getElementById('chooseFileBtn').focus();
           return;
         }
+        if (turnInAs === 'link' && pickedFiles.every(linkable)) { liveSubmitLinks(); return; }
         const C = window.AveragesCloud;
         // Sign-in windows have to open inside this click, so tokens are asked for before anything is awaited.
         const tokens = {};
