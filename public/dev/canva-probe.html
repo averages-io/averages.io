@@ -10,7 +10,7 @@
   Tries guessed Canva API addresses for the undocumented design:permission /
   folder:permission scopes with YOUR Canva connection, through our API
   (POST /canva/probe). Off unless the API's CANVA_PERMISSION_PROBE var is "1",
-  and every run needs the SCHOOLS_ADMIN_KEY. Only a new, empty test design and
+  and every run needs the REVIEW_SECRET (the reviewer sign-in's secret). Only a new, empty test design and
   test folder that the probe makes are ever changed. The key is never saved.
   Delete this file (and set the var back to "0") when done.
 -->
@@ -58,7 +58,7 @@
 
   <section class="card">
     <h2>2. Run it</h2>
-    <label>Admin key (SCHOOLS_ADMIN_KEY, not saved anywhere)
+    <label>Key: your REVIEW_SECRET (not saved anywhere)
       <input type="password" id="key" autocomplete="off" spellcheck="false">
     </label>
     <div class="row">
@@ -100,8 +100,8 @@
     } catch {}
     let last = null;
     const ERR = {
-      not_found: 'The probe is off. Set CANVA_PERMISSION_PROBE to "1" in the API and deploy (and make sure SCHOOLS_ADMIN_KEY is set).',
-      forbidden: 'Wrong admin key.',
+      not_found: 'The probe is off. Set CANVA_PERMISSION_PROBE to "1" in the API and deploy (and make sure REVIEW_SECRET is set).',
+      forbidden: 'Wrong key: it should be your REVIEW_SECRET.',
       not_authenticated: 'Sign in to Averages.io first (this tab), then try again.',
       canva_not_connected: 'Connect Canva first (step 1).',
       canva_reconnect_needed: 'Reconnect Canva (step 1).',
@@ -110,7 +110,7 @@
     };
     async function run(write) {
       const key = $('key').value.trim();
-      if (!key) { $('status').className = 'bad'; $('status').textContent = 'Enter the admin key.'; $('key').focus(); return; }
+      if (!key) { $('status').className = 'bad'; $('status').textContent = 'Enter your REVIEW_SECRET.'; $('key').focus(); return; }
       ['readBtn', 'writeBtn'].forEach(id => { $(id).disabled = true; });
       $('status').className = '';
       $('status').textContent = write ? 'Running read and write guesses… (about 30 Canva calls, up to a minute)' : 'Running read guesses… (about 20 Canva calls)';
