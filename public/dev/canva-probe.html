@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Canva permission probe</title>
+<!--
+  Canva permission probe (2026-10-10, developer only, temporary).
+  Tries guessed Canva API addresses for the undocumented design:permission /
+  folder:permission scopes with YOUR Canva connection, through our API
+  (POST /canva/probe). Off unless the API's CANVA_PERMISSION_PROBE var is "1",
+  and every run needs the SCHOOLS_ADMIN_KEY. Only a new, empty test design and
+  test folder that the probe makes are ever changed. The key is never saved.
+  Delete this file (and set the var back to "0") when done.
+-->
+<style>
+  :root { --bg: #f2f2f4; --card: #fff; --text: #14151f; --muted: #5a5c70; --border: #d8d8de; --accent: #d94a2b; --ok: #2f7d54; --warn: #a66a00; --bad: #b6432f; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #0c0c0e; --card: #1d1e24; --text: #f2f2f5; --muted: #a9aabb; --border: #34353e; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 24px 16px 60px; }
+  main { max-width: 980px; margin: 0 auto; display: grid; gap: 16px; }
+  h1 { margin: 0; font-size: 1.5rem; }
+  .card { background: var(--card); border-radius: 16px; padding: 18px; }
+  .card h2 { margin: 0 0 8px; font-size: 1rem; }
+  p { margin: 0 0 10px; color: var(--muted); }
+  label { display: grid; gap: 4px; font-weight: 700; font-size: .85rem; }
+  input[type=password] { padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border); background: transparent; color: var(--text); font: inherit; max-width: 420px; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
+  button, a.btn { border: none; border-radius: 999px; padding: 10px 16px; font: inherit; font-weight: 800; font-size: .85rem; cursor: pointer; background: var(--border); color: var(--text); text-decoration: none; }
+  button.primary, a.btn.primary { background: var(--accent); color: #fff; }
+  button:disabled { opacity: .5; cursor: progress; }
+  #status { font-weight: 700; }
+  #status.bad { color: var(--bad); }
+  table { width: 100%; border-collapse: collapse; font-size: .8rem; }
+  th, td { text-align: left; padding: 7px 6px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  td code { word-break: break-all; }
+  .st { font-weight: 800; white-space: nowrap; }
+  .s2 { color: var(--ok); } .s4 { color: var(--warn); } .s404 { color: var(--muted); } .s5 { color: var(--bad); }
+  tr.hit { background: rgba(217, 74, 43, .08); }
+  .legend li { margin: 2px 0; color: var(--muted); }
+  .scroll { overflow-x: auto; }
+</style>
+</head>
+<body>
+<main>
+  <div>
+    <h1>Canva permission probe</h1>
+    <p>Developer only. Tries guessed Canva addresses for sharing a design with your own Canva connection. It only changes a new, empty test design and test folder it makes itself.</p>
+  </div>
+
+  <section class="card">
+    <h2>1. Connect Canva with the test permissions</h2>
+    <p>Asks Canva for <code>design:permission:read</code>, <code>design:permission:write</code> and <code>folder:permission:write</code> on top of the usual ones. Canva comes back here.</p>
+    <div class="row"><a class="btn primary" id="connect" href="#">Connect Canva (test permissions)</a></div>
+    <p id="back" hidden></p>
+  </section>
+
+  <section class="card">
+    <h2>2. Run it</h2>
+    <label>Admin key (SCHOOLS_ADMIN_KEY, not saved anywhere)
+      <input type="password" id="key" autocomplete="off" spellcheck="false">
+    </label>
+    <div class="row">
+      <button type="button" id="readBtn">Run: read guesses only</button>
+      <button type="button" class="primary" id="writeBtn">Run: also try sharing the test design</button>
+      <button type="button" id="dl" hidden>Download results</button>
+    </div>
+    <p id="status" role="status"></p>
+  </section>
+
+  <section class="card" id="out" hidden>
+    <h2>Results</h2>
+    <p id="meta"></p>
+    <div class="scroll"><table><thead><tr><th>Status</th><th>Request</th><th>Canva said</th></tr></thead><tbody id="rows"></tbody></table></div>
+    <ul class="legend">
+      <li><b>404</b>: nothing at that address.</li>
+      <li><b>405</b>: something is there, just not with that method (interesting).</li>
+      <li><b>400</b> naming a field: the address exists; Canva is saying what it wants.</li>
+      <li><b>403</b>: exists, but this connection or plan can’t use it.</li>
+      <li><b>2xx</b>: it worked. Check the test design’s Share settings in Canva.</li>
+    </ul>
+  </section>
+</main>
+<script>
+  (function () {
+    'use strict';
+    const API = location.hostname.endsWith('averages.io') ? 'https://api.averages.io' : 'http://localhost:8787';
+    const $ = id => document.getElementById(id);
+    const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+    $('connect').href = `${API}/canva/connect?probe=1&return_to=${encodeURIComponent(location.pathname)}`;
+    // Back from Canva: say how it went and tidy the address.
+    try {
+      const q = new URLSearchParams(location.search);
+      if (q.has('canva')) {
+        $('back').hidden = false;
+        $('back').textContent = q.get('canva') === 'connected' ? 'Canva connected. Now run it below.' : `Canva said: ${q.get('canva')}`;
+        history.replaceState(null, '', location.pathname);
+      }
+    } catch {}
+    let last = null;
+    const ERR = {
+      not_found: 'The probe is off. Set CANVA_PERMISSION_PROBE to "1" in the API and deploy (and make sure SCHOOLS_ADMIN_KEY is set).',
+      forbidden: 'Wrong admin key.',
+      not_authenticated: 'Sign in to Averages.io first (this tab), then try again.',
+      canva_not_connected: 'Connect Canva first (step 1).',
+      canva_reconnect_needed: 'Reconnect Canva (step 1).',
+      rate_limited: 'Three runs per 10 minutes. Wait a bit.',
+      incognito_mode: 'Off in Incognito mode.',
+    };
+    async function run(write) {
+      const key = $('key').value.trim();
+      if (!key) { $('status').className = 'bad'; $('status').textContent = 'Enter the admin key.'; $('key').focus(); return; }
+      ['readBtn', 'writeBtn'].forEach(id => { $(id).disabled = true; });
+      $('status').className = '';
+      $('status').textContent = write ? 'Running read and write guesses… (about 30 Canva calls, up to a minute)' : 'Running read guesses… (about 20 Canva calls)';
+      try {
+        const r = await fetch(`${API}/canva/probe`, {
+          method: 'POST', credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key, write: !!write }),
+        });
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok || !j.ok) {
+          $('status').className = 'bad';
+          $('status').textContent = ERR[j.error] || `Didn’t work (${r.status} ${j.error || ''}).`;
+          return;
+        }
+        last = Object.assign({ at: new Date().toISOString(), write: !!write }, j);
+        show(j);
+        const hits = j.results.filter(x => x.status && x.status !== 404 && !/^(POST \/designs|POST \/folders)$/.test(`${x.method} ${x.path}`));
+        $('status').textContent = hits.length ? `Done. ${hits.length} answer(s) other than 404 are highlighted.` : 'Done. Every guess came back 404 (nothing there).';
+        $('dl').hidden = false;
+      } catch {
+        $('status').className = 'bad';
+        $('status').textContent = 'Couldn’t reach the API.';
+      } finally {
+        ['readBtn', 'writeBtn'].forEach(id => { $(id).disabled = false; });
+      }
+    }
+    function show(j) {
+      $('out').hidden = false;
+      $('meta').textContent = `Scopes on this connection: ${Array.isArray(j.scopes) ? j.scopes.join(' ') : (j.scopes || 'unknown')} · test design ${j.designId || '—'} · test folder ${j.folderId || '—'}`;
+      $('rows').innerHTML = j.results.map(x => {
+        const s = Number(x.status) || 0;
+        const cls = s >= 200 && s < 300 ? 's2' : s === 404 ? 's404' : s >= 500 ? 's5' : 's4';
+        const created = /^(POST \/designs|POST \/folders)$/.test(`${x.method} ${x.path}`);
+        return `<tr class="${s && s !== 404 && !created ? 'hit' : ''}"><td class="st ${cls}">${esc(s || '—')}</td>
+          <td><code>${esc(x.method)} ${esc(x.path)}</code>${x.body ? `<br><code>${esc(JSON.stringify(x.body))}</code>` : ''}</td>
+          <td><code>${esc(x.answer)}</code></td></tr>`;
+      }).join('');
+    }
+    $('readBtn').addEventListener('click', () => run(false));
+    $('writeBtn').addEventListener('click', () => run(true));
+    $('dl').addEventListener('click', () => {
+      if (!last) return;
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([JSON.stringify(last, null, 2)], { type: 'application/json' }));
+      a.download = 'canva-probe-results.json';
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    });
+  })();
+</script>
+</body>
+</html>
