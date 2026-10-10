@@ -406,6 +406,8 @@
   /* Rounded dropdown (2026-10-04): pill button + rounded menu */
   .pick { flex-shrink: 0; }
   .pick-btn { display: inline-flex; align-items: center; gap: 8px; font: inherit; font-weight: 700; font-size: 0.83rem; color: var(--text-dark); background: var(--panel-bg); border: 1px solid var(--border); border-radius: 999px; padding: 8px 12px 8px 16px; cursor: pointer; white-space: nowrap; }
+  .pick-btn.locked, .pick-btn:disabled { cursor: default; opacity: .75; }
+  .pick-btn.locked .pick-chev { display: none; }
   .pick-btn:hover { background: var(--panel-inner); }
   .pick-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring); }
   .pick-chev { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; transition: transform 0.15s ease; }
@@ -1986,8 +1988,42 @@
       const editorHint = document.getElementById('defaultEditorHint');
       const editorOpts = editorMenu ? [...editorMenu.querySelectorAll('.pick-opt')] : [];
       let editorValue = 'canva';
+      /*
+       * Only one editing app connected (2026-10-09, Martin): Open files in
+       * shows that one and can't be changed, since Edit can only use it.
+       * Null while either is unknown or both / neither are connected.
+       */
+      function lockedEditor() {
+        if (INCOGNITO) return null;
+        let canva, drive;
+        if (LIVE) {
+          if (canvaLive.state !== 'ready' && canvaLive.state !== 'unconfigured') return null;
+          if (cloud.state !== 'ready') return null;
+          canva = canvaLive.state === 'ready' && canvaLive.connected;
+          drive = !!cloud.cfg.google && !!cloudAccount('gdrive');
+        } else if (PREVIEW) {
+          canva = connected.has('canva');
+          drive = connected.has('gdrive');
+        } else return null;
+        if (canva === drive) return null;
+        return drive ? 'gdrive' : 'canva';
+      }
       function syncEditorHint() {
         if (!editorHint) return;
+        const lock = lockedEditor();
+        if (editorBtn) {
+          editorBtn.disabled = !!lock;
+          editorBtn.classList.toggle('locked', !!lock);
+          const shown = editorOpts.find(x => x.dataset.value === (lock || editorValue));
+          if (shown) editorLabel.textContent = shown.textContent.trim();
+          if (lock) closeEditorMenu(false);
+        }
+        if (lock) {
+          const on = APPS.find(a => a.id === lock), other = APPS.find(a => a.id === (lock === 'gdrive' ? 'canva' : 'gdrive'));
+          editorHint.hidden = false;
+          editorHint.textContent = `${on.name} is the only editing app connected, so Edit uses it. Connect ${other.name} above to choose.`;
+          return;
+        }
         const app = APPS.find(a => a.id === editorValue);
         let off = PREVIEW && app && !connected.has(app.id);
         // Signed in: only once we know for sure it isn't connected.
