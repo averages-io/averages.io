@@ -728,19 +728,21 @@
   }
 
   /*
-   * Turn in a view link (2026-10-09, Martin): gives the file "Anyone with the
-   * link: Viewer" and answers { url, name }. drive.file covers this for files
+   * Turn in a view link (2026-10-09, Martin; drafts only since 10-10): gives
+   * the file "Anyone with the link: Viewer" (or Commenter) and answers { url, name }. drive.file covers this for files
    * Averages.io can see. School accounts often aren't allowed to share outside
    * the school: Google says 403 and we say so (share_blocked).
    */
-  async function googleShareLink(token, id) {
+  async function googleShareLink(token, id, role) {
+    // Viewer or commenter only: a link that lets anyone edit a student's work is never made.
+    const as = role === 'commenter' ? 'commenter' : 'reader';
     if (!/^[A-Za-z0-9_-]{10,128}$/.test(String(id || ''))) throw fail('file_gone');
     const f = await googleFile(token, id);
     if (!f) throw fail('file_gone');
     const r = await gfetch(token, `${DRIVE}/files/${encodeURIComponent(id)}/permissions?${ALL_DRIVES}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ role: 'reader', type: 'anyone', allowFileDiscovery: false }),
+      body: JSON.stringify({ role: as, type: 'anyone', allowFileDiscovery: false }),
     });
     if (r.status === 404) throw fail('file_gone');
     if (r.status === 403 || r.status === 400) throw fail('share_blocked');
@@ -1871,6 +1873,8 @@
     config,
     accounts,
     hasToken: (app) => {
+      // Kept by our server (2026-10-09): a token is one quick request away.
+      if (serverOn(app) && SRV.status[app].connected) return true;
       const t = tokens()[app];
       return !!(t && ((t.token && t.exp - 60000 > Date.now()) || (t.access && t.exp - 60000 > Date.now()) || t.refresh));
     },
@@ -1881,7 +1885,11 @@
     GOOGLE_TYPE,
     // Google Drive
     prepareGoogle,
-    googleReady: () => !!gClient,
+    // Ready = Google's sign-in script loaded, or (2026-10-09) our server keeps the
+    // connection and the script isn't needed at all. Before, a school filter or a
+    // tracker blocker that stopped accounts.google.com left Edit in Google Drive,
+    // Save to Google Drive and turning in from Drive stuck on "still loading".
+    googleReady: () => !!gClient || serverOn('gdrive'),
     googleToken,
     googleSession,
     connectGoogle,
