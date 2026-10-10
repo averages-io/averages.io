@@ -130,6 +130,12 @@
         show(j);
         const hits = j.results.filter(x => x.status && x.status !== 404 && !/^(POST \/designs|POST \/folders)$/.test(`${x.method} ${x.path}`));
         $('status').textContent = hits.length ? `Done. ${hits.length} answer(s) other than 404 are highlighted.` : 'Done. Every guess came back 404 (nothing there).';
+        // The run only means something with the permission access on the connection (step 1).
+        const sc = Array.isArray(j.scopes) ? j.scopes : String(j.scopes || '').split(/\s+/);
+        if (!sc.includes('design:permission:write')) {
+          $('status').className = 'bad';
+          $('status').textContent = 'This Canva connection doesn’t have the design permission access yet, so Canva would refuse these anyway. Press “Connect Canva (test permissions)” in step 1, allow it in Canva, then run again.' + (j.designId ? '' : ' (The test design also couldn’t be read.)');
+        }
         $('dl').hidden = false;
       } catch {
         $('status').className = 'bad';
