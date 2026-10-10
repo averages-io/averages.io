@@ -440,6 +440,13 @@
   .draft-row.leaving { overflow: hidden; }
   /* ---------- Turning in a draft (2026-10-10): × [Send a Copy ⇅ | Submit], then a step bar ---------- */
   .draft-row { position: relative; }
+  /* "Why Canva?" under a file that opens in Canva although Google Drive is picked (2026-10-10) */
+  .why-btn { margin-top: 2px; padding: 0; border: none; background: none; font: inherit; font-size: 0.68rem; font-weight: 800; color: var(--text-faint); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+  .why-btn:hover, .why-btn[aria-expanded="true"] { color: var(--text-dark); }
+  .why-btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); border-radius: 4px; }
+  .why-note { flex: 0 0 100%; margin: 0; padding: 8px 10px; border-radius: 10px; background: var(--panel-bg); font-size: 0.74rem; font-weight: 600; color: var(--text-muted); line-height: 1.45; }
+  .why-note[hidden] { display: none; }
+  .why-note a { color: var(--accent-dark); font-weight: 800; }
   .ti-acts { gap: 14px; }
   .ti-x { flex: none; width: 40px; height: 40px; border-radius: 50%; border: none; background: var(--panel-bg); color: var(--text-muted); display: grid; place-items: center; cursor: pointer; }
   .ti-x svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2.4; stroke-linecap: round; }
@@ -1817,10 +1824,19 @@
       const fid = m.fileId ? ` data-file-id="${escapeHtml(m.fileId)}"` : '';   // live attachments (2026-10-05)
       const tip = (label, inner) => `<span class="tipwrap">${inner}<span class="tip" role="tooltip">${label}</span></span>`;
       const download = `<button class="material-icon-btn" type="button" data-file-action="download" data-file-name="${nm}" data-file-ext="${ex}"${fid} aria-label="Download ${nm}">${DOWNLOAD_ICON}</button>`;
-      let btns = '';
+      let btns = '', whyBtn = '', whyNote = '';
       if (actions === 'full') {
         const ext = String(m.ext || '').toLowerCase();
         const editApp = editAppFor(ext);
+        // "Why Canva?" (2026-10-10, Martin): Google Drive is picked in Settings, but this file gets Canva.
+        if (EDITOR_PREF === 'gdrive' && editApp === 'canva') {
+          const driveCan = DRIVE_EXTS.includes(ext);
+          const label = escapeHtml(String(ext || 'file').toUpperCase());
+          whyBtn = '<br><button class="why-btn" type="button" data-why aria-expanded="false">Why Canva?</button>';
+          whyNote = `<p class="why-note" hidden>${driveCan
+              ? 'You picked Google Drive in Settings, but Google Drive isn’t connected right now, so this opens in Canva. <a href="settings.html?section=integrations">Connect Google Drive</a> to edit it there.'
+              : `${label} files always open in Canva. Google Drive can only edit one by turning it into a Google Doc, which usually scrambles the layout. Word, PowerPoint and Excel files open in Google Drive, as you picked in <a href="settings.html?section=integrations">Settings</a>.`}</p>`;
+        }
         const canva = editApp === 'gdrive'
           ? `<button class="canva-btn drive-btn" type="button" data-file-action="gdrive" data-file-name="${nm}" data-file-ext="${ex}"${fid}${CANVA_PREVIEW || (LIVE && m.fileId) ? '' : ' aria-haspopup="menu"'}><span>Edit in Google Drive</span></button>`
           : editApp === 'canva'
@@ -1840,8 +1856,9 @@
       return `
         <div class="material-row${actions === 'full' ? ' file-bar' : ''}">
           ${fileIcon(m.ext, `<span class="material-badge" style="background:${escapeHtml(color)}">${escapeHtml(String(m.ext || '').toUpperCase())}</span>`)}
-          <span class="material-name">${nm}</span>
+          <span class="material-name">${nm}${whyBtn}</span>
           ${btns}
+          ${whyNote}
         </div>`;
     }
     // A submission-history entry carries its file(s) as either the older
@@ -2317,6 +2334,14 @@
 
     materialsEl.addEventListener('click', e => {
       if (e.target.closest('[data-live-retry]')) { loadLiveDetail(); return; }
+      const whyBtn = e.target.closest('[data-why]');
+      if (whyBtn) {
+        const note = whyBtn.closest('.material-row').querySelector('.why-note');
+        const open = whyBtn.getAttribute('aria-expanded') !== 'true';
+        whyBtn.setAttribute('aria-expanded', String(open));
+        if (note) note.hidden = !open;
+        return;
+      }
       const btn = e.target.closest('[data-file-action]');
       if (!btn) return;
       const liveFile = LIVE_DETAIL && ID_OK(btn.dataset.fileId);
