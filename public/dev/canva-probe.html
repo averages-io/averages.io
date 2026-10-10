@@ -64,6 +64,8 @@
     <div class="row">
       <button type="button" id="readBtn">Run: read guesses only</button>
       <button type="button" class="primary" id="writeBtn">Run: also try sharing the test design</button>
+      <button type="button" class="primary" id="sweepBtn">Try everything (about 550 guesses)</button>
+      <button type="button" id="stopBtn" hidden>Stop</button>
       <button type="button" id="dl" hidden>Download results</button>
     </div>
     <p id="status" role="status"></p>
@@ -72,6 +74,7 @@
   <section class="card" id="out" hidden>
     <h2>Results</h2>
     <p id="meta"></p>
+    <label class="row" style="font-weight:600"><input type="checkbox" id="showAll"> Show “Unknown endpoint” answers too</label>
     <div class="scroll"><table><thead><tr><th>Status</th><th>Request</th><th>Canva said</th></tr></thead><tbody id="rows"></tbody></table></div>
     <ul class="legend">
       <li><b>404</b>: nothing at that address.</li>
@@ -156,6 +159,69 @@
           <td><code>${esc(x.answer)}</code></td></tr>`;
       }).join('');
     }
+    // Try everything (2026-10-10): one batch per request, until done.
+    let stop = false, all = [];
+    const notThere = x => x.status === 404 && /endpoint_not_found/.test(String(x.answer));
+    const asDesignId = x => x.status === 403 && /Not allowed to access design/.test(String(x.answer)) && /^\/designs\/[a-z-_]+$/.test(x.path.split('?')[0]);
+    function showSweep(meta) {
+      $('out').hidden = false;
+      $('meta').textContent = meta;
+      const list = $('showAll').checked ? all : all.filter(x => !notThere(x) && !(x.method === 'GET' && /^\/(designs|folders)\/[A-Za-z0-9_-]+$/.test(x.path)) && !(x.method === 'POST' && /^\/(designs|folders)$/.test(x.path)));
+      $('rows').innerHTML = list.length ? list.map(x => {
+        const s = Number(x.status) || 0;
+        const cls = s >= 200 && s < 300 ? 's2' : s === 404 ? 's404' : s >= 500 ? 's5' : 's4';
+        const note = asDesignId(x) ? '<br><small>(Canva read this as “the design with this id”, not a new feature.)</small>' : '';
+        return `<tr class="${notThere(x) ? '' : 'hit'}"><td class="st ${cls}">${esc(s || '—')}</td><td><code>${esc(x.method)} ${esc(x.path)}</code>${x.body ? `<br><code>${esc(JSON.stringify(x.body))}</code>` : ''}</td><td><code>${esc(x.answer)}</code>${note}</td></tr>`;
+      }).join('') : '<tr><td colspan="3">Nothing yet other than “Unknown endpoint”.</td></tr>';
+    }
+    $('showAll').addEventListener('change', () => { if (all.length) showSweep($('meta').textContent); });
+    async function sweep() {
+      const key = $('key').value.trim();
+      if (!key) { $('status').className = 'bad'; $('status').textContent = 'Enter your REVIEW_SECRET.'; $('key').focus(); return; }
+      stop = false; all = [];
+      ['readBtn', 'writeBtn', 'sweepBtn'].forEach(id => { $(id).disabled = true; });
+      $('stopBtn').hidden = false;
+      $('status').className = '';
+      let batch = 0, batches = 1, designId = '', folderId = '', scopes = null, tries = 0;
+      try {
+        while (batch < batches && !stop) {
+          $('status').textContent = `Batch ${batch + 1} of ${batches === 1 && batch === 0 ? '…' : batches}…`;
+          const r = await fetch(`${API}/canva/probe`, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key, sweep: true, batch, designId, folderId }) });
+          const j = await r.json().catch(() => ({}));
+          if (r.status === 429 && tries < 3) {
+            tries++;
+            for (let w = 60; w > 0 && !stop; w--) { $('status').textContent = `Canva or our API asked to slow down. Waiting ${w} s, then batch ${batch + 1} again…`; await new Promise(res => setTimeout(res, 1000)); }
+            continue;
+          }
+          tries = 0;
+          if (!r.ok || !j.ok) {
+            $('status').className = 'bad';
+            $('status').textContent = ERR[j.error] || (j.error === 'not_test_items' ? 'The test design or folder is gone (deleted in Canva?). Start again.' : `Stopped at batch ${batch + 1} (${r.status} ${j.error || ''}).`);
+            break;
+          }
+          designId = j.designId; folderId = j.folderId; batches = j.batches; scopes = j.scopes;
+          all = all.concat(j.results);
+          last = { at: new Date().toISOString(), sweep: true, scopes, designId, folderId, batchesDone: batch + 1, batches, results: all };
+          $('dl').hidden = false;
+          const hits = all.filter(x => !notThere(x) && !(x.method === 'POST' && /^\/(designs|folders)$/.test(x.path)) && !(x.method === 'GET' && /^\/(designs|folders)\/[A-Za-z0-9_-]+$/.test(x.path)));
+          showSweep(`Scopes: ${Array.isArray(scopes) ? scopes.join(' ') : scopes} · test design ${designId} · test folder ${folderId} · ${all.length} answers so far, ${hits.length} not “Unknown endpoint”`);
+          batch++;
+          await new Promise(res => setTimeout(res, 1500));
+        }
+        if (!stop && batch >= batches) {
+          const hits = all.filter(x => !notThere(x) && !(x.method === 'POST' && /^\/(designs|folders)$/.test(x.path)) && !(x.method === 'GET' && /^\/(designs|folders)\/[A-Za-z0-9_-]+$/.test(x.path)));
+          $('status').textContent = hits.length ? `Done: ${hits.length} answer(s) other than “Unknown endpoint”, listed below. Download the results and send them over.` : 'Done: every guess was “Unknown endpoint”. Download the results and send them over.';
+        } else if (stop) $('status').textContent = `Stopped after ${batch} batch(es). You can download what ran.`;
+      } catch {
+        $('status').className = 'bad';
+        $('status').textContent = 'Couldn’t reach the API.';
+      } finally {
+        ['readBtn', 'writeBtn', 'sweepBtn'].forEach(id => { $(id).disabled = false; });
+        $('stopBtn').hidden = true;
+      }
+    }
+    $('sweepBtn').addEventListener('click', sweep);
+    $('stopBtn').addEventListener('click', () => { stop = true; });
     $('readBtn').addEventListener('click', () => run(false));
     $('writeBtn').addEventListener('click', () => run(true));
     $('dl').addEventListener('click', () => {
