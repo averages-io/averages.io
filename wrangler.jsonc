@@ -4,14 +4,6 @@
   "compatibility_date": "2026-09-05",
   "assets": {
     "directory": "./out",
-    // Without this, Cloudflare's static-assets handler returns its own
-    // generic "not found" response for any path that doesn't match a
-    // prerendered route — which is what showed up as "goes to a page that
-    // says it couldn't connect" instead of the real, custom 404.html this
-    // app already builds (from app/not-found.tsx, see pages-src/404.html).
-    // "404-page" tells it to serve that file (walking up to the nearest
-    // 404.html for the request path, root in this app's case) with a real
-    // 404 status instead. Found and fixed 2026-09-08.
     "not_found_handling": "404-page"
   }
 }
