@@ -13,6 +13,11 @@
  *      on to Schoology. XMLHttpRequest rather than fetch, because only it can
  *      report upload progress.
  *   4. One POST /submit/file with every file id: that's the actual turn-in.
+ * Since 2026-10-12 the Add Submission popup does 1-3 as soon as a file is
+ * added (uploadFile) and 4 when Turn in is pressed (turnInFiles); submitFiles
+ * still does all four in one go. A link the student shares (Google Drive,
+ * OneDrive, Canva) is turned in as a small web page that opens it (linkFile),
+ * so files and links are one turn-in.
  * A written answer is one POST /submit/text. A Canva design is turned into a
  * PDF by our API (POST /canva/designs/<id>/export, polled) and then goes
  * through the same four steps.
@@ -187,7 +192,20 @@
     return tz ? `${first ? '?' : '&'}tz=${enc(tz)}` : '';
   }
 
+  /*
+   * Request log (2026-10-12): setLogger(fn) gets { kind: 'req', method, url,
+   * body } before each request and { kind: 'res', status, body } after, for the
+   * popup's "what's being sent" box. The page hides ids and tokens in it.
+   */
+  let LOGGER = null;
+  function setLogger(fn) { LOGGER = typeof fn === 'function' ? fn : null; }
+  function log(entry) {
+    if (!LOGGER) return;
+    try { LOGGER(entry); } catch {}
+  }
+
   async function call(method, path, body, signal) {
+    log({ kind: 'req', method, url: API + path, body: body || null });
     let res;
     try {
       res = await fetch(API + path, {
@@ -198,6 +216,7 @@
         signal,
       });
     } catch (e) {
+      log({ kind: 'res', status: 0, note: e && e.name === 'AbortError' ? 'stopped' : 'no connection' });
       throw fail(e && e.name === 'AbortError' ? 'aborted' : 'network');
     }
     let j = null;
@@ -206,6 +225,7 @@
     } catch {
       if (signal && signal.aborted) throw fail('aborted');
     }
+    log({ kind: 'res', status: res.status, body: j });
     if (!res.ok) throw fail(codeFor(res.status, j && j.error), { status: res.status });
     return j && typeof j === 'object' ? j : {};
   }
@@ -250,6 +270,7 @@
     return new Promise((resolve, reject) => {
       if (signal && signal.aborted) return reject(fail('aborted'));
       const xhr = new XMLHttpRequest();
+      log({ kind: 'req', method: 'PUT', url: `${API}/submit/upload/${enc(token)}`, size: blob.size });
       xhr.open('PUT', `${API}/submit/upload/${enc(token)}`);
       xhr.withCredentials = true;
       xhr.setRequestHeader('Content-Type', type);
@@ -259,6 +280,7 @@
       xhr.onload = () => {
         let j = null;
         try { j = JSON.parse(xhr.responseText || 'null'); } catch {}
+        log({ kind: 'res', status: xhr.status, body: j });
         if (xhr.status >= 200 && xhr.status < 300) resolve(j && typeof j === 'object' ? j : {});
         else reject(fail(codeFor(xhr.status, j && j.error), { status: xhr.status }));
       };
@@ -267,6 +289,51 @@
       if (signal) signal.addEventListener('abort', () => xhr.abort(), { once: true });
       xhr.send(blob);
     });
+  }
+
+  /** A file's name and checks, as submitFiles and uploadFile want them. */
+  function checkedFile(f, index) {
+    if (!f || !isBlob(f.blob)) throw fail('bad_request', { index });
+    const name = cleanName(f.name || f.blob.name);
+    if (f.blob.size > MAX_BYTES) throw fail('file_too_large', { index, name });
+    if (!f.blob.size) throw fail('empty_file', { index, name });
+    return { blob: f.blob, name };
+  }
+
+  /**
+   * Uploads one file to Schoology without turning it in yet (2026-10-12): the
+   * MD5, an upload slot, the bytes. Resolves { fileId, name, size }; give the
+   * ids to turnInFiles. onProgress({ phase: 'hashing' | 'uploading', fraction }).
+   */
+  async function uploadFile(o) {
+    o = o || {};
+    const section = String(o.section || ''), assignment = String(o.assignment || ''), signal = o.signal;
+    if (!ID_OK(section) || !ID_OK(assignment)) throw fail('bad_request');
+    const f = checkedFile({ blob: o.blob, name: o.name });
+    const report = (phase, fraction) => { if (o.onProgress) try { o.onProgress({ phase, fraction }); } catch {} };
+    report('hashing', 0);
+    const sum = await md5Blob(f.blob, { signal, onProgress: (x) => report('hashing', x) });
+    const slot = await call('POST', '/submit/upload', { section, assignment, filename: f.name, filesize: f.blob.size, md5: sum }, signal);
+    if (typeof slot.upload !== 'string' || !slot.upload) throw fail('failed');
+    report('uploading', 0);
+    const put = await putBytes(slot.upload, f.blob, typeOf(f.blob, f.name), (x) => report('uploading', x), signal);
+    const id = String((put && put.fileId) || slot.fileId || '');
+    if (!ID_OK(id)) throw fail('failed');
+    return { fileId: id, name: f.name, size: f.blob.size };
+  }
+
+  /** The turn-in itself, for files already uploaded with uploadFile. Resolves { ok, revision }. */
+  async function turnInFiles(o) {
+    o = o || {};
+    const section = String(o.section || ''), assignment = String(o.assignment || '');
+    if (!ID_OK(section) || !ID_OK(assignment)) throw fail('bad_request');
+    const fileIds = (Array.isArray(o.fileIds) ? o.fileIds : []).map(String);
+    if (!fileIds.length) throw fail('no_files');
+    if (fileIds.length > MAX_FILES) throw fail('too_many_files');
+    if (!fileIds.every(ID_OK)) throw fail('bad_request');
+    const done = await call('POST', '/submit/file' + tzQuery(true), { section, assignment, fileIds }, o.signal);
+    // revision is null when Schoology's answer had none to show; the history reload fills in.
+    return { ok: true, revision: done.revision && typeof done.revision === 'object' ? done.revision : null, fileIds };
   }
 
   /**
@@ -282,13 +349,7 @@
     const files = Array.isArray(o.files) ? o.files : [];
     if (!files.length) throw fail('no_files');
     if (files.length > MAX_FILES) throw fail('too_many_files');
-    const named = files.map((f, index) => {
-      if (!f || !isBlob(f.blob)) throw fail('bad_request', { index });
-      const name = cleanName(f.name || f.blob.name);
-      if (f.blob.size > MAX_BYTES) throw fail('file_too_large', { index, name });
-      if (!f.blob.size) throw fail('empty_file', { index, name });
-      return { blob: f.blob, name };
-    });
+    const named = files.map((f, index) => checkedFile(f, index));
     const report = (index, phase, fraction) => {
       if (!o.onProgress) return;
       try { o.onProgress({ index, name: index >= 0 ? named[index].name : '', phase, fraction }); } catch {}
@@ -297,24 +358,37 @@
     for (let i = 0; i < named.length; i++) {
       const f = named[i];
       try {
-        report(i, 'hashing', 0);
-        const sum = await md5Blob(f.blob, { signal, onProgress: (x) => report(i, 'hashing', x) });
-        const slot = await call('POST', '/submit/upload', { section, assignment, filename: f.name, filesize: f.blob.size, md5: sum }, signal);
-        if (typeof slot.upload !== 'string' || !slot.upload) throw fail('failed');
-        report(i, 'uploading', 0);
-        const put = await putBytes(slot.upload, f.blob, typeOf(f.blob, f.name), (x) => report(i, 'uploading', x), signal);
-        const id = String((put && put.fileId) || slot.fileId || '');
-        if (!ID_OK(id)) throw fail('failed');
-        fileIds.push(id);
+        const up = await uploadFile({ section, assignment, blob: f.blob, name: f.name, signal, onProgress: (p) => report(i, p.phase, p.fraction) });
+        fileIds.push(up.fileId);
         report(i, 'done', 1);
       } catch (e) {
         throw e instanceof SubmitError ? Object.assign(e, { index: i, name: f.name }) : fail('failed', { index: i, name: f.name });
       }
     }
     report(-1, 'finishing', 1);
-    const done = await call('POST', '/submit/file' + tzQuery(true), { section, assignment, fileIds }, signal);
-    // revision is null when Schoology's answer had none to show; the history reload fills in.
-    return { ok: true, revision: done.revision && typeof done.revision === 'object' ? done.revision : null, fileIds };
+    return turnInFiles({ section, assignment, fileIds, signal });
+  }
+
+  /**
+   * A shared link as a small web page (2026-10-12, Martin: links go in as
+   * files, so files and links are one turn-in). Opening it goes straight to
+   * the link; it also shows the link to click, for when that doesn't happen.
+   * Only https links. Resolves { blob, name } named "<title> (link).html".
+   */
+  function linkFile(title, url, from) {
+    const u = String(url || '').trim();
+    if (!/^https:\/\/[^\s"'<>]{1,2000}$/i.test(u)) throw fail('bad_request');
+    const t = String(title || 'Link').replace(/[\u0000-\u001f\u007f]/g, '').replace(/\.[a-z0-9]{1,5}$/i, '').trim().slice(0, 150) || 'Link';
+    const esc = (v) => v.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const where = from ? ` in ${esc(String(from).slice(0, 40))}` : '';
+    const html = '<!doctype html>\n<html lang="en"><head><meta charset="utf-8">'
+      + `<meta http-equiv="refresh" content="0; url=${esc(u)}">`
+      + `<meta name="viewport" content="width=device-width, initial-scale=1"><title>${esc(t)}</title></head>`
+      + '<body style="font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;padding:32px;line-height:1.5">'
+      + `<p>Opening <strong>${esc(t)}</strong>${where}…</p>`
+      + `<p><a href="${esc(u)}">${esc(u)}</a></p>`
+      + '<p style="color:#666;font-size:14px">Turned in as a link with Averages.io.</p></body></html>\n';
+    return { blob: new Blob([html], { type: 'text/html' }), name: cleanName(`${t} (link).html`) };
   }
 
   /** Turns in a written answer (HTML from the Create tab; our API cleans it). */
@@ -382,11 +456,14 @@
     status('downloading');
     let res;
     for (;;) {
+      log({ kind: 'req', method: 'GET', url: `${API}/canva/exports/${enc(job)}/file?design=${enc(designId)}` });
       try {
         res = await fetch(`${API}/canva/exports/${enc(job)}/file?design=${enc(designId)}`, { credentials: 'include', signal });
       } catch (e) {
+        log({ kind: 'res', status: 0, note: 'no connection' });
         throw fail(e && e.name === 'AbortError' ? 'aborted' : 'network');
       }
+      log({ kind: 'res', status: res.status, size: Number(res.headers.get('Content-Length') || 0) || null });
       if (res.ok) break;
       const j = await res.json().catch(() => null);
       const code = codeFor(res.status, j && j.error);
@@ -411,11 +488,14 @@
     if (!ID_OK(src.section) || !ID_OK(src.fileId) || !parentOk) throw fail('bad_request');
     const parent = src.document ? `document=${enc(src.document)}` : `assignment=${enc(src.assignment)}`;
     let res;
+    log({ kind: 'req', method: 'GET', url: `${API}/data/attachment?section=${enc(src.section)}&${parent}&file=${enc(src.fileId)}` });
     try {
       res = await fetch(`${API}/data/attachment?section=${enc(src.section)}&${parent}&file=${enc(src.fileId)}`, { credentials: 'include', signal });
     } catch (e) {
+      log({ kind: 'res', status: 0, note: 'no connection' });
       throw fail(e && e.name === 'AbortError' ? 'aborted' : 'network');
     }
+    log({ kind: 'res', status: res.status, size: Number(res.headers.get('Content-Length') || 0) || null });
     if (!res.ok) {
       const j = await res.json().catch(() => null);
       throw fail(res.status === 404 ? 'file_not_found' : codeFor(res.status, j && j.error), { status: res.status });
@@ -485,6 +565,10 @@
     md5,
     md5Blob,
     submitFiles,
+    uploadFile,
+    turnInFiles,
+    linkFile,
+    setLogger,
     submitText,
     history,
     exportCanva,

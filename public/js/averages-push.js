@@ -250,11 +250,25 @@
   }
 
   async function test() {
-    const sub = await currentSubscription();
+    let sub = await currentSubscription();
+    // 2026-10-12: a subscription made with an older server key can never be sent
+    // to (the push service turns down our signature). Make a fresh one first, with
+    // the same types, then send the test to it.
+    const c = await config();
+    if (sub && c.publicKey && !sameKey(sub.options && sub.options.applicationServerKey, c.publicKey)) {
+      const st = await status();
+      const again = await enable(st.types || undefined);
+      if (!again.ok) return again;
+      sub = await currentSubscription();
+    }
     const endpoint = (sub && sub.endpoint) || getLocal(ENDPOINT_KEY);
     if (!endpoint) return fail('not_subscribed');
     const r = await api('POST', '/push/test', { endpoint });
-    return r.ok ? { ok: true } : fail(codeOf(r));
+    if (r.ok) return { ok: true };
+    const out = fail(codeOf(r));
+    // The push service's own status (push_failed / push_rejected), for the message.
+    if (r.data && typeof r.data.status === 'number') out.status = r.data.status;
+    return out;
   }
 
   /**

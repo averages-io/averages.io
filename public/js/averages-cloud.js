@@ -292,16 +292,26 @@
     try { window.dispatchEvent(new CustomEvent('averages-cloud-status')); } catch {}
   }
   /**
-   * A token from our API for `app` (with Files.Read when `read`). Rejects
+   * A token from our API for `app`. `need`: '' (the app folder), 'read' (also
+   * Files.Read: adding a file from OneDrive) or 'write' (also Files.ReadWrite:
+   * sharing a OneDrive file as a link, 2026-10-12); `true` means 'read'. Rejects
    * needs_click when they must connect, and `reconnect` when Google /
    * Microsoft took the connection back. `force` (after a 401 from the drive)
    * asks the API for a new one even if the old one looks fresh: when access
    * is removed in their Google account, the old one stops working at once.
    */
+  const needOf = (v) => (v === 'write' ? 'write' : v === 'read' || v === true ? 'read' : '');
+  /** The token's scopes cover `need`: Files.ReadWrite also covers reading. */
+  function scopesCover(scopes, need) {
+    if (need === 'write') return hasScope(scopes, 'Files.ReadWrite');
+    if (need === 'read') return hasScope(scopes, 'Files.Read') || hasScope(scopes, 'Files.ReadWrite');
+    return true;
+  }
   async function serverToken(app, read, force) {
+    const need = needOf(read);
     const me = owner();
     const t = SRV.tok[app];
-    if (!force && t && t.owner === me && t.exp - 60000 > Date.now() && (!read || hasScope(t.scopes, 'Files.Read'))) return t.token;
+    if (!force && t && t.owner === me && t.exp - 60000 > Date.now() && scopesCover(t.scopes, need)) return t.token;
     let r;
     try {
       r = await fetch(`${API}/cloud/${app}/token`, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: force ? '{"refresh":true}' : '{}' });
@@ -311,7 +321,7 @@
     const j = await r.json().catch(() => ({}));
     if (r.ok && j && typeof j.access_token === 'string') {
       SRV.tok[app] = { token: j.access_token, exp: Date.now() + (Number(j.expires_in) || 3600) * 1000, scopes: Array.isArray(j.scopes) ? j.scopes : [], owner: me };
-      if (read && !hasScope(SRV.tok[app].scopes, 'Files.Read')) throw fail('needs_click');
+      if (!scopesCover(SRV.tok[app].scopes, need)) throw fail('needs_click');
       return j.access_token;
     }
     if (r.status === 409) {
@@ -339,18 +349,20 @@
   }
   /** Connect through our API: the page goes to Google / Microsoft and comes back here. */
   function goConnect(app, read) {
+    const need = needOf(read);
     // Disconnected by Google / Microsoft: their account chooser starts on the same account.
     const acct = accounts()[app] || lost(app);
     const hint = acct && (acct.email || acct.username) ? `&login_hint=${encodeURIComponent(acct.email || acct.username)}` : '';
-    window.location.assign(`${API}/cloud/${app}/connect?return_to=${encodeURIComponent(returnPath())}${read ? '&read=1' : ''}${hint}`);
+    window.location.assign(`${API}/cloud/${app}/connect?return_to=${encodeURIComponent(returnPath())}${need === 'write' ? '&write=1' : need === 'read' ? '&read=1' : ''}${hint}`);
     // The page is leaving: nothing to show (callers stay quiet on popup_closed).
     return Promise.reject(fail('popup_closed'));
   }
   /** Token, or (asked from a click) off to connect. */
   function serverTokenOrConnect(app, opts) {
-    if (opts.prompt === 'select_account') return goConnect(app, !!opts.read);
-    return serverToken(app, !!opts.read).catch((e) => {
-      if (e && (e.code === 'needs_click' || e.code === 'reconnect') && opts.interactive) return goConnect(app, !!opts.read);
+    const need = opts.write ? 'write' : opts.read ? 'read' : '';
+    if (opts.prompt === 'select_account') return goConnect(app, need);
+    return serverToken(app, need).catch((e) => {
+      if (e && (e.code === 'needs_click' || e.code === 'reconnect') && opts.interactive) return goConnect(app, need);
       throw e;
     });
   }
@@ -566,14 +578,35 @@
     });
   }
 
+  /*
+   * Request log (2026-10-12): the Add Submission popup shows what's being sent
+   * while it turns work in. setLogger(fn) gets { kind: 'req', method, url, body }
+   * and { kind: 'res', status }; never a token (the page also hides ids).
+   */
+  let LOGGER = null;
+  function setLogger(fn) { LOGGER = typeof fn === 'function' ? fn : null; }
+  function logReq(method, url, body) {
+    if (!LOGGER) return;
+    let b = null;
+    try { b = typeof body === 'string' && body.length < 2000 ? JSON.parse(body) : null; } catch {}
+    try { LOGGER({ kind: 'req', method: method || 'GET', url: String(url), body: b }); } catch {}
+  }
+  function logRes(status, note) {
+    if (!LOGGER) return;
+    try { LOGGER({ kind: 'res', status, note: note || '' }); } catch {}
+  }
+
   async function gfetch(token, url, init) {
     init = init || {};
+    logReq(init.method, url, init.body);
     let r;
     try {
       r = await fetch(url, Object.assign({}, init, { headers: Object.assign({ Authorization: 'Bearer ' + token }, init.headers || {}) }));
     } catch {
+      logRes(0, 'no connection');
       throw fail('network');
     }
+    logRes(r.status);
     if (r.status === 401) {
       clearToken('gdrive');
       delete SRV.tok.gdrive;
@@ -1135,6 +1168,8 @@
   function oneDriveToken(opts) {
     opts = opts || {};
     if (serverOn('onedrive')) return serverTokenOrConnect('onedrive', opts);
+    // Sharing links (Files.ReadWrite) only through our server's connection.
+    if (opts.write) return Promise.reject(fail('not_configured'));
     if (!SRV.status && SRV.pending && !opts.interactive) return SRV.pending.then(() => oneDriveToken(opts));
     if (opts.read) return oneDriveReadToken(opts);
     const t = tokens().onedrive;
@@ -1266,12 +1301,15 @@
 
   async function mfetch(token, url, init) {
     init = init || {};
+    logReq(init.method, url, init.body);
     let r;
     try {
       r = await fetch(url, Object.assign({}, init, { headers: Object.assign({ Authorization: 'Bearer ' + token }, init.headers || {}) }));
     } catch {
+      logRes(0, 'no connection');
       throw fail('network');
     }
+    logRes(r.status);
     if (r.status === 401 && serverOn('onedrive') && !init.retried) {
       // Same as Google Drive: one new token from our server, then retry.
       delete SRV.tok.onedrive;
@@ -1427,9 +1465,12 @@
     const direct = String(item['@microsoft.graph.downloadUrl'] || '');
     let r = null;
     if (/^https:\/\//i.test(direct)) {
+      logReq('GET', direct.split('?')[0] + '?(download link)');
       try {
         r = await fetch(direct, { credentials: 'omit', referrerPolicy: 'no-referrer' });
+        logRes(r.status);
       } catch {
+        logRes(0, 'no connection');
         r = null;
       }
     }
@@ -1447,6 +1488,49 @@
     const name = plainName(item.name);
     const type = String((item.file && item.file.mimeType) || '') || MIME[extOf(name)] || blob.type || 'application/octet-stream';
     return { blob: blob.type === type ? blob : new Blob([blob], { type }), name, mimeType: type };
+  }
+
+  /*
+   * Share as a Link from OneDrive (2026-10-12, Martin): an "anyone with the link
+   * can view" link (createLink), falling back to "people in your school" when
+   * the school doesn't allow links for anyone. Needs Files.ReadWrite, asked for
+   * only when a student picks Share as a Link on a OneDrive file
+   * (oneDriveToken({ write: true })). Never an edit link. { url, name, scope }.
+   */
+  async function oneDriveShareLink(token, id) {
+    id = String(id || '');
+    if (!ITEM_ID.test(id)) throw fail('file_gone');
+    const meta = await mfetch(token, `${GRAPH}/me/drive/items/${encodeURIComponent(id)}?$select=id,name,webUrl`);
+    if (meta.status === 404) throw fail('file_gone');
+    if (!meta.ok) throw fail(meta.status === 403 ? 'write_access_needed' : 'onedrive_share_failed');
+    const item = await meta.json().catch(() => ({}));
+    let lastStatus = 0;
+    for (const scope of ['anonymous', 'organization']) {
+      const r = await mfetch(token, `${GRAPH}/me/drive/items/${encodeURIComponent(id)}/createLink`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'view', scope }),
+      });
+      lastStatus = r.status;
+      if (r.ok) {
+        const j = await r.json().catch(() => ({}));
+        const url = String((j.link && j.link.webUrl) || '');
+        if (!linkOk(url)) throw fail('onedrive_share_failed');
+        return { url, name: plainName(item.name || 'OneDrive file'), scope };
+      }
+      if (r.status === 404) throw fail('file_gone');
+      // 403 / 400: this kind of link isn't allowed (or, the first time, the
+      // token can't share at all). Try the school-only link once.
+      if (r.status !== 403 && r.status !== 400) break;
+    }
+    throw fail(lastStatus === 403 || lastStatus === 400 ? 'onedrive_share_blocked' : 'onedrive_share_failed');
+  }
+  /** 'on': OneDrive links work now; 'ask': connected, but sharing needs one more permission; 'off': not available. */
+  function oneDriveCanShare() {
+    if (!serverOn('onedrive') || !SRV.status.onedrive.connected) return 'off';
+    const t = SRV.tok.onedrive;
+    const scopes = (t && t.owner === owner() && Array.isArray(t.scopes) && t.scopes.length ? t.scopes : SRV.status.onedrive.scopes) || [];
+    return hasScope(scopes, 'Files.ReadWrite') ? 'on' : 'ask';
   }
 
   /* ── Add from OneDrive: our own picker (2026-10-06) ───────────────── */
@@ -1856,6 +1940,9 @@
     export_too_large: 'Google only turns files up to 10 MB into a PDF. Download it as a PDF in Google Drive, then attach that.',
     share_blocked: 'Google Drive wouldn’t share that file with anyone who has the link. Your school may not allow it. Turn in the file instead, or share it with your teacher in Google Drive.',
     share_failed: 'Couldn’t make a view link in Google Drive. Try again, or turn in the file instead.',
+    onedrive_share_blocked: 'OneDrive wouldn’t make a link for that file. Your school may not allow it. Send it as a copy instead.',
+    onedrive_share_failed: 'Couldn’t make a link in OneDrive. Try again, or send it as a copy.',
+    write_access_needed: 'OneDrive needs one more permission to share links. Click Allow next to the file, then try again.',
     canva_link_needed: 'Paste the Canva view link (it starts with https://www.canva.com/design/). In Canva: Share → Anyone with the link → Can view → Copy link.',
     read_access_needed: 'Averages.io needs permission to read that file. Use Add from OneDrive on the Files tab, then try again.',
   };
@@ -1913,6 +2000,10 @@
     oneDriveList,
     oneDrivePick,
     oneDriveDownload,
+    oneDriveShareLink,
+    oneDriveCanShare,
+    // Request log for the Add Submission popup (2026-10-12)
+    setLogger,
     /** True for a file picked with Add from OneDrive: downloading it needs `oneDriveToken({ read: true })`. */
     oneDrivePicked: (id) => pickedList().some((p) => p.id === String(id)),
   };
