@@ -3492,8 +3492,17 @@
       subscription_gone: 'This browser stopped accepting notifications. Turn them on again.',
       too_soon: 'Wait a few seconds, then try again.',
       push_failed: 'The test couldn’t be sent. Try again in a moment.',
+      // 2026-10-12: which kind of failure it was.
+      push_rejected: 'Your browser’s notification service turned the test down. Turn Browser Notifications off and on again, then send another test.',
+      push_misconfigured: 'Notifications aren’t set up right on our side yet, so the test couldn’t be sent. Try again later.',
+      feature_off: 'Notifications are switched off right now. Try again later.',
+      rate_limited: 'Too many tries. Wait a minute, then try again.',
     };
-    function notifError(code) { return NOTIF_ERRORS[code] || NOTIF_ERRORS.failed; }
+    function notifError(code, status) {
+      const text = NOTIF_ERRORS[code] || NOTIF_ERRORS.failed;
+      // The push service's own error number, for when Martin needs to look into it.
+      return status && (code === 'push_failed' || code === 'push_rejected') ? `${text} (Error ${status}.)` : text;
+    }
 
     // The preview: remembered on this device only, as before.
     browserNotifToggle.checked = NOTIF_PREVIEW
@@ -3671,7 +3680,7 @@
       const r = await notifPush.test();
       notifTestBtn.disabled = false;
       if (r.ok) { showNotifMsg(notifTestMsg, 'Sent. It can take a few seconds to show up.'); return; }
-      showNotifMsg(notifTestMsg, notifError(r.code), true);
+      showNotifMsg(notifTestMsg, notifError(r.code, r.status), true);
       if (r.code === 'subscription_gone' || r.code === 'not_subscribed') {
         // The API no longer has this browser: show it as off, and let go of it here too.
         await notifPush.forgetLocal();

@@ -405,6 +405,181 @@
   .submit-done-head h3 { margin: 0; }
   .submit-done-check { width: 28px; height: 28px; flex: none; border-radius: 50%; background: var(--grade-good); display: grid; place-items: center; }
   .submit-done-check svg { width: 16px; height: 16px; stroke: #fff; fill: none; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+  /* ---------- Add Submission (2026-10-12 redesign; see openAddSubmissionModal) ---------- */
+  .as-box { --as-raised: #fff; --as-ok: var(--grade-good); }
+  body.dark-mode .as-box { --as-raised: #262838; }
+  .as-box .as-i { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: butt; stroke-linejoin: miter; }
+  .as-box .as-i .as-fill, .as-box .as-i.as-tri path, .as-box .as-i.as-back path, .as-box .as-i.as-ud path { fill: currentColor; stroke: none; }
+  .as-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  .as-head h3 { margin: 0; }
+  .as-sub { margin: 4px 0 0 !important; font-size: 0.78rem !important; font-weight: 700; color: var(--text-muted) !important; }
+  .as-sub b { color: var(--text-dark); }
+  .as-sub .as-late { color: var(--accent-dark); }
+  body.dark-mode .as-sub .as-late { color: #ff8f73; }
+  .as-x { flex: none; width: 36px; height: 36px; border: none; border-radius: 50%; background: var(--panel-inner); color: var(--text-muted); display: grid; place-items: center; cursor: pointer; }
+  .as-x:hover { background: var(--border); color: var(--text-dark); }
+  .as-x:focus-visible, .as-btn:focus-visible, .as-chip:focus-visible, .as-pill:focus-visible, .as-rm:focus-visible, .as-opt:focus-visible, .as-hint-btn:focus-visible, .as-alt button:focus-visible, .as-linkbtn:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring); }
+  .as-x.busy { cursor: progress; color: var(--accent); }
+  .as-x.busy:hover { background: var(--panel-inner); color: var(--accent); }
+  .as-x.busy .as-spin { animation: as-x-in .25s cubic-bezier(.2,.8,.2,1), as-spin .8s linear infinite; }
+  .as-x.back svg { animation: as-x-back .3s cubic-bezier(.2,.8,.2,1); }
+  @keyframes as-x-in { from { opacity: 0; transform: scale(.5) rotate(-90deg); } }
+  @keyframes as-x-back { from { opacity: 0; transform: scale(.5) rotate(90deg); } }
+  @keyframes as-spin { to { transform: rotate(360deg); } }
+  .as-btn { border: none; border-radius: 999px; height: 40px; padding: 0 20px; font-family: inherit; font-size: 0.84rem; font-weight: 800; background: var(--panel-inner); color: var(--text-dark); display: inline-flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap; cursor: pointer; }
+  .as-btn:hover { background: var(--border); }
+  .as-btn.primary { background: var(--accent); color: #fff; }
+  .as-btn.primary:hover { background: var(--accent-dark); }
+  .as-btn:disabled { opacity: .55; cursor: not-allowed; }
+  .as-btn.primary:disabled { background: var(--border); color: var(--text-faint); opacity: 1; }
+  .as-btn:disabled:hover { background: var(--panel-inner); }
+  .as-btn.as-back { padding-left: 16px; }
+  .as-btn.as-back .as-i { width: 14px; height: 14px; }
+  /* The drop box */
+  .as-drop { margin-top: 20px; border: 2px dashed var(--border); border-radius: 16px; padding: 28px 16px; text-align: center; background: var(--as-raised); display: grid; justify-items: center; gap: 4px; }
+  .as-drop.over { border-color: var(--accent); }
+  .as-drop strong { font-size: 0.95rem; font-weight: 900; color: var(--text-dark); margin-top: 4px; }
+  .as-drop-sub { font-size: 0.76rem; font-weight: 700; color: var(--text-faint); }
+  .as-drop .as-btn { margin-top: 8px; }
+  .as-big { width: 48px; height: 48px; border-radius: 50%; background: var(--panel-inner); color: var(--text-muted); display: grid; place-items: center; overflow: hidden; transition: background .3s ease, color .3s ease; }
+  .as-up { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: butt; stroke-linejoin: miter; }
+  .as-upa { transform-box: view-box; }
+  .as-drop.sending .as-big { background: var(--accent); color: #fff; }
+  .as-drop.sending .as-upa { animation: as-fly .9s cubic-bezier(.5, 0, .3, 1) infinite; }
+  @keyframes as-fly { 0% { transform: translateY(0); } 48% { transform: translateY(-22px); } 48.01% { transform: translateY(18px); } 100% { transform: translateY(0); } }
+  .as-drop.turning { display: flex; flex-direction: column; gap: 12px; text-align: left; justify-items: stretch; border-style: solid; padding: 20px; min-height: 200px; }
+  /* Sources */
+  .as-from { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; margin-top: 16px; }
+  .as-from-label { flex-basis: 100%; text-align: center; font-size: 0.74rem; font-weight: 800; color: var(--text-faint); }
+  .as-chip { border: 1px solid var(--border); background: var(--as-raised); color: var(--text-dark); border-radius: 999px; height: 36px; padding: 0 12px 0 8px; font-family: inherit; font-size: 0.78rem; font-weight: 800; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+  .as-chip:hover:not(:disabled) { border-color: var(--text-faint); }
+  .as-chip:disabled { color: var(--text-faint); cursor: default; }
+  .as-chip:disabled .canva-mark, .as-chip:disabled .as-mark { opacity: .55; }
+  .as-chip[aria-busy="true"] { cursor: progress; opacity: .7; }
+  .as-chip .canva-mark { width: 20px; height: 20px; }
+  .as-soon { flex-basis: 100%; text-align: center; font-size: 0.72rem; font-weight: 700; color: var(--text-faint); }
+  .as-mark { width: 20px; height: 20px; border-radius: 50%; background: var(--mark); color: #fff; display: inline-grid; place-items: center; flex: none; }
+  .as-mark svg { width: 12px; height: 12px; fill: currentColor; stroke: none; }
+  .as-box .as-source-note { margin: 8px 0 0; text-align: center; font-size: 0.74rem; font-weight: 700; color: var(--text-muted); line-height: 1.45; }
+  .as-source-note[hidden] { display: none; }
+  .as-source-note a { color: var(--accent-dark); font-weight: 800; }
+  .as-linkbtn { border: none; background: none; padding: 0; font: inherit; font-weight: 800; color: var(--accent-dark); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+  body.dark-mode .as-linkbtn, body.dark-mode .as-alt button { color: #ff8f73; }
+  /* The list */
+  .as-list-h { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin: 16px 0 8px; font-size: 0.7rem; font-weight: 800; color: var(--text-faint); text-transform: uppercase; letter-spacing: .06em; }
+  .as-list { display: grid; gap: 8px; max-height: 320px; overflow-y: auto; }
+  .as-row { position: relative; display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 12px; align-items: center; background: var(--panel-inner); border-radius: 12px; padding: 8px 8px 8px 12px; }
+  .as-row.cloud { grid-template-columns: 40px minmax(0, 1fr) auto auto; }
+  .as-row .avfi { justify-self: center; }
+  .as-row-text { min-width: 0; }
+  .as-name { font-size: 0.86rem; font-weight: 800; color: var(--text-dark); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .as-meta { font-size: 0.72rem; font-weight: 700; color: var(--text-faint); margin-top: 2px; }
+  .as-stat { font-size: 0.7rem; font-weight: 800; color: var(--text-muted); margin-top: 4px; }
+  .as-stat.bad { color: var(--grade-bad); }
+  .as-fprog { height: 4px; border-radius: 999px; background: var(--border); margin-top: 8px; overflow: hidden; }
+  .as-fprog i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .2s linear; }
+  .as-rm { width: 32px; height: 32px; border: none; border-radius: 50%; background: none; color: var(--text-faint); display: grid; place-items: center; cursor: pointer; }
+  .as-rm:hover { background: var(--border); color: var(--text-dark); }
+  .as-rm .as-i { width: 16px; height: 16px; }
+  .as-below { grid-column: 1 / -1; display: grid; gap: 8px; }
+  .as-below:empty { display: none; }
+  /* Send as a Copy / Share as a Link */
+  .as-pill { height: 32px; display: inline-flex; align-items: center; gap: 8px; padding: 0 8px 0 12px; border-radius: 999px; border: 1px solid var(--border); background: var(--as-raised); color: var(--text-dark); font-family: inherit; font-size: 0.76rem; font-weight: 800; white-space: nowrap; cursor: pointer; }
+  .as-pill:hover { border-color: var(--text-faint); }
+  .as-pill .t { display: inline-flex; align-items: center; gap: 8px; }
+  .as-pill .as-i { width: 16px; height: 16px; }
+  .as-pill .as-ud { width: 12px; height: 12px; color: var(--text-faint); }
+  .as-hint { display: flex; align-items: center; gap: 8px; width: 100%; margin: 0 !important; padding: 8px; border: none; border-radius: 10px; background: none; font-family: inherit; font-size: 0.76rem !important; font-weight: 700; color: var(--text-muted) !important; text-align: left; line-height: 1.4 !important; }
+  .as-hint .as-i { width: 16px; height: 16px; }
+  .as-hint-btn { cursor: pointer; color: var(--text-dark) !important; }
+  .as-hint-btn:hover { background: var(--as-raised); }
+  .as-hint .as-tri { margin-left: auto; width: 10px; height: 10px; color: var(--text-faint); transition: transform .15s ease; }
+  .as-hint-btn[aria-expanded="true"] .as-tri { transform: rotate(90deg); }
+  .as-menu { position: absolute; right: 48px; top: 48px; z-index: 6; width: min(300px, calc(100% - 16px)); background: var(--as-raised); border-radius: 16px; box-shadow: 0 18px 40px rgba(0,0,0,.28); padding: 4px; }
+  .as-opt { display: grid; grid-template-columns: 16px 20px minmax(0, 1fr); gap: 8px; align-items: start; width: 100%; border: none; background: none; border-radius: 12px; padding: 8px 12px; text-align: left; font-family: inherit; color: var(--text-dark); cursor: pointer; }
+  .as-opt:hover { background: var(--panel-inner); }
+  .as-opt .as-ck { visibility: hidden; width: 14px; height: 14px; margin-top: 2px; }
+  .as-opt[aria-checked="true"] .as-ck { visibility: visible; }
+  .as-opt b { display: block; font-size: 0.84rem; font-weight: 800; }
+  .as-opt small { display: block; font-size: 0.72rem; font-weight: 700; color: var(--text-faint); margin-top: 2px; line-height: 1.35; }
+  .as-opt:disabled { opacity: .45; cursor: not-allowed; }
+  .as-access { background: var(--as-raised); border-radius: 12px; padding: 4px; }
+  .as-curl { display: flex; gap: 8px; align-items: center; }
+  .as-curl input { flex: 1; min-width: 0; height: 36px; border-radius: 10px; border: 1px solid var(--border); background: var(--as-raised); color: var(--text-dark); padding: 0 12px; font-family: inherit; font-size: 0.78rem; font-weight: 700; }
+  .as-curl input:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring); }
+  .as-curl small { font-size: 0.7rem; font-weight: 800; color: var(--text-faint); white-space: nowrap; }
+  .as-curl small.ok { color: var(--grade-good); }
+  .as-curl small.bad { color: var(--grade-bad); }
+  .as-alt { margin: 16px 0 0 !important; text-align: center; font-size: 0.8rem !important; font-weight: 700; color: var(--text-muted) !important; }
+  .as-alt button { border: none; background: none; padding: 0; font: inherit; font-weight: 900; color: var(--accent-dark); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+  /* Footer */
+  .as-foot { display: flex; align-items: center; gap: 8px; margin-top: 20px; }
+  .as-note { margin-right: auto; font-size: 0.74rem; font-weight: 700; color: var(--text-faint); }
+  .as-note-right { margin-left: auto; margin-right: 8px; }
+  .as-wfoot { gap: 16px; }
+  .as-wfoot .as-note { display: none; }
+  .as-wbar { flex: 1; min-width: 0; }
+  /* The step bar (like Cloudflare's): one segment per step */
+  .as-prog { display: grid; gap: 12px; }
+  .as-wbar .as-prog { gap: 8px; }
+  .as-prog-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 0.95rem; font-weight: 900; color: var(--text-dark); }
+  .as-wbar .as-prog-head { font-size: 0.82rem; }
+  .as-h { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
+  .as-h .as-i { width: 20px; height: 20px; color: var(--grade-good); }
+  .as-h.bad { color: var(--grade-bad); }
+  .as-prog-head small { font-size: 0.74rem; font-weight: 800; color: var(--text-faint); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .as-segs { display: flex; gap: 4px; }
+  .as-seg { min-width: max-content; display: grid; gap: 8px; }
+  .as-track { position: relative; display: block; height: 10px; border-radius: 999px; background: var(--panel-inner); overflow: hidden; }
+  .as-wbar .as-track { height: 8px; }
+  .as-fill-bar { position: absolute; inset: 0 auto 0 0; width: 0; border-radius: inherit; background: var(--accent); transition: width .2s linear; }
+  .as-seg.now .as-fill-bar.ind { width: 100%; background: linear-gradient(90deg, rgb(from var(--accent) r g b / 0.25) 0%, var(--accent) 50%, rgb(from var(--accent) r g b / 0.25) 100%); background-size: 200% 100%; animation: as-sweep 1.1s linear infinite; }
+  .as-seg.done .as-fill-bar { width: 100%; }
+  .as-seg.ok .as-fill-bar { background: var(--grade-good); }
+  .as-seg.fail .as-fill-bar { width: 100%; background: var(--grade-bad); }
+  @keyframes as-sweep { from { background-position: 200% 0; } to { background-position: 0 0; } }
+  .as-lab { display: flex; align-items: center; gap: 4px; font-size: 0.7rem; font-weight: 800; color: var(--text-faint); min-width: 0; }
+  .as-lab .as-i { width: 14px; height: 14px; }
+  .as-seg.now .as-lab, .as-seg.done .as-lab { color: var(--text-dark); }
+  .as-seg.fail .as-lab { color: var(--grade-bad); }
+  .as-seg.now .as-spin { animation: as-spin .8s linear infinite; }
+  .as-box .as-err { margin: 0; font-size: 0.78rem; font-weight: 700; color: var(--grade-bad); line-height: 1.45; }
+  .as-err a { color: var(--accent-dark); font-weight: 800; }
+  /* What's being sent (ids hidden) */
+  .as-log { flex: 1; min-height: 72px; overflow: auto; margin: 0; padding: 12px; border-radius: 12px; background: #15161c; color: #c9cad6; font: 600 0.72rem/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .as-log-ln { display: block; }
+  .as-log-m { color: #ff9a7a; font-weight: 800; }
+  .as-log-u { color: #e6e7ef; }
+  .as-log-b { color: #9a9bab; }
+  .as-log-ok { color: #6fd39b; font-weight: 800; }
+  .as-log-bad { color: #f0b860; font-weight: 800; }
+  .as-log-note { color: #9a9bab; font-style: italic; }
+  .as-log-ln.cur::after { content: "\258D"; color: #9a9bab; animation: as-blink 1s steps(1) infinite; }
+  @keyframes as-blink { 50% { opacity: 0; } }
+  /* Written answer */
+  .as-box .rte-toolbar { margin-top: 20px; }
+  .as-editor { min-height: 200px !important; }
+  .as-editor.locked { background: var(--panel-inner); color: var(--text-faint); cursor: not-allowed; }
+  .as-box .rte-btn:disabled, .as-box .rte-select:disabled { opacity: .45; cursor: not-allowed; }
+  @media (max-width: 640px) {
+    .as-row.cloud { gap: 8px; }
+    .as-pill { padding: 0 8px; gap: 4px; }
+    .as-pill .long { display: none; }
+    .as-menu { right: 8px; top: 52px; }
+    .as-list-h span + span { display: none; }
+    .as-curl { flex-wrap: wrap; }
+    .as-curl input { flex-basis: 100%; }
+    .as-foot { justify-content: flex-end; flex-wrap: wrap; }
+    .as-foot .as-note { display: none; }
+    .as-foot .as-back { margin-right: auto; }
+    .as-wbar { flex-basis: 100%; order: -1; }
+    .as-seg { min-width: 0; }
+    .as-seg .as-lab span { display: none; }
+    .as-drop.turning { padding: 16px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .as-drop.sending .as-upa, .as-seg.now .as-fill-bar.ind, .as-seg.now .as-spin, .as-x.busy .as-spin, .as-x.back svg, .as-log-ln.cur::after { animation: none; }
+  }
   .submit-dropzone.live-drop.dragging { background: var(--panel-inner); color: var(--text-dark); }
   .rev-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
   .rev-main .material-name { flex: none; overflow-wrap: anywhere; }
@@ -2275,13 +2450,28 @@
     // A turn-in still running when its popup closes (Cancel, Escape) is
     // stopped (2026-10-06): nothing is turned in unless it got that far.
     let activeSubmitAbort = null;
-    function closeModal() { if (activeSubmitAbort) { const stop = activeSubmitAbort; activeSubmitAbort = null; stop(); } modalOverlay.hidden = true; modalBox.innerHTML = ''; modalBox.classList.remove('modal-box-lg'); modalBox.removeAttribute('role'); modalBox.removeAttribute('aria-modal'); }
+    // Add Submission (2026-10-12) tidies up after itself here: stops its uploads and its request log.
+    let onModalClose = null;
+    // …and can take Escape first (closing its own menu instead of the popup).
+    let onModalEscape = null;
+    function closeModal() {
+      if (activeSubmitAbort) { const stop = activeSubmitAbort; activeSubmitAbort = null; stop(); }
+      if (onModalClose) { const f = onModalClose; onModalClose = null; try { f(); } catch (e) {} }
+      onModalEscape = null;
+      modalOverlay.hidden = true; modalBox.innerHTML = ''; modalBox.classList.remove('modal-box-lg', 'as-box');
+      modalBox.removeAttribute('role'); modalBox.removeAttribute('aria-modal'); modalBox.removeAttribute('aria-label');
+    }
     // Static popup (2026-08-29, per Martin's request) — clicking the dark
     // backdrop no longer dismisses the modal, so an accidental click outside
     // the box (easy to do on the Add Submission modal while picking a tab or
     // a file) can't lose in-progress input. Escape and the explicit
     // Cancel/Close buttons still close it.
-    document.addEventListener('keydown', e => { if (e.key === 'Escape' && !modalOverlay.hidden) closeModal(); });
+    // Not while work is being turned in (2026-10-12): it can't be stopped half way.
+    document.addEventListener('keydown', e => {
+      if (e.key !== 'Escape' || modalOverlay.hidden) return;
+      if (onModalEscape && onModalEscape()) return;
+      if (modalBox.dataset.lock !== '1') closeModal();
+    });
 
     // Edit in Canva / Save to cloud menus (2026-10-04). Not connected yet, so
     // every choice says Coming soon, same as the Materials page.
@@ -2828,80 +3018,70 @@
       document.getElementById('addSubmissionBtn').addEventListener('click', () => openAddSubmissionModal());
     }
 
-    // Add Submission — Upload / Create, mirroring the real Schoology upload
-    // dialog (screenshot Martin shared 2026-08-29): Upload loads a file from
-    // this device, Create answers directly in the app with no file. Both are
-    // real, switchable tabs sharing one optional comment box underneath.
-    // (A third Resources tab, picking a file from Google Drive, was removed
-    // 2026-09-02 per Martin's request — Google Drive integrations are coming
-    // back in a later update, not this release.)
-    const UPLOAD_TAB_PANEL = {
-      // Custom-styled "Choose Files" button + a list of what's been picked
-      // so far, in place of the bare native file input (2026-08-29, per
-      // Martin's request — the browser-default control looked out of
-      // place next to everything else in this modal). The real
-      // <input type="file"> is still there, just visually hidden and
-      // triggered by the button. `multiple` + the picked-files list below
-      // (2026-09-04, per Martin: "let people upload multiple files") — see
-      // bindUploadTab's pickedFiles handling for why the list is tracked
-      // in JS rather than read straight off the input at submit time.
-      upload: () => `
-        <p class="upload-tab-desc">Upload one or more files from this device.</p>
-        <div class="upload-picker" id="uploadPicker">
-          <button class="upload-picker-btn" type="button" id="chooseFileBtn">Choose Files</button>
-          <span class="upload-picker-filename empty" id="chooseFileName">No files chosen</span>
-        </div>
-        <div class="upload-picked-list" id="uploadPickedList"></div>
-        <!-- Hidden until a Submit attempt with no file chosen (2026-09-04,
-             per Martin -- at least one file is now required on this tab;
-             see modalSubmitBtn's click handler). -->
-        <p class="upload-required-note" id="uploadRequiredNote" hidden>Choose at least one file before submitting.</p>
-        ${uploadSourcesHTML()}
-        <input type="file" id="submissionFileInput" multiple style="display:none;">`,
-      // Rich-text answer area (2026-08-30, per Martin's request — a plain
-      // textbox with Google-Docs-style formatting options) in place of the
-      // old bare <textarea>. See bindCreateTab() below for the toolbar
-      // wiring (document.execCommand-based, front-end only).
-      create: () => `
-        <p class="upload-tab-desc">Answer directly — no file needed.</p>
-        <div class="rte-toolbar" role="toolbar" aria-label="Text formatting">
-          <select class="rte-select" id="rteBlockSelect" aria-label="Text style">
-            <option value="p">Normal text</option>
-            <option value="h1">Heading 1</option>
-            <option value="h2">Heading 2</option>
-            <option value="h3">Heading 3</option>
-          </select>
-          <span class="rte-divider" aria-hidden="true"></span>
-          <button class="rte-btn" type="button" data-cmd="bold" aria-label="Bold" title="Bold"><b>B</b></button>
-          <button class="rte-btn" type="button" data-cmd="italic" aria-label="Italic" title="Italic"><i>I</i></button>
-          <button class="rte-btn" type="button" data-cmd="underline" aria-label="Underline" title="Underline"><u>U</u></button>
-          <span class="rte-divider" aria-hidden="true"></span>
-          <button class="rte-btn" type="button" data-cmd="insertUnorderedList" aria-label="Bulleted list" title="Bulleted list">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="4" y1="6" x2="4.01" y2="6"/><line x1="4" y1="12" x2="4.01" y2="12"/><line x1="4" y1="18" x2="4.01" y2="18"/><path d="M9 6h11M9 12h11M9 18h11"/></svg>
-          </button>
-          <button class="rte-btn" type="button" data-cmd="insertOrderedList" aria-label="Numbered list" title="Numbered list">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><text x="1" y="8" font-size="7">1</text><text x="1" y="14" font-size="7">2</text><text x="1" y="20" font-size="7">3</text></svg>
-          </button>
-          <span class="rte-divider" aria-hidden="true"></span>
-          <button class="rte-btn" type="button" data-cmd="createLink" aria-label="Insert link" title="Insert link">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 15l6-6"/><path d="M10 6l1-1a4 4 0 0 1 6 6l-1 1"/><path d="M14 18l-1 1a4 4 0 0 1-6-6l1-1"/></svg>
-          </button>
-        </div>
-        <div class="modal-textarea answer-textarea rte-editor" id="submissionAnswerText" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Answer" data-placeholder="Type your answer here…"></div>`,
-    };
-
-    // "Or add from" (2026-10-06): the preview keeps its Coming soon row.
-    // Signed in with Schoology, each app works once it's set up: Canva when
-    // it's connected (else a Connect hint), Google Drive and OneDrive when
-    // their app ids are set and averages-cloud.js has the download helpers.
-    const SOURCE_NAME = { canva: 'Canva', gdrive: 'Google Drive', onedrive: 'OneDrive' };
-    const PICK_SOURCE = { course: 'Course file', gdrive: 'Google Drive', onedrive: 'OneDrive', canva: 'Canva, turned in as a PDF' };
+    // ------------------------------------------------------------------
+    // Add Submission (redesigned 2026-10-12, Martin's "direction A" mockup):
+    //   - one big drop box; files from this device start uploading the moment
+    //     they're dropped or chosen (the arrow flies until they're all up),
+    //   - Canva / Google Drive / OneDrive under it as colored source marks,
+    //   - a Send as a Copy / Share as a Link pill on Canva, Google Drive and
+    //     OneDrive rows (a link goes in as a small "(link).html" file, so
+    //     files and links are one turn-in),
+    //   - Turn in swaps the drop box for a step bar (one segment per step,
+    //     sized by how long it usually takes) and a log of what's being sent
+    //     (ids and tokens hidden); Cancel and Escape do nothing then, and the
+    //     × is a loading circle until it's done,
+    //   - "Write your answer instead" for a written answer, with its step bar
+    //     in the footer.
+    // The preview and the demo run the same popup with pretend uploads.
+    // ------------------------------------------------------------------
+    const SOURCE_NAME = { canva: 'Canva', gdrive: 'Google Drive', onedrive: 'OneDrive', course: 'Course files' };
     const PICK_ID_OK = {
       course: id => /^\d{1,20}$/.test(id),
       gdrive: id => /^[A-Za-z0-9_-]{1,200}$/.test(id),
       onedrive: id => /^[A-Za-z0-9!._-]{1,200}$/.test(id),
       canva: id => /^[A-Za-z0-9_-]{1,64}$/.test(id),
     };
+    // Source marks: a colored circle with a white shape, the same family as Canva's.
+    const AS_MARK = (c, d) => `<span class="as-mark" style="--mark:${c}" aria-hidden="true"><svg viewBox="0 0 24 24">${d}</svg></span>`;
+    const SOURCE_MARK = {
+      canva: '<span class="canva-mark" aria-hidden="true"></span>',
+      gdrive: AS_MARK('#188038', '<path d="M2.5 6.25C2.5 5.3 3.3 4.5 4.25 4.5H9.5l2.25 2.75h8c1 0 1.75.8 1.75 1.75v9.25c0 1-.8 1.75-1.75 1.75H4.25c-1 0-1.75-.8-1.75-1.75z" transform="translate(0 -.25)"/>'),
+      onedrive: AS_MARK('#0F6CBD', '<path d="M6.75 19.5a4.75 4.75 0 0 1-.55-9.47 6.25 6.25 0 0 1 11.95 1.97 3.75 3.75 0 0 1-.4 7.5z" transform="translate(.16 -.9)"/>'),
+      course: AS_MARK('#0F8A80', '<g transform="translate(-.5 -.25)"><path d="M9 2.5h7.5l4.5 4.5v11.5H9z"/><path d="M4 6.5h3.25V20.25H17V22H4z"/></g>'),
+    };
+    const AS_SVG = (d, cls) => `<svg class="${cls || 'as-i'}" viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`;
+    const AS_I = {
+      // The upload arrow: clipped above its base line, so it flies out the top and comes back up from behind it.
+      up: '<svg class="as-up" viewBox="0 0 24 24" aria-hidden="true"><defs><clipPath id="asUpClip"><rect x="0" y="-2" width="24" height="21.5"/></clipPath></defs><g clip-path="url(#asUpClip)"><g class="as-upa"><path d="M12 19V6"/><path d="M6 12l6-6 6 6"/></g></g><path d="M4 21h16"/></svg>',
+      copy: AS_SVG('<path d="M8 8h12v13H8z"/><path d="M16 8V3H4v15h4"/>'),
+      link: AS_SVG('<path d="M10 14l4-4"/><path d="M8.5 11.5L6 14a3.5 3.5 0 0 0 5 5l2.5-2.5M15.5 12.5L18 10a3.5 3.5 0 0 0-5-5l-2.5 2.5"/>'),
+      ud: AS_SVG('<path d="M7 10h10l-5-6zM7 14h10l-5 6z" class="as-fill"/>', 'as-i as-ud'),
+      ck: AS_SVG('<path d="M5 12.5l4.5 4.5L19 7.5"/>', 'as-i as-ck'),
+      globe: AS_SVG('<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c-4 5-4 13 0 18M12 3c4 5 4 13 0 18"/>'),
+      eye: AS_SVG('<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'),
+      bubble: AS_SVG('<path d="M4 4h16v12H9l-5 4z"/>'),
+      pen: AS_SVG('<path d="M4 20h4L19 9l-4-4L4 16z"/>'),
+      side: AS_SVG('<path d="M8 5v14l9-7z" class="as-fill"/>', 'as-i as-tri'),
+      back: AS_SVG('<path d="M15 6v12l-7-6z" class="as-fill"/>', 'as-i as-back'),
+      spin: AS_SVG('<path d="M12 3a9 9 0 1 0 9 9"/>', 'as-i as-spin'),
+      x: AS_SVG('<path d="M6 6l12 12M18 6L6 18"/>'),
+    };
+    const AS_STEP_ICON = {
+      get: '<path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/>',
+      pdf: '<path d="M5 3h9l5 5v13H5z"/><path d="M14 3v5h5"/>',
+      up: '<path d="M12 21V9"/><path d="M7 14l5-5 5 5"/><path d="M5 3h14"/>',
+      link: '<path d="M10 14l4-4"/><path d="M8.5 11.5L6 14a3.5 3.5 0 0 0 5 5l2.5-2.5M15.5 12.5L18 10a3.5 3.5 0 0 0-5-5l-2.5 2.5"/>',
+      files: '<path d="M5 3h9l5 5v13H5z"/><path d="M9 13l2 2 4-4"/>',
+      school: '<path d="M3 10l9-5 9 5-9 5z"/><path d="M7 12v4c0 1.5 2.2 3 5 3s5-1.5 5-3v-4"/>',
+      check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+      spin: '<path d="M12 3a9 9 0 1 0 9 9"/>',
+      fail: '<path d="M12 7v6M12 16v1.5"/><circle cx="12" cy="12" r="9"/>',
+    };
+    const asStepIcon = k => `<svg class="as-i${k === 'spin' ? ' as-spin' : ''}" viewBox="0 0 24 24" aria-hidden="true">${AS_STEP_ICON[k]}</svg>`;
+    const CANVA_LINK_OK = u => /^https:\/\/(www\.)?canva\.com\/design\/[A-Za-z0-9_-]+\/[A-Za-z0-9_\-\/?=&.%]*$/.test(String(u || '').trim());
+    const asMb = n => (n < 1048576 ? `${Math.max(1, Math.round(n / 1024))} KB` : `${(n / 1048576).toFixed(1)} MB`);
+    const andList = a => (a.length < 2 ? a.join('') : a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1]);
+
     function sourceState(app) {
       if (INCOGNITO) return 'off';
       if (app === 'canva') return !canvaInfo || !canvaInfo.configured ? 'soon' : canvaInfo.connected ? 'ready' : 'connect';
@@ -2911,35 +3091,20 @@
       return cloudCfg.microsoft && typeof C.oneDrivePick === 'function' && typeof C.oneDriveDownload === 'function' ? 'ready' : 'soon';
     }
     function uploadSourcesRowHTML() {
-      const off = ['canva', 'gdrive', 'onedrive'].filter(a => ['soon', 'off'].includes(sourceState(a)));
-      const btn = (app, inner) => `<button class="upload-source" type="button" data-source="${app}"${off.includes(app) ? ' disabled' : ''}>${inner}</button>`;
-      const soon = INCOGNITO ? 'Off in Incognito' : off.length === 3 ? 'Coming soon' : off.length ? `${off.map(a => SOURCE_NAME[a]).join(' and ')} coming soon` : '';
-      return `<div class="upload-sources" id="uploadSources" role="group" aria-label="Add from another app">
-          <span class="upload-sources-label">Or add from</span>
-          ${btn('canva', '<span class="canva-mark" aria-hidden="true"></span>Canva')}
-          ${btn('gdrive', 'Google Drive')}
-          ${btn('onedrive', 'OneDrive')}
-          ${soon ? `<span class="soon">${soon}</span>` : ''}
+      const live = SUBMIT_LIVE;
+      const off = ['canva', 'gdrive', 'onedrive'].filter(a => !live || ['soon', 'off'].includes(sourceState(a)));
+      const btn = app => `<button class="as-chip" type="button" data-source="${app}"${off.includes(app) ? ' disabled' : ''}>${SOURCE_MARK[app]}${SOURCE_NAME[app]}</button>`;
+      const soon = live && INCOGNITO ? 'Off in Incognito' : off.length === 3 ? 'Coming soon' : off.length ? `${off.map(a => SOURCE_NAME[a]).join(' and ')} coming soon` : '';
+      return `<div class="as-from" id="uploadSources" role="group" aria-label="Add from another app">
+          <span class="as-from-label">Or add from</span>
+          ${btn('canva')}${btn('gdrive')}${btn('onedrive')}
+          ${soon ? `<span class="as-soon">${soon}</span>` : ''}
         </div>`;
-    }
-    function uploadSourcesHTML() {
-      if (!SUBMIT_LIVE) return `
-        <div class="upload-sources" role="group" aria-label="Add from another app (coming soon)">
-          <span class="upload-sources-label">Or add from</span>
-          <button class="upload-source" type="button" disabled><span class="canva-mark" aria-hidden="true"></span>Canva</button>
-          <button class="upload-source" type="button" disabled>Google Drive</button>
-          <button class="upload-source" type="button" disabled>OneDrive</button>
-          <span class="soon">Coming soon</span>
-        </div>`;
-      return `
-        ${uploadSourcesRowHTML()}
-        <p class="upload-source-note" id="uploadSourceNote" role="status" hidden></p>
-        <div class="canva-pick" id="canvaPick" hidden></div>`;
     }
     /** Redraws the row in an open Add Submission when Canva / the cloud setup becomes known. */
     function refreshUploadSources() {
       const row = document.getElementById('uploadSources');
-      if (!row || !SUBMIT_LIVE || modalBox.getAttribute('aria-busy') === 'true') return;
+      if (!row || modalBox.dataset.lock === '1') return;
       const tmp = document.createElement('div');
       tmp.innerHTML = uploadSourcesRowHTML();
       row.replaceWith(tmp.firstElementChild);
@@ -2959,181 +3124,662 @@
       return ext || (f.src === 'gdrive' ? 'pdf' : '');
     }
 
+    /*
+     * The request log: what the page sends while it turns work in, with ids,
+     * tokens and checksums hidden (Martin, 2026-10-12: screenshots shouldn't
+     * leak anything). Each line is HTML, already escaped.
+     */
+    const HIDE = '••••';
+    function hideIds(text) {
+      return String(text)
+        .replace(/\/(submit\/upload|canva\/designs|canva\/exports|drive\/v3\/files|drive\/items)\/[^/?#\s]+/g, (m, k) => `/${k}/${HIDE}`)
+        .replace(/([?&](?:section|assignment|file|document|design|parent|continuation)=)[^&#\s]+/g, (m, k) => k + HIDE)
+        .replace(/\b[0-9a-f]{32}\b/gi, HIDE)
+        .replace(/\b\d{5,}\b/g, HIDE)
+        .replace(/(^|[/=!])[A-Za-z0-9_-]*\d[A-Za-z0-9_-]*[A-Za-z][A-Za-z0-9_-]*(?=$|[/?&#!])/g, (m, pre) => (m.length - pre.length >= 12 ? pre + HIDE : m))
+        .replace(/(^|[/=!])[A-Za-z0-9_-]*[A-Za-z][A-Za-z0-9_-]*\d[A-Za-z0-9_-]*(?=$|[/?&#!])/g, (m, pre) => (m.length - pre.length >= 12 ? pre + HIDE : m));
+    }
+    // Share links too: anyone with one can open the file.
+    const HIDE_KEYS = /^(section|assignment|md5|upload|token|fileId|fileIds|id|job|design|designId|access_token|refresh_token|uid|owner|webUrl|url|webViewLink)$/i;
+    function hideBody(v, depth) {
+      if (depth > 3) return '…';
+      if (Array.isArray(v)) return v.slice(0, 20).map(x => (typeof x === 'object' && x ? hideBody(x, depth + 1) : HIDE));
+      if (!v || typeof v !== 'object') return typeof v === 'string' ? hideIds(v.length > 80 ? v.slice(0, 80) + '…' : v) : v;
+      const out = {};
+      for (const k of Object.keys(v).slice(0, 12)) {
+        if (HIDE_KEYS.test(k)) out[k] = Array.isArray(v[k]) ? v[k].map(() => HIDE) : HIDE;
+        else if (k === 'revision' && v[k] && typeof v[k] === 'object') out[k] = '{…}';
+        else if (k === 'body' && typeof v[k] === 'string') out[k] = v[k].length > 60 ? v[k].slice(0, 60) + '…' : v[k];
+        else out[k] = hideBody(v[k], depth + 1);
+      }
+      return out;
+    }
+    function logLine(e) {
+      if (!e || typeof e !== 'object') return '';
+      if (e.kind === 'note') return `<span class="as-log-note"># ${escapeHtml(e.text || '')}</span>`;
+      if (e.kind === 'req') {
+        const url = hideIds(String(e.url || '').replace(/^https?:\/\//, ''));
+        const body = e.body && typeof e.body === 'object' ? JSON.stringify(hideBody(e.body, 0)) : '';
+        const size = typeof e.size === 'number' ? `  <span class="as-log-b">${escapeHtml(asMb(e.size))}</span>` : '';
+        return `<span class="as-log-m">${escapeHtml(String(e.method || 'GET'))}</span> <span class="as-log-u">${escapeHtml(url)}</span>${size}${body ? `\n  <span class="as-log-b">${escapeHtml(body.length > 220 ? body.slice(0, 220) + '…' : body)}</span>` : ''}`;
+      }
+      if (e.kind === 'res') {
+        const ok = e.status >= 200 && e.status < 400;
+        let rest = e.note ? String(e.note) : '';
+        if (!rest && e.body && typeof e.body === 'object') rest = JSON.stringify(hideBody(e.body, 0));
+        if (!rest && typeof e.size === 'number' && e.size) rest = asMb(e.size);
+        return `  <span class="${ok ? 'as-log-ok' : 'as-log-bad'}">← ${e.status || '…'}</span>${rest ? ` <span class="as-log-b">${escapeHtml(rest.length > 200 ? rest.slice(0, 200) + '…' : rest)}</span>` : ''}`;
+      }
+      return '';
+    }
+
     function openAddSubmissionModal(opts) {
       opts = opts || {};
-      let activeTab = 'upload';
-      // Every file picked on the Upload tab so far this modal session
-      // (2026-09-04, per Martin's multi-file request) -- lives here, not
-      // just on the <input>, because re-opening the OS file dialog
-      // REPLACES input.files with just that dialog's selection rather
-      // than adding to it; this array is what actually accumulates
-      // across multiple picks (see bindUploadTab's `change` handler).
-      // Also survives switching to the Create tab and back, since it's
-      // closed over here rather than living in the (regenerated) DOM.
-      let pickedFiles = [];
-      // Each pick is { name, src }: 'device' with its File, or, signed in
-      // (2026-10-06), 'course' | 'gdrive' | 'onedrive' | 'canva' with an id,
-      // fetched as a Blob only once Submit is clicked.
-      (opts.files || []).forEach(f => pickedFiles.push({ name: f.name, src: 'device', file: f, size: f.size }));
-      if (opts.attach) pickedFiles.push(pickFromAttach(opts.attach));
-      let renderPicked = () => {};
-      let running = false;
-
-      openModal(`
-        <h3>Add Submission</h3>
-        <div class="upload-tabs" role="tablist">
-          <button class="upload-tab active" type="button" role="tab" aria-selected="true" data-tab="upload">Upload</button>
-          <button class="upload-tab" type="button" role="tab" aria-selected="false" data-tab="create">Create</button>
-        </div>
-        <div class="upload-tab-panel" id="uploadTabPanel">${UPLOAD_TAB_PANEL.upload()}</div>
-        ${SUBMIT_LIVE
-          // Signed in: Schoology's turn-in has no comment field, so there's no box that would go nowhere.
-          ? '<p class="submit-error" id="submitError" role="alert" hidden></p>'
-          : `<label class="modal-field-label" for="submissionComment">Add a comment (optional)</label>
-        <textarea class="modal-textarea" id="submissionComment" placeholder="Add a comment (optional)"></textarea>`}
-        <div class="modal-actions">
-          <button class="modal-btn secondary" type="button" id="modalCancelBtn">Cancel</button>
-          <button class="modal-btn primary" type="button" id="modalSubmitBtn">Submit</button>
-        </div>`);
-      // Wider than the default .modal-box (2026-09-04, per Martin: "make
-      // the assignment submission popup bigger") -- see the modal-box-lg
-      // rule and closeModal(), which strips this back off so a later,
-      // smaller popup (file info, submission preview) isn't left oversized.
-      modalBox.classList.add('modal-box-lg');
-
-      const panelEl = document.getElementById('uploadTabPanel');
-      const commentEl = document.getElementById('submissionComment');
-
-      function bindUploadTab() {
-        if (activeTab !== 'upload') return;
-        const chooseBtn = document.getElementById('chooseFileBtn');
-        const fileInput = document.getElementById('submissionFileInput');
-        const nameEl = document.getElementById('chooseFileName');
-        const pickerEl = document.getElementById('uploadPicker');
-        const noteEl = document.getElementById('uploadRequiredNote');
-        const listEl = document.getElementById('uploadPickedList');
-
-        function renderPickedList() {
-          if (!pickedFiles.length) {
-            listEl.innerHTML = '';
-            nameEl.textContent = 'No files chosen';
-            nameEl.classList.add('empty');
-            return;
-          }
-          nameEl.textContent = pickedFiles.length === 1 ? pickedFiles[0].name : `${pickedFiles.length} files chosen`;
-          nameEl.classList.remove('empty');
-          listEl.innerHTML = pickedFiles.map((f, i) => {
-            const ext = SUBMIT_LIVE ? pickExt(f) : (f.name.split('.').pop() || '').toLowerCase();
-            const color = EXT_COLOR[ext] || '#83849a';
-            const name = `<span class="upload-picked-name">${escapeHtml(f.name)}</span>`;
-            // Signed in: where it's from (cloud files), and a line for its progress.
-            const tooBig = SUBMIT_LIVE && f.size > SUBMIT_MAX_BYTES;
-            const live = SUBMIT_LIVE ? `<span class="upload-picked-text">${name}${PICK_SOURCE[f.src] ? `<span class="upload-picked-src">${PICK_SOURCE[f.src]}</span>` : ''}<span class="upload-picked-progress"${tooBig ? '' : ' hidden'}><span class="upload-progress-text">${tooBig ? 'Too big to turn in (95 MB max)' : ''}</span><span class="upload-bar" aria-hidden="true"><i></i></span></span></span>` : '';
-            return `
-              <div class="upload-picked-row${tooBig ? ' failed' : ''}" data-pick="${i}">
-                ${fileIcon(f.src === 'canva' ? 'canva' : ext, `<span class="material-badge" style="background:${escapeHtml(color)}">${escapeHtml(SUBMIT_LIVE ? (ext || '?').toUpperCase().slice(0, 4) : (ext || '?').toUpperCase())}</span>`)}
-                ${SUBMIT_LIVE ? live : name}
-                <button class="material-icon-btn" type="button" data-index="${i}" aria-label="Remove ${escapeHtml(f.name)}">${REMOVE_ICON}</button>
-              </div>`;
-          }).join('');
-        }
-        renderPicked = renderPickedList;
-        renderPickedList(); // re-bound after a Create->Upload tab switch, with files already picked this session
-
-        chooseBtn.addEventListener('click', () => fileInput.click());
-        fileInput.addEventListener('change', () => {
-          const newFiles = Array.from(fileInput.files);
-          fileInput.value = ''; // so picking the same file(s) again still fires "change"
-          if (!newFiles.length) return;
-          pickedFiles.push(...newFiles.map(f => ({ name: f.name, src: 'device', file: f, size: f.size })));
-          renderPickedList();
-          // Picking file(s) clears a validation error from a previous
-          // failed Submit attempt (see modalSubmitBtn's click handler).
-          pickerEl.classList.remove('error');
-          noteEl.hidden = true;
-        });
-        // Delegated (not per-row) since the list is rebuilt on every add/remove.
-        listEl.addEventListener('click', e => {
-          const btn = e.target.closest('.material-icon-btn[data-index]');
-          if (!btn || running) return;
-          pickedFiles.splice(Number(btn.dataset.index), 1);
-          renderPickedList();
-        });
-      }
-
-      // Wires up the Create tab's rich-text toolbar (2026-08-30). Kept
-      // deliberately simple — document.execCommand is deprecated but still
-      // broadly supported, and this is a front-end mockup with no real
-      // save-as-HTML step, so a heavier editor library isn't warranted.
-      function bindCreateTab() {
-        if (activeTab !== 'create') return;
-        const editor = document.getElementById('submissionAnswerText');
-        const blockSelect = document.getElementById('rteBlockSelect');
-        const toolbar = editor.previousElementSibling;
-        const cmdBtns = toolbar.querySelectorAll('.rte-btn[data-cmd]');
-        function updateToolbarState() {
-          cmdBtns.forEach(btn => {
-            let active = false;
-            try { active = document.queryCommandState(btn.dataset.cmd); } catch (e) {}
-            btn.classList.toggle('active', active);
-          });
-          try {
-            const block = (document.queryCommandValue('formatBlock') || '').toLowerCase();
-            blockSelect.value = ['h1', 'h2', 'h3'].includes(block) ? block : 'p';
-          } catch (e) {}
-        }
-        cmdBtns.forEach(btn => {
-          btn.addEventListener('click', () => {
-            editor.focus();
-            const cmd = btn.dataset.cmd;
-            if (cmd === 'createLink') {
-              const url = window.prompt('Link URL:', 'https://');
-              if (url) document.execCommand('createLink', false, url);
-            } else {
-              document.execCommand(cmd, false, null);
-            }
-            updateToolbarState();
-          });
-        });
-        blockSelect.addEventListener('change', () => {
-          editor.focus();
-          document.execCommand('formatBlock', false, blockSelect.value);
-          updateToolbarState();
-        });
-        editor.addEventListener('keyup', updateToolbarState);
-        editor.addEventListener('mouseup', updateToolbarState);
-        editor.addEventListener('focus', updateToolbarState);
-      }
-
-      function bindActiveTab() {
-        bindUploadTab();
-        bindCreateTab();
-      }
-      bindActiveTab();
-
-      // ---------- Signed in with Schoology (2026-10-06) ----------
       const sec = String(item.courseId), asg = String(item.id);
-      function sourceNote(html) {
-        const note = document.getElementById('uploadSourceNote');
-        if (note) { note.innerHTML = html; note.hidden = !html; }
-      }
-      function clearRequired() {
-        const picker = document.getElementById('uploadPicker'), req = document.getElementById('uploadRequiredNote');
-        if (picker) picker.classList.remove('error');
-        if (req) req.hidden = true;
-      }
-      /** Adds a pick unless that same file is already in the list. */
+      // Each pick: { key, src, name, size?, file? (device), id, designId?, title?, kind?, parent?, course?,
+      //   mode: 'copy' | 'link', role: 'reader' | 'commenter', url (Canva link), menu, access,
+      //   up: { state: 'waiting' | 'hashing' | 'uploading' | 'done' | 'failed', frac, fileId, at, err } (device only),
+      //   fileId (once uploaded at turn-in), status (its line while turning in) }
+      const st = { picks: [], phase: null, write: false, wph: null, html: '', log: [], boxH: 0, prog: null, wprog: null, err: null, xBack: false, menuKey: null };
+      let seq = 0;
+      const uploads = { ctl: null, running: false };
+      const preview = !SUBMIT_LIVE;
+      const C = () => window.AveragesCloud;
+
       function addPick(f) {
-        if (f.src !== 'device' && pickedFiles.some(x => x.src === f.src && x.id === f.id)) return false;
-        pickedFiles.push(f);
-        renderPicked();
-        clearRequired();
+        if (f.src !== 'device' && st.picks.some(x => x.src === f.src && x.id === f.id)) return false;
+        const pick = Object.assign({ key: ++seq, mode: 'copy', role: 'reader', url: '', menu: false, access: false }, f);
+        if (pick.src === 'device') pick.up = { state: pick.size > SUBMIT_MAX_BYTES ? 'failed' : pick.size ? 'waiting' : 'failed', frac: 0, fileId: '', at: 0, err: pick.size > SUBMIT_MAX_BYTES ? { code: 'file_too_large' } : pick.size ? null : { code: 'empty_file' } };
+        st.picks.push(pick);
         return true;
       }
-      // Add from Canva: this assignment's Canva drafts, then the student's designs (GET /canva/designs, as on Files).
+      (opts.files || []).forEach(f => addPick({ src: 'device', name: f.name, file: f, size: f.size }));
+      if (opts.attach) addPick(pickFromAttach(opts.attach));
+
+      const canShareAs = p => {
+        if (p.src === 'gdrive' || p.src === 'canva') return true;
+        if (p.src !== 'onedrive') return false;
+        const c = C();
+        return !!(c && typeof c.oneDriveCanShare === 'function' && c.oneDriveCanShare() !== 'off');
+      };
+      const uploading = () => st.picks.some(p => p.up && (p.up.state === 'waiting' || p.up.state === 'hashing' || p.up.state === 'uploading'));
+      const linkNeeds = p => {
+        if (p.mode !== 'link') return '';
+        if (p.src === 'canva' && !CANVA_LINK_OK(p.url)) return 'canva_url';
+        if (p.src === 'onedrive' && !preview && C() && typeof C().oneDriveCanShare === 'function' && C().oneDriveCanShare() === 'ask') return 'onedrive_allow';
+        return '';
+      };
+      const ready = () => st.picks.length > 0 && !uploading() && !st.picks.some(p => (p.up && p.up.state === 'failed') || linkNeeds(p));
+      const anyLink = () => st.picks.some(p => p.mode === 'link');
+      const dueText = () => (item.due ? (currentStatus === 'overdue' ? `Was due ${escapeHtml(item.due)} (late)` : `Due ${escapeHtml(item.due)}`) : '');
+
+      // ---------- drawing ----------
+      function headHTML(busy) {
+        const sub = [`<b>${escapeHtml(item.title)}</b>`, escapeHtml(course.name)];
+        const due = dueText();
+        return `<div class="as-head">
+            <div class="as-head-text"><h3>Add Submission</h3><p class="as-sub">${sub.join(' · ')}${due ? ` · <span class="${currentStatus === 'overdue' ? 'as-late' : ''}">${due}</span>` : ''}</p></div>
+            ${busy
+              ? `<button class="as-x busy" type="button" disabled aria-label="Turning in, please wait">${AS_I.spin}</button>`
+              : `<button class="as-x${st.xBack ? ' back' : ''}" type="button" data-as-close aria-label="Close">${AS_I.x}</button>`}
+          </div>`;
+      }
+      function upTitle() {
+        const left = st.picks.filter(p => p.up && p.up.state !== 'done' && p.up.state !== 'failed').length;
+        return `Uploading ${left} file${left === 1 ? '' : 's'}`;
+      }
+      function upSub() {
+        const batch = st.picks.filter(p => p.up && p.up.batchOpen);
+        const total = batch.reduce((a, p) => a + p.size, 0), got = batch.reduce((a, p) => a + p.size * (p.up.state === 'done' ? 1 : p.up.frac), 0);
+        return `${asMb(got)} of ${asMb(total)}`;
+      }
+      function dropHTML() {
+        if (st.phase) return `<div class="as-drop turning" id="asDrop" style="height:${st.boxH || 240}px">${progHTML()}<pre class="as-log" id="asLog" aria-label="What’s being sent">${st.log.map((l, i, a) => `<span class="as-log-ln${i === a.length - 1 && st.phase === 'turning' ? ' cur' : ''}">${l}</span>`).join('')}</pre></div>`;
+        const flying = uploading();
+        return `<div class="as-drop${flying ? ' sending' : ''}" id="asDrop" data-as-drop>
+            <span class="as-big">${AS_I.up}</span>
+            <strong id="asDropTitle">${flying ? upTitle() : 'Drop files here'}</strong>
+            <span class="as-drop-sub" id="asDropSub">${flying ? upSub() : 'PDF, Word, PowerPoint, Excel, images. Up to 95 MB each.'}</span>
+            <button class="as-btn" type="button" id="chooseFileBtn">Choose files</button>
+            <input type="file" id="submissionFileInput" multiple hidden>
+          </div>`;
+      }
+      function metaFor(p) {
+        if (st.phase === 'done') {
+          if (p.mode === 'link') return `Shared as a link · Can ${p.role === 'commenter' ? 'comment' : 'view'}`;
+          return `Sent a copy${p.sentSize ? ' · ' + asMb(p.sentSize) : p.size ? ' · ' + asMb(p.size) : ''}`;
+        }
+        if (p.src === 'device') return `This device${p.size ? ' · ' + asMb(p.size) : ''}${p.up && p.up.state === 'done' ? ' · Uploaded' : ''}`;
+        if (p.src === 'course') return 'Course files';
+        if (p.mode === 'link') return `${SOURCE_NAME[p.src]} · live file, shared as a link`;
+        return `${SOURCE_NAME[p.src]}${p.src === 'canva' ? ' · turned in as a PDF' : p.size ? ' · ' + asMb(p.size) : ''}`;
+      }
+      function upLineHTML(p) {
+        if (!p.up || st.phase === 'done') return '';
+        // Known before averages-submit.js has loaded (it's checked when the file is added).
+        const early = { file_too_large: 'This file is too big to turn in. Files can be up to 95 MB.', empty_file: 'This file is empty. Pick another one.' };
+        if (p.up.state === 'failed') return `<div class="as-stat bad">${escapeHtml(early[p.up.err && p.up.err.code] || submitMessage(p.up.err || { code: 'failed' }))}${p.up.err && p.up.err.code !== 'file_too_large' && p.up.err.code !== 'empty_file' ? ` <button class="as-linkbtn" type="button" data-as-retry-up="${p.key}">Try again</button>` : ''}</div>`;
+        if (p.up.state === 'done') return '';
+        const pct = Math.round((p.up.frac || 0) * 100);
+        const text = p.up.state === 'waiting' ? 'Waiting to upload' : p.up.state === 'hashing' ? `Getting ready ${pct}%` : `Uploading · ${asMb(p.size * p.up.frac)} of ${asMb(p.size)}`;
+        return `<div class="as-fprog"><i style="width:${p.up.state === 'uploading' ? pct : 0}%"></i></div><div class="as-stat" data-as-upstat>${text}</div>`;
+      }
+      const optHTML = (kind, val, on, icon, title, sub, key, off) => `<button class="as-opt" type="button" role="${kind === 'mode' ? 'menuitemradio' : 'radio'}" aria-checked="${on}" data-as-opt="${kind}" data-val="${val}" data-key="${key}"${off ? ' disabled' : ''}>${AS_I.ck}${AS_I[icon]}<span><b>${title}</b><small>${sub}</small></span></button>`;
+      function rowHTML(p) {
+        const ext = pickExt(p);
+        const icon = fileIcon(p.src === 'canva' ? 'canva' : ext, `<span class="material-badge" style="background:${escapeHtml(EXT_COLOR[ext] || '#83849a')}">${escapeHtml((ext || '?').toUpperCase().slice(0, 4))}</span>`, 40);
+        const locked = !!st.phase;
+        const share = !locked && canShareAs(p);
+        let pill = '', below = '', menu = '';
+        if (share) {
+          const isLink = p.mode === 'link';
+          pill = `<button class="as-pill" type="button" data-as-pick="${p.key}" aria-haspopup="menu" aria-expanded="${p.menu}" aria-label="${isLink ? 'Share as a Link' : 'Send as a Copy'}: change"><span class="t">${isLink ? AS_I.link : AS_I.copy}<span><span class="long">${isLink ? 'Share as a ' : 'Send as a '}</span>${isLink ? 'Link' : 'Copy'}</span></span>${AS_I.ud}</button>`;
+          if (isLink) {
+            if (p.src === 'canva') {
+              const v = p.url ? (CANVA_LINK_OK(p.url) ? '<small class="ok">Looks right</small>' : '<small class="bad">Not a Canva link</small>') : '<small>In Canva: Share, then Copy view link</small>';
+              below = `<p class="as-hint">${AS_I.globe}Canva can’t share for us yet, so paste the design’s view link.</p><div class="as-curl"><input type="url" inputmode="url" placeholder="https://www.canva.com/design/…/view" value="${escapeHtml(p.url)}" data-as-url="${p.key}" aria-label="Canva view link for ${escapeHtml(p.name)}">${v}</div>`;
+            } else if (p.src === 'onedrive') {
+              below = linkNeeds(p) === 'onedrive_allow'
+                ? `<p class="as-hint">${AS_I.globe}OneDrive needs one more permission to share links. You’ll come back to this page. <button class="as-linkbtn" type="button" data-as-allow="${p.key}">Allow</button></p>`
+                : `<p class="as-hint">${AS_I.globe}Anyone with the link can view.</p>`;
+            } else {
+              below = `<button class="as-hint as-hint-btn" type="button" data-as-access="${p.key}" aria-expanded="${p.access}">${AS_I.globe}Anyone with the link can ${p.role === 'commenter' ? 'comment' : 'view'}.${AS_I.side}</button>`;
+              if (p.access) below += `<div class="as-access" role="radiogroup" aria-label="People with the link can">
+                  ${optHTML('role', 'reader', p.role !== 'commenter', 'eye', 'Can view', 'Anyone with the link can look, nothing else.', p.key)}
+                  ${optHTML('role', 'commenter', p.role === 'commenter', 'bubble', 'Can comment', 'Your teacher can leave comments on it.', p.key)}
+                  ${optHTML('role', 'writer', false, 'pen', 'Can edit', 'Not offered: nobody else should change your work.', p.key, true)}
+                </div>`;
+            }
+          }
+          if (p.menu) {
+            const copyWhat = p.src === 'canva' ? 'Turn in a PDF of it as it is now.' : 'Turn in the file as it is now.';
+            const linkWhat = p.src === 'onedrive' ? 'Your teacher opens the live file with a view link.' : 'Your teacher opens the live file with a link.';
+            menu = `<div class="as-menu" role="menu">
+                ${optHTML('mode', 'link', p.mode === 'link', 'link', 'Share as a Link', linkWhat, p.key)}
+                ${optHTML('mode', 'copy', p.mode !== 'link', 'copy', 'Send as a Copy', copyWhat, p.key)}
+              </div>`;
+          }
+        }
+        const status = st.phase && p.status ? `<div class="as-stat${p.statusBad ? ' bad' : ''}">${escapeHtml(p.status)}</div>` : '';
+        return `<div class="as-row avfi-host${share ? ' cloud' : ''}${p.up && p.up.state === 'failed' ? ' failed' : ''}" data-pick="${p.key}">
+            ${icon}
+            <div class="as-row-text"><div class="as-name">${escapeHtml(p.name)}</div><div class="as-meta">${escapeHtml(metaFor(p))}</div>${upLineHTML(p)}${status}</div>
+            ${pill}
+            ${locked ? '' : `<button class="as-rm" type="button" data-as-rm="${p.key}" aria-label="Remove ${escapeHtml(p.name)}">${AS_I.x}</button>`}
+            <div class="as-below">${below}</div>
+            ${menu}
+          </div>`;
+      }
+      function turnInLabel() {
+        if (uploading()) return 'Uploading…';
+        const n = st.picks.length;
+        return n > 1 ? `Turn in ${n} ${anyLink() ? 'items' : 'files'}` : 'Turn in';
+      }
+      function footHTML() {
+        if (st.phase === 'done') return '<div class="as-foot"><span class="as-note">Your teacher sees it on Schoology</span><button class="as-btn primary" type="button" data-as-done>Done</button></div>';
+        if (st.phase === 'turning') return `<div class="as-foot"><span class="as-note">Your teacher sees it on Schoology</span><button class="as-btn" type="button" disabled title="Can’t cancel while it’s being turned in">Cancel</button><button class="as-btn primary" type="button" disabled>Turning in…</button></div>`;
+        if (st.phase === 'failed') return '<div class="as-foot"><button class="as-btn" type="button" data-as-edit>Change files</button><span class="as-note"></span><button class="as-btn" type="button" data-as-close>Cancel</button><button class="as-btn primary" type="button" data-as-send>Try again</button></div>';
+        const note = st.picks.length ? 'Your teacher sees it on Schoology' : 'Add at least one file';
+        return `<div class="as-foot"><span class="as-note">${note}</span><button class="as-btn" type="button" data-as-close id="modalCancelBtn">Cancel</button><button class="as-btn primary" type="button" data-as-send id="modalSubmitBtn"${ready() ? '' : ' disabled'}>${turnInLabel()}</button></div>`;
+      }
+      function filesHTML() {
+        const n = st.picks.length;
+        const list = n ? `<div class="as-list-h"><span>${st.phase === 'done' ? 'Turned in' : 'Turning in'} (${n})</span><span>${n > 1 && st.phase !== 'done' ? 'One turn-in, all together' : ''}</span></div><div class="as-list" id="uploadPickedList">${st.picks.map(rowHTML).join('')}</div>` : '';
+        const sources = st.phase ? '' : `${uploadSourcesRowHTML()}<p class="as-source-note" id="uploadSourceNote" role="status" hidden></p><div class="canva-pick" id="canvaPick" hidden></div>`;
+        const write = st.phase ? '' : '<p class="as-alt">No file? <button type="button" data-as-write="1">Write your answer instead</button></p>';
+        return `${headHTML(st.phase === 'turning')}${dropHTML()}${sources}${list}${write}${st.phase === 'failed' ? '' : ''}${footHTML()}`;
+      }
+
+      // Written answer: the rich-text box (2026-08-30) with its step bar in the footer.
+      function writeHTML() {
+        const busy = st.wph === 'turning', fin = st.wph === 'done', lock = st.wph === 'turning' || st.wph === 'done';
+        const dis = lock ? ' disabled' : '';
+        const toolbar = `<div class="rte-toolbar" role="toolbar" aria-label="Text formatting">
+            <select class="rte-select" id="rteBlockSelect" aria-label="Text style"${dis}>
+              <option value="p">Normal text</option><option value="h1">Heading 1</option><option value="h2">Heading 2</option><option value="h3">Heading 3</option>
+            </select>
+            <span class="rte-divider" aria-hidden="true"></span>
+            <button class="rte-btn" type="button" data-cmd="bold" aria-label="Bold" title="Bold"${dis}><b>B</b></button>
+            <button class="rte-btn" type="button" data-cmd="italic" aria-label="Italic" title="Italic"${dis}><i>I</i></button>
+            <button class="rte-btn" type="button" data-cmd="underline" aria-label="Underline" title="Underline"${dis}><u>U</u></button>
+            <span class="rte-divider" aria-hidden="true"></span>
+            <button class="rte-btn" type="button" data-cmd="insertUnorderedList" aria-label="Bulleted list" title="Bulleted list"${dis}><svg viewBox="0 0 24 24" aria-hidden="true"><line x1="4" y1="6" x2="4.01" y2="6"/><line x1="4" y1="12" x2="4.01" y2="12"/><line x1="4" y1="18" x2="4.01" y2="18"/><path d="M9 6h11M9 12h11M9 18h11"/></svg></button>
+            <button class="rte-btn" type="button" data-cmd="insertOrderedList" aria-label="Numbered list" title="Numbered list"${dis}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><text x="1" y="8" font-size="7">1</text><text x="1" y="14" font-size="7">2</text><text x="1" y="20" font-size="7">3</text></svg></button>
+            <span class="rte-divider" aria-hidden="true"></span>
+            <button class="rte-btn" type="button" data-cmd="createLink" aria-label="Insert link" title="Insert link"${dis}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 15l6-6"/><path d="M10 6l1-1a4 4 0 0 1 6 6l-1 1"/><path d="M14 18l-1 1a4 4 0 0 1-6-6l1-1"/></svg></button>
+          </div>`;
+        const editor = `<div class="modal-textarea answer-textarea rte-editor as-editor${lock ? ' locked' : ''}" id="submissionAnswerText" contenteditable="${lock ? 'false' : 'true'}" role="textbox" aria-multiline="true" aria-label="Your answer" aria-disabled="${lock}" data-placeholder="Write your answer here…">${st.html}</div>`;
+        const back = fin ? '' : `<button class="as-btn as-back" type="button" data-as-write="0"${busy ? ' disabled' : ''}>${AS_I.back}Back</button>`;
+        const mid = st.wph ? `<div class="as-wbar">${wprogHTML()}</div>` : '<span class="as-note as-note-right">Turned in on Schoology as a written answer</span>';
+        const right = fin ? '<button class="as-btn primary" type="button" data-as-done>Done</button>'
+          : `<button class="as-btn primary" type="button" data-as-wsend id="modalSubmitBtn"${busy || !hasText() ? ' disabled' : ''}>${busy ? 'Turning in…' : st.wph === 'failed' ? 'Try again' : 'Turn in'}</button>`;
+        return `${headHTML(busy)}${toolbar}${editor}<div class="as-foot${st.wph ? ' as-wfoot' : ''}">${back}${mid}${right}</div>`;
+      }
+      const textOf = html => { const d = document.createElement('div'); d.innerHTML = html; return (d.textContent || '').replace(/ /g, ' ').trim(); };
+      const hasText = () => !!textOf(st.html);
+
+      function render(focusSel) {
+        modalBox.innerHTML = st.write ? writeHTML() : filesHTML();
+        modalBox.dataset.lock = st.phase === 'turning' || st.wph === 'turning' ? '1' : '';
+        if (st.write) bindEditor();
+        else bindFiles();
+        const log = document.getElementById('asLog');
+        if (log) log.scrollTop = log.scrollHeight;
+        if (focusSel) { const el = modalBox.querySelector(focusSel); if (el) el.focus({ preventScroll: true }); }
+        st.xBack = false;
+      }
+
+      // ---------- step bars ----------
+      function segHTML(stp, state) {
+        const ic = state.includes('fail') ? 'fail' : state.includes('done') ? 'check' : state === 'now' ? 'spin' : stp.icon;
+        const fill = state === 'now' && stp.mb ? `<i class="as-fill-bar" data-as-fill style="width:${Math.round((stp.frac || 0) * 100)}%"></i>` : `<i class="as-fill-bar${state === 'now' ? ' ind' : ''}"></i>`;
+        return `<div class="as-seg ${state}" style="flex:${Math.max(stp.ms, 900)} 1 0" title="${escapeHtml(stp.label)}"><span class="as-track">${fill}</span><span class="as-lab">${asStepIcon(ic)}<span>${escapeHtml(stp.short)}</span></span></div>`;
+      }
+      function barHTML(P, phase, doneRight) {
+        const fin = phase === 'done', failed = phase === 'failed';
+        const segs = P.steps.map((stp, i) => segHTML(stp, fin ? 'done ok' : failed && i === P.i ? 'fail' : i < P.i ? 'done' : i === P.i ? 'now' : 'next')).join('');
+        const cur = P.steps[Math.min(P.i, P.steps.length - 1)];
+        const head = fin ? `<span class="as-h">${asStepIcon('check')}Turned in</span>` : failed ? '<span class="as-h bad">Couldn’t turn it in</span>' : `<span class="as-h">${escapeHtml(cur.label)}…</span>`;
+        const right = fin ? doneRight : failed ? '' : cur.mb ? `${asMb(cur.frac * cur.mb)} of ${asMb(cur.mb)}` : `Step ${P.i + 1} of ${P.steps.length}`;
+        const err = failed && st.err ? `<p class="as-err" role="alert">${submitErrorHTML(st.err, false)}</p>` : '';
+        return `<div class="as-prog" role="status" aria-live="polite"><div class="as-prog-head">${head}<small data-as-right>${right}</small></div><div class="as-segs">${segs}</div>${err}</div>`;
+      }
+      const progHTML = () => (st.prog ? barHTML(st.prog, st.phase, `${st.picks.length} item${st.picks.length > 1 ? 's' : ''} sent to Schoology`) : '');
+      const wprogHTML = () => (st.wprog ? barHTML(st.wprog, st.wph, 'Written answer sent to Schoology') : '');
+      function paintProg() {
+        const drop = document.getElementById('asDrop');
+        if (!drop || !st.prog) return;
+        const old = drop.querySelector('.as-prog');
+        const tmp = document.createElement('div');
+        tmp.innerHTML = progHTML();
+        if (old) old.replaceWith(tmp.firstElementChild);
+      }
+      function paintFill() {
+        const P = st.prog, cur = P && P.steps[P.i];
+        if (!cur || !cur.mb) return;
+        const fill = modalBox.querySelector('[data-as-fill]');
+        if (fill) fill.style.width = Math.round(cur.frac * 100) + '%';
+        const r = modalBox.querySelector('[data-as-right]');
+        if (r) r.textContent = `${asMb(cur.frac * cur.mb)} of ${asMb(cur.mb)}`;
+      }
+      function setStatus(p, text, bad) {
+        p.status = text;
+        p.statusBad = !!bad;
+        const row = modalBox.querySelector(`.as-row[data-pick="${p.key}"]`);
+        if (!row) return;
+        let el = row.querySelector('.as-stat');
+        if (!el) { row.querySelector('.as-meta').insertAdjacentHTML('afterend', '<div class="as-stat"></div>'); el = row.querySelector('.as-stat'); }
+        el.textContent = text;
+        el.classList.toggle('bad', !!bad);
+      }
+      function addLog(e) {
+        const line = typeof e === 'string' ? e : logLine(e);
+        if (!line) return;
+        st.log.push(line);
+        if (st.log.length > 400) st.log.splice(0, st.log.length - 400);
+        const log = document.getElementById('asLog');
+        if (!log) return;
+        const last = log.querySelector('.cur');
+        if (last) last.classList.remove('cur');
+        log.insertAdjacentHTML('beforeend', `<span class="as-log-ln cur">${line}</span>`);
+        log.scrollTop = log.scrollHeight;
+      }
+      const note = text => addLog({ kind: 'note', text });
+
+      // ---------- uploading as soon as a file is added ----------
+      function paintUploads() {
+        const drop = document.getElementById('asDrop');
+        if (!drop || st.phase) return;
+        const flying = uploading();
+        const t = document.getElementById('asDropTitle'), s = document.getElementById('asDropSub');
+        if (flying) {
+          if (!drop.classList.contains('sending')) drop.classList.add('sending');
+          if (t) t.textContent = upTitle();
+          if (s) s.textContent = upSub();
+        }
+        st.picks.forEach(p => {
+          if (!p.up || (p.up.state !== 'hashing' && p.up.state !== 'uploading')) return;
+          const row = modalBox.querySelector(`.as-row[data-pick="${p.key}"]`);
+          if (!row) return;
+          const bar = row.querySelector('.as-fprog i'), stat = row.querySelector('[data-as-upstat]');
+          const pct = Math.round((p.up.frac || 0) * 100);
+          if (bar) bar.style.width = (p.up.state === 'uploading' ? pct : 0) + '%';
+          if (stat) stat.textContent = p.up.state === 'hashing' ? `Getting ready ${pct}%` : `Uploading · ${asMb(p.size * p.up.frac)} of ${asMb(p.size)}`;
+        });
+        const btn = modalBox.querySelector('[data-as-send]');
+        if (btn) { btn.disabled = !ready(); btn.textContent = turnInLabel(); }
+      }
+      /** The arrow finishes its trip and settles, then the list redraws without the bars. */
+      function landArrow() {
+        const arrow = modalBox.querySelector('#asDrop .as-upa');
+        const settle = () => { if (!st.phase && !st.write) render(); };
+        if (!arrow || !arrow.getAnimations || !arrow.getAnimations().length) { settle(); return; }
+        const s = document.getElementById('asDropSub');
+        if (s) s.textContent = 'All uploaded';
+        let done = false;
+        const finish = () => { if (done) return; done = true; arrow.style.animation = 'none'; settle(); };
+        arrow.addEventListener('animationiteration', finish, { once: true });
+        setTimeout(finish, 1200);   // in case the animation never reports (hidden tab)
+      }
+      async function runUploads() {
+        if (uploads.running) return;
+        uploads.running = true;
+        if (!uploads.ctl || uploads.ctl.signal.aborted) uploads.ctl = new AbortController();
+        const signal = uploads.ctl.signal;
+        activeSubmitAbort = () => uploads.ctl.abort();
+        let S = null;
+        if (!preview) {
+          try { S = await loadSubmitScript(); } catch { S = null; }
+        }
+        let p;
+        while (!signal.aborted && (p = st.picks.find(x => x.up && x.up.state === 'waiting'))) {
+          p.up.state = 'hashing';
+          p.up.frac = 0;
+          paintUploads();
+          // Its own stop switch: removing the file stops its upload.
+          const pc = new AbortController();
+          p.ctl = pc;
+          signal.addEventListener('abort', () => pc.abort(), { once: true });
+          try {
+            if (preview) {
+              p.up.state = 'uploading';
+              const ms = Math.max(1500, Math.min(6000, p.size / (1.5 * 1048576) * 1000));
+              const t0 = performance.now();
+              while (p.up.frac < 1 && !pc.signal.aborted) {
+                await new Promise(r => setTimeout(r, 60));
+                p.up.frac = Math.min(1, (performance.now() - t0) / ms);
+                paintUploads();
+              }
+              if (pc.signal.aborted) continue;
+              p.up.fileId = 'preview';
+            } else {
+              if (!S) throw { code: 'network' };
+              const r = await S.uploadFile({
+                section: sec, assignment: asg, blob: p.file, name: p.name, signal: pc.signal,
+                onProgress: x => { p.up.state = x.phase === 'hashing' ? 'hashing' : 'uploading'; p.up.frac = x.fraction || 0; paintUploads(); },
+              });
+              p.up.fileId = r.fileId;
+            }
+            if (!st.picks.includes(p)) continue;
+            p.up.state = 'done';
+            p.up.frac = 1;
+            p.up.at = Date.now();
+          } catch (e) {
+            if (signal.aborted) break;
+            if (!st.picks.includes(p)) continue;
+            p.up.state = 'failed';
+            p.up.err = e && typeof e === 'object' ? e : { code: String(e) };
+          }
+          if (!st.phase && !st.write) {
+            // Finished files drop their bar; the rest keep theirs.
+            const row = modalBox.querySelector(`.as-row[data-pick="${p.key}"]`);
+            if (row) { const tmp = document.createElement('div'); tmp.innerHTML = rowHTML(p); row.replaceWith(tmp.firstElementChild); }
+          }
+        }
+        uploads.running = false;
+        if (!uploading()) {
+          st.picks.forEach(x => { if (x.up) x.up.batchOpen = false; });
+          if (activeSubmitAbort && st.phase !== 'turning') activeSubmitAbort = null;
+          if (!signal.aborted) landArrow();
+        }
+      }
+      function addDeviceFiles(files) {
+        if (st.phase) return;
+        const flying = uploading();
+        let added = 0;
+        Array.from(files || []).forEach(f => {
+          if (addPick({ src: 'device', name: f.name, file: f, size: f.size })) {
+            added++;
+            const p = st.picks[st.picks.length - 1];
+            p.up.batchOpen = true;
+          }
+        });
+        if (!added) return;
+        if (!flying) st.picks.forEach(x => { if (x.up && x.up.state === 'done') x.up.batchOpen = false; });
+        render();
+        runUploads();
+      }
+
+      // ---------- Turn in ----------
+      const STEP_W = { pdf: 1600, get: 900, link: 900, send: 900, files: 400 };
+      function stepsFor(list) {
+        const canvaCopies = list.filter(p => p.src === 'canva' && p.mode !== 'link' && !p.fileId);
+        const getCopies = list.filter(p => (p.src === 'gdrive' || p.src === 'onedrive' || p.src === 'course') && p.mode !== 'link' && !p.fileId);
+        const links = list.filter(p => p.mode === 'link' && !p.fileId);
+        const reup = list.filter(p => p.src === 'device' && (!p.up.fileId || p.stale));
+        const steps = [];
+        if (canvaCopies.length) steps.push({ k: 'pdf', icon: 'pdf', short: 'Canva PDF', label: canvaCopies.length > 1 ? `Making ${canvaCopies.length} PDFs in Canva` : 'Making a PDF in Canva', items: canvaCopies, ms: STEP_W.pdf * canvaCopies.length });
+        if (getCopies.length) {
+          const apps = [...new Set(getCopies.map(p => (p.src === 'course' ? 'your class' : SOURCE_NAME[p.src])))];
+          const short = apps.length > 1 ? 'Get files' : getCopies[0].src === 'onedrive' ? 'OneDrive' : getCopies[0].src === 'course' ? 'Class' : 'Drive';
+          steps.push({ k: 'get', icon: 'get', short, label: `Getting ${getCopies.length > 1 ? getCopies.length + ' files' : 'it'} from ${andList(apps)}`, items: getCopies, ms: STEP_W.get * getCopies.length });
+        }
+        if (links.length) steps.push({ k: 'link', icon: 'link', short: links.length > 1 ? 'Links' : 'Link', label: links.length > 1 ? `Making ${links.length} share links` : links[0].src === 'canva' ? 'Checking your Canva link' : 'Making the view link', items: links, ms: STEP_W.link * links.length });
+        const toUpload = canvaCopies.concat(getCopies, links, reup);
+        if (toUpload.length) steps.push({ k: 'up', icon: 'up', short: 'Upload', label: 'Uploading', items: toUpload, mb: 0, frac: 0, ms: 1800 });
+        if (!steps.length) steps.push({ k: 'files', icon: 'files', short: 'Check', label: 'Checking your uploads', items: [], ms: STEP_W.files });
+        steps.push({ k: 'send', icon: 'school', short: 'Turn in', label: 'Turning in', items: [], ms: STEP_W.send });
+        return steps;
+      }
+      // Sign-in windows have to open inside the click, so tokens are asked for before anything is awaited.
+      function tokensForClick() {
+        const c = C(), tokens = {};
+        if (preview || !c) return tokens;
+        if (st.picks.some(p => p.src === 'gdrive' && !p.fileId)) tokens.gdrive = driveReadToken(c);
+        const od = st.picks.filter(p => p.src === 'onedrive' && !p.fileId);
+        if (od.some(p => p.mode === 'link')) tokens.onedriveWrite = c.oneDriveToken({ interactive: true, write: true });
+        if (od.some(p => p.mode !== 'link')) {
+          const needsRead = typeof c.oneDrivePicked !== 'function' || od.some(p => c.oneDrivePicked(p.id));
+          tokens.onedrive = needsRead ? oneDriveReadToken(c) : (typeof c.oneDriveToken === 'function' ? c.oneDriveToken({ interactive: true }) : Promise.reject({ code: 'not_configured' }));
+        }
+        Object.values(tokens).forEach(t => t.catch(() => {}));
+        return tokens;
+      }
+      const wait = ms => new Promise(r => setTimeout(r, ms));
+      async function turnIn() {
+        if (st.phase === 'turning' || (!ready() && st.phase !== 'failed')) return;
+        const tokens = tokensForClick();
+        const drop = document.getElementById('asDrop');
+        if (!st.phase) st.boxH = drop ? drop.offsetHeight : 240;
+        // Retrying after the turn-in call itself failed: Schoology may have let go of the uploads, so they go up again.
+        if (st.err && st.err.atSend) st.picks.forEach(p => { p.fileId = ''; if (p.up) p.stale = true; });
+        st.picks.forEach(p => { p.menu = false; p.access = false; p.status = ''; p.statusBad = false; });
+        // Uploaded long ago: Schoology may have let go of it. Up again.
+        st.picks.forEach(p => { if (p.up && p.up.at && Date.now() - p.up.at > 45 * 60 * 1000) p.stale = true; });
+        st.err = null;
+        st.prog = { steps: stepsFor(st.picks), i: 0 };
+        st.phase = 'turning';
+        render();
+        const ctl = new AbortController();
+        const signal = ctl.signal;
+        activeSubmitAbort = () => ctl.abort();
+        const P = st.prog;
+        let S = null;
+        try {
+          if (!preview) S = await loadSubmitScript();
+          const blobs = new Map();   // pick key -> { blob, name }
+          for (P.i = 0; P.i < P.steps.length; P.i++) {
+            const stp = P.steps[P.i];
+            paintProg();
+            if (stp.k === 'files') {
+              note('every file is already on Schoology');
+              await wait(350);
+            } else if (stp.k === 'pdf' || stp.k === 'get') {
+              for (const p of stp.items) {
+                try {
+                  if (preview) {
+                    setStatus(p, stp.k === 'pdf' ? 'Making a PDF…' : `Getting it from ${p.src === 'course' ? 'your class' : SOURCE_NAME[p.src]}…`);
+                    await wait(900);
+                    blobs.set(p.key, { blob: new Blob([new Uint8Array(Math.max(1, p.size || 200000))]), name: p.name });
+                  } else if (p.src === 'canva') {
+                    setStatus(p, 'Making a PDF…');
+                    blobs.set(p.key, await S.exportCanva(p.designId, { title: p.title, signal }));
+                  } else if (p.src === 'course') {
+                    setStatus(p, 'Getting it from your class…');
+                    const blob = await S.courseFile({ section: p.course, [p.kind === 'document' ? 'document' : 'assignment']: p.parent, fileId: p.id, name: p.name }, signal);
+                    blobs.set(p.key, { blob, name: p.name });
+                  } else {
+                    setStatus(p, `Getting it from ${SOURCE_NAME[p.src]}…`);
+                    const c = C();
+                    const download = c && (p.src === 'gdrive' ? c.googleDownload : c.oneDriveDownload);
+                    if (typeof download !== 'function') throw { code: 'not_configured' };
+                    const r = await download.call(c, await tokens[p.src], p.id);
+                    if (!r || !r.blob) throw { code: 'download_failed' };
+                    blobs.set(p.key, { blob: r.blob, name: String(r.name || p.name) });
+                  }
+                  setStatus(p, stp.k === 'pdf' ? 'PDF ready' : 'Got it');
+                } catch (e) {
+                  setStatus(p, submitMessage(e), true);
+                  throw e;
+                }
+                if (signal.aborted) throw { code: 'aborted' };
+              }
+            } else if (stp.k === 'link') {
+              for (const p of stp.items) {
+                try {
+                  let url;
+                  if (p.src === 'canva') {
+                    setStatus(p, 'Checking the link…');
+                    note('checking the pasted Canva link');
+                    if (!CANVA_LINK_OK(p.url)) throw { code: 'canva_link_needed' };
+                    url = p.url.trim();
+                    await wait(200);
+                  } else if (preview) {
+                    setStatus(p, 'Making the view link…');
+                    await wait(900);
+                    url = 'https://example.com/preview-link';
+                  } else if (p.src === 'gdrive') {
+                    setStatus(p, 'Making the view link…');
+                    url = (await C().googleShareLink(await tokens.gdrive, p.id, p.role === 'commenter' ? 'commenter' : 'reader')).url;
+                  } else {
+                    setStatus(p, 'Making the view link…');
+                    const r = await C().oneDriveShareLink(await tokens.onedriveWrite, p.id);
+                    url = r.url;
+                    if (r.scope === 'organization') note('your school only allows links for people in your school');
+                  }
+                  blobs.set(p.key, preview ? { blob: new Blob(['link']), name: p.name.replace(/\.[a-z0-9]{1,5}$/i, '') + ' (link).html' } : S.linkFile(p.title || p.name, url, SOURCE_NAME[p.src]));
+                  setStatus(p, `Link ready · Can ${p.role === 'commenter' ? 'comment' : 'view'}`);
+                } catch (e) {
+                  setStatus(p, submitMessage(e), true);
+                  throw e;
+                }
+                if (signal.aborted) throw { code: 'aborted' };
+              }
+            } else if (stp.k === 'up') {
+              const items = stp.items.map(p => ({ p, f: p.src === 'device' ? { blob: p.file, name: p.name } : blobs.get(p.key) }));
+              stp.mb = items.reduce((a, x) => a + (x.f ? x.f.blob.size : 0), 0) || 1;
+              stp.frac = 0;
+              paintProg();
+              let before = 0;
+              for (const { p, f } of items) {
+                if (!f) throw { code: 'failed' };
+                setStatus(p, 'Uploading…');
+                try {
+                  if (preview) {
+                    const t0 = performance.now(), ms = Math.max(600, f.blob.size / (2 * 1048576) * 1000);
+                    let fr = 0;
+                    while (fr < 1) { await wait(60); fr = Math.min(1, (performance.now() - t0) / ms); stp.frac = (before + fr * f.blob.size) / stp.mb; paintFill(); }
+                    p.fileId = 'preview';
+                  } else {
+                    const r = await S.uploadFile({ section: sec, assignment: asg, blob: f.blob, name: f.name, signal, onProgress: x => { if (x.phase === 'uploading') { stp.frac = (before + (x.fraction || 0) * f.blob.size) / stp.mb; paintFill(); } } });
+                    p.fileId = r.fileId;
+                  }
+                  if (p.src === 'device') { p.up.fileId = p.fileId; p.up.at = Date.now(); p.stale = false; }
+                  p.sentSize = f.blob.size;
+                } catch (e) {
+                  setStatus(p, submitMessage(e), true);
+                  throw e;
+                }
+                before += f.blob.size;
+                setStatus(p, 'Uploaded');
+              }
+            } else if (stp.k === 'send') {
+              const ids = st.picks.map(p => (p.src === 'device' ? p.up.fileId : p.fileId));
+              if (preview) {
+                note('preview: nothing is sent to Schoology');
+                await wait(900);
+                st.revision = null;
+              } else {
+                try {
+                  st.revision = (await S.turnInFiles({ section: sec, assignment: asg, fileIds: ids, signal })).revision;
+                } catch (e) {
+                  throw Object.assign(e && typeof e === 'object' ? e : { code: String(e) }, { atSend: true });
+                }
+              }
+              note('turned in');
+            }
+            if (signal.aborted) throw { code: 'aborted' };
+          }
+          activeSubmitAbort = null;
+          stopLogging();   // the history reload after this isn't part of the turn-in
+          st.phase = 'done';
+          st.xBack = true;
+          render('[data-as-done]');
+          if (preview) {
+            submissionHistory.push({ files: st.picks.map(p => ({ name: p.mode === 'link' ? p.name.replace(/\.[a-z0-9]{1,5}$/i, '') + ' (link).html' : p.name, ext: p.mode === 'link' ? 'html' : (pickExt(p) || 'pdf') })), timestamp: 'Just now' });
+            currentStatus = 'submitted';
+          } else afterTurnIn(st.revision);
+        } catch (e) {
+          if (signal.aborted || (e && e.code === 'aborted')) return;
+          activeSubmitAbort = null;
+          if (e && e.code === 'popup_closed') { st.phase = null; st.prog = null; render(); return; }
+          st.err = e && typeof e === 'object' ? e : { code: String(e) };
+          st.phase = 'failed';
+          note('stopped: nothing was turned in');
+          render();
+        }
+      }
+
+      // Written answer.
+      async function turnInText() {
+        if (st.wph === 'turning') return;
+        const editor = document.getElementById('submissionAnswerText');
+        if (editor) st.html = editor.innerHTML;
+        if (!hasText()) return;
+        st.wprog = { i: 0, steps: [
+          { k: 'files', icon: 'files', short: 'Check', label: 'Checking your answer', ms: 500 },
+          { k: 'send', icon: 'school', short: 'Turn in', label: 'Turning in', ms: 1100 },
+        ] };
+        st.wph = 'turning';
+        st.err = null;
+        render();
+        const ctl = new AbortController();
+        activeSubmitAbort = () => ctl.abort();
+        try {
+          st.wprog.i = 0;
+          if (new TextEncoder().encode(st.html).length > 100 * 1024) throw { code: 'text_too_large' };
+          await wait(350);
+          st.wprog.i = 1;
+          render();
+          let revision = null;
+          if (preview) await wait(900);
+          else revision = (await (await loadSubmitScript()).submitText({ section: sec, assignment: asg, html: st.html, signal: ctl.signal })).revision;
+          activeSubmitAbort = null;
+          stopLogging();
+          st.wph = 'done';
+          st.xBack = true;
+          render('[data-as-done]');
+          if (preview) {
+            submissionHistory.push({ files: [{ name: `${item.title.replace(/\s+/g, '_')}_Answer.txt`, ext: 'txt' }], timestamp: 'Just now' });
+            currentStatus = 'submitted';
+          } else afterTurnIn(revision);
+        } catch (e) {
+          if (ctl.signal.aborted || (e && e.code === 'aborted')) return;
+          activeSubmitAbort = null;
+          st.err = e && typeof e === 'object' ? e : { code: String(e) };
+          st.wph = 'failed';
+          render();
+        }
+      }
+
+      // ---------- Add from Canva / Google Drive / OneDrive ----------
+      function sourceNote(html) {
+        const el = document.getElementById('uploadSourceNote');
+        if (el) { el.innerHTML = html; el.hidden = !html; }
+      }
       let canvaPickItems = [], canvaPickNext = null;
       const httpsUrl = u => /^https:\/\//i.test(String(u || ''));
-      const canvaPickHead = `<div class="canva-pick-head"><span>Pick a design. It’s turned in as a PDF.</span><button class="material-icon-btn" type="button" data-canva-close aria-label="Close Canva designs">${REMOVE_ICON}</button></div>`;
+      const canvaPickHead = `<div class="canva-pick-head"><span>Pick a design. It’s turned in as a PDF, or as a link.</span><button class="material-icon-btn" type="button" data-canva-close aria-label="Close Canva designs">${REMOVE_ICON}</button></div>`;
       function renderCanvaPick() {
         const box = document.getElementById('canvaPick');
         if (!box || box.hidden) return;
@@ -3143,7 +3789,7 @@
         const draftIds = new Set(canvaDrafts.map(d => d.designId));
         const drafts = canvaDrafts.map(d => row(d.designId, d.name, `Edited ${d.edited}`, ''));
         const designs = canvaPickItems.filter(d => !draftIds.has(String(d.id))).map(d => row(String(d.id), String(d.title || 'Untitled design'), d.updatedAt ? editedLabel(d.updatedAt) : '', d.thumbnailUrl));
-        box.innerHTML = canvaPickHead + `<div class="canva-pick-list">`
+        box.innerHTML = canvaPickHead + '<div class="canva-pick-list">'
           + (drafts.length ? '<div class="canva-pick-label">Drafts for this assignment</div>' + drafts.join('') : '')
           + (designs.length ? '<div class="canva-pick-label">Your designs</div>' + designs.join('') : '')
           + (!drafts.length && !designs.length ? '<p class="canva-pick-empty">No Canva designs yet.</p>' : '')
@@ -3176,40 +3822,109 @@
       }
       // Google Drive / OneDrive: the sign-in window (if any) opens inside the click, before anything is awaited.
       function addFromCloud(app, btn) {
-        const C = window.AveragesCloud;
-        if (!C) return;
+        const c = C();
+        if (!c) return;
         // Google Drive (2026-10-09): no picker. Google Drive opens, the student chooses
         // Open with → Averages.io on their file, and attaches it to this assignment from Files.
         if (app === 'gdrive') {
-          // Not connected (or Google disconnected it): connect first, here,
-          // and come back to this assignment. Opening Drive first sent them
-          // to Files with nothing able to open the file (2026-10-09).
-          const lost = typeof C.lost === 'function' ? C.lost('gdrive') : null;
-          if (lost || !C.accounts().gdrive) {
-            sourceNote(`${lost ? 'Google Drive got disconnected.' : 'Connect Google Drive first.'} Then open Google Drive, right-click your file and choose <strong>Open with → Averages.io</strong>. <button class="upload-note-btn" type="button" data-drive-connect>${lost ? 'Reconnect' : 'Connect'} Google Drive</button>`);
+          const lost = typeof c.lost === 'function' ? c.lost('gdrive') : null;
+          if (lost || !c.accounts().gdrive) {
+            sourceNote(`${lost ? 'Google Drive got disconnected.' : 'Connect Google Drive first.'} Then open Google Drive, right-click your file and choose <strong>Open with → Averages.io</strong>. <button class="as-linkbtn" type="button" data-drive-connect>${lost ? 'Reconnect' : 'Connect'} Google Drive</button>`);
             return;
           }
-          window.open(C.driveHome || 'https://drive.google.com/', '_blank', 'noopener,noreferrer');
+          window.open(c.driveHome || 'https://drive.google.com/', '_blank', 'noopener,noreferrer');
           sourceNote('Google Drive opened in a new tab. Right-click your file, choose <strong>Open with → Averages.io</strong>, then <strong>Attach to an assignment</strong> and pick this one.');
           return;
         }
-        const pending = oneDriveReadToken(C).then(t => C.oneDrivePick(t)).then(items => (items || []).map(f => ({ id: String(f.id || ''), name: String(f.name || 'OneDrive file'), mimeType: String(f.mimeType || ''), size: Number(f.size) || 0 })));
+        const pending = oneDriveReadToken(c).then(t => c.oneDrivePick(t)).then(items => (items || []).map(f => ({ id: String(f.id || ''), name: String(f.name || 'OneDrive file'), mimeType: String(f.mimeType || ''), size: Number(f.size) || 0 })));
         btn.setAttribute('aria-busy', 'true');
         pending
           .then(list => {
-            list.forEach(f => {
-              if (!PICK_ID_OK[app](f.id)) return;
-              // Google Docs, Sheets and Slides come down as PDFs.
-              const google = app === 'gdrive' && /^application\/vnd\.google-apps\./.test(f.mimeType) && !/\.pdf$/i.test(f.name);
-              addPick({ src: app, id: f.id, name: (google ? f.name + '.pdf' : f.name).slice(0, 200), mimeType: f.mimeType, size: f.size });
-            });
+            let added = 0;
+            list.forEach(f => { if (PICK_ID_OK.onedrive(f.id) && addPick({ src: 'onedrive', id: f.id, name: f.name.slice(0, 200), mimeType: f.mimeType, size: f.size })) added++; });
+            if (added && !st.phase && !st.write) render();
           })
           .catch(err => { if (!err || err.code !== 'popup_closed') sourceNote(escapeHtml(submitMessage(err))); })
-          .then(() => btn.removeAttribute('aria-busy'));
+          .then(() => { const b = modalBox.querySelector('[data-source="onedrive"]'); if (b) b.removeAttribute('aria-busy'); });
       }
-      panelEl.addEventListener('click', e => {
-        if (!SUBMIT_LIVE || running) return;
-        const src = e.target.closest('[data-source]');
+
+      // ---------- wiring ----------
+      function bindFiles() {
+        const input = document.getElementById('submissionFileInput');
+        if (input) input.addEventListener('change', () => { const files = Array.from(input.files || []); input.value = ''; addDeviceFiles(files); });
+        const drop = document.getElementById('asDrop');
+        if (drop && !st.phase) {
+          drop.addEventListener('dragover', e => { if (!e.dataTransfer || !Array.from(e.dataTransfer.types || []).includes('Files')) return; e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; drop.classList.add('over'); });
+          drop.addEventListener('dragleave', e => { if (!drop.contains(e.relatedTarget)) drop.classList.remove('over'); });
+          drop.addEventListener('drop', e => { e.preventDefault(); drop.classList.remove('over'); addDeviceFiles((e.dataTransfer && e.dataTransfer.files) || []); });
+        }
+      }
+      function bindEditor() {
+        const editor = document.getElementById('submissionAnswerText');
+        const blockSelect = document.getElementById('rteBlockSelect');
+        if (!editor || !blockSelect) return;
+        const toolbar = modalBox.querySelector('.rte-toolbar');
+        const cmdBtns = toolbar.querySelectorAll('.rte-btn[data-cmd]');
+        const syncButton = () => { const b = modalBox.querySelector('[data-as-wsend]'); st.html = editor.innerHTML; if (b && !st.wph) b.disabled = !hasText(); };
+        function updateToolbarState() {
+          cmdBtns.forEach(btn => { let active = false; try { active = document.queryCommandState(btn.dataset.cmd); } catch (e) {} btn.classList.toggle('active', active); });
+          try { const block = (document.queryCommandValue('formatBlock') || '').toLowerCase(); blockSelect.value = ['h1', 'h2', 'h3'].includes(block) ? block : 'p'; } catch (e) {}
+        }
+        cmdBtns.forEach(btn => btn.addEventListener('click', () => {
+          if (st.wph === 'turning' || st.wph === 'done') return;
+          editor.focus();
+          const cmd = btn.dataset.cmd;
+          if (cmd === 'createLink') { const url = window.prompt('Link URL:', 'https://'); if (url) document.execCommand('createLink', false, url); }
+          else document.execCommand(cmd, false, null);
+          updateToolbarState();
+          syncButton();
+        }));
+        blockSelect.addEventListener('change', () => { editor.focus(); document.execCommand('formatBlock', false, blockSelect.value); updateToolbarState(); syncButton(); });
+        editor.addEventListener('keyup', updateToolbarState);
+        editor.addEventListener('mouseup', updateToolbarState);
+        editor.addEventListener('focus', updateToolbarState);
+        editor.addEventListener('input', syncButton);
+      }
+      const pickBy = key => st.picks.find(p => String(p.key) === String(key));
+      modalBox.onclick = e => {
+        const t = e.target;
+        if (t.closest('[data-as-close]')) { closeModal(); return; }
+        if (t.closest('[data-as-done]')) { closeModal(); if (preview) renderSubmissionsPanel(); return; }
+        if (st.write) {
+          const w = t.closest('[data-as-write]');
+          if (w && !w.disabled) { const ed = document.getElementById('submissionAnswerText'); if (ed) st.html = ed.innerHTML; st.write = false; st.wph = null; st.err = null; render(); return; }
+          const ws = t.closest('[data-as-wsend]');
+          if (ws && !ws.disabled) { turnInText(); return; }
+          return;
+        }
+        if (st.phase === 'turning') return;
+        if (t.closest('[data-as-send]')) { const b = t.closest('[data-as-send]'); if (!b.disabled) turnIn(); return; }
+        if (t.closest('[data-as-edit]')) { st.phase = null; st.prog = null; st.err = null; render(); return; }
+        if (st.phase) return;
+        if (t.closest('#chooseFileBtn')) { document.getElementById('submissionFileInput').click(); return; }
+        const w = t.closest('[data-as-write]');
+        if (w) { st.write = true; render('#submissionAnswerText'); return; }
+        const rm = t.closest('[data-as-rm]');
+        if (rm) { const p = pickBy(rm.dataset.asRm); st.picks = st.picks.filter(x => x !== p); if (p && p.ctl) p.ctl.abort(); render(); return; }
+        const retry = t.closest('[data-as-retry-up]');
+        if (retry) { const p = pickBy(retry.dataset.asRetryUp); if (p && p.up) { p.up = { state: 'waiting', frac: 0, fileId: '', at: 0, err: null, batchOpen: true }; render(); runUploads(); } return; }
+        const pk = t.closest('[data-as-pick]');
+        if (pk) { const p = pickBy(pk.dataset.asPick); const open = !p.menu; st.picks.forEach(x => { x.menu = false; }); p.menu = open; render(`[data-as-pick="${p.key}"]`); return; }
+        const op = t.closest('[data-as-opt]');
+        if (op && !op.disabled) {
+          const p = pickBy(op.dataset.key);
+          if (op.dataset.asOpt === 'mode') { p.mode = op.dataset.val; p.menu = false; p.access = false; }
+          else p.role = op.dataset.val === 'commenter' ? 'commenter' : 'reader';
+          render(p.mode === 'link' && p.src === 'canva' && op.dataset.asOpt === 'mode' ? `[data-as-url="${p.key}"]` : `[data-as-pick="${p.key}"]`);
+          return;
+        }
+        const ac = t.closest('[data-as-access]');
+        if (ac) { const p = pickBy(ac.dataset.asAccess); p.access = !p.access; render(`[data-as-access="${p.key}"]`); return; }
+        const allow = t.closest('[data-as-allow]');
+        if (allow) { const c = C(); if (c) c.oneDriveToken({ interactive: true, write: true }).then(() => render(), err => { if (!err || err.code !== 'popup_closed') sourceNote(escapeHtml(submitMessage(err))); }); return; }
+        if (st.picks.some(p => p.menu) && !t.closest('.as-menu')) { st.picks.forEach(p => { p.menu = false; }); render(); }
+        if (preview) return;
+        const src = t.closest('[data-source]');
         if (src && !src.disabled) {
           if (src.getAttribute('aria-busy') === 'true') return;
           sourceNote('');
@@ -3219,200 +3934,75 @@
           if (box && !box.hidden) box.hidden = true; else loadCanvaPick(false);
           return;
         }
-        if (e.target.closest('[data-drive-connect]')) {
-          const C = window.AveragesCloud;
-          if (C && typeof C.connectGoogle === 'function') C.connectGoogle().catch(err => { if (!err || err.code !== 'popup_closed') sourceNote(escapeHtml(submitMessage(err))); });
+        if (t.closest('[data-drive-connect]')) {
+          const c = C();
+          if (c && typeof c.connectGoogle === 'function') c.connectGoogle().catch(err => { if (!err || err.code !== 'popup_closed') sourceNote(escapeHtml(submitMessage(err))); });
           return;
         }
-        if (e.target.closest('[data-canva-close]')) { document.getElementById('canvaPick').hidden = true; return; }
-        if (e.target.closest('[data-canva-more]')) { loadCanvaPick(true); return; }
-        if (e.target.closest('[data-canva-retry]')) { loadCanvaPick(false); return; }
-        const d = e.target.closest('[data-pick-design]');
+        if (t.closest('[data-canva-close]')) { document.getElementById('canvaPick').hidden = true; return; }
+        if (t.closest('[data-canva-more]')) { loadCanvaPick(true); return; }
+        if (t.closest('[data-canva-retry]')) { loadCanvaPick(false); return; }
+        const d = t.closest('[data-pick-design]');
         if (d) {
           const title = (d.dataset.pickTitle || 'Canva design').replace(/\.pdf$/i, '').slice(0, 190) || 'Canva design';
-          addPick({ src: 'canva', id: d.dataset.pickDesign, designId: d.dataset.pickDesign, title, name: title + '.pdf' });
-          document.getElementById('canvaPick').hidden = true;
-        }
-      });
-
-      function setPickProgress(i, text, fraction, state) {
-        const row = modalBox.querySelector(`.upload-picked-row[data-pick="${i}"]`);
-        const line = row && row.querySelector('.upload-picked-progress');
-        if (!line) return;
-        line.hidden = false;
-        line.querySelector('.upload-progress-text').textContent = text;
-        const bar = line.querySelector('.upload-bar');
-        bar.hidden = fraction == null;
-        if (fraction != null) bar.firstElementChild.style.width = Math.round(Math.max(0, Math.min(1, fraction)) * 100) + '%';
-        row.classList.toggle('done', state === 'done');
-        row.classList.toggle('failed', state === 'failed');
-      }
-      function setRunning(on) {
-        running = on;
-        if (on) modalBox.setAttribute('aria-busy', 'true'); else modalBox.removeAttribute('aria-busy');
-        modalBox.querySelectorAll('.upload-tab, #chooseFileBtn, .upload-picked-row .material-icon-btn').forEach(b => { b.disabled = on; });
-        if (on) {
-          modalBox.querySelectorAll('.upload-source').forEach(b => { b.disabled = true; });
+          if (addPick({ src: 'canva', id: d.dataset.pickDesign, designId: d.dataset.pickDesign, title, name: title + '.pdf' })) render();
           const box = document.getElementById('canvaPick');
           if (box) box.hidden = true;
-          sourceNote('');
-        } else refreshUploadSources();
-        const editor = document.getElementById('submissionAnswerText');
-        if (editor) editor.setAttribute('contenteditable', on ? 'false' : 'true');
-        const btn = document.getElementById('modalSubmitBtn');
-        btn.disabled = on;
-        btn.textContent = on ? 'Turning in…' : 'Submit';
-      }
-      function showSubmitError(err) {
-        const onRow = !!err && typeof err.index === 'number' && err.index >= 0 && !!modalBox.querySelector(`.upload-picked-row[data-pick="${err.index}"]`);
-        if (onRow) setPickProgress(err.index, submitMessage(err), null, 'failed');
-        const el = document.getElementById('submitError');
-        if (el) { el.innerHTML = submitErrorHTML(err, onRow); el.hidden = false; }
-      }
-      /** One pick as { blob, name }. Cloud and Canva files are only fetched now. */
-      async function pickBlob(S, C, f, i, tokens, signal) {
-        if (f.src === 'device') return { blob: f.file, name: f.name };
-        if (f.src === 'course') {
-          setPickProgress(i, 'Getting it from your class…', null);
-          const blob = await S.courseFile({ section: f.course, [f.kind === 'document' ? 'document' : 'assignment']: f.parent, fileId: f.id, name: f.name }, signal);
-          return { blob, name: f.name };
         }
-        if (f.src === 'canva') {
-          setPickProgress(i, `Making a PDF of ${f.title}…`, null);
-          return S.exportCanva(f.designId, { title: f.title, signal });
-        }
-        const download = C && (f.src === 'gdrive' ? C.googleDownload : C.oneDriveDownload);
-        if (typeof download !== 'function') throw { code: 'not_configured' };
-        setPickProgress(i, `Getting it from ${SOURCE_NAME[f.src]}…`, null);
-        const r = await download.call(C, await tokens[f.src], f.id);
-        if (!r || !r.blob) throw { code: 'download_failed' };
-        return { blob: r.blob, name: String(r.name || f.name) };
-      }
-      /** Runs one turn-in: `run(S, signal)` resolves { revision }; names are what the done state lists. */
-      function go(run, names, sentence) {
-        const ctl = new AbortController();
-        activeSubmitAbort = () => ctl.abort();
-        const err = document.getElementById('submitError');
-        if (err) err.hidden = true;
-        setRunning(true);
-        loadSubmitScript()
-          .then(S => run(S, ctl.signal))
-          .then(r => {
-            if (ctl.signal.aborted) return;
-            showTurnedIn(names(), sentence);
-            afterTurnIn(r && r.revision);
-          })
-          .catch(e => {
-            // Closed mid-way (Cancel or Escape): the popup is gone; the list may have changed.
-            if (ctl.signal.aborted || (e && e.code === 'aborted')) { loadLiveHistory(); return; }
-            activeSubmitAbort = null;
-            setRunning(false);
-            if (e && e.code === 'popup_closed') { renderPicked(); return; }
-            showSubmitError(e && typeof e === 'object' ? e : { code: String(e) });
-          });
-      }
-      function liveSubmit() {
-        if (running) return;
-        if (activeTab === 'create') {
-          const editor = document.getElementById('submissionAnswerText');
-          if (!editor.textContent.trim()) { showSubmitError({ code: 'empty_text' }); editor.focus(); return; }
-          const html = editor.innerHTML;
-          go((S, signal) => S.submitText({ section: sec, assignment: asg, html, signal }), () => [], 'Your answer is turned in on Schoology.');
-          return;
-        }
-        if (!pickedFiles.length) {
-          document.getElementById('uploadPicker').classList.add('error');
-          document.getElementById('uploadRequiredNote').hidden = false;
-          document.getElementById('chooseFileBtn').focus();
-          return;
-        }
-        const C = window.AveragesCloud;
-        // Sign-in windows have to open inside this click, so tokens are asked for before anything is awaited.
-        const tokens = {};
-        if (pickedFiles.some(f => f.src === 'gdrive')) tokens.gdrive = driveReadToken(C);
-        const oneDriveFiles = pickedFiles.filter(f => f.src === 'onedrive');
-        if (oneDriveFiles.length) {
-          const needsRead = typeof C.oneDrivePicked !== 'function' || oneDriveFiles.some(f => C.oneDrivePicked(f.id));
-          tokens.onedrive = needsRead ? oneDriveReadToken(C)
-            : (typeof C.oneDriveToken === 'function' ? C.oneDriveToken({ interactive: true }) : Promise.reject({ code: 'not_configured' }));
-        }
-        Object.values(tokens).forEach(t => t.catch(() => {}));
-        const picks = pickedFiles.slice();
-        const names = picks.map(f => f.name);
-        renderPicked();
-        picks.forEach((f, i) => setPickProgress(i, 'Waiting…', null));
-        go(async (S, signal) => {
-          const files = [];
-          for (let i = 0; i < picks.length; i++) {
-            try {
-              files.push(await pickBlob(S, C, picks[i], i, tokens, signal));
-            } catch (e) {
-              throw Object.assign(e && typeof e === 'object' ? e : { code: String(e) }, { index: i });
-            }
-            if (signal.aborted) throw { code: 'aborted' };
-            names[i] = files[i].name;
-            if (picks[i].src !== 'device') setPickProgress(i, 'Waiting…', null);
-          }
-          return S.submitFiles({
-            section: sec, assignment: asg, files, signal,
-            onProgress: p => {
-              const pct = Math.round((p.fraction || 0) * 100);
-              if (p.phase === 'hashing') setPickProgress(p.index, `Getting ready ${pct}%`, p.fraction);
-              else if (p.phase === 'uploading') setPickProgress(p.index, `Uploading ${pct}%`, p.fraction);
-              else if (p.phase === 'done') setPickProgress(p.index, 'Uploaded', 1, 'done');
-            },
-          });
-        }, () => names);
-      }
+      };
+      modalBox.oninput = e => {
+        const u = e.target.closest && e.target.closest('[data-as-url]');
+        if (!u) return;
+        const p = pickBy(u.dataset.asUrl);
+        p.url = u.value;
+        const tag = u.nextElementSibling;
+        if (tag) { tag.className = p.url ? (CANVA_LINK_OK(p.url) ? 'ok' : 'bad') : ''; tag.textContent = p.url ? (CANVA_LINK_OK(p.url) ? 'Looks right' : 'Not a Canva link') : 'In Canva: Share, then Copy view link'; }
+        const b = modalBox.querySelector('[data-as-send]');
+        if (b) b.disabled = !ready();
+      };
+      onModalEscape = () => {
+        const open = st.picks.find(p => p.menu || p.access);
+        if (!open || st.phase) return false;
+        st.picks.forEach(p => { p.menu = false; p.access = false; });
+        render(`[data-as-pick="${open.key}"]`);
+        return true;
+      };
 
-      modalBox.querySelectorAll('.upload-tab').forEach(tabBtn => {
-        tabBtn.addEventListener('click', () => {
-          activeTab = tabBtn.dataset.tab;
-          modalBox.querySelectorAll('.upload-tab').forEach(b => {
-            const isActive = b === tabBtn;
-            b.classList.toggle('active', isActive);
-            b.setAttribute('aria-selected', String(isActive));
-          });
-          panelEl.innerHTML = UPLOAD_TAB_PANEL[activeTab]();
-          bindActiveTab();
-        });
-      });
+      // The request log: everything submit.js and cloud.js send while this popup is open.
+      const logHook = e => addLog(e);
+      if (!preview) {
+        loadSubmitScript().then(S => { if (typeof S.setLogger === 'function' && !modalOverlay.hidden) S.setLogger(logHook); }).catch(() => {});
+        if (C() && typeof C().setLogger === 'function') C().setLogger(logHook);
+      }
+      modalBox.dataset.asOpen = '1';
+      // OneDrive's sharing (and the Copy / Link pill) is known once our server says how it's connected.
+      const onCloudStatus = () => {
+        // Not while they're typing (a Canva link): the box would lose their place.
+        const a = document.activeElement;
+        if (st.phase || st.write || uploading() || (a && modalBox.contains(a) && a.matches('input, textarea, [contenteditable="true"]'))) return;
+        render();
+      };
+      window.addEventListener('averages-cloud-status', onCloudStatus);
+      const stopLogging = () => {
+        if (window.AveragesSubmit && typeof window.AveragesSubmit.setLogger === 'function') window.AveragesSubmit.setLogger(null);
+        if (C() && typeof C().setLogger === 'function') C().setLogger(null);
+      };
+      onModalClose = () => {
+        window.removeEventListener('averages-cloud-status', onCloudStatus);
+        stopLogging();
+        if (uploads.ctl) uploads.ctl.abort();
+        modalBox.onclick = null; modalBox.oninput = null;
+        delete modalBox.dataset.lock; delete modalBox.dataset.asOpen;
+      };
 
-      document.getElementById('modalCancelBtn').addEventListener('click', closeModal);
-      document.getElementById('modalSubmitBtn').addEventListener('click', () => {
-        if (SUBMIT_LIVE) { liveSubmit(); return; }
-        let files;
-        if (activeTab === 'upload') {
-          // At least one file is required on this tab (2026-09-04, per
-          // Martin) — no more falling back to a synthesized filename when
-          // nothing was chosen. Blocks the submit and surfaces the error
-          // inline instead of closing the modal.
-          if (!pickedFiles.length) {
-            document.getElementById('uploadPicker').classList.add('error');
-            document.getElementById('uploadRequiredNote').hidden = false;
-            document.getElementById('chooseFileBtn').focus();
-            return;
-          }
-          // Every file picked this session (2026-09-04, per Martin: "let
-          // people upload multiple files") goes into this one turn-in --
-          // see filesOf()/submissionHistoryHTML()/openSubmissionPreview
-          // for how a multi-file entry renders.
-          files = pickedFiles.map(f => ({ name: f.name, ext: (f.name.split('.').pop() || 'pdf').toLowerCase() }));
-        } else {
-          // activeTab === 'create'. Typed content isn't required to submit
-          // -- this tab has no file requirement (only the Upload tab does,
-          // per Martin) -- the filename just always reflects that this
-          // attempt was a typed answer, not an uploaded document.
-          files = [{ name: `${item.title.replace(/\s+/g, '_')}_Answer.txt`, ext: 'txt' }];
-        }
-        const comment = (commentEl.value || '').trim();
-        const entry = { files, timestamp: 'Just now' };
-        if (comment) entry.comment = comment;
-        submissionHistory.push(entry);
-        currentStatus = 'submitted';
-        closeModal();
-        renderSubmissionsPanel();
-      });
+      openModal('');
+      modalBox.classList.add('modal-box-lg', 'as-box');
+      modalBox.setAttribute('role', 'dialog');
+      modalBox.setAttribute('aria-modal', 'true');
+      modalBox.setAttribute('aria-label', 'Add Submission');
+      st.picks.forEach(p => { if (p.up) p.up.batchOpen = true; });
+      render();
+      if (uploading()) runUploads();
     }
 
     renderSubmissionsPanel();
