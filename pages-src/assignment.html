@@ -401,6 +401,9 @@
   .canva-pick-meta { flex-shrink: 0; font-size: 0.66rem; font-weight: 700; color: var(--text-faint); white-space: nowrap; }
   .canva-pick-empty { margin: 0; padding: 6px 4px; font-size: 0.76rem; color: var(--text-muted); }
   .canva-pick .assign-retry { margin: 6px 4px 2px; }
+  .canva-pick-item.added { opacity: .55; cursor: default; }
+  .canva-pick-thumb .avfi { width: 28px !important; height: 28px !important; }
+  .drive-pick-more { border-top: 1px solid var(--border); margin-top: 4px !important; padding-top: 8px !important; }
   .submit-done-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
   .submit-done-head h3 { margin: 0; }
   .submit-done-check { width: 28px; height: 28px; flex: none; border-radius: 50%; background: var(--grade-good); display: grid; place-items: center; }
@@ -3325,7 +3328,7 @@
       function filesHTML() {
         const n = st.picks.length;
         const list = n ? `<div class="as-list-h"><span>${st.phase === 'done' ? 'Turned in' : 'Turning in'} (${n})</span><span>${n > 1 && st.phase !== 'done' ? 'One turn-in, all together' : ''}</span></div><div class="as-list" id="uploadPickedList">${st.picks.map(rowHTML).join('')}</div>` : '';
-        const sources = st.phase ? '' : `${uploadSourcesRowHTML()}<p class="as-source-note" id="uploadSourceNote" role="status" hidden></p><div class="canva-pick" id="canvaPick" hidden></div>`;
+        const sources = st.phase ? '' : `${uploadSourcesRowHTML()}<p class="as-source-note" id="uploadSourceNote" role="status" hidden></p><div class="canva-pick" id="canvaPick" hidden></div><div class="canva-pick drive-pick" id="drivePick" hidden></div>`;
         const write = st.phase ? '' : '<p class="as-alt">No file? <button type="button" data-as-write="1">Write your answer instead</button></p>';
         return `${headHTML(st.phase === 'turning')}${dropHTML()}${sources}${list}${write}${st.phase === 'failed' ? '' : ''}${footHTML()}`;
       }
@@ -3820,20 +3823,74 @@
           box.innerHTML = canvaPickHead + '<p class="canva-pick-empty">Couldn’t load your Canva designs.<button class="assign-retry" type="button" data-canva-retry>Try again</button></p>';
         }
       }
+      // Add from Google Drive: the files Averages.io can see (drive.file), newest first.
+      let drivePickItems = [];
+      const driveHead = `<div class="canva-pick-head"><span>Your Google Drive files in Averages.io</span><button class="material-icon-btn" type="button" data-drive-close aria-label="Close Google Drive files">${REMOVE_ICON}</button></div>`;
+      const driveFoot = '<p class="canva-pick-empty drive-pick-more">Not here? In Google Drive, right-click the file and choose <strong>Open with → Averages.io</strong>, then attach it to this assignment. <button class="as-linkbtn" type="button" data-drive-open>Open Google Drive</button></p>';
+      const DRIVE_KIND = { 'application/vnd.google-apps.document': 'Google Doc', 'application/vnd.google-apps.spreadsheet': 'Google Sheet', 'application/vnd.google-apps.presentation': 'Google Slides', 'application/vnd.google-apps.drawing': 'Google Drawing', 'application/vnd.google-apps.form': 'Google Form' };
+      const DRIVE_ICON_KEY = { 'application/vnd.google-apps.document': 'gdoc', 'application/vnd.google-apps.spreadsheet': 'gsheet', 'application/vnd.google-apps.presentation': 'gslide', 'application/vnd.google-apps.drawing': 'gdraw', 'application/vnd.google-apps.form': 'gform' };
+      /** Files hidden on the Files page with "Remove from Averages.io" stay out of this list too. */
+      function driveHidden() {
+        try {
+          const owner = localStorage.getItem('averages_cloud_owner') || '';
+          const v = JSON.parse(localStorage.getItem('averages_files_hidden') || 'null');
+          if (v && v.owner && v.owner === owner && Array.isArray(v.keys)) return new Set(v.keys.map(String));
+        } catch {}
+        return new Set();
+      }
+      function renderDrivePick() {
+        const box = document.getElementById('drivePick');
+        if (!box || box.hidden) return;
+        const added = new Set(st.picks.filter(p => p.src === 'gdrive').map(p => String(p.id)));
+        const rows = drivePickItems.map(f => {
+          const id = String(f.id), mime = String(f.mimeType || '');
+          const kind = DRIVE_KIND[mime] || ((String(f.name).match(/\.([a-z0-9]{1,5})$/i) || [])[1] || 'File').toUpperCase();
+          const when = Date.parse(f.modifiedTime || '') ? editedLabel(Date.parse(f.modifiedTime)) : '';
+          const thumb = /^https:\/\/[a-z0-9.-]*googleusercontent\.com\//i.test(String(f.thumbnailLink || ''))
+            ? `<img src="${escapeHtml(f.thumbnailLink)}" alt="" loading="lazy" referrerpolicy="no-referrer">`
+            : fileIcon(DRIVE_ICON_KEY[mime] || pickExt({ name: f.name }) || 'file', SOURCE_MARK.gdrive, 28);
+          const on = added.has(id);
+          return `<button class="canva-pick-item${on ? ' added' : ''}" type="button" data-pick-drive="${escapeHtml(id)}"${on ? ' aria-disabled="true"' : ''}><span class="canva-pick-thumb">${thumb}</span><span class="canva-pick-name">${escapeHtml(String(f.name || 'Untitled'))}</span><span class="canva-pick-meta">${on ? 'Added' : escapeHtml([kind, when].filter(Boolean).join(' · '))}</span></button>`;
+        });
+        box.innerHTML = driveHead + '<div class="canva-pick-list">'
+          + (rows.length ? rows.join('') : '<p class="canva-pick-empty">No Google Drive files in Averages.io yet.</p>')
+          + '</div>' + driveFoot;
+      }
+      async function loadDrivePick(tokenP) {
+        const box = document.getElementById('drivePick');
+        if (!box) return;
+        box.hidden = false;
+        box.innerHTML = driveHead + '<p class="canva-pick-empty">Loading your Google Drive files…</p>';
+        try {
+          const c = C();
+          const list = await c.googleList(await tokenP);
+          const hidden = driveHidden();
+          drivePickItems = (list || []).filter(f => f && PICK_ID_OK.gdrive(String(f.id || '')) && String(f.mimeType || '') !== 'application/vnd.google-apps.folder' && !hidden.has('gdrive:' + String(f.id)));
+          renderDrivePick();
+        } catch (err) {
+          if (err && err.code === 'popup_closed') { box.hidden = true; return; }
+          box.innerHTML = driveHead + `<p class="canva-pick-empty">${escapeHtml(submitMessage(err))} <button class="assign-retry" type="button" data-drive-retry>Try again</button></p>`;
+        }
+      }
+
       // Google Drive / OneDrive: the sign-in window (if any) opens inside the click, before anything is awaited.
       function addFromCloud(app, btn) {
         const c = C();
         if (!c) return;
-        // Google Drive (2026-10-09): no picker. Google Drive opens, the student chooses
-        // Open with → Averages.io on their file, and attaches it to this assignment from Files.
+        // Google Drive (2026-10-12, Martin): a list of the files already in Averages.io
+        // (made here, or opened with Drive's "Open with → Averages.io"), right here.
+        // Another file still comes in through Open with; the list says how.
         if (app === 'gdrive') {
           const lost = typeof c.lost === 'function' ? c.lost('gdrive') : null;
           if (lost || !c.accounts().gdrive) {
-            sourceNote(`${lost ? 'Google Drive got disconnected.' : 'Connect Google Drive first.'} Then open Google Drive, right-click your file and choose <strong>Open with → Averages.io</strong>. <button class="as-linkbtn" type="button" data-drive-connect>${lost ? 'Reconnect' : 'Connect'} Google Drive</button>`);
+            sourceNote(`${lost ? 'Google Drive got disconnected.' : 'Connect Google Drive first.'} <button class="as-linkbtn" type="button" data-drive-connect>${lost ? 'Reconnect' : 'Connect'} Google Drive</button>`);
             return;
           }
-          window.open(c.driveHome || 'https://drive.google.com/', '_blank', 'noopener,noreferrer');
-          sourceNote('Google Drive opened in a new tab. Right-click your file, choose <strong>Open with → Averages.io</strong>, then <strong>Attach to an assignment</strong> and pick this one.');
+          const box = document.getElementById('drivePick');
+          if (box && !box.hidden) { box.hidden = true; return; }
+          const other = document.getElementById('canvaPick');
+          if (other) other.hidden = true;
+          loadDrivePick(driveReadToken(c));   // a sign-in window, if one is needed, opens now, inside the click
           return;
         }
         const pending = oneDriveReadToken(c).then(t => c.oneDrivePick(t)).then(items => (items || []).map(f => ({ id: String(f.id || ''), name: String(f.name || 'OneDrive file'), mimeType: String(f.mimeType || ''), size: Number(f.size) || 0 })));
@@ -3931,7 +3988,22 @@
           if (src.dataset.source !== 'canva') { addFromCloud(src.dataset.source, src); return; }
           if (sourceState('canva') === 'connect') { sourceNote('Connect Canva first in <a href="settings.html?section=integrations">Settings</a>, then add your designs here.'); return; }
           const box = document.getElementById('canvaPick');
+          const other = document.getElementById('drivePick');
+          if (other) other.hidden = true;
           if (box && !box.hidden) box.hidden = true; else loadCanvaPick(false);
+          return;
+        }
+        if (t.closest('[data-drive-close]')) { document.getElementById('drivePick').hidden = true; return; }
+        if (t.closest('[data-drive-retry]')) { const c = C(); if (c) loadDrivePick(driveReadToken(c)); return; }
+        if (t.closest('[data-drive-open]')) { const c = C(); window.open((c && c.driveHome) || 'https://drive.google.com/', '_blank', 'noopener,noreferrer'); return; }
+        const dp = t.closest('[data-pick-drive]');
+        if (dp) {
+          if (dp.getAttribute('aria-disabled') === 'true') return;
+          const f = drivePickItems.find(x => String(x.id) === dp.dataset.pickDrive);
+          if (!f) return;
+          // Google Docs, Sheets and Slides go in as PDFs when they're sent as a copy.
+          const google = /^application\/vnd\.google-apps\./.test(String(f.mimeType || '')) && !/\.pdf$/i.test(String(f.name));
+          if (addPick({ src: 'gdrive', id: String(f.id), name: (google ? String(f.name) + '.pdf' : String(f.name)).slice(0, 200), mimeType: String(f.mimeType || ''), size: Number(f.size) || 0 })) render();
           return;
         }
         if (t.closest('[data-drive-connect]')) {
