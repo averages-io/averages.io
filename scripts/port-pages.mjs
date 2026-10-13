@@ -454,19 +454,48 @@ const ERROR_MESSAGES: Record<string, string> = {
     // Back from Google signed in: don't trust an older cached "signed out".
     if (new URLSearchParams(window.location.search).get("google") === "ok") forgetSession();
 
-    // Already signed in? Don't make them do it again.
+    // Already signed in? Don't make them do it again. The screen may still
+    // be black from CHECKING_JS below; it stays black all the way to Home
+    // when they are, and shows the sign-in options when they aren't.
     let cancelled = false;
+    const reveal = () => document.documentElement.removeAttribute("data-av-checking");
     getSession().then((session) => {
-      if (cancelled || session.mode === "out") return;
+      if (cancelled) return;
+      if (session.mode === "out") { reveal(); return; }
       let onboarded = false;
       try {
         onboarded = window.localStorage.getItem("schoolagy_onboarded") === "1";
       } catch {}
-      window.location.href = onboarded ? "/home" : "/onboard";
+      // replace, not href: Back from Home shouldn't land on this page again.
+      window.location.replace(onboarded ? "/home" : "/onboard");
     });
     return () => { cancelled = true; };
   }, []);
 `
+    : "";
+
+  // Login: black until we know whether there's a session (Martin, 2026-10-13:
+  // signed in, app.averages.io still showed the sign-in buttons for ~3 s while
+  // /auth/me answered). The cookie is httpOnly, so nothing on the page can
+  // look for it; this goes by the hint getSession() leaves in localStorage.
+  // Runs inline before the browser paints. Not black when:
+  //   - the hint says signed out last time ("0"): the usual signed-out visit
+  //     shows the buttons at once, and the check still redirects if it's wrong;
+  //   - just back from Google with an error to show, or the hidden ?keys/?demo
+  //     form is asked for.
+  // A missing hint (first visit since this shipped) counts as "maybe", so it's
+  // black once and right from then on. The 8 s cap means a slow or broken API
+  // can never leave the page black for good; the effect above reveals sooner.
+  const loginChecking = isLogin
+    ? `
+const CHECKING_CSS = "html[data-av-checking],html[data-av-checking] body{background:#000!important}html[data-av-checking] body>*{visibility:hidden!important}";
+const CHECKING_JS = "(function(){var d=document.documentElement;try{if(localStorage.getItem('averages_signed_in')==='0')return;var q=new URLSearchParams(location.search),g=q.get('google');if((g&&g!=='ok')||q.has('keys')||q.has('demo'))return;}catch(e){}d.setAttribute('data-av-checking','');setTimeout(function(){d.removeAttribute('data-av-checking')},8000);})();";
+`
+    : "";
+  const loginCheckingTags = isLogin
+    ? `
+      <style dangerouslySetInnerHTML={{ __html: CHECKING_CSS }} />
+      <script dangerouslySetInnerHTML={{ __html: CHECKING_JS }} />`
     : "";
 
   // Only the login page runs an effect of its own; importing useEffect
@@ -480,9 +509,9 @@ const TITLE = ${JSON.stringify(data.title)};
 const STYLE_CSS = ${JSON.stringify(data.style)};
 const BODY_HTML = ${JSON.stringify(data.body)};
 const SCRIPT_JS = ${JSON.stringify(data.script)};
-
+${loginChecking}
 export default function Page() {${loginEffect}
-  return (
+  return (${isLogin ? "\n    <>" + loginCheckingTags : ""}
     <LegacyPage
       title={TITLE}
       styleCss={STYLE_CSS}
@@ -493,7 +522,7 @@ export default function Page() {${loginEffect}
       hasUploads={${UPLOAD_PAGES.has(name)}}
       externalScripts={${JSON.stringify(EXTERNAL_SCRIPTS[name] || [])}}
       pageId={${JSON.stringify(name)}}
-    />
+    />${isLogin ? "\n    </>" : ""}
   );
 }
 `;
