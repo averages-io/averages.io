@@ -47,6 +47,24 @@ export const API_BASE =
     ? "https://api.averages.io"
     : "http://localhost:8787";
 
+/**
+ * "Was this browser signed in last time we asked?" — "1", "0", or missing for
+ * never asked. Not a secret and not authorization (the session cookie is
+ * httpOnly, so page code can't see it at all): it only decides whether the
+ * login page stays black while it checks, so a signed-in student goes straight
+ * on to Home instead of seeing the sign-in buttons for a few seconds
+ * (Martin, 2026-10-13). The login page reads it before the page paints; see
+ * scripts/port-pages.mjs. Lives in localStorage so a new tab knows too.
+ */
+export const SIGNED_IN_HINT = "averages_signed_in";
+export function setSignedInHint(on: boolean): void {
+  try {
+    window.localStorage.setItem(SIGNED_IN_HINT, on ? "1" : "0");
+  } catch {
+    /* private browsing — the login page just checks with the screen black */
+  }
+}
+
 function cacheGet(key: string): string | null {
   try {
     return window.sessionStorage.getItem(key);
@@ -145,6 +163,9 @@ export async function getSession(): Promise<SessionState> {
       };
       if (!data?.demo && data?.uid != null) claimCloudConnections(String(data.uid));
     }
+    // Only a real answer changes the hint; an unreachable API says nothing
+    // about whether the cookie is there.
+    setSignedInHint(response.ok);
   } catch {
     // Network failure is not authorization. Treat it as signed-out rather than
     // letting someone in because the API happened to be unreachable.
@@ -217,6 +238,7 @@ export async function signIn(key: string, secret: string): Promise<SignInResult>
     cacheClear(FILES_CACHE);
     cacheClear(SUBS_CACHE);
     clearExtras();
+    setSignedInHint(true);
     return { ok: true, demo: !!data?.demo };
   } catch {
     return { ok: false, error: "network_error" };
@@ -304,6 +326,7 @@ function forgetPushOnThisDevice(): Promise<void> {
 }
 
 export async function signOut(): Promise<void> {
+  setSignedInHint(false);
   cacheClear(SESSION_CACHE);
   cacheClear(BUNDLE_CACHE);
   cacheClear(FILES_CACHE);
