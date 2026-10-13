@@ -163,9 +163,11 @@ export async function getSession(): Promise<SessionState> {
       };
       if (!data?.demo && data?.uid != null) claimCloudConnections(String(data.uid));
     }
-    // Only a real answer changes the hint; an unreachable API says nothing
+    // Only a real answer changes the hint: yes, or the API saying no (401).
+    // An unreachable API or a school platform that's down (502) says nothing
     // about whether the cookie is there.
-    setSignedInHint(response.ok);
+    if (response.ok) setSignedInHint(true);
+    else if (response.status === 401) setSignedInHint(false);
   } catch {
     // Network failure is not authorization. Treat it as signed-out rather than
     // letting someone in because the API happened to be unreachable.
