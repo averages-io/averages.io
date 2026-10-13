@@ -3814,6 +3814,7 @@
       if (settingsOptions.syncAcrossDevices === true) {
         deleteSyncSettingsNow();
         try { localStorage.removeItem('schoolagy_sync_meta'); } catch {}   // clearSyncMeta's key; that helper is defined further down
+        try { localStorage.removeItem('averages_sync_media'); } catch {}   // clearSyncMeta's other key (R2 pictures, 2026-10-13)
         saveSettingsOption('syncAcrossDevices', false);
       }
       syncAcrossDevicesToggle.checked = false;
@@ -3882,13 +3883,24 @@
         profile: readJSON(AVERAGES_PROFILE_KEY),
       };
     }
-    function applySyncedSettings(remote) {
+    async function applySyncedSettings(remote) {
       if (!remote || typeof remote !== 'object') return;
+      // Pictures stored in R2 come down first (2026-10-13), so nothing below
+      // ever writes an "r2:..." reference where a page expects an image.
+      const local = collectSyncedSettings();
+      let appearance = remote.appearance;
+      let profile = remote.profile;
+      if (appearance && typeof appearance.background === 'string' && appearance.background.startsWith('r2:')) {
+        appearance = { ...appearance, background: await pictureFromRef('background', appearance.background, local.appearance && local.appearance.background) };
+      }
+      if (profile && typeof profile.photo === 'string' && profile.photo.startsWith('r2:')) {
+        profile = { ...profile, photo: await pictureFromRef('photo', profile.photo, local.profile && local.profile.photo) };
+      }
       try {
         if (remote.settingsOptions) localStorage.setItem(AVERAGES_SETTINGS_OPTIONS_KEY, JSON.stringify(remote.settingsOptions));
-        if (remote.appearance) localStorage.setItem(AVERAGES_APPEARANCE_KEY, JSON.stringify(remote.appearance));
+        if (appearance) localStorage.setItem(AVERAGES_APPEARANCE_KEY, JSON.stringify(appearance));
         if (remote.darkMode) localStorage.setItem(AVERAGES_DARK_MODE_KEY, remote.darkMode);
-        if (remote.profile) localStorage.setItem(AVERAGES_PROFILE_KEY, JSON.stringify(remote.profile));
+        if (profile) localStorage.setItem(AVERAGES_PROFILE_KEY, JSON.stringify(profile));
       } catch {}
     }
 
@@ -3926,6 +3938,210 @@
     }
     function clearSyncMeta() {
       try { localStorage.removeItem(AVERAGES_SYNC_META_KEY); } catch {}
+      try { localStorage.removeItem('averages_sync_media'); } catch {}   // AVERAGES_SYNC_MEDIA_KEY, below
+    }
+
+    // ------------------------------------------------------------------
+    // Pictures in R2 (2026-10-13). The profile photo and an uploaded
+    // background used to ride inside the Sync record as data URLs: a few
+    // hundred KB each, sent again with every settings change, and together
+    // able to push the record past the API's 2 MB cap (a 413 nobody saw, so
+    // nothing synced). Now each picture is uploaded once to PUT /media/:kind
+    // and the record carries a short reference, "r2:<kind>:<version>".
+    //
+    // This device keeps its own copy in localStorage exactly as before, so
+    // every page still shows pictures instantly and only ANOTHER device ever
+    // downloads one. References never reach localStorage's profile or
+    // appearance records: other pages would try to show "r2:..." as a URL.
+    //
+    // If /media can't take a picture (no bucket yet, R2 down, too big), it
+    // simply goes inline as before. Nothing here can stop settings syncing.
+    //
+    // AVERAGES_SYNC_MEDIA_KEY remembers, per kind, the version on the server
+    // and a hash of the local copy it matches ({ photo: { v, h } }), so a
+    // picture is only uploaded when it actually changed.
+    // ------------------------------------------------------------------
+    const AVERAGES_SYNC_MEDIA_KEY = 'averages_sync_media';
+    const MEDIA_REF = /^r2:(photo|background):([A-Za-z0-9._-]{1,128})$/;
+    const PHOTO_SIDE = 256;
+    function loadSyncMedia() {
+      try {
+        const m = JSON.parse(localStorage.getItem(AVERAGES_SYNC_MEDIA_KEY) || '{}');
+        return m && typeof m === 'object' ? m : {};
+      } catch { return {}; }
+    }
+    function saveSyncMedia(m) {
+      try { localStorage.setItem(AVERAGES_SYNC_MEDIA_KEY, JSON.stringify(m)); } catch {}
+    }
+    function isDataImage(v) { return typeof v === 'string' && /^data:image\//.test(v); }
+    async function hashOf(text) {
+      const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+      return Array.from(new Uint8Array(d).slice(0, 12), (b) => b.toString(16).padStart(2, '0')).join('');
+    }
+    function dataUrlToBlob(url) {
+      const comma = url.indexOf(',');
+      const type = (/^data:([^;,]+)/.exec(url) || [])[1] || 'application/octet-stream';
+      const bin = atob(url.slice(comma + 1));
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      return new Blob([bytes], { type });
+    }
+    function blobToDataUrl(blob) {
+      return new Promise((resolve, reject) => {
+        const r = new FileReader();
+        r.onload = () => resolve(String(r.result));
+        r.onerror = () => reject(r.error);
+        r.readAsDataURL(blob);
+      });
+    }
+    // The photo goes up as a small square (about 20 to 40 KB as WebP). A GIF
+    // goes up as it is, so an animated one stays animated.
+    function photoBlob(url) {
+      if (/^data:image\/gif/.test(url)) return Promise.resolve(dataUrlToBlob(url));
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          const c = document.createElement('canvas');
+          c.width = c.height = PHOTO_SIDE;
+          const side = Math.min(img.naturalWidth, img.naturalHeight) || PHOTO_SIDE;
+          const sx = (img.naturalWidth - side) / 2, sy = (img.naturalHeight - side) / 2;
+          c.getContext('2d').drawImage(img, sx, sy, side, side, 0, 0, PHOTO_SIDE, PHOTO_SIDE);
+          // WebP where the browser can make it (keeps transparency), PNG where it can't.
+          c.toBlob((b) => {
+            if (b && b.type === 'image/webp') return resolve(b);
+            c.toBlob((p) => resolve(p || dataUrlToBlob(url)), 'image/png');
+          }, 'image/webp', 0.86);
+        };
+        img.onerror = () => resolve(dataUrlToBlob(url));
+        img.src = url;
+      });
+    }
+    // When /media said it can't store pictures (no bucket yet, R2 down),
+    // stop asking for an hour, across page loads, and send them inline.
+    const MEDIA_RETRY_MS = 60 * 60 * 1000;
+    function mediaUnavailable() {
+      const at = loadSyncMedia().downAt;
+      return typeof at === 'number' && Date.now() - at < MEDIA_RETRY_MS;
+    }
+    function markMediaUnavailable() {
+      const all = loadSyncMedia();
+      all.downAt = Date.now();
+      saveSyncMedia(all);
+    }
+    // The reference to send for one picture, uploading it first if it changed.
+    // upload=false only looks (for comparing with the server's copy).
+    async function mediaRefFor(kind, value, upload) {
+      const all = loadSyncMedia();
+      const known = all[kind];
+      // This device couldn't download the server's picture yet (see
+      // pictureFromRef). Until the student changes it here, keep sending the
+      // server's reference: sending what this device shows instead would
+      // wipe the picture for every other device.
+      if (known && known.pending && value === known.local) return 'r2:' + kind + ':' + known.v;
+      if (!isDataImage(value)) {
+        // A built-in background, white/black, or no photo: whatever this
+        // device put in R2 before isn't needed any more.
+        if (known && upload) {
+          delete all[kind];
+          saveSyncMedia(all);
+          fetch(averagesApiBase() + '/media/' + kind, { method: 'DELETE', credentials: 'include' }).catch(() => {});
+        }
+        return value;
+      }
+      let h = '';
+      try { h = await hashOf(value); } catch { return value; }
+      if (known && known.h === h && known.v) return 'r2:' + kind + ':' + known.v;
+      if (!upload || mediaUnavailable()) return value;
+      try {
+        const body = kind === 'photo' ? await photoBlob(value) : dataUrlToBlob(value);
+        const res = await fetch(averagesApiBase() + '/media/' + kind, {
+          method: 'PUT',
+          credentials: 'include',
+          headers: { 'Content-Type': body.type || 'application/octet-stream' },
+          body,
+        });
+        if (res.status === 503) markMediaUnavailable();
+        if (!res.ok) return value;
+        const data = await res.json();
+        const v = data && typeof data.v === 'string' ? data.v.replace(/"/g, '') : '';
+        if (!/^[A-Za-z0-9._-]{1,128}$/.test(v)) return value;
+        const latest = loadSyncMedia();
+        latest[kind] = { v, h };
+        saveSyncMedia(latest);
+        return 'r2:' + kind + ':' + v;
+      } catch {
+        return value;
+      }
+    }
+    // The settings as they go to the server: pictures as references.
+    async function syncedSettingsForServer(upload) {
+      const s = collectSyncedSettings();
+      if (s.profile && typeof s.profile === 'object') {
+        s.profile = { ...s.profile, photo: await mediaRefFor('photo', s.profile.photo, upload) };
+      }
+      if (s.appearance && typeof s.appearance === 'object') {
+        s.appearance = { ...s.appearance, background: await mediaRefFor('background', s.appearance.background, upload) };
+      }
+      return s;
+    }
+    // A reference from the server, as a picture this device can show. Uses
+    // the local copy when it's already that version; otherwise downloads it.
+    // Never returns the reference itself.
+    async function pictureFromRef(kind, ref, localValue) {
+      const m = MEDIA_REF.exec(ref);
+      if (!m || m[1] !== kind) return isDataImage(localValue) ? localValue : null;
+      const v = m[2];
+      const known = loadSyncMedia()[kind];
+      if (known && known.v === v && !known.pending && isDataImage(localValue)) return localValue;
+      try {
+        const res = await fetch(averagesApiBase() + '/media/' + kind, { credentials: 'include' });
+        if (!res.ok) throw new Error('media ' + res.status);
+        const url = await blobToDataUrl(await res.blob());
+        if (!isDataImage(url)) throw new Error('not an image');
+        const all = loadSyncMedia();
+        all[kind] = { v: (res.headers.get('X-Media-Version') || v).replace(/"/g, ''), h: await hashOf(url) };
+        saveSyncMedia(all);
+        return url;
+      } catch {
+        // Couldn't fetch it: keep showing what this device already has, and
+        // remember the server's version so it's tried again and not undone.
+        const kept = isDataImage(localValue) ? localValue : (kind === 'background' && typeof localValue === 'string' ? localValue : null);
+        const all = loadSyncMedia();
+        all[kind] = { v, pending: true, local: kept };
+        saveSyncMedia(all);
+        return kept;
+      }
+    }
+    // Pictures a previous visit couldn't download: try again, and show them
+    // from the next page on, unless the student has changed them since.
+    async function retryPendingPictures() {
+      const all = loadSyncMedia();
+      for (const kind of ['photo', 'background']) {
+        const known = all[kind];
+        if (!known || !known.pending) continue;
+        const key = kind === 'photo' ? AVERAGES_PROFILE_KEY : AVERAGES_APPEARANCE_KEY;
+        const field = kind === 'photo' ? 'photo' : 'background';
+        let rec = null;
+        try { rec = JSON.parse(localStorage.getItem(key) || 'null'); } catch {}
+        const current = rec ? rec[field] : null;
+        if ((current ?? null) !== (known.local ?? null)) continue;
+        const url = await pictureFromRef(kind, 'r2:' + kind + ':' + known.v, current);
+        if (!isDataImage(url)) continue;
+        try { localStorage.setItem(key, JSON.stringify({ ...(rec || {}), [field]: url })); } catch {}
+      }
+    }
+    // Old records (before 2026-10-13) still hold pictures inline. Pushing
+    // once moves them to R2; tried at most once a day if R2 says no.
+    function hasInlinePictures(settings) {
+      return !!settings && (isDataImage(settings.profile && settings.profile.photo) || isDataImage(settings.appearance && settings.appearance.background));
+    }
+    function migrateInlinePictures(settings) {
+      if (!hasInlinePictures(settings)) return;
+      const all = loadSyncMedia();
+      if (all.triedAt && Date.now() - all.triedAt < 24 * 60 * 60 * 1000) return;
+      all.triedAt = Date.now();
+      saveSyncMedia(all);
+      pushSyncSettingsNow();
     }
 
     // Debounced so a burst of writes (dragging the accent-color picker,
@@ -3936,14 +4152,25 @@
       clearTimeout(syncPushTimer);
       syncPushTimer = setTimeout(pushSyncSettingsNow, 800);
     }
-    async function pushSyncSettingsNow() {
+    // One push at a time (2026-10-13): a picture upload makes a push take a
+    // moment, and two overlapping ones could upload the same picture twice.
+    // var, not let: deleteSyncSettingsNow can run during the page's first
+    // run (the Incognito check), before this line has.
+    var syncPushChain = Promise.resolve();
+    function pushSyncSettingsNow() {
+      syncPushChain = syncPushChain.then(pushSyncSettingsOnce, pushSyncSettingsOnce);
+      return syncPushChain;
+    }
+    async function pushSyncSettingsOnce() {
       if (!isSyncOn()) return;
       try {
+        const settings = await syncedSettingsForServer(true);
+        if (!isSyncOn()) return;
         const res = await fetch(averagesApiBase() + '/sync/settings', {
           method: 'PUT',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ settings: collectSyncedSettings() }),
+          body: JSON.stringify({ settings }),
         });
         if (res.ok) {
           const record = await res.json();
@@ -3970,6 +4197,9 @@
     // push/pull are — it needs to run exactly when sync is BEING turned
     // off, i.e. while it's still (about to stop being) on.
     async function deleteSyncSettingsNow() {
+      // Let a push that's already uploading a picture finish first, so its
+      // picture can't land in R2 after the delete and be left behind.
+      if (syncPushChain) await syncPushChain.catch(() => {});
       try {
         await fetch(averagesApiBase() + '/sync/settings', { method: 'DELETE', credentials: 'include' });
       } catch {
@@ -3989,6 +4219,7 @@
     // of those render calls a second time here.
     async function pullSyncSettingsNow() {
       if (!isSyncOn()) return;
+      try { await retryPendingPictures(); } catch {}
       try {
         const res = await fetch(averagesApiBase() + '/sync/settings', { credentials: 'include' });
         if (!res.ok) return;
@@ -4014,6 +4245,7 @@
           // device's own not-yet-pushed edit, not something to overwrite —
           // schedulePushSyncSettings already covers pushing it (every
           // local-writing helper calls it), so there's nothing to do here.
+          migrateInlinePictures(record.settings);
           return;
         }
         // Either this device has never synced before (meta === null — a
@@ -4021,12 +4253,15 @@
         // server's timestamp has moved past what this device last saw
         // (someone else changed it since). Both are real reasons to adopt.
         const remote = JSON.stringify(record.settings);
-        const local = JSON.stringify(collectSyncedSettings());
+        // Pictures compared as references when this device's copy is the
+        // one already in R2 (nothing is uploaded just for comparing).
+        const local = JSON.stringify(await syncedSettingsForServer(false));
         if (remote === local) {
           saveSyncMeta(remoteStamp);
+          migrateInlinePictures(record.settings);
           return;
         }
-        applySyncedSettings(record.settings);
+        await applySyncedSettings(record.settings);
         saveSyncMeta(remoteStamp);
         window.location.reload();
       } catch {
