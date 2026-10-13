@@ -114,12 +114,10 @@ export default function LegacyPage({
    * shows "before … the user's actual saved background" lands over it. So it
    * keeps the theme; only Login opts out.
    *
-   * Nothing is erased when this is false: the saved appearance stays in
-   * localStorage and comes back the moment you sign in again. It is
-   * deliberately not cleared on sign-out — Sync Across Devices is opt-in and
-   * defaults to OFF, so for most people localStorage is the ONLY copy of their
-   * theme, and clearing it would mean losing a wallpaper for good every time
-   * they signed out.
+   * This flag erases nothing. What survives sign-out is decided in signOut()
+   * (app/lib/averages.ts): since 2026-10-13, with Sync Across Devices off
+   * everything on the device is deleted, wallpaper included; with Sync on
+   * the device keeps its copy because the account has it too.
    */
   usesSavedTheme?: boolean;
   /**
