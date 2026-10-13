@@ -327,7 +327,56 @@ function forgetPushOnThisDevice(): Promise<void> {
   })();
 }
 
+/**
+ * Everything Averages.io keeps in this browser: every key the app writes
+ * starts with one of these (localStorage and sessionStorage alike).
+ */
+const OUR_STORAGE_KEY = /^(schoolagy_|averages_)/;
+
+/** Whether this device was syncing settings to the account when signing out. */
+function syncWasOn(): boolean {
+  try {
+    const raw = window.localStorage.getItem("schoolagy_settings_options");
+    return !!raw && JSON.parse(raw)?.syncAcrossDevices === true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Signing out with Sync Across Devices off leaves nothing behind (Martin,
+ * 2026-10-13: signing out "with sync across devices off" wasn't deleting
+ * everything on the device). Settings, theme and wallpaper, profile name and
+ * photo, course nicknames and order, Home layout, hidden files, onboarding
+ * done, every cache: all of it, so the next person on a shared Chromebook
+ * starts from nothing.
+ *
+ * This replaces the earlier rule (2026-09-16) that the saved appearance
+ * survives sign-out. With Sync off this device held the only copy, so it is
+ * gone for good, which is what was asked for. With Sync on, the account
+ * still has it all, so the device keeps its copy as before.
+ *
+ * Not touched: the NSFW model in IndexedDB (Averages.io's own download, the
+ * same for everyone, nothing about the student) and the HttpOnly cookies,
+ * which the API's sign-out answer deletes (session, Google access, profile).
+ */
+function forgetEverythingOnThisDevice(): void {
+  for (const store of [window.localStorage, window.sessionStorage]) {
+    try {
+      const keys: string[] = [];
+      for (let i = 0; i < store.length; i++) {
+        const key = store.key(i);
+        if (key && OUR_STORAGE_KEY.test(key)) keys.push(key);
+      }
+      keys.forEach((key) => store.removeItem(key));
+    } catch {
+      /* storage blocked: nothing was saved there either */
+    }
+  }
+}
+
 export async function signOut(): Promise<void> {
+  const wipe = !syncWasOn();
   setSignedInHint(false);
   cacheClear(SESSION_CACHE);
   cacheClear(BUNDLE_CACHE);
@@ -336,6 +385,13 @@ export async function signOut(): Promise<void> {
   clearExtras();
   clearCloudConnections();
   const pushForgotten = forgetPushOnThisDevice();
+  // Synchronously, before the caller navigates away. The push notes above go
+  // first because forgetPushOnThisDevice reads nothing else from storage.
+  if (wipe) {
+    forgetEverythingOnThisDevice();
+    // The one note kept: the login page shows its buttons straight away.
+    setSignedInHint(false);
+  }
   // The DELETE below is what actually clears the httpOnly session cookie —
   // the API responds with a Set-Cookie that expires it; nothing on this side
   // can touch that cookie directly (that's the point of httpOnly). It has to
