@@ -498,6 +498,21 @@ const CHECKING_JS = "(function(){var d=document.documentElement;try{if(localStor
       <script dangerouslySetInnerHTML={{ __html: CHECKING_JS }} />`
     : "";
 
+  // Home (2026-10-13): app.averages.io's front door (worker/index.js) now
+  // sends anyone with a session cookie straight here, before the login page
+  // could pick Onboarding for someone who hasn't finished it on this device
+  // (that's kept in this browser, out of the Worker's sight). So Home makes
+  // the same choice, before it paints. Storage blocked: stay on Home.
+  const homeOnboard = name === "home"
+    ? `
+const ONBOARD_JS = "try{if(localStorage.getItem('schoolagy_onboarded')!=='1')location.replace('/onboard');}catch(e){}";
+`
+    : "";
+  const homeOnboardTag = name === "home"
+    ? `
+      <script dangerouslySetInnerHTML={{ __html: ONBOARD_JS }} />`
+    : "";
+
   // Only the login page runs an effect of its own; importing useEffect
   // everywhere would leave an unused import on 14 of the 15 pages.
   const reactImport = isLogin ? `import { useEffect } from "react";\n` : "";
@@ -509,9 +524,9 @@ const TITLE = ${JSON.stringify(data.title)};
 const STYLE_CSS = ${JSON.stringify(data.style)};
 const BODY_HTML = ${JSON.stringify(data.body)};
 const SCRIPT_JS = ${JSON.stringify(data.script)};
-${loginChecking}
+${loginChecking}${homeOnboard}
 export default function Page() {${loginEffect}
-  return (${isLogin ? "\n    <>" + loginCheckingTags : ""}
+  return (${isLogin ? "\n    <>" + loginCheckingTags : name === "home" ? "\n    <>" + homeOnboardTag : ""}
     <LegacyPage
       title={TITLE}
       styleCss={STYLE_CSS}
@@ -522,7 +537,7 @@ export default function Page() {${loginEffect}
       hasUploads={${UPLOAD_PAGES.has(name)}}
       externalScripts={${JSON.stringify(EXTERNAL_SCRIPTS[name] || [])}}
       pageId={${JSON.stringify(name)}}
-    />${isLogin ? "\n    </>" : ""}
+    />${isLogin || name === "home" ? "\n    </>" : ""}
   );
 }
 `;
