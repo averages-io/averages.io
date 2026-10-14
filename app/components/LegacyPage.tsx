@@ -247,6 +247,10 @@ export default function LegacyPage({
       // supposed to be on that list. Set for every page (not just
       // requiresAuth ones) so a page can check it without special-casing.
       (window as any).__AVERAGES_MODE__ = session.mode;
+      // The account's own name (2026-10-14), for the profile button, the
+      // greeting and Settings' profile card when no name is saved on this
+      // device. Replaces the sample "Martin" / "M" those used to fall back to.
+      (window as any).__AVERAGES_NAME__ = typeof session.name === "string" ? session.name : "";
       // Incognito (2026-10-05): nothing about the student is stored on our
       // servers, so Sync, connected apps and notifications are off. It's on
       // when the API says so (signed in as under 13, which can't be switched
