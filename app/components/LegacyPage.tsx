@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { clearCloudConnections, getSession, loadBundle, loadExtras, signOut, type Mode } from "../lib/averages";
+import { getSession, loadBundle, loadExtras, signOut, type Mode } from "../lib/averages";
 import { mergeExtras } from "../lib/extras";
 import { installNsfwGlobal, preloadNsfwModel } from "../lib/nsfw";
 import { SKELETON_CSS, skeletonHtml, revealContent } from "./PageSkeleton";
@@ -264,8 +264,9 @@ export default function LegacyPage({
       }
       const incognito = !!session.incognito || pickedIncognito;
       (window as any).__AVERAGES_INCOGNITO__ = { on: incognito, locked: !!session.incognito };
-      // Google Drive / OneDrive connections live on this device; Incognito has none.
-      if (incognito) clearCloudConnections();
+      // Incognito keeps Google Drive / OneDrive (2026-10-14): they connect in
+      // this browser only (public/js/averages-cloud.js), and any connection our
+      // server held is forgotten there. Sign-out clears them like everything else.
 
       setMode(session.mode);
       setPhase("ready");

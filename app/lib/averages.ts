@@ -344,17 +344,17 @@ function syncWasOn(): boolean {
 }
 
 /**
- * Signing out with Sync Across Devices off leaves nothing behind (Martin,
- * 2026-10-13: signing out "with sync across devices off" wasn't deleting
- * everything on the device). Settings, theme and wallpaper, profile name and
- * photo, course nicknames and order, Home layout, hidden files, onboarding
- * done, every cache: all of it, so the next person on a shared Chromebook
- * starts from nothing.
+ * Signing out leaves nothing behind on this device (Martin, 2026-10-13, and
+ * 2026-10-14: "it is keeping the dark mode theme and the background still,
+ * can you make it clear all cookies on sign out"). Settings, dark mode, theme
+ * and wallpaper, profile name and photo, course nicknames and order, Home
+ * layout, hidden files, onboarding done, every cache: all of it, Sync on or
+ * off, so the next person on a shared Chromebook starts from nothing.
  *
- * This replaces the earlier rule (2026-09-16) that the saved appearance
- * survives sign-out. With Sync off this device held the only copy, so it is
- * gone for good, which is what was asked for. With Sync on, the account
- * still has it all, so the device keeps its copy as before.
+ * This replaces the earlier rules that the saved appearance survives sign-out
+ * (2026-09-16) and, for one day, that it survived when Sync was on. With Sync
+ * on the account still has a copy: turning Sync on again after signing in
+ * brings it back. With Sync off it is gone for good.
  *
  * Not touched: the NSFW model in IndexedDB (Averages.io's own download, the
  * same for everyone, nothing about the student) and the HttpOnly cookies,
@@ -375,8 +375,22 @@ function forgetEverythingOnThisDevice(): void {
   }
 }
 
+/** The app's own cookie (worker/index.js's loop guard), the only one page code can reach. */
+function clearAppCookies(): void {
+  try {
+    // With and without Secure: a page on plain http (local testing) can't set
+    // a Secure cookie, even an expired one.
+    document.cookie = "averages_bounced=; Path=/; Max-Age=0; Secure; SameSite=Lax";
+    document.cookie = "averages_bounced=; Path=/; Max-Age=0; SameSite=Lax";
+  } catch {
+    /* nothing to clear */
+  }
+}
+
 export async function signOut(): Promise<void> {
-  const wipe = !syncWasOn();
+  // Sync off: the API also disconnects the connected apps it keeps for this
+  // student. Sync on: the account keeps them, as it keeps the settings.
+  const forgetOnServer = !syncWasOn();
   setSignedInHint(false);
   cacheClear(SESSION_CACHE);
   cacheClear(BUNDLE_CACHE);
@@ -387,11 +401,10 @@ export async function signOut(): Promise<void> {
   const pushForgotten = forgetPushOnThisDevice();
   // Synchronously, before the caller navigates away. The push notes above go
   // first because forgetPushOnThisDevice reads nothing else from storage.
-  if (wipe) {
-    forgetEverythingOnThisDevice();
-    // The one note kept: the login page shows its buttons straight away.
-    setSignedInHint(false);
-  }
+  forgetEverythingOnThisDevice();
+  clearAppCookies();
+  // The one note kept: the login page shows its buttons straight away.
+  setSignedInHint(false);
   // The DELETE below is what actually clears the httpOnly session cookie —
   // the API responds with a Set-Cookie that expires it; nothing on this side
   // can touch that cookie directly (that's the point of httpOnly). It has to
@@ -412,7 +425,7 @@ export async function signOut(): Promise<void> {
   // cookie whenever its response actually lands, however long that takes.
   // Sync off: the API also disconnects Canva, Google Drive and OneDrive,
   // which it keeps for this student on our servers (2026-10-13).
-  const deleteRequest = fetch(`${API_BASE}/auth/session${wipe ? "?forget=1" : ""}`, {
+  const deleteRequest = fetch(`${API_BASE}/auth/session${forgetOnServer ? "?forget=1" : ""}`, {
     method: "DELETE",
     credentials: "include",
   }).catch(() => {

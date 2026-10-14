@@ -65,6 +65,20 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         {/*
+          Warm up connections early (2026-10-14). The browser opens these
+          while the page is still loading, instead of when the first request
+          for them goes out: the API (every page asks /auth/me straight away)
+          and Adobe Fonts (its stylesheet, then the font files from
+          p.typekit.net, which are fetched without cookies, hence
+          crossOrigin). Each saves a DNS lookup and a TLS handshake, about
+          0.1 to 0.3 s on the first page of a visit. No crossOrigin on the API
+          one: its requests send cookies, and a connection opened for
+          cookie-less requests isn't reused for those.
+        */}
+        <link rel="preconnect" href="https://api.averages.io" />
+        <link rel="preconnect" href="https://use.typekit.net" />
+        <link rel="preconnect" href="https://p.typekit.net" crossOrigin="anonymous" />
+        {/*
           Puffin, via Adobe Fonts. Every page's CSS asks for
           `font-family: "puffin", ...`, but the stylesheet that actually
           DEFINES that face lives in a <link> in each source page's <head> —
