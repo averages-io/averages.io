@@ -1961,7 +1961,9 @@
       }
       function render() {
         list.innerHTML = APPS.map(a => {
-          if (INCOGNITO) return incognitoRowHTML(a);
+          // Incognito (2026-10-14): Google Drive and OneDrive connect in this
+          // tab only (nothing on our servers); Canva stays off.
+          if (INCOGNITO && (a.id === 'canva' || !LIVE)) return incognitoRowHTML(a);
           if (LIVE && a.id === 'canva') return canvaRowHTML(a);
           if (LIVE) return cloudRowHTML(a);
           const on = connected.has(a.id);
@@ -1999,7 +2001,11 @@
        * Null while either is unknown or both are connected.
        */
       function lockedEditor() {
-        if (INCOGNITO) return 'none';
+        // Incognito: Canva is off, so Google Drive or nothing.
+        if (INCOGNITO) {
+          if (!LIVE || cloud.state !== 'ready') return 'none';
+          return cloud.cfg.google && cloudAccount('gdrive') ? 'gdrive' : 'none';
+        }
         let canva, drive;
         if (LIVE) {
           if (canvaLive.state !== 'ready' && canvaLive.state !== 'unconfigured') return null;
@@ -2028,14 +2034,16 @@
         if (lock === 'none') {
           editorHint.hidden = false;
           editorHint.textContent = INCOGNITO
-            ? 'Editing apps are off in Incognito mode.'
+            ? 'Connect Google Drive above to edit files. Canva is off in Incognito mode.'
             : 'Connect Canva or Google Drive above to edit files.';
           return;
         }
         if (lock) {
           const on = APPS.find(a => a.id === lock), other = APPS.find(a => a.id === (lock === 'gdrive' ? 'canva' : 'gdrive'));
           editorHint.hidden = false;
-          editorHint.textContent = `${on.name} is the only editing app connected, so Edit uses it. Connect ${other.name} above to choose.`;
+          editorHint.textContent = INCOGNITO
+            ? `${on.name} is the only editing app in Incognito mode, so Edit uses it.`
+            : `${on.name} is the only editing app connected, so Edit uses it. Connect ${other.name} above to choose.`;
           return;
         }
         const app = APPS.find(a => a.id === editorValue);
@@ -2296,9 +2304,13 @@
       syncEditorHint();
       if (INCOGNITO) {
         const note = document.querySelector('.integ-note');
-        if (note) note.textContent = INCOG.locked
-          ? 'Connected apps are off because you signed in as under 13 (Incognito mode). Nothing about you is stored on our servers.'
-          : 'Connected apps are off in Incognito mode, so nothing about you is stored on our servers. You can switch modes in Settings > Account.';
+        if (note) note.textContent = (INCOG.locked ? 'You signed in as under 13, so you’re in Incognito mode. ' : 'You’re in Incognito mode. ')
+          + 'Google Drive and OneDrive sign in through this browser only: nothing about them is stored on our servers, a new tab asks you to sign in again, and signing out forgets them. OneDrive can send copies but not share links. Canva is off in Incognito mode.';
+        if (LIVE) {
+          loadCloud();
+          window.addEventListener('averages-cloud-change', () => { if (cloud.state === 'ready') render(); });
+          window.addEventListener('averages-cloud-status', () => { if (cloud.state === 'ready') render(); });
+        }
       } else if (LIVE) {
         loadCanvaStatus();
         loadCloud();
@@ -4285,7 +4297,17 @@
 
     function closeSyncOffConfirm() { syncOffConfirmOverlay.classList.remove('show'); }
     syncAcrossDevicesToggle.addEventListener('change', () => {
-      if (syncAcrossDevicesToggle.checked) { saveSettingsOption('syncAcrossDevices', true); return; } // turning on never needs confirming
+      if (syncAcrossDevicesToggle.checked) {
+        // Turning on never needs confirming. Ask the account for its copy
+        // first (2026-10-14): sign-out now clears this device, so pushing
+        // straight away would overwrite the account's settings with defaults.
+        // pullSyncSettingsNow adopts what's there, or uploads this device's
+        // settings when the account has none yet.
+        saveSettingsOption('syncAcrossDevices', true);
+        clearTimeout(syncPushTimer);
+        pullSyncSettingsNow();
+        return;
+      }
       syncAcrossDevicesToggle.checked = true; // hold it on until the user actually confirms
       syncOffConfirmBody.textContent = browserNotifToggle.checked ? SYNC_OFF_BODY_WITH_NOTIF : SYNC_OFF_BODY_DEFAULT;
       syncOffConfirmOverlay.classList.add('show');

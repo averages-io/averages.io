@@ -1779,8 +1779,9 @@
       function srcList() {
         // Turned in comes from the school platform like course files, so Incognito keeps it.
         const subs = SUB.state === 'off' ? [] : ['turnedin'];
-        if (INCOGNITO) return ['course'].concat(subs);
-        return ['course'].concat(subs, ['gdrive', 'onedrive', 'canva'].filter(src => !HIDDEN_STATES.includes(sourceState(src))));
+        // Incognito (2026-10-14): Google Drive and OneDrive work in this tab
+        // only, nothing on our servers; Canva stays off (its sign-in needs our server).
+        return ['course'].concat(subs, (INCOGNITO ? ['gdrive', 'onedrive'] : ['gdrive', 'onedrive', 'canva']).filter(src => !HIDDEN_STATES.includes(sourceState(src))));
       }
       function entries() {
         const out = [];
@@ -1794,12 +1795,12 @@
           out.push({ key: 'sub:' + i, src: 'turnedin', name: f.name, ext: f.ext, t: f.at, course: f.course,
             from: `${c.name} · Turned in${f.late ? ' late' : ''} · ${f.assignmentTitle}`, color: cfColor(c), size: f.size, raw: f });
         });
-        if (!INCOGNITO) {
+        {
           ['gdrive', 'onedrive'].forEach(app => {
             if (CLOUD[app].state !== 'ready') return;
             CLOUD[app].files.forEach((f, i) => out.push({ key: `${app}:${i}`, src: app, name: f.name, ext: f.type, kind: f.kind, t: f.t, from: app === 'gdrive' ? `Google Drive · ${f.kind}` : 'OneDrive', size: f.size, thumb: f.thumb || '', raw: f }));
           });
-          if (CV.state === 'ready') CV.items.forEach(d => out.push({ key: 'cv:' + d.id, src: 'canva', name: String(d.title || 'Untitled design'), ext: 'canva', t: Number(d.updatedAt) || 0, from: 'Canva', thumb: d.thumbnailUrl, raw: d }));
+          if (!INCOGNITO && CV.state === 'ready') CV.items.forEach(d => out.push({ key: 'cv:' + d.id, src: 'canva', name: String(d.title || 'Untitled design'), ext: 'canva', t: Number(d.updatedAt) || 0, from: 'Canva', thumb: d.thumbnailUrl, raw: d }));
         }
         // Removed from Averages.io: left out, unless "Show them" is on.
         return out.filter(e => {
@@ -1986,7 +1987,7 @@
           else if (f === 'gdrive' && (st === 'ready' || st === 'click')) extra = `<button class="fx-add" type="button" data-pick-drive title="In Google Drive, right-click a file → Open with → Averages.io">${PLUS_ICON}Add from Google Drive</button>`;
         } else if (f === 'canva') {
           if (foldersOn()) extra = `<button class="fx-add" type="button" data-folder-new${FD.formBusy ? ' disabled' : ''}>${PLUS_ICON}New folder</button>`;
-        } else if (!INCOGNITO) extra = `<button class="fx-add" type="button" data-lv-add aria-haspopup="menu" aria-expanded="false">${PLUS_ICON}Add files</button>`;
+        } else extra = `<button class="fx-add" type="button" data-lv-add aria-haspopup="menu" aria-expanded="false">${PLUS_ICON}Add files</button>`;
         return seg + extra;
       }
       function chipsLive() {
@@ -2055,8 +2056,8 @@
           if ((LV.filter === 'turnedin' || LV.filter === 'all') && SUB.state === 'ready' && SUB.partial) body += '<p class="fx-note">Turned In shows what you turned in for your most recent assignments; older ones (or a class that didn’t answer) may be missing.</p>';
           const nHidden = hiddenCount();
           if (nHidden || LV.showHidden) body += `<p class="fx-note">${LV.showHidden ? 'Showing files you removed from Averages.io.' : `${nHidden} file${nHidden === 1 ? '' : 's'} removed from Averages.io.`} <button class="lf-link" type="button" data-show-hidden>${LV.showHidden ? 'Hide them' : 'Show them'}</button></p>`;
-          if (!INCOGNITO && (LV.filter === 'all' || LV.filter === 'recent' || LV.filter === 'gdrive' || LV.filter === 'onedrive')) body += '<p class="fx-note">Google Drive and OneDrive show the files you save, edit or add with Averages.io, not your whole drive.</p>';
-          if (INCOGNITO && (LV.filter === 'all' || LV.filter === 'recent')) body += '<p class="fx-note">Google Drive, OneDrive and Canva are off in Incognito mode: it stores nothing about you on our servers.</p>';
+          if (LV.filter === 'all' || LV.filter === 'recent' || LV.filter === 'gdrive' || LV.filter === 'onedrive') body += '<p class="fx-note">Google Drive and OneDrive show the files you save, edit or add with Averages.io, not your whole drive.</p>';
+          if (INCOGNITO && (LV.filter === 'all' || LV.filter === 'recent')) body += '<p class="fx-note">Incognito mode: Google Drive and OneDrive stay connected in this tab only, and nothing about them is stored on our servers. Canva is off.</p>';
         }
         const focusId = document.activeElement && document.activeElement.id === 'lfFolderName' ? 'lfFolderName' : null;
         main.innerHTML = `
@@ -2253,15 +2254,12 @@
       // Signed in or out of a drive in another tab, or a sign-in finished late: show it.
       window.addEventListener('averages-cloud-change', () => { if (cfg) { startCloud('gdrive'); startCloud('onedrive'); } });
 
-      if (INCOGNITO) {
-        Object.keys(CLOUD).forEach(app => { CLOUD[app].state = 'off'; });
-        CV.state = 'off';
-      }
+      if (INCOGNITO) CV.state = 'off';
       render();
       loadCourse();
       loadSubs(false);
-      if (INCOGNITO) return;
       loadCloud();
+      if (INCOGNITO) return;
       loadCanva(false);
       loadCanvaStatus();
     }

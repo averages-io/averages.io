@@ -1987,8 +1987,9 @@
     // Which "Edit in" app a file gets (2026-10-05, per Martin): only one
     // that's connected. The preview shows both, as before.
     const EDIT_READY = { canva: CANVA_PREVIEW, gdrive: CANVA_PREVIEW };
-    // Incognito (2026-10-05, set by LegacyPage.tsx): connected apps are off, so
-    // no Edit buttons and no Save to cloud, and Canva / Google aren't asked anything.
+    // Incognito (set by LegacyPage.tsx): since 2026-10-14 Google Drive and
+    // OneDrive work through this browser's own sign-in (nothing on our servers),
+    // so Edit in Google Drive and Save to cloud stay; Canva is off.
     const INCOGNITO = !!(window.__AVERAGES_INCOGNITO__ && window.__AVERAGES_INCOGNITO__.on);
     function editAppFor(ext) {
       const can = { canva: CANVA_EXTS.includes(ext), gdrive: DRIVE_EXTS.includes(ext) };
@@ -2497,13 +2498,14 @@
       const editIn = kind === 'canva' ? 'Canva' : kind === 'gdrive' ? 'Google Drive' : '';
       fileMenu.setAttribute('aria-label', editIn ? `Edit in ${editIn}` : 'Save to cloud');
       // Signed in (2026-10-05): Save to cloud is real for whichever app is set up.
-      const liveSave = kind === 'cloud' && LIVE_DETAIL && ID_OK(btn.dataset.fileId) && cloudCfg && !INCOGNITO;
+      // Incognito too (2026-10-14): Google Drive and OneDrive sign in in this tab only.
+      const liveSave = kind === 'cloud' && LIVE_DETAIL && ID_OK(btn.dataset.fileId) && cloudCfg;
       const ready = { 'Google Drive': liveSave && !!cloudCfg.google, OneDrive: liveSave && !!cloudCfg.microsoft };
       const appId = { 'Google Drive': 'gdrive', OneDrive: 'onedrive' };
       fileMenu.innerHTML = `<div class="file-menu-label">${editIn ? 'Edit' : 'Save'} "${escapeHtml(name)}" ${editIn ? 'in ' + editIn : 'to'}</div>` +
         items.map(n => ready[n]
           ? `<button class="file-menu-item" type="button" role="menuitem" data-save="${appId[n]}"><span>${n}<small>${appId[n] === 'onedrive' ? 'Into Apps/Averages.io' : 'Into an Averages.io folder'}</small></span></button>`
-          : `<button class="file-menu-item" type="button" role="menuitem" disabled><span>${n}</span><span class="soon">${INCOGNITO ? 'Off in Incognito' : 'Coming soon'}</span></button>`).join('');
+          : `<button class="file-menu-item" type="button" role="menuitem" disabled><span>${n}</span><span class="soon">Coming soon</span></button>`).join('');
       fileMenu.hidden = false;
       const r = btn.getBoundingClientRect(), w = fileMenu.offsetWidth, h = fileMenu.offsetHeight;
       fileMenu.style.left = Math.max(8, Math.min(r.right - w, window.innerWidth - w - 8)) + 'px';
@@ -3086,7 +3088,8 @@
     const andList = a => (a.length < 2 ? a.join('') : a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1]);
 
     function sourceState(app) {
-      if (INCOGNITO) return 'off';
+      // Incognito (2026-10-14): only Canva is off; its sign-in needs our server.
+      if (INCOGNITO && app === 'canva') return 'off';
       if (app === 'canva') return !canvaInfo || !canvaInfo.configured ? 'soon' : canvaInfo.connected ? 'ready' : 'connect';
       const C = window.AveragesCloud;
       if (!C || !cloudCfg) return 'soon';
@@ -3097,7 +3100,11 @@
       const live = SUBMIT_LIVE;
       const off = ['canva', 'gdrive', 'onedrive'].filter(a => !live || ['soon', 'off'].includes(sourceState(a)));
       const btn = app => `<button class="as-chip" type="button" data-source="${app}"${off.includes(app) ? ' disabled' : ''}>${SOURCE_MARK[app]}${SOURCE_NAME[app]}</button>`;
-      const soon = live && INCOGNITO ? 'Off in Incognito' : off.length === 3 ? 'Coming soon' : off.length ? `${off.map(a => SOURCE_NAME[a]).join(' and ')} coming soon` : '';
+      const later = off.filter(a => !(INCOGNITO && a === 'canva'));
+      const soon = [
+        live && INCOGNITO ? 'Canva is off in Incognito' : '',
+        later.length === 3 ? 'Coming soon' : later.length ? `${later.map(a => SOURCE_NAME[a]).join(' and ')} coming soon` : '',
+      ].filter(Boolean).join('. ');
       return `<div class="as-from" id="uploadSources" role="group" aria-label="Add from another app">
           <span class="as-from-label">Or add from</span>
           ${btn('canva')}${btn('gdrive')}${btn('onedrive')}
@@ -4832,6 +4839,9 @@
         });
         loadCloud();
         loadCanvaReady();
+      } else if (INCOGNITO && !CLASSROOM) {
+        // Google Drive and OneDrive in this tab only (2026-10-14); no Canva, no drafts kept on our servers.
+        loadCloud();
       }
     }
 
