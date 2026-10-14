@@ -410,7 +410,9 @@ export async function signOut(): Promise<void> {
   // how long THIS FUNCTION waits, not against the request itself — the
   // fetch keeps running in the background and still gets to clear the
   // cookie whenever its response actually lands, however long that takes.
-  const deleteRequest = fetch(`${API_BASE}/auth/session`, {
+  // Sync off: the API also disconnects Canva, Google Drive and OneDrive,
+  // which it keeps for this student on our servers (2026-10-13).
+  const deleteRequest = fetch(`${API_BASE}/auth/session${wipe ? "?forget=1" : ""}`, {
     method: "DELETE",
     credentials: "include",
   }).catch(() => {
