@@ -545,7 +545,7 @@
     signed_out: 'You’ve been signed out of Averages.io. Sign in again.',
     turn_in_on_classroom: 'Turn this in on Google Classroom.',
     not_available_in_demo: 'Turning in work isn’t available in the demo.',
-    incognito_mode: 'Connected apps are off in Incognito mode.',
+    incognito_mode: 'Canva is off in Incognito mode.',
     bad_request: 'Something about this didn’t look right. Reload the page and try again.',
   };
   /** Friendly words for an error from this file, or from averages-cloud.js when it knows better. */
