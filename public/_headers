@@ -1,0 +1,8 @@
+# Let browsers keep the app's own built files (2026-10-14).
+# Everything under /_next/static/ has a hash of its content in its file name,
+# so a changed file always gets a new name and a new address. Marking these
+# "keep for a year, never re-check" is safe, and saves the "has this changed?"
+# request for each of them on every page after the first.
+# Pages, /js/ and everything else keep Cloudflare's default (check every time).
+/_next/static/*
+  Cache-Control: public, max-age=31536000, immutable
