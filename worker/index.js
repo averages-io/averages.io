@@ -69,7 +69,8 @@ export default {
         status: 302,
         headers: {
           Location: to,
-          "Set-Cookie": `${BOUNCE_COOKIE}=1; Path=/; Max-Age=${BOUNCE_SECONDS}; HttpOnly; Secure; SameSite=Lax`,
+          // Not HttpOnly: it holds nothing ("1"), and sign-out clears it from the page (2026-10-14).
+          "Set-Cookie": `${BOUNCE_COOKIE}=1; Path=/; Max-Age=${BOUNCE_SECONDS}; Secure; SameSite=Lax`,
           "Cache-Control": "no-store",
         },
       });
