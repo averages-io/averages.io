@@ -1273,7 +1273,7 @@
         </div>
       </div>
       <div class="profile-menu-wrap">
-        <button class="profile-btn" id="profileBtn" type="button" aria-haspopup="menu" aria-expanded="false" aria-label="Profile and settings">M</button>
+        <button class="profile-btn" id="profileBtn" type="button" aria-haspopup="menu" aria-expanded="false" aria-label="Profile and settings"></button>
         <div class="profile-menu" id="profileMenu" role="menu" hidden>
           <button class="profile-menu-item" type="button" role="menuitem" data-action="settings">Settings</button>
           <button class="profile-menu-item signout" type="button" role="menuitem" data-action="signout">Sign out</button>
@@ -4914,14 +4914,17 @@
         var raw = localStorage.getItem('schoolagy_profile');
         if (raw) profile = JSON.parse(raw);
       } catch (e) {}
-      if (!profile) return;
+      // No name saved on this device (new device, or signed out with Sync
+      // off): the account's own name from the sign-in, never a sample name
+      // (2026-10-14; this used to fall back to "Martin" / "M").
+      if (!profile || !profile.name || !String(profile.name).trim()) profile = Object.assign({}, profile, { name: window.__AVERAGES_NAME__ || '' });
       if (profile.photo) {
         profileBtn.style.backgroundImage = 'url("' + profile.photo + '")';
         profileBtn.style.backgroundSize = 'cover';
         profileBtn.style.backgroundPosition = 'center';
         profileBtn.textContent = '';
       } else if (profile.name) {
-        profileBtn.textContent = profile.name.trim().charAt(0).toUpperCase() || 'M';
+        profileBtn.textContent = profile.name.trim().charAt(0).toUpperCase() || '';
       }
     })();
     const profileMenu = document.getElementById('profileMenu');

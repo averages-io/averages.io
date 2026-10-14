@@ -408,6 +408,8 @@
   .pick-btn { display: inline-flex; align-items: center; gap: 8px; font: inherit; font-weight: 700; font-size: 0.83rem; color: var(--text-dark); background: var(--panel-bg); border: 1px solid var(--border); border-radius: 999px; padding: 8px 12px 8px 16px; cursor: pointer; white-space: nowrap; }
   .pick-btn.locked, .pick-btn:disabled { cursor: default; opacity: .75; }
   .pick-btn.locked .pick-chev { display: none; }
+  /* Nothing to pick (no editing app connected, or Incognito), 2026-10-14. */
+  .pick-btn.empty { opacity: .5; }
   .pick-btn:hover { background: var(--panel-inner); }
   .pick-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring); }
   .pick-chev { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; transition: transform 0.15s ease; }
@@ -1032,7 +1034,7 @@
         <h1 class="title">Settings</h1>
       </div>
       <div class="profile-menu-wrap">
-        <button class="profile-btn" id="profileBtn" type="button" aria-haspopup="menu" aria-expanded="false" aria-label="Profile and settings">M</button>
+        <button class="profile-btn" id="profileBtn" type="button" aria-haspopup="menu" aria-expanded="false" aria-label="Profile and settings"></button>
         <div class="profile-menu" id="profileMenu" role="menu" hidden>
           <button class="profile-menu-item" type="button" role="menuitem" data-action="settings">Settings</button>
           <button class="profile-menu-item signout" type="button" role="menuitem" data-action="signout">Sign out</button>
@@ -1220,9 +1222,9 @@
           <!-- ---------- Account ---------- -->
           <div class="settings-section" data-section="account">
             <div class="profile-card">
-              <div class="profile-card-avatar" id="profileCardAvatar">M</div>
+              <div class="profile-card-avatar" id="profileCardAvatar"></div>
               <div class="profile-card-text">
-                <p class="profile-card-name" id="profileCardName">Martin</p>
+                <p class="profile-card-name" id="profileCardName"></p>
                 <p class="profile-card-email empty" id="profileCardEmail">No email added</p>
                 <p class="profile-card-verify-note" id="profileCardVerifyNote" hidden>Unverified — <button type="button" id="profileCardVerifyBtn">verify now</button></p>
               </div>
@@ -1991,10 +1993,13 @@
       /*
        * Only one editing app connected (2026-10-09, Martin): Open files in
        * shows that one and can't be changed, since Edit can only use it.
-       * Null while either is unknown or both / neither are connected.
+       * Neither connected (2026-10-14, Martin: "nothing connected / only
+       * OneDrive"), or Incognito, where they're off: 'none', greyed out too,
+       * since there's nothing to pick. OneDrive doesn't count: it can't edit.
+       * Null while either is unknown or both are connected.
        */
       function lockedEditor() {
-        if (INCOGNITO) return null;
+        if (INCOGNITO) return 'none';
         let canva, drive;
         if (LIVE) {
           if (canvaLive.state !== 'ready' && canvaLive.state !== 'unconfigured') return null;
@@ -2005,7 +2010,8 @@
           canva = connected.has('canva');
           drive = connected.has('gdrive');
         } else return null;
-        if (canva === drive) return null;
+        if (canva && drive) return null;
+        if (!canva && !drive) return 'none';
         return drive ? 'gdrive' : 'canva';
       }
       function syncEditorHint() {
@@ -2014,9 +2020,17 @@
         if (editorBtn) {
           editorBtn.disabled = !!lock;
           editorBtn.classList.toggle('locked', !!lock);
-          const shown = editorOpts.find(x => x.dataset.value === (lock || editorValue));
+          editorBtn.classList.toggle('empty', lock === 'none');
+          const shown = editorOpts.find(x => x.dataset.value === (lock && lock !== 'none' ? lock : editorValue));
           if (shown) editorLabel.textContent = shown.textContent.trim();
           if (lock) closeEditorMenu(false);
+        }
+        if (lock === 'none') {
+          editorHint.hidden = false;
+          editorHint.textContent = INCOGNITO
+            ? 'Editing apps are off in Incognito mode.'
+            : 'Connect Canva or Google Drive above to edit files.';
+          return;
         }
         if (lock) {
           const on = APPS.find(a => a.id === lock), other = APPS.find(a => a.id === (lock === 'gdrive' ? 'canva' : 'gdrive'));
@@ -3281,7 +3295,7 @@
     // ------------------------------------------------------------------
     const AVERAGES_PROFILE_KEY = 'schoolagy_profile';
     function loadProfileState() {
-      const defaults = { name: 'Martin', email: '', emailVerified: false, photo: null };
+      const defaults = { name: '', email: '', emailVerified: false, photo: null };
       try {
         const raw = localStorage.getItem(AVERAGES_PROFILE_KEY);
         if (raw) return Object.assign(defaults, JSON.parse(raw));
@@ -3317,12 +3331,12 @@
         el.textContent = '';
       } else {
         el.style.backgroundImage = 'none';
-        el.textContent = (name || 'M').trim().charAt(0).toUpperCase() || 'M';
+        el.textContent = (name || window.__AVERAGES_NAME__ || '').trim().charAt(0).toUpperCase();
       }
     }
 
     function renderProfileCard() {
-      profileCardName.textContent = profileState.name || 'Martin';
+      profileCardName.textContent = profileState.name || window.__AVERAGES_NAME__ || '';
       if (profileState.email) {
         profileCardEmail.textContent = profileState.email;
         profileCardEmail.classList.remove('empty');
@@ -3391,7 +3405,7 @@
       });
     });
     document.getElementById('profileEditSave').addEventListener('click', () => {
-      const name = profileEditNameInput.value.trim() || 'Martin';
+      const name = profileEditNameInput.value.trim() || profileState.name || window.__AVERAGES_NAME__ || '';
       const email = profileEditEmailInput.value.trim();
       if (email && !isValidEmail(email)) {
         profileEditEmailError.hidden = false;

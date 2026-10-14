@@ -1178,11 +1178,11 @@
   <div class="page">
     <div class="topbar">
       <div>
-        <h1 class="title" id="greetingTitle">Hey, Martin</h1>
-        <p class="subtitle" id="homeDate">Monday, August 24</p>
+        <h1 class="title" id="greetingTitle">Hey</h1>
+        <p class="subtitle" id="homeDate"></p>
       </div>
       <div class="profile-menu-wrap">
-        <button class="profile-btn" id="profileBtn" type="button" aria-haspopup="menu" aria-expanded="false" aria-label="Profile and settings">M</button>
+        <button class="profile-btn" id="profileBtn" type="button" aria-haspopup="menu" aria-expanded="false" aria-label="Profile and settings"></button>
         <div class="profile-menu" id="profileMenu" role="menu" hidden>
           <button class="profile-menu-item" type="button" role="menuitem" data-action="settings">Settings</button>
           <button class="profile-menu-item signout" type="button" role="menuitem" data-action="signout">Sign out</button>
@@ -1213,7 +1213,7 @@
 
           <div class="today-block widget-block" id="block-today" data-widget="today">
             <div class="today-head">
-              <div class="today-date" id="todayDate">Mon, Aug 24</div>
+              <div class="today-date" id="todayDate"></div>
               <span class="see-all" role="link" tabindex="0" data-href="calendar.html">See calendar</span>
             </div>
             <div id="todayList"></div>
@@ -1807,11 +1807,15 @@
     // it's missing it failed, which the widget says rather than "none yet".
     const HOME_CLASSROOM = HOME_LIVE && (HOME_DATA.platform === 'classroom' || HOME_DATA.PEOPLE_PLATFORM === 'classroom');
     const UPDATES_FAILED = HOME_LIVE && !Array.isArray(HOME_DATA.COURSE_UPDATES);
-    // Today's date, signed in: the markup's "Monday, August 24" is the sample's (2026-10-06).
+    // Today's date, signed in; the sample's own date in demo. The markup ships
+    // empty (2026-10-14) so no sample date shows while the page loads.
     if (HOME_LIVE) {
       const now = new Date();
       document.getElementById('homeDate').textContent = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
       document.getElementById('todayDate').textContent = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    } else {
+      document.getElementById('homeDate').textContent = 'Monday, August 24';
+      document.getElementById('todayDate').textContent = 'Mon, Aug 24';
     }
     // "Now" for due math: real time when signed in; the demo's own Monday, Aug 24.
     const REF_NOW = HOME_LIVE ? new Date() : new Date(2026, 7, 24, 8, 0);
@@ -3143,14 +3147,17 @@
         var raw = localStorage.getItem('schoolagy_profile');
         if (raw) profile = JSON.parse(raw);
       } catch (e) {}
-      if (!profile) return;
+      // No name saved on this device (new device, or signed out with Sync
+      // off): the account's own name from the sign-in, never a sample name
+      // (2026-10-14; this used to fall back to "Martin" / "M").
+      if (!profile || !profile.name || !String(profile.name).trim()) profile = Object.assign({}, profile, { name: window.__AVERAGES_NAME__ || '' });
       if (profile.photo) {
         profileBtn.style.backgroundImage = 'url("' + profile.photo + '")';
         profileBtn.style.backgroundSize = 'cover';
         profileBtn.style.backgroundPosition = 'center';
         profileBtn.textContent = '';
       } else if (profile.name) {
-        profileBtn.textContent = profile.name.trim().charAt(0).toUpperCase() || 'M';
+        profileBtn.textContent = profile.name.trim().charAt(0).toUpperCase() || '';
       }
       if (profile.name && profile.name.trim()) {
         var firstName = profile.name.trim().split(/\s+/)[0];
