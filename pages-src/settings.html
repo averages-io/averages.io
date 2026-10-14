@@ -1540,7 +1540,7 @@
         <button class="editor-close" id="modeConfirmClose" type="button" aria-label="Close">&times;</button>
       </div>
       <div class="editor-body" style="padding-bottom: 16px;">
-        <p class="settings-row-desc" id="modeConfirmBody" style="font-size: 0.86rem;">Incognito mode stores nothing about you on our servers. It turns off Sync Across Devices and deletes what it stored, disconnects Canva, Google Drive and OneDrive, and turns off browser notifications. Files you saved to those apps stay in your accounts.</p>
+        <p class="settings-row-desc" id="modeConfirmBody" style="font-size: 0.86rem;">Incognito mode stores nothing about you on our servers. It turns off Sync Across Devices and deletes what it stored, disconnects Canva, Google Drive and OneDrive, and turns off browser notifications. Files you saved to those apps stay in your accounts. You can connect Google Drive and OneDrive again afterwards, through this browser only.</p>
       </div>
       <div class="editor-actions">
         <button class="editor-reset" id="modeConfirmCancel" type="button">Cancel</button>
@@ -1861,7 +1861,8 @@
       const connected = new Set();
       const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
       const LIVE = window.__AVERAGES_MODE__ === 'live';
-      // Incognito (2026-10-05): connected apps are off, and nothing is asked of them.
+      // Incognito (2026-10-05; 2026-10-14): Canva is off; Google Drive and OneDrive
+      // connect through this browser only (see averages-cloud.js localOnly).
       const INCOG = window.__AVERAGES_INCOGNITO__ || null;
       const INCOGNITO = !!(INCOG && INCOG.on);
       // state: loading | ready | error | unconfigured (the API has no Canva app credentials)
@@ -2327,7 +2328,7 @@
           connected: ['Canva is connected. Edit in Canva on an assignment file to start a draft.', false],
           failed: ['Couldn’t connect Canva. Try again.', true],
           cancelled: ['Canva wasn’t connected.', false],
-          incognito: ['Connected apps are off in Incognito mode.', false],
+          incognito: ['Canva is off in Incognito mode.', false],
         }[canvaParam];
         if (msg) {
           settingsStartSection = 'integrations';   // applied by the initial render at the end of this script
@@ -4396,11 +4397,11 @@
       const locked = !!(INC && INC.locked);
       label.textContent = incognito ? 'Incognito' : 'Classic';
       if (incognito && locked) {
-        desc.textContent = 'You said you\'re under 13 when you signed in, so Averages.io stays in Incognito mode. Nothing about you is stored on our servers, and Sync Across Devices and connected apps are off.';
+        desc.textContent = 'You said you\'re under 13 when you signed in, so Averages.io stays in Incognito mode. Nothing about you is stored on our servers: Sync Across Devices and Canva are off, and Google Drive and OneDrive connect through your browser only.';
       } else if (incognito) {
         desc.textContent = is13
-          ? 'Nothing about you is stored on our servers, so Sync Across Devices, connected apps (Canva, Google Drive, OneDrive) and browser notifications are off.'
-          : 'Nothing about you is stored on our servers, so Sync Across Devices and connected apps are off. Classic mode is for students 13 and older.';
+          ? 'Nothing about you is stored on our servers: Sync Across Devices, Canva and browser notifications are off, and Google Drive and OneDrive connect through your browser only.'
+          : 'Nothing about you is stored on our servers: Sync Across Devices and Canva are off, and Google Drive and OneDrive connect through your browser only. Classic mode is for students 13 and older.';
         if (is13) { btn.textContent = 'Switch to Classic'; btn.hidden = false; }
       } else {
         desc.textContent = 'You can turn on Sync Across Devices and connect apps (Canva, Google Drive, OneDrive). Only what you turn on is stored on our servers.';

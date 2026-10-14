@@ -1149,11 +1149,11 @@
           <div class="mode-options" id="modeOptions" role="radiogroup" aria-label="Mode">
             <button type="button" class="mode-option" data-mode="incognito" role="radio" aria-checked="false">
               <span class="mode-name">Incognito</span>
-              <span class="mode-desc">Stores nothing. Your settings stay on this device, and nothing about you is saved on our servers. No Sync, connected apps or notifications.</span>
+              <span class="mode-desc">Stores nothing. Your settings stay on this device, and nothing about you is saved on our servers. Google Drive and OneDrive connect through your browser only. No Sync, Canva or notifications.</span>
             </button>
             <button type="button" class="mode-option" data-mode="classic" role="radio" aria-checked="false">
               <span class="mode-name">Classic</span>
-              <span class="mode-desc">Sync your settings across devices, connect Canva and Google Drive, and get browser notifications. For students 13 and older.</span>
+              <span class="mode-desc">Sync your settings across devices, connect Canva, Google Drive and OneDrive, and get browser notifications. For students 13 and older.</span>
             </button>
           </div>
           <p class="mode-hint" id="modeHint">Pick one to continue.</p>
@@ -2227,8 +2227,10 @@
       const block = document.createElement('div');
       block.className = 'feature-category';
       block.id = 'integrationsCategory';
+      const NOTE_CLASSIC = 'Averages only gets what you allow. You can connect or disconnect these any time in Settings.';
+      const NOTE_INCOGNITO = 'Incognito mode: Google Drive and OneDrive connect through this browser only, so nothing about them is stored on our servers, and a new tab asks you to sign in again. Canva is off in Incognito mode.';
       block.innerHTML = '<div class="category-title">Integrations</div><p class="integ-flash" role="status" hidden></p><div class="integ-list"></div>'
-        + '<p class="integ-note">Averages only gets what you allow. You can connect or disconnect these any time in Settings.</p>';
+        + '<p class="integ-note">' + NOTE_CLASSIC + '</p>';
       // Above Performance (and below Sync & Privacy).
       const perf = [...featuresList.querySelectorAll('.feature-category')].find(b => {
         const title = b.querySelector('.category-title');
@@ -2259,7 +2261,10 @@
       const btn = (act, app, label, opts = {}) => `<button class="integ-btn${opts.secondary ? ' secondary' : ''}" type="button" data-integ-act="${act}" data-app="${app}" aria-label="${esc(label + ' ' + opts.name)}"${opts.disabled ? ' disabled' : ''}>${esc(label)}</button>`;
       const SOON = '<span class="integ-soon">Coming soon</span>';
 
+      let incognitoNow = false;
       function rowFor(a) {
+        // Incognito (2026-10-14): Canva is off (its sign-in needs our server).
+        if (incognitoNow && a.id === 'canva') return row(a, { text: 'Off in Incognito mode' }, '');
         if (PREVIEW) {
           const on = previewOn.has(a.id);
           return row(a, { text: on ? 'Connected' : 'Not connected', on }, btn(on ? 'preview-off' : 'preview-on', a.id, on ? 'Disconnect' : 'Connect', { name: a.name, secondary: on }));
@@ -2384,7 +2389,8 @@
         started = true;
         render();
         if (!LIVE) return;
-        loadCanva();
+        // Signed in as under 13: Canva can never be used, so don't ask about it.
+        if (!(INCOG && INCOG.locked)) loadCanva();
         loadCloud();
         // Back from the Canva tab (or a drive changed in another tab): check again.
         document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && canva.waiting) loadCanva(); });
@@ -2392,24 +2398,38 @@
         window.addEventListener('averages-cloud-change', () => { if (cloud.state === 'ready') render(); });
       }
 
-      // Incognito: connected apps are off. Hide the group, and undo anything
-      // connected during onboarding (Canva lives on our servers).
+      // Incognito (2026-10-14, Martin: integrations in the Features step with
+      // Incognito on). Google Drive and OneDrive stay, through this browser's
+      // own sign-in: the page's Incognito flag is what tells averages-cloud.js
+      // to keep our server out of it. Canva is off. Switching modes undoes
+      // whatever was connected here under the other mode, since the two kinds
+      // of connection differ (ours on the server vs this browser's).
+      let modeSeen = null;
       function setIncognito(on) {
-        block.hidden = on;
-        if (!on) { start(); render(); return; }
-        previewOn.clear();
-        if (!LIVE) return;
-        const K = C();
-        if (K && connectedHere.has('gdrive')) K.disconnectGoogle();
-        if (K && connectedHere.has('onedrive')) K.disconnectOneDrive();
-        if (connectedHere.has('canva') || canva.waiting) {
-          fetch(apiBase() + '/canva/connection', { method: 'DELETE', credentials: 'include' }).catch(() => {});
-          canva.connected = false;
-          canva.waiting = false;
+        const locked = !!(INCOG && INCOG.locked);
+        on = on || locked;
+        window.__AVERAGES_INCOGNITO__ = { on, locked };
+        incognitoNow = on;
+        block.hidden = false;
+        const note = block.querySelector('.integ-note');
+        if (note) note.textContent = on ? NOTE_INCOGNITO : NOTE_CLASSIC;
+        if (modeSeen !== null && modeSeen !== on) {
+          previewOn.clear();
+          const K = C();
+          if (LIVE && K && connectedHere.has('gdrive')) K.disconnectGoogle();
+          if (LIVE && K && connectedHere.has('onedrive')) K.disconnectOneDrive();
+          if (LIVE && (connectedHere.has('canva') || canva.waiting)) {
+            fetch(apiBase() + '/canva/connection', { method: 'DELETE', credentials: 'include' }).catch(() => {});
+            canva.connected = false;
+            canva.waiting = false;
+          }
+          connectedHere.clear();
+          flash.hidden = true;
         }
-        connectedHere.clear();
+        modeSeen = on;
+        start();
+        render();
       }
-      if (INCOG && INCOG.locked) block.hidden = true;
       return { setIncognito };
     })();
 
@@ -2459,7 +2479,7 @@
           if (incognito) block.querySelectorAll('input[type="checkbox"]').forEach(c => { c.checked = false; });
         }
       });
-      // Integrations: not in Incognito either (2026-10-06).
+      // Integrations: Google Drive and OneDrive in Incognito too, through the browser only (2026-10-14).
       integrations.setIncognito(incognito);
       // Email: not in Incognito.
       const emailBlock = document.getElementById('emailBlock');

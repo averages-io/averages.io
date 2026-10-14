@@ -1151,7 +1151,8 @@
       const CANVA_EDIT_URL = /^https:\/\/(www\.)?canva\.com\//i;
       const main = document.getElementById('fxMain');
       const fxRoot = document.getElementById('fx');
-      // Incognito (2026-10-05, set by LegacyPage.tsx): connected apps are off.
+      // Incognito (set by LegacyPage.tsx): Canva is off; Google Drive and OneDrive
+      // work through this browser only (2026-10-14).
       const INCOGNITO = !!(window.__AVERAGES_INCOGNITO__ && window.__AVERAGES_INCOGNITO__.on);
       const DAY = 86400000;
       const RECENT_DAYS = 7;
