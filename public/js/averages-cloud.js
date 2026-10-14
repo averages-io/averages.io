@@ -227,9 +227,21 @@
    */
   const SRV = { status: null, statusAt: 0, pending: null, tok: {}, result: null };
   const APPS = ['gdrive', 'onedrive'];
+  /*
+   * Incognito on this page (2026-10-14): Google Drive and OneDrive work, but
+   * only through this browser's own sign-in (tokens in this tab), never our
+   * server's connection, so nothing about them is stored on our servers. Also
+   * when Incognito was picked in Settings, where the API session itself isn't
+   * marked Incognito (only an under-13 sign-in is).
+   */
+  function localOnly() {
+    const st = SRV.status;
+    const page = typeof window !== 'undefined' && window.__AVERAGES_INCOGNITO__;
+    return !!((page && page.on) || (st && st.incognito));
+  }
   function serverOn(app) {
     const st = SRV.status;
-    return !!(st && !st.incognito && st[app] && st[app].configured);
+    return !!(st && !localOnly() && st[app] && st[app].configured);
   }
   /** Our server is set up for `app` (also in Incognito: Disconnect still reaches it). */
   function serverKnown(app) {
@@ -239,7 +251,14 @@
   function syncAccounts(st) {
     for (const app of APPS) {
       if (!st[app] || !st[app].configured) continue;
-      if (st.incognito || !st[app].connected) {
+      // Incognito: forget only what our server held; a connection made in
+      // this browser (no `server` mark) is the one Incognito uses.
+      if (localOnly()) {
+        const a = accounts()[app];
+        if (a && a.server) clearAccount(app);
+        continue;
+      }
+      if (!st[app].connected) {
         if (accounts()[app]) clearAccount(app);
         continue;
       }
@@ -278,7 +297,7 @@
    */
   function lost(app) {
     const st = SRV.status;
-    const a = st && !st.incognito && st[app];
+    const a = st && !localOnly() && st[app];
     return a && a.configured && !a.connected && a.lost ? { email: String(a.email || ''), name: String(a.name || '') } : null;
   }
   function markLost(app) {
@@ -656,7 +675,7 @@
 
   /** Forget Google here, and withdraw this token's access at Google when we still have one. */
   function disconnectGoogle() {
-    if (serverKnown('gdrive')) {
+    if (serverKnown('gdrive') && !localOnly()) {
       clearToken('gdrive');
       clearAccount('gdrive');
       writeJSON('local', DRAFTS_KEY, []);
@@ -1286,7 +1305,7 @@
 
   /** Forget Microsoft here. (A single-page app can't revoke; its refresh token dies within a day.) */
   function disconnectOneDrive() {
-    if (serverKnown('onedrive')) {
+    if (serverKnown('onedrive') && !localOnly()) {
       clearToken('onedrive');
       clearToken('onedriveRead');
       clearAccount('onedrive');
