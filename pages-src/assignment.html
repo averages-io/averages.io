@@ -518,6 +518,17 @@
   .as-pill .t { display: inline-flex; align-items: center; gap: 8px; }
   .as-pill .as-i { width: 16px; height: 16px; }
   .as-pill .as-ud { width: 12px; height: 12px; color: var(--text-faint); }
+  /* The type pill (2026-10-15): next to Send as a Copy; its menu is the file icons in a grid. */
+  .as-pills { display: inline-flex; align-items: center; gap: 6px; }
+  .as-pill.as-type { padding-left: 6px; }
+  .as-pill.as-type .avfi, .ti-type .avfi { width: 22px !important; height: 22px !important; flex: none; }
+  .as-tmenu { width: auto; right: 48px; padding: 6px; }
+  .type-tiles { display: grid; grid-template-columns: repeat(var(--n, 3), 64px); gap: 4px; }
+  .type-tile { width: 64px; height: 64px; display: grid; place-items: center; padding: 0; border: 2px solid transparent; border-radius: 14px; background: none; cursor: pointer; }
+  .type-tile:hover { background: var(--panel-inner); }
+  .type-tile[aria-checked="true"] { border-color: var(--accent); background: rgb(from var(--accent) r g b / 0.08); }
+  .type-tile:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring); }
+  .type-tag { font-size: 0.7rem; font-weight: 900; color: var(--text-dark); }
   .as-hint { display: flex; align-items: center; gap: 8px; width: 100%; margin: 0 !important; padding: 8px; border: none; border-radius: 10px; background: none; font-family: inherit; font-size: 0.76rem !important; font-weight: 700; color: var(--text-muted) !important; text-align: left; line-height: 1.4 !important; }
   .as-hint .as-i { width: 16px; height: 16px; }
   .as-hint-btn { cursor: pointer; color: var(--text-dark) !important; }
@@ -665,6 +676,9 @@
   .ti-pick .ti-t svg { width: 16px; height: 16px; }
   .ti-pick .ti-ud { width: 12px; height: 12px; color: var(--text-faint); }
   .ti-grp .draft-submit { min-height: 36px; padding: 6px 18px; }
+  .ti-sep { width: 1px; height: 20px; background: var(--border); flex: none; }
+  .ti-type { padding-left: 6px; }
+  .ti-menu.ti-tmenu { width: auto; }
   .draft-submit.ti-main { overflow: hidden; }
   .ti-x:focus-visible, .ti-pick:focus-visible, .ti-opt:focus-visible, .ti-hint:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
   .ti-below { flex: 0 0 100%; min-width: 0; display: grid; gap: 8px; padding: 2px 0 2px; }
@@ -714,6 +728,7 @@
     .ti-grp { min-width: 0; }
     .ti-pick { min-width: 0; padding: 0 8px 0 10px; }
     .ti-pick .ti-t { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+    .ti-type .ti-tn { display: none; }
     .ti-grp .draft-submit { padding: 6px 14px; }
     .ti-seg { min-width: 0; }
     .ti-seg:not(.now):not(.fail) .ti-lab span { display: none; }
@@ -1828,6 +1843,44 @@
     // icon when that script is loaded, else the old colored badge as before.
     const fileIcon = (ext, fallback, size) => (window.AveragesFileIcons ? window.AveragesFileIcons.html(ext || 'file', { size: size || 34 }) : fallback);
 
+    // ---- The type pill (2026-10-15): what the teacher gets when it's sent as a copy ----
+    // Canva: PDF, PowerPoint or PNG from Canva itself, Word for a Canva Doc
+    // (made from its PDF by our converter). Google Docs, Sheets, Slides and
+    // Drawings: whatever Google exports them as. Anything else goes as it is.
+    const TURN_TYPE = {
+      pdf: { name: 'PDF', a: 'a PDF' },
+      docx: { name: 'Word', a: 'a Word document' },
+      pptx: { name: 'PowerPoint', a: 'a PowerPoint' },
+      xlsx: { name: 'Excel', a: 'an Excel spreadsheet' },
+      csv: { name: 'CSV', a: 'a CSV of the first sheet' },
+      png: { name: 'PNG', a: 'PNG images' },
+    };
+    const turnType = t => TURN_TYPE[t] || TURN_TYPE.pdf;
+    /** Google Drive drafts are Google files made from the Office file they started as. */
+    const GOOGLE_MIME_FOR_EXT = {
+      doc: 'application/vnd.google-apps.document', docx: 'application/vnd.google-apps.document',
+      ppt: 'application/vnd.google-apps.presentation', pptx: 'application/vnd.google-apps.presentation',
+      xls: 'application/vnd.google-apps.spreadsheet', xlsx: 'application/vnd.google-apps.spreadsheet',
+    };
+    /** What a Google Drive file can be turned in as; [] when it just goes as it is. */
+    function driveTypes(mimeType) {
+      const C = window.AveragesCloud;
+      if (C && typeof C.googleExportTypes === 'function') return C.googleExportTypes(mimeType);
+      // Before averages-cloud.js is loaded (the preview): the same table.
+      return ({
+        'application/vnd.google-apps.document': ['pdf', 'docx'],
+        'application/vnd.google-apps.spreadsheet': ['pdf', 'xlsx', 'csv'],
+        'application/vnd.google-apps.presentation': ['pdf', 'pptx'],
+        'application/vnd.google-apps.drawing': ['pdf', 'png'],
+      }[String(mimeType || '')] || []).slice();
+    }
+    /** The preview's pretend Canva formats: a design called "...Doc..." acts like a Canva Doc. */
+    const previewCanvaTypes = title => (/\bdoc\b/i.test(String(title || '')) ? ['pdf', 'docx', 'png'] : ['pdf', 'pptx', 'png']);
+    /** The type menu: just the file icons in a grid (their letters say the type); the name is for screen readers and on hover. */
+    function typeTilesHTML(choices, cur, attr) {
+      return `<div class="type-tiles" style="--n:${choices.length}">${choices.map(t => `<button class="type-tile" type="button" role="menuitemradio" aria-checked="${t === cur}" aria-label="${escapeHtml(turnType(t).name)}" title="${escapeHtml(turnType(t).name)}" ${attr}="${t}">${fileIcon(t, `<span class="type-tag">${escapeHtml(t.toUpperCase())}</span>`, 44)}</button>`).join('')}</div>`;
+    }
+
     const DOWNLOAD_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3M12 15l-4-4M12 15l4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>';
     const PLUS_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
     // Remove button on a picked-file row in the Add Submission modal's
@@ -2137,6 +2190,7 @@
     // still turned in on Classroom; the preview and the demo keep the mock.
     const SUBMIT_LIVE = LIVE_DETAIL && !CLASSROOM;
     const SUBMIT_MAX_BYTES = 95 * 1024 * 1024;   // the API's limit per file
+    const SUBMIT_MAX_FILES = 20;                  // and files per turn-in (Schoology's limit)
     let submitScript = null;
     function loadSubmitScript() {
       if (!submitScript) {
@@ -3215,7 +3269,7 @@
     }
     function pickExt(f) {
       const ext = ((String(f.name || '').match(/\.([a-z0-9]{1,5})$/i) || [])[1] || '').toLowerCase();
-      if (f.src === 'canva') return 'pdf';
+      if (f.src === 'canva') return f.type || 'pdf';
       return ext || (f.src === 'gdrive' ? 'pdf' : '');
     }
 
@@ -3283,7 +3337,15 @@
 
       function addPick(f) {
         if (f.src !== 'device' && st.picks.some(x => x.src === f.src && x.id === f.id)) return false;
-        const pick = Object.assign({ key: ++seq, mode: 'copy', role: 'reader', url: '', menu: false, access: false }, f);
+        const pick = Object.assign({ key: ++seq, mode: 'copy', role: 'reader', url: '', menu: false, access: false, type: 'pdf', tmenu: false }, f);
+        // The type pill: what a Canva design or Google file is turned in as (2026-10-15).
+        if (pick.src === 'canva') {
+          pick.base = pick.title || String(pick.name || '').replace(/\.pdf$/i, '');
+          pick.types = preview ? previewCanvaTypes(pick.base) : ['pdf'];
+          if (!preview) loadCanvaTypes(pick);
+        } else if (pick.src === 'gdrive' && driveTypes(pick.mimeType).length) {
+          pick.base = String(pick.name || '').replace(/\.pdf$/i, '');
+        }
         if (pick.src === 'device') pick.up = { state: pick.size > SUBMIT_MAX_BYTES ? 'failed' : pick.size ? 'waiting' : 'failed', frac: 0, fileId: '', at: 0, err: pick.size > SUBMIT_MAX_BYTES ? { code: 'file_too_large' } : pick.size ? null : { code: 'empty_file' } };
         st.picks.push(pick);
         return true;
@@ -3297,6 +3359,25 @@
         const c = C();
         return !!(c && typeof c.oneDriveCanShare === 'function' && c.oneDriveCanShare() !== 'off');
       };
+      /** What this pick can be turned in as (empty or one choice: no type pill). */
+      const typesFor = p => (p.mode === 'link' ? [] : p.src === 'canva' ? (p.types || ['pdf']) : p.src === 'gdrive' ? driveTypes(p.mimeType) : []);
+      function setType(p, t) {
+        if (!typesFor(p).includes(t)) return;
+        p.type = t;
+        if (p.base) p.name = `${p.base}.${t}`;
+      }
+      /** Asks the API which types this design can be (Canva Docs can be Word, presentations PowerPoint). */
+      function loadCanvaTypes(p) {
+        loadSubmitScript().then(S => S.canvaFormats(p.designId)).then(list => {
+          if (!st.picks.includes(p)) return;
+          p.types = list;
+          if (!list.includes(p.type)) setType(p, 'pdf');
+          if (!st.phase && !st.write) {
+            const row = modalBox.querySelector(`.as-row[data-pick="${p.key}"]`);
+            if (row) { const tmp = document.createElement('div'); tmp.innerHTML = rowHTML(p); row.replaceWith(tmp.firstElementChild); }
+          }
+        }, () => {});
+      }
       const uploading = () => st.picks.some(p => p.up && (p.up.state === 'waiting' || p.up.state === 'hashing' || p.up.state === 'uploading'));
       const linkNeeds = p => {
         if (p.mode !== 'link') return '';
@@ -3342,12 +3423,14 @@
       function metaFor(p) {
         if (st.phase === 'done') {
           if (p.mode === 'link') return `Shared as a link · Can ${p.role === 'commenter' ? 'comment' : 'view'}`;
-          return `Sent a copy${p.sentSize ? ' · ' + asMb(p.sentSize) : p.size ? ' · ' + asMb(p.size) : ''}`;
+          if (p.fileIds && p.fileIds.length > 1) return `Sent ${p.fileIds.length} ${p.type === 'png' ? 'images, one per page' : 'files'}${p.sentSize ? ' · ' + asMb(p.sentSize) : ''}`;
+          return `Sent ${p.type && (p.src === 'canva' || p.base) ? turnType(p.type).a : 'a copy'}${p.sentSize ? ' · ' + asMb(p.sentSize) : p.size ? ' · ' + asMb(p.size) : ''}`;
         }
         if (p.src === 'device') return `This device${p.size ? ' · ' + asMb(p.size) : ''}${p.up && p.up.state === 'done' ? ' · Uploaded' : ''}`;
         if (p.src === 'course') return 'Course files';
         if (p.mode === 'link') return `${SOURCE_NAME[p.src]} · live file, shared as a link`;
-        return `${SOURCE_NAME[p.src]}${p.src === 'canva' ? ' · turned in as a PDF' : p.size ? ' · ' + asMb(p.size) : ''}`;
+        if (p.src === 'canva' || (p.src === 'gdrive' && driveTypes(p.mimeType).length)) return `${SOURCE_NAME[p.src]} · turned in as ${turnType(p.type).a}${p.type === 'png' ? ', one per page' : ''}`;
+        return `${SOURCE_NAME[p.src]}${p.size ? ' · ' + asMb(p.size) : ''}`;
       }
       function upLineHTML(p) {
         if (!p.up || st.phase === 'done') return '';
@@ -3362,7 +3445,7 @@
       const optHTML = (kind, val, on, icon, title, sub, key, off) => `<button class="as-opt" type="button" role="${kind === 'mode' ? 'menuitemradio' : 'radio'}" aria-checked="${on}" data-as-opt="${kind}" data-val="${val}" data-key="${key}"${off ? ' disabled' : ''}>${AS_I.ck}${AS_I[icon]}<span><b>${title}</b><small>${sub}</small></span></button>`;
       function rowHTML(p) {
         const ext = pickExt(p);
-        const icon = fileIcon(p.src === 'canva' ? 'canva' : ext, `<span class="material-badge" style="background:${escapeHtml(EXT_COLOR[ext] || '#83849a')}">${escapeHtml((ext || '?').toUpperCase().slice(0, 4))}</span>`, 40);
+        const icon = fileIcon(p.src === 'canva' && p.mode === 'link' ? 'canva' : ext, `<span class="material-badge" style="background:${escapeHtml(EXT_COLOR[ext] || '#83849a')}">${escapeHtml((ext || '?').toUpperCase().slice(0, 4))}</span>`, 40);
         const locked = !!st.phase;
         const share = !locked && canShareAs(p);
         let pill = '', below = '', menu = '';
@@ -3387,13 +3470,20 @@
             }
           }
           if (p.menu) {
-            const copyWhat = p.src === 'canva' ? 'Turn in a PDF of it as it is now.' : 'Turn in the file as it is now.';
+            const copyWhat = p.src === 'canva' || (p.src === 'gdrive' && driveTypes(p.mimeType).length) ? 'Turn in a file of it as it is now.' : 'Turn in the file as it is now.';
             const linkWhat = p.src === 'onedrive' ? 'Your teacher opens the live file with a view link.' : 'Your teacher opens the live file with a link.';
             menu = `<div class="as-menu" role="menu">
                 ${optHTML('mode', 'link', p.mode === 'link', 'link', 'Share as a Link', linkWhat, p.key)}
                 ${optHTML('mode', 'copy', p.mode !== 'link', 'copy', 'Send as a Copy', copyWhat, p.key)}
               </div>`;
           }
+        }
+        // The type pill, right after Send as a Copy, when there's more than one type to pick from.
+        const types = share ? typesFor(p) : [];
+        if (types.length > 1) {
+          const tt = turnType(p.type);
+          pill = `<span class="as-pills">${pill}<button class="as-pill as-type" type="button" data-as-type="${p.key}" aria-haspopup="menu" aria-expanded="${p.tmenu}" aria-label="Turn in as ${escapeHtml(tt.name)}: change">${fileIcon(p.type, '', 22)}<span class="long">${escapeHtml(tt.name)}</span>${AS_I.ud}</button></span>`;
+          if (p.tmenu) menu = `<div class="as-menu as-tmenu" role="menu" aria-label="Turn in as">${typeTilesHTML(types, p.type, `data-key="${p.key}" data-as-tile`)}</div>`;
         }
         const status = st.phase && p.status ? `<div class="as-stat${p.statusBad ? ' bad' : ''}">${escapeHtml(p.status)}</div>` : '';
         return `<div class="as-row avfi-host${share ? ' cloud' : ''}${p.up && p.up.state === 'failed' ? ' failed' : ''}" data-pick="${p.key}">
@@ -3460,8 +3550,31 @@
         else bindFiles();
         const log = document.getElementById('asLog');
         if (log) log.scrollTop = log.scrollHeight;
+        placeAsMenu();
         if (focusSel) { const el = modalBox.querySelector(focusSel); if (el) el.focus({ preventScroll: true }); }
         st.xBack = false;
+      }
+      /**
+       * An open row menu (Send as a Copy / Share as a Link, or the type icons)
+       * sits right under the pill that opened it, above everything (2026-10-15):
+       * inside the scrolling file list it used to be cut off at the list's edge.
+       */
+      function placeAsMenu() {
+        const menu = modalBox.querySelector('.as-menu');
+        if (!menu) return;
+        const row = menu.closest('.as-row');
+        const key = row ? row.dataset.pick : '';
+        const opener = modalBox.querySelector(menu.classList.contains('as-tmenu') ? `[data-as-type="${key}"]` : `[data-as-pick="${key}"]`);
+        if (!opener) return;
+        Object.assign(menu.style, { position: 'fixed', right: 'auto', left: '0px', top: '0px', zIndex: '40' });
+        const o = opener.getBoundingClientRect(), m = menu.getBoundingClientRect();
+        // Where (0, 0) actually landed: not the corner of the window if the popup is transformed.
+        const offX = m.left, offY = m.top;
+        const left = Math.max(8, Math.min(o.right - m.width, window.innerWidth - m.width - 8));
+        let top = o.bottom + 6;
+        if (top + m.height > window.innerHeight - 8) top = Math.max(8, o.top - 6 - m.height);
+        menu.style.left = (left - offX) + 'px';
+        menu.style.top = (top - offY) + 'px';
       }
 
       // ---------- step bars ----------
@@ -3643,7 +3756,16 @@
         const links = list.filter(p => p.mode === 'link' && !p.fileId);
         const reup = list.filter(p => p.src === 'device' && (!p.up.fileId || p.stale));
         const steps = [];
-        if (canvaCopies.length) steps.push({ k: 'pdf', icon: 'pdf', short: 'Canva PDF', label: canvaCopies.length > 1 ? `Making ${canvaCopies.length} PDFs in Canva` : 'Making a PDF in Canva', items: canvaCopies, ms: STEP_W.pdf * canvaCopies.length });
+        if (canvaCopies.length) {
+          // Named for the type picked: "Making a PowerPoint in Canva", "Canva Word"; mixed types read as files.
+          const kinds = [...new Set(canvaCopies.map(p => p.type || 'pdf'))];
+          const one = kinds.length === 1 ? turnType(kinds[0]) : null;
+          const label = canvaCopies.length > 1
+            ? `Making ${canvaCopies.length} ${one && kinds[0] === 'pdf' ? 'PDFs' : 'files'} in Canva`
+            : kinds[0] === 'docx' ? 'Making a Word document from Canva' : `Making ${one.a} in Canva`;
+          const words = canvaCopies.filter(p => p.type === 'docx').length;
+          steps.push({ k: 'pdf', icon: 'pdf', short: one ? `Canva ${one.name}` : 'Canva', label, items: canvaCopies, ms: STEP_W.pdf * canvaCopies.length + 2400 * words });
+        }
         if (getCopies.length) {
           const apps = [...new Set(getCopies.map(p => (p.src === 'course' ? 'your class' : SOURCE_NAME[p.src])))];
           const short = apps.length > 1 ? 'Get files' : getCopies[0].src === 'onedrive' ? 'OneDrive' : getCopies[0].src === 'course' ? 'Class' : 'Drive';
@@ -3677,8 +3799,8 @@
         const drop = document.getElementById('asDrop');
         if (!st.phase) st.boxH = drop ? drop.offsetHeight : 240;
         // Retrying after the turn-in call itself failed: Schoology may have let go of the uploads, so they go up again.
-        if (st.err && st.err.atSend) st.picks.forEach(p => { p.fileId = ''; if (p.up) p.stale = true; });
-        st.picks.forEach(p => { p.menu = false; p.access = false; p.status = ''; p.statusBad = false; });
+        if (st.err && st.err.atSend) st.picks.forEach(p => { p.fileId = ''; p.fileIds = null; if (p.up) p.stale = true; });
+        st.picks.forEach(p => { p.menu = false; p.access = false; p.tmenu = false; p.status = ''; p.statusBad = false; });
         // Uploaded long ago: Schoology may have let go of it. Up again.
         st.picks.forEach(p => { if (p.up && p.up.at && Date.now() - p.up.at > 45 * 60 * 1000) p.stale = true; });
         st.err = null;
@@ -3702,13 +3824,17 @@
             } else if (stp.k === 'pdf' || stp.k === 'get') {
               for (const p of stp.items) {
                 try {
+                  const tt = turnType(p.type);
                   if (preview) {
-                    setStatus(p, stp.k === 'pdf' ? 'Making a PDF…' : `Getting it from ${p.src === 'course' ? 'your class' : SOURCE_NAME[p.src]}…`);
-                    await wait(900);
-                    blobs.set(p.key, { blob: new Blob([new Uint8Array(Math.max(1, p.size || 200000))]), name: p.name });
+                    setStatus(p, stp.k === 'pdf' ? `Making ${tt.a}…` : `Getting it from ${p.src === 'course' ? 'your class' : SOURCE_NAME[p.src]}…`);
+                    await wait(p.type === 'docx' ? 1800 : 900);
+                    const pages = p.src === 'canva' && p.type === 'png' ? 3 : 1;
+                    const parts = Array.from({ length: pages }, (_, i) => ({ blob: new Blob([new Uint8Array(Math.max(1, p.size || 200000))]), name: pages > 1 ? `${p.base} (page ${i + 1} of ${pages}).png` : p.name }));
+                    blobs.set(p.key, pages > 1 ? parts : parts[0]);
                   } else if (p.src === 'canva') {
-                    setStatus(p, 'Making a PDF…');
-                    blobs.set(p.key, await S.exportCanva(p.designId, { title: p.title, signal }));
+                    setStatus(p, p.type === 'docx' ? 'Making a Word document (PDF first, then Word)…' : `Making ${tt.a}…`);
+                    const files = await S.exportCanvaFiles(p.designId, { title: p.title, signal, format: p.type || 'pdf' });
+                    blobs.set(p.key, files.length > 1 ? files : files[0]);
                   } else if (p.src === 'course') {
                     setStatus(p, 'Getting it from your class…');
                     const blob = await S.courseFile({ section: p.course, [p.kind === 'document' ? 'document' : 'assignment']: p.parent, fileId: p.id, name: p.name }, signal);
@@ -3718,11 +3844,12 @@
                     const c = C();
                     const download = c && (p.src === 'gdrive' ? c.googleDownload : c.oneDriveDownload);
                     if (typeof download !== 'function') throw { code: 'not_configured' };
-                    const r = await download.call(c, await tokens[p.src], p.id);
+                    const r = await download.call(c, await tokens[p.src], p.id, p.src === 'gdrive' ? { as: p.type || 'pdf' } : undefined);
                     if (!r || !r.blob) throw { code: 'download_failed' };
                     blobs.set(p.key, { blob: r.blob, name: String(r.name || p.name) });
                   }
-                  setStatus(p, stp.k === 'pdf' ? 'PDF ready' : 'Got it');
+                  const got = blobs.get(p.key);
+                  setStatus(p, Array.isArray(got) ? `${got.length} images ready` : stp.k === 'pdf' ? `${tt.name} ready` : 'Got it');
                 } catch (e) {
                   setStatus(p, submitMessage(e), true);
                   throw e;
@@ -3761,35 +3888,48 @@
                 if (signal.aborted) throw { code: 'aborted' };
               }
             } else if (stp.k === 'up') {
-              const items = stp.items.map(p => ({ p, f: p.src === 'device' ? { blob: p.file, name: p.name } : blobs.get(p.key) }));
-              stp.mb = items.reduce((a, x) => a + (x.f ? x.f.blob.size : 0), 0) || 1;
+              // A pick can be several files (a Canva design as PNG pages): each one goes up.
+              const items = stp.items.map(p => {
+                const got = p.src === 'device' ? { blob: p.file, name: p.name } : blobs.get(p.key);
+                return { p, fs: got ? [].concat(got) : [] };
+              });
+              const already = st.picks.filter(p => !stp.items.includes(p)).reduce((a, p) => a + (p.fileIds && p.fileIds.length ? p.fileIds.length : 1), 0);
+              if (already + items.reduce((a, x) => a + x.fs.length, 0) > SUBMIT_MAX_FILES) throw { code: 'too_many_files' };
+              stp.mb = items.reduce((a, x) => a + x.fs.reduce((b, f) => b + f.blob.size, 0), 0) || 1;
               stp.frac = 0;
               paintProg();
               let before = 0;
-              for (const { p, f } of items) {
-                if (!f) throw { code: 'failed' };
-                setStatus(p, 'Uploading…');
-                try {
-                  if (preview) {
-                    const t0 = performance.now(), ms = Math.max(600, f.blob.size / (2 * 1048576) * 1000);
-                    let fr = 0;
-                    while (fr < 1) { await wait(60); fr = Math.min(1, (performance.now() - t0) / ms); stp.frac = (before + fr * f.blob.size) / stp.mb; paintFill(); }
-                    p.fileId = 'preview';
-                  } else {
-                    const r = await S.uploadFile({ section: sec, assignment: asg, blob: f.blob, name: f.name, signal, onProgress: x => { if (x.phase === 'uploading') { stp.frac = (before + (x.fraction || 0) * f.blob.size) / stp.mb; paintFill(); } } });
-                    p.fileId = r.fileId;
+              for (const { p, fs } of items) {
+                if (!fs.length) throw { code: 'failed' };
+                const ids = [];
+                let sent = 0;
+                for (const f of fs) {
+                  setStatus(p, fs.length > 1 ? `Uploading ${ids.length + 1} of ${fs.length}…` : 'Uploading…');
+                  try {
+                    if (preview) {
+                      const t0 = performance.now(), ms = Math.max(600, f.blob.size / (2 * 1048576) * 1000);
+                      let fr = 0;
+                      while (fr < 1) { await wait(60); fr = Math.min(1, (performance.now() - t0) / ms); stp.frac = (before + fr * f.blob.size) / stp.mb; paintFill(); }
+                      ids.push('preview');
+                    } else {
+                      const r = await S.uploadFile({ section: sec, assignment: asg, blob: f.blob, name: f.name, signal, onProgress: x => { if (x.phase === 'uploading') { stp.frac = (before + (x.fraction || 0) * f.blob.size) / stp.mb; paintFill(); } } });
+                      ids.push(r.fileId);
+                    }
+                  } catch (e) {
+                    setStatus(p, submitMessage(e), true);
+                    throw e;
                   }
-                  if (p.src === 'device') { p.up.fileId = p.fileId; p.up.at = Date.now(); p.stale = false; }
-                  p.sentSize = f.blob.size;
-                } catch (e) {
-                  setStatus(p, submitMessage(e), true);
-                  throw e;
+                  before += f.blob.size;
+                  sent += f.blob.size;
                 }
-                before += f.blob.size;
+                p.fileId = ids[0];
+                p.fileIds = ids;
+                if (p.src === 'device') { p.up.fileId = p.fileId; p.up.at = Date.now(); p.stale = false; }
+                p.sentSize = sent;
                 setStatus(p, 'Uploaded');
               }
             } else if (stp.k === 'send') {
-              const ids = st.picks.map(p => (p.src === 'device' ? p.up.fileId : p.fileId));
+              const ids = st.picks.flatMap(p => (p.src === 'device' ? [p.up.fileId] : p.fileIds && p.fileIds.length ? p.fileIds : [p.fileId]));
               if (preview) {
                 note('preview: nothing is sent to Schoology');
                 await wait(900);
@@ -3811,7 +3951,7 @@
           st.xBack = true;
           render('[data-as-done]');
           if (preview) {
-            submissionHistory.push({ files: st.picks.map(p => ({ name: p.mode === 'link' ? p.name.replace(/\.[a-z0-9]{1,5}$/i, '') + ' (link).html' : p.name, ext: p.mode === 'link' ? 'html' : (pickExt(p) || 'pdf') })), timestamp: 'Just now' });
+            submissionHistory.push({ files: st.picks.map(p => ({ name: p.mode === 'link' ? p.name.replace(/\.[a-z0-9]{1,5}$/i, '') + ' (link).html' : p.name, ext: p.mode === 'link' ? 'html' : (pickExt(p) || 'pdf') })), timestamp: 'Just now' });   // (PNG pages show as one entry in the preview)
             currentStatus = 'submitted';
           } else afterTurnIn(st.revision);
         } catch (e) {
@@ -4058,11 +4198,15 @@
         const retry = t.closest('[data-as-retry-up]');
         if (retry) { const p = pickBy(retry.dataset.asRetryUp); if (p && p.up) { p.up = { state: 'waiting', frac: 0, fileId: '', at: 0, err: null, batchOpen: true }; render(); runUploads(); } return; }
         const pk = t.closest('[data-as-pick]');
-        if (pk) { const p = pickBy(pk.dataset.asPick); const open = !p.menu; st.picks.forEach(x => { x.menu = false; }); p.menu = open; render(`[data-as-pick="${p.key}"]`); return; }
+        if (pk) { const p = pickBy(pk.dataset.asPick); const open = !p.menu; st.picks.forEach(x => { x.menu = false; x.tmenu = false; }); p.menu = open; render(`[data-as-pick="${p.key}"]`); return; }
+        const tp = t.closest('[data-as-type]');
+        if (tp) { const p = pickBy(tp.dataset.asType); const open = !p.tmenu; st.picks.forEach(x => { x.menu = false; x.tmenu = false; }); p.tmenu = open; render(open ? `[data-key="${p.key}"][data-as-tile="${p.type}"]` : `[data-as-type="${p.key}"]`); return; }
+        const tile = t.closest('[data-as-tile]');
+        if (tile) { const p = pickBy(tile.dataset.key); if (p) { setType(p, tile.dataset.asTile); p.tmenu = false; render(`[data-as-type="${p.key}"]`); } return; }
         const op = t.closest('[data-as-opt]');
         if (op && !op.disabled) {
           const p = pickBy(op.dataset.key);
-          if (op.dataset.asOpt === 'mode') { p.mode = op.dataset.val; p.menu = false; p.access = false; }
+          if (op.dataset.asOpt === 'mode') { p.mode = op.dataset.val; p.menu = false; p.access = false; p.tmenu = false; }
           else p.role = op.dataset.val === 'commenter' ? 'commenter' : 'reader';
           render(p.mode === 'link' && p.src === 'canva' && op.dataset.asOpt === 'mode' ? `[data-as-url="${p.key}"]` : `[data-as-pick="${p.key}"]`);
           return;
@@ -4071,7 +4215,7 @@
         if (ac) { const p = pickBy(ac.dataset.asAccess); p.access = !p.access; render(`[data-as-access="${p.key}"]`); return; }
         const allow = t.closest('[data-as-allow]');
         if (allow) { const c = C(); if (c) c.oneDriveToken({ interactive: true, write: true }).then(() => render(), err => { if (!err || err.code !== 'popup_closed') sourceNote(escapeHtml(submitMessage(err))); }); return; }
-        if (st.picks.some(p => p.menu) && !t.closest('.as-menu')) { st.picks.forEach(p => { p.menu = false; }); render(); }
+        if (st.picks.some(p => p.menu || p.tmenu) && !t.closest('.as-menu')) { st.picks.forEach(p => { p.menu = false; p.tmenu = false; }); render(); }
         if (preview) return;
         const src = t.closest('[data-source]');
         if (src && !src.disabled) {
@@ -4124,11 +4268,16 @@
         const b = modalBox.querySelector('[data-as-send]');
         if (b) b.disabled = !ready();
       };
+      // Scrolling the file list keeps an open menu under its pill.
+      if (modalBox._asScroll) modalBox.removeEventListener('scroll', modalBox._asScroll, true);
+      modalBox._asScroll = () => placeAsMenu();
+      modalBox.addEventListener('scroll', modalBox._asScroll, true);
       onModalEscape = () => {
-        const open = st.picks.find(p => p.menu || p.access);
+        const open = st.picks.find(p => p.menu || p.access || p.tmenu);
         if (!open || st.phase) return false;
-        st.picks.forEach(p => { p.menu = false; p.access = false; });
-        render(`[data-as-pick="${open.key}"]`);
+        const wasType = open.tmenu;
+        st.picks.forEach(p => { p.menu = false; p.access = false; p.tmenu = false; });
+        render(wasType ? `[data-as-type="${open.key}"]` : `[data-as-pick="${open.key}"]`);
         return true;
       };
 
@@ -4238,6 +4387,26 @@
     const isCanvaDraft = d => !d.drive && (d.live || d.app === 'canva');
     // Share a Link is for Google Drive and Canva drafts (a course file or OneDrive file goes in as a copy).
     const canLink = d => isDriveDraft(d) || isCanvaDraft(d);
+    /** The type pill on a draft (2026-10-15): what a copy can be. Google Drive drafts are Google files made from their Office file. */
+    function draftTypes(d, t) {
+      if (!t || t.mode === 'link') return [];
+      if (isDriveDraft(d)) return driveTypes(GOOGLE_MIME_FOR_EXT[String(d.ext || '').toLowerCase()]);
+      if (isCanvaDraft(d)) return t.types || ['pdf'];
+      return [];
+    }
+    /** Asks the API which types a Canva draft can be; the preview makes them up. */
+    function loadDraftTypes(d) {
+      const t = TI.get(d.id);
+      if (!t || !isCanvaDraft(d)) return;
+      if (!d.live) { t.types = previewCanvaTypes(d.name); return; }
+      loadSubmitScript().then(S => S.canvaFormats(d.designId)).then(list => {
+        const now = TI.get(d.id);
+        if (now !== t || t.busy) return;
+        t.types = list;
+        if (!list.includes(t.type)) t.type = 'pdf';
+        tiDraw(d.id);
+      }, () => {});
+    }
     function tiOpt(kind, val, on, icon, title, sub) {
       return `<button class="ti-opt" type="button" role="${kind === 'mode' ? 'menuitemradio' : 'radio'}" aria-checked="${on}" data-draft-action="ti-${kind}" data-val="${val}">${TI_ICON.ck}${icon}<span><b>${title}</b><span>${sub}</span></span></button>`;
     }
@@ -4255,13 +4424,19 @@
         html += `<p class="ti-hint">${TI_ICON.globe}<span>Canva doesn’t let apps change sharing. In Canva: <b>Share</b> → <b>Anyone with the link</b> → <b>Can view</b> → <b>Copy link</b>, then paste it here.</span></p>
           <label class="ti-paste"><span class="sr-only">Canva view link for ${escapeHtml(d.name)}</span><input type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://www.canva.com/design/…" data-ti-url value="${escapeHtml(t.url || '')}"${t.busy ? ' disabled' : ''}></label>`;
       } else {
-        html += `<p class="ti-hint">${TI_ICON.person}<span>Your teacher gets ${d.live || d.app === 'canva' ? 'a PDF of it' : 'a copy'} as it is now. Later edits won’t show.</span></p>`;
+        const types = draftTypes(d, t);
+        const what = types.length ? `${turnType(t.type).a} of it${t.type === 'png' ? ' (one per page)' : ''}` : (d.live || d.app === 'canva' ? 'a PDF of it' : 'a copy');
+        html += `<p class="ti-hint">${TI_ICON.person}<span>Your teacher gets ${what} as it is now. Later edits won’t show.</span></p>`;
       }
       if (t.prog) html += tiProgHTML(d, t);
       if (t.menu) html += `<div class="ti-menu" role="menu">
           ${tiOpt('mode', 'link', t.mode === 'link', TI_ICON.link, 'Share a Link', isDriveDraft(d) ? 'Your teacher opens the live file with a link.' : 'Turn in Canva’s view link to your design.')}
-          ${tiOpt('mode', 'copy', t.mode !== 'link', TI_ICON.copy, 'Send a Copy', isDriveDraft(d) ? 'Turn in a PDF of it as it is now.' : isCanvaDraft(d) ? 'Turn in a PDF of your design as it is now.' : 'Turn in the file as it is now.')}
+          ${tiOpt('mode', 'copy', t.mode !== 'link', TI_ICON.copy, 'Send a Copy', isDriveDraft(d) ? 'Turn in a file of it as it is now.' : isCanvaDraft(d) ? 'Turn in a file of your design as it is now.' : 'Turn in the file as it is now.')}
         </div>`;
+      if (t.tmenu) {
+        const types = draftTypes(d, t);
+        if (types.length > 1) html += `<div class="ti-menu ti-tmenu" role="menu" aria-label="Turn in as">${typeTilesHTML(types, t.type, 'data-draft-action="ti-tile" data-val')}</div>`;
+      }
       return `<div class="ti-below">${html}</div>`;
     }
     /** The steps for this draft and choice; each gets a share of the bar about as big as the time it usually takes. */
@@ -4270,8 +4445,11 @@
         isDriveDraft(d) ? { icon: 'chain', label: 'Making the view link', w: 1 } : { icon: 'chain', label: 'Checking your Canva link', w: 1 },
         { icon: 'school', label: 'Sending it to your school', w: 2 },
       ];
+      const tt = turnType(t.type);
       return [
-        isDriveDraft(d) ? { icon: 'get', label: 'Getting it from Google Drive', w: 2 } : isCanvaDraft(d) ? { icon: 'pdf', label: 'Making a PDF in Canva', w: 3 } : { icon: 'get', label: 'Getting the file', w: 1 },
+        isDriveDraft(d) ? { icon: 'get', label: draftTypes(d, t).length ? `Getting ${tt.a} from Google Drive` : 'Getting it from Google Drive', w: 2 }
+          : isCanvaDraft(d) ? { icon: 'pdf', label: t.type === 'docx' ? 'Making a Word document from Canva' : `Making ${tt.a} in Canva`, w: t.type === 'docx' ? 5 : 3 }
+          : { icon: 'get', label: 'Getting the file', w: 1 },
         { icon: 'up', label: 'Uploading', w: 2, bytes: true },
         { icon: 'school', label: 'Turning in', w: 1 },
       ];
@@ -4352,11 +4530,16 @@
       }
     }
     function tiPlaceMenu(id) {
-      const menu = tiQ(id, '.ti-menu'), pick = tiQ(id, '.ti-pick'), row = tiRow(id);
+      const t = TI.get(id);
+      const menu = tiQ(id, '.ti-menu'), pick = t && t.tmenu ? tiQ(id, '.ti-type') : tiQ(id, '.ti-pick'), row = tiRow(id);
       if (!menu || !pick || !row) return;
       const r = row.getBoundingClientRect(), b = pick.getBoundingClientRect();
       menu.style.top = (b.bottom - r.top + 6) + 'px';
-      menu.style.right = Math.max(8, r.right - b.right - 40) + 'px';
+      if (t && t.tmenu) {
+        // The type icons: lined up with the right edge of the type pill.
+        menu.style.right = 'auto';
+        menu.style.left = Math.max(8, b.right - r.left - menu.offsetWidth) + 'px';
+      } else menu.style.right = Math.max(8, r.right - b.right - 40) + 'px';
     }
     /** × : one smooth motion, the reverse of Turn in. The row goes back at once while copies of the pill, × and the lines below leave. */
     function tiCancel(id) {
@@ -4419,7 +4602,7 @@
     function tiSubmit(d) {
       const t = TI.get(d.id);
       if (!t || t.busy) return;
-      t.menu = false; t.access = false;
+      t.menu = false; t.access = false; t.tmenu = false;
       if (t.mode === 'link' && !isDriveDraft(d) && !CANVA_VIEW_LINK(t.url)) {
         t.err = escapeHtml(submitMessage({ code: 'canva_link_needed' }));
         t.prog = { steps: tiSteps(d, t), i: 0, frac: null, size: 0, failedAt: 0, finished: false };
@@ -4476,18 +4659,19 @@
           const html = `<p><a href="${escapeHtml(link.url)}">${escapeHtml(link.name || d.name)}</a></p>`;
           return S.submitText({ section, assignment, html });
         }
-        let file;
+        let files;
         if (isDriveDraft(d)) {
           if (!C || typeof C.googleDownload !== 'function') throw { code: 'not_configured' };
-          const r = await C.googleDownload(await token, d.driveId);
+          const r = await C.googleDownload(await token, d.driveId, { as: t.type || 'pdf' });
           if (!r || !r.blob) throw { code: 'download_failed' };
-          file = { blob: r.blob, name: String(r.name || d.name + '.pdf') };
+          files = [{ blob: r.blob, name: String(r.name || d.name + '.' + (t.type || 'pdf')) }];
         } else {
-          file = await S.exportCanva(d.designId, { title: d.name });
+          // The type picked (PNG is a file per page; Word goes through our converter).
+          files = await S.exportCanvaFiles(d.designId, { title: d.name, format: t.type || 'pdf' });
         }
-        P.size = file.blob ? file.blob.size : 0;
+        P.size = files.reduce((a, f) => a + (f.blob ? f.blob.size : 0), 0);
         step(1);
-        return S.submitFiles({ section, assignment, files: [file], onProgress: onUpload });
+        return S.submitFiles({ section, assignment, files, onProgress: onUpload });
       };
       run().then(r => {
         P.finished = true; P.i = P.steps.length - 1; paint();
@@ -4495,11 +4679,11 @@
         setTimeout(() => {
           TI.set(d.id, { doneText: t.mode === 'link'
             ? (isDriveDraft(d) ? `Turned in as a link · anyone with it can ${roleWord}` : 'Turned in as a Canva link')
-            : `Turned in as ${d.live || d.app === 'canva' ? 'a PDF' : 'a copy'} · just now` });
+            : `Turned in as ${draftTypes(d, t).length ? turnType(t.type).a : d.live || d.app === 'canva' ? 'a PDF' : 'a copy'} · just now` });
           tiDraw(d.id, 'back');
           if (d.live) afterTurnIn(r && r.revision);
           else {
-            const outExt = d.app === 'canva' ? 'pdf' : (d.ext || 'docx');
+            const outExt = draftTypes(d, t).length ? (t.type || 'pdf') : d.app === 'canva' ? 'pdf' : (d.ext || 'docx');
             submissionHistory.push({ files: [{ name: t.mode === 'link' ? `${d.name} (link)` : `${d.name}.${outExt}`, ext: t.mode === 'link' ? 'link' : outExt }], timestamp: 'Just now', fromCanva: d.app === 'canva', fromDrive: d.app === 'gdrive' });
             currentStatus = 'submitted';
             renderSubmissionsPanel();
@@ -4531,13 +4715,14 @@
     document.addEventListener('keydown', e => {
       if (e.key !== 'Escape' || !modalOverlay.hidden) return;
       for (const [id, t] of TI) { if (t.menu) { t.menu = false; tiDraw(id, null, '.ti-pick'); return; } }
+      for (const [id, t] of TI) { if (t.tmenu) { t.tmenu = false; tiDraw(id, null, '.ti-type'); return; } }
       for (const [id, t] of TI) { if (t.turning && !t.busy) { tiCancel(id); return; } }
     });
     document.addEventListener('click', e => {
       if (e.target.closest('.ti-menu') || e.target.closest('.ti-pick')) return;
-      for (const [id, t] of TI) if (t.menu) { t.menu = false; tiDraw(id); }
+      for (const [id, t] of TI) if (t.menu || t.tmenu) { t.menu = false; t.tmenu = false; tiDraw(id); }
     });
-    window.addEventListener('resize', () => { for (const [id, t] of TI) if (t.menu) tiPlaceMenu(id); });
+    window.addEventListener('resize', () => { for (const [id, t] of TI) if (t.menu || t.tmenu) tiPlaceMenu(id); });
 
     function draftRowHTML(d) {
       const nm = escapeHtml(d.name);
@@ -4573,6 +4758,12 @@
         actions = `<button class="ti-x" type="button" data-draft-action="ti-cancel" aria-label="Don’t turn in ${nm}"${off}>${TI_ICON.x}</button>
             <span class="ti-grp">
               <button class="ti-pick" type="button" data-draft-action="ti-pick"${canLink(d) ? ` aria-haspopup="menu" aria-expanded="${!!t.menu}"${off}` : ' disabled'}><span class="ti-t">${t.mode === 'link' ? TI_ICON.link : TI_ICON.copy}${t.mode === 'link' ? 'Share a Link' : 'Send a Copy'}</span>${canLink(d) ? TI_ICON.ud : ''}</button>
+              ${(() => {
+                const types = draftTypes(d, t);
+                if (types.length < 2) return '';
+                const tt = turnType(t.type);
+                return `<span class="ti-sep" aria-hidden="true"></span><button class="ti-pick ti-type" type="button" data-draft-action="ti-type" aria-haspopup="menu" aria-expanded="${!!t.tmenu}" aria-label="Turn in as ${escapeHtml(tt.name)}: change"${off}><span class="ti-t">${fileIcon(t.type, '', 22)}<span class="ti-tn">${escapeHtml(tt.name)}</span></span>${TI_ICON.ud}</button>`;
+              })()}
               <button class="draft-submit ti-main" type="button" data-draft-action="ti-submit"${off}><span class="ti-t">Submit</span></button>
             </span>`;
       }
@@ -4862,14 +5053,20 @@
       const d = drafts.find(x => x.id === id);
       if (!d) return;
       const act = btn.dataset.draftAction;
-      if (act === 'turnin') { TI.set(id, { turning: true, mode: 'copy', role: 'reader', menu: false, access: false, url: '', busy: false, prog: null }); tiDraw(id, 'in', '.ti-pick'); return; }
+      if (act === 'turnin') { TI.set(id, { turning: true, mode: 'copy', role: 'reader', menu: false, access: false, url: '', busy: false, prog: null, type: 'pdf', types: null, tmenu: false }); loadDraftTypes(d); tiDraw(id, 'in', '.ti-pick'); return; }
       const t = TI.get(id);
       if (act === 'ti-cancel') { tiCancel(id); return; }
-      if (t && act === 'ti-pick') {
+      if (t && act === 'ti-pick' && !btn.classList.contains('ti-type')) {
         if (!canLink(d)) return;
+        t.tmenu = false;
         t.menu = !t.menu; tiDraw(id, t.menu ? 'menu' : null, t.menu ? '.ti-menu [aria-checked="true"]' : '.ti-pick'); return;
       }
-      if (t && act === 'ti-mode') { const changed = t.mode !== btn.dataset.val; t.mode = btn.dataset.val === 'link' ? 'link' : 'copy'; t.menu = false; t.access = false; t.prog = null; tiDraw(id, changed ? 'mode' : null, t.mode === 'link' && !isDriveDraft(d) ? '[data-ti-url]' : '.ti-pick'); return; }
+      if (t && act === 'ti-type') { t.menu = false; t.tmenu = !t.tmenu; tiDraw(id, t.tmenu ? 'menu' : null, t.tmenu ? '.ti-tmenu [aria-checked="true"]' : '.ti-type'); return; }
+      if (t && act === 'ti-tile') {
+        if (draftTypes(d, t).includes(btn.dataset.val)) { const changed = t.type !== btn.dataset.val; t.type = btn.dataset.val; t.prog = null; t.tmenu = false; tiDraw(id, changed ? 'mode' : null, '.ti-type'); }
+        return;
+      }
+      if (t && act === 'ti-mode') { const changed = t.mode !== btn.dataset.val; t.mode = btn.dataset.val === 'link' ? 'link' : 'copy'; t.menu = false; t.tmenu = false; t.access = false; t.prog = null; tiDraw(id, changed ? 'mode' : null, t.mode === 'link' && !isDriveDraft(d) ? '[data-ti-url]' : '.ti-pick'); return; }
       if (t && act === 'ti-access') { t.access = !t.access; tiDraw(id, null, '[data-draft-action="ti-access"]'); return; }
       if (t && act === 'ti-role') { t.role = btn.dataset.val === 'commenter' ? 'commenter' : 'reader'; tiDraw(id, null, `[data-draft-action="ti-role"][data-val="${t.role}"]`); return; }
       if (t && act === 'ti-submit') { tiSubmit(d); return; }
