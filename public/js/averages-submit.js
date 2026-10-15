@@ -434,48 +434,97 @@
    * minutes, then fetch the file. onStatus('starting' | 'exporting' | 'downloading').
    * Resolves { blob, name }.
    */
-  async function exportCanva(designId, opts) {
+  /** What the type pill can offer, a turn-in type, and its file's MIME type (2026-10-15). */
+  const CANVA_TYPES = ['pdf', 'docx', 'pptx', 'png'];
+  const TYPE_MIME = {
+    pdf: 'application/pdf',
+    docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    png: 'image/png',
+  };
+
+  /**
+   * What a Canva design can be turned in as: ['pdf', 'pptx', 'png'], or with
+   * 'docx' for a Canva Doc (GET /canva/designs/:id/formats). Anything that
+   * goes wrong reads as just PDF, which every design can be.
+   */
+  async function canvaFormats(designId, signal) {
+    if (!DESIGN_OK(designId)) return ['pdf'];
+    try {
+      const j = await call('GET', `/canva/designs/${enc(designId)}/formats`, null, signal);
+      const list = Array.isArray(j.formats) ? j.formats.filter((f) => CANVA_TYPES.includes(f)) : [];
+      return list.length ? CANVA_TYPES.filter((f) => list.includes(f)) : ['pdf'];
+    } catch (e) {
+      if (e && (e.code === 'aborted' || e.code === 'signed_out' || e.code === 'canva_design_gone')) throw e;
+      return ['pdf'];
+    }
+  }
+
+  /**
+   * A Canva design as the type picked (`opts.format`: pdf, docx, pptx or png;
+   * PDF when left out): Canva makes it, the API passes it on (Word goes
+   * through the converter on the way). PNG is one file per page. Returns
+   * [{ blob, name }].
+   */
+  async function exportCanvaFiles(designId, opts) {
     opts = opts || {};
     const signal = opts.signal;
+    const format = CANVA_TYPES.includes(opts.format) ? opts.format : 'pdf';
     if (!DESIGN_OK(designId)) throw fail('bad_request');
     const status = (s) => { if (opts.onStatus) try { opts.onStatus(s); } catch {} };
     status('starting');
     const started = Date.now();
-    const start = await call('POST', `/canva/designs/${enc(designId)}/export`, {}, signal);
+    // Word takes longer: Canva's PDF, then the converter (which may have to wake up).
+    const limit = format === 'docx' ? 240000 : 120000;
+    const start = await call('POST', `/canva/designs/${enc(designId)}/export`, format === 'pdf' ? {} : { format }, signal);
     const job = String(start.job || '');
-    if (!/^[A-Za-z0-9_-]{1,128}$/.test(job)) throw fail('canva_export_failed');
+    // The API's job token is sealed: "<iv>.<data>", a few hundred characters. (Until 2026-10-15 this
+    // check allowed no dot and 128 characters at most, so every Canva turn-in stopped here.)
+    if (!/^[A-Za-z0-9_-]{8,64}\.[A-Za-z0-9_-]{16,3000}$/.test(job)) throw fail('canva_export_failed');
     status('exporting');
+    let files = 1;
     for (;;) {
-      if (Date.now() - started > 120000) throw fail('canva_export_timeout');
+      if (Date.now() - started > limit) throw fail('canva_export_timeout');
       await sleep(1500, signal);
       const s = await call('GET', `/canva/exports/${enc(job)}`, null, signal);
-      if (s.status === 'success') break;
+      if (s.status === 'success') { files = Math.max(1, Math.min(MAX_FILES, Number(s.files) || 1)); break; }
       // { status: 'failed', error }: license_required / approval_required are the student's to sort out in Canva.
       if (s.status === 'failed') throw fail(/^canva_export_[a-z_]{1,40}$/.test(String(s.error || '')) ? s.error : 'canva_export_failed');
     }
-    status('downloading');
-    let res;
-    for (;;) {
-      log({ kind: 'req', method: 'GET', url: `${API}/canva/exports/${enc(job)}/file?design=${enc(designId)}` });
-      try {
-        res = await fetch(`${API}/canva/exports/${enc(job)}/file?design=${enc(designId)}`, { credentials: 'include', signal });
-      } catch (e) {
-        log({ kind: 'res', status: 0, note: 'no connection' });
-        throw fail(e && e.name === 'AbortError' ? 'aborted' : 'network');
+    status(format === 'docx' ? 'converting' : 'downloading');
+    const out = [];
+    for (let page = 1; page <= files; page++) {
+      const url = `${API}/canva/exports/${enc(job)}/file?design=${enc(designId)}${files > 1 ? `&page=${page}` : ''}`;
+      let res;
+      for (;;) {
+        log({ kind: 'req', method: 'GET', url });
+        try {
+          res = await fetch(url, { credentials: 'include', signal });
+        } catch (e) {
+          log({ kind: 'res', status: 0, note: 'no connection' });
+          throw fail(e && e.name === 'AbortError' ? 'aborted' : 'network');
+        }
+        log({ kind: 'res', status: res.status, size: Number(res.headers.get('Content-Length') || 0) || null });
+        if (res.ok) break;
+        const j = await res.json().catch(() => null);
+        const code = codeFor(res.status, j && j.error);
+        // Canva said done but the file isn't quite there yet: wait a moment, within the same time limit.
+        if (code !== 'canva_export_not_ready' || Date.now() - started > limit) throw fail(code === 'canva_export_not_ready' ? 'canva_export_timeout' : code, { status: res.status });
+        await sleep(1500, signal);
       }
-      log({ kind: 'res', status: res.status, size: Number(res.headers.get('Content-Length') || 0) || null });
-      if (res.ok) break;
-      const j = await res.json().catch(() => null);
-      const code = codeFor(res.status, j && j.error);
-      // Canva said done but the file isn't quite there yet: wait a moment, within the same two minutes.
-      if (code !== 'canva_export_not_ready' || Date.now() - started > 120000) throw fail(code === 'canva_export_not_ready' ? 'canva_export_timeout' : code, { status: res.status });
-      await sleep(1500, signal);
+      const blob = await res.blob();
+      if (blob.size > MAX_BYTES) throw fail('file_too_large');
+      let name = cleanName(nameFromDisposition(res.headers.get('Content-Disposition')) || `${opts.title || 'Canva design'}${files > 1 ? ` (page ${page} of ${files})` : ''}.${format}`);
+      if (extOf(name) !== format) name += '.' + format;
+      out.push({ blob: blob.type === TYPE_MIME[format] ? blob : new Blob([blob], { type: TYPE_MIME[format] }), name });
     }
-    const blob = await res.blob();
-    if (blob.size > MAX_BYTES) throw fail('file_too_large');
-    let name = cleanName(nameFromDisposition(res.headers.get('Content-Disposition')) || `${opts.title || 'Canva design'}.pdf`);
-    if (extOf(name) !== 'pdf') name += '.pdf';
-    return { blob: blob.type === 'application/pdf' ? blob : new Blob([blob], { type: 'application/pdf' }), name };
+    return out;
+  }
+
+  /** A Canva design as one PDF (before the type pill; kept for anything still calling it). */
+  async function exportCanva(designId, opts) {
+    const files = await exportCanvaFiles(designId, Object.assign({}, opts, { format: 'pdf' }));
+    return files[0];
   }
 
   /**
@@ -530,12 +579,15 @@
     canva_not_connected: 'Connect Canva in Settings to turn in Canva designs.',
     canva_not_configured: 'Turning in Canva designs isn’t switched on yet.',
     canva_design_gone: 'This design isn’t in your Canva account anymore.',
-    canva_export_failed: 'Canva couldn’t make a PDF of this design. Try again in a moment.',
-    canva_export_timeout: 'Canva is taking too long to make the PDF. Try again in a moment.',
-    canva_export_not_ready: 'Canva is still making the PDF. Try again in a moment.',
-    canva_export_not_found: 'Canva lost track of that PDF. Try again.',
-    canva_export_unavailable: 'Canva couldn’t hand over the PDF right now. Try again in a moment.',
-    canva_export_license_required: 'This design uses paid Canva elements, so Canva won’t make a PDF of it. Remove them in Canva, then try again.',
+    canva_export_failed: 'Canva couldn’t make a file of this design. Try again in a moment.',
+    canva_export_timeout: 'Canva is taking too long to make the file. Try again in a moment.',
+    canva_export_not_ready: 'Canva is still making the file. Try again in a moment.',
+    canva_export_not_found: 'Canva lost track of that file. Try again.',
+    canva_export_unavailable: 'Canva couldn’t hand over the file right now. Try again in a moment.',
+    canva_export_license_required: 'This design uses paid Canva elements, so Canva won’t make a file of it. Remove them in Canva, then try again.',
+    canva_export_too_many_pages: 'This design has more than 20 pages, too many to turn in as images. Turn it in as a PDF instead.',
+    convert_failed: 'Couldn’t turn this into a Word document. Turn it in as a PDF instead.',
+    convert_unavailable: 'Word isn’t available right now. Turn it in as a PDF instead, or try again in a minute.',
     canva_export_approval_required: 'Your school’s Canva needs to approve this design before it can be turned in. Try again once it’s approved.',
     file_not_found: 'This file isn’t in your class anymore.',
     download_failed: 'Couldn’t get the file from your school. Try again.',
@@ -572,6 +624,8 @@
     submitText,
     history,
     exportCanva,
+    exportCanvaFiles,
+    canvaFormats,
     courseFile,
     messageFor,
     nameFromDisposition,

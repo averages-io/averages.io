@@ -846,12 +846,38 @@
   ]);
 
   /**
+   * What a Google Doc, Sheet, Slides or Drawing can be turned in as (the type
+   * pill, 2026-10-15), first one is the default: Google exports each of these
+   * itself. CSV is the first sheet only (Google's rule).
+   */
+  const EXPORT_AS = {
+    'application/vnd.google-apps.document': ['pdf', 'docx'],
+    'application/vnd.google-apps.spreadsheet': ['pdf', 'xlsx', 'csv'],
+    'application/vnd.google-apps.presentation': ['pdf', 'pptx'],
+    'application/vnd.google-apps.drawing': ['pdf', 'png'],
+  };
+  const EXPORT_MIME = {
+    pdf: 'application/pdf',
+    docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    csv: 'text/csv',
+    png: 'image/png',
+  };
+  /** The types a Drive file can be turned in as: [] for an ordinary file (it goes in as it is). */
+  function googleExportTypes(mimeType) {
+    return (EXPORT_AS[String(mimeType || '')] || []).slice();
+  }
+
+  /**
    * One of their Google Drive files as bytes, for turning in (2026-10-06):
    * { blob, name, mimeType }. Docs, Sheets, Slides and Drawings come as a PDF
-   * named "<name>.pdf". drive.file only reaches files Averages.io made or
-   * they picked, which are the ones Files shows. Stops at 95 MB.
+   * named "<name>.pdf", or as `opts.as` (docx, xlsx, csv, pptx, png) when
+   * that's one their kind can be (the type pill, 2026-10-15). Any other file
+   * comes as it is. drive.file only reaches files Averages.io made or they
+   * picked, which are the ones Files shows. Stops at 95 MB.
    */
-  async function googleDownload(token, fileId) {
+  async function googleDownload(token, fileId, opts) {
     const id = String(fileId || '');
     if (!/^[A-Za-z0-9_-]{10,200}$/.test(id)) throw fail('file_gone');
     const meta = await gfetch(token, `${DRIVE}/files/${encodeURIComponent(id)}?fields=id,name,mimeType,size,trashed&${ALL_DRIVES}`);
@@ -864,15 +890,17 @@
     let type;
     let r;
     if (GOOGLE_EXPORTS.has(mime)) {
-      r = await gfetch(token, `${DRIVE}/files/${encodeURIComponent(id)}/export?mimeType=${encodeURIComponent('application/pdf')}`);
+      const wanted = opts && typeof opts.as === 'string' ? opts.as : 'pdf';
+      const as = googleExportTypes(mime).includes(wanted) ? wanted : 'pdf';
+      type = EXPORT_MIME[as];
+      r = await gfetch(token, `${DRIVE}/files/${encodeURIComponent(id)}/export?mimeType=${encodeURIComponent(type)}`);
       if (r.status === 403) {
         // Google only exports files up to 10 MB.
         const j = await r.json().catch(() => ({}));
         const reason = j && j.error && Array.isArray(j.error.errors) && j.error.errors[0] ? j.error.errors[0].reason : '';
         throw fail(reason === 'exportSizeLimitExceeded' ? 'export_too_large' : 'download_blocked');
       }
-      if (!/\.pdf$/i.test(name)) name += '.pdf';
-      type = 'application/pdf';
+      name = name.replace(/\.(pdf|docx|xlsx|csv|pptx|png)$/i, '') + '.' + as;
     } else if (mime.startsWith('application/vnd.google-apps.')) {
       throw fail('not_downloadable'); // Forms, Sites, folders, shortcuts...
     } else {
@@ -2007,6 +2035,7 @@
     googleOpenWith,
     driveHome: DRIVE_HOME,
     googleDownload,
+    googleExportTypes,
     editInGoogleDrive,
     listDriveDrafts,
     removeDriveDraft,
