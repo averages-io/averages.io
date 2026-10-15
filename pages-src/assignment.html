@@ -687,6 +687,15 @@
   .ti-pick .ti-ud { width: 12px; height: 12px; color: var(--text-faint); }
   .ti-grp .draft-submit { min-height: 36px; padding: 6px 18px; }
   .ti-sep { width: 1px; height: 20px; background: var(--border); flex: none; }
+  /* Never wider than the card (2026-10-15: "PowerPoint" pushed Submit out of it). Labels give way
+     first: the type's name, then Send a Copy's words; the icons stay (fitTi measures). */
+  .draft-row.ti-on .ti-acts { flex-shrink: 1; min-width: 0; max-width: 100%; }
+  .ti-acts .ti-grp { min-width: 0; }
+  .ti-grp .ti-pick, .ti-grp .ti-t { min-width: 0; }
+  .ti-grp .ti-tn, .ti-grp .ti-ml { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .draft-row.ti-tight1 .ti-type .ti-tn { display: none; }
+  .ti-type.growing .ti-tn { text-overflow: clip; }
+  .draft-row.ti-tight2 .ti-pick .ti-ml { display: none; }
   .ti-type { padding-left: 6px; }
   .ti-menu.ti-tmenu { width: auto; }
   .draft-submit.ti-main { overflow: hidden; }
@@ -4442,7 +4451,7 @@
           if (now !== t || t.busy) return;
           t.types = list;
           if (!list.includes(t.type)) t.type = 'pdf';
-          tiDraw(d.id);
+          tiDraw(d.id, 'types');
         }, Math.max(0, 420 - (Date.now() - started)));
       }, () => {});
     }
@@ -4562,11 +4571,12 @@
       const tmp = document.createElement('div');
       tmp.innerHTML = draftRowHTML(d).trim();
       old.replaceWith(tmp.firstElementChild);
-      if (lettersOn && !motion) {
+      if (lettersOn && (!motion || motion === 'types' || motion === 'menu')) {
         const icon = tiQ(id, ':scope > .avfi') || (tiRow(id) && tiRow(id).querySelector(':scope > .avfi'));
         if (icon) { icon.classList.add('on'); setTimeout(() => icon.classList.remove('on'), 1000); }
       }
       if (focusSel) { const f = tiQ(id, focusSel); if (f) f.focus({ preventScroll: true }); }
+      fitTi(id);
       tiPlaceMenu(id);
       if (!motion) return;
       if (motion !== 'menu') tiGrow(id, before.h, 300);
@@ -4590,6 +4600,19 @@
       } else if (motion === 'menu') {
         tiAnim(tiQ(id, '.ti-menu'), [{ opacity: 0, transform: 'translateY(-6px) scale(.96)' }, { opacity: 1, transform: 'none' }], 200);
         revealTiles(tiQ(id, '.ti-tmenu'));
+      } else if (motion === 'types') {
+        // The type pill joins the group once Canva says what the design can be: it grows in from
+        // nothing beside Send a Copy (Submit slides over), instead of just appearing.
+        const pill = tiQ(id, '.ti-type'), sep = tiQ(id, '.ti-sep');
+        if (pill && !before.type && !tiStill() && pill.animate) {
+          const w = pill.getBoundingClientRect().width;
+          pill.style.overflow = 'hidden';
+          pill.classList.add('growing');
+          const a = pill.animate([{ width: '0px', opacity: 0, paddingLeft: '0px', paddingRight: '0px' }, { width: w + 'px', opacity: 1 }], { duration: 320, easing: TI_EASE });
+          a.onfinish = () => { pill.style.overflow = ''; pill.classList.remove('growing'); };
+          if (sep) sep.animate([{ opacity: 0, transform: 'scaleY(0)' }, { opacity: 1, transform: 'none' }], { duration: 240, delay: 60, easing: TI_EASE, fill: 'backwards' });
+          popIcon(pill.querySelector('.avfi'), false);
+        }
       } else if (motion === 'type') {
         // A new type: the file's icon becomes it and pops with its letters showing, the pill's icon pops, its name rolls.
         const row = tiRow(id);
@@ -4606,6 +4629,18 @@
         tiAnim(tiQ(id, '.canva-btn'), [{ opacity: 0, transform: 'translateX(24px)' }, { opacity: 1, transform: 'none' }], 300, 60);
         tiAnim(tiQ(id, '.draft-meta'), [{ opacity: 0, transform: 'translateY(4px)' }, { opacity: 1, transform: 'none' }], 260, 80);
       }
+    }
+    /** Hides labels, the type's name first, while the turn-in row is wider than its card. */
+    function fitTi(id) {
+      const row = tiRow(id), acts = row && row.querySelector('.ti-acts');
+      if (!acts) return;
+      row.classList.remove('ti-tight1', 'ti-tight2');
+      // Too wide, or a label already cut short ("Send a …"): hide words rather than cut them.
+      const cut = el => !!el && el.offsetParent !== null && el.scrollWidth > el.clientWidth + 1;
+      const over = () => acts.scrollWidth > acts.clientWidth + 1 || acts.getBoundingClientRect().right > row.getBoundingClientRect().right - 2
+        || cut(row.querySelector('.ti-type .ti-tn')) || cut(row.querySelector('.ti-pick .ti-ml'));
+      if (over()) row.classList.add('ti-tight1');
+      if (over()) row.classList.add('ti-tight2');
     }
     function tiPlaceMenu(id) {
       const t = TI.get(id);
@@ -4800,7 +4835,7 @@
       if (e.target.closest('.ti-menu') || e.target.closest('.ti-pick')) return;
       for (const [id, t] of TI) if (t.menu || t.tmenu) { t.menu = false; t.tmenu = false; tiDraw(id); }
     });
-    window.addEventListener('resize', () => { for (const [id, t] of TI) if (t.menu || t.tmenu) tiPlaceMenu(id); });
+    window.addEventListener('resize', () => { for (const [id, t] of TI) { if (t.turning) fitTi(id); if (t.menu || t.tmenu) tiPlaceMenu(id); } });
 
     function draftRowHTML(d) {
       const nm = escapeHtml(d.name);
@@ -4835,7 +4870,7 @@
         const off = t.busy ? ' disabled' : '';
         actions = `<button class="ti-x" type="button" data-draft-action="ti-cancel" aria-label="Don’t turn in ${nm}"${off}>${TI_ICON.x}</button>
             <span class="ti-grp">
-              <button class="ti-pick" type="button" data-draft-action="ti-pick"${canLink(d) ? ` aria-haspopup="menu" aria-expanded="${!!t.menu}"${off}` : ' disabled'}><span class="ti-t">${t.mode === 'link' ? TI_ICON.link : TI_ICON.copy}${t.mode === 'link' ? 'Share a Link' : 'Send a Copy'}</span>${canLink(d) ? TI_ICON.ud : ''}</button>
+              <button class="ti-pick" type="button" data-draft-action="ti-pick"${canLink(d) ? ` aria-haspopup="menu" aria-expanded="${!!t.menu}"${off}` : ' disabled'}><span class="ti-t">${t.mode === 'link' ? TI_ICON.link : TI_ICON.copy}<span class="ti-ml">${t.mode === 'link' ? 'Share a Link' : 'Send a Copy'}</span></span>${canLink(d) ? TI_ICON.ud : ''}</button>
               ${(() => {
                 const types = draftTypes(d, t);
                 if (types.length < 2) return '';
@@ -4861,6 +4896,7 @@
     function renderDrafts() {
       draftsSec.hidden = drafts.length === 0 && draftsNote.hidden;
       draftsList.innerHTML = drafts.map(draftRowHTML).join('');
+      for (const [id, t] of TI) if (t.turning) fitTi(id);
     }
     // Signed in (2026-10-05): drafts are the student's real Canva designs, kept by the API.
     const draftsNote = document.createElement('p');
