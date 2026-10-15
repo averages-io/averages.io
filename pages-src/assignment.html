@@ -529,6 +529,16 @@
   .type-tile[aria-checked="true"] { border-color: var(--accent); background: rgb(from var(--accent) r g b / 0.08); }
   .type-tile:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring); }
   .type-tag { font-size: 0.7rem; font-weight: 900; color: var(--text-dark); }
+  /* Type pill motion (2026-10-15, from the mockup): the menu's icons show their
+     letters one after another; picking a type pops the file's icon (it changes
+     to the new type) and the pill's icon, and the new letters show for a moment. */
+  :is(.type-tiles, .draft-row, .as-row) .avfi.on .avfi-sym { transform: none; }
+  :is(.type-tiles, .draft-row, .as-row) .avfi.on .avfi-label { opacity: 1; transform: none; }
+  :is(.type-tiles, .draft-row, .as-row) .avfi.on .avfi-gap { opacity: 1; }
+  @keyframes typePop { 0% { transform: scale(.7); opacity: .2; } 70% { transform: scale(1.08); } 100% { transform: none; opacity: 1; } }
+  .type-pop { animation: typePop .32s cubic-bezier(.2,.8,.2,1); }
+  @media (prefers-reduced-motion: reduce) { .type-pop { animation: none; } }
+  body.potato-mode .type-pop { animation: none; }
   .as-hint { display: flex; align-items: center; gap: 8px; width: 100%; margin: 0 !important; padding: 8px; border: none; border-radius: 10px; background: none; font-family: inherit; font-size: 0.76rem !important; font-weight: 700; color: var(--text-muted) !important; text-align: left; line-height: 1.4 !important; }
   .as-hint .as-i { width: 16px; height: 16px; }
   .as-hint-btn { cursor: pointer; color: var(--text-dark) !important; }
@@ -4200,9 +4210,27 @@
         const pk = t.closest('[data-as-pick]');
         if (pk) { const p = pickBy(pk.dataset.asPick); const open = !p.menu; st.picks.forEach(x => { x.menu = false; x.tmenu = false; }); p.menu = open; render(`[data-as-pick="${p.key}"]`); return; }
         const tp = t.closest('[data-as-type]');
-        if (tp) { const p = pickBy(tp.dataset.asType); const open = !p.tmenu; st.picks.forEach(x => { x.menu = false; x.tmenu = false; }); p.tmenu = open; render(open ? `[data-key="${p.key}"][data-as-tile="${p.type}"]` : `[data-as-type="${p.key}"]`); return; }
+        if (tp) {
+          const p = pickBy(tp.dataset.asType); const open = !p.tmenu; st.picks.forEach(x => { x.menu = false; x.tmenu = false; }); p.tmenu = open;
+          render(open ? `[data-key="${p.key}"][data-as-tile="${p.type}"]` : `[data-as-type="${p.key}"]`);
+          if (open) revealTiles(modalBox.querySelector('.as-tmenu'));
+          return;
+        }
         const tile = t.closest('[data-as-tile]');
-        if (tile) { const p = pickBy(tile.dataset.key); if (p) { setType(p, tile.dataset.asTile); p.tmenu = false; render(`[data-as-type="${p.key}"]`); } return; }
+        if (tile) {
+          const p = pickBy(tile.dataset.key);
+          if (p) {
+            const changed = p.type !== tile.dataset.asTile;
+            setType(p, tile.dataset.asTile); p.tmenu = false; render(`[data-as-type="${p.key}"]`);
+            if (changed) {
+              // Like Drafts: the file's icon becomes the new type and pops, letters showing; the pill's icon pops.
+              const row = modalBox.querySelector(`.as-row[data-pick="${p.key}"]`);
+              popIcon(row && row.querySelector('.as-row > .avfi'), true);
+              popIcon(row && row.querySelector('.as-type .avfi'), false);
+            }
+          }
+          return;
+        }
         const op = t.closest('[data-as-opt]');
         if (op && !op.disabled) {
           const p = pickBy(op.dataset.key);
@@ -4340,6 +4368,13 @@
     const DRAFT_APP = { canva: 'Canva', gdrive: 'Google Drive', onedrive: 'OneDrive', course: 'Course file' };
     const DRAFT_EXT_COLOR = Object.assign({ doc: '#3b6fd1', xlsx: '#2f7d54', xls: '#2f7d54', ppt: '#d1852f' }, EXT_COLOR);
     function draftBadgeHTML(d) {
+      // Turning in (2026-10-15, like the mockup): the icon shows what the teacher gets,
+      // the link icon for Share a Link, or the type picked in the type pill.
+      const t = TI.get(d.id);
+      if (window.AveragesFileIcons && t && t.turning) {
+        if (t.mode === 'link') return fileIcon('link', '', 36);
+        if (draftTypes(d, t).length) return fileIcon(t.type || 'pdf', '', 36);
+      }
       if (window.AveragesFileIcons) {
         const x = String(d.ext || '').toLowerCase();
         const k = d.app === 'canva' ? 'canva' : d.app === 'gdrive' ? ({ doc: 'gdoc', docx: 'gdoc', ppt: 'gslide', pptx: 'gslide', xls: 'gsheet', xlsx: 'gsheet', csv: 'gsheet' })[x] || 'gdoc' : x || 'file';
@@ -4399,12 +4434,16 @@
       const t = TI.get(d.id);
       if (!t || !isCanvaDraft(d)) return;
       if (!d.live) { t.types = previewCanvaTypes(d.name); return; }
+      const started = Date.now();
       loadSubmitScript().then(S => S.canvaFormats(d.designId)).then(list => {
-        const now = TI.get(d.id);
-        if (now !== t || t.busy) return;
-        t.types = list;
-        if (!list.includes(t.type)) t.type = 'pdf';
-        tiDraw(d.id);
+        // After Turn in's own motion has played (the pill sliding out, the icon popping), not in the middle of it.
+        setTimeout(() => {
+          const now = TI.get(d.id);
+          if (now !== t || t.busy) return;
+          t.types = list;
+          if (!list.includes(t.type)) t.type = 'pdf';
+          tiDraw(d.id);
+        }, Math.max(0, 420 - (Date.now() - started)));
       }, () => {});
     }
     function tiOpt(kind, val, on, icon, title, sub) {
@@ -4478,6 +4517,24 @@
     const tiRow = id => draftsList.querySelector(`[data-draft="${CSS.escape(id)}"]`);
     const tiQ = (id, sel) => { const r = tiRow(id); return r ? r.querySelector(sel) : null; };
     const tiW = el => (el ? el.getBoundingClientRect().width : 0);
+    /** Pops an icon (it just changed); with `letters`, its type letters show for a moment too. */
+    function popIcon(el, letters) {
+      if (!el || tiStill()) return;
+      el.classList.remove('type-pop');
+      void el.offsetWidth;
+      el.classList.add('type-pop');
+      if (letters) {
+        el.classList.add('on');
+        setTimeout(() => el.classList.remove('on'), 1400);
+      }
+    }
+    /** The type menu's icons show their letters one after another, like the mockup. */
+    function revealTiles(menu) {
+      if (!menu) return;
+      const icons = menu.querySelectorAll('.avfi');
+      if (tiStill()) { icons.forEach(x => x.classList.add('on')); return; }
+      icons.forEach((x, i) => setTimeout(() => x.classList.add('on'), 120 + i * 110));
+    }
     function tiAnim(el, frames, ms, delay) { if (el && el.animate && !tiStill()) el.animate(frames, { duration: ms, delay: delay || 0, easing: TI_EASE, fill: 'backwards' }); }
     function tiMorph(el, from, ms) {
       if (!el || !from || tiStill() || !el.animate) return;
@@ -4497,12 +4554,18 @@
     function tiDraw(id, motion, focusSel) {
       const old = tiRow(id);
       if (!old) { renderDrafts(); return; }
-      const before = { main: tiW(old.querySelector('.ti-main')), pick: tiW(old.querySelector('.ti-pick')), h: old.offsetHeight };
+      const before = { main: tiW(old.querySelector('.ti-main')), pick: tiW(old.querySelector('.ti-pick')), type: tiW(old.querySelector('.ti-type')), h: old.offsetHeight };
       const d = drafts.find(x => x.id === id);
       if (!d) { renderDrafts(); return; }
+      // An icon still showing its letters after a pop keeps showing them through a redraw (types arriving, say).
+      const lettersOn = !!old.querySelector(':scope > .avfi.on');
       const tmp = document.createElement('div');
       tmp.innerHTML = draftRowHTML(d).trim();
       old.replaceWith(tmp.firstElementChild);
+      if (lettersOn && !motion) {
+        const icon = tiQ(id, ':scope > .avfi') || (tiRow(id) && tiRow(id).querySelector(':scope > .avfi'));
+        if (icon) { icon.classList.add('on'); setTimeout(() => icon.classList.remove('on'), 1000); }
+      }
       if (focusSel) { const f = tiQ(id, focusSel); if (f) f.focus({ preventScroll: true }); }
       tiPlaceMenu(id);
       if (!motion) return;
@@ -4513,13 +4576,28 @@
         tiRoll(tiQ(id, '.ti-main'));
         tiAnim(tiQ(id, '.ti-pick'), [{ opacity: 0, transform: 'translateX(40px) scale(.9)' }, { opacity: 1, transform: 'none' }], 320, 40);
         tiAnim(tiQ(id, '.ti-x'), [{ opacity: 0, transform: 'scale(.4) rotate(-90deg)' }, { opacity: 1, transform: 'none' }], 280, 90);
+        // The file's icon turns into what the teacher gets (a PDF to start).
+        const row = tiRow(id);
+        popIcon(row && row.querySelector('.draft-row > .avfi'), true);
         tiAnim(tiQ(id, '.ti-below'), [{ opacity: 0, transform: 'translateY(-8px)' }, { opacity: 1, transform: 'none' }], 260, 140);
       } else if (motion === 'mode') {
         tiMorph(tiQ(id, '.ti-pick'), before.pick, 260);
         tiRoll(tiQ(id, '.ti-pick'));
         tiAnim(tiQ(id, '.ti-hint'), [{ opacity: 0, transform: 'translateY(-6px)' }, { opacity: 1, transform: 'none' }], 240, 40);
+        // Copy and link have different icons: the file's icon pops into the new one.
+        const row = tiRow(id);
+        popIcon(row && row.querySelector('.draft-row > .avfi'), true);
       } else if (motion === 'menu') {
         tiAnim(tiQ(id, '.ti-menu'), [{ opacity: 0, transform: 'translateY(-6px) scale(.96)' }, { opacity: 1, transform: 'none' }], 200);
+        revealTiles(tiQ(id, '.ti-tmenu'));
+      } else if (motion === 'type') {
+        // A new type: the file's icon becomes it and pops with its letters showing, the pill's icon pops, its name rolls.
+        const row = tiRow(id);
+        popIcon(row && row.querySelector('.material-row > .avfi, .draft-row > .avfi'), true);
+        popIcon(tiQ(id, '.ti-type .avfi'), false);
+        tiAnim(tiQ(id, '.ti-type .ti-tn'), [{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], 240, 60);
+        tiMorph(tiQ(id, '.ti-type'), before.type, 260);
+        tiAnim(tiQ(id, '.ti-hint'), [{ opacity: 0, transform: 'translateY(-6px)' }, { opacity: 1, transform: 'none' }], 240, 40);
       } else if (motion === 'busy') {
         tiAnim(tiQ(id, '.ti-prog'), [{ opacity: 0, transform: 'translateY(-6px)' }, { opacity: 1, transform: 'none' }], 220);
       } else if (motion === 'back') {
@@ -5063,7 +5141,7 @@
       }
       if (t && act === 'ti-type') { t.menu = false; t.tmenu = !t.tmenu; tiDraw(id, t.tmenu ? 'menu' : null, t.tmenu ? '.ti-tmenu [aria-checked="true"]' : '.ti-type'); return; }
       if (t && act === 'ti-tile') {
-        if (draftTypes(d, t).includes(btn.dataset.val)) { const changed = t.type !== btn.dataset.val; t.type = btn.dataset.val; t.prog = null; t.tmenu = false; tiDraw(id, changed ? 'mode' : null, '.ti-type'); }
+        if (draftTypes(d, t).includes(btn.dataset.val)) { const changed = t.type !== btn.dataset.val; t.type = btn.dataset.val; t.prog = null; t.tmenu = false; tiDraw(id, changed ? 'type' : null, '.ti-type'); }
         return;
       }
       if (t && act === 'ti-mode') { const changed = t.mode !== btn.dataset.val; t.mode = btn.dataset.val === 'link' ? 'link' : 'copy'; t.menu = false; t.tmenu = false; t.access = false; t.prog = null; tiDraw(id, changed ? 'mode' : null, t.mode === 'link' && !isDriveDraft(d) ? '[data-ti-url]' : '.ti-pick'); return; }
