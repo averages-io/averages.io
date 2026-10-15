@@ -1265,17 +1265,17 @@
           <div class="settings-section" data-section="integrations">
             <p class="settings-subhead">Connected apps</p>
             <div class="settings-group" id="integrationList">
-              <div class="settings-row"><div class="settings-row-text"><p class="settings-row-label">Canva</p><p class="settings-row-desc">Edit assignment files in Canva, then turn them in from Drafts.</p></div></div>
-              <div class="settings-row"><div class="settings-row-text"><p class="settings-row-label">Google Drive</p><p class="settings-row-desc">Edit Word, PowerPoint and Excel files in Google Docs, Slides and Sheets, and add files from Drive.</p></div></div>
-              <div class="settings-row"><div class="settings-row-text"><p class="settings-row-label">OneDrive</p><p class="settings-row-desc">Save course files to OneDrive, add files from it, and find them on the Files tab.</p></div></div>
+              <div class="settings-row"><div class="settings-row-text"><p class="settings-row-label">Canva</p><p class="settings-row-desc">Edit files and turn in designs.</p></div></div>
+              <div class="settings-row"><div class="settings-row-text"><p class="settings-row-label">Google Drive</p><p class="settings-row-desc">Edit and add files.</p></div></div>
+              <div class="settings-row"><div class="settings-row-text"><p class="settings-row-label">OneDrive</p><p class="settings-row-desc">Save and add files.</p></div></div>
             </div>
-            <p class="settings-row-desc integ-note">Averages only gets what you allow: your Canva designs, the Google Drive files you open or add with Averages, and its own Apps/Averages.io folder in OneDrive. Add from OneDrive asks to read your OneDrive, and Averages only lists and opens the files you pick. Disconnecting removes Averages' access right away. To remove it completely, also remove Averages.io in that app's own account settings.</p>
+            <p class="settings-row-desc integ-note">Averages only sees the files you pick. Disconnect anytime.</p>
             <p class="settings-subhead">Editing</p>
             <div class="settings-group">
               <div class="settings-row">
                 <div class="settings-row-text">
                   <p class="settings-row-label">Open files in</p>
-                  <p class="settings-row-desc">Which app the Edit button uses for Word, PowerPoint and Excel files. PDFs and images always open in Canva.</p>
+                  <p class="settings-row-desc">For Word, PowerPoint and Excel files.</p>
                   <p class="settings-row-desc integ-hint" id="defaultEditorHint" hidden></p>
                 </div>
                 <div class="pick" id="defaultEditorPick">
@@ -1852,9 +1852,10 @@
       if (!list) return;
       const PREVIEW = !window.__AVERAGES_MODE__;   // set by LegacyPage.tsx when signed in (live or demo); missing in the preview
       const APPS = [
-        { id: 'canva', name: 'Canva', desc: 'Edit assignment files in Canva, then turn them in from Drafts.' },
-        { id: 'gdrive', name: 'Google Drive', desc: 'Edit Word, PowerPoint and Excel files in Google Docs, Slides and Sheets. To bring a file in, right-click it in Google Drive and choose Open with → Averages.io.' },
-        { id: 'onedrive', name: 'OneDrive', desc: 'Save course files to OneDrive, add files from it, and find them on the Files tab.' },   // back 2026-10-05
+        // Short on purpose (2026-10-15, Martin: the text was "way too long").
+        { id: 'canva', name: 'Canva', desc: 'Edit files and turn in designs.' },
+        { id: 'gdrive', name: 'Google Drive', desc: 'Edit and add files.' },
+        { id: 'onedrive', name: 'OneDrive', desc: 'Save and add files.' },   // back 2026-10-05
       ];
       // Feature switches (2026-10-09): a row hides while its integration is off (public/js/averages-features.js).
       const FEAT = { canva: 'canva-integration', gdrive: 'drive-integration', onedrive: 'onedrive-integration' };
@@ -1881,7 +1882,7 @@
           action = '<button class="btn-secondary integ-btn" type="button" data-canva="retry">Try again</button>';
         } else if (s.connected && s.turnIn === 'reconnect') {
           // Connected before turning in Canva designs was switched on (2026-10-06).
-          status = `<span class="integ-status on">Connected${s.name ? ' as ' + esc(s.name) : ''}</span><span class="integ-status integ-reconnect">Reconnect to turn in Canva designs as PDFs.</span>`;
+          status = `<span class="integ-status on">Connected${s.name ? ' as ' + esc(s.name) : ''}</span><span class="integ-status integ-reconnect">Reconnect to turn in designs.</span>`;
           action = `<button class="btn-secondary integ-btn" type="button" data-canva="connect" aria-label="Reconnect Canva"${s.busy ? ' disabled' : ''}>Reconnect</button>`;
         } else if (s.connected) {
           status = `<span class="integ-status on">Connected${s.name ? ' as ' + esc(s.name) : ''}</span>`;
@@ -1928,13 +1929,13 @@
           // Connected before "Open with → Averages.io" existed (2026-10-09): Reconnect adds it.
           const K = window.AveragesCloud;
           if (a.id === 'gdrive' && K && typeof K.googleOpenWith === 'function' && K.googleOpenWith() === 'reconnect') {
-            status += '<span class="integ-status integ-reconnect">Reconnect to add Averages.io to Google Drive’s Open with menu.</span>';
+            status += '<span class="integ-status integ-reconnect">Reconnect to finish setup.</span>';
             action = `<button class="btn-secondary integ-btn" type="button" data-cloud="connect" data-app="${a.id}" aria-label="Reconnect ${esc(a.name)}"${busy}>Reconnect</button>`;
           }
         } else if (cloudApi() && typeof cloudApi().lost === 'function' && cloudApi().lost(a.id)) {
           // Google / Microsoft disconnected it (2026-10-09): say so, and Reconnect.
           const who = cloudApi().lost(a.id).email;
-          status = `<span class="integ-status integ-reconnect">${cloud.busy[a.id] ? 'Connecting…' : `Disconnected${who ? ' (' + esc(who) + ')' : ''}: access was removed in your ${a.id === 'gdrive' ? 'Google' : 'Microsoft'} account or ran out. Reconnect to keep using it.`}</span>`;
+          status = `<span class="integ-status integ-reconnect">${cloud.busy[a.id] ? 'Connecting…' : `Disconnected${who ? ' (' + esc(who) + ')' : ''}. Reconnect to keep using it.`}</span>`;
           action = `<button class="btn-secondary integ-btn" type="button" data-cloud="connect" data-app="${a.id}" aria-label="Reconnect ${esc(a.name)}"${busy}>Reconnect</button>`;
         } else {
           status = `<span class="integ-status">${cloud.busy[a.id] ? 'Connecting…' : 'Not connected'}</span>`;
@@ -2034,17 +2035,13 @@
         }
         if (lock === 'none') {
           editorHint.hidden = false;
-          editorHint.textContent = INCOGNITO
-            ? 'Connect Google Drive above to edit files. Canva is off in Incognito mode.'
-            : 'Connect Canva or Google Drive above to edit files.';
+          editorHint.textContent = INCOGNITO ? 'Connect Google Drive to edit files.' : 'Connect Canva or Google Drive to edit files.';
           return;
         }
         if (lock) {
           const on = APPS.find(a => a.id === lock), other = APPS.find(a => a.id === (lock === 'gdrive' ? 'canva' : 'gdrive'));
           editorHint.hidden = false;
-          editorHint.textContent = INCOGNITO
-            ? `${on.name} is the only editing app in Incognito mode, so Edit uses it.`
-            : `${on.name} is the only editing app connected, so Edit uses it. Connect ${other.name} above to choose.`;
+          editorHint.textContent = INCOGNITO ? `Only ${on.name} works in Incognito.` : `Connect ${other.name} to choose.`;
           return;
         }
         const app = APPS.find(a => a.id === editorValue);
@@ -2057,7 +2054,7 @@
             : cloud.state === 'ready' && !!cloud.cfg.google && !cloudAccount(app.id);
         }
         editorHint.hidden = !off;
-        if (off) editorHint.textContent = `Connect ${app.name} above to use it.`;
+        if (off) editorHint.textContent = `Connect ${app.name} to use it.`;
       }
       function setEditor(v, save) {
         if (v !== 'canva' && v !== 'gdrive') return;
@@ -2305,8 +2302,7 @@
       syncEditorHint();
       if (INCOGNITO) {
         const note = document.querySelector('.integ-note');
-        if (note) note.textContent = (INCOG.locked ? 'You signed in as under 13, so you’re in Incognito mode. ' : 'You’re in Incognito mode. ')
-          + 'Google Drive and OneDrive sign in through this browser only: nothing about them is stored on our servers, a new tab asks you to sign in again, and signing out forgets them. OneDrive can send copies but not share links. Canva is off in Incognito mode.';
+        if (note) note.textContent = 'Incognito: Canva is off, and nothing is saved on our servers.';
         if (LIVE) {
           loadCloud();
           window.addEventListener('averages-cloud-change', () => { if (cloud.state === 'ready') render(); });
@@ -2318,8 +2314,6 @@
         // Signed in or out of a drive in another tab, or a sign-in finished late: show it.
         window.addEventListener('averages-cloud-change', () => { if (cloud.state === 'ready') render(); });
         window.addEventListener('averages-cloud-status', () => { if (cloud.state === 'ready') render(); });
-        const note = document.querySelector('.integ-note');
-        if (note) note.textContent += ' Google Drive and OneDrive stay connected in this browser only, and signing out of Averages.io disconnects them.';
       }
       // Back from Canva: open Integrations and say how it went, then tidy the address.
       const canvaParam = new URLSearchParams(window.location.search).get('canva');
