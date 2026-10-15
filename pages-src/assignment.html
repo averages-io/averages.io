@@ -286,6 +286,30 @@
   }
   .card-inner h2.second { margin-top: 20px; }
 
+  /* Points in the Submissions box's top right (2026-10-15, per Martin):
+     what it's worth ("20 pts"), or the score once graded ("18/20 pts") in
+     the grade's color. Hidden when the points aren't known. */
+  .subs-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+  .subs-head h2 { min-width: 0; }
+  .points-chip {
+    flex: none;
+    margin-top: -2px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--panel-inner);
+    color: var(--text-muted);
+    font-size: 0.74rem;
+    font-weight: 800;
+    line-height: 1.2;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  .points-chip b { font-weight: 800; color: var(--text-dark); }
+  .points-chip.good { background: rgba(47, 125, 84, 0.14); color: var(--grade-good); }
+  .points-chip.mid { background: rgba(166, 122, 34, 0.14); color: var(--grade-mid); }
+  .points-chip.bad { background: rgba(182, 67, 47, 0.14); color: var(--grade-bad); }
+  .points-chip.good b, .points-chip.mid b, .points-chip.bad b { color: inherit; }
+
   .assign-desc-text { font-size: 0.86rem; line-height: 1.55; color: var(--text-muted); margin: 0; white-space: pre-line; overflow-wrap: anywhere; }
 
   /* ---------- Attached / submitted file rows — same red/blue/orange
@@ -1297,7 +1321,10 @@
             <h2 id="draftsTitle">Drafts</h2>
             <div id="draftsList"></div>
           </section>
-          <h2>Submissions</h2>
+          <div class="subs-head">
+            <h2>Submissions</h2>
+            <span class="points-chip" id="submissionPoints" hidden></span>
+          </div>
           <div id="submissionBanner"></div>
           <div id="submissionBody"></div>
         </div>
@@ -1738,14 +1765,17 @@
     // resubmission.
     const DETAILS = {
       'apchem|Lab Report #4': {
+        points: 50,
         description: "Write up your findings from this week's titration lab. Include your data table, calculated molarity for each trial, and a short error-analysis paragraph.",
         materials: [{ name: 'Lab Report Template.docx', ext: 'docx' }, { name: 'Titration Data Sheet.pdf', ext: 'pdf' }],
       },
       'algebra2|Unit 2 Quiz': {
+        points: 30,
         description: 'Covers solving and graphing systems of equations (Sections 4.1–4.4). Calculator allowed; show your work for full credit.',
         materials: [{ name: 'Unit 2 Study Guide.pdf', ext: 'pdf' }],
       },
       'apchem|Molarity Practice Set': {
+        points: 20,
         description: "Ten practice problems on molarity and dilution calculations — extra practice before Friday's quiz. Show all work for each problem.",
         materials: [{ name: 'Molarity Practice Set.pdf', ext: 'pdf' }],
         submissions: [
@@ -1754,6 +1784,7 @@
         ],
       },
       'apchem|Gas Laws Test': {
+        points: 100,
         description: "Unit test covering Boyle's Law, Charles's Law, and the Ideal Gas Law. 25 multiple choice questions plus 2 free-response problems.",
         materials: [{ name: 'Gas Laws Formula Sheet.pdf', ext: 'pdf' }],
         submissions: [{ name: 'GasLawsTest_Martin.pdf', ext: 'pdf', timestamp: 'Mon, Aug 18 at 9:58 AM' }],
@@ -1763,6 +1794,7 @@
       // only ever shown once an assignment is actually Graded) so a
       // Returned item's note reads as "not your final grade yet".
       'apchem|Periodic Trends Worksheet': {
+        points: 15,
         description: 'Label and explain the periodic trends (atomic radius, ionization energy, electronegativity) across a period and down a group, using the blank periodic table provided.',
         materials: [{ name: 'Periodic Trends Packet.pdf', ext: 'pdf' }],
         submissions: [{ name: 'PeriodicTrends_Martin.pdf', ext: 'pdf', timestamp: 'Fri, Aug 21 at 4:32 PM' }],
@@ -1910,7 +1942,8 @@
           if (gb && gb.courseId === qCourse && (gb.title === item.title || (qIdOk && gb.id === qId))) {
             const cat = String(gb.category || '');
             item.type = /test|quiz|exam|assessment/i.test(cat) ? 'assessment' : /discussion/i.test(cat) ? 'discussion' : 'assignment';
-            if (gb.graded && typeof gb.score === 'number' && gb.points > 0) { item.status = 'graded'; item.score = Math.round(gb.score / gb.points * 100); }
+            if (gb.points > 0) item.maxPoints = gb.points;
+            if (gb.graded && typeof gb.score === 'number' && gb.points > 0) { item.status = 'graded'; item.score = Math.round(gb.score / gb.points * 100); item.earned = gb.score; }
           }
         }
       }
@@ -1925,6 +1958,13 @@
     if (qIdOk && !item.id && item.courseId) item.id = qId;
     const course = findCourse(item.courseId) || COURSES[0];
     const detail = buildDetail(item);
+    // Points for the Submissions box (2026-10-15). The preview/demo uses the
+    // sample's own points (or a typical amount for its type); signed in they
+    // come from the gradebook row it was opened from, or GET /data/assignment.
+    if (!LIVE && typeof item.maxPoints !== 'number') {
+      item.maxPoints = typeof detail.points === 'number' ? detail.points : ({ assessment: 50, discussion: 10 }[item.type] || 20);
+      if (item.status === 'graded' && typeof item.score === 'number') item.earned = Math.round(item.score * item.maxPoints / 100);
+    }
 
     document.title = `Averages — ${item.title}`;
     document.getElementById('assignTitle').textContent = item.title;
@@ -2183,6 +2223,7 @@
         if (!res.ok) throw new Error('status ' + res.status);
         const d = await res.json();
         desc.textContent = d.description || 'No description provided by your teacher yet.';
+        if (typeof d.maxPoints === 'number' && d.maxPoints > 0) { item.maxPoints = d.maxPoints; renderPoints(); }
         liveMaterials = {
           files: Array.isArray(d.files) ? d.files : [],
           links: Array.isArray(d.links) ? d.links : [],
@@ -2611,6 +2652,7 @@
       const s = d.submission || {};
       classroomLate = s.late === true;
       if (d.due) item.due = String(d.due);
+      if (typeof s.maxPoints === 'number' && s.maxPoints > 0) item.maxPoints = s.maxPoints;
       if (s.state === 'unknown') { renderSubmissionsPanel(); return; }   // Classroom didn't say: keep the list's status
       if (s.state === 'turned_in') currentStatus = 'submitted';
       else if (s.state === 'returned') {
@@ -2618,6 +2660,7 @@
           currentStatus = 'graded';
           item.score = Math.round(s.grade / s.maxPoints * 100);
           item.points = `${s.grade}/${s.maxPoints}`;
+          item.earned = s.grade;
         } else currentStatus = 'returned';
       } else {
         const due = d.dueAt ? new Date(d.dueAt) : null;
@@ -2923,7 +2966,30 @@
     }
 
 
+    /** "20 pts", or "18/20 pts" in the grade's color once graded; hidden when unknown. */
+    function renderPoints() {
+      const el = document.getElementById('submissionPoints');
+      if (!el) return;
+      const max = Number(item.maxPoints);
+      if (!(max > 0) || !Number.isFinite(max)) { el.hidden = true; return; }
+      const n = v => String(Math.round(v * 100) / 100);
+      const unit = max === 1 ? 'pt' : 'pts';
+      const earned = Number(item.earned);
+      el.className = 'points-chip';
+      if (currentStatus === 'graded' && item.earned !== undefined && item.earned !== null && Number.isFinite(earned)) {
+        const pct = earned / max * 100;
+        el.classList.add(pct >= 90 ? 'good' : pct >= 70 ? 'mid' : 'bad');
+        el.innerHTML = `<b>${escapeHtml(n(earned))}</b>/${escapeHtml(n(max))} ${unit}`;
+        el.setAttribute('aria-label', `Scored ${n(earned)} out of ${n(max)} points`);
+      } else {
+        el.innerHTML = `<b>${escapeHtml(n(max))}</b> ${unit}`;
+        el.setAttribute('aria-label', `Worth ${n(max)} ${max === 1 ? 'point' : 'points'}`);
+      }
+      el.title = el.getAttribute('aria-label');
+      el.hidden = false;
+    }
     function renderSubmissionsPanel() {
+      renderPoints();
       const banner = BANNER_COPY[currentStatus]();
       document.getElementById('submissionBanner').innerHTML = `
         <div class="submission-banner ${escapeHtml(currentStatus)}">
