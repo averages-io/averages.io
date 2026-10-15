@@ -936,7 +936,30 @@
 
   .sheet-split { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
   .sheet-trend { border-left: 1px solid var(--border); }
+  .trend-chart { position: relative; }
   .trend-chart svg { width: 100%; height: auto; display: block; overflow: visible; }
+  /* Dot hover labels (2026-10-15): assignment name and score. */
+  .trend-dot { cursor: pointer; outline: none; }
+  .trend-dot .trend-dot-mark { transition: r 120ms ease; }
+  .trend-dot.on .trend-dot-mark, .trend-dot:focus-visible .trend-dot-mark { r: 5.5; }
+  .trend-dot:focus-visible .trend-dot-hit { stroke: var(--accent-ring); stroke-width: 2; }
+  .trend-tip {
+    position: absolute; z-index: 5; pointer-events: none;
+    min-width: 120px; max-width: 240px;
+    padding: 8px 10px; border-radius: 10px;
+    background: var(--text-dark); color: var(--panel-bg);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    display: flex; flex-direction: column; gap: 4px;
+    font-size: 0.74rem; line-height: 1.3;
+  }
+  .trend-tip[hidden] { display: none; }
+  .trend-tip-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+  .trend-tip-title { font-weight: 800; overflow-wrap: anywhere; }
+  .trend-tip-score { font-weight: 900; white-space: nowrap; }
+  .trend-tip-letter { opacity: 0.75; }
+  .trend-tip > .trend-tip-title + .trend-tip-score { margin-top: -2px; }
+  .trend-tip-date { font-size: 0.66rem; font-weight: 700; opacity: 0.7; }
+  @media (prefers-reduced-motion: reduce) { .trend-dot .trend-dot-mark { transition: none; } }
   .trend-list { list-style: none; margin: 16px 0 0; padding: 0; }
   .trend-list li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 12px; align-items: baseline; padding: 8px 0; border-top: 1px solid var(--border); }
   .trend-title { font-size: 0.76rem; font-weight: 700; color: var(--text-dark); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1026,12 +1049,20 @@
   .week-when { font-size: 0.76rem; }
   .week-done { font-size: 0.68rem; }
   .week-free { text-align: center; font-size: 0.76rem; }
+  /* More room on the right of the calendar, and long names stay in their
+     day (2026-10-15, per Martin): a name wraps anywhere it has to (even one
+     long word) and stops at four lines; the full name is on hover. */
+  .sheet-week .week { padding-right: 16px; }
+  .week-item { min-width: 0; max-width: 100%; }
+  .week-item-text { width: 100%; }
+  .week-title { overflow-wrap: anywhere; word-break: break-word; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; line-clamp: 4; overflow: hidden; }
   /* switching weeks: a short blur, then the new week */
   #upcomingBody { transition: filter 140ms ease, opacity 140ms ease; }
   #upcomingBody.switching { filter: blur(6px); opacity: 0.35; }
   @media (prefers-reduced-motion: reduce) { #upcomingBody { transition: none; } #upcomingBody.switching { filter: none; opacity: 1; } }
   @media (max-width: 900px) {
     .week { min-height: 0; }
+    .sheet-week .week { padding-right: 0; }
     .week-col { padding: 8px 0; }
     .week-day { margin: 0; }
   }
@@ -2209,7 +2240,7 @@
       const href = item.type === 'event' ? eventHref(item) : assignmentHref(item);
       const when = late ? upAgo(item) : (whenFn ? whenFn(item) : upTime(item));
       const soon = !late && dueSoon(item);
-      return `<a class="week-item${late ? ' late' : ''}" href="${escapeHtml(href)}">
+      return `<a class="week-item${late ? ' late' : ''}" href="${escapeHtml(href)}" title="${escapeHtml(item.title)}">
           <span class="week-icons">
             <span class="emo" aria-hidden="true">${emojiSvg(UP_TYPE_EMOJI[item.type] || '📝')}</span>
             ${soon ? SOON_CLOCK : ''}
@@ -2340,16 +2371,19 @@
       const days = [];
       h.points.forEach((p, i) => {
         const d = h.dates[i];
+        // Each grade's own assignment, for the dot's hover label (2026-10-15).
+        const one = { title: (Array.isArray(h.titles) && Array.isArray(h.titles[i]) && h.titles[i][0]) ? String(h.titles[i][0]) : '', score: p };
         const last = days[days.length - 1];
-        if (last && last.date === d) { last.sum += p; last.n++; }
-        else days.push({ date: d, sum: p, n: 1 });
+        if (last && last.date === d) { last.sum += p; last.n++; last.items.push(one); }
+        else days.push({ date: d, sum: p, n: 1, items: [one] });
       });
       return Object.assign({}, h, {
         points: days.map(x => Math.round(x.sum / x.n)),
         dates: days.map(x => x.n > 1 ? `${x.date} ×${x.n}` : x.date),
+        days: days.map(x => ({ date: x.date, items: x.items })),
       });
     }
-    function buildGradeChartSVG(c) {
+    function buildGradeChartSVG(c, interactive) {
       if (!HISTORY[c.id] || !Array.isArray(HISTORY[c.id].points) || !HISTORY[c.id].points.length) return '<p class="trend-note">No graded work yet. The trend shows up after the first grades.</p>';
       const h = groupSameDay(HISTORY[c.id]);
       const allLabels = h.dates.concat(['Predicted']);
@@ -2367,7 +2401,14 @@
       `).join('');
       const actualPts = h.points.map((v, i) => [xFor(i), yFor(v)]);
       const actualLine = actualPts.map(p => p.join(',')).join(' ');
-      const actualMarkers = actualPts.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="4" fill="${escapeHtml(c.color)}" stroke="var(--panel-bg)" stroke-width="2"/>`).join('');
+      const actualMarkers = actualPts.map(([x, y], i) => {
+        const dot = `<circle class="trend-dot-mark" cx="${x}" cy="${y}" r="4" fill="${escapeHtml(c.color)}" stroke="var(--panel-bg)" stroke-width="2"/>`;
+        if (!interactive) return dot;
+        // Hover or focus a dot for its assignment and score (2026-10-15).
+        const day = h.days[i] || { date: h.dates[i], items: [] };
+        const label = day.items.map(it => `${it.title || 'Graded assignment'}, ${it.score}%`).join('; ') + (day.date ? `, ${day.date}` : '');
+        return `<g class="trend-dot" data-dot="${i}" tabindex="0" role="img" aria-label="${escapeHtml(label)}"><circle class="trend-dot-hit" cx="${x}" cy="${y}" r="11" fill="transparent"/>${dot}</g>`;
+      }).join('');
       const predX = xFor(allLabels.length - 1), predY = yFor(c.predictedPct);
       const lastActual = actualPts[actualPts.length - 1];
       const predictedBand = `x="${lastActual[0]}" y="${padT}" width="${predX - lastActual[0]}" height="${plotH}"`;
@@ -2386,7 +2427,7 @@
           <polyline points="${actualLine}" fill="none" stroke="${escapeHtml(c.color)}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           <line x1="${lastActual[0]}" y1="${lastActual[1]}" x2="${predX}" y2="${predY}" stroke="${escapeHtml(c.color)}" stroke-width="2" stroke-linecap="round" stroke-dasharray="3 3"/>
           ${actualMarkers}
-          <circle cx="${predX}" cy="${predY}" r="4.5" fill="var(--panel-bg)" stroke="${escapeHtml(c.color)}" stroke-width="2"/>
+          ${interactive ? `<g class="trend-dot" data-dot="pred" tabindex="0" role="img" aria-label="${escapeHtml(`Projected, ${c.predictedPct}% (${c.predicted})`)}"><circle class="trend-dot-hit" cx="${predX}" cy="${predY}" r="11" fill="transparent"/>` : ''}<circle class="trend-dot-mark" cx="${predX}" cy="${predY}" r="4.5" fill="var(--panel-bg)" stroke="${escapeHtml(c.color)}" stroke-width="2"/>${interactive ? '</g>' : ''}
           <text x="${predX}" y="${predY - 10}" text-anchor="end" font-size="8.5" font-weight="800" fill="var(--text-dark)">${escapeHtml(c.predictedPct)}%</text>
           ${xLabels}
         </svg>
@@ -2433,11 +2474,54 @@
       if (!h) return;
       const rows = h.points.map((p, i) => ({ score: p, date: h.dates[i], title: (h.titles && h.titles[i]) ? h.titles[i][0] : '' })).reverse();
       document.getElementById('trendBody').innerHTML = `
-        <div class="trend-chart">${buildGradeChartSVG(course)}</div>
+        <div class="trend-chart">${buildGradeChartSVG(course, true)}<div class="trend-tip" id="trendTip" role="tooltip" hidden></div></div>
         <ol class="trend-list">${rows.map(r => `<li><span class="trend-title">${escapeHtml(r.title)}</span><span class="trend-date">${escapeHtml(r.date)}</span><span class="trend-score">${escapeHtml(r.score)}%</span></li>`).join('')}</ol>
         <p class="trend-note">Projected grade follows this trend. It is not a copy of the current grade.</p>`;
     }
     renderTrend();
+    // The trend chart's dots: hover or focus one to see its assignment and score.
+    (function wireTrendTips() {
+      const body = document.getElementById('trendBody');
+      if (!body) return;
+      function tipFor(g) {
+        const tip = document.getElementById('trendTip');
+        const h = HISTORY[course.id];
+        if (!tip || !h) return;
+        const key = g.dataset.dot;
+        let html;
+        if (key === 'pred') {
+          html = `<span class="trend-tip-title">Projected</span><span class="trend-tip-score">${escapeHtml(course.predictedPct)}%${course.predicted && course.predicted !== '—' ? ` <span class="trend-tip-letter">${escapeHtml(course.predicted)}</span>` : ''}</span>`;
+        } else {
+          const day = (groupSameDay(h).days || [])[Number(key)];
+          if (!day) return;
+          html = day.items.map(it => `<span class="trend-tip-row"><span class="trend-tip-title">${escapeHtml(it.title || 'Graded assignment')}</span><span class="trend-tip-score">${escapeHtml(it.score)}%</span></span>`).join('') +
+            (day.date ? `<span class="trend-tip-date">${escapeHtml(day.date)}</span>` : '');
+        }
+        tip.innerHTML = html;
+        tip.hidden = false;
+        const box = tip.parentElement.getBoundingClientRect();
+        const dot = g.querySelector('.trend-dot-mark').getBoundingClientRect();
+        const tw = tip.offsetWidth, th = tip.offsetHeight;
+        let left = dot.left + dot.width / 2 - box.left - tw / 2;
+        left = Math.max(0, Math.min(left, box.width - tw));
+        let top = dot.top - box.top - th - 10;
+        if (top < -box.top + 8) top = dot.bottom - box.top + 10;   // no room above: below the dot
+        tip.style.left = `${left}px`;
+        tip.style.top = `${top}px`;
+        body.querySelectorAll('.trend-dot.on').forEach(x => x.classList.remove('on'));
+        g.classList.add('on');
+      }
+      function hideTip() {
+        const tip = document.getElementById('trendTip');
+        if (tip) tip.hidden = true;
+        body.querySelectorAll('.trend-dot.on').forEach(x => x.classList.remove('on'));
+      }
+      body.addEventListener('mouseover', e => { const g = e.target.closest('.trend-dot'); if (g) tipFor(g); });
+      body.addEventListener('mouseout', e => { const g = e.target.closest('.trend-dot'); if (g && !g.contains(e.relatedTarget)) hideTip(); });
+      body.addEventListener('focusin', e => { const g = e.target.closest('.trend-dot'); if (g) tipFor(g); });
+      body.addEventListener('focusout', hideTip);
+      body.addEventListener('keydown', e => { if (e.key === 'Escape') hideTip(); });
+    })();
 
     // ------------------------------------------------------------------
     // Upcoming Calendar — a real month grid, built from Date objects

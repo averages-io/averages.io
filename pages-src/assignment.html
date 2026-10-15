@@ -287,8 +287,8 @@
   .card-inner h2.second { margin-top: 20px; }
 
   /* Points in the Submissions box's top right (2026-10-15, per Martin):
-     what it's worth ("20 pts"), or the score once graded ("18/20 pts") in
-     the grade's color. Hidden when the points aren't known. */
+     "18/20" with the letter (A-) beside it once graded, "–/20" before.
+     Hidden when the points aren't known. */
   .subs-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
   .subs-head h2 { min-width: 0; }
   .points-chip {
@@ -304,11 +304,13 @@
     white-space: nowrap;
     font-variant-numeric: tabular-nums;
   }
-  .points-chip b { font-weight: 800; color: var(--text-dark); }
-  .points-chip.good { background: rgba(47, 125, 84, 0.14); color: var(--grade-good); }
-  .points-chip.mid { background: rgba(166, 122, 34, 0.14); color: var(--grade-mid); }
-  .points-chip.bad { background: rgba(182, 67, 47, 0.14); color: var(--grade-bad); }
-  .points-chip.good b, .points-chip.mid b, .points-chip.bad b { color: inherit; }
+  .points-chip b { font-weight: 900; color: var(--text-dark); }
+  .points-chip { display: inline-flex; align-items: center; gap: 7px; }
+  .points-chip[hidden] { display: none; }
+  .pts-letter { font-weight: 900; font-size: 0.78rem; }
+  .pts-letter.good { color: var(--grade-good); }
+  .pts-letter.mid { color: var(--grade-mid); }
+  .pts-letter.bad { color: var(--grade-bad); }
 
   .assign-desc-text { font-size: 0.86rem; line-height: 1.55; color: var(--text-muted); margin: 0; white-space: pre-line; overflow-wrap: anywhere; }
 
@@ -2223,7 +2225,16 @@
         if (!res.ok) throw new Error('status ' + res.status);
         const d = await res.json();
         desc.textContent = d.description || 'No description provided by your teacher yet.';
-        if (typeof d.maxPoints === 'number' && d.maxPoints > 0) { item.maxPoints = d.maxPoints; renderPoints(); }
+        if (typeof d.maxPoints === 'number' && d.maxPoints > 0) item.maxPoints = d.maxPoints;
+        // Graded on Schoology (2026-10-15): the exact score, and the status follows it.
+        const sc = d.score;
+        if (!CLASSROOM && sc && typeof sc.earned === 'number' && typeof sc.possible === 'number' && sc.possible > 0) {
+          if (!(item.maxPoints > 0)) item.maxPoints = sc.possible;
+          item.earned = sc.earned;
+          item.score = Math.round(sc.earned / sc.possible * 100);
+          if (currentStatus !== 'returned') currentStatus = 'graded';
+          renderSubmissionsPanel();
+        } else renderPoints();
         liveMaterials = {
           files: Array.isArray(d.files) ? d.files : [],
           links: Array.isArray(d.links) ? d.links : [],
@@ -2966,26 +2977,34 @@
     }
 
 
-    /** "20 pts", or "18/20 pts" in the grade's color once graded; hidden when unknown. */
+    /** Same scale as the API's letterFromPct. */
+    function letterFor(pct) {
+      const cuts = [[97, 'A+'], [93, 'A'], [90, 'A-'], [87, 'B+'], [83, 'B'], [80, 'B-'], [77, 'C+'], [73, 'C'], [70, 'C-'], [67, 'D+'], [63, 'D'], [60, 'D-']];
+      for (const [min, l] of cuts) if (pct >= min) return l;
+      return 'F';
+    }
+    /** "18/20" with the letter beside it once graded, "–/20" before; hidden when the points aren't known. */
     function renderPoints() {
       const el = document.getElementById('submissionPoints');
       if (!el) return;
       const max = Number(item.maxPoints);
       if (!(max > 0) || !Number.isFinite(max)) { el.hidden = true; return; }
       const n = v => String(Math.round(v * 100) / 100);
-      const unit = max === 1 ? 'pt' : 'pts';
       const earned = Number(item.earned);
+      const hasEarned = currentStatus === 'graded' && item.earned !== undefined && item.earned !== null && Number.isFinite(earned);
+      const pct = hasEarned ? earned / max * 100 : (currentStatus === 'graded' && typeof item.score === 'number' ? item.score : null);
       el.className = 'points-chip';
-      if (currentStatus === 'graded' && item.earned !== undefined && item.earned !== null && Number.isFinite(earned)) {
-        const pct = earned / max * 100;
-        el.classList.add(pct >= 90 ? 'good' : pct >= 70 ? 'mid' : 'bad');
-        el.innerHTML = `<b>${escapeHtml(n(earned))}</b>/${escapeHtml(n(max))} ${unit}`;
-        el.setAttribute('aria-label', `Scored ${n(earned)} out of ${n(max)} points`);
-      } else {
-        el.innerHTML = `<b>${escapeHtml(n(max))}</b> ${unit}`;
-        el.setAttribute('aria-label', `Worth ${n(max)} ${max === 1 ? 'point' : 'points'}`);
+      let html = `<span class="pts-num"><b>${hasEarned ? escapeHtml(n(earned)) : '–'}</b>/${escapeHtml(n(max))}</span>`;
+      let label = hasEarned ? `${n(earned)} out of ${n(max)} points` : `Worth ${n(max)} ${max === 1 ? 'point' : 'points'}`;
+      if (pct !== null) {
+        const letter = letterFor(pct);
+        const tone = letter[0] === 'A' ? 'good' : (letter[0] === 'B' || letter[0] === 'C') ? 'mid' : 'bad';
+        html += `<span class="pts-letter ${tone}">${escapeHtml(letter)}</span>`;
+        label += hasEarned ? `, ${letter}` : `, graded ${letter}`;
       }
-      el.title = el.getAttribute('aria-label');
+      el.innerHTML = html;
+      el.setAttribute('aria-label', label);
+      el.title = label;
       el.hidden = false;
     }
     function renderSubmissionsPanel() {
