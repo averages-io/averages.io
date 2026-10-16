@@ -613,6 +613,12 @@
   .ql-row .ql-row-icon { width: 22px; height: 22px; flex-shrink: 0; }
   .ql-row .ql-row-icon svg { width: 100%; height: 100%; }
   .ql-row-name { flex: 1; word-break: break-word; }
+  /* File previews (2026-10-16): the picture fills the icon's square, with a hairline so white pages show */
+  .item-icon.has-thumb { width: 64px; height: 64px; }
+  .item-thumb { max-width: 100%; max-height: 100%; border-radius: 4px; box-shadow: 0 0 0 1px var(--border), 0 2px 6px -2px rgba(0,0,0,0.25); background: #fff; display: block; }
+  .ql-preview { display: flex; align-items: center; justify-content: center; min-height: 120px; margin-bottom: 10px; border-radius: 8px; background: var(--panel-inner); overflow: hidden; }
+  .ql-preview img { max-width: 100%; max-height: 360px; display: block; }
+  .ql-preview.loading span { font-size: 0.76rem; font-weight: 700; color: var(--text-faint); }
 
   /* Get Info (2026-08-27, per Martin's request — including a Teacher/
      Student "created by" line). */
@@ -1032,6 +1038,29 @@
   .cloud-menu { min-width: 224px; }
   .cloud-menu .context-menu-tags-label { padding: 4px 12px 8px; text-transform: none; letter-spacing: 0; font-size: 0.72rem; }
   .cloud-soon { font-size: 0.66rem; font-weight: 800; color: var(--text-faint); }
+  /* Background tasks: Save to Canva and folder downloads (2026-10-16) */
+  .task-panel { position: fixed; right: 16px; bottom: 96px; z-index: 60; width: min(340px, calc(100vw - 32px)); display: flex; flex-direction: column; gap: 8px; }
+  .task-panel[hidden] { display: none; }
+  .task { background: var(--panel-bg); color: var(--text-dark); border-radius: var(--window-radius-md, 12px); padding: 12px 12px 10px; box-shadow: 0 16px 40px -12px rgba(0,0,0,0.45); }
+  .task-top { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .task-kind { font-size: 0.64rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-faint); flex-shrink: 0; }
+  .task-title { font-weight: 800; font-size: 0.84rem; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .task-btn { background: var(--panel-inner); color: var(--text-dark); border: none; border-radius: 999px; padding: 4px 12px; font: inherit; font-size: 0.72rem; font-weight: 800; cursor: pointer; flex-shrink: 0; }
+  .task-btn:hover { background: var(--border, var(--panel-inner)); }
+  .task-x { background: var(--panel-inner); border: none; width: 24px; height: 24px; border-radius: 50%; color: var(--text-muted); cursor: pointer; font-size: 0.9rem; line-height: 1; flex-shrink: 0; }
+  .task-x:hover { color: var(--text-dark); }
+  .task-btn:focus-visible, .task-x:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring, var(--accent)); }
+  .task-bar { height: 4px; border-radius: 999px; background: var(--panel-inner); margin: 8px 0 6px; overflow: hidden; }
+  .task-bar i { display: block; height: 100%; background: var(--accent); border-radius: 999px; transition: width 0.3s ease; }
+  .task.done .task-bar i { background: var(--grade-good, #2f7d54); }
+  .task.failed .task-bar i { background: var(--text-faint); }
+  .task-sub { font-size: 0.74rem; font-weight: 700; color: var(--text-muted); }
+  .task-sub a { color: var(--accent); font-weight: 800; }
+  .task-problems { margin-top: 6px; font-size: 0.72rem; color: var(--text-muted); }
+  .task-problems summary { cursor: pointer; font-weight: 800; }
+  .task-problems ul { margin: 6px 0 0; padding-left: 16px; max-height: 120px; overflow: auto; }
+  .task-problems li { margin: 2px 0; }
+  .task-problems b { color: var(--text-dark); font-weight: 800; overflow-wrap: anywhere; }
   /* Teacher contact card (2026-10-02): same card as the Contacts page */
   .teacher-link { background: none; border: none; padding: 0; margin: 0; font: inherit; color: inherit; cursor: pointer; text-decoration: underline; text-decoration-color: rgba(255,255,255,0.45); text-underline-offset: 3px; }
   .teacher-link:hover { text-decoration-color: currentColor; }
@@ -3284,51 +3313,10 @@
         infoCloseBtn.focus();
         return;
       }
+      // Signed in: the real files, through the steady downloader below (2026-10-16).
+      if (MATERIALS_LIVE) { downloadLiveFolder(folder); return; }
       const zip = new JSZip();
-      if (MATERIALS_LIVE) {
-        // Signed in: the real files (Google Drive links are skipped). Capped so
-        // a big class can't fill a Chromebook's memory.
-        const files = allFilesFlat(folder).filter(f => f.live && !f.url);
-        const bytes = files.reduce((n, f) => n + (Number(f.live.size) || 0), 0);
-        if (!files.length || bytes > 100 * 1024 * 1024) {
-          infoTitle.textContent = folder.name;
-          infoBody.innerHTML = `<p class="info-row-value">${files.length ? 'This folder is too big to download at once (over 100 MB). Download the files one at a time.' : 'There are no files here to download.'}</p>`;
-          infoOverlay.hidden = false;
-          infoCloseBtn.focus();
-          return;
-        }
-        // Teachers' names can hold "/" or ".." (2026-10-06): each item is one
-        // plain entry, and a name that's already there gets " (2)".
-        const zipName = (name, used) => {
-          let n = String(name || 'File').replace(/[\\/\u0000-\u001f]/g, '_').replace(/^\.+/, '_').trim().slice(0, 180) || 'File';
-          const dot = n.lastIndexOf('.');
-          const base = dot > 0 ? n.slice(0, dot) : n, ext = dot > 0 ? n.slice(dot) : '';
-          for (let i = 2; used.has(n.toLowerCase()); i++) n = `${base} (${i})${ext}`;
-          used.add(n.toLowerCase());
-          return n;
-        };
-        async function addLive(zipFolder, node) {
-          const used = new Set();
-          for (const f of node.files) {
-            if (!f.live || f.url) continue;
-            const res = await fetch(liveFileUrl(f), { credentials: 'include' });
-            if (!res.ok) throw new Error('download_failed');
-            zipFolder.file(zipName(f.name, used), await res.blob());
-          }
-          for (const sub of node.folders) await addLive(zipFolder.folder(zipName(sub.name, used)), sub);
-        }
-        try {
-          await addLive(zip, folder);
-        } catch {
-          infoTitle.textContent = folder.name;
-          infoBody.innerHTML = '<p class="info-row-value">Some files couldn\'t be downloaded just now. Try again in a moment.</p>';
-          infoOverlay.hidden = false;
-          infoCloseBtn.focus();
-          return;
-        }
-      } else {
-        addFolderToZip(zip, folder);
-      }
+      addFolderToZip(zip, folder);
       const blob = await zip.generateAsync({ type: 'blob' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -3363,7 +3351,7 @@
       const cloud = cmItem('Save to Cloud', () => {
         if (item.quiz || item.url) return;
         const x = parseFloat(contextMenu.style.left) || 0, y = parseFloat(contextMenu.style.top) || 0;
-        setTimeout(() => openCloudMenu(item.name, x, y, false, canvaCanOpen(item, isFolder)), 0);
+        setTimeout(() => openCloudMenu(item.name, x, y, false, canvaCanOpen(item, isFolder), { item, isFolder }), 0);
       }, { chevron: true });
       add(item.quiz ? lockedItem(cloud, 'tests stay in Schoology') : item.url ? lockedItem(cloud, item.drive ? 'it\'s already in Google Drive' : 'web links open in the browser') : cloud);
       add(cmItem('Get Info', () => openInfoModal(item, isFolder)));
@@ -3926,7 +3914,8 @@
       const hit = selectedId ? findItemById(selectedId) : null;
       const target = hit ? hit.item.name : (mode === 'browse' ? currentNode().name : 'All Materials');
       const r = cloudBtn.getBoundingClientRect();
-      openCloudMenu(target, r.right, r.bottom + 8, true, !!hit && canvaCanOpen(hit.item, hit.isFolder));
+      openCloudMenu(target, r.right, r.bottom + 8, true, !!hit && canvaCanOpen(hit.item, hit.isFolder),
+        hit ? { item: hit.item, isFolder: hit.isFolder } : { item: mode === 'browse' ? currentNode() : root, isFolder: true });
       cloudBtn.setAttribute('aria-expanded', 'true');
     });
     // Shared by the toolbar button and the right-click menu's "Save to Cloud".
@@ -3934,9 +3923,21 @@
     // Files Canva can open (2026-10-02). Not folders or web links.
     const CANVA_EXTS = ['pdf', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'key', 'numbers', 'pages', 'odt', 'odp', 'ods', 'png', 'jpg', 'jpeg', 'gif', 'heic', 'ai', 'psd'];
     function canvaCanOpen(item, isFolder) { return !!item && !isFolder && !item.url && !item.quiz && CANVA_EXTS.includes(String(item.ext || '').toLowerCase()); }
-    function openCloudMenu(targetName, x, y, alignRight, withCanva) {
+    let cloudMenuTarget = null;
+    function openCloudMenu(targetName, x, y, alignRight, withCanva, target) {
+      cloudMenuTarget = target || null;
+      const soon = n => `<button class="context-menu-item" type="button" role="menuitem" disabled><span>${n}</span><span class="cloud-soon">Coming soon</span></button>`;
+      // Signed in (2026-10-16): Canva is real, for a file or a whole folder (see "Save to Canva" below).
+      let canva = '';
+      if (MATERIALS_LIVE && target) {
+        const n = canvaFilesIn(target).length;
+        if (!n) canva = target.isFolder ? `<button class="context-menu-item" type="button" role="menuitem" disabled><span>Canva</span><span class="cloud-soon">Nothing Canva opens</span></button>` : '';
+        else if (canvaReady === false) canva = `<button class="context-menu-item" type="button" role="menuitem" data-canva-connect><span>Canva</span><span class="cloud-soon">Connect in Settings</span></button>`;
+        else if (n > SAVE_MAX_FILES) canva = `<button class="context-menu-item" type="button" role="menuitem" disabled><span>Canva</span><span class="cloud-soon">Over ${SAVE_MAX_FILES} files</span></button>`;
+        else canva = `<button class="context-menu-item" type="button" role="menuitem" data-save-canva><span>Canva</span><span class="cloud-soon">${target.isFolder ? `${n} file${n === 1 ? '' : 's'}` : ''}</span></button>`;
+      } else if (withCanva) canva = soon('Canva');
       cloudMenu.innerHTML = `<div class="context-menu-tags-label">Save "${escapeHtml(targetName)}" to</div>` +
-        ['Google Drive', 'OneDrive'].concat(withCanva ? ['Canva'] : []).map(n => `<button class="context-menu-item" type="button" role="menuitem" disabled><span>${n}</span><span class="cloud-soon">Coming soon</span></button>`).join('');
+        ['Google Drive', 'OneDrive'].map(soon).join('') + canva;
       cloudMenu.hidden = false;
       const w = cloudMenu.offsetWidth, h = cloudMenu.offsetHeight;
       const left = alignRight ? x - w : x;
@@ -3947,6 +3948,403 @@
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && !cloudMenu.hidden) closeCloudMenu(); });
     window.addEventListener('scroll', closeCloudMenu, true);
     window.addEventListener('resize', closeCloudMenu);
+    cloudMenu.addEventListener('click', e => {
+      if (e.target.closest('[data-canva-connect]')) { window.location.href = 'settings.html?section=integrations'; return; }
+      if (!e.target.closest('[data-save-canva]')) return;
+      const target = cloudMenuTarget;
+      closeCloudMenu();
+      if (target) startCanvaSave(target);
+    });
+
+    // ------------------------------------------------------------------
+    // Background tasks (2026-10-16): Save to Canva and folder downloads show
+    // their progress in one small panel at the bottom right, so the page
+    // stays usable while they run.
+    // ------------------------------------------------------------------
+    const SAVE_MAX_FILES = 50;
+    let canvaReady = null;   // null until /canva/status answers
+    if (MATERIALS_LIVE) {
+      fetch(`${liveApiBase()}/canva/status`, { credentials: 'include' })
+        .then(r => (r.ok ? r.json() : null))
+        .then(j => { canvaReady = !!(j && j.configured !== false && j.connected); })
+        .catch(() => { canvaReady = false; });
+    }
+    function canvaFilesIn(target) {
+      if (!target || !target.item) return [];
+      const files = target.isFolder ? allFilesFlat(target.item) : [target.item];
+      return files.filter(f => f && f.live && !f.url && !f.quiz && canvaCanOpen(f, false));
+    }
+    const taskPanel = document.createElement('div');
+    taskPanel.className = 'task-panel';
+    taskPanel.setAttribute('aria-live', 'polite');
+    taskPanel.hidden = true;
+    document.body.appendChild(taskPanel);
+    const tasks = [];
+    let taskSeq = 0;
+    function addTask(t) { t.key = 't' + (++taskSeq); tasks.unshift(t); drawTasks(); return t; }
+    function dropTask(t) { const i = tasks.indexOf(t); if (i !== -1) tasks.splice(i, 1); if (t.onClose) t.onClose(); drawTasks(); }
+    function drawTasks() {
+      taskPanel.hidden = !tasks.length;
+      taskPanel.innerHTML = tasks.map(t => {
+        const pct = Math.max(0, Math.min(100, Math.round(t.pct || 0)));
+        const running = t.state === 'running';
+        return `<div class="task ${escapeHtml(t.state)}" data-task="${t.key}">
+          <div class="task-top">
+            <span class="task-kind">${escapeHtml(t.kind)}</span>
+            <span class="task-title">${escapeHtml(t.title)}</span>
+            ${running && t.onStop ? `<button class="task-btn" type="button" data-task-stop>Stop</button>` : ''}
+            ${!running ? `<button class="task-x" type="button" data-task-close aria-label="Close">×</button>` : ''}
+          </div>
+          <div class="task-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><i style="width:${pct}%"></i></div>
+          <div class="task-sub">${escapeHtml(t.sub || '')}${t.link ? ` <a href="${escapeHtml(t.link.href)}" target="_blank" rel="noopener noreferrer">${escapeHtml(t.link.label)}</a>` : ''}</div>
+          ${t.problems && t.problems.length ? `<details class="task-problems"><summary>${t.problems.length} couldn't be ${escapeHtml(t.verb || 'done')}</summary><ul>${t.problems.map(p => `<li><b>${escapeHtml(p.name || 'A file')}</b> ${escapeHtml(p.why)}</li>`).join('')}</ul></details>` : ''}
+        </div>`;
+      }).join('');
+    }
+    taskPanel.addEventListener('click', e => {
+      const el = e.target.closest('[data-task]');
+      const t = el && tasks.find(x => x.key === el.dataset.task);
+      if (!t) return;
+      if (e.target.closest('[data-task-stop]') && t.onStop) t.onStop();
+      else if (e.target.closest('[data-task-close]')) dropTask(t);
+    });
+    const wait = ms => new Promise(r => setTimeout(r, ms));
+
+    // Save to Canva: the API makes a Canva folder and saves the files one by
+    // one on its queue, a few a minute (Canva's own limit), so a big folder
+    // takes a little while. It keeps going if this page is closed; this tab
+    // picks the progress up again after a reload.
+    const SAVES_KEY = 'averages_canva_saves';
+    const SAVE_WHY = {
+      file_too_large: 'is over Canva\'s 25 MB limit',
+      canva_invalid_file: 'is a kind of file Canva can\'t open',
+      canva_import_failed: 'couldn\'t be opened by Canva',
+      file_not_found: 'isn\'t in the class anymore',
+      signed_out: 'took too long. Try again',
+      expired: 'took too long. Try again',
+      gave_up: 'couldn\'t be saved: Canva was busy. Try again later',
+      canva_not_connected: 'couldn\'t be saved: connect Canva in Settings',
+      canva_reconnect_needed: 'couldn\'t be saved: reconnect Canva in Settings',
+    };
+    function savedJobs() { try { const v = JSON.parse(sessionStorage.getItem(SAVES_KEY) || '[]'); return Array.isArray(v) ? v : []; } catch { return []; } }
+    function rememberJob(job, name) { try { sessionStorage.setItem(SAVES_KEY, JSON.stringify(savedJobs().filter(x => x.job !== job).concat([{ job, name }]).slice(-5))); } catch {} }
+    function forgetJob(job) { try { sessionStorage.setItem(SAVES_KEY, JSON.stringify(savedJobs().filter(x => x.job !== job))); } catch {} }
+    function showSave(t, s) {
+      const left = s.waiting;
+      t.pct = s.total ? ((s.done + s.failed) / s.total) * 100 : 100;
+      t.problems = s.items.filter(i => i.state === 'failed').map(i => ({ name: i.name, why: SAVE_WHY[i.error] || 'couldn\'t be saved' }));
+      if (!s.finished) {
+        t.state = 'running';
+        t.sub = `${s.done} of ${s.total} saved${left ? ` · about ${Math.max(1, Math.ceil(left * 8 / 60))} min left` : ''}`;
+      } else {
+        t.state = s.done ? 'done' : 'failed';
+        t.sub = s.stopped ? `Stopped. ${s.done} of ${s.total} saved.` : s.done === s.total ? `Saved ${s.total === 1 ? 'it' : `all ${s.total}`} to Canva${s.folder ? ' in a folder with this name' : ''}.` : `Saved ${s.done} of ${s.total} to Canva.`;
+        if (s.done) t.link = { href: 'https://www.canva.com/projects', label: 'Open Canva' };
+      }
+      drawTasks();
+    }
+    function followSave(job, name, first) {
+      const t = addTask({ kind: 'Canva', title: name, state: 'running', sub: 'Starting…', pct: 0, verb: 'saved' });
+      let stopped = false;
+      t.onClose = () => { stopped = true; forgetJob(job); };
+      t.onStop = async () => {
+        t.sub = 'Stopping…'; drawTasks();
+        try {
+          const r = await fetch(`${liveApiBase()}/canva/save-folder/${encodeURIComponent(job)}`, { method: 'DELETE', credentials: 'include' });
+          if (r.ok) showSave(t, await r.json());
+        } catch {}
+      };
+      if (first) showSave(t, first);
+      (async () => {
+        let misses = 0;
+        while (!stopped) {
+          await wait(4000);
+          if (stopped) return;
+          try {
+            const r = await fetch(`${liveApiBase()}/canva/save-folder/${encodeURIComponent(job)}`, { credentials: 'include' });
+            if (r.status === 404) { forgetJob(job); dropTask(t); return; }
+            if (!r.ok) throw new Error('status ' + r.status);
+            misses = 0;
+            const s = await r.json();
+            showSave(t, s);
+            if (s.finished) { forgetJob(job); return; }
+          } catch {
+            // Offline for a moment: keep the last numbers, look again (less often).
+            if (++misses > 3) await wait(16000);
+          }
+        }
+      })();
+    }
+    async function startCanvaSave(target) {
+      const files = canvaFilesIn(target);
+      if (!files.length) return;
+      const name = target.isFolder ? (target.item === root ? course.name : target.item.name) : target.item.name;
+      const t = addTask({ kind: 'Canva', title: name, state: 'running', sub: 'Starting…', pct: 0, verb: 'saved' });
+      try {
+        const r = await fetch(`${liveApiBase()}/canva/save-folder`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, files: files.map(f => ({ section: f.live.course, kind: f.live.kind, parent: f.live.parent, file: f.live.id })) }),
+        });
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok) {
+          t.state = 'failed';
+          t.sub = j.error === 'too_many_save_jobs' ? 'Two saves are already running. Try again when one finishes.'
+            : j.error === 'too_many_files' ? `Canva saves up to ${SAVE_MAX_FILES} files at a time. Pick a smaller folder.`
+            : (j.error === 'canva_not_connected' || j.error === 'canva_reconnect_needed') ? 'Connect Canva in Settings first.'
+            : j.error === 'save_unavailable' ? 'Saving to Canva isn\'t available right now.'
+            : 'Couldn\'t start saving to Canva. Try again in a moment.';
+          if (j.error === 'canva_not_connected' || j.error === 'canva_reconnect_needed') { canvaReady = false; t.link = { href: 'settings.html?section=integrations', label: 'Settings' }; }
+          drawTasks();
+          return;
+        }
+        dropTask(t);
+        rememberJob(j.job, name);
+        followSave(j.job, name, j);
+      } catch {
+        t.state = 'failed';
+        t.sub = 'Couldn\'t reach Averages.io. Try again in a moment.';
+        drawTasks();
+      }
+    }
+    if (MATERIALS_LIVE) savedJobs().forEach(x => followSave(x.job, x.name, null));
+
+    // Folder downloads (2026-10-16): three files at a time, each tried again
+    // when the server is busy (it says how long to wait) or the network
+    // blinks, so one hiccup no longer loses the whole folder. Files that still
+    // fail are listed; the zip has everything else.
+    const ZIP_MAX_BYTES = 100 * 1024 * 1024;
+    async function fetchWithRetry(url, ctl) {
+      for (let attempt = 0; ; attempt++) {
+        if (ctl.stopped) throw new Error('stopped');
+        let res = null;
+        try { res = await fetch(url, { credentials: 'include' }); } catch {}
+        if (res && res.ok) return res;
+        if (res && res.status === 401) { ctl.signedOut = true; throw new Error('signed_out'); }
+        const busy = !res || res.status === 429 || res.status >= 500;
+        if (!busy || attempt >= 3) throw new Error(res ? 'status ' + res.status : 'network');
+        const after = res ? Number(res.headers.get('Retry-After')) : 0;
+        await wait(after > 0 ? Math.min(after, 30) * 1000 : 1500 * Math.pow(2, attempt));
+      }
+    }
+    async function downloadLiveFolder(folder) {
+      // Each entry: the file and where it goes in the zip. Teachers' names can hold
+      // "/" or ".." (2026-10-06): each is one plain entry, repeats get " (2)".
+      const zipName = (name, used) => {
+        let n = String(name || 'File').replace(/[\\/\u0000-\u001f]/g, '_').replace(/^\.+/, '_').trim().slice(0, 180) || 'File';
+        const dot = n.lastIndexOf('.');
+        const base = dot > 0 ? n.slice(0, dot) : n, ext = dot > 0 ? n.slice(dot) : '';
+        for (let i = 2; used.has(n.toLowerCase()); i++) n = `${base} (${i})${ext}`;
+        used.add(n.toLowerCase());
+        return n;
+      };
+      const zip = new JSZip();
+      const entries = [];
+      (function walk(zipFolder, node) {
+        const used = new Set();
+        node.files.forEach(f => { if (f.live && !f.url) entries.push({ f, dir: zipFolder, name: zipName(f.name, used) }); });
+        node.folders.forEach(sub => walk(zipFolder.folder(zipName(sub.name, used)), sub));
+      })(zip, folder);
+      const bytes = entries.reduce((n, e) => n + (Number(e.f.live.size) || 0), 0);
+      if (!entries.length || bytes > ZIP_MAX_BYTES) {
+        infoTitle.textContent = folder.name;
+        infoBody.innerHTML = `<p class="info-row-value">${entries.length ? 'This folder is too big to download at once (over 100 MB). Download the files one at a time.' : 'There are no files here to download.'}</p>`;
+        infoOverlay.hidden = false;
+        infoCloseBtn.focus();
+        return;
+      }
+      const ctl = { stopped: false, signedOut: false };
+      const t = addTask({ kind: 'Download', title: folder.name, state: 'running', sub: `0 of ${entries.length} downloaded`, pct: 0, verb: 'downloaded' });
+      t.onStop = () => { ctl.stopped = true; t.sub = 'Stopping…'; drawTasks(); };
+      t.onClose = () => { ctl.stopped = true; };
+      let done = 0, next = 0;
+      const problems = [];
+      async function worker() {
+        while (next < entries.length && !ctl.stopped) {
+          const e = entries[next++];
+          try {
+            const res = await fetchWithRetry(liveFileUrl(e.f), ctl);
+            e.dir.file(e.name, await res.blob());
+            done++;
+          } catch (err) {
+            if (ctl.stopped) return;
+            problems.push({ name: e.f.name, why: ctl.signedOut ? 'stopped: you\'re signed out' : 'couldn\'t be downloaded just now' });
+          }
+          t.pct = ((done + problems.length) / entries.length) * 100;
+          t.sub = `${done} of ${entries.length} downloaded`;
+          t.problems = problems.slice();
+          drawTasks();
+        }
+      }
+      await Promise.all([worker(), worker(), worker()]);
+      if (ctl.stopped && !tasks.includes(t)) return;   // closed: nothing more to show
+      if (ctl.stopped) { t.state = 'failed'; t.sub = `Stopped. Nothing was saved.`; drawTasks(); return; }
+      if (!done) { t.state = 'failed'; t.sub = ctl.signedOut ? 'You\'re signed out. Sign in and try again.' : 'Couldn\'t download these files just now. Try again in a moment.'; drawTasks(); return; }
+      t.sub = 'Making the zip…'; drawTasks();
+      const blob = await zip.generateAsync({ type: 'blob' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${folder.name}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      t.state = 'done';
+      t.pct = 100;
+      t.sub = done === entries.length ? `Downloaded all ${done} files.` : `Downloaded ${done} of ${entries.length} files.`;
+      drawTasks();
+    }
+
+    // ------------------------------------------------------------------
+    // File previews (2026-10-16): a small picture of each image and PDF
+    // (its first page) in place of the file icon, and a bigger one in Quick
+    // Look. Made on this device from the file the API already serves (PDFs
+    // drawn with PDF.js), never stored on our servers. Only for tiles on
+    // screen, two at a time; small ones are kept for this tab
+    // (sessionStorage, like the rest of the page cache). Off with Settings >
+    // File Previews, in Potato PC Mode, and when the browser asks to save data.
+    // Word, PowerPoint and Excel keep their icons for now.
+    // ------------------------------------------------------------------
+    const PREVIEW_IMG = ['png', 'jpg', 'jpeg', 'gif', 'webp'];
+    const PREVIEW_MAX = { img: 8 * 1024 * 1024, pdf: 10 * 1024 * 1024 };
+    const PREVIEW_KEY = 'averages_previews';
+    const PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/';
+    function previewsOn() {
+      if (!MATERIALS_LIVE || document.body.classList.contains('potato-mode')) return false;
+      try { if (navigator.connection && navigator.connection.saveData) return false; } catch {}
+      try { return (JSON.parse(localStorage.getItem('schoolagy_settings_options') || '{}') || {}).filePreviews !== false; } catch { return true; }
+    }
+    function previewKind(f) {
+      if (!f || !f.live || f.url || f.quiz) return '';
+      const ext = String(f.ext || '').toLowerCase();
+      const kind = ext === 'pdf' ? 'pdf' : PREVIEW_IMG.includes(ext) ? 'img' : '';
+      if (!kind) return '';
+      const size = Number(f.live.size) || 0;
+      return size > 0 && size <= PREVIEW_MAX[kind] ? kind : '';
+    }
+    const previewKeyOf = f => `${f.live.kind}:${f.live.parent}:${f.live.id}`;
+    const thumbs = new Map();
+    try { const saved = JSON.parse(sessionStorage.getItem(PREVIEW_KEY) || '{}'); Object.keys(saved).forEach(k => { if (/^data:image\/jpeg;base64,/.test(saved[k])) thumbs.set(k, saved[k]); }); } catch {}
+    function keepThumb(key, url) {
+      thumbs.set(key, url);
+      try {
+        const all = {};
+        Array.from(thumbs.keys()).slice(-80).forEach(k => { all[k] = thumbs.get(k); });
+        sessionStorage.setItem(PREVIEW_KEY, JSON.stringify(all));
+      } catch {}
+    }
+    let pdfjs = null;
+    function loadPdfjs() {
+      if (!pdfjs) {
+        pdfjs = import(PDFJS + 'pdf.min.mjs').then(m => { m.GlobalWorkerOptions.workerSrc = PDFJS + 'pdf.worker.min.mjs'; return m; });
+        pdfjs.catch(() => { pdfjs = null; });
+      }
+      return pdfjs;
+    }
+    /** A JPEG data URL of the file, `side` px on its longest side; null when it can't be made. */
+    async function makePreview(f, side) {
+      const kind = previewKind(f);
+      if (!kind) return null;
+      const res = await fetch(liveFileUrl(f), { credentials: 'include' });
+      if (!res.ok) return null;
+      const blob = await res.blob();
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (kind === 'img') {
+        const bmp = await createImageBitmap(blob);
+        const k = Math.min(1, side / Math.max(bmp.width, bmp.height));
+        canvas.width = Math.max(1, Math.round(bmp.width * k));
+        canvas.height = Math.max(1, Math.round(bmp.height * k));
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(bmp, 0, 0, canvas.width, canvas.height);
+        if (bmp.close) bmp.close();
+      } else {
+        const lib = await loadPdfjs();
+        // isEvalSupported: false: a PDF's fonts can never run code (CVE-2024-4367).
+        const doc = await lib.getDocument({ data: new Uint8Array(await blob.arrayBuffer()), isEvalSupported: false, enableXfa: false }).promise;
+        try {
+          const page = await doc.getPage(1);
+          const base = page.getViewport({ scale: 1 });
+          const viewport = page.getViewport({ scale: side / Math.max(base.width, base.height) });
+          canvas.width = Math.max(1, Math.round(viewport.width));
+          canvas.height = Math.max(1, Math.round(viewport.height));
+          ctx.fillStyle = '#fff';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          await page.render({ canvasContext: ctx, viewport }).promise;
+        } finally {
+          doc.destroy();
+        }
+      }
+      return canvas.toDataURL('image/jpeg', 0.8);
+    }
+    // Two at a time, newest request first (what was just scrolled to).
+    const previewQueue = [];
+    let previewsRunning = 0;
+    const previewFailed = new Set();
+    function pumpPreviews() {
+      while (previewsRunning < 2 && previewQueue.length) {
+        const job = previewQueue.pop();
+        if (thumbs.has(job.key) || previewFailed.has(job.key)) { showThumb(job.key); continue; }
+        previewsRunning++;
+        makePreview(job.f, 160)
+          .then(url => { if (url) { keepThumb(job.key, url); showThumb(job.key); } else previewFailed.add(job.key); })
+          .catch(() => previewFailed.add(job.key))
+          .finally(() => { previewsRunning--; pumpPreviews(); });
+      }
+    }
+    function showThumb(key) {
+      const url = thumbs.get(key);
+      if (!url) return;
+      document.querySelectorAll(`.item-tile[data-preview="${CSS.escape(key)}"] .item-icon`).forEach(icon => {
+        if (icon.querySelector('img.item-thumb')) return;
+        icon.classList.add('has-thumb');
+        icon.innerHTML = `<img class="item-thumb" alt="" src="${url}">`;
+      });
+    }
+    const previewWatch = 'IntersectionObserver' in window ? new IntersectionObserver(entries => {
+      entries.forEach(en => {
+        if (!en.isIntersecting) return;
+        previewWatch.unobserve(en.target);
+        const hit = findItemById(en.target.dataset.id);
+        if (hit && !hit.isFolder) { previewQueue.push({ key: en.target.dataset.preview, f: hit.item }); pumpPreviews(); }
+      });
+    }, { rootMargin: '120px' }) : null;
+    function attachPreviews() {
+      if (!previewsOn()) return;
+      document.querySelectorAll('#itemGrid .item-tile[data-id]').forEach(tile => {
+        const hit = findItemById(tile.dataset.id);
+        if (!hit || hit.isFolder || !previewKind(hit.item)) return;
+        const key = previewKeyOf(hit.item);
+        tile.dataset.preview = key;
+        if (thumbs.has(key)) showThumb(key);
+        else if (!previewFailed.has(key) && previewWatch) previewWatch.observe(tile);
+      });
+    }
+    const renderWithoutPreviews = render;
+    render = function () { renderWithoutPreviews(); attachPreviews(); };
+    // Quick Look: a bigger picture of the same file.
+    const openQuickLookWithoutPreview = openQuickLook;
+    openQuickLook = function (item, isFolder) {
+      openQuickLookWithoutPreview(item, isFolder);
+      if (isFolder || !previewsOn() || !previewKind(item)) return;
+      const box = document.createElement('div');
+      box.className = 'ql-preview loading';
+      box.innerHTML = '<span>Loading preview…</span>';
+      qlBody.prepend(box);
+      makePreview(item, 720)
+        .then(url => {
+          if (!box.isConnected) return;
+          if (!url) { box.remove(); return; }
+          box.className = 'ql-preview';
+          box.innerHTML = `<img alt="Preview of ${escapeHtml(item.name)}" src="${url}">`;
+          const note = qlBody.querySelector('.ql-empty');
+          if (note) note.textContent = note.textContent.replace(" There's no preview here: download it to open it.", '');
+        })
+        .catch(() => box.remove());
+    };
 
     // Clamp to Grid fix (2026-10-02): free-placed tiles are one column wide;
     // search results keep flexible rows.

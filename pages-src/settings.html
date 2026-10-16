@@ -381,6 +381,10 @@
   .settings-row-text { min-width: 0; }
   .settings-row-label { font-weight: 700; font-size: 0.88rem; color: var(--text-dark); margin: 0; }
   .settings-row-desc { font-size: 0.76rem; color: var(--text-muted); margin: 2px 0 0; line-height: 1.4; }
+  /* A switch another setting decides (File Previews in Potato PC Mode, 2026-10-16) */
+  .settings-row.is-disabled .settings-row-label { color: var(--text-faint); }
+  .settings-row.is-disabled .toggle { cursor: not-allowed; filter: grayscale(1); }
+  .settings-row.is-disabled .toggle input { pointer-events: none; }
   .settings-row-value { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; flex-shrink: 0; }
 
   /* ---------- Integrations (2026-10-04) ---------- */
@@ -1097,6 +1101,16 @@
                 </div>
                 <label class="toggle">
                   <input type="checkbox" id="potatoModeToggle" aria-label="Toggle Potato PC Mode">
+                  <span class="track"><span class="thumb"></span></span>
+                </label>
+              </div>
+              <div class="settings-row">
+                <div class="settings-row-text">
+                  <p class="settings-row-label">File Previews</p>
+                  <p class="settings-row-desc" id="filePreviewsDesc">Shows a small picture of images and PDFs in Course Materials. Turn off to use less data. Always off in Potato PC Mode.</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="filePreviewsToggle" aria-label="Toggle File Previews">
                   <span class="track"><span class="thumb"></span></span>
                 </label>
               </div>
@@ -2499,6 +2513,24 @@
       saveSettingsOption('potatoMode', potatoModeToggle.checked);
       // Potato mode skips the Adobe font (app/layout.tsx); turning it off brings it back without a reload.
       if (!potatoModeToggle.checked && typeof window.__averagesLoadFonts === 'function') window.__averagesLoadFonts();
+      syncFilePreviewsToggle();
+    });
+
+    // File Previews (2026-10-16): pictures of images and PDFs in Course
+    // Materials. On unless turned off here; Potato PC Mode turns them off too,
+    // so this switch shows off (and can't be changed) while that's on.
+    const filePreviewsToggle = document.getElementById('filePreviewsToggle');
+    function syncFilePreviewsToggle() {
+      const potato = potatoModeToggle.checked;
+      filePreviewsToggle.checked = !potato && loadSettingsOptions().filePreviews !== false;
+      filePreviewsToggle.disabled = potato;
+      filePreviewsToggle.closest('.settings-row').classList.toggle('is-disabled', potato);
+    }
+    syncFilePreviewsToggle();
+    filePreviewsToggle.addEventListener('change', () => {
+      saveSettingsOption('filePreviews', filePreviewsToggle.checked);
+      // Off: forget the pictures already made in this tab.
+      if (!filePreviewsToggle.checked) { try { sessionStorage.removeItem('averages_previews'); } catch {} }
     });
 
     // ------------------------------------------------------------------
@@ -2517,7 +2549,8 @@
     // code units rather than exact bytes, close enough for a rough
     // on-device size indicator like this.
     // ------------------------------------------------------------------
-    const CACHE_STORAGE_KEYS = ['schoolagy_bundle_cache', 'schoolagy_session_state'];
+    // averages_previews (2026-10-16): Course Materials' small file pictures for this tab.
+    const CACHE_STORAGE_KEYS = ['schoolagy_bundle_cache', 'schoolagy_session_state', 'averages_previews'];
     function computeCacheBytes() {
       let total = 0;
       try {
@@ -4114,8 +4147,10 @@
       const v = m[2];
       const known = loadSyncMedia()[kind];
       if (known && known.v === v && !known.pending && isDataImage(localValue)) return localValue;
+      let status = 0;
       try {
         const res = await fetch(averagesApiBase() + '/media/' + kind, { credentials: 'include' });
+        status = res.status;
         if (!res.ok) throw new Error('media ' + res.status);
         const url = await blobToDataUrl(await res.blob());
         if (!isDataImage(url)) throw new Error('not an image');
@@ -4124,10 +4159,21 @@
         saveSyncMedia(all);
         return url;
       } catch {
-        // Couldn't fetch it: keep showing what this device already has, and
-        // remember the server's version so it's tried again and not undone.
         const kept = isDataImage(localValue) ? localValue : (kind === 'background' && typeof localValue === 'string' ? localValue : null);
         const all = loadSyncMedia();
+        if (status === 404) {
+          // The server's picture is gone for good (2026-10-16): the record
+          // points at nothing, so waiting can't fix it. Forget it and push
+          // this device's own picture (uploaded fresh, or none), which
+          // replaces the dead reference for every device.
+          delete all[kind];
+          saveSyncMedia(all);
+          try { schedulePushSyncSettings(); } catch {}
+          return kept;
+        }
+        // Couldn't fetch it for now: keep showing what this device already
+        // has, and remember the server's version so it's tried again and
+        // not undone.
         all[kind] = { v, pending: true, local: kept };
         saveSyncMedia(all);
         return kept;
