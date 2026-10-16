@@ -1112,6 +1112,12 @@
   .submission-banner.returned { background: rgba(106, 79, 174, 0.14); }
   .submission-banner.returned .dot { background: var(--returned); }
   .submission-banner.returned .submission-banner-label { color: var(--returned); }
+  /* Outside tools (2026-10-16): neutral, it isn't known to be missing. */
+  .submission-banner.pending { background: var(--panel-inner); }
+  .submission-banner.pending .dot { background: var(--text-faint); }
+  .submission-banner.pending .submission-banner-label { color: var(--text-muted); }
+  /* Both grey banners: the date line in the panel's own muted ink (it inherited white text on the light panel). */
+  .submission-banner.pending .submission-banner-meta, .submission-banner.upcoming .submission-banner-meta { color: var(--text-muted); }
 
   .submit-dropzone {
     border: 2px dashed var(--border);
@@ -1933,8 +1939,10 @@
     // page shows the status and sends the student there. No Drafts.
     const CLASSROOM = LIVE && LIVE_DATA.platform === 'classroom';
     const ALL_ITEMS = [];
-    OVERDUE.forEach(o => ALL_ITEMS.push({ status: 'overdue', type: o.type, title: o.title, courseId: o.courseId, due: o.due, id: o.id }));
-    UPCOMING.forEach(u => ALL_ITEMS.push({ status: 'upcoming', type: u.type, title: u.title, courseId: u.courseId, due: u.due, id: u.id }));
+    // Google Assignments, Turnitin and other outside tools (2026-10-16, `outside` from the API):
+    // turned in on Schoology where we can't see it, so past due is Pending, never Missing.
+    OVERDUE.forEach(o => ALL_ITEMS.push({ status: o.outside ? 'pending' : 'overdue', type: o.type, title: o.title, courseId: o.courseId, due: o.due, id: o.id, outside: !!o.outside }));
+    UPCOMING.forEach(u => ALL_ITEMS.push({ status: 'upcoming', type: u.type, title: u.title, courseId: u.courseId, due: u.due, id: u.id, outside: !!u.outside }));
     (LIVE && !LIVE_DATA.SUBMITTED ? [] : SUBMITTED).forEach(s => ALL_ITEMS.push({ status: 'submitted', type: s.type, title: s.title, courseId: s.courseId, submittedOn: s.submittedOn, id: s.id }));
     (LIVE ? [] : RETURNED).forEach(r => ALL_ITEMS.push({ status: 'returned', type: r.type, title: r.title, courseId: r.courseId, returnedOn: r.returnedOn }));
     COURSES.forEach(course => {
@@ -2299,6 +2307,13 @@
         const d = await res.json();
         desc.textContent = d.description || 'No description provided by your teacher yet.';
         if (typeof d.maxPoints === 'number' && d.maxPoints > 0) item.maxPoints = d.maxPoints;
+        // An outside tool (2026-10-16): open it on Schoology; past due shows Pending until a grade comes back.
+        if (!CLASSROOM && d.outside === true && !item.outside) {
+          item.outside = true;
+          if (currentStatus === 'overdue') currentStatus = 'pending';
+          renderSubmissionsPanel();
+          renderDrafts();
+        }
         // Graded on Schoology (2026-10-15): the exact score, and the status follows it.
         const sc = d.score;
         if (!CLASSROOM && sc && typeof sc.earned === 'number' && typeof sc.possible === 'number' && sc.possible > 0) {
@@ -2710,6 +2725,8 @@
       },
       graded: () => ({ label: 'Graded', meta: typeof item.score === 'number' ? `${item.score}%` : '' }),
       returned: () => ({ label: 'Returned: revision requested', meta: item.returnedOn ? `Returned ${item.returnedOn}` : '' }),
+      // Outside tools (2026-10-16): we can't see the turn-in, only the grade when it comes back.
+      pending: () => ({ label: 'Pending: no grade yet', meta: item.due ? `Was due ${item.due}` : '' }),
     };
     // Google Classroom's own words for its states (2026-10-05).
     let classroomLink = '';
@@ -3118,12 +3135,16 @@
       // its status — the status banner above still reflects the real
       // Missing/Submitted/Graded/Returned state, since Averages.io does
       // still mirror that from Schoology once it happens.
-      if (item.type === 'assessment') {
+      if (item.type === 'assessment' || item.outside) {
+        // Outside tools (2026-10-16, Martin: "opening it in a new tab like quizzes"): straight to this assignment on Schoology.
+        const toolHref = item.outside && ID_OK(item.id) ? `https://app.schoology.com/assignment/${encodeURIComponent(item.id)}` : 'https://www.schoology.com/';
         html += `
           <div class="submit-dropzone quiz-redirect-notice">
             ${EXTERNAL_LINK_ICON}
-            <div>Quizzes and tests are taken in Schoology, not in Averages. Head to Schoology to complete this one — your grade will show up here once it's in.</div>
-            <a class="quiz-redirect-btn" href="https://www.schoology.com/" target="_blank" rel="noopener noreferrer">
+            <div>${item.type === 'assessment'
+              ? 'Quizzes and tests are taken in Schoology, not in Averages. Head to Schoology to complete this one — your grade will show up here once it\'s in.'
+              : 'Your teacher set this up in an outside tool, like Google Assignments or Turnitin. Open it in Schoology to work on it and turn it in. Your grade shows up here once it\'s in.'}</div>
+            <a class="quiz-redirect-btn" href="${escapeHtml(toolHref)}" target="_blank" rel="noopener noreferrer">
               Open in Schoology
               ${EXTERNAL_LINK_ICON}
             </a>
@@ -4358,7 +4379,7 @@
     renderSubmissionsPanel();
     // Signed in with Schoology: the real Submission History (2026-10-06).
     // Quizzes are taken on Schoology and show no history here.
-    if (SUBMIT_LIVE && item.type !== 'assessment') loadLiveHistory();
+    if (SUBMIT_LIVE && item.type !== 'assessment' && !item.outside) loadLiveHistory();
 
     // ------------------------------------------------------------------
     // Drafts (2026-10-04, per Martin): Edit in Canva sends the file over to
@@ -4840,10 +4861,10 @@
     function draftRowHTML(d) {
       const nm = escapeHtml(d.name);
       const tip = (label, inner) => `<span class="tipwrap">${inner}<span class="tip" role="tooltip">${label}</span></span>`;
-      const testItem = item.type === 'assessment';
+      const testItem = item.type === 'assessment' || !!item.outside;
       const t = TI.get(d.id);
       // Can this draft be turned in from here? (Signed in: Drive needs its download; Canva needs our API.)
-      let can = !testItem, why = testItem ? 'Tests are turned in on Schoology' : '';
+      let can = !testItem, why = testItem ? (item.outside ? 'This one is turned in on Schoology' : 'Tests are turned in on Schoology') : '';
       if (d.live && d.drive && !(SUBMIT_LIVE && driveDownloadReady())) { can = false; why = why || 'Turning in from Averages.io is coming soon'; }
       if (d.live && !d.drive && !SUBMIT_LIVE) { can = false; why = why || 'Turning in from Averages.io is coming soon'; }
       let open = '', meta;
@@ -5275,7 +5296,7 @@
       } catch (e) {}
       const parsed = /^\s*\{/.test(raw) ? parseAttach(raw) : null;
       if (SUBMIT_LIVE) {
-        if (parsed && item.type !== 'assessment') openAddSubmissionModal({ attach: parsed });
+        if (parsed && item.type !== 'assessment' && !item.outside) openAddSubmissionModal({ attach: parsed });
         return;
       }
       if (!CANVA_PREVIEW) return;

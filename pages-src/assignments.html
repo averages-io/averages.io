@@ -366,6 +366,7 @@
   .assign-row.overdue .assign-due { color: var(--grade-bad); }
   .assign-row.graded .assign-due { color: var(--grade-good); }
   .assign-row.submitted .assign-due { color: var(--grade-mid); }
+  .assign-row.pending .assign-due { color: var(--text-muted); }
   .assign-empty { font-size: 0.8rem; color: var(--text-faint); font-style: italic; padding: 10px 0; }
 
   /* Rows are clickable — each opens its own assignment.html detail
@@ -960,11 +961,16 @@
     // ------------------------------------------------------------------
     // Live items with a real due time sort by it (day of month alone breaks across months).
     const sortDay = x => (x.dueAt && !isNaN(Date.parse(x.dueAt)) ? Date.parse(x.dueAt) : dayNum(x.due));
-    const overdueItems = OVERDUE
+    // Google Assignments, Turnitin and other outside tools (2026-10-16): turned in on
+    // Schoology where we can't see it, so past due is Pending (All tab), never Missing.
+    const overdueItems = OVERDUE.filter(o => !o.outside)
       .map(o => ({ status: 'overdue', type: o.type, title: o.title, courseId: o.courseId, day: sortDay(o), due: o.due, id: o.id }))
       .sort((a, b) => a.day - b.day);
+    const pendingItems = OVERDUE.filter(o => o.outside)
+      .map(o => ({ status: 'pending', type: o.type, title: o.title, courseId: o.courseId, day: sortDay(o), due: o.due, id: o.id, outside: true }))
+      .sort((a, b) => a.day - b.day);
     const upcomingItems = UPCOMING
-      .map(u => ({ status: 'upcoming', type: u.type, title: u.title, courseId: u.courseId, day: sortDay(u), due: u.due, id: u.id }))
+      .map(u => ({ status: 'upcoming', type: u.type, title: u.title, courseId: u.courseId, day: sortDay(u), due: u.due, id: u.id, outside: !!u.outside }))
       .sort((a, b) => a.day - b.day);
     const submittedItems = SUBMITTED
       .map(s => ({ status: 'submitted', type: s.type, title: s.title, courseId: s.courseId, day: dayNum(s.submittedOn), due: s.submittedOn, id: s.id }))
@@ -994,6 +1000,7 @@
       const course = findCourse(item.courseId) || { name: '', color: 'var(--text-faint)' };
       const dueText = item.status === 'graded' ? (typeof item.score === 'number' && isFinite(item.score) ? `Graded · ${item.score}%` : 'Graded')
         : item.status === 'overdue' ? (item.due ? `Missing · ${item.due}` : 'Missing')
+        : item.status === 'pending' ? (item.due ? `Pending · ${item.due}` : 'Pending')
         : item.status === 'submitted' ? (item.due ? `Submitted · ${item.due}` : 'Submitted')
         : (item.due ? `Due ${item.due}` : 'Upcoming');
       const dest = avgAssignHref(item.courseId, item.title, item.id);
@@ -1003,7 +1010,7 @@
           <div class="assign-text">
             <p class="assign-course" style="color: ${escapeHtml(course.color)}">${escapeHtml(course.name)}</p>
             <p class="assign-title">${escapeHtml(item.title)}</p>
-            <p class="assign-meta">${TYPE_LABEL[item.type] || 'Assignment'}</p>
+            <p class="assign-meta">${TYPE_LABEL[item.type] || 'Assignment'}${item.outside ? ' · Opens in Schoology' : ''}</p>
           </div>
           <span class="assign-due">${escapeHtml(dueText)}</span>
         </div>`;
@@ -1027,13 +1034,14 @@
       const body = document.getElementById('assignListBody');
       const byCourse = arr => selectedCourseId ? arr.filter(i => i.courseId === selectedCourseId) : arr;
       const overdue = byCourse(overdueItems);
+      const pending = byCourse(pendingItems);
       const upcoming = byCourse(upcomingItems);
       const submitted = byCourse(submittedItems);
       const graded = byCourse(gradedItems);
       const gradedR = byCourse(gradedRecent);
       let html = '';
       if (filter === 'all') {
-        html = assignGroupHTML('Missing', overdue) + assignGroupHTML('Upcoming', upcoming) + assignGroupHTML('Recently Submitted', submitted) + assignGroupHTML('Recently Graded', gradedR);
+        html = assignGroupHTML('Missing', overdue) + assignGroupHTML('Pending', pending) + assignGroupHTML('Upcoming', upcoming) + assignGroupHTML('Recently Submitted', submitted) + assignGroupHTML('Recently Graded', gradedR);
       } else if (filter === 'overdue') {
         html = overdue.map(assignRowHTML).join('');
       } else if (filter === 'upcoming') {
@@ -1150,8 +1158,8 @@
       window.location.href = row.dataset.href;
     });
 
-    document.getElementById('assignTotal').textContent = `${overdueItems.length + upcomingItems.length + submittedItems.length + gradedItems.length} total`;
-    document.getElementById('assignSub').textContent = `${overdueItems.length} missing · ${upcomingItems.length} upcoming · ${submittedItems.length} submitted`;
+    document.getElementById('assignTotal').textContent = `${overdueItems.length + pendingItems.length + upcomingItems.length + submittedItems.length + gradedItems.length} total`;
+    document.getElementById('assignSub').textContent = `${overdueItems.length} missing${pendingItems.length ? ` · ${pendingItems.length} pending` : ''} · ${upcomingItems.length} upcoming · ${submittedItems.length} submitted`;
 
     // Nav — Home/Courses/Assignments are real links between real pages
     // (same full-mesh convention course-home.html and

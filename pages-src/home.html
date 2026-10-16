@@ -1990,10 +1990,15 @@
         window.location.href = row.dataset.href;
       });
     }
+    // Google Assignments, Turnitin and other outside tools (2026-10-16): turned in on
+    // Schoology where we can't see it, so past due is "Pending" at the top of Upcoming,
+    // never Overdue.
+    const OVERDUE_SHOWN = OVERDUE.filter(o => !o.outside);
+    const PENDING_SHOWN = OVERDUE.filter(o => o.outside).map(o => ({ ...o, due: 'Pending' }));
     function renderAssignLists() {
-      renderAssignList(document.getElementById('overdueList'), OVERDUE, true);
-      renderAssignList(document.getElementById('upcomingList'), UPCOMING, false);
-      document.getElementById('overdueCount').textContent = OVERDUE.length;
+      renderAssignList(document.getElementById('overdueList'), OVERDUE_SHOWN, true);
+      renderAssignList(document.getElementById('upcomingList'), PENDING_SHOWN.concat(UPCOMING), false);
+      document.getElementById('overdueCount').textContent = OVERDUE_SHOWN.length;
     }
     // Wired once — delegated listeners survive renderAssignList()
     // replacing the lists' innerHTML on every re-render.
@@ -2149,7 +2154,7 @@
       const title = !today.length ? 'Nothing due today' : allTests ? `${today.length} ${word} due today` : `${today.length} thing${today.length === 1 ? '' : 's'} due today`;
       const metaParts = [];
       if (today.length) metaParts.push(`${today[0].title}, ${courseName(today[0].courseId)}${today.length > 1 ? ` + ${today.length - 1} more` : ''}`);
-      metaParts.push(OVERDUE.length ? `${OVERDUE.length} overdue` : 'Nothing overdue');
+      metaParts.push(OVERDUE_SHOWN.length ? `${OVERDUE_SHOWN.length} overdue` : 'Nothing overdue');
       cats.push({ key: 'today', label: 'Today', desc: 'A summary of today', items: [
         { top: SHORT_DOW[REF_NOW.getDay()], num: REF_NOW.getDate(), color: 'var(--accent)', title, meta: metaParts.join(' · '), href: 'calendar.html' } ] });
       return cats;

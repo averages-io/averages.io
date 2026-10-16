@@ -2275,7 +2275,8 @@
       const allItems = UPCOMING.filter(u => u.courseId === course.id).concat(events)
         .map(i => ({ ...i, _d: upDate(i) })).filter(i => i._d).sort((a, b) => a._d - b._d);
       const today = dayStart(REF_NOW);
-      const late = OVERDUE.filter(o => o.courseId === course.id && !o.submitted);
+      // Outside tools (Google Assignments, Turnitin; 2026-10-16) are turned in on Schoology where we can't see it: never Late.
+      const late = OVERDUE.filter(o => o.courseId === course.id && !o.submitted && !o.outside);
       const body = document.getElementById('upcomingBody');
       const range = document.getElementById('weekRange');
 
