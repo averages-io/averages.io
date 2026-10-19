@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 /**
  * Link previews (2026-10-07, Martin): what iMessage, Discord, Slack, Gmail
  * and so on show when someone shares an app.averages.io link. Every route
- * gets this card unless it sets its own (app/schools/apply/layout.tsx does).
- * The images live in public/ (og.png, og-schools.png), 1200 x 630.
+ * gets this card unless it sets its own. The image lives in public/ (og.png),
+ * 1200 x 630.
  */
 const TYPEKIT_CSS = "https://use.typekit.net/gsk6off.css";
 const FONT_LOADER = `(function(){

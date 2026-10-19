@@ -393,16 +393,16 @@
   /* ---------- Sign-in (redone 2026-10-06, same flow as Martin's "Select
      your LMS" mock, per Martin: "it just looks kind of funky").
      One card in two parts on computers: a navy side with the logo and the
-     three steps (Platform, School, Log in; Google skips School), and the
+     three steps (Platform, School, Log in), and the
      light main side with the screens. Phones get the main side only, with
      the logo on top. Screens are unchanged:
-     1. Select your platform: Schoology, Canvas, Google Classroom (read only).
-     2. Schoology / Canvas: search your school, the 13+ check, Log in with
-        Schoology / Canvas. The button sends the student to their school's
+     1. Select your platform: Schoology (Google Classroom sign-in was removed
+        2026-10-19: the public beta is Schoology only).
+     2. Schoology: search your school, the 13+ check, Log in with
+        Schoology. The button sends the student to their school's
         own sign-in page (its SSO or a password); the password is never
         typed into Averages.io.
-     3. Google Classroom: the 13+ check and Continue with Google.
-     Screens are hash routes (#schoology, #canvas, #google) so the browser's
+     Screens are hash routes (#schoology) so the browser's
      Back button walks back through them. No colored borders, no glass, no
      fades on hover; spacing on the 4px scale. ---------- */
   :root {
@@ -650,54 +650,9 @@
   .lms-sso:active:not([disabled]) { transform: scale(0.99); }
   .lms-sso[disabled] { background: #c5c8d6; color: #ffffff; cursor: not-allowed; }
   .lms-sso.busy { pointer-events: none; background: #3a49b5; }
-  .lms-sso.google { background: #ffffff; color: #1f1f1f; box-shadow: inset 0 0 0 1px #b9bdc9; }
-  .lms-sso.google:hover { background: #f4f5f8; }
   .signin-note { margin: 0; padding: 12px 16px; border-radius: 14px; background: #e4e5ec; color: var(--ink); font-size: 0.92rem; font-weight: 700; line-height: 1.45; }
   .signin-note[hidden] { display: none; }
 
-  /* Canvas: school not listed */
-  .lms-missing {
-    margin: auto 0 0;
-    padding-top: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    flex-wrap: wrap;
-    font-size: 0.95rem;
-    font-weight: 700;
-    color: var(--ink-muted);
-    line-height: 1.5;
-  }
-  .lms-missing > span { flex: 1 1 240px; }
-  .lms-missing[hidden] { display: none; }
-  .lms-missing::before { content: ""; flex-basis: 100%; height: 1px; background: var(--line); margin-bottom: 8px; }
-  .lms-link-btn { border: 0; border-radius: 999px; padding: 10px 20px; background: #e4e5ec; color: var(--ink); font: inherit; font-size: 0.95rem; font-weight: 800; cursor: pointer; white-space: nowrap; }
-  .lms-link-btn:hover { background: #d8dae3; }
-
-  /* Google Classroom */
-  .google-pane { display: flex; flex-direction: column; gap: 16px; }
-  .ro-card { display: flex; gap: 16px; align-items: flex-start; padding: 16px 20px; border-radius: 18px; background: #ffffff; box-shadow: 0 1px 2px rgba(20, 21, 31, 0.06); }
-  .ro-card .pin { flex: none; width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: #eef0f8; color: var(--blue); }
-  .ro-card .pin svg { width: 20px; height: 20px; display: block; }
-  .ro-card p { margin: 0; font-size: 1rem; font-weight: 600; color: var(--ink-muted); line-height: 1.5; }
-  .ro-card .ro { display: block; font-weight: 800; color: var(--ink); font-size: 1.05rem; }
-
-  /* Email Template sheet (Canvas) */
-  .tpl-overlay { position: fixed; inset: 0; background: rgba(5, 8, 40, 0.6); display: grid; place-items: center; padding: 20px; z-index: 50; }
-  .tpl-overlay[hidden] { display: none; }
-  .tpl-modal { width: 100%; max-width: 560px; background: var(--main-bg); border-radius: 28px; padding: 32px; box-shadow: 0 30px 70px -30px rgba(0, 0, 0, 0.6); }
-  .tpl-modal h2 { margin: 0 0 8px; font-size: 1.4rem; font-weight: 800; color: var(--ink); letter-spacing: -0.01em; }
-  .tpl-modal p { margin: 0 0 16px; font-size: 0.95rem; font-weight: 600; color: var(--ink-muted); line-height: 1.5; }
-  .tpl-text { width: 100%; min-height: 232px; padding: 16px; border-radius: 16px; border: 0; box-shadow: inset 0 0 0 1px var(--line); background: #ffffff; font: inherit; font-size: 0.95rem; line-height: 1.5; color: var(--ink); resize: vertical; }
-  .tpl-text:focus { outline: none; box-shadow: inset 0 0 0 1px #b7bbcc, 0 0 0 4px var(--ring); }
-  .tpl-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; flex-wrap: wrap; }
-  .tpl-actions button, .tpl-actions a { min-height: 44px; padding: 0 20px; border-radius: 999px; border: 0; font: inherit; font-size: 0.95rem; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; text-decoration: none; transition: background-color 0.15s ease; }
-  .tpl-actions :focus-visible { outline: none; box-shadow: 0 0 0 3px var(--main-bg), 0 0 0 6px var(--blue); }
-  .tpl-close { background: #e2e3ea; color: var(--ink); }
-  .tpl-close:hover { background: #d8dae3; }
-  .tpl-copy, .tpl-mail { background: var(--blue); color: #ffffff; }
-  .tpl-copy:hover, .tpl-mail:hover { background: var(--blue-hover); }
 
   .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
   .signin-foot { margin: 0; font-size: 0.85rem; font-weight: 700; color: rgba(255, 255, 255, 0.85); text-align: center; }
@@ -764,9 +719,6 @@
     .school-input { height: 56px; font-size: 1rem; }
     .school-pick { padding: 12px 16px; }
     .lms-sso { min-height: 56px; font-size: 1.08rem; }
-    .lms-missing { font-size: 0.9rem; }
-    .lms-link-btn { width: 100%; }
-    .tpl-modal { padding: 24px 20px; border-radius: 24px; }
   }
 </style>
 </head>
@@ -783,7 +735,7 @@
           <li class="side-step" data-side-step="school"><span class="num"><span class="n">2</span><svg class="check" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7.5l3.2 3L12 3.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="butt" stroke-linejoin="miter"/></svg></span>Find your school</li>
           <li class="side-step" data-side-step="login"><span class="num"><span class="n" data-login-num>3</span><svg class="check" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7.5l3.2 3L12 3.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="butt" stroke-linejoin="miter"/></svg></span>Log in with your school account</li>
         </ol>
-        <p class="side-safe">You log in on Schoology, Canvas or Google itself, so your password never goes to Averages.io.</p>
+        <p class="side-safe">You log in on Schoology itself, so your password never goes to Averages.io.</p>
       </aside>
 
       <div class="lms-main">
@@ -797,8 +749,6 @@
             <h2 class="sr-only">Select your platform</h2>
             <div class="lms-choices">
               <button class="lms-btn" type="button" data-lms="schoology"><span class="t"><span class="name">Schoology</span><small>Log in with your school</small></span><span class="go" aria-hidden="true"><svg viewBox="0 0 10 12"><path d="M1 0l9 6-9 6z" fill="currentColor"/></svg></span></button>
-              <button class="lms-btn" type="button" data-lms="canvas"><span class="t"><span class="name">Canvas</span><small>Log in with your school</small></span><span class="go" aria-hidden="true"><svg viewBox="0 0 10 12"><path d="M1 0l9 6-9 6z" fill="currentColor"/></svg></span></button>
-              <button class="lms-btn" type="button" data-lms="google" aria-label="Google Classroom, read only"><span class="t"><span class="name">Google Classroom</span><small>Read only</small></span><span class="go" aria-hidden="true"><svg viewBox="0 0 10 12"><path d="M1 0l9 6-9 6z" fill="currentColor"/></svg></span></button>
             </div>
           </div>
           <p class="lms-legal">By selecting a platform login you agree to the <a href="https://averages.io/terms" target="_blank" rel="noopener">Terms of Use</a> and <a href="https://averages.io/privacy-policy" target="_blank" rel="noopener">Privacy Policy</a>.</p>
@@ -842,7 +792,7 @@
       </section>
         </section>
 
-        <!-- 2. Schoology / Canvas: find your school -->
+        <!-- 2. Schoology: find your school -->
         <section class="screen" id="screenSchool" aria-labelledby="schoolTitle" hidden>
           <button class="lms-back" type="button" data-back><svg viewBox="0 0 10 12" aria-hidden="true"><path d="M9 0L0 6l9 6z" fill="currentColor"/></svg>Back</button>
           <h1 class="lms-title" id="schoolTitle" tabindex="-1">Schoology Log In</h1>
@@ -869,46 +819,12 @@
               <p class="signin-note" id="schoolNote" role="status" hidden></p>
             </div>
           </div>
-          <p class="lms-missing" id="canvasMissing" hidden><span>If your school is not here, email your admin to get in touch with Averages.io.</span><button class="lms-link-btn" type="button" id="emailTemplateBtn">Email Template</button></p>
         </section>
 
-        <!-- 3. Google Classroom -->
-        <section class="screen" id="screenGoogle" aria-labelledby="googleTitle" hidden>
-          <button class="lms-back" type="button" data-back><svg viewBox="0 0 10 12" aria-hidden="true"><path d="M9 0L0 6l9 6z" fill="currentColor"/></svg>Back</button>
-          <h1 class="lms-title" id="googleTitle" tabindex="-1">Google Classroom Log In</h1>
-          <p class="lms-sub">Log in with the Google account you use for school.</p>
-          <div class="lms-body google-pane">
-            <div class="ro-card">
-              <span class="pin" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none"><path d="M1.5 10S4.5 4.5 10 4.5 18.5 10 18.5 10 15.5 15.5 10 15.5 1.5 10 1.5 10z" stroke="currentColor" stroke-width="1.75" stroke-linejoin="miter"/><circle cx="10" cy="10" r="2.6" stroke="currentColor" stroke-width="1.75"/></svg></span>
-              <p><span class="ro">Read only</span>See your classes, grades and coursework here. You still turn in work on Google Classroom.</p>
-            </div>
-            <div class="lms-finish">
-              <div class="age-row"><label class="age-check"><input type="checkbox" data-age> I am 13+</label><button class="age-why" type="button" aria-expanded="false" data-age-why>Why?</button></div>
-              <p class="age-note" data-age-note hidden>If you're under 13, Averages.io runs in Incognito mode: nothing about you is stored on our servers, and Sync, connected apps and notifications stay off.</p>
-              <button class="lms-sso google" id="googleBtn" type="button">Continue with Google</button>
-              <p class="signin-note" id="googleNote" role="status" hidden></p>
-            </div>
-          </div>
-        </section>
       </div>
     </main>
     <p class="signin-foot">Beta 0.1.1a · <a href="https://github.com/averages-io/averages.io/issues" target="_blank" rel="noopener">Report a bug on GitHub</a></p>
   </div>
-  </div>
-
-  <!-- Canvas: an email a student can send their school's Canvas admin -->
-  <div class="tpl-overlay" id="tplOverlay" hidden>
-    <div class="tpl-modal" role="dialog" aria-modal="true" aria-labelledby="tplTitle">
-      <h2 id="tplTitle">Email your school's IT team</h2>
-      <p>Your school has to turn on Averages.io for Canvas before you can sign in. Send this to your IT team or Canvas admin, or change it however you like. They email schools@averages.io to get started.</p>
-      <label class="sr-only" for="tplText">Email text</label>
-      <textarea class="tpl-text" id="tplText"></textarea>
-      <div class="tpl-actions">
-        <button class="tpl-close" type="button" id="tplClose">Close</button>
-        <button class="tpl-copy" type="button" id="tplCopy">Copy</button>
-        <a class="tpl-mail" id="tplMail" href="#">Open in email</a>
-      </div>
-    </div>
   </div>
 
   <script>
@@ -962,41 +878,32 @@
     
     // ------------------------------------------------------------------
     // Sign in by LMS (draft, 2026-10-06). Same hooks as the current login
-    // page, so it can replace it as-is: window.__averagesGoogleSignIn (live
-    // since 2026-10-05) and window.__averagesSignIn (the API-key sign-in the
-    // built app wires in). Schoology and Canvas sign-in aren't built yet: the
-    // built app will provide window.__averagesLmsSignIn(lms, address) for them
+    // page, so it can replace it as-is: window.__averagesSignIn (the API-key
+    // sign-in the built app wires in). Google Classroom sign-in was removed
+    // 2026-10-19 (Schoology-only beta). Schoology sign-in isn't built yet: the
+    // built app will provide window.__averagesLmsSignIn(lms, address) for it
     // (it sends the browser to that school's own sign-in page); until then
     // their button says it's coming. In the preview every button walks on to
     // onboarding like the old mock.
     // ------------------------------------------------------------------
-    const SCREENS = { choose: 'screenChoose', schoology: 'screenSchool', canvas: 'screenSchool', google: 'screenGoogle' };
+    const SCREENS = { choose: 'screenChoose', schoology: 'screenSchool' };
     const LMS = {
       // Schoology: any district, listed or not. Some use their own address
       // (lms.yourdistrict.org) instead of yourdistrict.schoology.com, so any
       // web address can be typed in.
       schoology: { name: 'Schoology', title: 'Schoology Log In', button: 'Log in with Schoology', example: 'yourdistrict.schoology.com', anyAddress: true,
         soon: "Sign in with Schoology is waiting on Schoology's approval. It's coming soon." },
-      // Canvas: only schools whose Canvas admin turned Averages.io on (each
-      // one gives us its own Canvas app key), so a typed address that isn't
-      // listed can't sign in yet.
-      canvas: { name: 'Canvas', title: 'Canvas Log In', button: 'Log in with Canvas', example: 'yourdistrict.instructure.com', anyAddress: false,
-        soon: 'Sign in with Canvas is coming soon.' },
     };
     // SAMPLE schools, used only in the preview. Signed-in builds ask the API
-    // (GET /config/schools?lms=, not built yet): for Canvas, the schools whose
-    // admin turned Averages.io on; for Schoology, districts added over time
-    // (typing the address always works). `aliases` are other addresses the
-    // same school answers on.
+    // (GET /config/schools?lms=): Schoology districts added over time (typing
+    // the address always works). `aliases` are other addresses the same school
+    // answers on.
     const API = window.location.hostname.endsWith('averages.io') ? 'https://api.averages.io' : 'http://localhost:8787';
     const SAMPLE_SCHOOLS = {
       schoology: [
         { name: 'Newport Mesa Unified School District', domain: 'nmusd.schoology.com' },
         { name: 'Lincoln Unified School District', domain: 'lincolnusd.schoology.com' },
         { name: 'Lincoln High School', domain: 'lincolnhs.schoology.com' },
-      ],
-      canvas: [
-        { name: 'Lincoln Unified School District', domain: 'lincolnusd.instructure.com', aliases: ['canvas.lincolnusd.org'] },
       ],
     };
     const schoolLists = {};   // lms -> Promise of [{name, domain, aliases}]
@@ -1012,14 +919,6 @@
       return schoolLists[which];
     }
     let schools = [];
-    const GOOGLE_RESULT = {
-      ok: 'Signed in with Google. Opening Averages.io…',
-      cancelled: 'Google sign-in was cancelled. Try again whenever you’re ready.',
-      permissions: 'Averages.io needs to see your classes and your coursework and grades in Google Classroom. Try again and leave those boxes ticked on Google’s screen.',
-      expired: 'That sign-in took too long or was started in another tab. Try again.',
-      failed: 'Something went wrong signing in with Google. Try again in a moment.',
-      unavailable: 'Sign in with Google isn’t available right now.',
-    };
     const SCHOOL_KEY = 'averages_login_school';   // last school picked, per LMS (this device only)
 
     function esc(v) {
@@ -1040,29 +939,28 @@
     function show(route, focus) {
       const id = SCREENS[route] || SCREENS.choose;
       Object.values(SCREENS).forEach(s => { document.getElementById(s).hidden = s !== id; });
-      if (route === 'schoology' || route === 'canvas') setupSchool(route);
+      if (route === 'schoology') setupSchool(route);
       currentRoute = SCREENS[route] ? route : 'choose';
       updateSteps();
       if (focus) {
-        const target = route === 'schoology' || route === 'canvas' ? document.getElementById('schoolSearch')
+        const target = route === 'schoology' ? document.getElementById('schoolSearch')
           : document.querySelector('#' + id + ' .lms-title');
         target && target.focus({ preventScroll: true });
       }
     }
-    // Side steps (computers): Platform, School, Log in. Google has no School step.
+    // Side steps (computers): Platform, School, Log in.
     let currentRoute = 'choose';
     function updateSteps() {
-      const isSchool = currentRoute === 'schoology' || currentRoute === 'canvas';
+      const isSchool = currentRoute === 'schoology';
       const state = {
         platform: currentRoute === 'choose' ? 'current' : 'done',
-        school: currentRoute === 'google' ? 'skip' : isSchool ? (picked ? 'done' : 'current') : '',
-        login: currentRoute === 'google' || (isSchool && picked) ? 'current' : '',
+        school: isSchool ? (picked ? 'done' : 'current') : '',
+        login: isSchool && picked ? 'current' : '',
       };
       document.querySelectorAll('[data-side-step]').forEach(li => {
         li.className = 'side-step' + (state[li.dataset.sideStep] ? ' ' + state[li.dataset.sideStep] : '');
         if (state[li.dataset.sideStep] === 'current') li.setAttribute('aria-current', 'step'); else li.removeAttribute('aria-current');
       });
-      document.querySelector('[data-login-num]').textContent = currentRoute === 'google' ? '2' : '3';
     }
     function routeFromHash() { const h = location.hash.replace('#', ''); return SCREENS[h] ? h : 'choose'; }
     window.addEventListener('hashchange', () => show(routeFromHash(), true));
@@ -1075,7 +973,7 @@
     // Mark hash steps we added, so "back" can use the real history entry.
     window.addEventListener('hashchange', () => { if (location.hash && !(history.state && history.state.lmsPushed)) history.replaceState({ lmsPushed: true }, ''); });
 
-    // ---------- Schoology / Canvas school search ----------
+    // ---------- Schoology school search ----------
     const searchInput = document.getElementById('schoolSearch');
     const resultsEl = document.getElementById('schoolResults');
     const hintEl = document.getElementById('schoolHint');
@@ -1090,7 +988,6 @@
       if (lms === which) return;
       lms = which;
       document.getElementById('schoolTitle').textContent = LMS[which].title;
-      document.getElementById('canvasMissing').hidden = which !== 'canvas';
       searchInput.value = '';
       schoolNote.hidden = true;
       ssoBtn.classList.remove('busy');
@@ -1103,8 +1000,6 @@
       loadSchools(which).then(list => {
         if (lms !== which) return;
         schools = list;
-        // A Canvas school that has since left the list can't sign in anymore.
-        if (which === 'canvas' && picked && !findSchool(picked.domain)) pick(null, false);
         renderResults();
       });
     }
@@ -1125,8 +1020,7 @@
       const typed = normalizeDomain(searchInput.value);
       const matches = s => s.name.toLowerCase().includes(q) || s.domain.includes(q)
         || (Array.isArray(s.aliases) && s.aliases.some(a => a.includes(q) || a === typed));
-      // Canvas shows every school that's on Averages.io before you type.
-      options = q ? schools.filter(matches).slice(0, 6) : (lms === 'canvas' ? schools.slice(0, 6) : []);
+      options = q ? schools.filter(matches).slice(0, 6) : [];
       const typedLooksLikeAddress = q && HOST_RE.test(typed);
       // Schoology: typing your school's address works even when it isn't listed.
       if (typedLooksLikeAddress && LMS[lms].anyAddress && !findSchool(typed)) {
@@ -1139,17 +1033,9 @@
         </li>`).join('');
       searchInput.setAttribute('aria-expanded', options.length ? 'true' : 'false');
       if (active >= 0) searchInput.setAttribute('aria-activedescendant', 'schoolOpt' + active); else searchInput.removeAttribute('aria-activedescendant');
-      if (lms === 'canvas') {
-        hintEl.innerHTML = !q && !schools.length
-          ? 'No schools have turned on Averages.io for Canvas yet. Ask your Canvas admin with the <button type="button" data-template>Email Template</button>.'
-          : q && !options.length
-          ? `${typedLooksLikeAddress ? esc(typed) + ' hasn’t' : 'If your school isn’t listed, it hasn’t'} turned on Averages.io for Canvas yet. Ask your Canvas admin with the <button type="button" data-template>Email Template</button>.`
-          : '';
-      } else {
-        hintEl.textContent = q && !options.length
-          ? `No schools match. You can also type the address you use for Schoology, like ${LMS[lms].example}.`
-          : '';
-      }
+      hintEl.textContent = q && !options.length
+        ? `No schools match. You can also type the address you use for Schoology, like ${LMS[lms].example}.`
+        : '';
     }
     function moveActive(step) {
       if (!options.length) return;
@@ -1198,14 +1084,14 @@
       if (!picked || ssoBtn.classList.contains('busy')) return;
       saveAge(ageBoxes[0].checked);
       if (window.__averagesLmsSignIn) {
-        // Off to that school's own Schoology/Canvas sign-in page.
+        // Off to that school's own Schoology sign-in page.
         ssoBtn.classList.add('busy');
         ssoBtn.textContent = `Opening ${LMS[lms].name}…`;
         window.__averagesLmsSignIn(lms, picked.domain);
         return;
       }
       if (window.__averagesSignIn) {
-        // Built app: Schoology/Canvas sign-in isn't built yet.
+        // Built app: Schoology sign-in isn't built yet.
         schoolNote.textContent = LMS[lms].soon;
         schoolNote.hidden = false;
         return;
@@ -1215,86 +1101,22 @@
       window.setTimeout(() => { window.location.href = 'onboarding.html'; }, 700);
     });
 
-    // ---------- Canvas: email template ----------
-    const tplOverlay = document.getElementById('tplOverlay');
-    const tplText = document.getElementById('tplText');
-    const TPL_SUBJECT = 'Can our school turn on Averages.io for Canvas?';
-    const TPL_BODY = [
-      'Hi,',
-      '',
-      "I'd like to use Averages.io (https://averages.io) to see my Canvas classes, grades and assignments in one place. Students can only sign in with Canvas after our school turns it on.",
-      '',
-      'Could you email schools@averages.io to get started? They reply right away with a short application and what happens next.',
-      '',
-      'Thank you,',
-      '',
-    ].join('\n');
-    function openTemplate() {
-      tplText.value = TPL_BODY;
-      document.getElementById('tplMail').href = 'mailto:?subject=' + encodeURIComponent(TPL_SUBJECT) + '&body=' + encodeURIComponent(TPL_BODY);
-      tplOverlay.hidden = false;
-      tplText.focus();
-      tplText.setSelectionRange(0, 0);
-      tplText.scrollTop = 0;
-    }
-    function closeTemplate() { tplOverlay.hidden = true; document.getElementById('emailTemplateBtn').focus(); }
     // "Why?" next to the 13+ check.
     document.querySelectorAll('[data-age-why]').forEach(b => b.addEventListener('click', () => {
       const note = b.closest('.age-row').nextElementSibling;
       note.hidden = !note.hidden;
       b.setAttribute('aria-expanded', note.hidden ? 'false' : 'true');
     }));
-    document.getElementById('emailTemplateBtn').addEventListener('click', openTemplate);
-    hintEl.addEventListener('click', e => { if (e.target.closest('[data-template]')) openTemplate(); });
-    document.getElementById('tplClose').addEventListener('click', closeTemplate);
-    tplOverlay.addEventListener('click', e => { if (e.target === tplOverlay) closeTemplate(); });
-    document.addEventListener('keydown', e => { if (e.key === 'Escape' && !tplOverlay.hidden) closeTemplate(); });
-    document.getElementById('tplCopy').addEventListener('click', async e => {
-      const btn = e.currentTarget;
-      const text = 'Subject: ' + TPL_SUBJECT + '\n\n' + tplText.value;
-      try { await navigator.clipboard.writeText(text); btn.textContent = 'Copied'; }
-      catch { tplText.select(); btn.textContent = 'Press Ctrl+C to copy'; }
-      window.setTimeout(() => { btn.textContent = 'Copy'; }, 1800);
-    });
-    document.getElementById('tplMail').addEventListener('click', () => {
-      // Keep any edits the student made.
-      document.getElementById('tplMail').href = 'mailto:?subject=' + encodeURIComponent(TPL_SUBJECT) + '&body=' + encodeURIComponent(tplText.value);
-    });
 
-    // ---------- Google Classroom ----------
-    const googleBtn = document.getElementById('googleBtn');
-    const googleNote = document.getElementById('googleNote');
-    googleBtn.addEventListener('click', () => {
-      if (googleBtn.classList.contains('busy')) return;
-      saveAge(ageBoxes[0].checked);
-      googleBtn.classList.add('busy');
-      googleNote.hidden = true;
-      if (window.__averagesGoogleSignIn) {
-        googleBtn.textContent = 'Opening Google…';
-        window.__averagesGoogleSignIn();
-        return;
-      }
-      googleBtn.textContent = 'Signing in…';
-      window.setTimeout(() => { window.location.href = 'onboarding.html'; }, 700);
-    });
-    // Back from Google with the browser's Back button: undo "Opening Google…".
+    // Back from the school's sign-in with the browser's Back button: undo "busy".
     window.addEventListener('pageshow', e => {
       if (!e.persisted) return;
-      googleBtn.classList.remove('busy');
-      googleBtn.textContent = 'Continue with Google';
       ssoBtn.classList.remove('busy');
       if (lms) ssoBtn.textContent = LMS[lms].button;
     });
 
     // ---------- Start ----------
     const q = new URLSearchParams(location.search);
-    const googleOutcome = q.get('google');
-    if (googleOutcome && Object.prototype.hasOwnProperty.call(GOOGLE_RESULT, googleOutcome)) {
-      // Just back from Google: show how it went on the Google screen.
-      history.replaceState(null, '', location.pathname + location.search + '#google');
-      googleNote.textContent = GOOGLE_RESULT[googleOutcome];
-      googleNote.hidden = false;
-    }
     show(routeFromHash(), false);
 
     // Hidden API-key sign-in: login.html?keys (or ?demo). Not linked anywhere.

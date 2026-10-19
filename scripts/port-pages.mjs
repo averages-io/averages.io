@@ -43,12 +43,10 @@ const ROUTES = {
   contacts: "contacts",
   files: "files",
   settings: "settings",
-  // School application (2026-10-06): public, for a school's IT team.
-  "schools-apply": "schools/apply",
 };
 
 /** Pages anyone can open without signing in (2026-10-06). They also keep their own fixed look. */
-const PUBLIC_PAGES = new Set(["login", "schools-apply"]);
+const PUBLIC_PAGES = new Set(["login"]);
 
 /**
  * Sample-data constants that live data can override.
@@ -246,7 +244,7 @@ function wireDataOverrides(script, file) {
  *                      Drive files and Canva designs (2026-10-04)
  * Anything NOT listed here must have overridable data, or the build fails.
  */
-const NO_DATA_PAGES = new Set(["login", "onboarding", "settings", "files", "schools-apply"]);
+const NO_DATA_PAGES = new Set(["login", "onboarding", "settings", "files"]);
 
 /**
  * Replaces login's simulated credential check with the real one.
@@ -403,7 +401,7 @@ function generatePage(name, route, data) {
 
   const loginExtras = isLogin
     ? `
-import { forgetSession, getSession, googleSignInUrl, signIn } from "./lib/averages";
+import { getSession, signIn } from "./lib/averages";
 
 const ERROR_MESSAGES: Record<string, string> = {
   invalid_credentials: "That API key and secret didn't work. Double-check you copied both from your school's Schoology /api page.",
@@ -446,14 +444,6 @@ const ERROR_MESSAGES: Record<string, string> = {
       };
     };
 
-    // Continue with Google (2026-10-05): off to the API, then Google, then
-    // back here with ?google=ok (or why not). The login script calls this.
-    (window as any).__averagesGoogleSignIn = () => {
-      window.location.href = googleSignInUrl();
-    };
-    // Back from Google signed in: don't trust an older cached "signed out".
-    if (new URLSearchParams(window.location.search).get("google") === "ok") forgetSession();
-
     // Already signed in? Don't make them do it again. The screen may still
     // be black from CHECKING_JS below; it stays black all the way to Home
     // when they are, and shows the sign-in options when they aren't.
@@ -481,15 +471,15 @@ const ERROR_MESSAGES: Record<string, string> = {
   // Runs inline before the browser paints. Not black when:
   //   - the hint says signed out last time ("0"): the usual signed-out visit
   //     shows the buttons at once, and the check still redirects if it's wrong;
-  //   - just back from Google with an error to show, or the hidden ?keys/?demo
-  //     form is asked for.
+  //   - the hidden ?keys/?demo form is asked for. (Google sign-in, which
+  //     came back here with ?google=, was removed 2026-10-19.)
   // A missing hint (first visit since this shipped) counts as "maybe", so it's
   // black once and right from then on. The 8 s cap means a slow or broken API
   // can never leave the page black for good; the effect above reveals sooner.
   const loginChecking = isLogin
     ? `
 const CHECKING_CSS = "html[data-av-checking],html[data-av-checking] body{background:#000!important}html[data-av-checking] body>*{visibility:hidden!important}";
-const CHECKING_JS = "(function(){var d=document.documentElement;try{if(localStorage.getItem('averages_signed_in')==='0')return;var q=new URLSearchParams(location.search),g=q.get('google');if((g&&g!=='ok')||q.has('keys')||q.has('demo'))return;}catch(e){}d.setAttribute('data-av-checking','');setTimeout(function(){d.removeAttribute('data-av-checking')},8000);})();";
+const CHECKING_JS = "(function(){var d=document.documentElement;try{if(localStorage.getItem('averages_signed_in')==='0')return;var q=new URLSearchParams(location.search);if(q.has('keys')||q.has('demo'))return;}catch(e){}d.setAttribute('data-av-checking','');setTimeout(function(){d.removeAttribute('data-av-checking')},8000);})();";
 `
     : "";
   const loginCheckingTags = isLogin

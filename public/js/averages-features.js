@@ -22,16 +22,16 @@
   'use strict';
   const KEYS = [
     'canva-integration', 'onedrive-integration', 'drive-integration',
-    'schoology-signin', 'gclassroom-signin', 'canvas-signin', 'test-signin',
-    'maintenance-banner', 'schoolsform-page', 'coursematerialpreview-feature',
+    'schoology-signin', 'test-signin',
+    'maintenance-banner', 'coursematerialpreview-feature',
     'turnin-feature', 'messaging-features', 'notifications-features',
   ];
   const DEFAULTS = { 'maintenance-banner': false, 'coursematerialpreview-feature': false };
   const NAMES = {
     'canva-integration': 'Canva is', 'onedrive-integration': 'OneDrive is', 'drive-integration': 'Google Drive is',
-    'schoology-signin': 'Signing in with Schoology is', 'gclassroom-signin': 'Signing in with Google Classroom is',
-    'canvas-signin': 'Signing in with Canvas is', 'test-signin': 'The reviewer account is',
-    'schoolsform-page': 'The school application form is', 'coursematerialpreview-feature': 'Previews are',
+    'schoology-signin': 'Signing in with Schoology is',
+    'test-signin': 'The reviewer account is',
+    'coursematerialpreview-feature': 'Previews are',
     'turnin-feature': 'Turning in work is', 'messaging-features': 'Messages is', 'notifications-features': 'Notifications are',
   };
   // Existing parts of the app, per switch (a selector each; all of them are hidden while it's off).
@@ -49,8 +49,6 @@
       '#fxNav [data-filter="onedrive"]', '.fx-chip[data-filter="onedrive"]',
     ],
     'schoology-signin': ['[data-lms="schoology"]'],
-    'gclassroom-signin': ['[data-lms="google"]'],
-    'canvas-signin': ['[data-lms="canvas"]'],
     'turnin-feature': ['#addSubmissionBtn', '.submit-dropzone.live-drop', '[data-draft-action="submit"]'],
     'messaging-features': [
       '.nav-link[data-page="messages"]', '[data-href^="messages.html"]', '[href^="messages.html"]', '[href^="/messages"]',
@@ -61,7 +59,6 @@
   // Pages that are a feature on their own: a notice goes over them while it's off.
   const PAGES = [
     { path: /^\/messages(\.html)?\/?$/, key: 'messaging-features', title: 'Messages is turned off right now', text: 'You can still message your teachers on Schoology. Check back here later.', back: ['/home', 'Back to Home'] },
-    { path: /^\/schools\/apply(\.html)?\/?$|^\/schools-apply(\.html)?$/, key: 'schoolsform-page', title: 'Applications are closed right now', text: 'You can still email schools@averages.io and we’ll get back to you.', back: ['mailto:schools@averages.io', 'Email us'] },
   ];
   const CACHE = 'averages_features';
   const API = window.location.hostname.endsWith('averages.io') ? 'https://api.averages.io' : 'http://localhost:8787';

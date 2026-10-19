@@ -196,21 +196,6 @@ function under13(): boolean {
   }
 }
 
-/**
- * Sign in with Google, for schools on Google Classroom (2026-10-05). The
- * browser goes to the API, which sends it on to Google's consent screen and,
- * once the student agrees, back to the login page with ?google=ok (or a
- * reason it didn't work). The Google tokens never reach the browser: the API
- * seals them into the same httpOnly session cookie as a Schoology sign-in.
- *
- * Forgets the cached "signed out" answer first: coming back from Google within
- * a minute would otherwise read it and stay on the login page.
- */
-export function googleSignInUrl(): string {
-  forgetSession();
-  return `${API_BASE}/auth/google/start?under13=${under13() ? "1" : "0"}`;
-}
-
 /** Drops every cached answer about who's signed in and their data. */
 export function forgetSession(): void {
   cacheClear(SESSION_CACHE);
