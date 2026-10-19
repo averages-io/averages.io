@@ -2863,6 +2863,8 @@
       pendingThread = null;
       activeConvoId = id;
       if (c.unread) c.unread = false;
+      // The bell's dot for this thread goes too (2026-10-19, public/js/averages-bell.js).
+      if (window.AveragesSeen) window.AveragesSeen.mark('m', id);
       if (MSG_LIVE) liveLoadThread(c);
       showThread(c);
       renderThreadList();
@@ -3613,6 +3615,13 @@
     // a deep link opens straight into that person's identity (no To
     // dropdown needed — see the comment above startNewThreadWith).
     // ------------------------------------------------------------------
+    // Opened from the bell (2026-10-19): messages.html?thread=<id> opens that
+    // conversation, the same as clicking it in the list.
+    (function handleThreadDeepLink() {
+      const id = new URLSearchParams(window.location.search).get('thread');
+      if (id && CONVERSATIONS.some(c => c.id === id)) openConversation(id);
+    })();
+
     (function handleComposeDeepLink() {
       const params = new URLSearchParams(window.location.search);
       const composeId = params.get('compose');

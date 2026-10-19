@@ -4,7 +4,12 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { getSession, loadBundle, loadExtras, signOut, type Mode } from "../lib/averages";
 import { mergeExtras } from "../lib/extras";
 import { installNsfwGlobal, preloadNsfwModel } from "../lib/nsfw";
-import { SKELETON_CSS, skeletonHtml, revealContent } from "./PageSkeleton";
+import { SKELETON_CSS, skeletonHtml, revealContent, snapshotSkeleton, type SkeletonSnapshot } from "./PageSkeleton";
+import * as loading from "../lib/averages-loading";
+
+// The loading animations (2026-10-19) for the page scripts and the bell:
+// window.AveragesLoading.skelBar / revealRows / rise / chartSkeleton / calm.
+if (typeof window !== "undefined") (window as any).AveragesLoading = loading;
 import { THEME_BOOT_JS } from "../lib/theme-boot";
 
 /**
@@ -145,6 +150,10 @@ export default function LegacyPage({
   pageId?: string;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
+  /** The signed-in account's id, for the bell's background fetch (scopes the extras cache). */
+  const uidRef = useRef("");
+  /** The skeleton as it was the moment before the swap (see snapshotSkeleton). */
+  const snapRef = useRef<SkeletonSnapshot>({});
 
   /**
    * "checking" until the API answers. The page's markup only mounts once this
@@ -209,6 +218,7 @@ export default function LegacyPage({
       // (teachers, updates, events...), asked for at the same time as the
       // bundle, not after it. Live sessions only. loadExtras waits at most 4 s;
       // see app/lib/extras.ts for which page gets what.
+      uidRef.current = session.uid ?? "";
       const wantsExtras = requiresAuth && session.mode === "live" && !!pageId;
       const [bundle, extras] = await Promise.all([
         requiresAuth ? loadBundle() : Promise.resolve(null),
@@ -269,6 +279,9 @@ export default function LegacyPage({
       // server held is forgotten there. Sign-out clears them like everything else.
 
       setMode(session.mode);
+      // The placeholders' heights and shimmer positions, read before they're
+      // replaced, so the reveal can fade a frozen copy of them out.
+      snapRef.current = snapshotSkeleton(containerRef.current, pageId);
       setPhase("ready");
     })();
 
@@ -340,6 +353,21 @@ export default function LegacyPage({
    * after the DOM update and before the browser paints, which closes that gap
    * by construction rather than by luck.
    */
+  /**
+   * While loading (2026-10-19): every chart placeholder ([data-chart-skel],
+   * the class page's grade trend) gets chartSkeleton(), a line that keeps
+   * drawing itself. The markup already shows its grid from the first frame;
+   * this starts the motion once React is live. The swap to the real page
+   * removes it, and the cleanup stops its timer.
+   */
+  useLayoutEffect(() => {
+    if (phase !== "checking" || !containerRef.current) return;
+    const stops = Array.from(containerRef.current.querySelectorAll<HTMLElement>("[data-chart-skel]")).map((el) =>
+      loading.chartSkeleton(el, { kind: "line" })
+    );
+    return () => stops.forEach((stop) => stop());
+  }, [phase]);
+
   useLayoutEffect(() => {
     if (phase !== "ready" || !containerRef.current) return;
 
@@ -357,7 +385,12 @@ export default function LegacyPage({
      * you'd see them pop in at full opacity first and then fade, which is
      * worse than no animation at all.
      */
-    revealContent(containerRef.current, pageId);
+    revealContent(containerRef.current, pageId, snapRef.current);
+
+    // Notifications bell (2026-10-19, public/js/averages-bell.js): next to the
+    // profile picture on every signed-in page, drawn from the data this page
+    // already has. Course updates it doesn't have come in the background below.
+    if (requiresAuth) (window as any).AveragesBell?.mount({ mode });
 
     // Warm the model only where an upload is possible, and only after the page
     // is interactive, so a multi-megabyte download never competes with paint.
@@ -373,7 +406,30 @@ export default function LegacyPage({
       script.remove();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, scriptJs, hasUploads, pageId]);
+  }, [phase, scriptJs, hasUploads, pageId, requiresAuth, mode]);
+
+  /**
+   * The bell's course updates on pages that don't load them (everything but
+   * Home and the class page). After the page has drawn, never before it, so
+   * no page waits longer than it did; usually answered from the cache Home
+   * filled. A failure just leaves the bell without that section.
+   */
+  useEffect(() => {
+    if (phase !== "ready" || !requiresAuth || mode !== "live") return;
+    const bell = (window as any).AveragesBell;
+    const have = (window as any).__AVERAGES__?.data?.COURSE_UPDATES;
+    if (!bell || Array.isArray(have)) return;
+    let cancelled = false;
+    bell.expectUpdates();
+    loadExtras("bell", "", uidRef.current)
+      .then((r) => {
+        if (cancelled) return;
+        const got = mergeExtras({}, r.requests, r.answers) as { COURSE_UPDATES?: unknown };
+        bell.setData(Array.isArray(got.COURSE_UPDATES) ? { COURSE_UPDATES: got.COURSE_UPDATES } : null);
+      })
+      .catch(() => { if (!cancelled) bell.setData(null); });
+    return () => { cancelled = true; };
+  }, [phase, requiresAuth, mode]);
 
   /**
    * Loading state, reworked 2026-09-16.

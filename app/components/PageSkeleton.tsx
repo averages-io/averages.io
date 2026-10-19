@@ -30,59 +30,28 @@
  * the build if a selector below no longer exists in its page.
  */
 
-export const SKELETON_CSS = `
-  @keyframes averagesSkeletonShimmer {
-    0%   { background-position: -340px 0; }
-    100% { background-position:  340px 0; }
-  }
-  .skel-bar {
-    display: inline-block;
-    border-radius: 999px;
-    background-color: rgba(120, 120, 135, 0.16);
-    background-image: linear-gradient(
-      90deg,
-      rgba(120, 120, 135, 0.16) 0px,
-      rgba(120, 120, 135, 0.16) 150px,
-      rgba(120, 120, 135, 0.30) 210px,
-      rgba(120, 120, 135, 0.16) 270px,
-      rgba(120, 120, 135, 0.16) 420px
-    );
-    background-size: 680px 100%;
-    background-repeat: no-repeat;
-    animation: averagesSkeletonShimmer 1.25s ease-in-out infinite;
-  }
-  .skel-dot { border-radius: 50%; }
-  /* Respect the OS setting: a constant sweep is a problem for some people.
-     The bar still reads as a placeholder without moving. */
-  @media (prefers-reduced-motion: reduce) {
-    .skel-bar { animation: none; }
-  }
-  /* Nothing inside a skeleton row should be clickable or focusable. */
-  [data-skel] { pointer-events: none; user-select: none; }
+import { calm, rise, skelBar } from "../lib/averages-loading";
 
-  /* The hand-off: real rows fade up from the top of the page down.
-     Opacity ONLY — no movement of any kind. An earlier version lifted each
-     row 6px as it faded, which made the page look like it was sliding into
-     place rather than filling in; Martin's note was exactly that: "i dont
-     want the whole page to revel up to down i only want the data to do
-     that". The structure is already at its final size and position from the
-     first frame, and it stays there. */
-  @keyframes averagesReveal {
-    from { opacity: 0; }
-    to   { opacity: 1; }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    [data-reveal] { animation: none !important; }
-  }
+/**
+ * What's left here after the 2026-10-19 switch to the new loading animation:
+ * the shimmer bar, [data-skel], the rise/fade keyframes and the chart skeleton
+ * all come from app/lib/averages-loading.css (loaded app-wide by
+ * app/layout.tsx), Martin's file, unchanged.
+ */
+export const SKELETON_CSS = `
+  .skel-dot { border-radius: 50%; }
+  /* The trend chart's placeholder (class page): its own frame, until
+     chartSkeleton() takes over and keeps drawing. */
+  [data-chart-skel] { aspect-ratio: 240 / 108; }
 `;
 
 /** A shimmer bar. `w` accepts any CSS width so rows can vary believably. */
 function bar(w: string, h = 10): string {
-  return `<span class="skel-bar" style="width:${w};height:${h}px"></span>`;
+  return skelBar(w, h);
 }
 
 function dot(size = 8): string {
-  return `<span class="skel-bar skel-dot" style="width:${size}px;height:${size}px"></span>`;
+  return skelBar(`${size}px`, size, "50%");
 }
 
 /**
@@ -118,6 +87,19 @@ export interface SkeletonSpec {
    */
   reveal?: boolean;
 }
+
+/**
+ * chartSkeleton()'s grid and axis labels, drawn ahead of time at the trend
+ * chart's own size (240 x 108), for the frames before any script runs. Same
+ * numbers as app/lib/averages-loading.js: L 34, R 6, T 8, B 22.
+ */
+const CHART_FRAME = (() => {
+  const w = 240, h = 108, L = 34, R = 6, T = 8, B = 22;
+  const y = (f: number) => T + f * (h - T - B);
+  let g = [0, 0.5, 1].map((f) => `<line class="g" x1="${L}" x2="${w - R}" y1="${y(f)}" y2="${y(f)}"/><rect class="axs" x="${L - 30}" y="${y(f) - 4}" width="22" height="8" rx="4"/>`).join("");
+  g += [0, 0.5, 1].map((f) => `<rect class="axs" x="${L + f * (w - L - R) - 18 - (f === 1 ? 18 : f ? 0 : -18)}" y="${h - 11}" width="36" height="8" rx="4"/>`).join("");
+  return `<svg class="cskel" viewBox="0 0 ${w} ${h}" aria-hidden="true">${g}</svg>`;
+})();
 
 const SPECS: Record<string, SkeletonSpec[]> = {
   home: [
@@ -173,6 +155,29 @@ const SPECS: Record<string, SkeletonSpec[]> = {
           <div class="message-item-top"><p class="message-item-from">${bar("96px", 10)}</p>
           <p class="message-item-time">${bar("40px", 9)}</p></div>
           <p class="message-item-preview">${bar(PX[i % PX.length], 9)}</p>
+        </div>
+      </div>`,
+    },
+    {
+      // renderRecentGrades() (added 2026-10-19 with the new loading animation):
+      // "Recently graded" sat empty while loading.
+      sel: "#recentList",
+      count: 3,
+      row: (i) => `<div class="rg-item" data-skel>
+        <span class="assign-tick" style="background:rgba(120, 120, 135, 0.16)"></span>
+        <div class="rg-text"><p class="rg-title">${bar(PX[(i + 2) % PX.length], 10)}</p><p class="rg-meta">${bar("96px", 8)}</p></div>
+        <div class="rg-score">${bar("40px", 12)}</div>
+      </div>`,
+    },
+    {
+      // renderCourseUpdates() (2026-10-19): the Course updates box, same reason.
+      sel: "#updatesList",
+      count: 2,
+      row: (i) => `<div class="tu-item" data-skel>
+        <span class="tu-avatar" style="background:none">${dot(28)}</span>
+        <div class="tu-text">
+          <div class="tu-top"><p>${bar("120px", 10)}</p><span class="tu-time">${bar("32px", 8)}</span></div>
+          <p class="tu-body">${bar(w(i), 9)}</p>
         </div>
       </div>`,
     },
@@ -429,6 +434,16 @@ const SPECS: Record<string, SkeletonSpec[]> = {
       count: 3,
       row: (i) => `<div class="week-item" data-skel>${dot(18)}<span class="week-item-text"><span class="week-title">${bar(w(i), 10)}</span><span class="week-when">${bar("48px", 8)}</span></span></div>`,
     },
+    {
+      // renderTrend(): the grade trend chart and the scores under it
+      // (2026-10-19). The frame is chartSkeleton()'s own grid at the chart's
+      // 240 x 108, so the first frame already looks like a chart loading;
+      // once the page is live, LegacyPage starts the line that keeps drawing.
+      sel: "#trendBody",
+      count: 1,
+      row: () => `<div class="trend-chart" data-chart-skel data-skel>${CHART_FRAME}</div>
+        <ol class="trend-list" data-skel>${[0, 1, 2].map((i) => `<li><span class="trend-title">${bar(w(i + 1), 10)}</span><span class="trend-date">${bar("40px", 8)}</span><span class="trend-score">${bar("28px", 10)}</span></li>`).join("")}</ol>`,
+    },
   ],
 
   /*
@@ -538,97 +553,98 @@ export function skeletonHtml(bodyHtml: string, pageId?: string): string {
 }
 
 /**
- * Two rows count as the same band when their tops are within this many pixels
- * of each other. Not zero: a table cell and a floated widget row that look
- * level to the eye are often a pixel or two apart after sub-pixel layout, and
- * splitting those into separate bands is visible as a stutter.
+ * Taken a moment before the skeleton is swapped for the real page (LegacyPage,
+ * right before it flips to "ready"): each data box's height, and where every
+ * shimmer was in its sweep. The reveal uses it to lay a frozen copy of the
+ * placeholders over the real rows and fade it out, and to ease each box from
+ * its loading height to its real one. Empty under Potato mode or reduced
+ * motion, where nothing animates.
  */
-const BAND_TOLERANCE_PX = 6;
-/**
- * Gap between one band lighting up and the next — the speed of the wave down
- * the page. Raised from 40ms on 2026-09-16 at Martin's request ("make the top
- * to down animation a bit slower"): at 40 the wave was over almost before you
- * registered it was a wave.
- */
-const BAND_STEP_MS = 70;
-/**
- * Ceiling on the stagger. Without it a 40-row list at 70ms a band would take
- * nearly three seconds to finish arriving; with it the tail of a long list
- * comes in together rather than making you wait for it.
- */
-const BAND_MAX_MS = 560;
-/** How long one band takes to fade in. */
-const REVEAL_MS = 320;
+export interface SkeletonSnapshot {
+  [sel: string]: { h0: number; sweep: string[] };
+}
 
-/**
- * Fades the real rows in once the page's own script has filled the containers
- * the skeleton was holding — top of the page downwards, and everything level
- * with each other at the same moment.
- *
- * Two rules, both straight from Martin:
- *
- *   1. "ONLY the data that need to be pulled" — furniture (the greeting, an
- *      assignment's title, the big current/predicted grade numbers) is marked
- *      `reveal: false` in SPECS and never animates. Those are headings; fading
- *      them is what made the whole page look like it was arriving.
- *   2. "if the data is on the same x axis they revel at the same time" — rows
- *      are grouped into horizontal bands by their measured top and each BAND
- *      gets one delay, not each element. Home fills a grades table and two
- *      assignment lists side by side; without this, the row at the top of the
- *      middle column would wait behind every row of the left one.
- *
- * All the geometry is read in one pass before anything is written, so this
- * doesn't thrash layout: reading a rect after setting a style on the previous
- * element would force a synchronous reflow per row.
- */
-export function revealContent(root: HTMLElement, pageId?: string): void {
+const isTablePart = (el: Element) => /^(TABLE|THEAD|TBODY|TFOOT|TR)$/.test(el.tagName);
+const shown = (el: Element) => el.getClientRects().length > 0;
+
+export function snapshotSkeleton(root: HTMLElement | null, pageId?: string): SkeletonSnapshot {
+  const out: SkeletonSnapshot = {};
   const sels = pageId ? REVEAL_SELECTORS[pageId] : undefined;
-  if (!sels || sels.length === 0) return;
-
-  const candidates: HTMLElement[] = [];
+  if (!root || !sels || calm()) return out;
   for (const sel of sels) {
     const host = root.querySelector<HTMLElement>(sel);
-    if (!host) continue;
-    for (const child of Array.from(host.children)) candidates.push(child as HTMLElement);
+    if (!host || !shown(host)) continue;
+    out[sel] = {
+      h0: host.offsetHeight,
+      sweep: Array.from(host.querySelectorAll<HTMLElement>(".skel-bar")).map((b) => getComputedStyle(b).backgroundPosition),
+    };
   }
-  if (candidates.length === 0) return;
+  return out;
+}
 
-  // Read every position first...
-  const rows: Array<{ el: HTMLElement; top: number; order: number }> = [];
-  candidates.forEach((el, order) => {
-    const rect = el.getBoundingClientRect();
-    // Skip anything not actually on screen. Home's Messages widget is off by
-    // default, so its rows measure 0x0 — left in, they'd collect the first
-    // three slots of the cascade and delay every visible row behind an
-    // animation nobody can see.
-    if (rect.height === 0 && rect.width === 0) return;
-    rows.push({ el, top: rect.top, order });
-  });
-  if (rows.length === 0) return;
+/**
+ * The placeholders, laid exactly over the box that now holds the real rows,
+ * with each shimmer frozen where it was, fading out (.skel-ghost). Built from
+ * the same markup the skeleton was, in the same parent, so it looks the same.
+ *
+ * Not for tables: a <tbody> or <tr> can't be lifted out and laid over its own
+ * table, so table rows just rise in.
+ */
+function ghostOver(host: HTMLElement, markup: string, sweep: string[]): void {
+  const par = host.parentElement;
+  if (!par || isTablePart(host) || isTablePart(par)) return;
+  const restore = par.style.position;
+  if (getComputedStyle(par).position === "static") par.style.position = "relative";
+  const g = document.createElement(host.tagName);
+  g.className = host.className;
+  g.classList.add("skel-ghost");
+  g.setAttribute("aria-hidden", "true");
+  g.innerHTML = markup;
+  g.querySelectorAll<HTMLElement>(".skel-bar").forEach((b, i) => { if (sweep[i]) b.style.backgroundPosition = sweep[i]; });
+  Object.assign(g.style, { position: "absolute", left: `${host.offsetLeft}px`, top: `${host.offsetTop}px`, width: `${host.offsetWidth}px`, margin: "0" });
+  par.insertBefore(g, host.nextSibling);
+  window.setTimeout(() => {
+    g.remove();
+    par.style.position = restore;
+  }, 420);
+}
 
-  // Sort by vertical position, falling back to document order for a tie so
-  // that side-by-side rows resolve left-to-right instead of arbitrarily.
-  rows.sort((a, b) => (a.top - b.top) || (a.order - b.order));
+/**
+ * Data landed (2026-10-19, Martin's new loading animation,
+ * app/lib/averages-loading.js): in each data box the placeholders fade out on
+ * top, the real rows rise in underneath 35ms apart (capped, so a long list
+ * doesn't drag), and the box eases from its loading height to its real one.
+ *
+ * Unchanged from before: only the data moves. Furniture (the greeting, a
+ * course title, the big grade numbers) is `reveal: false` in SPECS and just
+ * appears. Every box starts at the same moment, so rows level with each other
+ * in side-by-side boxes still arrive together.
+ *
+ * Replaces the 2026-09-16 opacity-only wave down the page. Potato mode and
+ * reduced motion: the rows simply appear.
+ */
+export function revealContent(root: HTMLElement, pageId?: string, snap: SkeletonSnapshot = {}): void {
+  const sels = pageId ? REVEAL_SELECTORS[pageId] : undefined;
+  if (!sels || sels.length === 0 || calm()) return;
+  const markup = new Map(skeletonMarkup(pageId));
 
-  // ...then write. `bandTop` tracks the first row of the current band rather
-  // than the previous row, so a long column of rows 4px apart can't creep into
-  // one band a pixel at a time.
-  let band = 0;
-  let bandTop = rows[0].top;
-  for (const row of rows) {
-    if (row.top - bandTop > BAND_TOLERANCE_PX) {
-      band += 1;
-      bandTop = row.top;
+  for (const sel of sels) {
+    const host = root.querySelector<HTMLElement>(sel);
+    // Home's Messages widget is off by default: nothing to animate in it.
+    if (!host || !shown(host)) continue;
+    const before = snap[sel];
+    if (before && markup.has(sel)) ghostOver(host, markup.get(sel)!, before.sweep);
+
+    Array.from(host.children).filter(shown).forEach((row, i) => rise(row as HTMLElement, i));
+
+    const h1 = host.offsetHeight;
+    if (before && before.h0 && !isTablePart(host) && Math.abs(h1 - before.h0) > 2 && host.animate) {
+      const overflow = host.style.overflow;
+      host.style.overflow = "hidden";
+      host.animate([{ height: `${before.h0}px` }, { height: `${h1}px` }], { duration: 520, easing: "cubic-bezier(.16, 1, .3, 1)" }).onfinish = () => {
+        host.style.overflow = overflow;
+      };
     }
-    const delay = Math.min(band * BAND_STEP_MS, BAND_MAX_MS);
-    row.el.setAttribute("data-reveal", "");
-    row.el.style.animation = `averagesReveal ${REVEAL_MS}ms ease-out ${delay}ms both`;
-    row.el.addEventListener("animationend", () => {
-      // Leave no inline styles behind, so nothing the page does later has to
-      // fight them and a re-render can't replay the reveal.
-      row.el.style.animation = "";
-      row.el.removeAttribute("data-reveal");
-    }, { once: true });
   }
 }
 

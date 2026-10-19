@@ -1,0 +1,59 @@
+/* Averages.io loading animations
+   Skeleton shimmer, rows that rise in when data lands, the chart skeleton, the chart entrance and the refresh spin.
+   Every animation turns off under prefers-reduced-motion and when <body> has .potato-mode.
+   Colors come from your tokens when you have them: --panel (card background) and --series (chart color). */
+
+/* ---------- skeleton bars ---------- */
+@keyframes averagesSkeletonShimmer { 0% { background-position: -280px 0; } 100% { background-position: calc(100% + 690px) 0; } }
+.skel-bar {
+  display: inline-block; flex: none; border-radius: 999px; background-color: rgba(120, 120, 135, .16);
+  background-image: linear-gradient(90deg, rgba(120, 120, 135, .16) 0px, rgba(120, 120, 135, .16) 150px, rgba(120, 120, 135, .30) 210px, rgba(120, 120, 135, .16) 270px, rgba(120, 120, 135, .16) 420px);
+  background-size: 680px 100%; background-position: -280px 0; background-repeat: no-repeat;
+  animation: averagesSkeletonShimmer 1.4s cubic-bezier(.45, 0, .55, 1) infinite;
+}
+.skel-tx { display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 0; }   /* a title bar and a subtitle bar, stacked */
+.skel-block { display: block; width: 100%; height: 100%; border-radius: 12px; }
+[data-skel] { pointer-events: none; user-select: none; transition: opacity 200ms ease; }  /* put on every placeholder row */
+
+/* ---------- data lands: rows rise and fade in, the placeholders fade out on top ---------- */
+@keyframes averagesReveal { from { opacity: 0; } to { opacity: 1; } }
+@keyframes averagesRise { from { transform: translateY(10px); } to { transform: none; } }
+@keyframes averagesFadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ghostOut { from { opacity: 1; } to { opacity: 0; } }
+.skel-ghost { pointer-events: none; z-index: 2; animation: ghostOut 380ms cubic-bezier(.4, 0, .2, 1) forwards; }
+.skel-ghost * { animation: none !important; transition: none !important; }
+
+/* ---------- chart skeleton: faint grid and axis labels, then a line (or bars) that keeps drawing itself ---------- */
+.cskel { display: block; width: 100%; height: 100%; transition: opacity 200ms ease; }
+.cskel.leaving { opacity: .25; }
+.cskel .g { stroke: rgba(120, 120, 135, .16); stroke-width: 1; }
+.cskel .axs { fill: rgba(120, 120, 135, .16); }
+.cskel .sk-run { transition: opacity 300ms ease; }
+.cskel .sk-run.out { opacity: 0; }
+.cskel .sarea { fill: rgba(120, 120, 135, .08); animation: averagesReveal 500ms ease 600ms both; }
+.cskel .sdraw { fill: none; stroke: rgba(120, 120, 135, .34); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; stroke-dasharray: 100 100; animation: chartDraw 1000ms cubic-bezier(.37, 0, .63, 1) both; }
+.cskel .spt { fill: var(--panel, #fff); stroke: rgba(120, 120, 135, .5); stroke-width: 2; transform-box: fill-box; transform-origin: center; animation: ptPop 340ms cubic-bezier(.34, 1.4, .64, 1) both; animation-delay: var(--d); }
+.cskel .sbar { fill: rgba(120, 120, 135, .2); transform-box: fill-box; transform-origin: 50% 100%; animation: barGrow 640ms cubic-bezier(.22, .8, .3, 1) both; animation-delay: calc(var(--i) * 55ms); }
+
+/* ---------- chart entrance: add class "enter" to the real chart's <svg> the first time it draws ----------
+   the line:  class="ln-main" pathLength="100"
+   the fill:  class="area"
+   points:    class="pt" style="--d: 120ms"   (stagger them with --d)
+   bars:      class="bar" style="--i: 0"      (0, 1, 2... left to right) */
+@keyframes chartDraw { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }
+@keyframes barGrow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes ptPop { from { opacity: 0; transform: scale(.3); } to { opacity: 1; transform: scale(1); } }
+svg.enter .ln-main { stroke-dasharray: 100 100; animation: chartDraw 900ms cubic-bezier(.37, 0, .63, 1) both; }
+svg.enter .area { animation: averagesReveal 520ms cubic-bezier(.22, .61, .36, 1) 560ms both; }
+svg.enter .pt { transform-box: fill-box; transform-origin: center; animation: ptPop 380ms cubic-bezier(.34, 1.4, .64, 1) both; animation-delay: var(--d); }
+svg.enter .bar { transform-box: fill-box; transform-origin: 50% 100%; animation: barGrow 640ms cubic-bezier(.22, .8, .3, 1) both; animation-delay: calc(var(--i) * 55ms); }
+
+/* ---------- refresh button while it loads (the spin itself is in averages-loading.js) ---------- */
+.loading { cursor: progress; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ---------- motion off ---------- */
+.potato-mode .skel-bar, .potato-mode .cskel *, .potato-mode svg.enter *, .potato-mode .skel-ghost { animation: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  .skel-bar, .cskel *, svg.enter *, .skel-ghost { animation: none !important; }
+}

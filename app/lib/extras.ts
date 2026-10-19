@@ -53,6 +53,11 @@ export const EXTRAS_BY_PAGE: Readonly<Record<string, readonly ExtraName[]>> = {
   // Opened as assignment?id=<id> (2026-10-07): which class it's in, for work
   // that isn't in the bundle (older, graded). Skipped when ?course= is there.
   assignment: ["locate"],
+  // Not a page: the notifications bell (2026-10-19, public/js/averages-bell.js).
+  // LegacyPage asks for this in the background, after the page has drawn, on
+  // pages that didn't load course updates themselves. Same cache key as Home's,
+  // so it's usually already there.
+  bell: ["updates"],
 };
 
 /** The pages about one class: since 2026-10-07 a real class comes as ?id=<section id>. */

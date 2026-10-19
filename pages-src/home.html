@@ -1975,11 +1975,20 @@
     // out during widget reorder/resize mode (see widgetDragModeOn below)
     // so grabbing a row to drag its whole widget card doesn't also fire
     // a navigation on release.
+    // Notification dots (2026-10-19, Martin): a dot shows while an update or a
+    // grade is new AND hasn't been opened on this device. AveragesSeen is in
+    // public/js/averages-bell.js (the bell uses the same memory); without it,
+    // as in a plain preview of this file, nothing is remembered.
+    const SEEN = window.AveragesSeen || { has: () => false, mark() {}, markMany() {} };
+    function openRow(row) {
+      if (row.dataset.seenKind && row.dataset.seenId) SEEN.mark(row.dataset.seenKind, row.dataset.seenId);
+      window.location.href = row.dataset.href;
+    }
     function wireRowNav(container) {
       container.addEventListener('click', e => {
         if (widgetDragModeOn) return;
         const row = e.target.closest('[data-href]');
-        if (row) window.location.href = row.dataset.href;
+        if (row) openRow(row);
       });
       container.addEventListener('keydown', e => {
         if (e.key !== 'Enter' && e.key !== ' ') return;
@@ -1987,7 +1996,7 @@
         const row = e.target.closest('[data-href]');
         if (!row) return;
         e.preventDefault();
-        window.location.href = row.dataset.href;
+        openRow(row);
       });
     }
     // Google Assignments, Turnitin and other outside tools (2026-10-16): turned in on
@@ -2069,10 +2078,10 @@
     const recentList = document.getElementById('recentList');
     function renderRecentGrades() {
       recentList.innerHTML = RECENT_GRADES.length ? RECENT_GRADES.map(r => `
-        <div class="rg-item" role="link" tabindex="0" data-href="gradebook.html?${avgCourseQ(r.courseId)}" aria-label="${escapeHtml([r.title, courseName(r.courseId), [r.letter, typeof r.pct === 'number' ? `${r.pct} percent` : ''].filter(v => v !== undefined && v !== null && v !== '').join(' ')].filter(Boolean).join(', '))}">
+        <div class="rg-item" role="link" tabindex="0" data-href="gradebook.html?${avgCourseQ(r.courseId)}" data-seen-kind="g" data-seen-id="${escapeHtml(r.id == null ? '' : r.id)}" aria-label="${escapeHtml([r.title, courseName(r.courseId), [r.letter, typeof r.pct === 'number' ? `${r.pct} percent` : ''].filter(v => v !== undefined && v !== null && v !== '').join(' ')].filter(Boolean).join(', '))}">
           <span class="assign-tick" style="background:${escapeHtml(courseColor(r.courseId))}"></span>
           <div class="rg-text">
-            <p class="rg-title">${escapeHtml(r.title)}${r.isNew ? '<span class="new-dot" title="New"></span>' : ''}</p>
+            <p class="rg-title">${escapeHtml(r.title)}${r.isNew && !SEEN.has('g', r.id) ? '<span class="new-dot" title="New"></span>' : ''}</p>
             <p class="rg-meta">${escapeHtml([courseName(r.courseId), r.when].filter(Boolean).join(' · '))}</p>
           </div>
           <div class="rg-score">
@@ -2094,17 +2103,17 @@
         return t && !t.includes(',') ? t : (from || 'Your teacher');
       };
       updatesList.innerHTML = COURSE_UPDATES.length ? COURSE_UPDATES.map(u => ({ ...u, from: poster(u) })).map(u => `
-        <div class="tu-item" role="link" tabindex="0" data-href="course-home.html?${avgCourseQ(u.courseId)}" aria-label="${escapeHtml(u.from)}, ${escapeHtml(courseName(u.courseId))}: ${escapeHtml(u.body)}">
+        <div class="tu-item" role="link" tabindex="0" data-href="course-home.html?${avgCourseQ(u.courseId)}${u.id != null && u.id !== '' ? `&update=${encodeURIComponent(u.id)}` : ''}#updates" data-seen-kind="u" data-seen-id="${escapeHtml(u.id == null ? '' : u.id)}" aria-label="${escapeHtml(u.from)}, ${escapeHtml(courseName(u.courseId))}: ${escapeHtml(u.body)}">
           <span class="tu-avatar" style="background:${escapeHtml(courseColor(u.courseId))}" aria-hidden="true">${escapeHtml(initial(u.from))}</span>
           <div class="tu-text">
             <div class="tu-top">
               <p><span class="tu-from">${escapeHtml(u.from)}</span>${courseName(u.courseId) ? ` <span class="tu-course">· ${escapeHtml(courseName(u.courseId))}</span>` : ''}</p>
-              <span class="tu-time">${escapeHtml(u.when)}${u.unread ? '<span class="new-dot" title="New"></span>' : ''}</span>
+              <span class="tu-time">${escapeHtml(u.when)}${u.unread && !SEEN.has('u', u.id) ? '<span class="new-dot" title="New"></span>' : ''}</span>
             </div>
             <p class="tu-body">${escapeHtml(u.body)}</p>
           </div>
         </div>`).join('') : (UPDATES_FAILED ? '<p class="widget-empty">Teacher updates didn’t load this time.</p>' : '<p class="widget-empty">No updates from your teachers yet.</p>');
-      const unread = COURSE_UPDATES.filter(u => u.unread).length;
+      const unread = COURSE_UPDATES.filter(u => u.unread && !SEEN.has('u', u.id)).length;
       const tag = document.getElementById('updatesNew');
       tag.hidden = !unread; tag.textContent = `${unread} new`;
     }
@@ -3205,6 +3214,8 @@
     renderMessagesWidget();
     renderRecentGrades();
     renderCourseUpdates();
+    // Opened from the bell (or in another tab): those dots go here too.
+    window.addEventListener('averages:seen', () => { renderRecentGrades(); renderCourseUpdates(); });
     renderSummary();
     sumSchedule();
     applyWidgetPrefs();

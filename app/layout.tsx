@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+// Loading animations (2026-10-19, Martin): shimmer, rows rising in, the chart skeleton. See app/lib/averages-loading.js.
+import "./lib/averages-loading.css";
 
 /**
  * Link previews (2026-10-07, Martin): what iMessage, Discord, Slack, Gmail
@@ -114,6 +116,8 @@ export default function RootLayout({
         <script src="/js/averages-file-icons.js" />
         {/* "Open with → Averages.io" from Google Drive (2026-10-09): keeps the chosen file for the Files page. */}
         <script src="/js/averages-drive-open.js" />
+        {/* Notifications (2026-10-19): the bell next to the profile picture, and AveragesSeen, which every notification dot uses. */}
+        <script src="/js/averages-bell.js" />
       </head>
       {/*
         No inline style on <body>, deliberately.

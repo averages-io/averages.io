@@ -527,6 +527,13 @@
   .announce-modal-list { max-height: 60vh; overflow-y: auto; margin: 8px -4px 0; padding: 0 4px 2px; }
   .announce-item { padding: 10px 0; border-bottom: 1px solid var(--border); cursor: pointer; background: none; border-left: none; border-right: none; border-top: none; width: 100%; text-align: left; font: inherit; }
   .announce-item:last-child { border-bottom: none; }
+  /* Opened from Home or the bell (?update=<id>, 2026-10-19): the post lights up once. */
+  .sheet-updates { scroll-margin-top: 24px; }
+  /* The ring reaches past the row's own edges, so the tint has room around the text. */
+  @keyframes announceFlash { 0%, 30% { background: rgb(from var(--accent) r g b / 0.16); box-shadow: 0 0 0 8px rgb(from var(--accent) r g b / 0.16); } 100% { background: transparent; box-shadow: 0 0 0 8px transparent; } }
+  .announce-item.flash { border-radius: var(--window-radius-sm); animation: announceFlash 2.2s ease-out 300ms both; }
+  @media (prefers-reduced-motion: reduce) { .announce-item.flash { animation: none; background: rgb(from var(--accent) r g b / 0.12); box-shadow: 0 0 0 8px rgb(from var(--accent) r g b / 0.12); } }
+  body.potato-mode .announce-item.flash { animation: none; background: rgb(from var(--accent) r g b / 0.12); box-shadow: 0 0 0 8px rgb(from var(--accent) r g b / 0.12); }
   .announce-item:hover .announce-text { color: var(--text-dark); }
   .announce-item:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); border-radius: var(--window-radius-sm); }
   .announce-item-head { display: flex; align-items: center; gap: 8px; }
@@ -1185,7 +1192,7 @@
     </div>
 
     <div class="sheet sheet-card sheet-split">
-        <section class="sheet-sec sheet-updates" aria-labelledby="updatesTitle">
+        <section class="sheet-sec sheet-updates" id="updates" aria-labelledby="updatesTitle">
           <div class="sheet-sec-head">
             <h2 id="updatesTitle">Updates</h2>
             <div class="announce-head-actions">
@@ -1954,6 +1961,8 @@
     // Schoology's come from the updates extra (2026-10-06), with who posted
     // them; Classroom's say "Announcement", shown as the class's teacher when
     // there's exactly one. Missing means the extra failed: no samples, a note.
+    // Notification dots (2026-10-19): read on this device = no dot. See public/js/averages-bell.js.
+    const SEEN = window.AveragesSeen || { has: () => false, mark() {}, markMany() {} };
     const LIVE_UPDATES = AV_LIVE ? AV_DATA.COURSE_UPDATES : undefined;
     const UPDATES_FAILED = AV_LIVE && !Array.isArray(LIVE_UPDATES);
     if (AV_LIVE) {
@@ -1962,7 +1971,9 @@
       ANNOUNCEMENTS[course.id] = (Array.isArray(LIVE_UPDATES) ? LIVE_UPDATES : []).filter(u => u && String(u.courseId) === String(course.id))
         .map((u, i) => {
           const from = String(u.from || '').trim();
-          return { id: 'live' + i, text: String(u.body || ''), time: String(u.when || ''), pinned: false, unread: !!u.unread, author: from && from !== 'Announcement' ? from : fallback };
+          // The real id (2026-10-19), so Home and the bell can open this exact post.
+          const id = u.id != null && u.id !== '' ? String(u.id) : 'live' + i;
+          return { id, text: String(u.body || ''), time: String(u.when || ''), pinned: false, unread: !!u.unread && !SEEN.has('u', id), author: from && from !== 'Announcement' ? from : fallback };
         });
     }
     const announceItems = (ANNOUNCEMENTS[course.id] || []).slice().sort((a, b) => (b.pinned - a.pinned));
@@ -2008,10 +2019,41 @@
       const btn = e.target.closest('.announce-item');
       if (!btn) return;
       const item = announceItems.find(a => a.id === btn.dataset.id);
+      if (item) SEEN.mark('u', item.id);
       if (item && item.unread) { item.unread = false; renderAnnouncements(); }
     }
     document.getElementById('announceList').addEventListener('click', handleAnnounceItemClick);
     document.getElementById('announceModalList').addEventListener('click', handleAnnounceItemClick);
+
+    // Opened from Home's Course updates or the bell (2026-10-19, Martin):
+    // ?update=<id>#updates. Scroll to Updates, mark the post read and light it
+    // up; past the first three it's only in "See all", so that opens instead.
+    (function openLinkedUpdate() {
+      const params = new URLSearchParams(window.location.search);
+      const wanted = params.get('update');
+      if (!wanted && window.location.hash !== '#updates') return;
+      const section = document.getElementById('updates');
+      const index = wanted ? announceItems.findIndex(a => a.id === wanted) : -1;
+      if (index >= 0) {
+        SEEN.mark('u', wanted);
+        if (announceItems[index].unread) { announceItems[index].unread = false; renderAnnouncements(); }
+      }
+      const calm = document.body.classList.contains('potato-mode') || matchMedia('(prefers-reduced-motion: reduce)').matches;
+      requestAnimationFrame(() => {
+        if (section) section.scrollIntoView({ behavior: calm ? 'auto' : 'smooth', block: 'start' });
+        if (index < 0) return;
+        let row = null;
+        if (index < ANNOUNCE_WIDGET_CAP) row = document.querySelector(`#announceList .announce-item[data-id="${CSS.escape(wanted)}"]`);
+        else { openAnnounceModal(); row = document.querySelector(`#announceModalList .announce-item[data-id="${CSS.escape(wanted)}"]`); }
+        if (row) { row.classList.add('flash'); if (index >= ANNOUNCE_WIDGET_CAP) row.scrollIntoView({ block: 'nearest' }); }
+      });
+    })();
+    // Opened from the bell or another tab: drop those dots here too.
+    window.addEventListener('averages:seen', () => {
+      let changed = false;
+      announceItems.forEach(a => { if (a.unread && SEEN.has('u', a.id)) { a.unread = false; changed = true; } });
+      if (changed) renderAnnouncements();
+    });
 
     // "See all" popup — reuses the exact .modal-overlay/.modal-box
     // component (and its dark-backdrop / click-outside-closes / Escape-
@@ -2384,7 +2426,10 @@
         days: days.map(x => ({ date: x.date, items: x.items })),
       });
     }
-    function buildGradeChartSVG(c, interactive) {
+    // enter (2026-10-19): the first time the page's own trend chart draws, its
+    // line draws itself in, the score dots pop as it reaches them and the
+    // projection fades in after (svg.enter, app/lib/averages-loading.css).
+    function buildGradeChartSVG(c, interactive, enter) {
       if (!HISTORY[c.id] || !Array.isArray(HISTORY[c.id].points) || !HISTORY[c.id].points.length) return '<p class="trend-note">No graded work yet. The trend shows up after the first grades.</p>';
       const h = groupSameDay(HISTORY[c.id]);
       const allLabels = h.dates.concat(['Predicted']);
@@ -2403,7 +2448,8 @@
       const actualPts = h.points.map((v, i) => [xFor(i), yFor(v)]);
       const actualLine = actualPts.map(p => p.join(',')).join(' ');
       const actualMarkers = actualPts.map(([x, y], i) => {
-        const dot = `<circle class="trend-dot-mark" cx="${x}" cy="${y}" r="4" fill="${escapeHtml(c.color)}" stroke="var(--panel-bg)" stroke-width="2"/>`;
+        const pop = enter ? ` pt" style="--d:${Math.round(actualPts.length > 1 ? (i / (actualPts.length - 1)) * 820 : 0)}ms` : '';
+        const dot = `<circle class="trend-dot-mark${pop}" cx="${x}" cy="${y}" r="4" fill="${escapeHtml(c.color)}" stroke="var(--panel-bg)" stroke-width="2"/>`;
         if (!interactive) return dot;
         // Hover or focus a dot for its assignment and score (2026-10-15).
         const day = h.days[i] || { date: h.dates[i], items: [] };
@@ -2421,15 +2467,15 @@
       `;
       const xLabels = allLabels.map((lab, i) => `<text x="${xFor(i)}" y="${H - 2}" text-anchor="middle" font-size="7.5" fill="var(--text-faint)">${escapeHtml(lab === 'Predicted' ? 'Pred.' : lab)}</text>`).join('');
       return `
-        <svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Line chart of ${escapeHtml(c.name)} assignment scores trending toward a predicted grade of ${escapeHtml(c.predictedPct)} percent">
+        <svg${enter ? ' class="enter"' : ''} viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Line chart of ${escapeHtml(c.name)} assignment scores trending toward a predicted grade of ${escapeHtml(c.predictedPct)} percent">
           <defs>${stripeDefs}</defs>
           ${gridlines}
-          <rect ${predictedBand} fill="url(#predStripesHub)" stroke="none"/>
-          <polyline points="${actualLine}" fill="none" stroke="${escapeHtml(c.color)}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          <line x1="${lastActual[0]}" y1="${lastActual[1]}" x2="${predX}" y2="${predY}" stroke="${escapeHtml(c.color)}" stroke-width="2" stroke-linecap="round" stroke-dasharray="3 3"/>
+          <rect class="area" ${predictedBand} fill="url(#predStripesHub)" stroke="none"/>
+          <polyline${enter ? ' class="ln-main" pathLength="100"' : ''} points="${actualLine}" fill="none" stroke="${escapeHtml(c.color)}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <line class="area" x1="${lastActual[0]}" y1="${lastActual[1]}" x2="${predX}" y2="${predY}" stroke="${escapeHtml(c.color)}" stroke-width="2" stroke-linecap="round" stroke-dasharray="3 3"/>
           ${actualMarkers}
-          ${interactive ? `<g class="trend-dot" data-dot="pred" tabindex="0" role="img" aria-label="${escapeHtml(`Projected, ${c.predictedPct}% (${c.predicted})`)}"><circle class="trend-dot-hit" cx="${predX}" cy="${predY}" r="11" fill="transparent"/>` : ''}<circle class="trend-dot-mark" cx="${predX}" cy="${predY}" r="4.5" fill="var(--panel-bg)" stroke="${escapeHtml(c.color)}" stroke-width="2"/>${interactive ? '</g>' : ''}
-          <text x="${predX}" y="${predY - 10}" text-anchor="end" font-size="8.5" font-weight="800" fill="var(--text-dark)">${escapeHtml(c.predictedPct)}%</text>
+          ${interactive ? `<g class="trend-dot" data-dot="pred" tabindex="0" role="img" aria-label="${escapeHtml(`Projected, ${c.predictedPct}% (${c.predicted})`)}"><circle class="trend-dot-hit" cx="${predX}" cy="${predY}" r="11" fill="transparent"/>` : ''}<circle class="trend-dot-mark area" cx="${predX}" cy="${predY}" r="4.5" fill="var(--panel-bg)" stroke="${escapeHtml(c.color)}" stroke-width="2"/>${interactive ? '</g>' : ''}
+          <text class="area" x="${predX}" y="${predY - 10}" text-anchor="end" font-size="8.5" font-weight="800" fill="var(--text-dark)">${escapeHtml(c.predictedPct)}%</text>
           ${xLabels}
         </svg>
       `;
@@ -2470,14 +2516,16 @@
     predBlock.addEventListener('keydown', e => { if (e.key === 'Escape') { hideGradePopup(); predBlock.blur(); } });
     // Grade trend panel (hub redo): the same chart the Projected popup draws,
     // shown in place, with the five graded scores it is built from.
+    let trendDrawn = false;   // the entrance plays once, on the first draw
     function renderTrend() {
       const h = HISTORY[course.id];
       if (!h) return;
       const rows = h.points.map((p, i) => ({ score: p, date: h.dates[i], title: (h.titles && h.titles[i]) ? h.titles[i][0] : '' })).reverse();
       document.getElementById('trendBody').innerHTML = `
-        <div class="trend-chart">${buildGradeChartSVG(course, true)}<div class="trend-tip" id="trendTip" role="tooltip" hidden></div></div>
+        <div class="trend-chart">${buildGradeChartSVG(course, true, !trendDrawn)}<div class="trend-tip" id="trendTip" role="tooltip" hidden></div></div>
         <ol class="trend-list">${rows.map(r => `<li><span class="trend-title">${escapeHtml(r.title)}</span><span class="trend-date">${escapeHtml(r.date)}</span><span class="trend-score">${escapeHtml(r.score)}%</span></li>`).join('')}</ol>
         <p class="trend-note">Projected grade follows this trend. It is not a copy of the current grade.</p>`;
+      trendDrawn = true;
     }
     renderTrend();
     // The trend chart's dots: hover or focus one to see its assignment and score.
