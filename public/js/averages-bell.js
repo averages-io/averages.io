@@ -160,14 +160,17 @@
 
   // ---------------------------------------------------------------- view
   const CSS = `
-.avb-wrap { position: relative; flex-shrink: 0; margin-left: auto; margin-right: 12px; }
-.avb-btn { position: relative; width: 42px; height: 42px; border-radius: 50%; padding: 0; background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.5); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.14s ease; }
-.avb-btn:hover, .avb-btn[aria-expanded="true"] { background: rgba(255,255,255,0.32); }
+/* Just the icon (2026-10-19, Martin: no circle around it). The button keeps a
+   42px tap area, it's just invisible; the shadow keeps the white bell readable
+   on light wallpapers. */
+.avb-wrap { position: relative; flex-shrink: 0; margin-left: auto; margin-right: 4px; }
+.avb-btn { position: relative; width: 42px; height: 42px; border-radius: 50%; padding: 0; background: none; border: 0; color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; }
 .avb-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring, rgba(255,255,255,0.6)); }
-.avb-btn svg { width: 20px; height: 20px; display: block; }
-.avb-badge { position: absolute; top: -4px; right: -4px; min-width: 20px; height: 20px; padding: 0 4px; box-sizing: border-box; border-radius: 999px; background: #E5484D; color: #fff; font-family: inherit; font-size: 0.7rem; font-weight: 800; line-height: 20px; text-align: center; box-shadow: 0 0 0 2px rgba(0,0,0,0.18); }
+.avb-btn svg { width: 26px; height: 26px; display: block; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.35)); transition: transform 0.14s ease; }
+.avb-btn:hover svg, .avb-btn[aria-expanded="true"] svg { transform: translateY(-1px); }
+.avb-badge { position: absolute; top: 2px; right: 1px; min-width: 18px; height: 18px; padding: 0 4px; box-sizing: border-box; border-radius: 999px; background: #E5484D; color: #fff; font-family: inherit; font-size: 0.66rem; font-weight: 800; line-height: 18px; text-align: center; box-shadow: 0 0 0 2px rgba(0,0,0,0.18); }
 .avb-badge[hidden] { display: none; }
-.avb-panel { position: absolute; top: calc(100% + 12px); right: -54px; width: min(380px, calc(100vw - 32px)); max-height: min(560px, calc(100vh - 120px)); overflow-y: auto; background: var(--panel-bg, #eaeaec); color: var(--text-dark, #14151f); border-radius: var(--window-radius-md, 14px); box-shadow: 0 20px 45px -16px rgba(0,0,0,0.5); padding: 8px; z-index: 30; text-align: left; }
+.avb-panel { position: absolute; top: calc(100% + 12px); right: -46px; width: min(380px, calc(100vw - 32px)); max-height: min(560px, calc(100vh - 120px)); overflow-y: auto; background: var(--panel-bg, #eaeaec); color: var(--text-dark, #14151f); border-radius: var(--window-radius-md, 14px); box-shadow: 0 20px 45px -16px rgba(0,0,0,0.5); padding: 8px; z-index: 30; text-align: left; }
 .avb-panel[hidden] { display: none; }
 .avb-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 8px 4px 12px; }
 .avb-head h2 { margin: 0; font-size: 1rem; font-weight: 800; }
