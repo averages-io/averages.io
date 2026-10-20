@@ -1029,6 +1029,18 @@
     .settings-card[data-view="detail"] .settings-detail-wrap { display: block; flex: 1; }
     .settings-sidebar { border-right: none; }
   }
+
+  /* Official app logos (2026-10-19): the files Martin added in public/brand/.
+     Only ever resized, never changed (Google's and Canva's brand rules). A
+     brand-slot is an empty space the same size, so names line up where an app
+     has no logo yet (OneDrive). */
+  .canva-mark { width: 20px; height: 20px; flex: none; display: block; border-radius: 50%; background: center / contain no-repeat url("/brand/canva-mark.svg"); }
+  .drive-mark { width: 20px; height: 20px; flex: none; display: block; background: center / contain no-repeat url("/brand/google-drive.png"); }
+  .brand-slot { width: 20px; height: 20px; flex: none; display: block; }
+  .integ-name { display: flex; align-items: center; gap: 8px; }
+  .integ-tm { margin-top: 4px; }
+  .pick-name, #defaultEditorLabel { display: inline-flex; align-items: center; gap: 8px; }
+  .pick-name .canva-mark, .pick-name .drive-mark, #defaultEditorLabel .canva-mark, #defaultEditorLabel .drive-mark { width: 18px; height: 18px; }
 </style>
 </head>
 <body>
@@ -1279,11 +1291,12 @@
           <div class="settings-section" data-section="integrations">
             <p class="settings-subhead">Connected apps</p>
             <div class="settings-group" id="integrationList">
-              <div class="settings-row"><div class="settings-row-text"><p class="settings-row-label">Canva</p><p class="settings-row-desc">Edit files and turn in designs.</p></div></div>
-              <div class="settings-row"><div class="settings-row-text"><p class="settings-row-label">Google Drive</p><p class="settings-row-desc">Edit and add files.</p></div></div>
-              <div class="settings-row"><div class="settings-row-text"><p class="settings-row-label">OneDrive</p><p class="settings-row-desc">Save and add files.</p></div></div>
+              <div class="settings-row"><div class="settings-row-text"><p class="settings-row-label integ-name"><span class="canva-mark" aria-hidden="true"></span>Canva</p><p class="settings-row-desc">Edit files and turn in designs.</p></div></div>
+              <div class="settings-row"><div class="settings-row-text"><p class="settings-row-label integ-name"><span class="drive-mark" aria-hidden="true"></span>Google Drive</p><p class="settings-row-desc">Edit and add files.</p></div></div>
+              <div class="settings-row"><div class="settings-row-text"><p class="settings-row-label integ-name"><span class="brand-slot" aria-hidden="true"></span>OneDrive</p><p class="settings-row-desc">Save and add files.</p></div></div>
             </div>
             <p class="settings-row-desc integ-note">Averages only sees the files you pick. Disconnect anytime.</p>
+            <p class="settings-row-desc integ-note integ-tm">Google Drive is a trademark of Google LLC.</p>
             <p class="settings-subhead">Editing</p>
             <div class="settings-group">
               <div class="settings-row">
@@ -1294,12 +1307,12 @@
                 </div>
                 <div class="pick" id="defaultEditorPick">
                   <button type="button" class="pick-btn" id="defaultEditorBtn" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="defaultEditorName defaultEditorLabel">
-                    <span id="defaultEditorLabel">Canva</span><svg class="pick-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+                    <span id="defaultEditorLabel"><span class="canva-mark" aria-hidden="true"></span>Canva</span><svg class="pick-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
                   </button>
                   <span id="defaultEditorName" hidden>Open files in</span>
                   <div class="pick-menu" id="defaultEditorMenu" role="listbox" aria-label="Open files in" tabindex="-1" hidden>
-                    <button type="button" class="pick-opt" role="option" data-value="canva" aria-selected="true"><span>Canva</span><svg class="pick-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
-                    <button type="button" class="pick-opt" role="option" data-value="gdrive" aria-selected="false"><span>Google Drive</span><svg class="pick-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
+                    <button type="button" class="pick-opt" role="option" data-value="canva" aria-selected="true"><span class="pick-name"><span class="canva-mark" aria-hidden="true"></span>Canva</span><svg class="pick-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
+                    <button type="button" class="pick-opt" role="option" data-value="gdrive" aria-selected="false"><span class="pick-name"><span class="drive-mark" aria-hidden="true"></span>Google Drive</span><svg class="pick-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
                   </div>
                 </div>
               </div>
@@ -1864,6 +1877,8 @@
     (function () {
       const list = document.getElementById('integrationList');
       if (!list) return;
+      // Logos (2026-10-19): OneDrive keeps an empty slot until it has one, so the names line up.
+      const INTEG_MARK = { canva: '<span class="canva-mark" aria-hidden="true"></span>', gdrive: '<span class="drive-mark" aria-hidden="true"></span>', onedrive: '<span class="brand-slot" aria-hidden="true"></span>' };
       const PREVIEW = !window.__AVERAGES_MODE__;   // set by LegacyPage.tsx when signed in (live or demo); missing in the preview
       const APPS = [
         // Short on purpose (2026-10-15, Martin: the text was "way too long").
@@ -1908,7 +1923,7 @@
         return `
             <div class="settings-row" data-feature="${FEAT[a.id]}">
               <div class="settings-row-text">
-                <p class="settings-row-label">${esc(a.name)}</p>
+                <p class="settings-row-label integ-name">${INTEG_MARK[a.id] || ''}${esc(a.name)}</p>
                 <p class="settings-row-desc">${esc(a.desc)}</p>
                 ${status}
               </div>
@@ -1958,7 +1973,7 @@
         return `
             <div class="settings-row" data-feature="${FEAT[a.id]}">
               <div class="settings-row-text">
-                <p class="settings-row-label">${esc(a.name)}</p>
+                <p class="settings-row-label integ-name">${INTEG_MARK[a.id] || ''}${esc(a.name)}</p>
                 <p class="settings-row-desc">${esc(a.desc)}</p>
                 ${status}
               </div>
@@ -1969,7 +1984,7 @@
         return `
             <div class="settings-row" data-feature="${FEAT[a.id]}">
               <div class="settings-row-text">
-                <p class="settings-row-label">${esc(a.name)}</p>
+                <p class="settings-row-label integ-name">${INTEG_MARK[a.id] || ''}${esc(a.name)}</p>
                 <p class="settings-row-desc">${esc(a.desc)}</p>
                 <span class="integ-status">Off in Incognito mode</span>
               </div>
@@ -1989,7 +2004,7 @@
           return `
             <div class="settings-row" data-feature="${FEAT[a.id]}">
               <div class="settings-row-text">
-                <p class="settings-row-label">${esc(a.name)}</p>
+                <p class="settings-row-label integ-name">${INTEG_MARK[a.id] || ''}${esc(a.name)}</p>
                 <p class="settings-row-desc">${esc(a.desc)}</p>
                 <span class="integ-status${on ? ' on' : ''}">${on ? 'Connected' : 'Not connected'}</span>
               </div>
@@ -2005,6 +2020,11 @@
       const editorBtn = document.getElementById('defaultEditorBtn');
       const editorMenu = document.getElementById('defaultEditorMenu');
       const editorLabel = document.getElementById('defaultEditorLabel');
+      // The button shows the picked app's logo with its name (2026-10-19).
+      function setEditorLabel(opt) {
+        const mark = opt.querySelector('.canva-mark, .drive-mark');
+        editorLabel.replaceChildren(...(mark ? [mark.cloneNode(true)] : []), document.createTextNode(opt.textContent.trim()));
+      }
       const editorHint = document.getElementById('defaultEditorHint');
       const editorOpts = editorMenu ? [...editorMenu.querySelectorAll('.pick-opt')] : [];
       let editorValue = 'canva';
@@ -2044,7 +2064,7 @@
           editorBtn.classList.toggle('locked', !!lock);
           editorBtn.classList.toggle('empty', lock === 'none');
           const shown = editorOpts.find(x => x.dataset.value === (lock && lock !== 'none' ? lock : editorValue));
-          if (shown) editorLabel.textContent = shown.textContent.trim();
+          if (shown) setEditorLabel(shown);
           if (lock) closeEditorMenu(false);
         }
         if (lock === 'none') {
@@ -2075,7 +2095,7 @@
         editorValue = v;
         editorOpts.forEach(o => o.setAttribute('aria-selected', String(o.dataset.value === v)));
         const o = editorOpts.find(x => x.dataset.value === v);
-        if (o) editorLabel.textContent = o.textContent.trim();
+        if (o) setEditorLabel(o);
         if (save) { try { localStorage.setItem(EDITOR_KEY, v); } catch {} }
         syncEditorHint();
       }

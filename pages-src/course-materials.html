@@ -1097,6 +1097,17 @@
   .topbar .back-link:hover { background: none; color: #fff; }
   .topbar .back-link:focus-visible { box-shadow: none; text-decoration: underline; }
   .topbar .back-link svg { display: block; }
+
+  /* Official app logos (2026-10-19): the files Martin added in public/brand/.
+     Only ever resized, never changed (Google's and Canva's brand rules). A
+     brand-slot is an empty space the same size, so names line up where an app
+     has no logo yet (OneDrive). */
+  .canva-mark { width: 20px; height: 20px; flex: none; display: block; border-radius: 50%; background: center / contain no-repeat url("/brand/canva-mark.svg"); }
+  .drive-mark { width: 20px; height: 20px; flex: none; display: block; background: center / contain no-repeat url("/brand/google-drive.png"); }
+  .brand-slot { width: 20px; height: 20px; flex: none; display: block; }
+  .context-menu-item .cm-name { display: flex; align-items: center; gap: 8px; }
+  .context-menu-item .cm-name .canva-mark, .context-menu-item .cm-name .drive-mark, .context-menu-item .cm-name .brand-slot { width: 18px; height: 18px; }
+  .context-menu-item:disabled .cm-name .canva-mark, .context-menu-item:disabled .cm-name .drive-mark { opacity: .55; }
 </style>
 </head>
 <body>
@@ -3926,15 +3937,17 @@
     let cloudMenuTarget = null;
     function openCloudMenu(targetName, x, y, alignRight, withCanva, target) {
       cloudMenuTarget = target || null;
-      const soon = n => `<button class="context-menu-item" type="button" role="menuitem" disabled><span>${n}</span><span class="cloud-soon">Coming soon</span></button>`;
+      // Logos (2026-10-19): OneDrive keeps an empty slot until it has one, so the names line up.
+      const CM_MARK = { 'Google Drive': '<span class="drive-mark" aria-hidden="true"></span>', OneDrive: '<span class="brand-slot" aria-hidden="true"></span>', Canva: '<span class="canva-mark" aria-hidden="true"></span>' };
+      const soon = n => `<button class="context-menu-item" type="button" role="menuitem" disabled><span class="cm-name">${CM_MARK[n] || ''}<span>${n}</span></span><span class="cloud-soon">Coming soon</span></button>`;
       // Signed in (2026-10-16): Canva is real, for a file or a whole folder (see "Save to Canva" below).
       let canva = '';
       if (MATERIALS_LIVE && target) {
         const n = canvaFilesIn(target).length;
-        if (!n) canva = target.isFolder ? `<button class="context-menu-item" type="button" role="menuitem" disabled><span>Canva</span><span class="cloud-soon">Nothing Canva opens</span></button>` : '';
-        else if (canvaReady === false) canva = `<button class="context-menu-item" type="button" role="menuitem" data-canva-connect><span>Canva</span><span class="cloud-soon">Connect in Settings</span></button>`;
-        else if (n > SAVE_MAX_FILES) canva = `<button class="context-menu-item" type="button" role="menuitem" disabled><span>Canva</span><span class="cloud-soon">Over ${SAVE_MAX_FILES} files</span></button>`;
-        else canva = `<button class="context-menu-item" type="button" role="menuitem" data-save-canva><span>Canva</span><span class="cloud-soon">${target.isFolder ? `${n} file${n === 1 ? '' : 's'}` : ''}</span></button>`;
+        if (!n) canva = target.isFolder ? `<button class="context-menu-item" type="button" role="menuitem" disabled><span class="cm-name">${CM_MARK.Canva}<span>Canva</span></span><span class="cloud-soon">Nothing Canva opens</span></button>` : '';
+        else if (canvaReady === false) canva = `<button class="context-menu-item" type="button" role="menuitem" data-canva-connect><span class="cm-name">${CM_MARK.Canva}<span>Canva</span></span><span class="cloud-soon">Connect in Settings</span></button>`;
+        else if (n > SAVE_MAX_FILES) canva = `<button class="context-menu-item" type="button" role="menuitem" disabled><span class="cm-name">${CM_MARK.Canva}<span>Canva</span></span><span class="cloud-soon">Over ${SAVE_MAX_FILES} files</span></button>`;
+        else canva = `<button class="context-menu-item" type="button" role="menuitem" data-save-canva><span class="cm-name">${CM_MARK.Canva}<span>Canva</span></span><span class="cloud-soon">${target.isFolder ? `${n} file${n === 1 ? '' : 's'}` : ''}</span></button>`;
       } else if (withCanva) canva = soon('Canva');
       cloudMenu.innerHTML = `<div class="context-menu-tags-label">Save "${escapeHtml(targetName)}" to</div>` +
         ['Google Drive', 'OneDrive'].map(soon).join('') + canva;

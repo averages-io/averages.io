@@ -651,6 +651,17 @@
     .fx-row .fx-src, .fx-row .fx-date, .fx-row.head { display: none; }
     .fx-name small { display: block; }
   }
+
+  /* Official app logos (2026-10-19): the files Martin added in public/brand/.
+     Only ever resized, never changed (Google's and Canva's brand rules). A
+     brand-slot is an empty space the same size, so names line up where an app
+     has no logo yet (OneDrive). */
+  .canva-mark { width: 20px; height: 20px; flex: none; display: block; border-radius: 50%; background: center / contain no-repeat url("/brand/canva-mark.svg"); }
+  .drive-mark { width: 20px; height: 20px; flex: none; display: block; background: center / contain no-repeat url("/brand/google-drive.png"); }
+  .brand-slot { width: 20px; height: 20px; flex: none; display: block; }
+  .fx-item .canva-mark, .fx-item .drive-mark, .fx-item .brand-slot { width: 18px; height: 18px; }
+  .fx-chip { display: inline-flex; align-items: center; gap: 6px; }
+  .fx-chip .canva-mark, .fx-chip .drive-mark { width: 14px; height: 14px; }
 </style>
 </head>
 <body>
@@ -1035,12 +1046,15 @@
     }
     const byNewest = (a, b) => b.date.localeCompare(a.date) || a.name.localeCompare(b.name);
 
+    // Logos in the Sources list and the phone chips (2026-10-19). Course Files, Turned In
+    // and OneDrive keep an empty slot so the names line up.
+    const SRC_MARK = { gdrive: '<span class="drive-mark" aria-hidden="true"></span>', canva: '<span class="canva-mark" aria-hidden="true"></span>', onedrive: '<span class="brand-slot" aria-hidden="true"></span>', course: '<span class="brand-slot" aria-hidden="true"></span>', turnedin: '<span class="brand-slot" aria-hidden="true"></span>' };
     function renderNav() {
       const count = filter => FILES.filter(f => inFilter(f, filter)).length;
       const item = (filter, label, extra) => `<button class="fx-item${fxFilter === filter ? ' on' : ''}" type="button" data-filter="${esc(filter)}" aria-current="${fxFilter === filter ? 'true' : 'false'}">${extra || ''}<span class="nm">${esc(label)}</span><span class="n">${count(filter)}</span></button>`;
       document.getElementById('fxNav').innerHTML =
         item('all', 'All Files') + item('recent', 'Recents') +
-        '<p class="fx-label">Sources</p>' + item('course', 'Course Files') + item('gdrive', 'Google Drive') + item('onedrive', 'OneDrive') + item('canva', 'Canva') +
+        '<p class="fx-label">Sources</p>' + item('course', 'Course Files', SRC_MARK.course) + item('gdrive', 'Google Drive', SRC_MARK.gdrive) + item('onedrive', 'OneDrive', SRC_MARK.onedrive) + item('canva', 'Canva', SRC_MARK.canva) +
         '<p class="fx-label">Courses</p>' + FILE_COURSES.map(c => item('c:' + c.id, c.name, `<span class="fx-dot" style="background:${esc(c.color)}"></span>`)).join('');
     }
     function tileHTML(f) {
@@ -1064,7 +1078,7 @@
       renderNav();
       const main = document.getElementById('fxMain');
       const chips = [['all', 'All'], ['recent', 'Recents'], ['course', 'Courses'], ['gdrive', 'Google Drive'], ['onedrive', 'OneDrive'], ['canva', 'Canva']]
-        .map(([k, l]) => `<button class="fx-chip" type="button" data-filter="${k}" aria-pressed="${fxFilter === k}">${l}</button>`).join('');
+        .map(([k, l]) => `<button class="fx-chip" type="button" data-filter="${k}" aria-pressed="${fxFilter === k}">${k === 'gdrive' || k === 'canva' ? SRC_MARK[k] : ''}${l}</button>`).join('');
       const list = FILES.filter(f => inFilter(f, fxFilter) && matches(f)).sort(byNewest);
       const showRecent = fxFilter === 'all' && !fxQuery && fxView === 'list';
       let body = '';
@@ -1972,7 +1986,7 @@
         const withFiles = CF.courses.filter(c => CF.files.some(f => f.course === c.id) || SUB.files.some(f => f.course === c.id));
         document.getElementById('fxNav').innerHTML =
           item('all', 'All Files') + item('recent', 'Recents') +
-          '<p class="fx-label">Sources</p>' + srcList().map(src => item(src, LIVE_SRC_NAME[src])).join('') +
+          '<p class="fx-label">Sources</p>' + srcList().map(src => item(src, LIVE_SRC_NAME[src], SRC_MARK[src] || '')).join('') +
           (withFiles.length ? '<p class="fx-label">Courses</p>' + withFiles.map(c => item('c:' + c.id, c.name, `<span class="fx-dot" style="background:${esc(cfColor(c))}"></span>`)).join('') : '');
       }
       function toolsLive() {
@@ -1993,7 +2007,7 @@
       }
       function chipsLive() {
         return [['all', 'All'], ['recent', 'Recents']].concat(srcList().map(s => [s, s === 'course' ? 'Courses' : s === 'turnedin' ? 'Turned in' : LIVE_SRC_NAME[s]]))
-          .map(([k, l]) => `<button class="fx-chip" type="button" data-filter="${k}" aria-pressed="${LV.filter === k}">${l}</button>`).join('');
+          .map(([k, l]) => `<button class="fx-chip" type="button" data-filter="${k}" aria-pressed="${LV.filter === k}">${k === 'gdrive' || k === 'canva' ? SRC_MARK[k] : ''}${l}</button>`).join('');
       }
       function folderBrowserHTML() {
         const crumbs = FD.path.map((p, i) => i === FD.path.length - 1

@@ -1121,6 +1121,15 @@
   .mode-hint { margin: 0 0 4px; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); }
   .btn-next:disabled { opacity: 0.5; cursor: not-allowed; }
   body.potato-mode .mode-option { transition: none; }
+
+  /* Official app logos (2026-10-19): the files Martin added in public/brand/.
+     Only ever resized, never changed (Google's and Canva's brand rules). A
+     brand-slot is an empty space the same size, so names line up where an app
+     has no logo yet (OneDrive). */
+  .canva-mark { width: 20px; height: 20px; flex: none; display: block; border-radius: 50%; background: center / contain no-repeat url("/brand/canva-mark.svg"); }
+  .drive-mark { width: 20px; height: 20px; flex: none; display: block; background: center / contain no-repeat url("/brand/google-drive.png"); }
+  .brand-slot { width: 20px; height: 20px; flex: none; display: block; }
+  .feature-title.integ-name { display: flex; align-items: center; gap: 8px; }
 </style>
 </head>
 <body>
@@ -2248,10 +2257,12 @@
       const connectedHere = new Set();   // connected during onboarding (undone if they switch to Incognito)
       const C = () => window.AveragesCloud || null;
 
+      // Logos (2026-10-19): OneDrive keeps an empty slot until it has one, so the names line up.
+      const INTEG_MARK = { canva: '<span class="canva-mark" aria-hidden="true"></span>', gdrive: '<span class="drive-mark" aria-hidden="true"></span>', onedrive: '<span class="brand-slot" aria-hidden="true"></span>' };
       function row(a, status, action) {
         return `<div class="feature-row integ-row" data-app="${a.id}">
             <div class="feature-text">
-              <p class="feature-title">${esc(a.name)}</p>
+              <p class="feature-title integ-name">${INTEG_MARK[a.id] || ''}${esc(a.name)}</p>
               <p class="feature-desc">${esc(a.desc)}</p>
               ${status ? `<p class="integ-status${status.on ? ' on' : ''}">${esc(status.text)}</p>` : ''}
             </div>
