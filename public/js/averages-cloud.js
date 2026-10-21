@@ -31,6 +31,9 @@
  *   localStorage   averages_cloud_accounts  which account is connected
  *                                           ("Connected as ...").
  *   localStorage   averages_drive_drafts    Edit in Google Drive drafts.
+ *   localStorage   averages_drive_opened    ids of files brought in with
+ *                                           Open with → Averages.io for Drive
+ *                                           (2026-10-21), at most 200.
  *   localStorage   averages_onedrive_picked files picked with Add from
  *                                           OneDrive: [{ id, name }], newest
  *                                           first, at most 200. Only ids and
@@ -63,6 +66,8 @@
   const DRAFTS_KEY = 'averages_drive_drafts';
   const PICKED_KEY = 'averages_onedrive_picked';
   const MAX_PICKED = 200;
+  const OPENED_KEY = 'averages_drive_opened';
+  const MAX_OPENED = 200;
   const FOLDER = 'Averages.io';
   const MAX_COPY_BYTES = 250 * 1024 * 1024;
   // Turning in (2026-10-06): Schoology takes files up to 95 MB, so a file
@@ -207,6 +212,29 @@
       const s = store('local');
       if (s) s.removeItem(PICKED_KEY);
     } catch {}
+  }
+
+  /*
+   * Files brought in from Google Drive with Open with → Averages.io for Drive
+   * (2026-10-21, Martin: after disconnecting and reconnecting, an opened file
+   * "would show then reload and disappear" with no error). Google's file list
+   * can leave such a file out even though the file itself can still be read,
+   * so the list was rebuilt without it on the next load. Their ids are kept
+   * here and looked up one by one when they're missing from the list. Ids
+   * only, never names or contents; forgotten on Disconnect and sign-out.
+   */
+  const DRIVE_ID = /^[A-Za-z0-9_-]{10,128}$/;
+  function openedList() {
+    const v = readJSON('local', OPENED_KEY, []);
+    return Array.isArray(v) ? [...new Set(v.filter((id) => typeof id === 'string' && DRIVE_ID.test(id)))] : [];
+  }
+  function rememberOpened(ids) {
+    const fresh = (ids || []).map(String).filter((id) => DRIVE_ID.test(id));
+    if (fresh.length) writeJSON('local', OPENED_KEY, [...new Set(fresh.concat(openedList()))].slice(0, MAX_OPENED));
+  }
+  function forgetOpened(ids) {
+    const gone = new Set((ids || []).map(String));
+    writeJSON('local', OPENED_KEY, openedList().filter((id) => !gone.has(id)));
   }
 
   // Another tab signed out, switched student or disconnected: forget this tab's tokens now.
@@ -679,6 +707,7 @@
       clearToken('gdrive');
       clearAccount('gdrive');
       writeJSON('local', DRAFTS_KEY, []);
+      writeJSON('local', OPENED_KEY, []);
       return serverDisconnect('gdrive');
     }
     const t = tokens().gdrive;
@@ -690,6 +719,7 @@
     clearToken('gdrive');
     clearAccount('gdrive');
     writeJSON('local', DRAFTS_KEY, []);
+    writeJSON('local', OPENED_KEY, []);
   }
 
   /** The "Averages.io" folder in their Drive (drive.file only sees folders we made). */
@@ -804,12 +834,35 @@
     return { url, name: String(f.name || 'Google Drive file') };
   }
 
-  /** Files Averages.io can see in their Drive (drive.file: ones it made or they picked), newest first. */
+  /**
+   * Files Averages.io can see in their Drive (drive.file: ones it made or they
+   * opened with it), newest first. Files opened with Open with that Google's
+   * list leaves out are looked up one by one and added. `gone` on the result:
+   * opened files that can't be read anymore (deleted for good, or Averages.io
+   * lost access); they're forgotten, so the page says so once.
+   */
   async function googleList(token) {
     const q = encodeURIComponent("trashed=false and mimeType != 'application/vnd.google-apps.folder'");
     const r = await gfetch(token, `${DRIVE}/files?q=${q}&orderBy=modifiedTime desc&pageSize=50&fields=files(${DRIVE_FIELDS})&${ALL_DRIVES}&corpora=allDrives&includeItemsFromAllDrives=true`);
     if (!r.ok) throw fail('network');
-    return ((await r.json()).files || []).filter((f) => f && f.id);
+    const files = ((await r.json()).files || []).filter((f) => f && f.id);
+    const have = new Set(files.map((f) => String(f.id)));
+    const missing = openedList().filter((id) => !have.has(id)).slice(0, 20);
+    const gone = [];
+    const trashed = [];
+    await Promise.all(missing.map(async (id) => {
+      const res = await gfetch(token, `${DRIVE}/files/${encodeURIComponent(id)}?fields=${DRIVE_FIELDS},trashed&${ALL_DRIVES}`);
+      if (res.status === 404) { gone.push(id); return; }
+      if (!res.ok) return;   // Google busy or offline: tried again next time
+      const f = await res.json().catch(() => null);
+      if (!f || !f.id) return;
+      if (f.trashed) { trashed.push(id); return; }
+      if (!have.has(String(f.id))) { have.add(String(f.id)); files.push(f); }
+    }));
+    if (gone.length || trashed.length) forgetOpened(gone.concat(trashed));
+    files.sort((a, b) => (Date.parse(b.modifiedTime) || 0) - (Date.parse(a.modifiedTime) || 0));
+    files.gone = gone;
+    return files;
   }
 
   /*
@@ -2032,6 +2085,8 @@
     googleFile,
     googleShareLink,
     googleList,
+    /** Keeps files opened with Open with → Averages.io for Drive in the list (see googleList). */
+    rememberDriveOpened: rememberOpened,
     googleOpenWith,
     driveHome: DRIVE_HOME,
     googleDownload,
