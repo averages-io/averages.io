@@ -1053,7 +1053,7 @@
 
     // Logos in the Sources list and the phone chips (2026-10-19). Course Files, Turned In
     // and OneDrive keep an empty slot so the names line up.
-    const SRC_MARK = { gdrive: '<span class="drive-mark" aria-hidden="true"></span>', canva: '<span class="canva-mark" aria-hidden="true"></span>', onedrive: '<span class="brand-slot" aria-hidden="true"></span>', course: '<span class="brand-slot" aria-hidden="true"></span>', turnedin: '<span class="brand-slot" aria-hidden="true"></span>' };
+    const SRC_MARK = { gdrive: '<span class="drive-mark" aria-hidden="true"></span>', canva: '<span class="canva-mark" aria-hidden="true"></span>', onedrive: '<span class="brand-slot" aria-hidden="true"></span>' };   // Course Files and Turned In have no logo slot (2026-10-21, Martin): their names line up with the logos
     function renderNav() {
       const count = filter => FILES.filter(f => inFilter(f, filter)).length;
       const item = (filter, label, extra) => `<button class="fx-item${fxFilter === filter ? ' on' : ''}" type="button" data-filter="${esc(filter)}" aria-current="${fxFilter === filter ? 'true' : 'false'}">${extra || ''}<span class="nm">${esc(label)}</span><span class="n">${count(filter)}</span></button>`;
@@ -1237,6 +1237,9 @@
           const raw = app === 'gdrive' ? await C().googleList(token) : await C().oneDriveList(token);
           c.files = raw.map(f => normalize(app, f)).sort((a, b) => b.t - a.t);
           c.state = 'ready';
+          // A file opened from Google Drive that can't be read anymore (2026-10-21): said once, not dropped quietly.
+          const gone = app === 'gdrive' && Array.isArray(raw.gone) ? raw.gone.length : 0;
+          if (gone) flash(gone === 1 ? 'A file you opened from Google Drive isn’t available anymore. If it’s still in your Drive, open it again with Open with → Averages.io for Drive.' : `${gone} files you opened from Google Drive aren’t available anymore. If they’re still in your Drive, open them again with Open with → Averages.io for Drive.`, true);
           if (app === 'gdrive') setTimeout(() => driveOpenPending(token), 0);
         } catch (err) {
           c.state = err && err.code === 'reconnect' ? 'reconnect' : err && err.code === 'needs_click' ? 'click' : 'error';
@@ -1272,16 +1275,26 @@
         const p = D && D.pending();
         if (!p || driveOpenBusy || !C()) return;
         driveOpenBusy = true;
-        D.clear();
         try {
           const got = [];
+          let failed = null;
           for (const id of p.ids) {
-            try { const f = await C().googleFile(token, id); if (f && f.id) got.push(f); } catch { /* not ours to open */ }
+            try { const f = await C().googleFile(token, id); if (f && f.id) got.push(f); } catch (err) { failed = failed || err; }
           }
-          if (!got.length) {
-            flash('That file is in a different Google account than the connected one.', true);
+          // The connection itself failed (2026-10-21): keep the file to open after reconnecting, and say so.
+          if (!got.length && failed) {
+            const c = CLOUD.gdrive;
+            if (failed.code === 'reconnect' || failed.code === 'needs_click') { c.state = failed.code === 'reconnect' ? 'reconnect' : 'connect'; render(); return; }
+            flash('Couldn’t reach Google Drive to open your file. Reload the page to try again.', true);
             return;
           }
+          D.clear();
+          if (!got.length) {
+            flash('Couldn’t open that file. It may be in a different Google account than the one connected here.', true);
+            return;
+          }
+          // Remembered, so it stays in the list when the list reloads (see googleList in averages-cloud.js).
+          if (C().rememberDriveOpened) C().rememberDriveOpened(got.map(f => String(f.id)));
           const c = CLOUD.gdrive;
           const have = new Set(c.files.map(f => f.id));
           got.forEach(f => { if (!have.has(String(f.id))) c.files.unshift(normalize('gdrive', f)); });
