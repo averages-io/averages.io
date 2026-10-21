@@ -1325,7 +1325,7 @@
         pending
           .then(async token => {
             if (how === 'pick') {
-              if (app === 'gdrive') { window.open(K.driveHome || 'https://drive.google.com/', '_blank', 'noopener,noreferrer'); return; }   // no picker any more
+              if (app === 'gdrive') { (window.AveragesHelp ? (f) => window.AveragesHelp.open('drive', { onContinue: f }) : (f) => f())(() => window.open(K.driveHome || 'https://drive.google.com/', '_blank', 'noopener,noreferrer')); return; }   // no picker any more
               const picked = await K.oneDrivePick(token);
               if (!picked.length && c.state === 'ready') return;
               await listCloud(app, token);
@@ -1661,28 +1661,57 @@
         return false;
       }
       function closeCanvaTab(tab) { try { if (tab && !tab.closed) tab.close(); } catch {} }
+      // Martin's "Before you open Canva" popup (2026-10-21, public/js/averages-help.js). It shows until they tick
+      // "Don't show this again". Canva is asked for the edit link while it's up: Open Canva stays grey until it answers.
+      // A problem Try again can't fix (design gone, not connected...) closes it and is handled the usual way.
+      // Returns false when the popup isn't shown, so the caller opens Canva the usual way.
+      function canvaWithHelp(from, getUrl, onProblem) {
+        if (!(window.AveragesHelp && window.AveragesHelp.shouldShow('canva'))) return false;
+        window.AveragesHelp.open('canva', {
+          from,
+          prepare: () => getUrl().catch(e => { if (!(e && e.retry)) { window.AveragesHelp.close(); onProblem(e && e.code); } throw e; }),
+          onContinue: url => { if (url) sendToCanva(null, url); },
+        });
+        return true;
+      }
+      /** What a failed Canva request throws: its error code, and whether Try again could help. */
+      function canvaError(code, status) {
+        const e = new Error(code || 'canva');
+        e.code = code || '';
+        e.retry = code === 'network' || code === 'canva_rate_limited' || (!code && !(status >= 400 && status < 500));
+        return e;
+      }
       async function openDesign(id, el) {
         if (!id || (el && el.getAttribute('aria-busy') === 'true')) return;
-        if (el) el.setAttribute('aria-busy', 'true');
-        const tab = openCanvaTab();
-        try {
-          const res = await fetch(`${api}/canva/designs/${encodeURIComponent(id)}/open`, {
-            method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ returnTo: '/files' }),
-          });
-          const j = await res.json().catch(() => ({}));
-          if (res.ok && CANVA_EDIT_URL.test(String(j.editUrl || ''))) { sendToCanva(tab, j.editUrl); return; }
-          closeCanvaTab(tab);
-          if (j.error === 'canva_design_gone') {
+        const getUrl = async () => {
+          let res, j;
+          try {
+            res = await fetch(`${api}/canva/designs/${encodeURIComponent(id)}/open`, {
+              method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ returnTo: '/files' }),
+            });
+            j = await res.json().catch(() => ({}));
+          } catch { throw canvaError('network'); }
+          if (res.ok && CANVA_EDIT_URL.test(String(j.editUrl || ''))) return j.editUrl;
+          throw canvaError(j.error, res.status);
+        };
+        const problem = code => {
+          if (code === 'canva_design_gone') {
             CV.items = CV.items.filter(x => x.id !== id);
             FD.items = FD.items.filter(x => x.id !== id);
             flash('That design isn’t in your Canva anymore.', true);
             return;
           }
-          if (j.error === 'canva_not_connected' || j.error === 'canva_reconnect_needed') { loadCanva(false); return; }
+          if (code === 'canva_not_connected' || code === 'canva_reconnect_needed') { loadCanva(false); return; }
           flash('Couldn’t open that design in Canva. Try again in a moment.', true);
-        } catch {
+        };
+        if (canvaWithHelp(el, getUrl, problem)) return;
+        if (el) el.setAttribute('aria-busy', 'true');
+        const tab = openCanvaTab();
+        try {
+          sendToCanva(tab, await getUrl());
+        } catch (e) {
           closeCanvaTab(tab);
-          flash('Couldn’t open that design in Canva. Try again in a moment.', true);
+          problem(e && e.code);
         } finally {
           if (el && el.isConnected) el.removeAttribute('aria-busy');
         }
@@ -2004,7 +2033,7 @@
           const st = CLOUD[f].state;
           if ((st === 'ready' || st === 'click') && canPick(f)) extra = `<button class="fx-add" type="button" ${f === 'gdrive' ? 'data-pick-drive' : 'data-pick-onedrive'}${CLOUD[f].busy ? ' disabled' : ''}>${PLUS_ICON}Add from ${esc(CLOUD[f].name)}</button>`;
           // Google Drive (2026-10-09): opens Drive, where they choose Open with → Averages.io.
-          else if (f === 'gdrive' && (st === 'ready' || st === 'click')) extra = `<button class="fx-add" type="button" data-pick-drive title="In Google Drive, right-click a file → Open with → Averages.io">${PLUS_ICON}Add from Google Drive</button>`;
+          else if (f === 'gdrive' && (st === 'ready' || st === 'click')) extra = `<button class="fx-add" type="button" data-pick-drive title="In Google Drive, right-click a file → Open with → Averages.io for Drive">${PLUS_ICON}Add from Google Drive</button>`;
         } else if (f === 'canva') {
           if (foldersOn()) extra = `<button class="fx-add" type="button" data-folder-new${FD.formBusy ? ' disabled' : ''}>${PLUS_ICON}New folder</button>`;
         } else extra = `<button class="fx-add" type="button" data-lv-add aria-haspopup="menu" aria-expanded="false">${PLUS_ICON}Add files</button>`;
@@ -2173,7 +2202,7 @@
             // No picker: Google Drive opens, and they choose Open with → Averages.io there.
             const ow = C() && typeof C().googleOpenWith === 'function' ? C().googleOpenWith() : 'on';
             if (ow === 'reconnect') list.push({ label: 'Reconnect Google Drive', sub: 'Adds Averages.io to Google Drive’s Open with menu', run: () => askCloud(app, 'connect') });
-            else list.push({ label: 'From Google Drive', sub: 'In Drive, right-click a file → Open with → Averages.io', run: () => { window.open((C() && C().driveHome) || 'https://drive.google.com/', '_blank', 'noopener,noreferrer'); } });
+            else list.push({ label: 'From Google Drive', sub: 'In Drive, right-click a file → Open with → Averages.io for Drive', run: () => { (window.AveragesHelp ? (f) => window.AveragesHelp.open('drive', { onContinue: f }) : (f) => f())(() => window.open((C() && C().driveHome) || 'https://drive.google.com/', '_blank', 'noopener,noreferrer')); } });
           }
           else if ((c.state === 'ready' || c.state === 'click') && canPick(app)) list.push({ label: `From ${c.name}`, run: () => askCloud(app, 'pick') });
           else list.push({ label: `From ${c.name}`, soon: true });
@@ -2216,7 +2245,7 @@
         const show = t.closest('[data-cloud-show]');
         if (show && !show.disabled) { askCloud(show.dataset.cloudShow, 'show'); return; }
         const pick = t.closest('[data-pick-drive]');
-        if (pick && !pick.disabled) { window.open((C() && C().driveHome) || 'https://drive.google.com/', '_blank', 'noopener,noreferrer'); flash('In Google Drive, right-click a file, then Open with → Averages.io.'); return; }
+        if (pick && !pick.disabled) { const guided = !!(window.AveragesHelp && window.AveragesHelp.shouldShow('drive')); (window.AveragesHelp ? (f) => window.AveragesHelp.open('drive', { onContinue: f }) : (f) => f())(() => window.open((C() && C().driveHome) || 'https://drive.google.com/', '_blank', 'noopener,noreferrer')); if (!guided) flash('In Google Drive, right-click a file, then Open with → Averages.io for Drive.'); return; }
         const pickOne = t.closest('[data-pick-onedrive]');
         if (pickOne && !pickOne.disabled) { askCloud('onedrive', 'pick'); return; }
         const retry = t.closest('[data-cloud-retry]');

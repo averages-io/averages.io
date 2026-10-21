@@ -2419,6 +2419,26 @@
       return false;
     }
     function closeCanvaTab(tab) { try { if (tab && !tab.closed) tab.close(); } catch {} }
+    // Martin's "Before you open Canva" popup (2026-10-21, public/js/averages-help.js). It shows until they tick
+    // "Don't show this again". The design is made while it's up: Open Canva stays grey until the API answers.
+    // A problem it can't fix with Try again (not connected, file too big...) closes it and shows the usual message.
+    // Returns false when the popup isn't shown, so the caller opens Canva the usual way.
+    function canvaWithHelp(from, getUrl, onProblem) {
+      if (!(window.AveragesHelp && window.AveragesHelp.shouldShow('canva'))) return false;
+      window.AveragesHelp.open('canva', {
+        from,
+        prepare: () => getUrl().catch(e => { if (!(e && e.retry)) { window.AveragesHelp.close(); onProblem(e && e.code); } throw e; }),
+        onContinue: url => { if (url) sendToCanva(null, url); },
+      });
+      return true;
+    }
+    /** What a failed Canva request throws: its error code, and whether Try again could help. */
+    function canvaError(code, status) {
+      const e = new Error(code || 'canva');
+      e.code = code || '';
+      e.retry = code === 'network' || code === 'canva_rate_limited' || (!code && !(status >= 400 && status < 500));
+      return e;
+    }
     async function liveEditInCanva(btn) {
       if (btn.getAttribute('aria-busy') === 'true') return;
       const label = btn.querySelector('span:last-child');
@@ -2426,27 +2446,32 @@
       btn.setAttribute('aria-busy', 'true');
       if (label) label.textContent = 'Opening Canva…';
       const done = () => { btn.removeAttribute('aria-busy'); if (label) label.textContent = was; };
-      const tab = openCanvaTab();
-      try {
-        const res = await fetch(averagesApiBase() + '/canva/edit', {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ section: String(item.courseId), assignment: String(item.id), fileId: btn.dataset.fileId, returnTo: currentAppPath() }),
-        });
-        const j = await res.json().catch(() => ({}));
+      // Makes the design in the student's Canva and gives back its edit link.
+      const getUrl = async () => {
+        let res, j;
+        try {
+          res = await fetch(averagesApiBase() + '/canva/edit', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ section: String(item.courseId), assignment: String(item.id), fileId: btn.dataset.fileId, returnTo: currentAppPath() }),
+          });
+          j = await res.json().catch(() => ({}));
+        } catch { throw canvaError('network'); }
         if (res.ok && typeof j.editUrl === 'string' && CANVA_EDIT_URL.test(j.editUrl)) {
           if (j.draft) { upsertLiveDraft(j.draft); renderDrafts(); }
-          if (sendToCanva(tab, j.editUrl)) done();   // same tab only if pop-ups are blocked
-          return;
+          return j.editUrl;
         }
+        throw canvaError(j.error, res.status);
+      };
+      if (canvaWithHelp(btn, getUrl, showCanvaProblem)) { done(); return; }
+      const tab = openCanvaTab();
+      try {
+        if (sendToCanva(tab, await getUrl())) done();   // same tab only if pop-ups are blocked
+      } catch (e) {
         closeCanvaTab(tab);
         done();
-        showCanvaProblem(j.error);
-      } catch {
-        closeCanvaTab(tab);
-        done();
-        showCanvaProblem('network');
+        showCanvaProblem(e && e.code);
       }
     }
 
@@ -4126,7 +4151,7 @@
       // Add from Google Drive: the files Averages.io can see (drive.file), newest first.
       let drivePickItems = [];
       const driveHead = `<div class="canva-pick-head"><span>Your Google Drive files in Averages.io</span><button class="material-icon-btn" type="button" data-drive-close aria-label="Close Google Drive files">${REMOVE_ICON}</button></div>`;
-      const driveFoot = '<p class="canva-pick-empty drive-pick-more">Not here? In Google Drive, right-click the file and choose <strong>Open with → Averages.io</strong>, then attach it to this assignment. <button class="as-linkbtn" type="button" data-drive-open>Open Google Drive</button></p>';
+      const driveFoot = '<p class="canva-pick-empty drive-pick-more">Not here? In Google Drive, right-click the file and choose <strong>Open with → Averages.io for Drive</strong>, then attach it to this assignment. <button class="as-linkbtn" type="button" data-drive-open>Open Google Drive</button></p>';
       const DRIVE_KIND = { 'application/vnd.google-apps.document': 'Google Doc', 'application/vnd.google-apps.spreadsheet': 'Google Sheet', 'application/vnd.google-apps.presentation': 'Google Slides', 'application/vnd.google-apps.drawing': 'Google Drawing', 'application/vnd.google-apps.form': 'Google Form' };
       const DRIVE_ICON_KEY = { 'application/vnd.google-apps.document': 'gdoc', 'application/vnd.google-apps.spreadsheet': 'gsheet', 'application/vnd.google-apps.presentation': 'gslide', 'application/vnd.google-apps.drawing': 'gdraw', 'application/vnd.google-apps.form': 'gform' };
       /** Files hidden on the Files page with "Remove from Averages.io" stay out of this list too. */
@@ -4317,7 +4342,12 @@
         }
         if (t.closest('[data-drive-close]')) { document.getElementById('drivePick').hidden = true; return; }
         if (t.closest('[data-drive-retry]')) { const c = C(); if (c) loadDrivePick(driveReadToken(c)); return; }
-        if (t.closest('[data-drive-open]')) { const c = C(); window.open((c && c.driveHome) || 'https://drive.google.com/', '_blank', 'noopener,noreferrer'); return; }
+        if (t.closest('[data-drive-open]')) {
+          const c = C(), go = () => window.open((c && c.driveHome) || 'https://drive.google.com/', '_blank', 'noopener,noreferrer');
+          // Martin's "Add files from Google Drive" popup (2026-10-21, averages-help.js); Drive opens from its button, inside that click
+          if (window.AveragesHelp) window.AveragesHelp.open('drive', { onContinue: go, from: t.closest('[data-drive-open]') }); else go();
+          return;
+        }
         const dp = t.closest('[data-pick-drive]');
         if (dp) {
           if (dp.getAttribute('aria-disabled') === 'true') return;
@@ -5001,22 +5031,27 @@
       btn.setAttribute('aria-busy', 'true');
       if (label) label.textContent = 'Opening…';
       const done = () => { btn.removeAttribute('aria-busy'); if (label) label.textContent = 'Open in Canva'; };
+      const getUrl = async () => {
+        let res, j;
+        try {
+          res = await fetch(`${averagesApiBase()}/canva/designs/${encodeURIComponent(d.designId)}/open`, {
+            method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ returnTo: currentAppPath() }),
+          });
+          j = await res.json().catch(() => ({}));
+        } catch { throw canvaError('network'); }
+        if (res.ok && typeof j.editUrl === 'string' && CANVA_EDIT_URL.test(j.editUrl)) return j.editUrl;
+        throw canvaError(j.error, res.status);
+      };
+      const problem = code => { if (code === 'canva_design_gone') removeDraftRow(d.id); showCanvaProblem(code); };
+      if (canvaWithHelp(btn, getUrl, problem)) { done(); return; }
       const tab = openCanvaTab();
       try {
-        const res = await fetch(`${averagesApiBase()}/canva/designs/${encodeURIComponent(d.designId)}/open`, {
-          method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ returnTo: currentAppPath() }),
-        });
-        const j = await res.json().catch(() => ({}));
-        if (res.ok && typeof j.editUrl === 'string' && CANVA_EDIT_URL.test(j.editUrl)) { if (sendToCanva(tab, j.editUrl)) done(); return; }
+        if (sendToCanva(tab, await getUrl())) done();
+      } catch (e) {
         closeCanvaTab(tab);
         done();
-        if (j.error === 'canva_design_gone') removeDraftRow(d.id);
-        showCanvaProblem(j.error);
-      } catch {
-        closeCanvaTab(tab);
-        done();
-        showCanvaProblem('network');
+        problem(e && e.code);
       }
     }
     function pulse(el) {

@@ -597,6 +597,7 @@
   .mode-row[data-mode="plus"] .mode-pick[aria-checked="true"] .mode-radio { border-color: #E5484D; background: radial-gradient(circle, #E5484D 0 4px, transparent 4.5px); }
   .plus-msg { margin: 8px 0 0; font-weight: 700; }
   #browserNotifToggleWrap[hidden], #notifPlusBtn[hidden], #calendarBlock[hidden], #calBtn[hidden], #calLinkRow[hidden], #calActions[hidden], #calMsg[hidden] { display: none; }
+  .plus-tag[hidden] { display: none; }
   .plus-tag { display: inline-block; margin-left: 4px; padding: 0 8px; border-radius: 999px; background: linear-gradient(135deg, #FF7A50, #E5484D); color: #2A0A05; font-size: 0.66rem; font-weight: 800; line-height: 18px; vertical-align: 2px; }
   .cal-link-row { gap: 8px; }
   .cal-link { flex: 1; min-width: 0; padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--window-radius-sm); background: var(--panel-bg); color: var(--text-dark); font: inherit; font-size: 0.78rem; }
@@ -4669,6 +4670,10 @@
         block.hidden = false;
         linkRow.hidden = actions.hidden = true;
         action = null;
+        // Billing off (2026-10-21): calendar sync is free for everyone, so no Plus tag or Get Plus.
+        const free = s.plusRequired === false;
+        const tag = block.querySelector('.plus-tag');
+        if (tag) tag.hidden = free;
         if (!s.eligible || (INC && INC.on)) {
           desc.textContent = 'Due dates in your calendar app. Needs Classic mode.';
         } else if (s.on && s.url) {
@@ -4679,7 +4684,7 @@
           document.getElementById('calApple').href = webcal;
           linkRow.hidden = actions.hidden = false;
           action = 'new';
-        } else if (s.plus) {
+        } else if (s.plus || free) {
           desc.textContent = ABOUT;
           action = 'make';
         } else {
