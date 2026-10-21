@@ -389,7 +389,12 @@ function wireOnboardingComplete(script, file) {
 
         // Long enough to read "You're all set!", short enough not to strand
         // them on a screen whose whole message is that it's about to move on.
-        setTimeout(() => { window.location.href = '/home'; }, 1800);
+        // Picked Plus (2026-10-21): the page sets __averagesOnboardFinish to open
+        // Stripe checkout instead.
+        setTimeout(() => {
+          if (typeof window.__averagesOnboardFinish === 'function') window.__averagesOnboardFinish();
+          else window.location.href = '/home';
+        }, 1800);
       }, 650);`;
 
   return assertReplaced(
