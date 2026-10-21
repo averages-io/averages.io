@@ -102,7 +102,7 @@
     const updates = Array.isArray(d.COURSE_UPDATES) ? d.COURSE_UPDATES : null;
     if (updates || updatesPending) {
       out.push({
-        key: 'u', title: 'Course updates', loading: !updates,
+        key: 'u', title: 'Course updates', tab: 'Updates', loading: !updates,
         items: (updates || []).slice(0, CAP).map((u) => {
           const c = course(u.courseId);
           const from = String(u.from || '').trim();
@@ -112,7 +112,7 @@
             kind: 'u', id,
             unread: !!u.unread && !Seen.has('u', id),
             mark: initial(poster), color: (c && c.color) || '#6b6d82',
-            title: poster, sub: c ? c.name : '', body: u.body, when: u.when,
+            title: poster, sub: c ? c.name : '', body: u.body, when: u.when, label: 'Update',
             href: '/course-home?' + courseQ(u.courseId) + (id ? '&update=' + encodeURIComponent(id) : '') + '#updates',
           };
         }),
@@ -122,7 +122,7 @@
     const grades = Array.isArray(d.RECENT_GRADES) ? d.RECENT_GRADES : [];
     if (grades.length) {
       out.push({
-        key: 'g', title: 'New grades', all: { label: 'See grades', href: '/grades' },
+        key: 'g', title: 'New grades', tab: 'Grades', all: { label: 'See all grades', href: '/grades' },
         items: grades.slice(0, CAP).map((r) => {
           const c = course(r.courseId);
           const id = r.id != null && r.id !== '' ? String(r.id) : '';
@@ -130,9 +130,9 @@
           return {
             kind: 'g', id,
             unread: !!r.isNew && !Seen.has('g', id),
-            tick: (c && c.color) || '#6b6d82',
-            title: r.title || 'Assignment', sub: c ? c.name : '', when: r.when,
-            score: [r.letter, pct].filter(Boolean).join(' '),
+            mark: String(r.letter || '').slice(0, 2) || initial(c ? c.name : 'G'), color: (c && c.color) || '#6b6d82',
+            title: r.title || 'Assignment', sub: c ? c.name : '', when: r.when, label: 'Grade',
+            score: pct || r.letter || '',
             href: '/gradebook?' + courseQ(r.courseId),
           };
         }),
@@ -142,14 +142,14 @@
     const msgs = messagesOn() && Array.isArray(d.MESSAGES) ? d.MESSAGES : [];
     if (msgs.length) {
       out.push({
-        key: 'm', title: 'Messages', all: { label: 'See messages', href: '/messages' },
+        key: 'm', title: 'Messages', tab: 'Messages', all: { label: 'See all messages', href: '/messages' },
         items: msgs.slice(0, CAP).map((m) => {
           const id = m.id != null && m.id !== '' ? String(m.id) : '';
           return {
             kind: 'm', id,
             unread: !!m.unread && !Seen.has('m', id),
-            mark: initial(m.from), color: '#4b4d63',
-            title: m.from || 'Teacher', body: m.subject || m.preview, when: m.time,
+            mark: initial(m.from), color: '',
+            title: m.from || 'Teacher', body: m.subject || m.preview, when: m.time, label: 'Message',
             href: id ? '/messages?thread=' + encodeURIComponent(id) : '/messages',
           };
         }),
@@ -159,93 +159,163 @@
   }
 
   // ---------------------------------------------------------------- view
+  // Redesigned 2026-10-21 (Martin: the icon "looks really weird", it should swing "like a real
+  // bell" when something new comes in, and the dropdown "feels really cluttered"):
+  //   - a solid bell with a clapper that swings when a new notification arrives (once per item,
+  //     remembered in averages_bell_rung), a small nudge on hover, and a badge that pops in;
+  //   - the panel grows out of the bell instead of appearing;
+  //   - one list at a time: All (new first) / Updates / Grades / Messages, each with its count,
+  //     calmer rows (one bold weight, one muted body line, a single unread dot) and a footer link.
+  // Potato mode and reduced motion get no movement (the potato CSS also stops every animation).
   const CSS = `
-/* Just the icon (2026-10-19, Martin: no circle around it). The button keeps a
-   42px tap area, it's just invisible; the shadow keeps the white bell readable
-   on light wallpapers. */
 .avb-wrap { position: relative; flex-shrink: 0; margin-left: auto; margin-right: 4px; }
 .avb-btn { position: relative; width: 42px; height: 42px; border-radius: 50%; padding: 0; background: none; border: 0; color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; }
 .avb-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring, rgba(255,255,255,0.6)); }
-.avb-btn svg { width: 26px; height: 26px; display: block; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.35)); transition: transform 0.14s ease; }
-.avb-btn:hover svg, .avb-btn[aria-expanded="true"] svg { transform: translateY(-1px); }
+.avb-btn svg { width: 24px; height: 24px; display: block; overflow: visible; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.35)); }
+.avb-bell, .avb-clapper { transform-box: view-box; transform-origin: 12px 2.75px; }
+@media (prefers-reduced-motion: no-preference) {
+  .avb-btn.ringing .avb-bell { animation: avb-ring 1.2s cubic-bezier(.36,.07,.19,.97); }
+  .avb-btn.ringing .avb-clapper { animation: avb-clap 1.2s cubic-bezier(.36,.07,.19,.97) 0.06s; }
+  .avb-btn:not(.ringing):hover .avb-bell { animation: avb-nudge 0.5s ease-in-out; }
+  .avb-badge.pop { animation: avb-pop 0.36s cubic-bezier(.34,1.56,.64,1); }
+  .avb-panel.opening { animation: avb-in 0.16s cubic-bezier(.2,.8,.2,1); }
+}
+@keyframes avb-ring { 0% { transform: rotate(0); } 10% { transform: rotate(18deg); } 22% { transform: rotate(-15deg); } 34% { transform: rotate(11deg); } 46% { transform: rotate(-8deg); } 58% { transform: rotate(5deg); } 70% { transform: rotate(-3deg); } 82% { transform: rotate(1.5deg); } 100% { transform: rotate(0); } }
+@keyframes avb-clap { 0% { transform: rotate(0); } 10% { transform: rotate(-10deg); } 22% { transform: rotate(14deg); } 34% { transform: rotate(-10deg); } 46% { transform: rotate(7deg); } 58% { transform: rotate(-4deg); } 70% { transform: rotate(2deg); } 100% { transform: rotate(0); } }
+@keyframes avb-nudge { 0%, 100% { transform: rotate(0); } 30% { transform: rotate(-10deg); } 65% { transform: rotate(6deg); } }
+@keyframes avb-pop { 0% { transform: scale(0.4); } 100% { transform: scale(1); } }
+@keyframes avb-in { from { opacity: 0; transform: translateY(-4px) scale(0.97); } to { opacity: 1; transform: none; } }
 .avb-badge { position: absolute; top: 2px; right: 1px; min-width: 18px; height: 18px; padding: 0 4px; box-sizing: border-box; border-radius: 999px; background: #E5484D; color: #fff; font-family: "puffin", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 0.66rem; font-weight: 800; font-variant-numeric: tabular-nums; display: inline-flex; align-items: center; justify-content: center; line-height: 1; box-shadow: 0 0 0 2px rgba(0,0,0,0.18); }
 .avb-badge > span { display: block; text-box: trim-both cap alphabetic; }
-/* The number is centered by its own height (2026-10-21, Martin: "the number inside the noti bubble is not centered"): it used the button's default font, and line-height centering
-   follows the font's ascent/descent, which put digits high on Macs. The inner span is trimmed to cap height and baseline (text-box), so flex centers the digits themselves; browsers without text-box (Firefox) still get flex centering. */
+/* The number is centered by its own height (2026-10-21): the inner span is trimmed to cap height and baseline (text-box), so flex centers the digits; browsers without text-box (Firefox) still get flex centering. */
 .avb-badge[hidden] { display: none; }
-.avb-panel { position: absolute; top: calc(100% + 12px); right: -46px; width: min(380px, calc(100vw - 32px)); max-height: min(560px, calc(100vh - 120px)); overflow-y: auto; background: var(--panel-bg, #eaeaec); color: var(--text-dark, #14151f); border-radius: var(--window-radius-md, 14px); box-shadow: 0 20px 45px -16px rgba(0,0,0,0.5); padding: 8px; z-index: 30; text-align: left; }
+
+.avb-panel { position: absolute; top: calc(100% + 12px); right: -46px; width: min(360px, calc(100vw - 32px)); max-height: min(520px, calc(100vh - 120px)); display: flex; flex-direction: column; background: var(--panel-bg, #eaeaec); color: var(--text-dark, #14151f); border-radius: var(--window-radius-md, 14px); box-shadow: 0 20px 45px -16px rgba(0,0,0,0.5); z-index: 30; text-align: left; overflow: hidden; transform-origin: calc(100% - 66px) 0; }
 .avb-panel[hidden] { display: none; }
-.avb-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 8px 4px 12px; }
+.avb-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 16px 8px; }
 .avb-head h2 { margin: 0; font-size: 1rem; font-weight: 800; }
-.avb-read-all { border: 0; background: none; padding: 4px 8px; border-radius: 8px; font: inherit; font-size: 0.8rem; font-weight: 800; color: var(--accent, #0a1d9e); cursor: pointer; }
-.avb-read-all:hover { background: var(--panel-inner, #dcdce0); }
+.avb-read-all { border: 0; background: none; padding: 4px 8px; margin-right: -8px; border-radius: 8px; font: inherit; font-size: 0.78rem; font-weight: 700; color: var(--text-muted, #4b4d63); cursor: pointer; }
+.avb-read-all:hover, .avb-read-all:focus-visible { background: var(--panel-inner, #dcdce0); color: var(--text-dark, #14151f); outline: none; }
 .avb-read-all[hidden] { display: none; }
-.avb-sec { padding: 4px 0; }
-.avb-sec + .avb-sec { border-top: 1px solid var(--border, #cfcfd6); margin-top: 4px; padding-top: 8px; }
-.avb-sec-head { display: flex; align-items: baseline; justify-content: space-between; padding: 4px 12px; }
-.avb-sec-title { margin: 0; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-muted, #4b4d63); }
-.avb-sec-all { font-size: 0.78rem; font-weight: 800; color: var(--accent, #0a1d9e); text-decoration: none; }
-.avb-sec-all:hover { text-decoration: underline; }
-.avb-rows { display: flex; flex-direction: column; }
-.avb-row { display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 12px; align-items: start; width: 100%; padding: 8px 12px; border: 0; border-radius: var(--window-radius-sm, 10px); background: none; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.avb-tabs { display: flex; gap: 4px; padding: 0 12px 12px; overflow-x: auto; scrollbar-width: none; }
+.avb-tabs::-webkit-scrollbar { display: none; }
+.avb-tab { flex: none; display: inline-flex; align-items: center; gap: 4px; height: 28px; padding: 0 12px; border: 0; border-radius: 999px; background: var(--panel-inner, #dcdce0); font: inherit; font-size: 0.78rem; font-weight: 700; color: var(--text-muted, #4b4d63); cursor: pointer; }
+.avb-tab:hover { color: var(--text-dark, #14151f); }
+.avb-tab:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring, rgba(10,29,158,0.35)); }
+.avb-tab[aria-pressed="true"] { background: var(--text-dark, #14151f); color: var(--panel-bg, #eaeaec); }
+.avb-tab .avb-n { font-variant-numeric: tabular-nums; opacity: 0.7; }
+.avb-list { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 0 8px 8px; border-top: 1px solid var(--border, #cfcfd6); padding-top: 4px; }
+.avb-row { position: relative; display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: 12px; align-items: start; width: 100%; padding: 8px 8px 8px 20px; border: 0; border-radius: var(--window-radius-sm, 10px); background: none; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.avb-row + .avb-row { margin-top: 2px; }
 .avb-row:hover, .avb-row:focus-visible { background: var(--panel-inner, #dcdce0); outline: none; }
-.avb-mark { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-size: 0.82rem; font-weight: 800; }
-.avb-tick { width: 6px; height: 32px; border-radius: 3px; justify-self: center; }
-.avb-tx { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
-.avb-t { font-size: 0.86rem; font-weight: 800; line-height: 1.25; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.avb-row.unread .avb-t { font-weight: 900; }
-.avb-sub { font-weight: 700; color: var(--text-muted, #4b4d63); }
-.avb-b { font-size: 0.8rem; font-weight: 600; line-height: 1.35; color: var(--text-muted, #4b4d63); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.avb-row.unread .avb-b { color: var(--text-dark, #14151f); }
-.avb-m { font-size: 0.74rem; font-weight: 700; color: var(--text-muted, #4b4d63); }
-.avb-end { display: flex; align-items: center; gap: 8px; padding-top: 4px; }
-.avb-score { font-size: 0.8rem; font-weight: 800; white-space: nowrap; }
-.avb-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent, #0a1d9e); flex: none; }
-.avb-empty { margin: 0; padding: 16px 12px 12px; font-size: 0.86rem; font-weight: 700; color: var(--text-muted, #4b4d63); }
-.avb-skel { display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: 12px; padding: 8px 12px; pointer-events: none; }
+.avb-dot { position: absolute; left: 6px; top: 20px; width: 8px; height: 8px; border-radius: 50%; background: #E5484D; }
+.avb-av { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-size: 0.78rem; font-weight: 800; letter-spacing: 0.01em; background: linear-gradient(180deg, #A5ABB8, #858994); }
+.avb-tx { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.avb-l1 { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+.avb-t { flex: 1 1 auto; min-width: 0; font-size: 0.86rem; font-weight: 700; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.avb-w { flex: none; font-size: 0.74rem; font-weight: 600; color: var(--text-faint, #6b6d82); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.avb-row.unread .avb-w { color: var(--text-muted, #4b4d63); }
+.avb-score { flex: none; font-size: 0.8rem; font-weight: 800; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.avb-b { font-size: 0.8rem; font-weight: 500; line-height: 1.35; color: var(--text-muted, #4b4d63); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.avb-m { font-size: 0.72rem; font-weight: 600; color: var(--text-faint, #6b6d82); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.avb-row:not(.unread) .avb-t { font-weight: 600; color: var(--text-muted, #4b4d63); }
+.avb-empty { margin: 0; padding: 24px 12px; text-align: center; font-size: 0.84rem; font-weight: 600; color: var(--text-muted, #4b4d63); }
+.avb-foot { display: block; margin: 4px 8px 0; padding: 8px; border-radius: var(--window-radius-sm, 10px); text-align: center; font-size: 0.8rem; font-weight: 700; color: var(--text-dark, #14151f); text-decoration: none; }
+.avb-foot:hover, .avb-foot:focus-visible { background: var(--panel-inner, #dcdce0); outline: none; }
+.avb-skel { display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: 12px; padding: 8px 8px 8px 20px; pointer-events: none; }
 /* Phones: the full width of the screen, just under the bell (top is set when it opens). */
-@media (max-width: 520px) { .avb-panel { position: fixed; right: 16px; left: 16px; width: auto; } }
+@media (max-width: 520px) { .avb-panel { position: fixed; right: 16px; left: 16px; width: auto; transform-origin: calc(100% - 80px) 0; } }
 `;
-  const BELL = '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.75 2H4.25z" stroke="currentColor" stroke-width="1.75" stroke-linejoin="miter"/><path d="M9.75 21h4.5" stroke="currentColor" stroke-width="1.75" stroke-linecap="butt"/><path d="M12 3v2" stroke="currentColor" stroke-width="1.75" stroke-linecap="butt"/></svg>';
+  // A solid bell (no outline icon set): the body and its top swing from the loop, the clapper
+  // underneath lags behind it, like a real bell.
+  const BELL = '<svg viewBox="0 0 24 24" aria-hidden="true">'
+    + '<g class="avb-clapper"><path d="M9.6 18.6a2.4 2.4 0 0 0 4.8 0z" fill="currentColor"/></g>'
+    + '<g class="avb-bell"><circle cx="12" cy="2.75" r="1.35" fill="currentColor"/>'
+    + '<path d="M12 3.6c-3.45 0-6 2.7-6 6.25v3.4c0 .95-.36 1.86-1.02 2.55L3.75 17.1c-.3.32-.08.85.36.85h15.78c.44 0 .66-.53.36-.85l-1.23-1.3A3.7 3.7 0 0 1 18 13.25v-3.4c0-3.55-2.55-6.25-6-6.25z" fill="currentColor"/></g>'
+    + '</svg>';
 
   let wrap = null, btn = null, panel = null, badge = null;
+  let tab = 'all';
+  let lastUnread = -1;
+
+  // Which unread items have already rung the bell (this device): a new one rings it once.
+  const RUNG_KEY = 'averages_bell_rung';
+  function readRung() {
+    try { const v = JSON.parse(localStorage.getItem(RUNG_KEY) || '[]'); return Array.isArray(v) ? v : []; } catch { return []; }
+  }
+  function ringIfNew(unreadKeys) {
+    if (!unreadKeys.length) return;
+    const rung = readRung();
+    const fresh = unreadKeys.filter((k) => !rung.includes(k));
+    if (!fresh.length) return;
+    try { localStorage.setItem(RUNG_KEY, JSON.stringify(rung.concat(fresh).slice(-300))); } catch {}
+    const calm = document.body && document.body.classList.contains('potato-mode');
+    if (calm || !btn) return;
+    btn.classList.remove('ringing');
+    void btn.offsetWidth;   // restart the animation if it was mid-swing
+    btn.classList.add('ringing');
+  }
 
   function bar(w, h, r) {
     const L = window.AveragesLoading;
     return L && L.skelBar ? L.skelBar(w, h, r) : `<span class="skel-bar" style="width:${w};height:${h}px${r ? ';border-radius:' + r : ''}"></span>`;
   }
-  function rowHTML(it) {
-    const lead = it.tick
-      ? `<span class="avb-tick" style="background:${esc(it.tick)}" aria-hidden="true"></span>`
-      : `<span class="avb-mark" style="background:${esc(it.color)}" aria-hidden="true">${esc(it.mark)}</span>`;
-    const title = esc(it.title) + (it.sub ? ` <span class="avb-sub">· ${esc(it.sub)}</span>` : '');
-    const label = [it.unread ? 'New.' : '', it.title, it.sub, it.body, it.score, it.when].filter(Boolean).join(', ');
+  const short = (w) => String(w || '').replace(/\s+ago$/i, '');
+  function rowHTML(it, showKind) {
+    const av = `<span class="avb-av"${it.color ? ` style="background:${esc(it.color)}"` : ''} aria-hidden="true">${esc(it.mark)}</span>`;
+    const right = it.score ? `<span class="avb-score">${esc(it.score)}</span>` : it.when ? `<span class="avb-w">${esc(short(it.when))}</span>` : '';
+    const meta = [showKind ? it.label : '', it.sub, it.score && it.when ? short(it.when) : ''].filter(Boolean).join(' · ');
+    const label = [it.unread ? 'New.' : '', it.label, it.title, it.sub, it.body, it.score, it.when].filter(Boolean).join(', ');
     return `<button type="button" class="avb-row${it.unread ? ' unread' : ''}" data-kind="${it.kind}" data-id="${esc(it.id)}" data-href="${esc(it.href)}" aria-label="${esc(label)}">
-      ${lead}
-      <span class="avb-tx"><span class="avb-t">${title}</span>${it.body ? `<span class="avb-b">${esc(it.body)}</span>` : ''}${it.when ? `<span class="avb-m">${esc(it.when)}</span>` : ''}</span>
-      <span class="avb-end">${it.score ? `<span class="avb-score">${esc(it.score)}</span>` : ''}${it.unread ? '<span class="avb-dot"></span>' : ''}</span>
+      ${it.unread ? '<span class="avb-dot" aria-hidden="true"></span>' : ''}${av}
+      <span class="avb-tx"><span class="avb-l1"><span class="avb-t">${esc(it.title)}</span>${right}</span>${it.body ? `<span class="avb-b">${esc(it.body)}</span>` : ''}${meta ? `<span class="avb-m">${esc(meta)}</span>` : ''}</span>
     </button>`;
   }
   function skelRows() {
     return [0, 1].map((i) => `<div class="avb-skel" data-skel>${bar('32px', 32, '50%')}<span class="skel-tx">${bar(['62%', '48%'][i], 12)}${bar('34%', 9)}</span></div>`).join('');
   }
 
+  function listFor(secs) {
+    if (tab === 'all') {
+      const all = [];
+      secs.forEach((s) => s.items.forEach((it) => all.push(it)));
+      // New first (in section order), then the rest; at most 8.
+      const items = all.filter((i) => i.unread).concat(all.filter((i) => !i.unread)).slice(0, 8);
+      const loading = secs.some((s) => s.loading);
+      if (!items.length && !loading) return '<p class="avb-empty">You’re all caught up.</p>';
+      return `<section class="avb-sec" data-sec="all">${loading ? skelRows() : ''}${items.map((it) => rowHTML(it, true)).join('')}</section>`;
+    }
+    const s = secs.find((x) => x.key === tab);
+    if (!s) return '<p class="avb-empty">You’re all caught up.</p>';
+    const body = s.loading ? skelRows() : s.items.length ? s.items.map((it) => rowHTML(it, false)).join('') : `<p class="avb-empty">Nothing new from your teachers.</p>`;
+    return `<section class="avb-sec" data-sec="${s.key}" aria-label="${esc(s.title)}">${body}</section>`
+      + (s.all ? `<a class="avb-foot" href="${esc(s.all.href)}">${esc(s.all.label)}</a>` : '');
+  }
+
   function render() {
     if (!wrap) return;
     const secs = sections();
-    const unread = secs.reduce((n, s) => n + s.items.filter((i) => i.unread).length, 0);
+    const unreadItems = [];
+    secs.forEach((s) => s.items.forEach((i) => { if (i.unread) unreadItems.push(i); }));
+    const unread = unreadItems.length;
     badge.hidden = unread === 0;
     const n = document.createElement('span');
     n.textContent = unread > 9 ? '9+' : String(unread);
     badge.replaceChildren(n);
+    if (unread > lastUnread && lastUnread !== -1) { badge.classList.remove('pop'); void badge.offsetWidth; badge.classList.add('pop'); }
+    lastUnread = unread;
     btn.setAttribute('aria-label', unread ? `Notifications, ${unread} new` : 'Notifications');
+    ringIfNew(unreadItems.filter((i) => i.id).map((i) => i.kind + ':' + i.id));
     if (panel.hidden) return;   // the list is drawn when it's opened
-    const any = secs.some((s) => s.items.length || s.loading);
-    panel.innerHTML = `<div class="avb-head"><h2 id="avbTitle">Notifications</h2><button type="button" class="avb-read-all"${unread ? '' : ' hidden'}>Mark all read</button></div>` +
-      (any ? secs.map((s) => `<section class="avb-sec" data-sec="${s.key}" aria-label="${esc(s.title)}">
-          <div class="avb-sec-head"><h3 class="avb-sec-title">${esc(s.title)}</h3>${s.all ? `<a class="avb-sec-all" href="${esc(s.all.href)}">${esc(s.all.label)}</a>` : ''}</div>
-          <div class="avb-rows">${s.loading ? skelRows() : s.items.length ? s.items.map(rowHTML).join('') : '<p class="avb-empty">Nothing new from your teachers.</p>'}</div>
-        </section>`).join('') : '<p class="avb-empty">All caught up. New grades and messages show up here.</p>');
+    if (tab !== 'all' && !secs.some((x) => x.key === tab)) tab = 'all';
+    const count = (list) => list.filter((i) => i.unread).length;
+    const tabs = [{ key: 'all', name: 'All', n: unread }].concat(secs.map((x) => ({ key: x.key, name: x.tab, n: count(x.items) })));
+    const focused = document.activeElement && document.activeElement.closest && document.activeElement.closest('.avb-tab');
+    const focusKey = focused ? focused.dataset.tab : '';
+    panel.innerHTML = `<div class="avb-head"><h2 id="avbTitle">Notifications</h2><button type="button" class="avb-read-all"${unread ? '' : ' hidden'}>Mark all read</button></div>`
+      + (secs.length ? `<div class="avb-tabs" aria-label="Show">${tabs.map((t) => `<button type="button" class="avb-tab" data-tab="${t.key}" aria-pressed="${t.key === tab}">${esc(t.name)}${t.n ? ` <span class="avb-n">${t.n > 9 ? '9+' : t.n}</span>` : ''}</button>`).join('')}</div>` : '')
+      + `<div class="avb-list">${secs.length ? listFor(secs) : '<p class="avb-empty">You’re all caught up.</p>'}</div>`;
+    if (focusKey) { const b = panel.querySelector(`.avb-tab[data-tab="${focusKey}"]`); if (b) b.focus(); }
   }
 
   function open() {
@@ -258,6 +328,9 @@
       panel.style.maxHeight = '';
     }
     panel.hidden = false;
+    panel.classList.remove('opening');
+    void panel.offsetWidth;
+    panel.classList.add('opening');
     btn.setAttribute('aria-expanded', 'true');
     render();
   }
@@ -290,7 +363,12 @@
     badge = wrap.querySelector('.avb-badge');
 
     btn.addEventListener('click', () => (panel.hidden ? open() : close(false)));
+    btn.addEventListener('animationend', (e) => { if (e.animationName === 'avb-ring') btn.classList.remove('ringing'); });
+    badge.addEventListener('animationend', () => badge.classList.remove('pop'));
+    panel.addEventListener('animationend', () => panel.classList.remove('opening'));
     panel.addEventListener('click', (e) => {
+      const t = e.target.closest('.avb-tab');
+      if (t) { tab = t.dataset.tab; render(); return; }
       if (e.target.closest('.avb-read-all')) {
         sections().forEach((s) => Seen.markMany(s.key, s.items.filter((i) => i.unread).map((i) => i.id)));
         return;
@@ -300,7 +378,8 @@
       if (row.dataset.id) Seen.mark(row.dataset.kind, row.dataset.id);
       window.location.href = row.dataset.href;
     });
-    document.addEventListener('click', (e) => { if (!panel.hidden && !e.target.closest('.avb-wrap')) close(false); });
+    // By the click's path, not e.target: a tab redraws the panel, so its button is already detached here.
+    document.addEventListener('click', (e) => { if (!panel.hidden && !(e.composedPath ? e.composedPath().includes(wrap) : wrap.contains(e.target))) close(false); });
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !panel.hidden) close(true); });
     window.addEventListener('averages:seen', render);
     render();
@@ -314,13 +393,13 @@
     /** The background fetch landed. Pass null when it failed: the section goes away. */
     setData(more) {
       // Open with the placeholders showing: the real rows rise in where they were.
-      const wasLoading = !!(panel && !panel.hidden && panel.querySelector('[data-sec="u"] [data-skel]'));
+      const wasLoading = !!(panel && !panel.hidden && panel.querySelector('[data-skel]'));
       updatesPending = false;
       extra = more && typeof more === 'object' ? more : null;
       render();
       const L = window.AveragesLoading;
       if (wasLoading && L && L.rise && !(L.calm && L.calm())) {
-        panel.querySelectorAll('[data-sec="u"] .avb-row').forEach((el, i) => L.rise(el, i));
+        panel.querySelectorAll('.avb-row[data-kind="u"]').forEach((el, i) => L.rise(el, i));
       }
     },
   };
