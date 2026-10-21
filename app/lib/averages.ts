@@ -251,6 +251,8 @@ export function clearCloudConnections(): void {
     window.localStorage.removeItem("averages_drive_drafts");
     // Files picked from OneDrive (names and ids) for Add from OneDrive (2026-10-06).
     window.localStorage.removeItem("averages_onedrive_picked");
+    // Ids of files opened with "Open with → Averages.io for Drive" (2026-10-21).
+    window.localStorage.removeItem("averages_drive_opened");
     window.localStorage.removeItem(CLOUD_OWNER_KEY);
   } catch {
     /* same */

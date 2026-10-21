@@ -2,7 +2,7 @@
 // Our /js scripts' addresses with a version, so browsers can keep them (see public/_headers).
 export const JS = {
   "averages-bell.js": "/js/averages-bell.js?v=83cd865084",
-  "averages-cloud.js": "/js/averages-cloud.js?v=f1f213f86f",
+  "averages-cloud.js": "/js/averages-cloud.js?v=1b5a39cae8",
   "averages-drive-open.js": "/js/averages-drive-open.js?v=bb3393006e",
   "averages-features.js": "/js/averages-features.js?v=a3352620c2",
   "averages-file-icons.js": "/js/averages-file-icons.js?v=08e0c20458",
