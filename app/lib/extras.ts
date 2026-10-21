@@ -43,7 +43,8 @@ export const EXTRAS_BY_PAGE: Readonly<Record<string, readonly ExtraName[]>> = {
   home: ["people", "updates"],
   courses: ["people"],
   grades: ["people"],
-  assignments: ["people"],
+  // The Assignments page never shows teachers (2026-10-20): no people call.
+  assignments: [],
   "course-home": ["people", "updates", "events"],
   gradebook: ["people", "gradebook"],
   "course-materials": ["people", "folders"],
@@ -59,6 +60,35 @@ export const EXTRAS_BY_PAGE: Readonly<Record<string, readonly ExtraName[]>> = {
   // so it's usually already there.
   bell: ["updates"],
 };
+
+/**
+ * Cards that load on their own (2026-10-20, Martin: "make requests for every
+ * card and then reveal them when the data comes in").
+ *
+ * A page no longer waits for these extras: it draws as soon as the bundle is
+ * in, each card listed here holds its placeholders, and when that card's own
+ * call answers (or fails) the page redraws just that card and it reveals like
+ * the rest did. Value: the containers that hold placeholders meanwhile ([] for
+ * an extra that only fills in text, like teachers' names).
+ *
+ * Extras not listed are still waited for (up to EXTRAS_WAIT_MS), because they
+ * are the page itself: the calendar's events, the inbox, the directory, a
+ * class's folders, its exact gradebook, which class an assignment is in.
+ *
+ * Every page listed here sets window.__averagesExtraLanded(name), which redraws
+ * what that extra feeds. LegacyPage waits for any extra whose page lacks it.
+ */
+export const LATE_EXTRAS: Readonly<Record<string, Readonly<Partial<Record<ExtraName, readonly string[]>>>>> = {
+  home: { updates: ["#updatesList"], people: [] },
+  courses: { people: [] },
+  grades: { people: [] },
+  "course-home": { updates: ["#announceList"], events: ["#upcomingBody"], people: [] },
+  gradebook: { people: [] },
+  "course-materials": { people: [] },
+};
+
+/** A card that's still loading this long after the page drew gives up and shows its "didn't load" state. */
+export const EXTRAS_LATE_GIVE_UP_MS = 20000;
 
 /** The pages about one class: since 2026-10-07 a real class comes as ?id=<section id>. */
 const COURSE_PAGES = new Set(["course-home", "gradebook", "course-materials"]);
@@ -268,4 +298,24 @@ export function mergeExtras(
     if (Object.prototype.hasOwnProperty.call(answers, req.name)) mergeExtra(data, req, answers[req.name]);
   }
   return data;
+}
+
+/**
+ * An extra that answered after the page drew (see LATE_EXTRAS): merged into
+ * the data object the page is already holding. Same as mergeExtra, except
+ * that teachers' names go into the existing course objects instead of a new
+ * COURSES array, because the page's own COURSES is that existing array.
+ */
+export function mergeLateExtra(data: Data, req: Pick<ExtraRequest, "name" | "course">, payload: unknown): boolean {
+  const before = req.name === "people" && Array.isArray(data.COURSES) ? data.COURSES : null;
+  if (!mergeExtra(data, req, payload)) return false;
+  if (before && Array.isArray(data.COURSES) && data.COURSES !== before) {
+    const after = data.COURSES;
+    before.forEach((course, i) => {
+      const filled = after[i];
+      if (isRecord(course) && isRecord(filled) && filled.teacher !== course.teacher) course.teacher = filled.teacher;
+    });
+    data.COURSES = before;
+  }
+  return true;
 }

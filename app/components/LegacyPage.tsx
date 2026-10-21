@@ -1,16 +1,17 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { getSession, loadBundle, loadExtras, signOut, type Mode } from "../lib/averages";
-import { mergeExtras } from "../lib/extras";
+import { BELL_UPDATES_MAX_AGE_MS, getSession, loadBundle, loadExtras, signOut, startExtras, waitForExtras, type ExtrasRun, type Mode } from "../lib/averages";
+import { EXTRAS_LATE_GIVE_UP_MS, LATE_EXTRAS, mergeExtras, mergeLateExtra, type ExtraName } from "../lib/extras";
 import { installNsfwGlobal, preloadNsfwModel } from "../lib/nsfw";
-import { SKELETON_CSS, skeletonHtml, revealContent, snapshotSkeleton, type SkeletonSnapshot } from "./PageSkeleton";
+import { SKELETON_CSS, REVEAL_SELECTORS, holdCards, revealCards, skeletonHtml, revealContent, snapshotSkeleton, type SkeletonSnapshot } from "./PageSkeleton";
 import * as loading from "../lib/averages-loading";
 
 // The loading animations (2026-10-19) for the page scripts and the bell:
 // window.AveragesLoading.skelBar / revealRows / rise / chartSkeleton / calm.
 if (typeof window !== "undefined") (window as any).AveragesLoading = loading;
 import { THEME_BOOT_JS } from "../lib/theme-boot";
+import { JS } from "../lib/js-version";
 
 /**
  * Re-applies the saved theme when ANOTHER tab changes it.
@@ -32,7 +33,7 @@ function reapplyStoredTheme(): void {
  * a turn-off the API hasn't heard about yet. Loaded on demand rather than on
  * every page: most students never turn notifications on.
  */
-const PUSH_SCRIPT = "/js/averages-push.js";
+const PUSH_SCRIPT = JS["averages-push.js"];
 type PushApi = { touchIfDue?: () => Promise<unknown> };
 
 function touchPushIfOn(): void {
@@ -154,6 +155,10 @@ export default function LegacyPage({
   const uidRef = useRef("");
   /** The skeleton as it was the moment before the swap (see snapshotSkeleton). */
   const snapRef = useRef<SkeletonSnapshot>({});
+  /** This page's extras, kept so the cards that load on their own can follow them (2026-10-20). */
+  const extrasRef = useRef<ExtrasRun | null>(null);
+  /** The extras still on their way when the page drew: their cards hold placeholders until they land. */
+  const lateRef = useRef<ExtraName[]>([]);
 
   /**
    * "checking" until the API answers. The page's markup only mounts once this
@@ -216,15 +221,28 @@ export default function LegacyPage({
       //
       // Page extras (2026-10-06): what this page shows beyond the bundle
       // (teachers, updates, events...), asked for at the same time as the
-      // bundle, not after it. Live sessions only. loadExtras waits at most 4 s;
-      // see app/lib/extras.ts for which page gets what.
+      // bundle, not after it. Live sessions only; see app/lib/extras.ts for
+      // which page gets what.
+      //
+      // Cards that load on their own (2026-10-20): the page waits only for the
+      // extras it can't draw without (up to 4 s, as before). The ones in
+      // LATE_EXTRAS don't hold it: their cards keep their placeholders and
+      // fill in when their own call lands (the effect after the page draws).
+      // A page without window.__averagesExtraLanded can't redraw a card later,
+      // so for safety its extras are all waited for, like before.
       uidRef.current = session.uid ?? "";
       const wantsExtras = requiresAuth && session.mode === "live" && !!pageId;
-      const [bundle, extras] = await Promise.all([
+      const extras = wantsExtras ? startExtras(pageId!, window.location.search, session.uid ?? "") : null;
+      extrasRef.current = extras;
+      const lateMap = (pageId && LATE_EXTRAS[pageId]) || {};
+      const mustWait = extras ? extras.requests.map((r) => r.name).filter((name) => !(name in lateMap)) : [];
+      const [bundle] = await Promise.all([
         requiresAuth ? loadBundle() : Promise.resolve(null),
-        wantsExtras ? loadExtras(pageId!, window.location.search, session.uid ?? "") : Promise.resolve(null),
+        extras ? waitForExtras(extras, mustWait) : Promise.resolve(),
       ]);
       if (cancelled) return;
+      // Late cards: whatever hasn't answered yet by the time the page draws.
+      lateRef.current = extras ? extras.requests.map((r) => r.name).filter((name) => name in lateMap && !(name in extras.answers)) : [];
 
       // The session died between the check above and the data requests.
       if (bundle === "signed_out" || extras?.signedOut) {
@@ -248,6 +266,10 @@ export default function LegacyPage({
         // COURSE_UPDATES...), so a page reads them like any bundle field. One
         // that failed or ran out of time is simply missing.
         data: extras ? mergeExtras(bundle ?? {}, extras.requests, extras.answers) : bundle ?? {},
+        // Extras still loading when the page drew (2026-10-20). A page can check
+        // this to tell "loading" from "didn't load"; most don't need to, since
+        // LegacyPage puts the placeholders back in those cards.
+        pending: [...lateRef.current],
       };
       // Separate from __AVERAGES__ above on purpose: settings.html only
       // needs to know demo-vs-live to gate the sync toggles, not consume real
@@ -375,6 +397,16 @@ export default function LegacyPage({
     script.text = scriptJs;
     document.body.appendChild(script);
 
+    // Cards still waiting on their own extra (2026-10-20): the script drew them
+    // as "didn't load"; put their placeholders back before this frame paints.
+    // A page that can't redraw a card later (no __averagesExtraLanded) keeps
+    // what it drew; LegacyPage waited for its extras anyway.
+    const canRedraw = typeof (window as any).__averagesExtraLanded === "function";
+    if (!canRedraw) lateRef.current = [];
+    const lateMap = (pageId && LATE_EXTRAS[pageId]) || {};
+    const held = Array.from(new Set(lateRef.current.flatMap((name) => lateMap[name] ?? [])));
+    holdCards(containerRef.current, pageId, held);
+
     /**
      * Hand-off from skeleton to content (2026-09-16).
      *
@@ -385,7 +417,7 @@ export default function LegacyPage({
      * you'd see them pop in at full opacity first and then fade, which is
      * worse than no animation at all.
      */
-    revealContent(containerRef.current, pageId, snapRef.current);
+    revealContent(containerRef.current, pageId, snapRef.current, (pageId ? REVEAL_SELECTORS[pageId] ?? [] : []).filter((sel) => !held.includes(sel)));
 
     // Notifications bell (2026-10-19, public/js/averages-bell.js): next to the
     // profile picture on every signed-in page, drawn from the data this page
@@ -409,6 +441,46 @@ export default function LegacyPage({
   }, [phase, scriptJs, hasUploads, pageId, requiresAuth, mode]);
 
   /**
+   * Cards that load on their own (2026-10-20). For each extra still coming
+   * when the page drew: when it lands (or fails, or takes longer than
+   * EXTRAS_LATE_GIVE_UP_MS), merge it into the data the page holds, let the
+   * page redraw what it feeds (window.__averagesExtraLanded), and reveal those
+   * cards. A 401 means the session died: back to sign-in, like the bundle.
+   */
+  useEffect(() => {
+    if (phase !== "ready") return;
+    const run = extrasRef.current;
+    const late = lateRef.current;
+    if (!run || !late.length) return;
+    let cancelled = false;
+    const lateMap = (pageId && LATE_EXTRAS[pageId]) || {};
+    const bell = (window as any).AveragesBell;
+    if (late.includes("updates")) bell?.expectUpdates?.();
+    for (const name of late) {
+      const req = run.requests.find((r) => r.name === name);
+      const settled = run.settled[name];
+      if (!req || !settled) continue;
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const giveUp = new Promise<"failed">((resolve) => { timer = setTimeout(() => resolve("failed"), EXTRAS_LATE_GIVE_UP_MS); });
+      Promise.race([settled, giveUp]).then((outcome) => {
+        if (timer !== undefined) clearTimeout(timer);
+        if (cancelled) return;
+        if (outcome === "signed_out") { window.location.href = "/"; return; }
+        const av = (window as any).__AVERAGES__;
+        if (!av || !av.data) return;
+        if (outcome === "ok" && name in run.answers) mergeLateExtra(av.data, req, run.answers[name]);
+        if (Array.isArray(av.pending)) av.pending = av.pending.filter((n: string) => n !== name);
+        const redraw = () => {
+          try { (window as any).__averagesExtraLanded?.(name); } catch (e) { console.error(e); }
+        };
+        revealCards(containerRef.current, pageId, lateMap[name] ?? [], redraw);
+        if (name === "updates") bell?.setData?.(Array.isArray(av.data.COURSE_UPDATES) ? { COURSE_UPDATES: av.data.COURSE_UPDATES } : null);
+      });
+    }
+    return () => { cancelled = true; };
+  }, [phase, pageId]);
+
+  /**
    * The bell's course updates on pages that don't load them (everything but
    * Home and the class page). After the page has drawn, never before it, so
    * no page waits longer than it did; usually answered from the cache Home
@@ -418,10 +490,13 @@ export default function LegacyPage({
     if (phase !== "ready" || !requiresAuth || mode !== "live") return;
     const bell = (window as any).AveragesBell;
     const have = (window as any).__AVERAGES__?.data?.COURSE_UPDATES;
-    if (!bell || Array.isArray(have)) return;
+    // This page loads course updates itself and they're still coming: the
+    // late-cards effect below hands them to the bell when they land.
+    if (!bell || Array.isArray(have) || lateRef.current.includes("updates")) return;
     let cancelled = false;
     bell.expectUpdates();
-    loadExtras("bell", "", uidRef.current)
+    // Less often (2026-10-20): a cached answer up to 15 minutes old will do here.
+    loadExtras("bell", "", uidRef.current, { maxAgeMs: BELL_UPDATES_MAX_AGE_MS })
       .then((r) => {
         if (cancelled) return;
         const got = mergeExtras({}, r.requests, r.answers) as { COURSE_UPDATES?: unknown };

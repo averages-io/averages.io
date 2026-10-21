@@ -623,8 +623,10 @@ function ghostOver(host: HTMLElement, markup: string, sweep: string[]): void {
  * Replaces the 2026-09-16 opacity-only wave down the page. Potato mode and
  * reduced motion: the rows simply appear.
  */
-export function revealContent(root: HTMLElement, pageId?: string, snap: SkeletonSnapshot = {}): void {
-  const sels = pageId ? REVEAL_SELECTORS[pageId] : undefined;
+export function revealContent(root: HTMLElement, pageId?: string, snap: SkeletonSnapshot = {}, only?: readonly string[]): void {
+  const all = pageId ? REVEAL_SELECTORS[pageId] : undefined;
+  // `only`: just these cards (a card that loaded on its own, revealCards()).
+  const sels = all && only ? all.filter((sel) => only.includes(sel)) : all;
   if (!sels || sels.length === 0 || calm()) return;
   const markup = new Map(skeletonMarkup(pageId));
 
@@ -646,6 +648,49 @@ export function revealContent(root: HTMLElement, pageId?: string, snap: Skeleton
       };
     }
   }
+}
+
+/**
+ * Cards that load on their own (2026-10-20, app/lib/extras.ts LATE_EXTRAS).
+ *
+ * holdCards: right after the page's script has drawn (it drew these cards
+ * without their data, as "didn't load"), put the placeholders back in them,
+ * in the same frame, so what shows is a card still loading.
+ */
+export function holdCards(root: HTMLElement | null, pageId: string | undefined, sels: readonly string[]): void {
+  if (!root || !pageId || !sels.length) return;
+  const markup = new Map(skeletonMarkup(pageId));
+  for (const sel of sels) {
+    const host = root.querySelector<HTMLElement>(sel);
+    const inner = markup.get(sel);
+    if (!host || inner === undefined) continue;
+    host.innerHTML = inner;
+    host.setAttribute("aria-busy", "true");
+  }
+}
+
+/**
+ * revealCards: a held card's data is in. Same reveal as the page's first one,
+ * card by card: the placeholders fade out on top, the real rows rise in, the
+ * box eases to its new height. `redraw` is the page drawing those cards.
+ * Potato mode and reduced motion: the rows simply appear.
+ */
+export function revealCards(root: HTMLElement | null, pageId: string | undefined, sels: readonly string[], redraw: () => void): void {
+  if (!root || !pageId || !sels.length) {
+    redraw();
+    return;
+  }
+  const snap: SkeletonSnapshot = {};
+  if (!calm()) {
+    for (const sel of sels) {
+      const host = root.querySelector<HTMLElement>(sel);
+      if (!host || !shown(host)) continue;
+      snap[sel] = { h0: host.offsetHeight, sweep: Array.from(host.querySelectorAll<HTMLElement>(".skel-bar")).map((b) => getComputedStyle(b).backgroundPosition) };
+    }
+  }
+  redraw();
+  for (const sel of sels) root.querySelector(sel)?.removeAttribute("aria-busy");
+  revealContent(root, pageId, snap, sels);
 }
 
 /** Page ids that have a spec — used by verify-pages.mjs and by LegacyPage. */

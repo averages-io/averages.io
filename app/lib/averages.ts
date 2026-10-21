@@ -503,7 +503,8 @@ function sweepExtras(): void {
       } catch {
         /* unreadable: stale */
       }
-      if (!(Date.now() - at < EXTRAS_CACHE_MS && at <= Date.now())) stale.push(key);
+      const keep = key.startsWith(EXTRAS_PREFIX + "updates") ? BELL_UPDATES_MAX_AGE_MS : EXTRAS_CACHE_MS;
+      if (!(Date.now() - at < keep && at <= Date.now())) stale.push(key);
     }
     stale.forEach((key) => store.removeItem(key));
   } catch {
@@ -515,44 +516,61 @@ export interface ExtrasResult {
   /** The calls this page made (or found cached). */
   requests: ExtraRequest[];
   /**
-   * Answers by extra, filled in as each one lands. loadExtras() resolves at
-   * the 4 s mark at the latest; anything that lands after that but before
-   * the bundle does is still here when LegacyPage merges, and anything later
-   * still fills the cache for the next page.
+   * Answers by extra, filled in as each one lands: the cached ones at once,
+   * the rest as their calls answer. A failed call never gets an entry.
    */
   answers: Partial<Record<ExtraName, unknown>>;
   /** An extra got a 401: the session died, same as loadBundle's "signed_out". */
   signedOut: boolean;
 }
 
+/** What each extra's call came to: "ok" (in answers), "failed", or "signed_out" (401). */
+export type ExtraOutcome = "ok" | "failed" | "signed_out";
+
+export interface ExtrasRun extends ExtrasResult {
+  /** Settles when that extra's answer is in (at once for a cached one). Never rejects. */
+  settled: Partial<Record<ExtraName, Promise<ExtraOutcome>>>;
+}
+
 /**
- * Loads one page's extras (2026-10-06; which ones: EXTRAS_BY_PAGE in
- * ./extras.ts). Live sessions only: demo pages run on sample data and the
- * API answers these with 403 there anyway.
+ * How old a cached course-updates answer the bell will still use (2026-10-20,
+ * Martin: "just make it less frequent"). Pages that show updates themselves
+ * keep the usual 5 minutes; the bell's background check, on every other
+ * page, asks the API again only once this is up.
+ */
+export const BELL_UPDATES_MAX_AGE_MS = 15 * 60 * 1000;
+
+/**
+ * Starts one page's extras (2026-10-06; which ones: EXTRAS_BY_PAGE in
+ * ./extras.ts) and returns straight away. Live sessions only: demo pages run
+ * on sample data and the API answers these with 403 there anyway.
  *
  *   - All in parallel, each cached in sessionStorage for 5 minutes under a
  *     key starting "averages_extras_", tagged with the student (`who`): a
  *     cached answer from another account is ignored.
- *   - Waits at most EXTRAS_WAIT_MS (4 s). A slow extra doesn't hold the page:
- *     it renders without that one (its signed-in empty state), and the call
- *     keeps going and fills the cache, so the next page has it.
+ *   - `settled` says when each one is in. LegacyPage waits for the ones the
+ *     page needs to draw at all (up to EXTRAS_WAIT_MS) and lets the rest
+ *     (LATE_EXTRAS) fill their own cards when they land (2026-10-20).
+ *   - A call keeps going however long it takes and fills the cache, so the
+ *     next page has it.
  *   - A failed call (network, 5xx, 403, 404) is simply absent. Never cached.
  */
-export async function loadExtras(pageId: string, search: string, who = ""): Promise<ExtrasResult> {
+export function startExtras(pageId: string, search: string, who = "", opts: { maxAgeMs?: number } = {}): ExtrasRun {
   sweepExtras();
   const generation = extrasGeneration;
+  const maxAge = opts.maxAgeMs ?? EXTRAS_CACHE_MS;
   const requests = extrasFor(pageId, search, new Date());
-  const result: ExtrasResult = { requests, answers: {}, signedOut: false };
-  const pending: Promise<void>[] = [];
+  const run: ExtrasRun = { requests, answers: {}, signedOut: false, settled: {} };
 
   for (const req of requests) {
     const cached = cacheGet(req.cacheKey);
     if (cached) {
       try {
         const parsed = JSON.parse(cached);
-        const fresh = Date.now() - parsed.at < EXTRAS_CACHE_MS && parsed.at <= Date.now();
+        const fresh = Date.now() - parsed.at < maxAge && parsed.at <= Date.now();
         if (fresh && parsed.who === who && "data" in parsed) {
-          result.answers[req.name] = parsed.data;
+          run.answers[req.name] = parsed.data;
+          run.settled[req.name] = Promise.resolve("ok");
           continue;
         }
       } catch {
@@ -561,36 +579,52 @@ export async function loadExtras(pageId: string, search: string, who = ""): Prom
       cacheClear(req.cacheKey);
     }
 
-    pending.push(
-      (async () => {
-        try {
-          const response = await fetch(`${API_BASE}${req.path}`, { credentials: "include" });
-          if (response.status === 401) {
-            cacheClear(SESSION_CACHE);
-            result.signedOut = true;
-            return;
-          }
-          if (!response.ok) return;
-          const data = await response.json();
-          // Signed out (or in as someone else) while this was in flight: don't cache it.
-          if (generation === extrasGeneration) cacheSet(req.cacheKey, JSON.stringify({ at: Date.now(), who, data }));
-          result.answers[req.name] = data;
-        } catch {
-          /* network or JSON error: this extra is just absent */
+    run.settled[req.name] = (async (): Promise<ExtraOutcome> => {
+      try {
+        const response = await fetch(`${API_BASE}${req.path}`, { credentials: "include" });
+        if (response.status === 401) {
+          cacheClear(SESSION_CACHE);
+          run.signedOut = true;
+          return "signed_out";
         }
-      })()
-    );
+        if (!response.ok) return "failed";
+        const data = await response.json();
+        // Signed out (or in as someone else) while this was in flight: don't cache it.
+        if (generation === extrasGeneration) cacheSet(req.cacheKey, JSON.stringify({ at: Date.now(), who, data }));
+        run.answers[req.name] = data;
+        return "ok";
+      } catch {
+        /* network or JSON error: this extra is just absent */
+        return "failed";
+      }
+    })();
   }
+  return run;
+}
 
-  if (pending.length) {
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    await Promise.race([
-      Promise.all(pending),
-      new Promise<void>((resolve) => {
-        timer = setTimeout(resolve, EXTRAS_WAIT_MS);
-      }),
-    ]);
-    if (timer !== undefined) clearTimeout(timer);
-  }
-  return result;
+/**
+ * Waits for the given extras of a run, at most `ms` (EXTRAS_WAIT_MS by default).
+ * Anything that lands later still shows up in run.answers and the cache.
+ */
+export async function waitForExtras(run: ExtrasRun, names: readonly ExtraName[], ms = EXTRAS_WAIT_MS): Promise<void> {
+  const pending = names.map((name) => run.settled[name]).filter((p): p is Promise<ExtraOutcome> => !!p);
+  if (!pending.length) return;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  await Promise.race([
+    Promise.all(pending),
+    new Promise<void>((resolve) => {
+      timer = setTimeout(resolve, ms);
+    }),
+  ]);
+  if (timer !== undefined) clearTimeout(timer);
+}
+
+/**
+ * Starts a page's extras and waits for all of them (at most EXTRAS_WAIT_MS).
+ * Used by the bell's background check; pages use startExtras().
+ */
+export async function loadExtras(pageId: string, search: string, who = "", opts: { maxAgeMs?: number } = {}): Promise<ExtrasResult> {
+  const run = startExtras(pageId, search, who, opts);
+  await waitForExtras(run, run.requests.map((r) => r.name));
+  return run;
 }
