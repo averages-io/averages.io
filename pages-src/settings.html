@@ -584,7 +584,21 @@
   .mode-pick:hover:not([aria-disabled="true"]) .mode-radio { border-color: var(--text-muted); }
   .mode-pick[aria-checked="true"] .mode-radio { border-color: var(--accent); background: radial-gradient(circle, var(--accent) 0 4px, transparent 4.5px); }
   .mode-row.is-past-due .settings-row-desc { color: var(--grade-bad); }
+  /* Plus stands out in Punch, the logo gradient (2026-10-21), whatever the accent color is. Dark text: white fails AA on it. */
+  .mode-row[data-mode="plus"] { background: color-mix(in srgb, #FF7A50 16%, var(--panel-inner)); }
+  .mode-row[data-mode="plus"] .mode-pick .settings-row-label { display: inline-block; padding: 0 10px; border-radius: 999px; background: linear-gradient(135deg, #FF7A50, #E5484D); color: #2A0A05; line-height: 22px; }
+  .mode-row[data-mode="plus"] .mode-pick[aria-checked="true"] .mode-radio { border-color: #E5484D; background: radial-gradient(circle, #E5484D 0 4px, transparent 4.5px); }
   .plus-msg { margin: 10px 2px 0; font-weight: 700; }
+  #browserNotifToggleWrap[hidden], #notifPlusBtn[hidden], #calendarBlock[hidden], #calBtn[hidden], #calLinkRow[hidden], #calActions[hidden], #calMsg[hidden] { display: none; }
+  .plus-tag { display: inline-block; margin-left: 4px; padding: 0 8px; border-radius: 999px; background: linear-gradient(135deg, #FF7A50, #E5484D); color: #2A0A05; font-size: 0.66rem; font-weight: 800; line-height: 18px; vertical-align: 2px; }
+  .cal-link-row { gap: 8px; }
+  .cal-link { flex: 1; min-width: 0; padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--window-radius-sm); background: var(--panel-bg); color: var(--text-dark); font: inherit; font-size: 0.78rem; }
+  .cal-link:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring); }
+  .cal-actions { justify-content: flex-start; flex-wrap: wrap; gap: 8px 20px; }
+  .cal-add, .cal-off { background: none; border: none; padding: 0; font: inherit; font-weight: 800; font-size: 0.8rem; color: var(--accent-dark, var(--accent)); text-decoration: none; cursor: pointer; }
+  .cal-add:hover, .cal-off:hover { text-decoration: underline; }
+  .cal-off { margin-left: auto; color: var(--grade-bad); }
+  .cal-add:focus-visible, .cal-off:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring); border-radius: 4px; }
   .plus-msg.bad { color: var(--grade-bad); }
   select.settings-select {
     font: inherit;
@@ -1123,7 +1137,7 @@
               <div class="settings-row">
                 <div class="settings-row-text">
                   <p class="settings-row-label">Potato PC Mode</p>
-                  <p class="settings-row-desc">Made for Chromebooks and older computers: turns off every animation and visual effect and uses the font already on your device, so Averages uses as little power as possible.</p>
+                  <p class="settings-row-desc">Turns off animations and effects for Chromebooks and older computers.</p>
                 </div>
                 <label class="toggle">
                   <input type="checkbox" id="potatoModeToggle" aria-label="Toggle Potato PC Mode">
@@ -1133,7 +1147,7 @@
               <div class="settings-row">
                 <div class="settings-row-text">
                   <p class="settings-row-label">File Previews</p>
-                  <p class="settings-row-desc" id="filePreviewsDesc">Shows a small picture of images and PDFs in Course Materials. Turn off to use less data. Always off in Potato PC Mode.</p>
+                  <p class="settings-row-desc" id="filePreviewsDesc">Small previews of images and PDFs in Course Materials.</p>
                 </div>
                 <label class="toggle">
                   <input type="checkbox" id="filePreviewsToggle" aria-label="Toggle File Previews">
@@ -1143,7 +1157,7 @@
               <div class="settings-row">
                 <div class="settings-row-text">
                   <p class="settings-row-label">Cache</p>
-                  <p class="settings-row-desc">Grades, messages, and course files stored on this device for faster loading. Currently using <strong id="cacheSizeValue">128 MB</strong>.</p>
+                  <p class="settings-row-desc">Saved on this device for faster loading. Using <strong id="cacheSizeValue">128 MB</strong>.</p>
                 </div>
                 <button class="btn-secondary" type="button" id="clearCacheBtn">Clear Cache</button>
               </div>
@@ -1176,7 +1190,7 @@
             </div>
 
             <p class="settings-subhead">Background &amp; Color</p>
-            <p class="settings-row-desc" style="margin: -2px 0 10px;">Picking a background sets a matching accent automatically — use Accent Color above any time to fine-tune it, whatever background is selected.</p>
+            <p class="settings-row-desc" style="margin: -2px 0 10px;">Backgrounds set a matching accent. Change it with Accent Color above.</p>
             <div class="swatch-grid" id="swatchGrid"></div>
           </div>
 
@@ -1208,12 +1222,14 @@
               <div class="settings-row">
                 <div class="settings-row-text">
                   <p class="settings-row-label">Browser Notifications</p>
-                  <p class="settings-row-desc" id="browserNotifDesc">Get a notification when something changes, even with Averages closed.</p>
+                  <p class="settings-row-desc" id="browserNotifDesc">Get notified when something changes, even with Averages closed.</p>
                 </div>
-                <label class="toggle"><input type="checkbox" id="browserNotifToggle" aria-label="Browser notifications"><span class="track"><span class="thumb"></span></span></label>
+                <label class="toggle" id="browserNotifToggleWrap"><input type="checkbox" id="browserNotifToggle" aria-label="Browser notifications"><span class="track"><span class="thumb"></span></span></label>
+                <!-- Averages Plus (2026-10-21): shown instead of the switch when notifications need Plus. -->
+                <button class="btn-secondary" type="button" id="notifPlusBtn" hidden>Get Plus</button>
               </div>
             </div>
-            <p class="settings-row-desc notif-blocked" id="notifBlockedNote" hidden>Notifications are blocked for this site. Allow them in your browser's site settings, then turn this on again.</p>
+            <p class="settings-row-desc notif-blocked" id="notifBlockedNote" hidden>Notifications are blocked. Allow them in your browser's site settings.</p>
             <p class="settings-row-desc notif-msg" id="notifMsg" role="status" hidden></p>
             <div id="notifTypesWrap" hidden>
               <p class="settings-subhead">Notify me about</p>
@@ -1326,6 +1342,30 @@
             </div>
             <p class="settings-row-desc integ-note">Averages only sees the files you pick. Disconnect anytime.</p>
             <p class="settings-row-desc integ-note integ-tm">Google Drive is a trademark of Google LLC.</p>
+            <!-- Calendar sync (2026-10-21), an Averages Plus perk: a private link calendar apps
+                 subscribe to. Filled in by the script below from GET /calendar/status. -->
+            <div id="calendarBlock" data-feature="calendar-sync" hidden>
+              <p class="settings-subhead">Calendar</p>
+              <div class="settings-group">
+                <div class="settings-row">
+                  <div class="settings-row-text">
+                    <p class="settings-row-label">Calendar sync <span class="plus-tag">Plus</span></p>
+                    <p class="settings-row-desc" id="calDesc"></p>
+                  </div>
+                  <button class="btn-secondary" type="button" id="calBtn" hidden>Get link</button>
+                </div>
+                <div class="settings-row cal-link-row" id="calLinkRow" hidden>
+                  <input class="cal-link" id="calLink" type="text" readonly aria-label="Your private calendar link">
+                  <button class="btn-secondary" type="button" id="calCopy">Copy</button>
+                </div>
+                <div class="settings-row cal-actions" id="calActions" hidden>
+                  <a class="cal-add" id="calGoogle" target="_blank" rel="noopener">Add to Google Calendar</a>
+                  <a class="cal-add" id="calApple">Add to Apple Calendar</a>
+                  <button class="cal-off" type="button" id="calOff">Turn off</button>
+                </div>
+              </div>
+              <p class="settings-row-desc plus-msg" id="calMsg" role="status" hidden></p>
+            </div>
             <p class="settings-subhead">Editing</p>
             <div class="settings-group">
               <div class="settings-row">
@@ -1355,7 +1395,7 @@
               <div class="settings-row">
                 <div class="settings-row-text">
                   <p class="settings-row-label">Sync Across Devices</p>
-                  <p class="settings-row-desc" id="syncAcrossDevicesDesc">Always on in Classic mode: your profile, appearance and settings follow you to every device you sign in on. Your grades are never stored. Switch to Incognito to keep everything on this device only.</p>
+                  <p class="settings-row-desc" id="syncAcrossDevicesDesc">Always on in Classic: your settings follow you to every device.</p>
                 </div>
                 <span class="settings-row-value" id="syncStateValue">On</span>
               </div>
@@ -1442,8 +1482,8 @@
         <button class="editor-close" id="notifConsentClose" type="button" aria-label="Close">&times;</button>
       </div>
       <div class="editor-body" style="padding-bottom: 16px;">
-        <p class="settings-row-desc" style="font-size: 0.86rem;">To tell you about changes while Averages is closed, Averages checks your classes about every 20 minutes. To do that it stores your school sign-in key on its server, encrypted with a separate key that's only used for notifications. It keeps it only while notifications are on in one of your browsers.</p>
-        <p class="settings-row-desc" style="font-size: 0.86rem; margin-top: 10px;">Notifications only say what kind of thing changed, like "A new grade was posted." The details stay in Averages. Turn this off or sign out and the stored key is deleted right away.</p>
+        <p class="settings-row-desc" style="font-size: 0.86rem;">Averages checks your classes every 20 minutes, keeping your sign-in key encrypted.</p>
+        <p class="settings-row-desc" style="font-size: 0.86rem; margin-top: 10px;">Notices only say what changed. Turning them off deletes the key.</p>
       </div>
       <div class="editor-actions">
         <button class="editor-reset" id="notifConsentCancel" type="button">Not now</button>
@@ -1465,7 +1505,7 @@
         <button class="editor-close" id="emailVerifyClose" type="button" aria-label="Close">&times;</button>
       </div>
       <div class="editor-body" style="padding-bottom: 16px;">
-        <p class="settings-row-desc" style="font-size: 0.86rem;">We sent a verification link to <strong id="emailVerifyAddress" style="color: var(--text-dark);"></strong>. This is a mockup with no real mail server — click below to simulate opening the link, and we'll detect the confirmation automatically.</p>
+        <p class="settings-row-desc" style="font-size: 0.86rem;">We sent a verification link to <strong id="emailVerifyAddress" style="color: var(--text-dark);"></strong>. Click below to simulate opening it.</p>
         <button class="danger-link" type="button" id="emailVerifyResend" style="margin: 10px auto 0; display: block;">Resend link</button>
       </div>
       <div class="editor-actions">
@@ -1486,7 +1526,7 @@
           <h2 id="uploadGateTitle">Before you upload…</h2>
         </div>
         <div class="editor-body" style="padding-bottom: 16px;">
-          <p class="settings-row-desc" style="font-size: 0.86rem;">Your photo will be scanned for inappropriate (NSFW) content before it's used. This happens automatically — you don't need to do anything else.</p>
+          <p class="settings-row-desc" style="font-size: 0.86rem;">Your photo is checked for inappropriate content on this device.</p>
         </div>
         <div class="editor-actions">
           <button class="editor-reset" id="uploadGateGoBackBtn" type="button">Go Back</button>
@@ -1552,7 +1592,7 @@
         <button class="editor-close" id="bgCropClose" type="button" aria-label="Cancel">&times;</button>
       </div>
       <div class="editor-body" style="padding-bottom: 4px;">
-        <p class="settings-row-desc" style="font-size: 0.82rem; margin: 0 0 10px;">Drag to reposition, and use the slider to zoom — this previews roughly how it'll look behind the app.</p>
+        <p class="settings-row-desc" style="font-size: 0.82rem; margin: 0 0 10px;">Drag to move it. Use the slider to zoom.</p>
         <div class="bg-crop-stage" id="bgCropStage">
           <img class="bg-crop-img" id="bgCropImg" alt="" draggable="false">
         </div>
@@ -2172,7 +2212,7 @@
             <button class="editor-close" type="button" data-disc="cancel" aria-label="Close">&times;</button>
           </div>
           <div class="editor-body" style="padding-bottom: 16px;">
-            <p class="settings-row-desc" id="canvaDiscText" style="font-size: 0.86rem;">Averages.io stops using your Canva account and forgets your Drafts list. Your designs stay in your Canva account. To remove Averages.io completely, also remove it in Canva's own settings.</p>
+            <p class="settings-row-desc" id="canvaDiscText" style="font-size: 0.86rem;">Averages.io forgets your Canva account and Drafts. Designs stay in Canva.</p>
           </div>
           <div class="editor-actions">
             <button class="editor-reset" type="button" data-disc="cancel">Cancel</button>
@@ -2182,7 +2222,7 @@
       document.body.appendChild(disc);
       // The same confirm serves Google Drive and OneDrive (2026-10-05).
       const DISC_TEXT = {
-        canva: ['Disconnect Canva?', 'Averages.io stops using your Canva account and forgets your Drafts list. Your designs stay in your Canva account. To remove Averages.io completely, also remove it in Canva\'s own settings.'],
+        canva: ['Disconnect Canva?', 'Averages.io forgets your Canva account and Drafts. Designs stay in Canva.'],
         gdrive: ['Disconnect Google Drive?', 'Averages.io stops using your Google Drive in this browser and forgets your Google Drive drafts. Files it saved stay in your Drive, in the Averages.io folder. To remove Averages.io completely, also remove it in your Google Account\'s third-party connections.'],
         onedrive: ['Disconnect OneDrive?', 'Averages.io stops using your OneDrive in this browser and forgets the files you added. Files it saved stay in your OneDrive, in Apps/Averages.io. To remove Averages.io completely, also remove it in your Microsoft account\'s app permissions.'],
       };
@@ -2274,7 +2314,7 @@
         flash.hidden = true;
         render();
         pending
-          .then(() => showFlash(app === 'gdrive' ? 'Google Drive is connected. Use Save to cloud or Edit in Google Drive on an assignment file.' : 'OneDrive is connected. Use Save to cloud on an assignment file, or Add from OneDrive on the Files tab.'))
+          .then(() => showFlash(app === 'gdrive' ? 'Google Drive is connected. Try it on an assignment file.' : 'OneDrive is connected. Try Save to cloud on an assignment file.'))
           .catch(err => showFlash(C.messageFor(err), !err || err.code !== 'popup_closed'))
           .finally(() => { cloud.busy[app] = false; render(); focusRow(app); });
       });
@@ -2348,7 +2388,7 @@
       const canvaParam = new URLSearchParams(window.location.search).get('canva');
       if (canvaParam) {
         const msg = {
-          connected: ['Canva is connected. Edit in Canva on an assignment file to start a draft.', false],
+          connected: ['Canva is connected. Try Edit in Canva on an assignment file.', false],
           failed: ['Couldn’t connect Canva. Try again.', true],
           cancelled: ['Canva wasn’t connected.', false],
           incognito: ['Canva is off in Incognito mode.', false],
@@ -3561,10 +3601,12 @@
       too_soon: 'Wait a few seconds, then try again.',
       push_failed: 'The test couldn’t be sent. Try again in a moment.',
       // 2026-10-12: which kind of failure it was.
-      push_rejected: 'Your browser’s notification service turned the test down. Turn Browser Notifications off and on again, then send another test.',
-      push_misconfigured: 'Notifications aren’t set up right on our side yet, so the test couldn’t be sent. Try again later.',
+      push_rejected: 'The test was refused. Turn notifications off and on, then retry.',
+      push_misconfigured: 'Notifications aren’t set up on our side yet. Try later.',
       feature_off: 'Notifications are switched off right now. Try again later.',
       rate_limited: 'Too many tries. Wait a minute, then try again.',
+      plus_required: 'Notifications are part of Plus. Pick Plus in Account.',
+      billing_unavailable: 'Couldn’t check your plan right now. Try again in a moment.',
     };
     function notifError(code, status) {
       const text = NOTIF_ERRORS[code] || NOTIF_ERRORS.failed;
@@ -3646,6 +3688,23 @@
       return pushScriptPromise;
     }
 
+    // Notifications need Plus (2026-10-21): the switch is swapped for Get Plus,
+    // which opens Account and picks Plus there (Stripe checkout).
+    function showNotifPlus(justTurnedOff) {
+      setNotifUi(false);
+      browserNotifToggle.disabled = true;
+      document.getElementById('browserNotifToggleWrap').hidden = true;
+      const btn = document.getElementById('notifPlusBtn');
+      btn.hidden = false;
+      notifDesc.textContent = 'Part of Averages Plus: get notified when things change.';
+      if (justTurnedOff) showNotifMsg(notifMsg, 'Notifications turned off: they’re part of Averages Plus now.');
+      btn.addEventListener('click', () => {
+        showSection('account', { showDetail: true });
+        const plus = document.querySelector('.mode-pick[data-mode="plus"]');
+        if (plus) { plus.focus(); plus.click(); }
+      });
+    }
+
     // Signed in: is the API set up, and is this browser on?
     async function startLiveNotifications() {
       let P;
@@ -3660,6 +3719,8 @@
       if (c.failed) { showNotifMsg(notifMsg, 'Couldn’t check notifications right now. Reload the page to try again.', true); return; }
       if (!c.publicKey) { notifDesc.textContent = NOTIF_COMING_SOON; return; }
       const st = await P.status();
+      // Averages Plus (2026-10-21): notifications are a Plus perk while billing is on.
+      if (st.plusRequired) { showNotifPlus(st.turnedOff === 'plus_required'); return; }
       notifLiveReady = true;
       browserNotifToggle.disabled = false;
       if (st.here && (!isSyncOn() || notifPermission() !== 'granted')) {
@@ -3690,7 +3751,7 @@
       browserNotifToggle.disabled = true;
       const r = await notifPush.disable();
       browserNotifToggle.disabled = !notifLiveReady;
-      showNotifMsg(notifMsg, r.ok ? '' : 'Turned off in this browser. Averages couldn’t reach its server, so it will finish deleting the next time you open Averages.', !r.ok);
+      showNotifMsg(notifMsg, r.ok ? '' : 'Turned off here. The rest finishes next time you’re online.', !r.ok);
     }
     // Switching to Incognito: off, and the stored sign-in deleted. Awaited
     // by the mode switch before the page reloads.
@@ -3879,11 +3940,11 @@
         saveSettingsOption('syncAcrossDevices', false);
       }
       syncStateValue.textContent = 'Off';
-      syncStateDesc.textContent = 'Off in Incognito mode: nothing about you is stored on our servers. Switch to Classic in Account to have your settings follow you.';
+      syncStateDesc.textContent = 'Off in Incognito mode. Switch to Classic to sync.';
     } else if (AVERAGES_SYNC_UNAVAILABLE) {
       // The demo has no real account to sync to (the API refuses demo sessions).
       syncStateValue.textContent = 'Off';
-      syncStateDesc.textContent = 'Not available on the demo account: there\'s no real account for it to sync to.';
+      syncStateDesc.textContent = 'Not available on the demo account.';
     } else if (settingsOptions.syncAcrossDevices !== true) {
       settingsOptions.syncAcrossDevices = true;
       try {
@@ -4373,8 +4434,8 @@
       const is13 = read('schoolagy_13plus') === 'yes';
       const incognito = INC ? INC.on : read('schoolagy_account_mode') === 'incognito';
       const locked = !!(INC && INC.locked);
-      const PRICE = '$2.99 a month in the U.S.';
-      const OFFER = 'Everything in Classic, plus browser notifications, more themes, the iPhone app when it comes out, and new features two weeks early. ' + PRICE;
+      const PRICE = '$2.99/month.';
+      const OFFER = 'Notifications, calendar sync and early features. ' + PRICE;
       let billing = null;   // GET /billing/status, once it answers
       let busy = false;
 
@@ -4395,17 +4456,17 @@
       function plusDesc() {
         const s = billing;
         if (!s || !s.plus) return incognito && s && s.manageable ? 'You don’t have Plus right now.' : OFFER;
-        if (incognito) return 'Your Plus subscription is still running. Switch to Classic to use it, or cancel it in Manage plan.';
-        if (s.status === 'past_due') return 'Your last payment didn’t go through. Update your card in Manage plan to keep Plus.';
-        if (s.cancelAtPeriodEnd && s.renewsAt) return 'You have Plus until ' + day(s.renewsAt) + '. It won’t renew.';
-        if (s.renewsAt) return 'You have Plus. It renews on ' + day(s.renewsAt) + '.';
-        return 'You have Plus. Thanks for supporting Averages.io.';
+        if (incognito) return 'Plus is still billing. Switch to Classic or cancel in Manage plan.';
+        if (s.status === 'past_due') return 'Payment failed. Update your card in Manage plan to keep Plus.';
+        if (s.cancelAtPeriodEnd && s.renewsAt) return 'Plus ends ' + day(s.renewsAt) + '.';
+        if (s.renewsAt) return 'Renews ' + day(s.renewsAt) + '.';
+        return 'You have Plus. Thanks!';
       }
       function render() {
         descs.incognito.textContent = locked
-          ? 'You said you’re under 13 when you signed in, so Averages.io stays in Incognito mode. Nothing about you is stored on our servers: Canva and browser notifications are off, and Google Drive and OneDrive connect through your browser only.'
-          : 'Nothing about you is stored on our servers. Your settings stay on this device, Canva and browser notifications are off, and Google Drive and OneDrive connect through your browser only.';
-        descs.classic.textContent = 'Your profile, appearance and settings follow you to every device you sign in on, and you can connect Canva, Google Drive and OneDrive. For students 13 and older.';
+          ? 'You’re under 13, so Averages.io stays in Incognito mode.'
+          : 'Nothing stored on our servers. No sync, Canva or notifications.';
+        descs.classic.textContent = 'Settings sync across devices. Connect Canva, Google Drive and OneDrive.';
         descs.plus.textContent = plusDesc();
         const canClassic = !locked && (is13 || !incognito);
         rows.classic.hidden = !canClassic;
@@ -4469,7 +4530,7 @@
         say('');
         if (mode === 'incognito') {
           confirmBody.textContent = hasPlus()
-            ? CONFIRM_DEFAULT + ' Your Plus subscription keeps going: cancel it in Manage plan if you don’t want it.'
+            ? CONFIRM_DEFAULT + ' Plus keeps billing until you cancel it.'
             : CONFIRM_DEFAULT;
           overlay.classList.add('show');
           document.getElementById('modeConfirmCancel').focus();
@@ -4482,7 +4543,7 @@
             return;
           }
           // Plus -> Classic means cancelling the subscription, which is Stripe's page.
-          openStripe('portal', 'To go back to Classic, cancel Plus on the next page. You keep Plus until the end of the time you paid for. Opening your plan…');
+          openStripe('portal', 'Cancel Plus on the next page. You keep it until it ends.');
           return;
         }
         // Plus. From Incognito this is Classic as well: a checkout that's
@@ -4520,6 +4581,9 @@
         if (window.__AVERAGES_MODE__ === 'live') {
           // Canva: tokens and Drafts list deleted on our server (designs stay in Canva).
           try { await fetch(averagesApiBase() + '/canva/connection', { method: 'DELETE', credentials: 'include' }); } catch {}
+          // The calendar link and its stored sign-in (2026-10-21).
+          try { await fetch(averagesApiBase() + '/calendar', { method: 'DELETE', credentials: 'include' }); } catch {}
+          try { localStorage.removeItem('averages_calendar_on'); localStorage.removeItem('averages_calendar_touched'); } catch {}
           // Google Drive / OneDrive: forgotten here (and Google's access withdrawn).
           const C = window.AveragesCloud;
           if (C) { try { C.disconnectGoogle(); C.disconnectOneDrive(); } catch {} }
@@ -4558,8 +4622,121 @@
           const s = await load();
           if (s && s.plus) { say('Averages Plus is on. Thanks!'); return; }
         }
-        say('Your payment went through. Plus can take a minute to show here, so check back soon.');
+        say('Payment went through. Plus can take a minute to show.');
       })();
+    })();
+
+    // ------------------------------------------------------------------
+    // Calendar sync (2026-10-21), an Averages Plus perk, in Integrations.
+    // The API keeps a private link (src/calendar.ts in the API); this shows
+    // it with Copy, Add to Google Calendar (by URL) and Add to Apple Calendar
+    // (webcal://). Live sign-ins only; never for under-13s.
+    // ------------------------------------------------------------------
+    (function () {
+      const block = document.getElementById('calendarBlock');
+      const desc = document.getElementById('calDesc');
+      const btn = document.getElementById('calBtn');
+      const linkRow = document.getElementById('calLinkRow');
+      const link = document.getElementById('calLink');
+      const actions = document.getElementById('calActions');
+      const msg = document.getElementById('calMsg');
+      const INC = window.__AVERAGES_INCOGNITO__ || null;
+      if (window.__AVERAGES_MODE__ !== 'live' || (INC && INC.locked)) return;
+      const ABOUT = 'Your due dates in Google Calendar or Apple Calendar.';
+      let state = null;
+      let action = null;
+      function say(text, bad) { msg.textContent = text || ''; msg.classList.toggle('bad', !!bad); msg.hidden = !text; }
+      const setLocalOn = (on) => { try { if (on) localStorage.setItem('averages_calendar_on', '1'); else { localStorage.removeItem('averages_calendar_on'); localStorage.removeItem('averages_calendar_touched'); } } catch (e) {} };
+      function render() {
+        const s = state;
+        if (!s || !s.enabled || !s.configured) { block.hidden = true; return; }
+        block.hidden = false;
+        linkRow.hidden = actions.hidden = true;
+        action = null;
+        if (!s.eligible || (INC && INC.on)) {
+          desc.textContent = 'Due dates in your calendar app. Needs Classic mode.';
+        } else if (s.on && s.url) {
+          desc.textContent = 'On. Keep this link private: it shows your due dates.';
+          link.value = s.url;
+          const webcal = s.url.replace(/^https?:/, 'webcal:');
+          document.getElementById('calGoogle').href = 'https://calendar.google.com/calendar/r?cid=' + encodeURIComponent(webcal);
+          document.getElementById('calApple').href = webcal;
+          linkRow.hidden = actions.hidden = false;
+          action = 'new';
+        } else if (s.plus) {
+          desc.textContent = ABOUT;
+          action = 'make';
+        } else {
+          desc.textContent = 'Due dates in your calendar app. Part of Averages Plus.';
+          action = 'plus';
+        }
+        btn.hidden = !action;
+        btn.disabled = false;
+        btn.textContent = { make: 'Get link', new: 'New link', plus: 'Get Plus' }[action] || '';
+        setLocalOn(!!(s.on && s.url));
+      }
+      async function load() {
+        try {
+          const res = await fetch(averagesApiBase() + '/calendar/status', { credentials: 'include', cache: 'no-store' });
+          state = res.ok ? await res.json() : null;
+        } catch (e) { state = null; }
+        render();
+      }
+      async function make(replacing) {
+        btn.disabled = true;
+        say(replacing ? 'Making a new link…' : 'Making your link…');
+        let tz = '';
+        try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) {}
+        try {
+          const res = await fetch(averagesApiBase() + '/calendar', {
+            method: 'POST', credentials: 'include',
+            headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tz: tz.slice(0, 64) }),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (res.ok && data && typeof data.url === 'string') {
+            state = { ...state, on: true, url: data.url, createdAt: data.createdAt };
+            render();
+            say(replacing ? 'New link made. The old one no longer works.' : 'Your link is ready. Add it below.');
+            return;
+          }
+          const code = data && data.error;
+          say(code === 'plus_required' ? 'Calendar sync is part of Averages Plus.'
+            : code === 'incognito_mode' ? 'Calendar sync needs Classic mode.'
+            : res.status === 503 ? 'Calendar sync isn’t available right now. Try again later.'
+            : 'Couldn’t make your link. Try again.', true);
+        } catch (e) {
+          say('Couldn’t reach Averages.io. Check your connection and try again.', true);
+        }
+        btn.disabled = false;
+      }
+      btn.addEventListener('click', () => {
+        say('');
+        if (action === 'make') make(false);
+        else if (action === 'new') {
+          if (window.confirm('Make a new link? The old one will stop working.')) make(true);
+        } else if (action === 'plus') {
+          showSection('account', { showDetail: true });
+          const plus = document.querySelector('.mode-pick[data-mode="plus"]');
+          if (plus) { plus.focus(); plus.click(); }
+        }
+      });
+      document.getElementById('calCopy').addEventListener('click', async () => {
+        try { await navigator.clipboard.writeText(link.value); say('Link copied.'); }
+        catch (e) { link.focus(); link.select(); say('Press Ctrl+C (or Command+C) to copy it.'); }
+      });
+      document.getElementById('calOff').addEventListener('click', async () => {
+        say('');
+        try {
+          const res = await fetch(averagesApiBase() + '/calendar', { method: 'DELETE', credentials: 'include' });
+          if (!res.ok) throw new Error(String(res.status));
+          state = { ...state, on: false, url: null };
+          render();
+          say('Calendar sync is off. You can remove it from your calendar app.');
+        } catch (e) {
+          say('Couldn’t turn it off. Try again.', true);
+        }
+      });
+      load();
     })();
 
     buildSearchIndex();

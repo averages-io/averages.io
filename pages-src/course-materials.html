@@ -2982,7 +2982,7 @@
         if (folders) parts.push(`${folders} folder${folders === 1 ? '' : 's'}`);
         if (files) parts.push(`${files} file${files === 1 ? '' : 's'}`);
         deleteModalMsg.textContent = parts.length
-          ? `This will delete "${item.name}" and every file inside of it — ${parts.join(' and ')} in total. This can't be undone.`
+          ? `Deletes "${item.name}" and everything in it (${parts.join(' and ')}). This can't be undone.`
           : `"${item.name}" is empty. This can't be undone.`;
       } else {
         deleteModalMsg.textContent = `This can't be undone.`;
@@ -3222,7 +3222,7 @@
         // genuinely taken in Schoology, not previewed here at all.
         qlSubtitle.textContent = item.quiz ? 'Quiz' : item.drive ? `Google Drive${item.assignment ? ' · Assignment' : ''}` : `${item.ext.toUpperCase()} Document${item.assignment ? ' · Assignment' : ''}`;
         qlBody.innerHTML = item.quiz
-          ? '<p class="ql-empty">Taken in Schoology, not in Averages — open this item for a link over there.</p>'
+          ? '<p class="ql-empty">Taken in Schoology. Open this item for a link.</p>'
           : item.drive
             ? `<p class="ql-empty">Added ${escapeHtml(item.created || 'recently')}. It opens in Google Drive.</p>`
             : item.live
@@ -3319,7 +3319,7 @@
       // than a native alert(), so it looks like the rest of this app.
       if (typeof JSZip === 'undefined') {
         infoTitle.textContent = folder.name;
-        infoBody.innerHTML = '<p class="info-row-value">Downloading a folder needs an internet connection (to load the zip tool) — try again once you\'re back online.</p>';
+        infoBody.innerHTML = '<p class="info-row-value">Downloading a folder needs internet. Try again once you\'re online.</p>';
         infoOverlay.hidden = false;
         infoCloseBtn.focus();
         return;
@@ -4162,7 +4162,7 @@
       const bytes = entries.reduce((n, e) => n + (Number(e.f.live.size) || 0), 0);
       if (!entries.length || bytes > ZIP_MAX_BYTES) {
         infoTitle.textContent = folder.name;
-        infoBody.innerHTML = `<p class="info-row-value">${entries.length ? 'This folder is too big to download at once (over 100 MB). Download the files one at a time.' : 'There are no files here to download.'}</p>`;
+        infoBody.innerHTML = `<p class="info-row-value">${entries.length ? 'This folder is over 100 MB. Download its files one at a time.' : 'There are no files here to download.'}</p>`;
         infoOverlay.hidden = false;
         infoCloseBtn.focus();
         return;
@@ -4779,7 +4779,7 @@
             node.files.forEach(f => { f._id = 'n' + (idCounter++); });
           })(root);
           history = [root]; pointer = 0; selectedId = null;
-          rootNote = items.length ? 'No items here.' : (j.partial ? 'This class didn\'t answer just now. Reload to try again.' : 'No files in this class yet. Files your teacher posts, and files attached to assignments, show up here.');
+          rootNote = items.length ? 'No items here.' : (j.partial ? 'This class didn\'t answer just now. Reload to try again.' : 'No files yet. Teacher files and assignment attachments show up here.');
         } catch {
           rootNote = 'Couldn\'t load this class\'s files. Reload the page to try again.';
         }

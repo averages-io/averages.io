@@ -1387,7 +1387,7 @@
 
     function renderGradePopup(course) {
       const hist = HISTORY[course.id];
-      if (!hist || !Array.isArray(hist.points) || !hist.points.length) return `<h3>${escapeHtml(course.name)}</h3><p class="popup-sub">No graded work yet. The trend and predicted grade show up after the first grades.</p>`;
+      if (!hist || !Array.isArray(hist.points) || !hist.points.length) return `<h3>${escapeHtml(course.name)}</h3><p class="popup-sub">No grades yet. Trend and prediction show after the first grade.</p>`;
       const first = hist.points[0], lastGraded = hist.points[hist.points.length - 1];
       return `
         <h3>${escapeHtml(course.name)}</h3>

@@ -1091,7 +1091,7 @@
           ? `<div class="fx-grid">${list.map(tileHTML).join('')}</div>`
           : `<div class="fx-list" role="table" aria-label="${esc(filterTitle())}"><div class="fx-row head" role="row"><span></span><span>Name</span><span>From</span><span>Changed</span><span></span></div>${list.map(rowHTML).join('')}</div>`;
       }
-      if (fxFilter === 'all' || fxFilter === 'gdrive' || fxFilter === 'onedrive') body += '<p class="fx-note">Google Drive and OneDrive show the files you add here or make with Averages, not your whole drive.</p>';
+      if (fxFilter === 'all' || fxFilter === 'gdrive' || fxFilter === 'onedrive') body += '<p class="fx-note">Only files you save or add with Averages.io, not your whole drive.</p>';
       main.innerHTML = `
         <div class="fx-head">
           <h2>${esc(filterTitle())}</h2><span class="fx-meta">${list.length} file${list.length === 1 ? '' : 's'}</span>
@@ -1274,7 +1274,7 @@
             try { const f = await C().googleFile(token, id); if (f && f.id) got.push(f); } catch { /* not ours to open */ }
           }
           if (!got.length) {
-            flash('That file is in a different Google account than the one connected to Averages.io. Open it from the connected account, or connect the other account in Settings.', true);
+            flash('That file is in a different Google account than the connected one.', true);
             return;
           }
           const c = CLOUD.gdrive;
@@ -1687,7 +1687,7 @@
       // path: where the student is, from the top of their Canva Projects.
       const FD = { path: [{ id: 'root', name: 'Projects' }], items: [], next: null, state: 'idle', form: null, formBusy: false };
       const FOLDER_ERR = {
-        canva_item_in_multiple_folders: 'That design is in more than one folder, so Canva only lets you move it in Canva itself.',
+        canva_item_in_multiple_folders: 'It’s in several folders, so move it in Canva instead.',
         canva_folder_full: 'That folder is full in Canva.',
         canva_folder_gone: 'That folder isn’t in your Canva anymore.',
         canva_folder_not_allowed: 'Canva doesn’t let you change that one.',
@@ -1915,7 +1915,7 @@
       function sourcePanel(src) {
         const st = sourceState(src);
         if (src === 'course') {
-          if (st === 'loading') return '<div class="fx-empty"><strong>Loading your course files…</strong>This takes a moment the first time: every class is asked for its files.</div>';
+          if (st === 'loading') return '<div class="fx-empty"><strong>Loading your course files…</strong>The first load takes a moment: every class is checked.</div>';
           if (st === 'error') return '<div class="fx-empty"><strong>Couldn’t load your course files</strong>Try again in a moment.<br><button class="fx-more-designs" type="button" data-cf-retry>Try again</button></div>';
           return '';
         }
@@ -1937,7 +1937,7 @@
         if (st === 'soon') return `<div class="fx-empty"><strong>${esc(c.name)} is coming soon</strong>Files you save to ${esc(c.name)} with Averages.io will show up here.</div>`;
         if (st === 'reconnect') return `<div class="fx-empty"><strong>${esc(c.name)} got disconnected</strong>${esc(lostText(src))}<br><button class="fx-connect" type="button" data-cloud-connect="${src}"${c.busy ? ' disabled' : ''}>Reconnect ${esc(c.name)}</button></div>`;
         if (st === 'error') return `<div class="fx-empty"><strong>Couldn’t load your ${esc(c.name)} files</strong>${esc(c.message || 'Try again in a moment.')}<br><button class="fx-more-designs" type="button" data-cloud-retry="${src}">Try again</button></div>`;
-        if (st === 'connect') return `<div class="fx-empty"><strong>Connect ${esc(c.name)} to see your files here</strong>${src === 'onedrive' ? 'Averages.io saves into its own Apps/Averages.io folder. Add from OneDrive asks to read your files, and only the ones you pick show up here.' : 'Averages.io only sees the files it saves there or that you add, never the rest of your drive.'}<br><button class="fx-connect" type="button" data-cloud-connect="${src}"${c.busy ? ' disabled' : ''}>Connect ${esc(c.name)}</button></div>`;
+        if (st === 'connect') return `<div class="fx-empty"><strong>Connect ${esc(c.name)} to see your files here</strong>${src === 'onedrive' ? 'Saves to Apps/Averages.io. Only files you pick show up here.' : 'Only files you save or add, never the rest of your drive.'}<br><button class="fx-connect" type="button" data-cloud-connect="${src}"${c.busy ? ' disabled' : ''}>Connect ${esc(c.name)}</button></div>`;
         if (st === 'click') return `<div class="fx-empty"><strong>Your ${esc(c.name)} files</strong>${acct && (acct.email || acct.username) ? 'Connected as ' + esc(acct.email || acct.username) + '. ' : ''}${esc(c.name)} may ask you to confirm it’s you.<br><button class="fx-connect" type="button" data-cloud-show="${src}"${c.busy ? ' disabled' : ''}>Show files</button></div>`;
         return '';
       }
@@ -1955,7 +1955,7 @@
       function lostText(app) {
         const who = C() && C().lost ? (C().lost(app) || {}) : {};
         const name = CLOUD[app].name;
-        return `${who.email ? who.email + ' was disconnected from Averages.io' : `Averages.io can’t reach your ${name} anymore`}: access was removed in your ${app === 'gdrive' ? 'Google' : 'Microsoft'} account, or it ran out. Your files are still in ${name}. Reconnect to see them here again.`;
+        return `${who.email ? who.email + ' was disconnected from Averages.io' : `Averages.io can’t reach your ${name} anymore`}. Reconnect to see your files here again.`;
       }
       function reauthHTML() {
         if (INCOGNITO) return '';
@@ -1964,7 +1964,7 @@
         const D = window.AveragesDriveOpen;
         const g = CLOUD.gdrive;
         if (D && D.pending() && (g.state === 'connect' || g.state === 'reconnect')) {
-          out += `<div class="lf-reauth" role="status"><span>To open the file you chose in Google Drive, ${g.state === 'reconnect' ? 'reconnect' : 'connect'} Google Drive first. You’ll come back here and it opens.</span><button type="button" data-cloud-connect="gdrive"${g.busy ? ' disabled' : ''}>${g.state === 'reconnect' ? 'Reconnect' : 'Connect'} Google Drive</button><button class="lf-reauth-x" type="button" data-drive-open-cancel aria-label="Don’t open the file from Google Drive">×</button></div>`;
+          out += `<div class="lf-reauth" role="status"><span>${g.state === 'reconnect' ? 'Reconnect' : 'Connect'} Google Drive first, then the file you chose opens.</span><button type="button" data-cloud-connect="gdrive"${g.busy ? ' disabled' : ''}>${g.state === 'reconnect' ? 'Reconnect' : 'Connect'} Google Drive</button><button class="lf-reauth-x" type="button" data-drive-open-cancel aria-label="Don’t open the file from Google Drive">×</button></div>`;
         }
         out += ['gdrive', 'onedrive'].filter(app => (CLOUD[app].state === 'click' || CLOUD[app].state === 'reconnect') && LV.filter !== app && !reauthHidden.has(app)).map(app => {
           const c = CLOUD[app];
@@ -2067,12 +2067,12 @@
             if (LV.filter === 'canva' && CV.next) body += '<button class="fx-more-designs" type="button" data-more-designs>Load more Canva designs</button>';
             list.forEach(e => shownByKey.set(e.key, e));
           }
-          if ((LV.filter === 'course' || LV.filter.startsWith('c:') || LV.filter === 'all') && CF.partial) body += '<p class="fx-note">Some classes didn’t answer, so a few course files may be missing. Use Refresh under Course Files to try again.</p>';
-          if ((LV.filter === 'turnedin' || LV.filter === 'all') && SUB.state === 'ready' && SUB.partial) body += '<p class="fx-note">Turned In shows what you turned in for your most recent assignments; older ones (or a class that didn’t answer) may be missing.</p>';
+          if ((LV.filter === 'course' || LV.filter.startsWith('c:') || LV.filter === 'all') && CF.partial) body += '<p class="fx-note">Some classes didn’t answer. Use Refresh to try again.</p>';
+          if ((LV.filter === 'turnedin' || LV.filter === 'all') && SUB.state === 'ready' && SUB.partial) body += '<p class="fx-note">Work from your recent assignments; older ones may be missing.</p>';
           const nHidden = hiddenCount();
           if (nHidden || LV.showHidden) body += `<p class="fx-note">${LV.showHidden ? 'Showing files you removed from Averages.io.' : `${nHidden} file${nHidden === 1 ? '' : 's'} removed from Averages.io.`} <button class="lf-link" type="button" data-show-hidden>${LV.showHidden ? 'Hide them' : 'Show them'}</button></p>`;
-          if (LV.filter === 'all' || LV.filter === 'recent' || LV.filter === 'gdrive' || LV.filter === 'onedrive') body += '<p class="fx-note">Google Drive and OneDrive show the files you save, edit or add with Averages.io, not your whole drive.</p>';
-          if (INCOGNITO && (LV.filter === 'all' || LV.filter === 'recent')) body += '<p class="fx-note">Incognito mode: Google Drive and OneDrive stay connected in this tab only, and nothing about them is stored on our servers. Canva is off.</p>';
+          if (LV.filter === 'all' || LV.filter === 'recent' || LV.filter === 'gdrive' || LV.filter === 'onedrive') body += '<p class="fx-note">Only files you save or add with Averages.io, not your whole drive.</p>';
+          if (INCOGNITO && (LV.filter === 'all' || LV.filter === 'recent')) body += '<p class="fx-note">Incognito: Google Drive and OneDrive connect in this tab only.</p>';
         }
         const focusId = document.activeElement && document.activeElement.id === 'lfFolderName' ? 'lfFolderName' : null;
         main.innerHTML = `
@@ -2207,7 +2207,7 @@
         const show = t.closest('[data-cloud-show]');
         if (show && !show.disabled) { askCloud(show.dataset.cloudShow, 'show'); return; }
         const pick = t.closest('[data-pick-drive]');
-        if (pick && !pick.disabled) { window.open((C() && C().driveHome) || 'https://drive.google.com/', '_blank', 'noopener,noreferrer'); flash('Google Drive opened in a new tab. Right-click a file there and choose Open with → Averages.io.'); return; }
+        if (pick && !pick.disabled) { window.open((C() && C().driveHome) || 'https://drive.google.com/', '_blank', 'noopener,noreferrer'); flash('In Google Drive, right-click a file, then Open with → Averages.io.'); return; }
         const pickOne = t.closest('[data-pick-onedrive]');
         if (pickOne && !pickOne.disabled) { askCloud('onedrive', 'pick'); return; }
         const retry = t.closest('[data-cloud-retry]');
@@ -2332,7 +2332,7 @@
     } else if (FILES_SIGNED_IN) {
       document.getElementById('fxSide').hidden = true;
       document.getElementById('fx').style.gridTemplateColumns = 'minmax(0, 1fr)';
-      document.getElementById('fxMain').innerHTML = '<div class="fx-empty"><strong>Files is on the way</strong>Your course files, Google Drive and OneDrive files, and Canva designs will all show up here.</div>';
+      document.getElementById('fxMain').innerHTML = '<div class="fx-empty"><strong>Files is on the way</strong>Course files, Google Drive, OneDrive and Canva files show up here.</div>';
       document.getElementById('filesSub').textContent = 'Coming soon';
     } else {
       render();

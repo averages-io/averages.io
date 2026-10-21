@@ -735,7 +735,7 @@
           <li class="side-step" data-side-step="school"><span class="num"><span class="n">2</span><svg class="check" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7.5l3.2 3L12 3.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="butt" stroke-linejoin="miter"/></svg></span>Find your school</li>
           <li class="side-step" data-side-step="login"><span class="num"><span class="n" data-login-num>3</span><svg class="check" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7.5l3.2 3L12 3.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="butt" stroke-linejoin="miter"/></svg></span>Log in with your school account</li>
         </ol>
-        <p class="side-safe">You log in on Schoology itself, so your password never goes to Averages.io.</p>
+        <p class="side-safe">You sign in on Schoology, so Averages.io never sees your password.</p>
       </aside>
 
       <div class="lms-main">
@@ -814,7 +814,7 @@
             </div>
             <div class="lms-finish">
               <div class="age-row"><label class="age-check"><input type="checkbox" data-age> I am 13+</label><button class="age-why" type="button" aria-expanded="false" data-age-why>Why?</button></div>
-              <p class="age-note" data-age-note hidden>To comply with U.S. privacy law, students under 13 can only use Incognito mode.</p>
+              <p class="age-note" data-age-note hidden>Under U.S. privacy law, students under 13 use Incognito mode only.</p>
               <button class="lms-sso" id="ssoBtn" type="button" disabled>Log in with Schoology</button>
               <p class="signin-note" id="schoolNote" role="status" hidden></p>
             </div>
@@ -1034,7 +1034,7 @@
       searchInput.setAttribute('aria-expanded', options.length ? 'true' : 'false');
       if (active >= 0) searchInput.setAttribute('aria-activedescendant', 'schoolOpt' + active); else searchInput.removeAttribute('aria-activedescendant');
       hintEl.textContent = q && !options.length
-        ? `No schools match. You can also type the address you use for Schoology, like ${LMS[lms].example}.`
+        ? `No match. Type your Schoology address, like ${LMS[lms].example}.`
         : '';
     }
     function moveActive(step) {

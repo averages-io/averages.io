@@ -1118,7 +1118,11 @@
   .mode-option[hidden] { display: none; }
   .mode-name { font-weight: 800; font-size: 1.1rem; }
   .mode-desc { font-size: 0.82rem; font-weight: 600; color: var(--text-muted); line-height: 1.45; }
-  .mode-price { font-size: 0.82rem; font-weight: 800; color: var(--text-dark); }
+  /* Plus stands out (2026-10-21, Martin: "a different color like to stand out", then "the color of the fruit punch logo"): Punch, the logo gradient #FF7A50 -> #E5484D, whatever the accent is. Dark text on it: white fails AA on both stops. */
+  .mode-option[data-mode="plus"] { background: color-mix(in srgb, #FF7A50 18%, var(--control-bg)); }
+  .mode-option[data-mode="plus"][aria-checked="true"] { border-color: #E5484D; box-shadow: 0 0 0 2px rgb(229 72 77 / 0.3); }
+  .mode-option[data-mode="plus"]:focus-visible { box-shadow: 0 0 0 3px rgb(229 72 77 / 0.45); }
+  .mode-price { padding: 0 8px; border-radius: 999px; background: linear-gradient(135deg, #FF7A50, #E5484D); color: #2A0A05; font-size: 0.74rem; font-weight: 800; line-height: 20px; }
   .mode-option[data-mode="plus"] .mode-name { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
   .mode-hint { margin: 0 0 4px; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); }
   .btn-next:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -1162,17 +1166,17 @@
           <div class="mode-options" id="modeOptions" role="radiogroup" aria-label="Mode">
             <button type="button" class="mode-option" data-mode="incognito" role="radio" aria-checked="false">
               <span class="mode-name">Incognito</span>
-              <span class="mode-desc">Stores nothing. Your settings stay on this device, and nothing about you is saved on our servers. Google Drive and OneDrive connect through your browser only. No Canva or notifications.</span>
+              <span class="mode-desc">Stores nothing on our servers. No sync, Canva or notifications.</span>
             </button>
             <button type="button" class="mode-option" data-mode="classic" role="radio" aria-checked="false">
               <span class="mode-name">Classic</span>
-              <span class="mode-desc">Your profile, appearance and settings follow you to every device you sign in on, and you can connect Canva, Google Drive and OneDrive. For students 13 and older.</span>
+              <span class="mode-desc">Syncs your settings and connects Canva, Google Drive and OneDrive. Ages 13+.</span>
             </button>
             <!-- Plus (2026-10-21): Classic with the Averages Plus subscription. Shown only when
                  billing is on (GET /billing/status) and they're 13+; checkout opens when setup is done. -->
             <button type="button" class="mode-option" data-mode="plus" role="radio" aria-checked="false" data-feature="billing" hidden>
               <span class="mode-name">Plus <span class="mode-price">$2.99/mo</span></span>
-              <span class="mode-desc">Everything in Classic, plus browser notifications, more themes, the iPhone app when it comes out, and new features two weeks early. Checkout opens when you finish setting up.</span>
+              <span class="mode-desc">Everything in Classic, plus notifications, calendar sync and early features.</span>
             </button>
           </div>
           <p class="mode-hint" id="modeHint">Pick one to continue.</p>
@@ -1285,7 +1289,7 @@
     <div class="upload-gate-box" id="uploadGateBox" role="dialog" aria-modal="true" aria-labelledby="uploadGateTitle">
       <div class="upload-gate-pane" id="uploadGateConsent">
         <h2 id="uploadGateTitle">Before you upload…</h2>
-        <p>Your photo will be scanned for inappropriate (NSFW) content before it's used. This happens automatically — you don't need to do anything else.</p>
+        <p>Your photo is checked for inappropriate content on this device.</p>
         <div class="upload-gate-actions">
           <button class="upload-gate-goback" type="button" id="uploadGateGoBackBtn">Go Back</button>
           <button class="upload-gate-continue" type="button" id="uploadGateContinueBtn">Continue</button>
@@ -1315,7 +1319,7 @@
   <div class="upload-gate-overlay bg-crop-overlay" id="bgCropOverlay">
     <div class="upload-gate-box bg-crop-box" id="bgCropBox" role="dialog" aria-modal="true" aria-labelledby="bgCropTitle">
       <h2 id="bgCropTitle">Position Background</h2>
-      <p>Drag to reposition, and use the slider to zoom — this previews roughly how it'll look behind the app.</p>
+      <p>Drag to move it. Use the slider to zoom.</p>
       <div class="bg-crop-stage" id="bgCropStage">
         <img class="bg-crop-img" id="bgCropImg" alt="" draggable="false">
       </div>
@@ -1514,7 +1518,7 @@
         category: 'Performance',
         key: 'potatoMode',
         title: 'Potato PC Mode',
-        desc: 'Made for Chromebooks and older computers: turns off every animation and visual effect and uses the font already on your device, so Averages uses as little power as possible.',
+        desc: 'Turns off animations and effects for Chromebooks and older computers.',
         checked: false
       }
     ];
@@ -2227,9 +2231,9 @@
     // connects in a new tab so nothing picked here is lost.
     const integrations = (function () {
       const APPS = [
-        { id: 'canva', name: 'Canva', desc: 'Edit assignment files in Canva, then turn them in from Drafts.' },
-        { id: 'gdrive', name: 'Google Drive', desc: 'Edit Word, PowerPoint and Excel files in Google Docs, Slides and Sheets, and open Drive files in Averages.io (Open with → Averages.io).' },
-        { id: 'onedrive', name: 'OneDrive', desc: 'Save course files to OneDrive and find them on the Files tab.' },
+        { id: 'canva', name: 'Canva', desc: 'Edit files in Canva, then turn them in.' },
+        { id: 'gdrive', name: 'Google Drive', desc: 'Edit Office files in Google Docs, Slides and Sheets.' },
+        { id: 'onedrive', name: 'OneDrive', desc: 'Save course files to OneDrive.' },
       ];
       const MODE = window.__AVERAGES_MODE__;          // undefined in the preview
       const PREVIEW = !MODE;
@@ -2241,8 +2245,8 @@
       const block = document.createElement('div');
       block.className = 'feature-category';
       block.id = 'integrationsCategory';
-      const NOTE_CLASSIC = 'Averages only gets what you allow. You can connect or disconnect these any time in Settings.';
-      const NOTE_INCOGNITO = 'Incognito mode: Google Drive and OneDrive connect through this browser only, so nothing about them is stored on our servers, and a new tab asks you to sign in again. Canva is off in Incognito mode.';
+      const NOTE_CLASSIC = 'Averages only gets what you allow. Change it anytime in Settings.';
+      const NOTE_INCOGNITO = 'Incognito: Google Drive and OneDrive connect in this browser only. No Canva.';
       block.innerHTML = '<div class="category-title">Integrations</div><p class="integ-flash" role="status" hidden></p><div class="integ-list"></div>'
         + '<p class="integ-note">' + NOTE_CLASSIC + '</p>';
       // Above Performance (and below Sync & Privacy).
@@ -2371,7 +2375,7 @@
           // A new tab, so this one keeps everything picked so far. It comes
           // back to Settings when Canva is done; this tab re-checks on return.
           const w = window.open(apiBase() + '/canva/connect?return_to=' + encodeURIComponent('/settings'), '_blank');
-          if (!w) { showFlash('Your browser blocked the Canva tab. Allow pop-ups for Averages, or connect Canva later in Settings.', true); return; }
+          if (!w) { showFlash('Canva tab blocked. Allow pop-ups, or connect later in Settings.', true); return; }
           canva.waiting = true;
           connectedHere.add('canva-pending');
           flash.hidden = true;
@@ -2525,7 +2529,7 @@
       if (!billingStatus || !billingStatus.enabled || !billingStatus.configured) return;
       plusCard.hidden = false;
       if (billingStatus.plus) {
-        plusCard.querySelector('.mode-desc').textContent = 'You have Plus. Everything in Classic, plus browser notifications, more themes, the iPhone app when it comes out, and new features two weeks early.';
+        plusCard.querySelector('.mode-desc').textContent = 'You have Plus: notifications, calendar sync and early features.';
         if (!accountMode) setMode('plus');
       }
     })();
@@ -2720,7 +2724,7 @@
       // A cancelled or failed checkout lands in the app as Classic.
       if (accountMode === 'plus' && !(billingStatus && billingStatus.plus)) {
         const lead = completeState.querySelector('p');
-        if (lead) lead.textContent = 'Your Averages profile has been created. Taking you to checkout for Plus next.';
+        if (lead) lead.textContent = 'Profile created. Taking you to Plus checkout next.';
         window.__averagesOnboardFinish = async function () {
           try {
             const base = window.location.hostname.endsWith('averages.io') ? 'https://api.averages.io' : 'http://localhost:8787';

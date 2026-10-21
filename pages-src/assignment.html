@@ -2144,7 +2144,7 @@
           const label = escapeHtml(String(ext || 'file').toUpperCase());
           whyBtn = '<br><button class="why-btn" type="button" data-why aria-expanded="false">Why Canva?</button>';
           whyNote = `<p class="why-note" hidden>${driveCan
-              ? 'You picked Google Drive in Settings, but Google Drive isn’t connected right now, so this opens in Canva. <a href="settings.html?section=integrations">Connect Google Drive</a> to edit it there.'
+              ? 'Google Drive isn’t connected, so this opens in Canva. <a href="settings.html?section=integrations">Connect Google Drive</a>'
               : `${label} files always open in Canva. Google Drive can only edit one by turning it into a Google Doc, which usually scrambles the layout. Word, PowerPoint and Excel files open in Google Drive, as you picked in <a href="settings.html?section=integrations">Settings</a>.`}</p>`;
         }
         const canva = editApp === 'gdrive'
@@ -2361,15 +2361,15 @@
     function showCanvaProblem(code) {
       const connect = code === 'canva_not_connected' || code === 'canva_reconnect_needed';
       const MSG = {
-        canva_not_connected: ['Connect Canva first', 'Edit in Canva opens assignment files in your own Canva account. Connect it once and this button works from then on.'],
+        canva_not_connected: ['Connect Canva first', 'Opens files in your Canva account. Connect Canva once to start.'],
         canva_reconnect_needed: ['Reconnect Canva', 'Your Canva connection ran out. Connect it again to keep editing.'],
         canva_not_configured: ['Canva is coming soon', 'Editing in Canva isn’t switched on yet.'],
-        canva_missing_permission: ['Canva needs permission', 'Disconnect and connect Canva again in Settings, and allow access when Canva asks.'],
-        canva_duplicate_import: ['Already in your Canva', 'This file was opened in Canva before. Find it in your Canva account or on the Files tab.'],
+        canva_missing_permission: ['Canva needs permission', 'Reconnect Canva in Settings and allow access when asked.'],
+        canva_duplicate_import: ['Already in your Canva', 'Already opened in Canva. Find it on the Files tab.'],
         canva_rate_limited: ['Canva is busy', 'Too many files were opened at once. Try again in a minute.'],
         canva_invalid_file: ['Canva can’t open this file', 'Download it instead and open it another way.'],
-        file_too_large: ['This file is too big for Canva', 'Files over 25 MB can’t be opened in Canva from Averages.io. Download it instead.'],
-        file_not_found: ['File not found', 'This file isn’t on the assignment anymore. Reload the page to see what’s attached now.'],
+        file_too_large: ['This file is too big for Canva', 'Files over 25 MB can’t open in Canva. Download it instead.'],
+        file_not_found: ['File not found', 'This file was removed. Reload to see what’s attached.'],
         canva_design_gone: ['Design not found', 'This draft was deleted in Canva, so it’s been removed from Drafts.'],
       };
       const [title, text] = MSG[code] || ['Couldn’t open this in Canva', 'Something went wrong. Try again in a moment.'];
@@ -2532,7 +2532,7 @@
       const pending = cloudToken(C, app);
       openModal(`
         <h3>Saving to ${escapeHtml(name)}…</h3>
-        <p>Copying "${escapeHtml(src.name)}" to ${escapeHtml(CLOUD_WHERE[app])}. If a sign-in window opened, finish there first.</p>`);
+        <p>Copying "${escapeHtml(src.name)}" to ${escapeHtml(CLOUD_WHERE[app])}. Finish any sign-in window first.</p>`);
       modalBox.setAttribute('aria-busy', 'true');
       pending
         .then(async token => {
@@ -2965,7 +2965,7 @@
       if (!liveHistory.revisions.length) return `
           <div class="submit-dropzone live-drop" data-dropzone>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M12 4l-5 5M12 4l5 5"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
-            <div>Nothing turned in yet. Drop files here, or use Add Submission to upload a file or write your answer.</div>
+            <div>Nothing turned in yet. Drop files here or use Add Submission.</div>
           </div>`;
       return `<h2 style="margin-top:0;">Submission History</h2>${liveHistory.revisions.map(revisionRowHTML).join('')}`;
     }
@@ -3135,7 +3135,7 @@
         bodyEl.innerHTML = `
           <div class="submit-dropzone quiz-redirect-notice classroom-turnin">
             ${EXTERNAL_LINK_ICON}
-            <div>${done ? 'This was turned in on Google Classroom. Open it there to see your work and any comments.' : 'Turn this in on Google Classroom. Your status and grade show up here once it’s in.'}</div>
+            <div>${done ? 'Turned in on Google Classroom. Open it there to see comments.' : 'Turn this in on Google Classroom. Your grade shows here after.'}</div>
             <a class="quiz-redirect-btn" href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer">
               ${done ? 'Open in Google Classroom' : 'Turn in on Google Classroom'}
               ${EXTERNAL_LINK_ICON}
@@ -3165,8 +3165,8 @@
           <div class="submit-dropzone quiz-redirect-notice">
             ${EXTERNAL_LINK_ICON}
             <div>${item.type === 'assessment'
-              ? 'Quizzes and tests are taken in Schoology, not in Averages. Head to Schoology to complete this one — your grade will show up here once it\'s in.'
-              : 'Your teacher set this up in an outside tool, like Google Assignments or Turnitin. Open it in Schoology to work on it and turn it in. Your grade shows up here once it\'s in.'}</div>
+              ? 'Take this in Schoology. Your grade shows here after.'
+              : 'This uses an outside tool. Open it in Schoology to turn it in.'}</div>
             <a class="quiz-redirect-btn" href="${escapeHtml(toolHref)}" target="_blank" rel="noopener noreferrer">
               Open in Schoology
               ${EXTERNAL_LINK_ICON}
@@ -3498,7 +3498,7 @@
       function upLineHTML(p) {
         if (!p.up || st.phase === 'done') return '';
         // Known before averages-submit.js has loaded (it's checked when the file is added).
-        const early = { file_too_large: 'This file is too big to turn in. Files can be up to 95 MB.', empty_file: 'This file is empty. Pick another one.' };
+        const early = { file_too_large: 'Too big to turn in. Files can be up to 95 MB.', empty_file: 'This file is empty. Pick another one.' };
         if (p.up.state === 'failed') return `<div class="as-stat bad">${escapeHtml(early[p.up.err && p.up.err.code] || submitMessage(p.up.err || { code: 'failed' }))}${p.up.err && p.up.err.code !== 'file_too_large' && p.up.err.code !== 'empty_file' ? ` <button class="as-linkbtn" type="button" data-as-retry-up="${p.key}">Try again</button>` : ''}</div>`;
         if (p.up.state === 'done') return '';
         const pct = Math.round((p.up.frac || 0) * 100);
@@ -3521,7 +3521,7 @@
               below = `<p class="as-hint">${AS_I.globe}Canva can’t share for us yet, so paste the design’s view link.</p><div class="as-curl"><input type="url" inputmode="url" placeholder="https://www.canva.com/design/…/view" value="${escapeHtml(p.url)}" data-as-url="${p.key}" aria-label="Canva view link for ${escapeHtml(p.name)}">${v}</div>`;
             } else if (p.src === 'onedrive') {
               below = linkNeeds(p) === 'onedrive_allow'
-                ? `<p class="as-hint">${AS_I.globe}OneDrive needs one more permission to share links. You’ll come back to this page. <button class="as-linkbtn" type="button" data-as-allow="${p.key}">Allow</button></p>`
+                ? `<p class="as-hint">${AS_I.globe}OneDrive needs one more permission to share links. <button class="as-linkbtn" type="button" data-as-allow="${p.key}">Allow</button></p>`
                 : `<p class="as-hint">${AS_I.globe}Anyone with the link can view.</p>`;
             } else {
               below = `<button class="as-hint as-hint-btn" type="button" data-as-access="${p.key}" aria-expanded="${p.access}">${AS_I.globe}Anyone with the link can ${p.role === 'commenter' ? 'comment' : 'view'}.${AS_I.side}</button>`;
@@ -5092,7 +5092,7 @@
     function confirmSubmitDraft(d, fromBtn) {
       openModal(`
         <h3>Turn in "${escapeHtml(d.name)}" as a PDF?</h3>
-        <p>${d.drive ? 'Averages.io gets a PDF of it from your Google Drive and turns it in on Schoology.' : 'Canva makes a PDF of your design, and Averages.io turns it in on Schoology.'}</p>
+        <p>${d.drive ? 'Turned in on Schoology as a PDF from your Google Drive.' : 'Canva makes a PDF, and it’s turned in on Schoology.'}</p>
         <div class="upload-picked-progress" id="draftSubProgress" hidden><span class="upload-progress-text"></span><span class="upload-bar" aria-hidden="true"><i></i></span></div>
         <p class="submit-error" id="submitError" role="alert" hidden></p>
         <div class="modal-actions">

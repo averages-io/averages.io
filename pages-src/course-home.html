@@ -2494,13 +2494,13 @@
     }
     function renderGradePopup(c) {
       const h = HISTORY[c.id];
-      if (!h || !Array.isArray(h.points) || !h.points.length) return `<h3>${escapeHtml(c.name)}</h3><p class="popup-sub">No graded work yet. The trend and predicted grade show up after the first grades.</p>`;
+      if (!h || !Array.isArray(h.points) || !h.points.length) return `<h3>${escapeHtml(c.name)}</h3><p class="popup-sub">No grades yet. Trend and prediction show after the first grade.</p>`;
       const first = h.points[0], lastGraded = h.points[h.points.length - 1];
       return `
         <h3>${escapeHtml(c.name)}</h3>
         <p class="popup-sub">${TREND_WORD[c.trend]}: <strong>${escapeHtml(first)}% → ${escapeHtml(lastGraded)}%</strong> over the last ${h.points.length} graded assignments, predicting <strong>${escapeHtml(c.predictedPct)}%</strong> (${escapeHtml(c.predicted)}).</p>
         ${buildGradeChartSVG(c)}
-        <p class="popup-foot">Predicted grade extrapolates this trend. It is not a copy of the current grade.</p>
+        <p class="popup-foot">Predicted grade follows this trend, not your current grade.</p>
       `;
     }
     const gradePopup = document.getElementById('gradePopup');
@@ -2536,7 +2536,7 @@
       document.getElementById('trendBody').innerHTML = `
         <div class="trend-chart">${buildGradeChartSVG(course, true, !trendDrawn)}<div class="trend-tip" id="trendTip" role="tooltip" hidden></div></div>
         <ol class="trend-list">${rows.map(r => `<li><span class="trend-title">${escapeHtml(r.title)}</span><span class="trend-date">${escapeHtml(r.date)}</span><span class="trend-score">${escapeHtml(r.score)}%</span></li>`).join('')}</ol>
-        <p class="trend-note">Projected grade follows this trend. It is not a copy of the current grade.</p>`;
+        <p class="trend-note">Projected grade follows this trend, not your current grade.</p>`;
       trendDrawn = true;
     }
     renderTrend();
