@@ -17,6 +17,14 @@
  *
  * The API refuses a switched-off feature anyway (503 feature_off); hiding is
  * only so nobody is offered something that won't work.
+ *
+ * Early access (2026-10-21, an Averages Plus perk): /config/features also
+ * lists `early`, switches that are off for everyone but on for Plus members.
+ * When there are any, this asks /billing/status (signed in only, kept for
+ * this tab for 10 minutes); for a Plus member those count as on, and
+ * <html data-feature-preview="key ..."> lets a page show a Preview tag:
+ * anything marked data-preview-tag="key" only shows while that key is a
+ * preview. AveragesFeatures.preview(key) says the same.
  */
 (function () {
   'use strict';
@@ -25,7 +33,7 @@
     'schoology-signin', 'test-signin',
     'maintenance-banner', 'coursematerialpreview-feature',
     'turnin-feature', 'messaging-features', 'notifications-features',
-    'billing',
+    'billing', 'calendar-sync',
   ];
   const DEFAULTS = { 'maintenance-banner': false, 'coursematerialpreview-feature': false, billing: false };
   const NAMES = {
@@ -35,6 +43,7 @@
     'coursematerialpreview-feature': 'Previews are',
     'turnin-feature': 'Turning in work is', 'messaging-features': 'Messages is', 'notifications-features': 'Notifications are',
     billing: 'Averages Plus is',
+    'calendar-sync': 'Calendar sync is',
   };
   // Existing parts of the app, per switch (a selector each; all of them are hidden while it's off).
   const RULES = {
@@ -66,10 +75,12 @@
   const API = window.location.hostname.endsWith('averages.io') ? 'https://api.averages.io' : 'http://localhost:8787';
   const root = document.documentElement;
 
-  let state = { features: null, maintenance: null };
+  let state = { features: null, maintenance: null, early: [] };
+  let plusMember = false;   // early access: this student has Averages Plus
+  const preview = (k) => plusMember && Array.isArray(state.early) && state.early.includes(k);
   const on = (k) => {
     const f = state.features;
-    if (f && typeof f[k] === 'boolean') return f[k];
+    if (f && typeof f[k] === 'boolean') return f[k] || preview(k);
     return k in DEFAULTS ? DEFAULTS[k] : true;
   };
 
@@ -84,6 +95,8 @@
     out.push('html[data-feature-off~="schoology-signin"][data-feature-off~="test-signin"] #devKeys');
     // "Save to cloud" with neither cloud.
     out.push('html[data-feature-off~="drive-integration"][data-feature-off~="onedrive-integration"] [data-file-action="cloud"]');
+    // Preview tags: hidden unless that key is a preview for this student.
+    out.push('[data-preview-tag]:not(.avf-preview-on)');
     return out.join(' { display: none !important; }\n') + ' { display: none !important; }\n'
       + '.avf-banner{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:2147483000;display:flex;align-items:center;gap:12px;max-width:min(640px,calc(100vw - 32px));padding:10px 10px 10px 16px;border-radius:14px;background:#14151f;color:#fff;font:700 13px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.3)}'
       + '.avf-banner svg{flex:none;width:18px;height:18px}'
@@ -100,6 +113,15 @@
     const off = KEYS.filter((k) => !on(k));
     if (off.length) root.setAttribute('data-feature-off', off.join(' '));
     else root.removeAttribute('data-feature-off');
+    const previews = KEYS.filter((k) => preview(k));
+    if (previews.length) root.setAttribute('data-feature-preview', previews.join(' '));
+    else root.removeAttribute('data-feature-preview');
+    whenBody(() => {
+      document.querySelectorAll('[data-preview-tag]').forEach((el) => {
+        const keys = String(el.getAttribute('data-preview-tag') || '').split(/\s+/);
+        el.classList.toggle('avf-preview-on', keys.some((k) => previews.includes(k)));
+      });
+    });
     whenBody(() => { banner(); pageNotice(); });
     try { window.dispatchEvent(new CustomEvent('averages:features', { detail: { on } })); } catch { /* old browser */ }
   }
@@ -181,7 +203,8 @@
     const features = {};
     KEYS.forEach((k) => { if (typeof j.features[k] === 'boolean') features[k] = j.features[k]; });
     const m = j.maintenance && typeof j.maintenance.message === 'string' ? { message: j.maintenance.message.slice(0, 300) } : null;
-    return { features, maintenance: m };
+    const early = Array.isArray(j.early) ? j.early.filter((k) => KEYS.includes(k)) : [];
+    return { features, maintenance: m, early };
   }
 
   // 1. The last answer this tab had, right away.
@@ -205,8 +228,34 @@
       state = c;
       try { sessionStorage.setItem(CACHE, JSON.stringify(c)); } catch { /* storage off */ }
       apply();
+      if (c.early.length) return checkPlus();
     })
     .catch(() => { /* API unreachable: keep what we have */ });
+
+  // Early access: is this student a Plus member? Only asked when there are
+  // early switches and someone's signed in; remembered for this tab 10 minutes.
+  const PLUS_CACHE = 'averages_plus_member';
+  function checkPlus() {
+    let signedIn = false;
+    try { signedIn = localStorage.getItem('averages_signed_in') === '1'; } catch { /* storage off */ }
+    if (!signedIn) return null;
+    try {
+      const kept = JSON.parse(sessionStorage.getItem(PLUS_CACHE) || 'null');
+      if (kept && typeof kept.plus === 'boolean' && Date.now() - kept.at < 10 * 60 * 1000) {
+        plusMember = kept.plus;
+        apply();
+        return null;
+      }
+    } catch { /* nothing kept */ }
+    return fetch(API + '/billing/status', { credentials: 'include', cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((b) => {
+        plusMember = !!(b && b.plus);
+        try { sessionStorage.setItem(PLUS_CACHE, JSON.stringify({ plus: plusMember, at: Date.now() })); } catch { /* storage off */ }
+        apply();
+      })
+      .catch(() => { /* keep everyone else's view */ });
+  }
 
   // Client-side navigation (Next.js): page notices follow the address.
   let last = window.location.pathname;
@@ -214,5 +263,5 @@
     if (window.location.pathname !== last) { last = window.location.pathname; whenBody(pageNotice); }
   }, 500);
 
-  window.AveragesFeatures = { on, ready, keys: KEYS.slice() };
+  window.AveragesFeatures = { on, ready, preview, keys: KEYS.slice() };
 })();

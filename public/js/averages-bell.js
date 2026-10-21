@@ -245,7 +245,7 @@
       (any ? secs.map((s) => `<section class="avb-sec" data-sec="${s.key}" aria-label="${esc(s.title)}">
           <div class="avb-sec-head"><h3 class="avb-sec-title">${esc(s.title)}</h3>${s.all ? `<a class="avb-sec-all" href="${esc(s.all.href)}">${esc(s.all.label)}</a>` : ''}</div>
           <div class="avb-rows">${s.loading ? skelRows() : s.items.length ? s.items.map(rowHTML).join('') : '<p class="avb-empty">Nothing new from your teachers.</p>'}</div>
-        </section>`).join('') : '<p class="avb-empty">You’re all caught up. New grades, teacher updates and messages show up here.</p>');
+        </section>`).join('') : '<p class="avb-empty">All caught up. New grades and messages show up here.</p>');
   }
 
   function open() {

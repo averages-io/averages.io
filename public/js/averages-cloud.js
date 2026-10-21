@@ -1765,7 +1765,7 @@
             e && e.code === 'needs_click'
               ? 'Your sign-in ran out. Close this, then click Add from OneDrive again.'
               : e && e.code === 'denied'
-                ? 'OneDrive didn’t let Averages.io read your files. Close this, then click Add from OneDrive and allow it.'
+                ? 'OneDrive blocked access. Try Add from OneDrive again and allow it.'
                 : 'Couldn’t load your OneDrive. Check your internet and try again.';
         }
         loading = false;
@@ -1963,19 +1963,19 @@
     not_ready: 'Google sign-in is still loading. Try again in a second.',
     network: 'Couldn’t connect right now. Check your internet and try again.',
     needs_click: 'Your sign-in ran out. Click again to sign back in.',
-    reconnect: 'Your Google Drive or OneDrive got disconnected (access was removed or ran out). Reconnect it in Settings › Integrations.',
-    popup_blocked: 'Your browser blocked the sign-in window. Allow pop-ups for this site, then try again.',
-    popup_closed: 'The sign-in window closed before it finished. If it said your school blocks Averages.io, your school’s IT team has to allow it first.',
+    reconnect: 'Google Drive or OneDrive disconnected. Reconnect in Settings › Integrations.',
+    popup_blocked: 'Sign-in window blocked. Allow pop-ups, then try again.',
+    popup_closed: 'Sign-in closed early. If your school blocks Averages.io, ask IT.',
     denied: 'Access wasn’t allowed, so nothing was changed.',
     incognito: 'Off in Incognito mode.',
     connect_cancelled: 'Nothing was connected.',
     connect_failed: 'Couldn’t connect right now. Try again in a moment.',
-    picked_not_granted: 'Google didn’t give Averages.io access to that file. Try Google Drive again; if it keeps happening, the Picker key and the Drive sign-in are set up in different Google Cloud projects.',
-    picked_other_account: 'Those files are in a different Google account than the one connected. Open Google Drive again and choose the connected account in Google’s window, or connect the other account in Settings.',
-    drive_not_allowed: 'Google Drive access wasn’t ticked. Connect again and leave “See, edit, create, and delete only the specific Google Drive files you use with this app” ticked.',
+    picked_not_granted: 'Google didn’t allow access to that file. Try again.',
+    picked_other_account: 'Those files are in a different Google account than the connected one.',
+    drive_not_allowed: 'Google Drive access wasn’t ticked. Connect again and tick it.',
     too_large: 'This file is too big to copy (250 MB max).',
-    not_editable: 'Only Word, PowerPoint and Excel files open in Google Docs, Slides and Sheets.',
-    drive_full_or_blocked: 'Your drive refused the file. It may be full, or your school may block uploads.',
+    not_editable: 'Only Word, PowerPoint and Excel files open in Google’s editors.',
+    drive_full_or_blocked: 'Your drive refused the file. It may be full or blocked.',
     signed_out: 'You’ve been signed out of Averages.io. Sign in again.',
     download_failed: 'Couldn’t get the file from your school. Try again.',
     // Getting a drive file to turn in (2026-10-06)
@@ -1983,15 +1983,15 @@
     file_gone: 'That file isn’t there anymore. It may have been moved or deleted.',
     cloud_download_failed: 'Couldn’t download the file from your drive. Try again.',
     download_blocked: 'That file can’t be downloaded. Its owner may have turned downloading off.',
-    not_downloadable: 'This kind of file can’t be attached. Try a document, slides, a spreadsheet, a PDF or a picture.',
-    export_too_large: 'Google only turns files up to 10 MB into a PDF. Download it as a PDF in Google Drive, then attach that.',
-    share_blocked: 'Google Drive wouldn’t share that file with anyone who has the link. Your school may not allow it. Turn in the file instead, or share it with your teacher in Google Drive.',
-    share_failed: 'Couldn’t make a view link in Google Drive. Try again, or turn in the file instead.',
-    onedrive_share_blocked: 'OneDrive wouldn’t make a link for that file. Your school may not allow it. Send it as a copy instead.',
-    onedrive_share_failed: 'Couldn’t make a link in OneDrive. Try again, or send it as a copy.',
-    write_access_needed: 'OneDrive needs one more permission to share links. Click Allow next to the file, then try again.',
-    canva_link_needed: 'Paste the Canva view link (it starts with https://www.canva.com/design/). In Canva: Share → Anyone with the link → Can view → Copy link.',
-    read_access_needed: 'Averages.io needs permission to read that file. Use Add from OneDrive on the Files tab, then try again.',
+    not_downloadable: 'This file type can’t be attached. Try a document, PDF or picture.',
+    export_too_large: 'Google only makes PDFs from files up to 10 MB.',
+    share_blocked: 'Google Drive wouldn’t share it by link. Turn in the file instead.',
+    share_failed: 'Couldn’t make a Google Drive link. Try again or turn in the file.',
+    onedrive_share_blocked: 'OneDrive wouldn’t make a link. Send it as a copy instead.',
+    onedrive_share_failed: 'Couldn’t make a OneDrive link. Try again or send a copy.',
+    write_access_needed: 'OneDrive needs permission to share links. Click Allow, then retry.',
+    canva_link_needed: 'Paste the Canva view link (Share → Anyone with the link → Copy link).',
+    read_access_needed: 'Add that file with Add from OneDrive first, then try again.',
   };
   function messageFor(error) {
     const code = error && error.code ? error.code : String(error && error.message ? error.message : error || '');

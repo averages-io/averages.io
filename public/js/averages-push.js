@@ -11,7 +11,7 @@
  *   window.AveragesPush = {
  *     supported()        this browser can do push at all
  *     config()           { publicKey } (null until the API is set up), or { failed: true }
- *     status()           { ok, on, here, types } for this student and this browser
+ *     status()           { ok, on, here, types, plusRequired, turnedOff } for this student and this browser
  *     enable(types)      subscribe this browser and turn notifications on
  *     disable()          unsubscribe this browser; the API deletes everything
  *                        once no browser is left
@@ -151,7 +151,14 @@
     const here = !!r.data.here;
     if (here) setLocal(ENDPOINT_KEY, endpoint);
     else removeLocal(ENDPOINT_KEY);
-    return { ok: true, on: !!r.data.on, here, types: r.data.types || null, configured: r.data.configured !== false };
+    // Averages Plus (2026-10-21): plusRequired = notifications are a Plus perk
+    // and this student doesn't have Plus; turnedOff = the API just turned them
+    // off for that reason (this browser stops too).
+    const turnedOff = typeof r.data.turnedOff === 'string' ? r.data.turnedOff : '';
+    if (turnedOff && sub) {
+      try { await sub.unsubscribe(); } catch (e) {}
+    }
+    return { ok: true, on: !!r.data.on, here, types: r.data.types || null, configured: r.data.configured !== false, plusRequired: !!r.data.plusRequired, turnedOff };
   }
 
   /**
