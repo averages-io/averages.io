@@ -17,10 +17,17 @@
  *   AveragesFileIcons.key(extOrName, mime)            -> 'pdf' | 'doc' | … | 'file'
  *   AveragesFileIcons.color(extOrName, mime)          -> '#E5484D' …
  * Pages keep their old badge when this script isn't there, so nothing breaks.
+ * Off in Potato mode (2026-10-20), so those plain badges show there.
  */
 (function () {
   'use strict';
   if (window.AveragesFileIcons) return;
+  // Potato mode (2026-10-20): no drawn icons; every page falls back to its
+  // plain colored type label. Read from the saved setting, since this runs in
+  // <head>, before the theme script marks <body>.
+  try {
+    if ((JSON.parse(localStorage.getItem('schoolagy_settings_options') || '{}') || {}).potatoMode === true) return;
+  } catch (e) { /* storage blocked: draw them */ }
 
   // key: [label, color, name]
   const T = {

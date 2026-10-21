@@ -25,14 +25,16 @@
     'schoology-signin', 'test-signin',
     'maintenance-banner', 'coursematerialpreview-feature',
     'turnin-feature', 'messaging-features', 'notifications-features',
+    'billing',
   ];
-  const DEFAULTS = { 'maintenance-banner': false, 'coursematerialpreview-feature': false };
+  const DEFAULTS = { 'maintenance-banner': false, 'coursematerialpreview-feature': false, billing: false };
   const NAMES = {
     'canva-integration': 'Canva is', 'onedrive-integration': 'OneDrive is', 'drive-integration': 'Google Drive is',
     'schoology-signin': 'Signing in with Schoology is',
     'test-signin': 'The reviewer account is',
     'coursematerialpreview-feature': 'Previews are',
     'turnin-feature': 'Turning in work is', 'messaging-features': 'Messages is', 'notifications-features': 'Notifications are',
+    billing: 'Averages Plus is',
   };
   // Existing parts of the app, per switch (a selector each; all of them are hidden while it's off).
   const RULES = {

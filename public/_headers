@@ -3,6 +3,12 @@
 # so a changed file always gets a new name and a new address. Marking these
 # "keep for a year, never re-check" is safe, and saves the "has this changed?"
 # request for each of them on every page after the first.
-# Pages, /js/ and everything else keep Cloudflare's default (check every time).
+# Pages and everything else keep Cloudflare's default (check every time).
 /_next/static/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Our own scripts (2026-10-20). Every page asks for them by an address with a
+# version in it (/js/averages-bell.js?v=...; see scripts/port-pages.mjs), so a
+# changed file always has a new address and this is as safe as /_next/static.
+/js/*
   Cache-Control: public, max-age=31536000, immutable
