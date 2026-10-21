@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 // Loading animations (2026-10-19, Martin): shimmer, rows rising in, the chart skeleton. See app/lib/averages-loading.js.
 import "./lib/averages-loading.css";
+// Help popups for Canva and Google Drive (2026-10-21): the styles for public/js/averages-help.js.
+import "./lib/averages-help.css";
 // Our /js scripts' versioned addresses (2026-10-20; generated, see scripts/port-pages.mjs).
 import { JS } from "./lib/js-version";
 
@@ -120,6 +122,8 @@ export default function RootLayout({
         <script src={JS["averages-drive-open.js"]} />
         {/* Notifications (2026-10-19): the bell next to the profile picture, and AveragesSeen, which every notification dot uses. */}
         <script src={JS["averages-bell.js"]} />
+        {/* Help popups (2026-10-21, Martin's design): "Before you open Canva" and "Add files from Google Drive". Styles: app/lib/averages-help.css. */}
+        <script src={JS["averages-help.js"]} />
       </head>
       {/*
         No inline style on <body>, deliberately.
