@@ -168,7 +168,10 @@
 .avb-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring, rgba(255,255,255,0.6)); }
 .avb-btn svg { width: 26px; height: 26px; display: block; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.35)); transition: transform 0.14s ease; }
 .avb-btn:hover svg, .avb-btn[aria-expanded="true"] svg { transform: translateY(-1px); }
-.avb-badge { position: absolute; top: 2px; right: 1px; min-width: 18px; height: 18px; padding: 0 4px; box-sizing: border-box; border-radius: 999px; background: #E5484D; color: #fff; font-family: inherit; font-size: 0.66rem; font-weight: 800; line-height: 18px; text-align: center; box-shadow: 0 0 0 2px rgba(0,0,0,0.18); }
+.avb-badge { position: absolute; top: 2px; right: 1px; min-width: 18px; height: 18px; padding: 0 4px; box-sizing: border-box; border-radius: 999px; background: #E5484D; color: #fff; font-family: "puffin", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 0.66rem; font-weight: 800; font-variant-numeric: tabular-nums; display: inline-flex; align-items: center; justify-content: center; line-height: 1; box-shadow: 0 0 0 2px rgba(0,0,0,0.18); }
+.avb-badge > span { display: block; text-box: trim-both cap alphabetic; }
+/* The number is centered by its own height (2026-10-21, Martin: "the number inside the noti bubble is not centered"): it used the button's default font, and line-height centering
+   follows the font's ascent/descent, which put digits high on Macs. The inner span is trimmed to cap height and baseline (text-box), so flex centers the digits themselves; browsers without text-box (Firefox) still get flex centering. */
 .avb-badge[hidden] { display: none; }
 .avb-panel { position: absolute; top: calc(100% + 12px); right: -46px; width: min(380px, calc(100vw - 32px)); max-height: min(560px, calc(100vh - 120px)); overflow-y: auto; background: var(--panel-bg, #eaeaec); color: var(--text-dark, #14151f); border-radius: var(--window-radius-md, 14px); box-shadow: 0 20px 45px -16px rgba(0,0,0,0.5); padding: 8px; z-index: 30; text-align: left; }
 .avb-panel[hidden] { display: none; }
@@ -232,7 +235,9 @@
     const secs = sections();
     const unread = secs.reduce((n, s) => n + s.items.filter((i) => i.unread).length, 0);
     badge.hidden = unread === 0;
-    badge.textContent = unread > 9 ? '9+' : String(unread);
+    const n = document.createElement('span');
+    n.textContent = unread > 9 ? '9+' : String(unread);
+    badge.replaceChildren(n);
     btn.setAttribute('aria-label', unread ? `Notifications, ${unread} new` : 'Notifications');
     if (panel.hidden) return;   // the list is drawn when it's opened
     const any = secs.some((s) => s.items.length || s.loading);
