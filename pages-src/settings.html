@@ -574,6 +574,11 @@
   .notif-msg[hidden] { display: none; }
   .notif-msg { margin: 10px 2px 0; font-weight: 700; }
   .notif-msg.bad { color: var(--grade-bad); }
+  /* Averages Plus (2026-10-21) */
+  #plusBlock[hidden], #plusBtn[hidden], #plusMsg[hidden] { display: none; }
+  .plus-msg { margin: 10px 2px 0; font-weight: 700; }
+  .plus-msg.bad { color: var(--grade-bad); }
+  #plusRow.is-past-due .settings-row-desc { color: var(--grade-bad); }
   select.settings-select {
     font: inherit;
     font-weight: 700;
@@ -1266,6 +1271,22 @@
                 </div>
                 <button class="btn-secondary" type="button" id="modeSwitchBtn" hidden>Switch</button>
               </div>
+            </div>
+
+            <!-- Averages Plus (2026-10-21): filled in by the script below from GET /billing/status.
+                 Hidden until the API says billing is on, and always behind the "billing" switch. -->
+            <div id="plusBlock" data-feature="billing" hidden>
+              <p class="settings-subhead">Averages Plus</p>
+              <div class="settings-group">
+                <div class="settings-row" id="plusRow">
+                  <div class="settings-row-text">
+                    <p class="settings-row-label" id="plusLabel">Averages Plus</p>
+                    <p class="settings-row-desc" id="plusDesc"></p>
+                  </div>
+                  <button class="btn-secondary" type="button" id="plusBtn" hidden>Upgrade</button>
+                </div>
+              </div>
+              <p class="settings-row-desc plus-msg" id="plusMsg" role="status" hidden></p>
             </div>
 
             <p class="settings-subhead">School</p>
@@ -4511,6 +4532,130 @@
         } catch {}
         reloadToAccount();
       });
+    })();
+
+    // ------------------------------------------------------------------
+    // Averages Plus (2026-10-21), in Account. The API has the truth (Stripe's
+    // webhook keeps it current); this only shows it and opens Stripe's pages:
+    // Upgrade -> POST /billing/checkout (Stripe Checkout, Managed Payments),
+    // Manage plan -> POST /billing/portal (cancel, change card, invoices).
+    // Live sign-ins only. Never offered to under-13s (always Incognito); 13+
+    // students in Incognito are told Plus needs Classic. Anyone who already
+    // has a subscription can always reach Manage plan.
+    // ------------------------------------------------------------------
+    (function () {
+      const block = document.getElementById('plusBlock');
+      const row = document.getElementById('plusRow');
+      const label = document.getElementById('plusLabel');
+      const desc = document.getElementById('plusDesc');
+      const btn = document.getElementById('plusBtn');
+      const msg = document.getElementById('plusMsg');
+      const INC = window.__AVERAGES_INCOGNITO__ || null;
+      const OFFER = '$2.99 a month in the U.S. Browser notifications, more themes, the iPhone app when it comes out, and new features two weeks early.';
+      let action = null;
+
+      function say(text, bad) {
+        msg.textContent = text || '';
+        msg.classList.toggle('bad', !!bad);
+        msg.hidden = !text;
+      }
+      function day(ms) {
+        try { return new Date(ms).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' }); } catch (e) { return ''; }
+      }
+      function render(s) {
+        const locked = !!(INC && INC.locked);
+        if (!s || !s.enabled || !s.configured || (locked && !s.manageable)) { block.hidden = true; return; }
+        block.hidden = false;
+        row.classList.toggle('is-past-due', s.status === 'past_due');
+        action = null;
+        if (s.plus) {
+          label.textContent = 'Averages Plus';
+          if (s.status === 'past_due') desc.textContent = 'Your last payment didn’t go through. Update your card to keep Plus.';
+          else if (s.cancelAtPeriodEnd && s.renewsAt) desc.textContent = 'You have Plus until ' + day(s.renewsAt) + '. It won’t renew.';
+          else if (s.renewsAt) desc.textContent = 'You have Plus. It renews on ' + day(s.renewsAt) + '.';
+          else desc.textContent = 'You have Plus. Thanks for supporting Averages.io.';
+          action = 'portal';
+        } else if (s.eligible) {
+          label.textContent = 'Get Averages Plus';
+          desc.textContent = OFFER;
+          action = 'checkout';
+        } else if (s.manageable) {
+          label.textContent = 'Averages Plus';
+          desc.textContent = 'You don’t have Plus right now. Switch to Classic mode to subscribe again.';
+          action = 'portal';
+        } else {
+          label.textContent = 'Averages Plus';
+          desc.textContent = 'Plus is for Classic mode (13 and older), because a subscription has to be saved to your account.';
+        }
+        btn.hidden = !action;
+        btn.disabled = false;
+        btn.textContent = action === 'checkout' ? 'Upgrade' : 'Manage plan';
+      }
+      async function load() {
+        if (window.__AVERAGES_MODE__ !== 'live') { block.hidden = true; return null; }
+        try {
+          const res = await fetch(averagesApiBase() + '/billing/status', { credentials: 'include', cache: 'no-store' });
+          if (!res.ok) { block.hidden = true; return null; }
+          const s = await res.json();
+          render(s);
+          return s;
+        } catch (e) { block.hidden = true; return null; }
+      }
+
+      btn.addEventListener('click', async () => {
+        if (!action) return;
+        const which = action;
+        btn.disabled = true;
+        btn.textContent = 'Opening…';
+        say('');
+        try {
+          const res = await fetch(averagesApiBase() + '/billing/' + which, {
+            method: 'POST', credentials: 'include',
+            headers: { 'Content-Type': 'application/json' }, body: '{}',
+          });
+          const data = await res.json().catch(() => ({}));
+          const url = data && typeof data.url === 'string' ? data.url : '';
+          // Only ever Stripe's own pages.
+          if (res.ok && /^https:\/\/(checkout|billing)\.stripe\.com\//.test(url)) { window.location.assign(url); return; }
+          const code = data && data.error;
+          if (code === 'billing_already_subscribed') { await load(); say('You already have Plus.'); return; }
+          if (code === 'incognito_mode') say('Plus needs Classic mode.', true);
+          else if (code === 'billing_no_account') say('There’s no plan to manage yet.', true);
+          else if (res.status === 503) say('Plus isn’t available right now. Try again later.', true);
+          else say(which === 'checkout' ? 'Couldn’t open checkout. Try again.' : 'Couldn’t open your plan. Try again.', true);
+        } catch (e) {
+          say('Couldn’t reach Averages.io. Check your connection and try again.', true);
+        }
+        btn.disabled = false;
+        btn.textContent = which === 'checkout' ? 'Upgrade' : 'Manage plan';
+      });
+
+      // Back from Stripe: ?billing=success|cancelled (with ?section=account,
+      // which opens Account below). Stripe's webhook can land a few seconds
+      // after the browser does, so success checks again for up to ~20s.
+      let back = null;
+      try {
+        const u = new URL(window.location.href);
+        back = u.searchParams.get('billing');
+        if (back) {
+          u.searchParams.delete('billing');
+          window.history.replaceState(window.history.state, '', u.pathname + u.search + u.hash);
+          if (!settingsStartSection) settingsStartSection = 'account';
+        }
+      } catch (e) {}
+      (async () => {
+        const first = await load();
+        if (back === 'cancelled') { if (first) say('No changes were made, and you weren’t charged.'); return; }
+        if (back !== 'success' || !first) return;
+        if (first.plus) { say('Averages Plus is on. Thanks!'); return; }
+        say('Payment received. Turning on Plus…');
+        for (let i = 0; i < 8; i++) {
+          await new Promise(r => setTimeout(r, 2500));
+          const s = await load();
+          if (s && s.plus) { say('Averages Plus is on. Thanks!'); return; }
+        }
+        say('Your payment went through. Plus can take a minute to show here, so check back soon.');
+      })();
     })();
 
     buildSearchIndex();

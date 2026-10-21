@@ -4500,7 +4500,9 @@
       }
       const subject = (typeof courseSubject === 'function') ? courseSubject(course.name) : null;
       const emoji = course.emoji || (subject ? subject[1] : '📚');
-      el('sheetEmoji').innerHTML = SHEET_EMOJI_SVG[emoji] || SHEET_EMOJI_SVG['📚'];
+      // Potato mode (2026-10-20): the plain emoji character, not the drawn picture.
+      if (document.body.classList.contains('potato-mode')) el('sheetEmoji').textContent = SHEET_EMOJI_SVG[emoji] ? emoji : '📚';
+      else el('sheetEmoji').innerHTML = SHEET_EMOJI_SVG[emoji] || SHEET_EMOJI_SVG['📚'];
       el('sheetTitle').textContent = course.name;
       const meta = [];
       if (course.period) meta.push(`Pd ${course.period}`);
@@ -4509,6 +4511,20 @@
       if (course.code) meta.push(course.code);
       el('sheetMeta').textContent = meta.join(' · ');
       linkTeacherIn(el('sheetMeta'), course.teacher, course.name);
+      // Cards that load on their own (2026-10-20): the teacher's name (and the
+      // directory behind the teacher card) comes in after the page draws.
+      window.__averagesExtraLanded = function (name) {
+        if (name !== 'people' || !window.__AVERAGES__ || !window.__AVERAGES__.data) return;
+        const data = window.__AVERAGES__.data;
+        CONTACTS.splice(0, CONTACTS.length, ...(Array.isArray(data.CONTACTS) ? data.CONTACTS : []));
+        const meta = [];
+        if (course.period) meta.push(`Pd ${course.period}`);
+        if (course.teacher) meta.push(course.teacher);
+        if (course.section) meta.push(`Section ${course.section}`);
+        if (course.code) meta.push(course.code);
+        el('sheetMeta').textContent = meta.join(' · ');
+        linkTeacherIn(el('sheetMeta'), course.teacher, course.name);
+      };
       const ARROW = { up: '↗', down: '↘', flat: '–' };
       if (course.grade) {
         el('sheetCurVal').innerHTML = `<span class="sheet-letter">${esc(course.grade)}</span><span class="sheet-pct">${esc(course.pct)}%</span>`;

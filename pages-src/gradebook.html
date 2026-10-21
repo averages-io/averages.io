@@ -2138,7 +2138,9 @@
       }
       const subject = (typeof courseSubject === 'function') ? courseSubject(course.name) : null;
       const emoji = course.emoji || (subject ? subject[1] : '📚');
-      el('sheetEmoji').innerHTML = SHEET_EMOJI_SVG[emoji] || SHEET_EMOJI_SVG['📚'];
+      // Potato mode (2026-10-20): the plain emoji character, not the drawn picture.
+      if (document.body.classList.contains('potato-mode')) el('sheetEmoji').textContent = SHEET_EMOJI_SVG[emoji] ? emoji : '📚';
+      else el('sheetEmoji').innerHTML = SHEET_EMOJI_SVG[emoji] || SHEET_EMOJI_SVG['📚'];
       el('sheetTitle').textContent = course.name;
       const meta = [];
       if (course.period) meta.push(`Pd ${course.period}`);
@@ -2147,6 +2149,26 @@
       if (course.code) meta.push(course.code);
       el('sheetMeta').textContent = meta.join(' · ');
       linkTeacherIn(el('sheetMeta'), course.teacher, course.name);
+      // Cards that load on their own (2026-10-20): the teacher's name (and the
+      // directory behind the teacher card) comes in after the page draws.
+      window.__averagesExtraLanded = function (name) {
+        if (name !== 'people' || !window.__AVERAGES__ || !window.__AVERAGES__.data) return;
+        const data = window.__AVERAGES__.data;
+        CONTACTS.splice(0, CONTACTS.length, ...(Array.isArray(data.CONTACTS) ? data.CONTACTS : []));
+        const meta = [];
+        if (course.period) meta.push(`Pd ${course.period}`);
+        if (course.teacher) meta.push(course.teacher);
+        if (course.section) meta.push(`Section ${course.section}`);
+        if (course.code) meta.push(course.code);
+        el('sheetMeta').textContent = meta.join(' · ');
+        linkTeacherIn(el('sheetMeta'), course.teacher, course.name);
+        {
+          const has = v => v !== undefined && v !== null && v !== '';
+          const left = [has(course.period) ? `Pd:${course.period}` : '', has(course.teacher) ? course.teacher : ''].filter(Boolean).join(' ');
+          const line = [left, has(course.section) ? course.section : ''].filter(Boolean).join(' - ');
+          el('gbSubtitle').textContent = [has(course.code) ? course.code : '', line].filter(Boolean).join(' · ');
+        }
+      };
       document.querySelectorAll('.sheet-tab[data-href]').forEach(tab => {
         tab.addEventListener('click', () => { window.location.href = `${tab.dataset.href}?course=${encodeURIComponent(course.id)}`; });
       });

@@ -1624,6 +1624,20 @@
     }
     renderGradesTable();
     renderGPA();
+    // Cards that load on their own (2026-10-20): teachers' names come in
+    // after the page draws; fill them into each row's meta line.
+    window.__averagesExtraLanded = function (name) {
+      if (name !== 'people') return;
+      document.querySelectorAll('#gradesBody tr[data-id]').forEach(tr => {
+        const c = COURSES.find(x => String(x.id) === tr.dataset.id);
+        const meta = tr.querySelector('.course-row-meta');
+        if (!c || !meta) return;
+        const text = courseMetaLine(c);
+        const last = meta.lastChild;
+        if (last && last.nodeType === 3) last.nodeValue = text;
+        else meta.appendChild(document.createTextNode(text));
+      });
+    };
 
     // Row click/Enter → navigate straight to that course's real Gradebook
     // page (2026-08-31, per Martin's request: this used to pop out a

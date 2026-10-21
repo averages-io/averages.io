@@ -1806,7 +1806,7 @@
     // bundle. Schoology's teacher updates are a page extra (2026-10-06): when
     // it's missing it failed, which the widget says rather than "none yet".
     const HOME_CLASSROOM = HOME_LIVE && (HOME_DATA.platform === 'classroom' || HOME_DATA.PEOPLE_PLATFORM === 'classroom');
-    const UPDATES_FAILED = HOME_LIVE && !Array.isArray(HOME_DATA.COURSE_UPDATES);
+    let UPDATES_FAILED = HOME_LIVE && !Array.isArray(HOME_DATA.COURSE_UPDATES);
     // Today's date, signed in; the sample's own date in demo. The markup ships
     // empty (2026-10-14) so no sample date shows while the page loads.
     if (HOME_LIVE) {
@@ -1825,7 +1825,7 @@
       { title: 'Unit 1 Test', courseId: 'algebra2', when: '1d ago', letter: 'A', pct: 94, pts: '47/50' },
       { title: 'Reading Log 3', courseId: 'english10', when: '1d ago', letter: 'A-', pct: 90, pts: '9/10' },
     ];
-    const COURSE_UPDATES = HOME_LIVE ? (Array.isArray(HOME_DATA.COURSE_UPDATES) ? HOME_DATA.COURSE_UPDATES : []) : [
+    let COURSE_UPDATES = HOME_LIVE ? (Array.isArray(HOME_DATA.COURSE_UPDATES) ? HOME_DATA.COURSE_UPDATES : []) : [
       { from: 'Mr. Alvarez', courseId: 'apchem', when: '1h ago', unread: true, body: 'Lab report grading rubric is posted in Materials. Read it before Thursday’s lab.' },
       { from: 'Mr. Cho', courseId: 'english10', when: '4h ago', unread: true, body: 'Essay Draft feedback is in. Check the comments before you revise for the final draft.' },
       { from: 'Mr. Cho', courseId: 'english10', when: '1d ago', body: 'Reminder: Chapter 6 Discussion post is overdue. Late posts still get partial credit through Friday.' },
@@ -2119,6 +2119,18 @@
     }
     wireRowNav(recentList);
     wireRowNav(updatesList);
+    // Cards that load on their own (2026-10-20): the page draws before the
+    // teachers' updates are in; LegacyPage keeps this card's placeholders up
+    // and calls this when they land (or fail), then reveals the card.
+    window.__averagesExtraLanded = function (name) {
+      if (!HOME_LIVE) return;
+      if (name === 'updates') {
+        UPDATES_FAILED = !Array.isArray(HOME_DATA.COURSE_UPDATES);
+        COURSE_UPDATES = UPDATES_FAILED ? [] : HOME_DATA.COURSE_UPDATES;
+      }
+      // people: Classroom posts show the class's teacher, now that it's known.
+      if (name === 'updates' || name === 'people') renderCourseUpdates();
+    };
 
     // ------------------------------------------------------------------
     // Summary card at the top of Assignments (2026-10-03, per Martin).
@@ -2754,7 +2766,8 @@
       widgetRecentToggle.checked = widgetPrefs.recent;
       document.getElementById('block-updates').hidden = !widgetPrefs.updates;
       widgetUpdatesToggle.checked = widgetPrefs.updates;
-      document.getElementById('sumCard').hidden = !widgetPrefs.summary;   // the timer below stops while it's hidden
+      // Potato mode (2026-10-20): no sliding Next test card at all; the lists below have the same items.
+      document.getElementById('sumCard').hidden = !widgetPrefs.summary || document.body.classList.contains('potato-mode');   // the timer below stops while it's hidden
       widgetSummaryToggle.checked = widgetPrefs.summary;
     }
     applyWidgetPrefs();   // a widget turned off last time stays off
