@@ -27,7 +27,7 @@ async function test(name, fn) {
 }
 
 const extras = await import("../app/lib/extras.ts");
-const { extrasFor, mergeExtras, mergeExtra, courseParam, EXTRAS_PREFIX, EXTRAS_BY_PAGE } = extras;
+const { extrasFor, mergeExtras, mergeExtra, mergeLateExtra, courseParam, EXTRAS_PREFIX, EXTRAS_BY_PAGE, LATE_EXTRAS } = extras;
 
 // A fixed "today" (local time): Tue Oct 6 2026.
 const NOW = new Date(2026, 9, 6, 9, 30);
@@ -39,7 +39,7 @@ await test("each page asks for what the contract lists", () => {
   assert.deepEqual(names("home"), ["people", "updates"]);
   assert.deepEqual(names("courses"), ["people"]);
   assert.deepEqual(names("grades"), ["people"]);
-  assert.deepEqual(names("assignments"), ["people"]);
+  assert.deepEqual(names("assignments"), []);   // never shows teachers (2026-10-20)
   assert.deepEqual(names("course-home", "?course=123"), ["people", "updates", "events"]);
   assert.deepEqual(names("gradebook", "?course=123"), ["people", "gradebook"]);
   assert.deepEqual(names("course-materials", "?course=123"), ["people", "folders"]);
@@ -393,7 +393,7 @@ await test("a page with no extras resolves at once without calls", async () => {
   const t0 = Date.now();
   const r = await loadExtras("settings", "", "u1");
   assert.ok(Date.now() - t0 < 20);
-  assert.deepEqual(r, { requests: [], answers: {}, signedOut: false });
+  assert.deepEqual({ requests: r.requests, answers: r.answers, signedOut: r.signedOut }, { requests: [], answers: {}, signedOut: false });
   assert.equal(calls.length, 0);
 });
 
@@ -494,6 +494,85 @@ await test("expired extras are swept, so old event windows don't pile up (2026-1
   assert.equal(session.getItem("averages_extras_events_2026-01-02_2026-09-02"), null);
   assert.equal(session.getItem("schoolagy_bundle_cache"), "keep me", "other keys untouched");
   assert.ok(session.getItem("averages_extras_people"), "the fresh one is cached");
+});
+
+await test("startExtras returns at once; each extra settles on its own", async () => {
+  reset();
+  routes = { "/data/people": { body: PEOPLE, delay: 30 }, "/data/updates": { body: { COURSE_UPDATES: [] }, delay: 200 } };
+  const t0 = Date.now();
+  const run = averages.startExtras("home", "", "u1");
+  assert.ok(Date.now() - t0 < 20, "doesn't wait");
+  assert.equal(await run.settled.people, "ok");
+  assert.equal(run.answers.updates, undefined, "updates still on its way");
+  assert.equal(await run.settled.updates, "ok");
+  assert.deepEqual(run.answers.updates, { COURSE_UPDATES: [] });
+});
+
+await test("waitForExtras waits only for the ones asked", async () => {
+  reset();
+  routes = { "/data/people": { body: PEOPLE, delay: 30 }, "/data/updates": { body: { COURSE_UPDATES: [] }, delay: 400 } };
+  const run = averages.startExtras("home", "", "u1");
+  const t0 = Date.now();
+  await averages.waitForExtras(run, ["people"]);
+  assert.ok(Date.now() - t0 < 300, "didn't wait for updates");
+  assert.ok(run.answers.people);
+});
+
+await test("a failed late extra settles as failed, a 401 as signed_out", async () => {
+  reset();
+  routes = { "/data/people": { status: 500, body: {} }, "/data/updates": { status: 401, body: {} } };
+  const run = averages.startExtras("home", "", "u1");
+  assert.equal(await run.settled.people, "failed");
+  assert.equal(await run.settled.updates, "signed_out");
+  assert.equal(run.signedOut, true);
+});
+
+await test("the bell takes cached updates up to 15 minutes old; pages want 5", async () => {
+  reset();
+  const tenMin = JSON.stringify({ at: Date.now() - 10 * 60 * 1000, who: "u1", data: { COURSE_UPDATES: [{ id: "old" }] } });
+  session.setItem("averages_extras_updates", tenMin);
+  routes = { "/data/updates": { body: { COURSE_UPDATES: [{ id: "new" }] } } };
+  const bell = await loadExtras("bell", "", "u1", { maxAgeMs: averages.BELL_UPDATES_MAX_AGE_MS });
+  assert.deepEqual(bell.answers.updates, { COURSE_UPDATES: [{ id: "old" }] });
+  assert.equal(calls.length, 0, "no call for the bell");
+  const page = await loadExtras("home", "", "u1");
+  assert.deepEqual(page.answers.updates, { COURSE_UPDATES: [{ id: "new" }] }, "Home asks again");
+});
+
+console.log("\ncards that load on their own (2026-10-20)");
+
+await test("every late extra is one its page asks for", () => {
+  for (const [page, map] of Object.entries(LATE_EXTRAS)) {
+    for (const name of Object.keys(map)) assert.ok(EXTRAS_BY_PAGE[page].includes(name), `${page}: ${name}`);
+  }
+});
+
+await test("the page-defining extras are never late", () => {
+  assert.equal("events" in (LATE_EXTRAS.calendar ?? {}), false);
+  assert.equal("messages" in (LATE_EXTRAS.messages ?? {}), false);
+  assert.equal("people" in (LATE_EXTRAS.contacts ?? {}), false);
+  assert.equal("folders" in (LATE_EXTRAS["course-materials"] ?? {}), false);
+  assert.equal("gradebook" in (LATE_EXTRAS.gradebook ?? {}), false);
+  assert.equal("locate" in (LATE_EXTRAS.assignment ?? {}), false);
+});
+
+await test("late teachers go into the course objects the page already holds", () => {
+  const c1 = { id: "1", name: "Chem", teacher: "" }, c2 = { id: "2", name: "Bio", teacher: "Ms. Set" };
+  const held = [c1, c2];
+  const data = { COURSES: held };
+  assert.equal(mergeLateExtra(data, { name: "people", course: "" }, { courseTeachers: { 1: "Mr. Late", 2: "Mr. Other" }, CONTACTS: [{ name: "Mr. Late" }] }), true);
+  assert.equal(data.COURSES, held, "same array");
+  assert.equal(c1.teacher, "Mr. Late");
+  assert.equal(c2.teacher, "Ms. Set", "a teacher already there stays");
+  assert.deepEqual(data.CONTACTS, [{ name: "Mr. Late" }]);
+});
+
+await test("a late answer with the wrong shape changes nothing", () => {
+  const data = { COURSES: [{ id: "1", teacher: "" }] };
+  assert.equal(mergeLateExtra(data, { name: "people", course: "" }, { nope: 1 }), false);
+  assert.equal(data.CONTACTS, undefined);
+  assert.equal(mergeLateExtra(data, { name: "updates", course: "" }, { COURSE_UPDATES: [{ id: "u" }] }), true);
+  assert.deepEqual(data.COURSE_UPDATES, [{ id: "u" }]);
 });
 
 console.log(`\n${passed} passed${process.exitCode ? ", some FAILED" : ""}`);
