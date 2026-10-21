@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { BELL_UPDATES_MAX_AGE_MS, getSession, loadBundle, loadExtras, signOut, startExtras, waitForExtras, type ExtrasRun, type Mode } from "../lib/averages";
+import { API_BASE, BELL_UPDATES_MAX_AGE_MS, getSession, loadBundle, loadExtras, signOut, startExtras, waitForExtras, type ExtrasRun, type Mode } from "../lib/averages";
 import { EXTRAS_LATE_GIVE_UP_MS, LATE_EXTRAS, mergeExtras, mergeLateExtra, type ExtraName } from "../lib/extras";
 import { installNsfwGlobal, preloadNsfwModel } from "../lib/nsfw";
 import { SKELETON_CSS, REVEAL_SELECTORS, holdCards, revealCards, skeletonHtml, revealContent, snapshotSkeleton, type SkeletonSnapshot } from "./PageSkeleton";
@@ -60,6 +60,40 @@ function touchPushIfOn(): void {
     document.head.appendChild(script);
   }
   script.addEventListener("load", run, { once: true });
+}
+
+/**
+ * Calendar sync (2026-10-21, an Averages Plus perk): like notifications, the
+ * calendar link keeps a stored sign-in so it can read due dates while the
+ * student is away. At most once a day, while this device knows the link is
+ * on, it's brought in step with this session (POST /calendar/touch). The API
+ * saying it's off (turned off elsewhere, Plus ended) forgets it here.
+ */
+const CALENDAR_ON_KEY = "averages_calendar_on";
+const CALENDAR_TOUCHED_KEY = "averages_calendar_touched";
+function touchCalendarIfOn(): void {
+  try {
+    const store = window.localStorage;
+    if (store.getItem(CALENDAR_ON_KEY) !== "1") return;
+    const last = Number(store.getItem(CALENDAR_TOUCHED_KEY)) || 0;
+    if (Date.now() - last < 24 * 60 * 60 * 1000 && last <= Date.now()) return;
+    store.setItem(CALENDAR_TOUCHED_KEY, String(Date.now()));
+  } catch {
+    return;
+  }
+  fetch(`${API_BASE}/calendar/touch`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: "{}" })
+    .then((r) => (r.ok ? r.json() : null))
+    .then((d) => {
+      if (d && d.on === false) {
+        try {
+          window.localStorage.removeItem(CALENDAR_ON_KEY);
+          window.localStorage.removeItem(CALENDAR_TOUCHED_KEY);
+        } catch {
+          /* nothing to forget */
+        }
+      }
+    })
+    .catch(() => {});
 }
 
 /**
@@ -317,7 +351,10 @@ export default function LegacyPage({
   // in the way of the page: deferred, async, and silent on failure.
   useEffect(() => {
     if (phase !== "ready" || mode !== "live" || !requiresAuth) return;
-    const timer = window.setTimeout(touchPushIfOn, 1500);
+    const timer = window.setTimeout(() => {
+      touchPushIfOn();
+      touchCalendarIfOn();
+    }, 1500);
     return () => window.clearTimeout(timer);
   }, [phase, mode, requiresAuth]);
 
