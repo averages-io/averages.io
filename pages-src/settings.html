@@ -574,11 +574,18 @@
   .notif-msg[hidden] { display: none; }
   .notif-msg { margin: 10px 2px 0; font-weight: 700; }
   .notif-msg.bad { color: var(--grade-bad); }
-  /* Averages Plus (2026-10-21) */
-  #plusBlock[hidden], #plusBtn[hidden], #plusMsg[hidden] { display: none; }
+  /* Mode picker with Averages Plus (2026-10-21) */
+  .mode-row[hidden], #plusManageBtn[hidden], #plusMsg[hidden] { display: none; }
+  .mode-pick { flex: 1; min-width: 0; display: flex; align-items: flex-start; gap: 12px; margin: -4px; padding: 4px; border: none; border-radius: 8px; background: none; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+  .mode-pick:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring); }
+  .mode-pick[aria-disabled="true"] { cursor: default; }
+  .mode-pick .settings-row-label, .mode-pick .settings-row-desc { display: block; }
+  .mode-radio { flex: none; width: 20px; height: 20px; margin-top: 0; box-sizing: border-box; border-radius: 50%; border: 2px solid var(--text-faint); }
+  .mode-pick:hover:not([aria-disabled="true"]) .mode-radio { border-color: var(--text-muted); }
+  .mode-pick[aria-checked="true"] .mode-radio { border-color: var(--accent); background: radial-gradient(circle, var(--accent) 0 4px, transparent 4.5px); }
+  .mode-row.is-past-due .settings-row-desc { color: var(--grade-bad); }
   .plus-msg { margin: 10px 2px 0; font-weight: 700; }
   .plus-msg.bad { color: var(--grade-bad); }
-  #plusRow.is-past-due .settings-row-desc { color: var(--grade-bad); }
   select.settings-select {
     font: inherit;
     font-weight: 700;
@@ -1042,6 +1049,8 @@
   .canva-mark { width: 20px; height: 20px; flex: none; display: block; border-radius: 50%; background: center / contain no-repeat url("/brand/canva-mark.svg"); }
   .drive-mark { width: 20px; height: 20px; flex: none; display: block; background: center / contain no-repeat url("/brand/google-drive.png"); }
   .brand-slot { width: 20px; height: 20px; flex: none; display: block; }
+  /* Integrations rows (2026-10-21, Martin): no empty space before "OneDrive" until its logo is uploaded, so the name lines up with its description. Menus keep the slot so their names stay in a column. */
+  .integ-name .brand-slot { display: none; }
   .integ-name { display: flex; align-items: center; gap: 8px; }
   .integ-tm { margin-top: 4px; }
   .pick-name, #defaultEditorLabel { display: inline-flex; align-items: center; gap: 8px; }
@@ -1199,7 +1208,7 @@
               <div class="settings-row">
                 <div class="settings-row-text">
                   <p class="settings-row-label">Browser Notifications</p>
-                  <p class="settings-row-desc" id="browserNotifDesc">Get a notification when something changes, even with Averages closed. Needs Sync Across Devices.</p>
+                  <p class="settings-row-desc" id="browserNotifDesc">Get a notification when something changes, even with Averages closed.</p>
                 </div>
                 <label class="toggle"><input type="checkbox" id="browserNotifToggle" aria-label="Browser notifications"><span class="track"><span class="thumb"></span></span></label>
               </div>
@@ -1263,31 +1272,30 @@
             </div>
 
             <p class="settings-subhead">Mode</p>
-            <div class="settings-group">
-              <div class="settings-row">
-                <div class="settings-row-text">
-                  <p class="settings-row-label" id="modeLabel">Classic</p>
-                  <p class="settings-row-desc" id="modeDesc"></p>
-                </div>
-                <button class="btn-secondary" type="button" id="modeSwitchBtn" hidden>Switch</button>
+            <!-- Mode (2026-10-21): Incognito, Classic or Plus, picked here. Plus is Classic with the
+                 Averages Plus subscription; its row only shows when billing is on (see the script). -->
+            <div class="settings-group" id="modeGroup" role="radiogroup" aria-label="Mode">
+              <div class="settings-row mode-row" data-mode="incognito">
+                <button type="button" class="mode-pick" role="radio" aria-checked="false" data-mode="incognito">
+                  <span class="mode-radio" aria-hidden="true"></span>
+                  <span class="settings-row-text"><span class="settings-row-label">Incognito</span><span class="settings-row-desc" data-mode-desc></span></span>
+                </button>
+              </div>
+              <div class="settings-row mode-row" data-mode="classic">
+                <button type="button" class="mode-pick" role="radio" aria-checked="false" data-mode="classic">
+                  <span class="mode-radio" aria-hidden="true"></span>
+                  <span class="settings-row-text"><span class="settings-row-label">Classic</span><span class="settings-row-desc" data-mode-desc></span></span>
+                </button>
+              </div>
+              <div class="settings-row mode-row" data-mode="plus" id="plusRow" data-feature="billing" hidden>
+                <button type="button" class="mode-pick" role="radio" aria-checked="false" data-mode="plus">
+                  <span class="mode-radio" aria-hidden="true"></span>
+                  <span class="settings-row-text"><span class="settings-row-label">Plus</span><span class="settings-row-desc" data-mode-desc></span></span>
+                </button>
+                <button class="btn-secondary" type="button" id="plusManageBtn" hidden>Manage plan</button>
               </div>
             </div>
-
-            <!-- Averages Plus (2026-10-21): filled in by the script below from GET /billing/status.
-                 Hidden until the API says billing is on, and always behind the "billing" switch. -->
-            <div id="plusBlock" data-feature="billing" hidden>
-              <p class="settings-subhead">Averages Plus</p>
-              <div class="settings-group">
-                <div class="settings-row" id="plusRow">
-                  <div class="settings-row-text">
-                    <p class="settings-row-label" id="plusLabel">Averages Plus</p>
-                    <p class="settings-row-desc" id="plusDesc"></p>
-                  </div>
-                  <button class="btn-secondary" type="button" id="plusBtn" hidden>Upgrade</button>
-                </div>
-              </div>
-              <p class="settings-row-desc plus-msg" id="plusMsg" role="status" hidden></p>
-            </div>
+            <p class="settings-row-desc plus-msg" id="plusMsg" role="status" hidden></p>
 
             <p class="settings-subhead">School</p>
             <div class="settings-group">
@@ -1346,10 +1354,10 @@
             <div class="settings-group">
               <div class="settings-row">
                 <div class="settings-row-text">
-                  <p class="settings-row-label">Sync Customizations Across Devices</p>
-                  <p class="settings-row-desc" id="syncAcrossDevicesDesc">Allow Averages.io to keep your unique ID so your customizations sync to your other devices.</p>
+                  <p class="settings-row-label">Sync Across Devices</p>
+                  <p class="settings-row-desc" id="syncAcrossDevicesDesc">Always on in Classic mode: your profile, appearance and settings follow you to every device you sign in on. Your grades are never stored. Switch to Incognito to keep everything on this device only.</p>
                 </div>
-                <label class="toggle"><input type="checkbox" id="syncAcrossDevicesToggle"><span class="track"><span class="thumb"></span></span></label>
+                <span class="settings-row-value" id="syncStateValue">On</span>
               </div>
             </div>
           </div>
@@ -1412,28 +1420,8 @@
     </div>
   </div>
 
-  <!-- ---------- "Turn on sync first" nudge (2026-09-08; for Browser
-       Notifications since 2026-10-04, when the Weekly Grade Summary email
-       it was made for went away). Shown when notifications are switched on
-       but Sync Across Devices isn't: both keep something for the student on
-       our server, so notifications are only for students who opted into
-       that already. Turning sync on from here carries straight on to the
-       consent popup below. ---------- -->
-  <div class="editor-overlay" id="syncRequiredOverlay">
-    <div class="editor-modal" role="dialog" aria-modal="true" aria-labelledby="syncRequiredTitle" style="max-width: 340px;">
-      <div class="editor-head">
-        <h2 id="syncRequiredTitle">Turn on sync first</h2>
-        <button class="editor-close" id="syncRequiredClose" type="button" aria-label="Close">&times;</button>
-      </div>
-      <div class="editor-body" style="padding-bottom: 16px;">
-        <p class="settings-row-desc" style="font-size: 0.86rem;">Browser Notifications needs Sync Across Devices turned on first. Both keep something for you on the Averages server, so they go together.</p>
-      </div>
-      <div class="editor-actions">
-        <button class="editor-reset" id="syncRequiredCancel" type="button">Not now</button>
-        <button class="editor-done" id="syncRequiredEnable" type="button">Turn On Sync</button>
-      </div>
-    </div>
-  </div>
+  <!-- The "Turn on sync first" nudge and the turn-Sync-off confirm were removed on 2026-10-21: Sync is always on in Classic. -->
+
 
   <!-- ---------- "What turning this on means" consent (2026-09-12; for
        Browser Notifications since 2026-10-04, copy made exact 2026-10-05
@@ -1597,21 +1585,7 @@
     </div>
   </div>
 
-  <div class="editor-overlay" id="syncOffConfirmOverlay">
-    <div class="editor-modal" role="dialog" aria-modal="true" aria-labelledby="syncOffConfirmTitle" style="max-width: 360px;">
-      <div class="editor-head">
-        <h2 id="syncOffConfirmTitle">Turn off sync?</h2>
-        <button class="editor-close" id="syncOffConfirmClose" type="button" aria-label="Close">&times;</button>
-      </div>
-      <div class="editor-body" style="padding-bottom: 16px;">
-        <p class="settings-row-desc" id="syncOffConfirmBody" style="font-size: 0.86rem;">Your customizations (theme, background, accent color, and other settings) won't sync to your other devices anymore, and what's already saved to Averages.io's servers under your account gets deleted. Anything already on this device stays as-is.</p>
-      </div>
-      <div class="editor-actions">
-        <button class="editor-reset" id="syncOffConfirmCancel" type="button">Cancel</button>
-        <button class="editor-done editor-done-danger" id="syncOffConfirmTurnOff" type="button">Turn Off</button>
-      </div>
-    </div>
-  </div>
+
 
 
   <nav class="app-nav" aria-label="Main navigation">
@@ -3534,10 +3508,9 @@
     const NOTIF_DEMO = window.__AVERAGES_MODE__ === 'demo';
     const NOTIF_LIVE = window.__AVERAGES_MODE__ === 'live' && !AVERAGES_INCOGNITO;
     const NOTIF_SUPPORTED = 'Notification' in window;
-    const NOTIF_COMING_SOON = 'Coming soon: notifications in your browser when grades, assignments or messages change. Will need Sync Across Devices.';
+    const NOTIF_COMING_SOON = 'Coming soon: notifications in your browser when grades, assignments or messages change.';
     let notifPush = null;            // window.AveragesPush once loaded (live only)
     let notifLiveReady = false;      // live: the API is set up and this browser can do it
-    let pendingNotifEnable = false;  // set when "Turn on sync first" was shown on the way to turning this on
     // The email is gone: a saved "on" goes back to off, which also makes the
     // API stop keeping its two GPA snapshots for this student.
     if (settingsOptions.weeklyGradeSummary === true) saveSettingsOption('weeklyGradeSummary', false);
@@ -3602,7 +3575,6 @@
     // The preview: remembered on this device only, as before.
     browserNotifToggle.checked = NOTIF_PREVIEW
       && settingsOptions.browserNotifications === true
-      && settingsOptions.syncAcrossDevices === true
       && notifPermission() === 'granted';
     if (!NOTIF_PREVIEW || !NOTIF_SUPPORTED) {
       // Signed in: off until the API and this browser say otherwise (startLiveNotifications).
@@ -3610,7 +3582,7 @@
       if (notifDesc && (!NOTIF_SUPPORTED || !NOTIF_LIVE)) notifDesc.textContent = !NOTIF_SUPPORTED
         ? "This browser doesn't support notifications."
         : AVERAGES_INCOGNITO
-        ? 'Off in Incognito mode: notifications need Sync Across Devices.'
+        ? 'Off in Incognito mode: notifications keep something for you on our servers.'
         : NOTIF_DEMO
         ? 'Not available on the demo account.'
         : NOTIF_COMING_SOON;
@@ -3849,7 +3821,6 @@
       showNotifMsg(notifMsg, '');
       if (!browserNotifToggle.checked) { turnNotifOff(); return; }   // turning it off never needs gating
       browserNotifToggle.checked = false;   // hold off until every step below says yes
-      if (!isSyncOn()) { openSyncRequiredNudge(); return; }
       openNotifConsent();
     });
 
@@ -3857,8 +3828,6 @@
       if (e.key !== 'Escape') return;
       if (profileEditOverlay.classList.contains('show')) closeProfileEditor();
       if (emailVerifyOverlay.classList.contains('show')) closeEmailVerifyModal();
-      if (syncOffConfirmOverlay.classList.contains('show')) closeSyncOffConfirm();
-      if (syncRequiredOverlay.classList.contains('show')) { pendingNotifEnable = false; closeSyncRequiredNudge(); }
       if (notifConsentOverlay.classList.contains('show')) closeNotifConsent();
     });
 
@@ -3887,68 +3856,45 @@
     // applySyncedSettings below, and the same four-function push hook to
     // wherever those two pages save), not a redesign.
     //
-    // Turning it OFF is confirmed first, same as before — still a "your
-    // other devices stop matching this one" change, not a cosmetic toggle
-    // — but the confirmation now also has to cover a second consequence:
-    // Browser Notifications requires this to be on (see the toggle above;
-    // it was the Weekly Grade Summary email until 2026-10-04), so turning
-    // sync off turns notifications off too if they were on. The confirm
-    // body's copy is rewritten right before showing it, to actually say so
-    // when it applies, rather than only ever showing the generic version.
+    // Since 2026-10-21 there's no toggle: Classic always syncs, Incognito
+    // never does (switching to Incognito deletes what was stored).
     // ------------------------------------------------------------------
-    const syncAcrossDevicesToggle = document.getElementById('syncAcrossDevicesToggle');
-    const syncOffConfirmOverlay = document.getElementById('syncOffConfirmOverlay');
-    const syncOffConfirmBody = document.getElementById('syncOffConfirmBody');
-    const SYNC_OFF_BODY_DEFAULT = syncOffConfirmBody.textContent;
-    const SYNC_OFF_BODY_WITH_NOTIF = SYNC_OFF_BODY_DEFAULT + ' Browser Notifications needs sync to be on, so that turns off too.';
-
+    // Always on in Classic (2026-10-21, Martin: "faze out sync across devices
+    // and just have it on if the user is in classic mode"). There's no toggle
+    // any more: Classic (and Plus, which is Classic plus the subscription)
+    // syncs, Incognito never does, and the demo can't. The saved flag is kept
+    // (written straight to storage so nothing is pushed before the account's
+    // copy is pulled by pullSyncSettingsNow at the end of this page) because
+    // sign-out (app/lib/averages.ts syncWasOn) and older code read it.
+    const syncStateValue = document.getElementById('syncStateValue');
+    const syncStateDesc = document.getElementById('syncAcrossDevicesDesc');
     if (!AVERAGES_SYNC_UNAVAILABLE && AVERAGES_INCOGNITO) {
       // Incognito (2026-10-05): nothing about the student is stored on our
-      // servers. If sync was left on from before, it's turned off here and
-      // what it stored is deleted (the API refuses new writes either way).
+      // servers. If sync was on from before, what it stored is deleted (the
+      // API refuses new writes either way).
       if (settingsOptions.syncAcrossDevices === true) {
         deleteSyncSettingsNow();
         try { localStorage.removeItem('schoolagy_sync_meta'); } catch {}   // clearSyncMeta's key; that helper is defined further down
         try { localStorage.removeItem('averages_sync_media'); } catch {}   // clearSyncMeta's other key (R2 pictures, 2026-10-13)
         saveSettingsOption('syncAcrossDevices', false);
       }
-      syncAcrossDevicesToggle.checked = false;
-      syncAcrossDevicesToggle.disabled = true;
-      const desc = document.getElementById('syncAcrossDevicesDesc');
-      if (desc) desc.textContent = 'Off in Incognito mode: nothing about you is stored on our servers.';
+      syncStateValue.textContent = 'Off';
+      syncStateDesc.textContent = 'Off in Incognito mode: nothing about you is stored on our servers. Switch to Classic in Account to have your settings follow you.';
     } else if (AVERAGES_SYNC_UNAVAILABLE) {
-      // Demo has no real Schoology uid for the API to key a stored record
-      // on, and /sync/settings refuses demo sessions server-side regardless
-      // (403 not_available_in_demo) — this just keeps a demo visitor from
-      // flipping a toggle that could never actually do anything.
-      syncAcrossDevicesToggle.checked = false;
-      syncAcrossDevicesToggle.disabled = true;
-      const desc = document.getElementById('syncAcrossDevicesDesc');
-      if (desc) desc.textContent = 'Not available on the demo account — there\'s no real account for it to sync to.';
-    } else {
-      // Persisted via schoolagy_settings_options. Defaults to OFF — this
-      // is an opt-in "let Averages.io keep your unique ID" toggle (see
-      // its own row description), and nothing should get pushed to the
-      // server for someone who never actually asked for cross-device
-      // sync. Only an explicit saved `true` turns it on.
-      //
-      // Fixed 2026-09-09 (per Martin: "the sync setting is auto on even
-      // tho i didn't turn it on at all"). This used to default to on
-      // (matching the HTML's own `checked` attribute, now removed) —
-      // which was worse than just a surprising default: this toggle and
-      // isSyncOn() below disagreed with the server's own
-      // syncEnabledIn() (averages-api/src/sync.ts), which has always
-      // required an explicit `=== true`. So the UI showed sync as ON
-      // for every user by default while the API silently treated them
-      // as OFF (no GPA snapshots recorded, /data/bundle never wrote
-      // anything) — the toggle was lying about what was actually
-      // happening. Both sides now agree: off until explicitly turned on.
-      syncAcrossDevicesToggle.checked = settingsOptions.syncAcrossDevices === true;
+      // The demo has no real account to sync to (the API refuses demo sessions).
+      syncStateValue.textContent = 'Off';
+      syncStateDesc.textContent = 'Not available on the demo account: there\'s no real account for it to sync to.';
+    } else if (settingsOptions.syncAcrossDevices !== true) {
+      settingsOptions.syncAcrossDevices = true;
+      try {
+        const o = loadSettingsOptions();
+        o.syncAcrossDevices = true;
+        localStorage.setItem('schoolagy_settings_options', JSON.stringify(o));
+      } catch {}
     }
 
     function isSyncOn() {
-      if (AVERAGES_SYNC_UNAVAILABLE || AVERAGES_INCOGNITO) return false;
-      return loadSettingsOptions().syncAcrossDevices === true;
+      return AVERAGES_MODE === 'live' && !AVERAGES_INCOGNITO;
     }
 
     function averagesApiBase() {
@@ -4377,78 +4323,11 @@
       }
     }
 
-    function closeSyncOffConfirm() { syncOffConfirmOverlay.classList.remove('show'); }
-    syncAcrossDevicesToggle.addEventListener('change', () => {
-      if (syncAcrossDevicesToggle.checked) {
-        // Turning on never needs confirming. Ask the account for its copy
-        // first (2026-10-14): sign-out now clears this device, so pushing
-        // straight away would overwrite the account's settings with defaults.
-        // pullSyncSettingsNow adopts what's there, or uploads this device's
-        // settings when the account has none yet.
-        saveSettingsOption('syncAcrossDevices', true);
-        clearTimeout(syncPushTimer);
-        pullSyncSettingsNow();
-        return;
-      }
-      syncAcrossDevicesToggle.checked = true; // hold it on until the user actually confirms
-      syncOffConfirmBody.textContent = browserNotifToggle.checked ? SYNC_OFF_BODY_WITH_NOTIF : SYNC_OFF_BODY_DEFAULT;
-      syncOffConfirmOverlay.classList.add('show');
-    });
-    document.getElementById('syncOffConfirmClose').addEventListener('click', closeSyncOffConfirm);
-    document.getElementById('syncOffConfirmCancel').addEventListener('click', closeSyncOffConfirm);
-    syncOffConfirmOverlay.addEventListener('click', e => { if (e.target === syncOffConfirmOverlay) closeSyncOffConfirm(); });
-    document.getElementById('syncOffConfirmTurnOff').addEventListener('click', () => {
-      // Cancel any debounced push still pending from an edit made just
-      // before turning this off — otherwise it could fire up to 800ms from
-      // now and silently recreate the record right after we delete it.
-      clearTimeout(syncPushTimer);
-      deleteSyncSettingsNow(); // best-effort; see its own comment above
-      clearSyncMeta(); // the server record is gone; a stale timestamp here would be meaningless if sync comes back on later
-      syncAcrossDevicesToggle.checked = false;
-      saveSettingsOption('syncAcrossDevices', false);
-      // The rule: no sync, no browser notifications (2026-10-04; was the
-      // weekly email). Signed in, that also unsubscribes this browser and
-      // tells the API, which deletes the stored sign-in once no browser is
-      // left (2026-10-05).
-      if (browserNotifToggle.checked) turnNotifOff();
-      closeSyncOffConfirm();
-    });
-
-    // "Turn on sync first" nudge — see the browserNotifToggle change
-    // handler above, and the syncRequiredOverlay markup's own comment.
-    const syncRequiredOverlay = document.getElementById('syncRequiredOverlay');
-    function openSyncRequiredNudge() {
-      pendingNotifEnable = true; // "resume once unblocked": turning sync on from here carries on to the consent popup
-      syncRequiredOverlay.classList.add('show');
-    }
-    function closeSyncRequiredNudge() { syncRequiredOverlay.classList.remove('show'); }
-    document.getElementById('syncRequiredClose').addEventListener('click', closeSyncRequiredNudge);
-    document.getElementById('syncRequiredCancel').addEventListener('click', () => {
-      pendingNotifEnable = false;
-      closeSyncRequiredNudge();
-    });
-    syncRequiredOverlay.addEventListener('click', e => { if (e.target === syncRequiredOverlay) closeSyncRequiredNudge(); });
-    document.getElementById('syncRequiredEnable').addEventListener('click', () => {
-      syncAcrossDevicesToggle.checked = true;
-      saveSettingsOption('syncAcrossDevices', true);
-      closeSyncRequiredNudge();
-      // "Good to go": once sync (the thing that was blocking notifications)
-      // is on, carry straight on rather than making the student turn the
-      // toggle on a second time. Still through the consent popup, never
-      // straight to on.
-      if (pendingNotifEnable) {
-        pendingNotifEnable = false;
-        openNotifConsent();   // sync is on now: next is the consent popup, then the browser's prompt
-      }
-    });
-
     // ---------- "What turning this on means" consent (2026-09-12) ----------
     // The last step before Browser Notifications turn on (the Weekly Grade
-    // Summary email's until 2026-10-04), reached from two places once sync
-    // is on: the toggle's own change handler, and syncRequiredEnable's
-    // resume just above. Both funnel through here, so there's exactly one
-    // place that turns this on, and it's the one place that's shown the
-    // student what that means.
+    // Summary email's until 2026-10-04), reached from the toggle's own change
+    // handler, so there's exactly one place that turns this on, and it's the
+    // one place that's shown the student what that means.
     const notifConsentOverlay = document.getElementById('notifConsentOverlay');
     function openNotifConsent() { notifConsentOverlay.classList.add('show'); }
     function closeNotifConsent() { notifConsentOverlay.classList.remove('show'); }
@@ -4464,45 +4343,166 @@
     // Initial render
     // ------------------------------------------------------------------
     // ------------------------------------------------------------------
-    // Mode (2026-10-05): Incognito or Classic, in Account. Classic is 13+.
+    // Mode (2026-10-05; Plus added 2026-10-21), in Account: Incognito,
+    // Classic (13+) or Plus (Classic with the Averages Plus subscription).
+    //
+    // Plus: the API has the truth (Stripe's webhook keeps it current); this
+    // only shows it and opens Stripe's pages. Picking Plus -> POST
+    // /billing/checkout (Stripe Checkout, Managed Payments); Manage plan ->
+    // POST /billing/portal (cancel, change card, invoices). Live sign-ins
+    // only, and only while the "billing" switch is on. Never offered to
+    // under-13s (always Incognito). Anyone who has a subscription can always
+    // reach Manage plan, so nobody is stuck paying.
     // ------------------------------------------------------------------
     (function () {
-      const label = document.getElementById('modeLabel');
-      const desc = document.getElementById('modeDesc');
-      const btn = document.getElementById('modeSwitchBtn');
       const overlay = document.getElementById('modeConfirmOverlay');
+      const confirmBody = document.getElementById('modeConfirmBody');
+      const CONFIRM_DEFAULT = confirmBody.textContent;
+      const msg = document.getElementById('plusMsg');
+      const manageBtn = document.getElementById('plusManageBtn');
+      const rows = {}, picks = {}, descs = {};
+      document.querySelectorAll('#modeGroup .mode-row').forEach(r => {
+        const m = r.dataset.mode;
+        rows[m] = r;
+        picks[m] = r.querySelector('.mode-pick');
+        descs[m] = r.querySelector('[data-mode-desc]');
+      });
       const INC = window.__AVERAGES_INCOGNITO__ || null;   // signed in only
+      const LIVE = window.__AVERAGES_MODE__ === 'live';
       const read = k => { try { return localStorage.getItem(k); } catch { return null; } };
       const is13 = read('schoolagy_13plus') === 'yes';
       const incognito = INC ? INC.on : read('schoolagy_account_mode') === 'incognito';
       const locked = !!(INC && INC.locked);
-      label.textContent = incognito ? 'Incognito' : 'Classic';
-      if (incognito && locked) {
-        desc.textContent = 'You said you\'re under 13 when you signed in, so Averages.io stays in Incognito mode. Nothing about you is stored on our servers: Sync Across Devices and Canva are off, and Google Drive and OneDrive connect through your browser only.';
-      } else if (incognito) {
-        desc.textContent = is13
-          ? 'Nothing about you is stored on our servers: Sync Across Devices, Canva and browser notifications are off, and Google Drive and OneDrive connect through your browser only.'
-          : 'Nothing about you is stored on our servers: Sync Across Devices and Canva are off, and Google Drive and OneDrive connect through your browser only. Classic mode is for students 13 and older.';
-        if (is13) { btn.textContent = 'Switch to Classic'; btn.hidden = false; }
-      } else {
-        desc.textContent = 'You can turn on Sync Across Devices and connect apps (Canva, Google Drive, OneDrive). Only what you turn on is stored on our servers.';
-        btn.textContent = 'Switch to Incognito'; btn.hidden = false;
+      const PRICE = '$2.99 a month in the U.S.';
+      const OFFER = 'Everything in Classic, plus browser notifications, more themes, the iPhone app when it comes out, and new features two weeks early. ' + PRICE;
+      let billing = null;   // GET /billing/status, once it answers
+      let busy = false;
+
+      function say(text, bad) {
+        msg.textContent = text || '';
+        msg.classList.toggle('bad', !!bad);
+        msg.hidden = !text;
       }
+      function day(ms) {
+        try { return new Date(ms).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' }); } catch (e) { return ''; }
+      }
+      const billingOn = () => !!(billing && billing.enabled && billing.configured);
+      const hasPlus = () => !!(billing && billing.plus);
+      function current() {
+        if (incognito) return 'incognito';
+        return hasPlus() ? 'plus' : 'classic';
+      }
+      function plusDesc() {
+        const s = billing;
+        if (!s || !s.plus) return incognito && s && s.manageable ? 'You don’t have Plus right now.' : OFFER;
+        if (incognito) return 'Your Plus subscription is still running. Switch to Classic to use it, or cancel it in Manage plan.';
+        if (s.status === 'past_due') return 'Your last payment didn’t go through. Update your card in Manage plan to keep Plus.';
+        if (s.cancelAtPeriodEnd && s.renewsAt) return 'You have Plus until ' + day(s.renewsAt) + '. It won’t renew.';
+        if (s.renewsAt) return 'You have Plus. It renews on ' + day(s.renewsAt) + '.';
+        return 'You have Plus. Thanks for supporting Averages.io.';
+      }
+      function render() {
+        descs.incognito.textContent = locked
+          ? 'You said you’re under 13 when you signed in, so Averages.io stays in Incognito mode. Nothing about you is stored on our servers: Canva and browser notifications are off, and Google Drive and OneDrive connect through your browser only.'
+          : 'Nothing about you is stored on our servers. Your settings stay on this device, Canva and browser notifications are off, and Google Drive and OneDrive connect through your browser only.';
+        descs.classic.textContent = 'Your profile, appearance and settings follow you to every device you sign in on, and you can connect Canva, Google Drive and OneDrive. For students 13 and older.';
+        descs.plus.textContent = plusDesc();
+        const canClassic = !locked && (is13 || !incognito);
+        rows.classic.hidden = !canClassic;
+        const manageable = !!(billing && billing.manageable);
+        rows.plus.hidden = !((billingOn() && canClassic) || manageable || hasPlus());
+        rows.plus.classList.toggle('is-past-due', !!(billing && billing.status === 'past_due'));
+        manageBtn.hidden = !manageable;
+        const now = current();
+        Object.keys(picks).forEach(m => {
+          picks[m].setAttribute('aria-checked', String(m === now));
+          // Plus can only be picked while billing is on and Classic is allowed.
+          const off = busy || (m === 'plus' && !(billingOn() && canClassic) && now !== 'plus');
+          picks[m].setAttribute('aria-disabled', String(off));
+        });
+      }
+      async function load() {
+        if (!LIVE) { billing = null; render(); return null; }
+        try {
+          const res = await fetch(averagesApiBase() + '/billing/status', { credentials: 'include', cache: 'no-store' });
+          billing = res.ok ? await res.json() : null;
+        } catch (e) { billing = null; }
+        render();
+        return billing;
+      }
+
+      function setBusy(b) { busy = b; render(); }
+      async function openStripe(which, opening) {
+        setBusy(true);
+        say(opening || (which === 'checkout' ? 'Opening checkout…' : 'Opening your plan…'));
+        try {
+          const res = await fetch(averagesApiBase() + '/billing/' + which, {
+            method: 'POST', credentials: 'include',
+            headers: { 'Content-Type': 'application/json' }, body: '{}',
+          });
+          const data = await res.json().catch(() => ({}));
+          const url = data && typeof data.url === 'string' ? data.url : '';
+          // Only ever Stripe's own pages.
+          if (res.ok && /^https:\/\/(checkout|billing)\.stripe\.com\//.test(url)) { window.location.assign(url); return true; }
+          const code = data && data.error;
+          if (code === 'billing_already_subscribed') { await load(); say('You already have Plus.'); }
+          else if (code === 'incognito_mode') say('Plus needs Classic mode.', true);
+          else if (code === 'billing_no_account') say('There’s no plan to manage yet.', true);
+          else if (res.status === 503) say('Plus isn’t available right now. Try again later.', true);
+          else say(which === 'checkout' ? 'Couldn’t open checkout. Try again.' : 'Couldn’t open your plan. Try again.', true);
+        } catch (e) {
+          say('Couldn’t reach Averages.io. Check your connection and try again.', true);
+        }
+        setBusy(false);
+        return false;
+      }
+
       function reloadToAccount() {
         const u = new URL(window.location.href);
         u.searchParams.set('section', 'account');
         window.location.replace(u.pathname + u.search);
       }
-      function close() { overlay.classList.remove('show'); btn.focus(); }
-      btn.addEventListener('click', () => {
-        if (incognito) {
-          try { localStorage.setItem('schoolagy_account_mode', 'classic'); } catch {}
-          reloadToAccount();
+      function close() { overlay.classList.remove('show'); picks.incognito.focus(); }
+      function pick(mode) {
+        const now = current();
+        if (busy || mode === now || picks[mode].getAttribute('aria-disabled') === 'true') return;
+        say('');
+        if (mode === 'incognito') {
+          confirmBody.textContent = hasPlus()
+            ? CONFIRM_DEFAULT + ' Your Plus subscription keeps going: cancel it in Manage plan if you don’t want it.'
+            : CONFIRM_DEFAULT;
+          overlay.classList.add('show');
+          document.getElementById('modeConfirmCancel').focus();
           return;
         }
-        overlay.classList.add('show');
-        document.getElementById('modeConfirmCancel').focus();
+        if (mode === 'classic') {
+          if (now === 'incognito') {
+            try { localStorage.setItem('schoolagy_account_mode', 'classic'); } catch {}
+            reloadToAccount();
+            return;
+          }
+          // Plus -> Classic means cancelling the subscription, which is Stripe's page.
+          openStripe('portal', 'To go back to Classic, cancel Plus on the next page. You keep Plus until the end of the time you paid for. Opening your plan…');
+          return;
+        }
+        // Plus. From Incognito this is Classic as well: a checkout that's
+        // cancelled comes back to Classic.
+        if (now === 'incognito') { try { localStorage.setItem('schoolagy_account_mode', 'classic'); } catch {} }
+        openStripe('checkout');
+      }
+      Object.keys(picks).forEach(m => picks[m].addEventListener('click', () => pick(m)));
+      // Arrow keys move between the options (picking still needs Enter or Space:
+      // picking can mean leaving for Stripe).
+      document.getElementById('modeGroup').addEventListener('keydown', e => {
+        if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) return;
+        const shown = Object.keys(picks).filter(m => !rows[m].hidden).map(m => picks[m]);
+        const i = shown.indexOf(document.activeElement);
+        if (i === -1) return;
+        e.preventDefault();
+        shown[(i + (e.key === 'ArrowUp' || e.key === 'ArrowLeft' ? -1 : 1) + shown.length) % shown.length].focus();
       });
+      manageBtn.addEventListener('click', () => { say(''); openStripe('portal'); });
+
       document.getElementById('modeConfirmCancel').addEventListener('click', close);
       document.getElementById('modeConfirmClose').addEventListener('click', close);
       overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
@@ -4511,7 +4511,7 @@
         const ok = document.getElementById('modeConfirmOk');
         ok.disabled = true;
         ok.textContent = 'Switching…';
-        // Sync off, and what it stored deleted.
+        // What Sync stored is deleted.
         clearTimeout(syncPushTimer);
         if (isSyncOn()) { await deleteSyncSettingsNow(); clearSyncMeta(); }
         saveSettingsOption('syncAcrossDevices', false);
@@ -4532,103 +4532,6 @@
         } catch {}
         reloadToAccount();
       });
-    })();
-
-    // ------------------------------------------------------------------
-    // Averages Plus (2026-10-21), in Account. The API has the truth (Stripe's
-    // webhook keeps it current); this only shows it and opens Stripe's pages:
-    // Upgrade -> POST /billing/checkout (Stripe Checkout, Managed Payments),
-    // Manage plan -> POST /billing/portal (cancel, change card, invoices).
-    // Live sign-ins only. Never offered to under-13s (always Incognito); 13+
-    // students in Incognito are told Plus needs Classic. Anyone who already
-    // has a subscription can always reach Manage plan.
-    // ------------------------------------------------------------------
-    (function () {
-      const block = document.getElementById('plusBlock');
-      const row = document.getElementById('plusRow');
-      const label = document.getElementById('plusLabel');
-      const desc = document.getElementById('plusDesc');
-      const btn = document.getElementById('plusBtn');
-      const msg = document.getElementById('plusMsg');
-      const INC = window.__AVERAGES_INCOGNITO__ || null;
-      const OFFER = '$2.99 a month in the U.S. Browser notifications, more themes, the iPhone app when it comes out, and new features two weeks early.';
-      let action = null;
-
-      function say(text, bad) {
-        msg.textContent = text || '';
-        msg.classList.toggle('bad', !!bad);
-        msg.hidden = !text;
-      }
-      function day(ms) {
-        try { return new Date(ms).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' }); } catch (e) { return ''; }
-      }
-      function render(s) {
-        const locked = !!(INC && INC.locked);
-        if (!s || !s.enabled || !s.configured || (locked && !s.manageable)) { block.hidden = true; return; }
-        block.hidden = false;
-        row.classList.toggle('is-past-due', s.status === 'past_due');
-        action = null;
-        if (s.plus) {
-          label.textContent = 'Averages Plus';
-          if (s.status === 'past_due') desc.textContent = 'Your last payment didn’t go through. Update your card to keep Plus.';
-          else if (s.cancelAtPeriodEnd && s.renewsAt) desc.textContent = 'You have Plus until ' + day(s.renewsAt) + '. It won’t renew.';
-          else if (s.renewsAt) desc.textContent = 'You have Plus. It renews on ' + day(s.renewsAt) + '.';
-          else desc.textContent = 'You have Plus. Thanks for supporting Averages.io.';
-          action = 'portal';
-        } else if (s.eligible) {
-          label.textContent = 'Get Averages Plus';
-          desc.textContent = OFFER;
-          action = 'checkout';
-        } else if (s.manageable) {
-          label.textContent = 'Averages Plus';
-          desc.textContent = 'You don’t have Plus right now. Switch to Classic mode to subscribe again.';
-          action = 'portal';
-        } else {
-          label.textContent = 'Averages Plus';
-          desc.textContent = 'Plus is for Classic mode (13 and older), because a subscription has to be saved to your account.';
-        }
-        btn.hidden = !action;
-        btn.disabled = false;
-        btn.textContent = action === 'checkout' ? 'Upgrade' : 'Manage plan';
-      }
-      async function load() {
-        if (window.__AVERAGES_MODE__ !== 'live') { block.hidden = true; return null; }
-        try {
-          const res = await fetch(averagesApiBase() + '/billing/status', { credentials: 'include', cache: 'no-store' });
-          if (!res.ok) { block.hidden = true; return null; }
-          const s = await res.json();
-          render(s);
-          return s;
-        } catch (e) { block.hidden = true; return null; }
-      }
-
-      btn.addEventListener('click', async () => {
-        if (!action) return;
-        const which = action;
-        btn.disabled = true;
-        btn.textContent = 'Opening…';
-        say('');
-        try {
-          const res = await fetch(averagesApiBase() + '/billing/' + which, {
-            method: 'POST', credentials: 'include',
-            headers: { 'Content-Type': 'application/json' }, body: '{}',
-          });
-          const data = await res.json().catch(() => ({}));
-          const url = data && typeof data.url === 'string' ? data.url : '';
-          // Only ever Stripe's own pages.
-          if (res.ok && /^https:\/\/(checkout|billing)\.stripe\.com\//.test(url)) { window.location.assign(url); return; }
-          const code = data && data.error;
-          if (code === 'billing_already_subscribed') { await load(); say('You already have Plus.'); return; }
-          if (code === 'incognito_mode') say('Plus needs Classic mode.', true);
-          else if (code === 'billing_no_account') say('There’s no plan to manage yet.', true);
-          else if (res.status === 503) say('Plus isn’t available right now. Try again later.', true);
-          else say(which === 'checkout' ? 'Couldn’t open checkout. Try again.' : 'Couldn’t open your plan. Try again.', true);
-        } catch (e) {
-          say('Couldn’t reach Averages.io. Check your connection and try again.', true);
-        }
-        btn.disabled = false;
-        btn.textContent = which === 'checkout' ? 'Upgrade' : 'Manage plan';
-      });
 
       // Back from Stripe: ?billing=success|cancelled (with ?section=account,
       // which opens Account below). Stripe's webhook can land a few seconds
@@ -4643,6 +4546,7 @@
           if (!settingsStartSection) settingsStartSection = 'account';
         }
       } catch (e) {}
+      render();
       (async () => {
         const first = await load();
         if (back === 'cancelled') { if (first) say('No changes were made, and you weren’t charged.'); return; }

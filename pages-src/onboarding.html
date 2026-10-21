@@ -1118,6 +1118,8 @@
   .mode-option[hidden] { display: none; }
   .mode-name { font-weight: 800; font-size: 1.1rem; }
   .mode-desc { font-size: 0.82rem; font-weight: 600; color: var(--text-muted); line-height: 1.45; }
+  .mode-price { font-size: 0.82rem; font-weight: 800; color: var(--text-dark); }
+  .mode-option[data-mode="plus"] .mode-name { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
   .mode-hint { margin: 0 0 4px; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); }
   .btn-next:disabled { opacity: 0.5; cursor: not-allowed; }
   body.potato-mode .mode-option { transition: none; }
@@ -1129,6 +1131,8 @@
   .canva-mark { width: 20px; height: 20px; flex: none; display: block; border-radius: 50%; background: center / contain no-repeat url("/brand/canva-mark.svg"); }
   .drive-mark { width: 20px; height: 20px; flex: none; display: block; background: center / contain no-repeat url("/brand/google-drive.png"); }
   .brand-slot { width: 20px; height: 20px; flex: none; display: block; }
+  /* Integrations rows (2026-10-21, Martin): no empty space before "OneDrive" until its logo is uploaded, so the name lines up with its description. Menus keep the slot so their names stay in a column. */
+  .integ-name .brand-slot { display: none; }
   .feature-title.integ-name { display: flex; align-items: center; gap: 8px; }
 </style>
 </head>
@@ -1158,11 +1162,17 @@
           <div class="mode-options" id="modeOptions" role="radiogroup" aria-label="Mode">
             <button type="button" class="mode-option" data-mode="incognito" role="radio" aria-checked="false">
               <span class="mode-name">Incognito</span>
-              <span class="mode-desc">Stores nothing. Your settings stay on this device, and nothing about you is saved on our servers. Google Drive and OneDrive connect through your browser only. No Sync, Canva or notifications.</span>
+              <span class="mode-desc">Stores nothing. Your settings stay on this device, and nothing about you is saved on our servers. Google Drive and OneDrive connect through your browser only. No Canva or notifications.</span>
             </button>
             <button type="button" class="mode-option" data-mode="classic" role="radio" aria-checked="false">
               <span class="mode-name">Classic</span>
-              <span class="mode-desc">Sync your settings across devices, connect Canva, Google Drive and OneDrive, and get browser notifications. For students 13 and older.</span>
+              <span class="mode-desc">Your profile, appearance and settings follow you to every device you sign in on, and you can connect Canva, Google Drive and OneDrive. For students 13 and older.</span>
+            </button>
+            <!-- Plus (2026-10-21): Classic with the Averages Plus subscription. Shown only when
+                 billing is on (GET /billing/status) and they're 13+; checkout opens when setup is done. -->
+            <button type="button" class="mode-option" data-mode="plus" role="radio" aria-checked="false" data-feature="billing" hidden>
+              <span class="mode-name">Plus <span class="mode-price">$2.99/mo</span></span>
+              <span class="mode-desc">Everything in Classic, plus browser notifications, more themes, the iPhone app when it comes out, and new features two weeks early. Checkout opens when you finish setting up.</span>
             </button>
           </div>
           <p class="mode-hint" id="modeHint">Pick one to continue.</p>
@@ -1459,6 +1469,8 @@
     }
 
     // ------------------------------------------------------------------
+    // (No Sync toggle here since 2026-10-21: Classic and Plus always sync,
+    // Incognito never does. Kept below for history.)
     // Sync & Privacy default (2026-09-02, per Martin's request — "remove
     // the [Login sync checkbox] and just have them enable it in
     // onboarding"). This used to be a hand-off value inherited from a
@@ -1498,13 +1510,6 @@
     // 2026-09-02 then removed for good on 2026-09-04 (per Martin) — the
     // whole merge-messages concept was dropped everywhere in the app.
     const FEATURES = [
-      {
-        category: 'Sync & Privacy',
-        key: 'syncAcrossDevices',
-        title: 'Sync customizations across devices',
-        desc: 'Stores your customization choices plus your account ID so they follow you between devices.',
-        checked: false // off by default — see the comment above
-      },
       {
         category: 'Performance',
         key: 'potatoMode',
@@ -2505,6 +2510,25 @@
     } else {
       setMode(null);
     }
+    // Plus (2026-10-21): only for 13+ live sign-ins while the API says billing
+    // is on and set up. Someone who already has Plus sees it picked.
+    let billingStatus = null;
+    (async function () {
+      const plusCard = document.querySelector('.mode-option[data-mode="plus"]');
+      if (!IS_13_PLUS || window.__AVERAGES_MODE__ !== 'live' || (window.__AVERAGES_INCOGNITO__ && window.__AVERAGES_INCOGNITO__.locked)) return;
+      try {
+        const base = window.location.hostname.endsWith('averages.io') ? 'https://api.averages.io' : 'http://localhost:8787';
+        const res = await fetch(base + '/billing/status', { credentials: 'include', cache: 'no-store' });
+        if (!res.ok) return;
+        billingStatus = await res.json();
+      } catch (e) { return; }
+      if (!billingStatus || !billingStatus.enabled || !billingStatus.configured) return;
+      plusCard.hidden = false;
+      if (billingStatus.plus) {
+        plusCard.querySelector('.mode-desc').textContent = 'You have Plus. Everything in Classic, plus browser notifications, more themes, the iPhone app when it comes out, and new features two weeks early.';
+        if (!accountMode) setMode('plus');
+      }
+    })();
     modeButtons.forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
     document.getElementById('modeOptions').addEventListener('keydown', e => {
       if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) return;
@@ -2663,13 +2687,17 @@
       // already respects, instead of vanishing the instant onboarding
       // ends.
       try {
-        localStorage.setItem('schoolagy_account_mode', accountMode || 'incognito');   // 2026-10-04
-        // Potato PC Mode chosen here now carries into the app (it was never saved before).
-        const potatoPick = document.querySelector('[data-key="potatoMode"]');
-        if (potatoPick) {
+        // Plus is Classic with the subscription (2026-10-21).
+        const savedMode = accountMode === 'plus' ? 'classic' : (accountMode || 'incognito');
+        localStorage.setItem('schoolagy_account_mode', savedMode);   // 2026-10-04
+        {
           let opts = {};
           try { opts = JSON.parse(localStorage.getItem('schoolagy_settings_options') || '{}') || {}; } catch {}
-          opts.potatoMode = potatoPick.checked;
+          // Potato PC Mode chosen here now carries into the app (it was never saved before).
+          const potatoPick = document.querySelector('[data-key="potatoMode"]');
+          if (potatoPick) opts.potatoMode = potatoPick.checked;
+          // Sync is always on in Classic and Plus, never in Incognito (2026-10-21).
+          opts.syncAcrossDevices = savedMode === 'classic';
           localStorage.setItem('schoolagy_settings_options', JSON.stringify(opts));
         }
         localStorage.setItem('schoolagy_profile', JSON.stringify({
@@ -2686,6 +2714,28 @@
           }));
         }
       } catch {}
+
+      // Picked Plus (and doesn't have it yet): Stripe checkout instead of Home
+      // once setup is done. Used by the finish step (scripts/port-pages.mjs).
+      // A cancelled or failed checkout lands in the app as Classic.
+      if (accountMode === 'plus' && !(billingStatus && billingStatus.plus)) {
+        const lead = completeState.querySelector('p');
+        if (lead) lead.textContent = 'Your Averages profile has been created. Taking you to checkout for Plus next.';
+        window.__averagesOnboardFinish = async function () {
+          try {
+            const base = window.location.hostname.endsWith('averages.io') ? 'https://api.averages.io' : 'http://localhost:8787';
+            const res = await fetch(base + '/billing/checkout', {
+              method: 'POST', credentials: 'include',
+              headers: { 'Content-Type': 'application/json' }, body: '{}',
+            });
+            const data = await res.json().catch(() => ({}));
+            const url = data && typeof data.url === 'string' ? data.url : '';
+            if (res.ok && /^https:\/\/checkout\.stripe\.com\//.test(url)) { window.location.assign(url); return; }
+          } catch (e) {}
+          // Couldn't open checkout: Settings > Account, where Plus can be picked again.
+          window.location.href = '/settings?section=account';
+        };
+      }
 
       submitBtn.disabled = true;
       submitBtn.classList.add('loading');
