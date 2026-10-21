@@ -187,18 +187,23 @@
   }
 
   .profile-menu-wrap { position: relative; flex-shrink: 0; }
+  /* No photo: an Apple-style monogram (2026-10-21, Martin: "make the default no pfp letters
+     look more like the apple ones"), the grey gradient and rounded white initials of a contact
+     with no picture. A photo replaces it (set inline as background-image). */
   .profile-btn {
     width: 42px;
     height: 42px;
     border-radius: 50%;
-    background: rgba(255,255,255,0.2);
+    background: linear-gradient(180deg, #A5ABB8, #858994);
     border: 2px solid rgba(255,255,255,0.5);
     display: flex;
     align-items: center;
     justify-content: center;
     color: #fff;
-    font-weight: 800;
-    font-size: 0.95rem;
+    font-family: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-weight: 600;
+    font-size: 16px;
+    letter-spacing: 0.02em;
     cursor: pointer;
     flex-shrink: 0;
   }
@@ -2773,7 +2778,7 @@
         profileBtn.style.backgroundPosition = 'center';
         profileBtn.textContent = '';
       } else if (profile.name) {
-        profileBtn.textContent = profile.name.trim().charAt(0).toUpperCase() || '';
+        profileBtn.textContent = (function (n) { var p = String(n).trim().split(/\s+/).filter(Boolean); var f = function (w) { return w ? Array.from(w)[0] : ''; }; return (f(p[0]) + (p.length > 1 ? f(p[p.length - 1]) : '')).toUpperCase(); })(profile.name);   // initials, like Apple's (2026-10-21)
       }
     })();
     const profileMenu = document.getElementById('profileMenu');

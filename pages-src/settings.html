@@ -177,18 +177,23 @@
     margin: 2px 0 0 2px;
   }
   .profile-menu-wrap { position: relative; flex-shrink: 0; }
+  /* No photo: an Apple-style monogram (2026-10-21, Martin: "make the default no pfp letters
+     look more like the apple ones"), the grey gradient and rounded white initials of a contact
+     with no picture. A photo replaces it (set inline as background-image). */
   .profile-btn {
     width: 42px;
     height: 42px;
     border-radius: 50%;
-    background: rgba(255,255,255,0.2);
+    background: linear-gradient(180deg, #A5ABB8, #858994);
     border: 2px solid rgba(255,255,255,0.5);
     display: flex;
     align-items: center;
     justify-content: center;
     color: #fff;
-    font-weight: 800;
-    font-size: 0.95rem;
+    font-family: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-weight: 600;
+    font-size: 16px;
+    letter-spacing: 0.02em;
     cursor: pointer;
     flex-shrink: 0;
   }
@@ -363,7 +368,9 @@
     color: var(--text-faint);
     margin: 20px 0 8px;
   }
-  .settings-subhead:first-child { margin-top: 0; }
+  /* Only a section's own first heading loses its top space: a heading that starts a wrapper
+     (Calendar, Averages Plus) still needs the gap above it (2026-10-21, Martin: "fix the padding"). */
+  .settings-section > .settings-subhead:first-child { margin-top: 0; }
 
   .settings-group {
     background: var(--panel-inner);
@@ -397,7 +404,7 @@
   .integ-btn { min-width: 104px; }
   .integ-btn.disconnect { color: var(--grade-bad, #b6432f); }
   .integ-soon { font-size: 0.72rem; font-weight: 800; color: var(--text-faint); white-space: nowrap; flex-shrink: 0; }
-  .integ-note { margin: 10px 2px 0; }
+  .integ-note { margin: 8px 0 0; }
   /* Canva, signed in (2026-10-05) */
   .integ-btn[disabled] { opacity: 0.55; cursor: default; }
   .integ-flash { margin: 0 2px 10px; padding: 10px 12px; border-radius: 10px; background: var(--panel-inner); font-size: 0.82rem; font-weight: 700; color: var(--text-dark); }
@@ -405,7 +412,7 @@
   .integ-flash[hidden] { display: none; }
   .editor-done.integ-danger { background: var(--grade-bad, #b6432f); }
   .editor-done.integ-danger:hover { background: var(--grade-bad, #b6432f); filter: brightness(0.92); }
-  .integ-note + .settings-subhead { margin-top: 22px; }
+  .integ-note + .settings-subhead, .integ-note + div > .settings-subhead:first-child { margin-top: 24px; }
   .integ-hint { color: var(--text-faint); font-weight: 700; }
   /* Rounded dropdown (2026-10-04): pill button + rounded menu */
   .pick { flex-shrink: 0; }
@@ -566,13 +573,13 @@
 
   /* Browser notifications (2026-10-04) */
   #notifTypesWrap[hidden], .notif-blocked[hidden] { display: none; }
-  .notif-blocked { margin: 10px 2px 0; color: var(--grade-bad); font-weight: 700; }
+  .notif-blocked { margin: 8px 0 0; color: var(--grade-bad); font-weight: 700; }
   .notif-test { margin-top: 12px; }
-  #notifTypesWrap > .settings-subhead { margin-top: 22px; }
+  #notifTypesWrap > .settings-subhead { margin-top: 24px; }
   /* Live (2026-10-05): one short line saying what just happened (turning on,
      a failed change, the test). Plain text, red only when it's a problem. */
   .notif-msg[hidden] { display: none; }
-  .notif-msg { margin: 10px 2px 0; font-weight: 700; }
+  .notif-msg { margin: 8px 0 0; font-weight: 700; }
   .notif-msg.bad { color: var(--grade-bad); }
   /* Mode picker with Averages Plus (2026-10-21) */
   .mode-row[hidden], #plusManageBtn[hidden], #plusMsg[hidden] { display: none; }
@@ -588,7 +595,7 @@
   .mode-row[data-mode="plus"] { background: color-mix(in srgb, #FF7A50 16%, var(--panel-inner)); }
   .mode-row[data-mode="plus"] .mode-pick .settings-row-label { display: inline-block; padding: 0 10px; border-radius: 999px; background: linear-gradient(135deg, #FF7A50, #E5484D); color: #2A0A05; line-height: 22px; }
   .mode-row[data-mode="plus"] .mode-pick[aria-checked="true"] .mode-radio { border-color: #E5484D; background: radial-gradient(circle, #E5484D 0 4px, transparent 4.5px); }
-  .plus-msg { margin: 10px 2px 0; font-weight: 700; }
+  .plus-msg { margin: 8px 0 0; font-weight: 700; }
   #browserNotifToggleWrap[hidden], #notifPlusBtn[hidden], #calendarBlock[hidden], #calBtn[hidden], #calLinkRow[hidden], #calActions[hidden], #calMsg[hidden] { display: none; }
   .plus-tag { display: inline-block; margin-left: 4px; padding: 0 8px; border-radius: 999px; background: linear-gradient(135deg, #FF7A50, #E5484D); color: #2A0A05; font-size: 0.66rem; font-weight: 800; line-height: 18px; vertical-align: 2px; }
   .cal-link-row { gap: 8px; }
@@ -626,10 +633,13 @@
     width: 54px;
     height: 54px;
     border-radius: 50%;
-    background: var(--accent);
+    /* Apple-style monogram, same as the top-right button (2026-10-21). */
+    background: linear-gradient(180deg, #A5ABB8, #858994);
     color: #fff;
-    font-weight: 800;
-    font-size: 1.3rem;
+    font-family: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-weight: 600;
+    font-size: 21px;
+    letter-spacing: 0.02em;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1190,7 +1200,7 @@
             </div>
 
             <p class="settings-subhead">Background &amp; Color</p>
-            <p class="settings-row-desc" style="margin: -2px 0 10px;">Backgrounds set a matching accent. Change it with Accent Color above.</p>
+            <p class="settings-row-desc" style="margin: 0 0 8px;">Backgrounds set a matching accent. Change it with Accent Color above.</p>
             <div class="swatch-grid" id="swatchGrid"></div>
           </div>
 
@@ -1438,7 +1448,7 @@
       </div>
       <div class="editor-body">
         <div class="editor-section" style="text-align: center;">
-          <div class="profile-card-avatar" id="profileEditAvatarPreview" style="width: 64px; height: 64px; font-size: 1.5rem; margin: 0 auto 10px;">M</div>
+          <div class="profile-card-avatar" id="profileEditAvatarPreview" style="width: 64px; height: 64px; font-size: 25px; margin: 0 auto 10px;"></div>
           <button class="btn-secondary" type="button" id="profileEditPhotoBtn">Change Photo</button>
           <input type="file" id="profileEditPhotoInput" accept="image/png,image/jpeg,image/gif" style="display: none;">
         </div>
@@ -3425,8 +3435,14 @@
         el.style.backgroundPosition = 'center';
         el.textContent = '';
       } else {
-        el.style.backgroundImage = 'none';
-        el.textContent = (name || window.__AVERAGES_NAME__ || '').trim().charAt(0).toUpperCase();
+        // Back to the stylesheet's monogram gradient (not 'none', which would hide it).
+        el.style.backgroundImage = '';
+        el.style.backgroundSize = '';
+        el.style.backgroundPosition = '';
+        // Initials like Apple's (2026-10-21): first and last name, or one letter.
+        const parts = (name || window.__AVERAGES_NAME__ || '').trim().split(/\s+/).filter(Boolean);
+        const first = w => (w ? Array.from(w)[0] : '');
+        el.textContent = (first(parts[0]) + (parts.length > 1 ? first(parts[parts.length - 1]) : '')).toUpperCase();
       }
     }
 

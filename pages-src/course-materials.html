@@ -815,18 +815,23 @@
   }
 
   .profile-menu-wrap { position: relative; flex-shrink: 0; }
+  /* No photo: an Apple-style monogram (2026-10-21, Martin: "make the default no pfp letters
+     look more like the apple ones"), the grey gradient and rounded white initials of a contact
+     with no picture. A photo replaces it (set inline as background-image). */
   .profile-btn {
     width: 42px;
     height: 42px;
     border-radius: 50%;
-    background: rgba(255,255,255,0.2);
+    background: linear-gradient(180deg, #A5ABB8, #858994);
     border: 2px solid rgba(255,255,255,0.5);
     display: flex;
     align-items: center;
     justify-content: center;
     color: #fff;
-    font-weight: 800;
-    font-size: 0.95rem;
+    font-family: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-weight: 600;
+    font-size: 16px;
+    letter-spacing: 0.02em;
     cursor: pointer;
     flex-shrink: 0;
   }
@@ -2465,6 +2470,19 @@
     function openLink(f) {
       if (/^https?:\/\//i.test(f.url || '')) window.open(f.url, '_blank', 'noopener');
     }
+    // Opening a course file (double-click, or Enter) (2026-10-21, Martin: "open them in the new
+    // tab like the pdf viewer built in to the browser without downloading"): PDFs, pictures,
+    // text, audio and video open in a new tab in the browser's own viewer (the API's ?view=1).
+    // Anything a browser can't show (Word, PowerPoint...) still opens Quick Look.
+    const VIEW_IN_BROWSER = new Set(['pdf', 'png', 'jpg', 'jpeg', 'gif', 'webp', 'txt', 'mp3', 'm4a', 'wav', 'mp4', 'webm', 'mov']);
+    function opensInBrowser(f) {
+      return !!(f && f.live && !f.url && VIEW_IN_BROWSER.has(String(f.ext || '').toLowerCase()));
+    }
+    function openFile(f) {
+      if (f.url) { openLink(f); return; }
+      if (opensInBrowser(f)) { window.open(liveFileUrl(f) + '&view=1', '_blank', 'noopener'); return; }
+      openQuickLook(f, false);
+    }
     let renamingId = null;
 
     function currentNode() { return history[pointer]; }
@@ -3344,6 +3362,7 @@
       const add = el => contextMenu.appendChild(el);
       const divider = () => { const d = document.createElement('div'); d.className = 'context-menu-divider'; add(d); };
 
+      if (!isFolder && opensInBrowser(item)) add(cmItem('Open in New Tab', () => openFile(item)));
       add(cmItem('Quick Look', () => openQuickLook(item, isFolder)));
       // Download — real files only. A folder gets its own "Download
       // Folder" (a real .zip, see downloadFolderAsZip() above — added
@@ -3783,8 +3802,8 @@
             tile.addEventListener('click', () => { if (renamingId !== f._id) { if (selectedId === f._id) { openAssignmentDetail(f); } else { selectItem(f._id); } } });
             tile.addEventListener('keydown', e => { if (e.key === 'Enter' && renamingId !== f._id) openAssignmentDetail(f); });
           } else {
-            tile.addEventListener('click', () => { if (renamingId !== f._id) { if (selectedId === f._id) { (f.url ? openLink(f) : openQuickLook(f, false)); } else { selectItem(f._id); } } });
-            tile.addEventListener('keydown', e => { if (e.key === 'Enter' && renamingId !== f._id) (f.url ? openLink(f) : openQuickLook(f, false)); });
+            tile.addEventListener('click', () => { if (renamingId !== f._id) { if (selectedId === f._id) { openFile(f); } else { selectItem(f._id); } } });
+            tile.addEventListener('keydown', e => { if (e.key === 'Enter' && renamingId !== f._id) openFile(f); });
           }
           attachDragHandlers(tile, f, false);
           grid.appendChild(tile);
@@ -3829,7 +3848,7 @@
           if (f.assignment || f.quiz) {
             tr.addEventListener('click', () => { if (renamingId !== f._id) { if (selectedId === f._id) { openAssignmentDetail(f); } else { selectItem(f._id); } } });
           } else {
-            tr.addEventListener('click', () => { if (renamingId !== f._id) { if (selectedId === f._id) { (f.url ? openLink(f) : openQuickLook(f, false)); } else { selectItem(f._id); } } });
+            tr.addEventListener('click', () => { if (renamingId !== f._id) { if (selectedId === f._id) { openFile(f); } else { selectItem(f._id); } } });
           }
           attachDragHandlers(tr, f, false);
           listBody.appendChild(tr);
@@ -4827,7 +4846,7 @@
         profileBtn.style.backgroundPosition = 'center';
         profileBtn.textContent = '';
       } else if (profile.name) {
-        profileBtn.textContent = profile.name.trim().charAt(0).toUpperCase() || '';
+        profileBtn.textContent = (function (n) { var p = String(n).trim().split(/\s+/).filter(Boolean); var f = function (w) { return w ? Array.from(w)[0] : ''; }; return (f(p[0]) + (p.length > 1 ? f(p[p.length - 1]) : '')).toUpperCase(); })(profile.name);   // initials, like Apple's (2026-10-21)
       }
     })();
     const profileMenu = document.getElementById('profileMenu');
