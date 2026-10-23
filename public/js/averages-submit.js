@@ -322,7 +322,14 @@
     return { fileId: id, name: f.name, size: f.blob.size };
   }
 
-  /** The turn-in itself, for files already uploaded with uploadFile. Resolves { ok, revision }. */
+  /** Longest description on a file turn-in (the API's limit too). */
+  const MAX_DESCRIPTION = 1000;
+  /**
+   * The turn-in itself, for files already uploaded with uploadFile. Resolves
+   * { ok, revision, description }. An optional `description` (2026-10-23) goes
+   * on as a comment on the turn-in; `description` in the answer is 'added',
+   * 'failed' (the files are still turned in) or '' when there was none.
+   */
   async function turnInFiles(o) {
     o = o || {};
     const section = String(o.section || ''), assignment = String(o.assignment || '');
@@ -331,9 +338,12 @@
     if (!fileIds.length) throw fail('no_files');
     if (fileIds.length > MAX_FILES) throw fail('too_many_files');
     if (!fileIds.every(ID_OK)) throw fail('bad_request');
-    const done = await call('POST', '/submit/file' + tzQuery(true), { section, assignment, fileIds }, o.signal);
+    const description = typeof o.description === 'string' ? o.description.trim() : '';
+    if (Array.from(description).length > MAX_DESCRIPTION) throw fail('description_too_long');
+    const body = description ? { section, assignment, fileIds, description } : { section, assignment, fileIds };
+    const done = await call('POST', '/submit/file' + tzQuery(true), body, o.signal);
     // revision is null when Schoology's answer had none to show; the history reload fills in.
-    return { ok: true, revision: done.revision && typeof done.revision === 'object' ? done.revision : null, fileIds };
+    return { ok: true, revision: done.revision && typeof done.revision === 'object' ? done.revision : null, fileIds, description: description ? (done.description === 'added' ? 'added' : 'failed') : '' };
   }
 
   /**
@@ -366,7 +376,7 @@
       }
     }
     report(-1, 'finishing', 1);
-    return turnInFiles({ section, assignment, fileIds, signal });
+    return turnInFiles({ section, assignment, fileIds, signal, description: o.description });
   }
 
   /**
@@ -568,6 +578,7 @@
     empty_text: 'Write your answer before submitting.',
     empty_submission: 'Write your answer before submitting.',
     text_too_large: 'Answer too long. Turn it in as a file instead.',
+    description_too_long: 'Description too long. Keep it under 1,000 characters.',
     upload_expired: 'That took too long, so the upload ran out. Try again.',
     upload_not_yours: 'Started by another sign-in. Reload and try again.',
     length_required: 'Couldn’t read the file size. Try again or another browser.',
@@ -612,6 +623,7 @@
   root.AveragesSubmit = {
     MAX_BYTES,
     MAX_FILES,
+    MAX_DESCRIPTION,
     CHUNK,
     Md5,
     md5,

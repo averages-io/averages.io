@@ -62,6 +62,18 @@
   const isId = (v) => /^\d{1,20}$/.test(String(v == null ? '' : v));
   const courseQ = (c) => (isId(c) ? 'id=' : 'course=') + encodeURIComponent(c == null ? '' : c);
   const initial = (n) => String(n || '').replace(/^(Mr\.|Mrs\.|Ms\.|Mx\.|Dr\.|Sra\.|Sr\.|Coach)\s*/i, '').trim().charAt(0).toUpperCase() || '?';
+  /*
+   * People get Apple-style monograms (2026-10-23, Martin: notifications from
+   * people were hard to tell apart): first and last initials on the same grey
+   * as the profile pictures, like Contacts. No real name (a class
+   * announcement): Apple's plain person instead.
+   */
+  const monogram = (n) => {
+    const words = String(n || '').replace(/^(Mr\.?|Mrs\.?|Ms\.?|Mx\.?|Dr\.?|Sra\.?|Sr\.?|Coach)\s+/i, '').split(/[\s,]+/).map((w) => w.replace(/[^\p{L}]/gu, '')).filter(Boolean);
+    if (!words.length) return '';
+    return (words[0].charAt(0) + (words.length > 1 ? words[words.length - 1].charAt(0) : '')).toUpperCase();
+  };
+  const PERSON = '<svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="12.5" r="5.5" fill="#fff"/><path d="M6.5 27.5c1-5.4 5-8.5 9.5-8.5s8.5 3.1 9.5 8.5z" fill="#fff"/></svg>';
 
   // The same samples Home and Messages show in a demo session.
   const DEMO = {
@@ -106,12 +118,13 @@
         items: (updates || []).slice(0, CAP).map((u) => {
           const c = course(u.courseId);
           const from = String(u.from || '').trim();
-          const poster = from && from !== 'Announcement' ? from : (c && c.teacher && !String(c.teacher).includes(',') ? c.teacher : 'Your teacher');
+          const named = from && from !== 'Announcement' ? from : (c && c.teacher && !String(c.teacher).includes(',') ? c.teacher : '');
+          const poster = named || 'Your teacher';
           const id = u.id != null && u.id !== '' ? String(u.id) : '';
           return {
             kind: 'u', id,
             unread: !!u.unread && !Seen.has('u', id),
-            mark: initial(poster), color: (c && c.color) || '#6b6d82',
+            person: true, mark: monogram(named),
             title: poster, sub: c ? c.name : '', body: u.body, when: u.when, label: 'Update',
             href: '/course-home?' + courseQ(u.courseId) + (id ? '&update=' + encodeURIComponent(id) : '') + '#updates',
           };
@@ -148,7 +161,7 @@
           return {
             kind: 'm', id,
             unread: !!m.unread && !Seen.has('m', id),
-            mark: initial(m.from), color: '',
+            person: true, mark: monogram(m.from),
             title: m.from || 'Teacher', body: m.subject || m.preview, when: m.time, label: 'Message',
             href: id ? '/messages?thread=' + encodeURIComponent(id) : '/messages',
           };
@@ -210,6 +223,9 @@
 .avb-row:hover, .avb-row:focus-visible { background: var(--panel-inner, #dcdce0); outline: none; }
 .avb-dot { position: absolute; left: 6px; top: 20px; width: 8px; height: 8px; border-radius: 50%; background: #E5484D; }
 .avb-av { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-size: 0.78rem; font-weight: 800; letter-spacing: 0.01em; background: linear-gradient(180deg, #A5ABB8, #858994); }
+.avb-av.avb-me { background: linear-gradient(180deg, #A5ABB8, #858994); font-family: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-weight: 600; font-size: 0.8rem; letter-spacing: 0.02em; }
+.avb-av.avb-anon { overflow: hidden; }
+.avb-av.avb-anon svg { width: 32px; height: 32px; display: block; opacity: 0.92; }
 .avb-tx { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .avb-l1 { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
 .avb-t { flex: 1 1 auto; min-width: 0; font-size: 0.86rem; font-weight: 700; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -262,7 +278,9 @@
   }
   const short = (w) => String(w || '').replace(/\s+ago$/i, '');
   function rowHTML(it, showKind) {
-    const av = `<span class="avb-av"${it.color ? ` style="background:${esc(it.color)}"` : ''} aria-hidden="true">${esc(it.mark)}</span>`;
+    const av = it.person
+      ? `<span class="avb-av avb-me${it.mark ? '' : ' avb-anon'}" aria-hidden="true">${it.mark ? esc(it.mark) : PERSON}</span>`
+      : `<span class="avb-av"${it.color ? ` style="background:${esc(it.color)}"` : ''} aria-hidden="true">${esc(it.mark)}</span>`;
     const right = it.score ? `<span class="avb-score">${esc(it.score)}</span>` : it.when ? `<span class="avb-w">${esc(short(it.when))}</span>` : '';
     const meta = [showKind ? it.label : '', it.sub, it.score && it.when ? short(it.when) : ''].filter(Boolean).join(' · ');
     const label = [it.unread ? 'New.' : '', it.label, it.title, it.sub, it.body, it.score, it.when].filter(Boolean).join(', ');
