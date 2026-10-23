@@ -1127,7 +1127,7 @@
   .updates-new { font-size: 0.76rem; font-weight: 700; color: var(--accent); }
   .tu-item { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
   .tu-item:last-child { border-bottom: none; padding-bottom: 2px; }
-  .tu-avatar { width: 28px; height: 28px; border-radius: 50%; color: #fff; font-weight: 800; font-size: 0.74rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .tu-avatar { width: 28px; height: 28px; border-radius: 50%; color: #fff; font-family: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-weight: 600; letter-spacing: 0.02em; font-size: 0.72rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
   .tu-text { flex: 1; min-width: 0; }
   .tu-text p { margin: 0; }
   .tu-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
@@ -2109,7 +2109,7 @@
       };
       updatesList.innerHTML = COURSE_UPDATES.length ? COURSE_UPDATES.map(u => ({ ...u, from: poster(u) })).map(u => `
         <div class="tu-item" role="link" tabindex="0" data-href="course-home.html?${avgCourseQ(u.courseId)}${u.id != null && u.id !== '' ? `&update=${encodeURIComponent(u.id)}` : ''}#updates" data-seen-kind="u" data-seen-id="${escapeHtml(u.id == null ? '' : u.id)}" aria-label="${escapeHtml(u.from)}, ${escapeHtml(courseName(u.courseId))}: ${escapeHtml(u.body)}">
-          <span class="tu-avatar" style="background:${escapeHtml(courseColor(u.courseId))}" aria-hidden="true">${escapeHtml(initial(u.from))}</span>
+          <span class="tu-avatar" style="background:${escapeHtml(window.AveragesAvatar ? window.AveragesAvatar.background(u.from) : courseColor(u.courseId))}" aria-hidden="true">${escapeHtml(window.AveragesAvatar ? window.AveragesAvatar.initials(u.from) : initial(u.from))}</span>
           <div class="tu-text">
             <div class="tu-top">
               <p><span class="tu-from">${escapeHtml(u.from)}</span>${courseName(u.courseId) ? ` <span class="tu-course">· ${escapeHtml(courseName(u.courseId))}</span>` : ''}</p>
@@ -3189,7 +3189,8 @@
         profileBtn.style.backgroundPosition = 'center';
         profileBtn.textContent = '';
       } else if (profile.name) {
-        profileBtn.textContent = (function (n) { var p = String(n).trim().split(/\s+/).filter(Boolean); var f = function (w) { return w ? Array.from(w)[0] : ''; }; return (f(p[0]) + (p.length > 1 ? f(p[p.length - 1]) : '')).toUpperCase(); })(profile.name);   // initials, like Apple's (2026-10-21)
+        if (window.AveragesAvatar) window.AveragesAvatar.paint(profileBtn, profile.name);   // initials on their own color (2026-10-23, averages-avatar.js)
+        else profileBtn.textContent = (function (n) { var p = String(n).trim().split(/\s+/).filter(Boolean); var f = function (w) { return w ? Array.from(w)[0] : ''; }; return (f(p[0]) + (p.length > 1 ? f(p[p.length - 1]) : '')).toUpperCase(); })(profile.name);
       }
       if (profile.name && profile.name.trim()) {
         var firstName = profile.name.trim().split(/\s+/)[0];

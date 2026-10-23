@@ -547,7 +547,7 @@
     border-radius: 50%;
     background: var(--course-color);
     color: #fff;
-    font-weight: 800;
+    font-family: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-weight: 600; letter-spacing: 0.02em;
     font-size: 0.66rem;
     display: flex; align-items: center; justify-content: center;
     flex-shrink: 0;
@@ -1105,7 +1105,7 @@
   .tc-close:hover { color: var(--text-dark); }
   .tc-close:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
   .tc-head { display: flex; align-items: center; gap: 12px; clear: both; padding-top: 4px; }
-  .tc-avatar { width: 52px; height: 52px; border-radius: 50%; color: #fff; font-weight: 800; font-size: 1.05rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .tc-avatar { width: 52px; height: 52px; border-radius: 50%; color: #fff; font-family: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-weight: 600; letter-spacing: 0.02em; font-size: 1.05rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
   .tc-box h3 { margin: 0; font-size: 1.1rem; font-weight: 900; color: var(--text-dark); }
   .tc-role { font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin: 2px 0 0; }
   .tc-rows { margin-top: 14px; }
@@ -1805,6 +1805,7 @@
       const set = (id, v) => { document.getElementById(id).textContent = v || '—'; };
       const avatar = document.getElementById('tcAvatar');
       avatar.textContent = tcInitials(c.name); avatar.style.background = color;
+      if (window.AveragesAvatar) window.AveragesAvatar.paint(avatar, c.name);   // their own color (2026-10-23)
       set('tcName', c.name); set('tcRole', c.role || c.dept); set('tcDept', c.dept); set('tcSchool', c.school); set('tcEmail', c.email); set('tcPhone', c.phone);
       // Signed in (2026-10-06): rows the school doesn't share are left out,
       // "Department" is the classes they teach here, and Message is only for
@@ -1995,7 +1996,7 @@
       return `
         <button type="button" class="announce-item" data-id="${escapeHtml(item.id)}">
           <div class="announce-item-head">
-            <span class="announce-avatar" aria-hidden="true">${escapeHtml(String(item.author || course.teacher || 'T').replace(/^(Mr\.|Mrs\.|Ms\.|Sra\.|Coach)\s*/, '').charAt(0))}</span>
+            <span class="announce-avatar" aria-hidden="true"${window.AveragesAvatar ? ` style="background:${escapeHtml(window.AveragesAvatar.background(item.author || course.teacher))}"` : ''}>${escapeHtml(window.AveragesAvatar ? (window.AveragesAvatar.initials(item.author || course.teacher) || 'T') : String(item.author || course.teacher || 'T').replace(/^(Mr\.|Mrs\.|Ms\.|Sra\.|Coach)\s*/, '').charAt(0))}</span>
             <span class="announce-author">${escapeHtml(item.author || course.teacher)}</span>
             <span class="announce-time">${escapeHtml(item.time)}</span>
             ${item.unread ? '<span class="announce-unread-dot" aria-label="Unread"></span>' : ''}
@@ -2778,7 +2779,8 @@
         profileBtn.style.backgroundPosition = 'center';
         profileBtn.textContent = '';
       } else if (profile.name) {
-        profileBtn.textContent = (function (n) { var p = String(n).trim().split(/\s+/).filter(Boolean); var f = function (w) { return w ? Array.from(w)[0] : ''; }; return (f(p[0]) + (p.length > 1 ? f(p[p.length - 1]) : '')).toUpperCase(); })(profile.name);   // initials, like Apple's (2026-10-21)
+        if (window.AveragesAvatar) window.AveragesAvatar.paint(profileBtn, profile.name);   // initials on their own color (2026-10-23, averages-avatar.js)
+        else profileBtn.textContent = (function (n) { var p = String(n).trim().split(/\s+/).filter(Boolean); var f = function (w) { return w ? Array.from(w)[0] : ''; }; return (f(p[0]) + (p.length > 1 ? f(p[p.length - 1]) : '')).toUpperCase(); })(profile.name);
       }
     })();
     const profileMenu = document.getElementById('profileMenu');

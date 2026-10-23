@@ -264,7 +264,7 @@
     width: 38px; height: 38px;
     border-radius: 50%;
     color: #fff;
-    font-weight: 800;
+    font-family: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-weight: 600; letter-spacing: 0.02em;
     font-size: 0.82rem;
     display: flex; align-items: center; justify-content: center;
     flex-shrink: 0;
@@ -961,6 +961,7 @@
     }
 
     function initials(name) {
+      if (window.AveragesAvatar) return name === 'Your teacher' ? '?' : window.AveragesAvatar.initials(name);   // (2026-10-23)
       const parts = name.replace(/^(Mr\.|Mrs\.|Ms\.|Mx\.|Dr\.|Sra\.|Sr\.|Coach|Nurse)\s+/i, '').split(' ');
       return parts.map(p => p[0]).join('').slice(0, 2).toUpperCase();
     }
@@ -984,7 +985,7 @@
     function contactRowHTML(c) {
       return `
         <div class="contact-row" role="button" tabindex="0" data-id="${escapeHtml(c.id)}" aria-label="${escapeHtml(c.name)}${c.role ? ', ' + escapeHtml(c.role) : ''}">
-          <span class="contact-avatar" style="background:${escapeHtml(c.color)}">${escapeHtml(initials(c.name))}</span>
+          <span class="contact-avatar" style="background:${escapeHtml(window.AveragesAvatar ? window.AveragesAvatar.background(c.name === 'Your teacher' ? '' : c.name) : c.color)}">${escapeHtml(initials(c.name))}</span>
           <div class="contact-text">
             <p class="contact-name">${escapeHtml(c.name)}</p>
             ${c.role ? `<p class="contact-role">${escapeHtml(c.role)}</p>` : ''}
@@ -1035,7 +1036,7 @@
 
     function openContactModal(c) {
       document.getElementById('modalAvatar').textContent = initials(c.name);
-      document.getElementById('modalAvatar').style.background = c.color;
+      document.getElementById('modalAvatar').style.background = window.AveragesAvatar ? window.AveragesAvatar.background(c.name === 'Your teacher' ? '' : c.name) : c.color;
       document.getElementById('modalContactName').textContent = c.name;
       document.getElementById('modalContactRole').textContent = c.role || c.dept;
       document.getElementById('modalDept').textContent = c.dept;
@@ -1134,7 +1135,8 @@
         profileBtn.style.backgroundPosition = 'center';
         profileBtn.textContent = '';
       } else if (profile.name) {
-        profileBtn.textContent = (function (n) { var p = String(n).trim().split(/\s+/).filter(Boolean); var f = function (w) { return w ? Array.from(w)[0] : ''; }; return (f(p[0]) + (p.length > 1 ? f(p[p.length - 1]) : '')).toUpperCase(); })(profile.name);   // initials, like Apple's (2026-10-21)
+        if (window.AveragesAvatar) window.AveragesAvatar.paint(profileBtn, profile.name);   // initials on their own color (2026-10-23, averages-avatar.js)
+        else profileBtn.textContent = (function (n) { var p = String(n).trim().split(/\s+/).filter(Boolean); var f = function (w) { return w ? Array.from(w)[0] : ''; }; return (f(p[0]) + (p.length > 1 ? f(p[p.length - 1]) : '')).toUpperCase(); })(profile.name);
       }
     })();
     const profileMenu = document.getElementById('profileMenu');
