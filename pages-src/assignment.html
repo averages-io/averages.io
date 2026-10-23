@@ -157,13 +157,20 @@
   .back-link:hover { color: #fff; }
   .back-link:focus-visible { outline: none; text-decoration: underline; }
 
+  /* The bell and profile picture stay put next to the title's first line (2026-10-23, Martin:
+     on this page they "move and shrink"). They used to line up with the bottom of the title
+     block, so they slid down as the title loaded in and when a long one wrapped; the title
+     side now takes the room that's left and wraps, and never squeezes them. */
   .topbar {
     display: flex;
-    align-items: flex-end;
+    align-items: flex-start;
     justify-content: space-between;
     margin: 0 4px 8px;
     gap: 12px;
   }
+  .topbar > div:first-child { flex: 1 1 auto; min-width: 0; }
+  .topbar h1.title { max-width: 100%; overflow-wrap: anywhere; }
+  .topbar .profile-menu-wrap, .topbar .avb-wrap { flex: 0 0 auto; }
 
   h1.title {
     color: #ffffff;
@@ -574,6 +581,14 @@
   .as-curl small { font-size: 0.7rem; font-weight: 800; color: var(--text-faint); white-space: nowrap; }
   .as-curl small.ok { color: var(--grade-good); }
   .as-curl small.bad { color: var(--grade-bad); }
+  .as-desc { margin-top: 16px; }
+  .as-desc-h { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; font-size: 0.7rem; font-weight: 800; color: var(--text-faint); text-transform: uppercase; letter-spacing: .06em; }
+  .as-desc-h span { font-weight: 700; text-transform: none; letter-spacing: 0; }
+  .as-desc textarea { display: block; width: 100%; min-height: 56px; max-height: 160px; resize: vertical; box-sizing: border-box; border-radius: 10px; border: 1px solid var(--border); background: var(--as-raised); color: var(--text-dark); padding: 8px 12px; font-family: inherit; font-size: 0.8rem; font-weight: 600; line-height: 1.4; }
+  .as-desc textarea:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring); }
+  .as-desc textarea:disabled { opacity: 0.75; resize: none; }
+  .as-desc-note { margin: 8px 0 0 !important; font-size: 0.74rem !important; font-weight: 700; color: var(--text-muted) !important; }
+  .as-desc-note.bad { color: var(--grade-bad) !important; }
   .as-alt { margin: 16px 0 0 !important; text-align: center; font-size: 0.8rem !important; font-weight: 700; color: var(--text-muted) !important; }
   .as-alt button { border: none; background: none; padding: 0; font: inherit; font-weight: 900; color: var(--accent-dark); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
   /* Footer */
@@ -2315,10 +2330,36 @@
       const ready = !!(C && cloudCfg && cloudCfg.google && C.accounts().gdrive);
       if (ready !== EDIT_READY.gdrive) { EDIT_READY.gdrive = ready; renderLiveMaterials(); }
     }
+    /*
+     * Attachments loading (2026-10-23, Martin: an assignment with attachments
+     * "shows nothing then just clips the attachments and animates out").
+     * Before, the box swapped its placeholders for a one-line "Loading…" right
+     * as the page appeared, so the page's reveal shrank it to that line with
+     * its overflow hidden, and attachments that landed during the shrink were
+     * cut off. Now the placeholders (the same rows as PageSkeleton's) stay
+     * until the attachments are in, then the usual reveal: placeholders fade,
+     * rows rise in, the box eases to its new height.
+     */
+    function materialsSkeletonHTML() {
+      const L = window.AveragesLoading;
+      const bar = (w, h, r) => (L && L.skelBar ? L.skelBar(w, h, r) : `<span class="skel-bar" style="width:${w};height:${h}px${r ? ';border-radius:' + r : ''}"></span>`);
+      return ['68%', '52%', '80%'].map(w => `<div class="material-row" data-skel>
+        <span class="material-badge">${bar('30px', 30)}</span>
+        <span class="material-name">${bar(w, 10)}</span>
+        <div class="material-actions">${bar('28px', 28, '50%')}</div>
+      </div>`).join('');
+    }
+    function showMaterials(draw) {
+      const L = window.AveragesLoading;
+      materialsEl.removeAttribute('aria-busy');
+      if (L && L.revealRows && materialsEl.querySelector('[data-skel]')) L.revealRows(materialsEl, draw);
+      else draw();
+    }
     async function loadLiveDetail() {
       const desc = document.getElementById('descText');
       desc.textContent = 'Loading…';
-      materialsEl.innerHTML = '<p class="assign-empty">Loading attached materials…</p>';
+      materialsEl.innerHTML = materialsSkeletonHTML();
+      materialsEl.setAttribute('aria-busy', 'true');
       try {
         let tz = '';
         try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch {}
@@ -2349,11 +2390,11 @@
           links: Array.isArray(d.links) ? d.links : [],
           materials: CLASSROOM && Array.isArray(d.materials) ? d.materials.filter(m => m && /^https?:\/\//i.test(String(m.url || ''))).map(m => ({ kind: String(m.kind || 'link'), title: String(m.title || 'Link'), url: String(m.url) })) : null,
         };
-        renderLiveMaterials();
+        showMaterials(renderLiveMaterials);
         if (CLASSROOM) applyClassroomSubmission(d);
       } catch {
         desc.textContent = 'Couldn’t load this assignment’s details right now.';
-        materialsEl.innerHTML = '<p class="assign-empty">Couldn’t load the attached materials.<button class="assign-retry" type="button" data-live-retry>Try again</button></p>';
+        showMaterials(() => { materialsEl.innerHTML = '<p class="assign-empty">Couldn’t load the attached materials.<button class="assign-retry" type="button" data-live-retry>Try again</button></p>'; });
       }
     }
     if (LIVE) {
@@ -3110,7 +3151,8 @@
         </div>`;
       modalBox.setAttribute('role', 'dialog');
       const done = document.getElementById('modalDoneBtn');
-      done.addEventListener('click', closeModal);
+      // Signed in, Done reloads the page so it shows what was just turned in (2026-10-23, Martin).
+      done.addEventListener('click', () => { closeModal(); if (SUBMIT_LIVE) window.location.reload(); });
       done.focus();
     }
 
@@ -3422,7 +3464,7 @@
       //   mode: 'copy' | 'link', role: 'reader' | 'commenter', url (Canva link), menu, access,
       //   up: { state: 'waiting' | 'hashing' | 'uploading' | 'done' | 'failed', frac, fileId, at, err } (device only),
       //   fileId (once uploaded at turn-in), status (its line while turning in) }
-      const st = { picks: [], phase: null, write: false, wph: null, html: '', log: [], boxH: 0, prog: null, wprog: null, err: null, xBack: false, menuKey: null };
+      const st = { picks: [], phase: null, write: false, wph: null, html: '', log: [], boxH: 0, prog: null, wprog: null, err: null, xBack: false, menuKey: null, desc: '', descResult: '' };
       let seq = 0;
       const uploads = { ctl: null, running: false };
       const preview = !SUBMIT_LIVE;
@@ -3605,7 +3647,22 @@
         const list = n ? `<div class="as-list-h"><span>${st.phase === 'done' ? 'Turned in' : 'Turning in'} (${n})</span><span>${n > 1 && st.phase !== 'done' ? 'One turn-in, all together' : ''}</span></div><div class="as-list" id="uploadPickedList">${st.picks.map(rowHTML).join('')}</div>` : '';
         const sources = st.phase ? '' : `${uploadSourcesRowHTML()}<p class="as-source-note" id="uploadSourceNote" role="status" hidden></p><div class="canva-pick" id="canvaPick" hidden></div><div class="canva-pick drive-pick" id="drivePick" hidden></div>`;
         const write = st.phase ? '' : '<p class="as-alt">No file? <button type="button" data-as-write="1">Write your answer instead</button></p>';
-        return `${headHTML(st.phase === 'turning')}${dropHTML()}${sources}${list}${write}${st.phase === 'failed' ? '' : ''}${footHTML()}`;
+        return `${headHTML(st.phase === 'turning')}${dropHTML()}${sources}${list}${descHTML()}${write}${st.phase === 'failed' ? '' : ''}${footHTML()}`;
+      }
+      /*
+       * A description with the files (2026-10-23, Martin). Optional, plain
+       * text, up to 1,000 characters. It goes on as a comment on the turn-in
+       * on Schoology (see POST /submit/file in the API).
+       */
+      function descHTML() {
+        if (!st.picks.length) return '';
+        const lock = st.phase === 'turning' || st.phase === 'done';
+        if (st.phase === 'done' && !st.desc.trim()) return '';
+        const after = st.phase === 'done' && st.descResult === 'failed'
+          ? '<p class="as-desc-note bad" role="status">Your files are turned in, but the description couldn’t be added. Add it as a comment on Schoology.</p>'
+          : '';
+        return `<div class="as-desc"><label class="as-desc-h" for="asDesc">Description <span>Optional</span></label>
+            <textarea id="asDesc" data-as-desc rows="2" maxlength="1000" placeholder="Add a note for your teacher"${lock ? ' disabled' : ''}>${escapeHtml(st.desc)}</textarea>${after}</div>`;
       }
 
       // Written answer: the rich-text box (2026-08-30) with its step bar in the footer.
@@ -3637,7 +3694,14 @@
       const hasText = () => !!textOf(st.html);
 
       function render(focusSel) {
+        // Typing a description while files upload: the redraw keeps the cursor where it was.
+        const typing = document.activeElement && document.activeElement.matches && document.activeElement.matches('[data-as-desc]') ? document.activeElement : null;
+        const caret = typing ? [typing.selectionStart, typing.selectionEnd, typing.scrollTop] : null;
         modalBox.innerHTML = st.write ? writeHTML() : filesHTML();
+        if (caret && !focusSel) {
+          const d = modalBox.querySelector('[data-as-desc]');
+          if (d && !d.disabled) { d.focus({ preventScroll: true }); d.setSelectionRange(caret[0], caret[1]); d.scrollTop = caret[2]; }
+        }
         modalBox.dataset.lock = st.phase === 'turning' || st.wph === 'turning' ? '1' : '';
         if (st.write) bindEditor();
         else bindFiles();
@@ -4029,7 +4093,9 @@
                 st.revision = null;
               } else {
                 try {
-                  st.revision = (await S.turnInFiles({ section: sec, assignment: asg, fileIds: ids, signal })).revision;
+                  const sent = await S.turnInFiles({ section: sec, assignment: asg, fileIds: ids, signal, description: st.desc });
+                  st.revision = sent.revision;
+                  st.descResult = sent.description || '';
                 } catch (e) {
                   throw Object.assign(e && typeof e === 'object' ? e : { code: String(e) }, { atSend: true });
                 }
@@ -4271,7 +4337,8 @@
       modalBox.onclick = e => {
         const t = e.target;
         if (t.closest('[data-as-close]')) { closeModal(); return; }
-        if (t.closest('[data-as-done]')) { closeModal(); if (preview) renderSubmissionsPanel(); return; }
+        // Done reloads the page (2026-10-23, Martin), so everything shows what was just turned in.
+        if (t.closest('[data-as-done]')) { closeModal(); if (preview) renderSubmissionsPanel(); else window.location.reload(); return; }
         if (st.write) {
           const w = t.closest('[data-as-write]');
           if (w && !w.disabled) { const ed = document.getElementById('submissionAnswerText'); if (ed) st.html = ed.innerHTML; st.write = false; st.wph = null; st.err = null; render(); return; }
@@ -4375,6 +4442,7 @@
         }
       };
       modalBox.oninput = e => {
+        if (e.target.matches && e.target.matches('[data-as-desc]')) { st.desc = e.target.value; return; }
         const u = e.target.closest && e.target.closest('[data-as-url]');
         if (!u) return;
         const p = pickBy(u.dataset.asUrl);

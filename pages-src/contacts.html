@@ -256,8 +256,8 @@
      by it isn't reliable — a plain searchable list, same idea as
      PowerSchool's own Faculty directory, works for everyone whether or
      not their role happens to be on file). ---------- */
-  .contact-row { display: flex; align-items: center; gap: 10px; padding: 9px 6px; border-bottom: 1px solid var(--border); cursor: pointer; border-radius: var(--window-radius-sm); }
-  .contact-row:last-child { border-bottom: none; }
+  /* No lines between people (2026-10-23, Martin). */
+  .contact-row { display: flex; align-items: center; gap: 10px; padding: 9px 6px; cursor: pointer; border-radius: var(--window-radius-sm); }
   .contact-row:hover { background: var(--panel-inner); }
   .contact-row:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring) inset; }
   .contact-avatar {

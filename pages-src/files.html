@@ -520,6 +520,7 @@
   .fx-seg button:focus-visible, .fx-add:focus-visible, .fx-chip:focus-visible, .fx-more:focus-visible, .fx-row:focus-visible, .fx-tile:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
   .fx-add { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--panel-bg); border-radius: 999px; padding: 8px 16px; font: inherit; font-size: 0.8rem; font-weight: 800; color: var(--text-dark); cursor: pointer; white-space: nowrap; }
   .fx-add:hover { background: var(--panel-inner); }
+  a.fx-add { text-decoration: none; }
   .fx-add svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2.4; stroke-linecap: round; }
   .fx-chips { display: none; }
   .fx-sec { font-size: 0.7rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-faint); margin: 22px 0 10px; }
@@ -1193,6 +1194,7 @@
         return `${mb.toFixed(1)} MB`;
       }
       const PLUS_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
+      const OUT_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg>';
       const FOLDER_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7.5V18a1.5 1.5 0 0 0 1.5 1.5h15A1.5 1.5 0 0 0 21 18V9a1.5 1.5 0 0 0-1.5-1.5h-7.4L10 5H4.5A1.5 1.5 0 0 0 3 6.5z"/></svg>';
 
       // The page's own state.
@@ -2049,6 +2051,8 @@
           else if (f === 'gdrive' && (st === 'ready' || st === 'click')) extra = `<button class="fx-add" type="button" data-pick-drive title="In Google Drive, right-click a file → Open with → Averages.io for Drive">${PLUS_ICON}Add from Google Drive</button>`;
         } else if (f === 'canva') {
           if (foldersOn()) extra = `<button class="fx-add" type="button" data-folder-new${FD.formBusy ? ' disabled' : ''}>${PLUS_ICON}New folder</button>`;
+          // Open Canva (2026-10-23, Martin): their projects in Canva, in a new tab.
+          extra += `<a class="fx-add" href="https://www.canva.com/projects" target="_blank" rel="noopener noreferrer">Open Canva${OUT_ICON}</a>`;
         } else extra = `<button class="fx-add" type="button" data-lv-add aria-haspopup="menu" aria-expanded="false">${PLUS_ICON}Add files</button>`;
         return seg + extra;
       }
