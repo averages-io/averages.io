@@ -55,33 +55,30 @@ fs.writeFileSync(
 );
 
 /**
- * The version on the sign-in page and in Settings › About (2026-10-23, Martin:
- * "update the version number every time the app builds itself on Cloudflare").
- * Pages write __AVERAGES_VERSION__ (and __AVERAGES_COMMIT__ for the exact
- * commit, shown on hover); this fills them in on every port.
+ * The version on the sign-in page and in Settings › About (2026-10-23, Martin):
  *
- *   Beta <package.json version> (build <n>)
+ *   Beta <package.json version> (Build <first 7 of the commit>)
  *
- * <n> counts the commits up to the one being built, so every push that
- * Cloudflare builds goes up by at least one. Workers Builds says which commit
- * (WORKERS_CI_COMMIT_SHA). If its copy of the repo is shallow and can't count,
- * the build's own time stands in (Pacific time). Outside Cloudflare it says
- * "local build", so building here doesn't change the ported pages each time.
- * To move to 0.2.0 and so on, change "version" in package.json.
+ * "Build 336051a" links to the commit list on GitHub and is underlined on
+ * hover; hovering shows the whole commit and when it was built. The commit is
+ * the one Cloudflare's Workers Builds is building (WORKERS_CI_COMMIT_SHA),
+ * else git's own HEAD. Outside Cloudflare it says "Build local", so building
+ * here doesn't change the ported pages each time. Pages write
+ * __AVERAGES_BASE__, __AVERAGES_BUILD__ and __AVERAGES_COMMIT__; this fills
+ * them in on every port. To move to 0.2.0 and so on, change "version" in
+ * package.json.
  */
 function buildVersion() {
   const pkg = JSON.parse(fs.readFileSync(path.resolve(HERE, "../package.json"), "utf8"));
   const base = String(pkg.version || "0.0.0");
-  const sha = String(process.env.WORKERS_CI_COMMIT_SHA || "").slice(0, 7);
-  if (!process.env.WORKERS_CI) return { label: `Beta ${base} (local build)`, commit: "local build" };
-  const git = (...args) => execFileSync("git", args, { cwd: path.resolve(HERE, ".."), encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
-  let count = "";
-  try {
-    if (git("rev-parse", "--is-shallow-repository") === "false") count = git("rev-list", "--count", "HEAD");
-  } catch { /* no git here: the time stands in */ }
+  if (!process.env.WORKERS_CI) return { base, build: "local", commit: "Built on this computer", label: `Beta ${base} (Build local)` };
+  let sha = String(process.env.WORKERS_CI_COMMIT_SHA || "").trim();
+  if (!/^[0-9a-f]{7,40}$/i.test(sha)) {
+    try { sha = execFileSync("git", ["rev-parse", "HEAD"], { cwd: path.resolve(HERE, ".."), encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim(); } catch { sha = ""; }
+  }
   const when = new Date().toLocaleString("en-US", { timeZone: "America/Los_Angeles", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
-  const build = /^\d+$/.test(count) ? `build ${count}` : `build ${when}`;
-  return { label: `Beta ${base} (${build})`, commit: sha ? `Commit ${sha}, built ${when} Pacific` : `Built ${when} Pacific` };
+  const build = /^[0-9a-f]{7,40}$/i.test(sha) ? sha.slice(0, 7).toLowerCase() : "unknown";
+  return { base, build, commit: sha ? `Commit ${sha.toLowerCase()}, built ${when} Pacific` : `Built ${when} Pacific`, label: `Beta ${base} (Build ${build})` };
 }
 const VERSION = buildVersion();
 const escapeText = (v) => v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -180,7 +177,8 @@ function maskEmbeddedBlocks(html) {
 
 function extract(srcPath) {
   const html = fs.readFileSync(srcPath, "utf8")
-    .replaceAll("__AVERAGES_VERSION__", escapeText(VERSION.label))
+    .replaceAll("__AVERAGES_BASE__", escapeText(VERSION.base))
+    .replaceAll("__AVERAGES_BUILD__", escapeText(VERSION.build))
     .replaceAll("__AVERAGES_COMMIT__", escapeText(VERSION.commit));
   const styles = [...html.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/gi)].map((m) => m[1]);
   const scripts = [...html.matchAll(/<script(?![^>]*src=)[^>]*>([\s\S]*?)<\/script>/gi)].map((m) => m[1]);
@@ -462,8 +460,10 @@ const UPLOAD_PAGES = new Set(["onboarding", "settings"]);
  * that never zip anything would be pure waste, so they're wired per-page via
  * LegacyPage's `externalScripts` prop instead.
  */
+// Served by the app itself since 2026-10-23 (public/vendor, the same files as npm's jszip 3.10.1):
+// nothing from another site runs inside the app.
 const EXTERNAL_SCRIPTS = {
-  "course-materials": ["https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"],
+  "course-materials": ["/vendor/jszip-3.10.1/jszip.min.js"],
 };
 
 function generatePage(name, route, data) {
