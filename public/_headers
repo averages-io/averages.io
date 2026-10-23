@@ -1,3 +1,20 @@
+# Security headers on every page and file (2026-10-23, Martin: "tighten up app security").
+#   nosniff            a file is only ever run as the type it's served as
+#   Referrer-Policy    other sites see only "app.averages.io", never a page's address (which can hold ids)
+#   X-Frame-Options / frame-ancestors   no other site can show the app inside a frame (clickjacking)
+#   HSTS               browsers only ever use https for app.averages.io (one year)
+#   Permissions-Policy camera, microphone, location, payments and devices are off: the app uses none of them
+#   CSP                no <base> tag tricks, no plugins, forms only post to the app, every request upgraded to https
+# The CSP leaves scripts and styles alone on purpose: the pages run their own inline code
+# (see LegacyPage), and Google/Microsoft sign-in, Typekit and the API all need to keep working.
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: DENY
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), serial=(), hid=(), bluetooth=(), midi=(), browsing-topics=()
+  Content-Security-Policy: base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests
+
 # Let browsers keep the app's own built files (2026-10-14).
 # Everything under /_next/static/ has a hash of its content in its file name,
 # so a changed file always gets a new name and a new address. Marking these
@@ -11,4 +28,8 @@
 # version in it (/js/averages-bell.js?v=...; see scripts/port-pages.mjs), so a
 # changed file always has a new address and this is as safe as /_next/static.
 /js/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# JSZip and pdf.js (2026-10-23): the version is in the folder name, so these never change in place.
+/vendor/*
   Cache-Control: public, max-age=31536000, immutable
