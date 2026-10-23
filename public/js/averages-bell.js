@@ -64,9 +64,10 @@
   const initial = (n) => String(n || '').replace(/^(Mr\.|Mrs\.|Ms\.|Mx\.|Dr\.|Sra\.|Sr\.|Coach)\s*/i, '').trim().charAt(0).toUpperCase() || '?';
   /*
    * People get Apple-style monograms (2026-10-23, Martin: notifications from
-   * people were hard to tell apart): first and last initials on the same grey
-   * as the profile pictures, like Contacts. No real name (a class
-   * announcement): Apple's plain person instead.
+   * people were hard to tell apart): first and last initials, on each
+   * person's own color since 2026-10-23 (averages-avatar.js), the same as
+   * their profile picture everywhere else. No real name (a class
+   * announcement): Apple's plain person on grey instead.
    */
   const monogram = (n) => {
     const words = String(n || '').replace(/^(Mr\.?|Mrs\.?|Ms\.?|Mx\.?|Dr\.?|Sra\.?|Sr\.?|Coach)\s+/i, '').split(/[\s,]+/).map((w) => w.replace(/[^\p{L}]/gu, '')).filter(Boolean);
@@ -124,7 +125,7 @@
           return {
             kind: 'u', id,
             unread: !!u.unread && !Seen.has('u', id),
-            person: true, mark: monogram(named),
+            person: true, who: named, mark: monogram(named),
             title: poster, sub: c ? c.name : '', body: u.body, when: u.when, label: 'Update',
             href: '/course-home?' + courseQ(u.courseId) + (id ? '&update=' + encodeURIComponent(id) : '') + '#updates',
           };
@@ -161,7 +162,7 @@
           return {
             kind: 'm', id,
             unread: !!m.unread && !Seen.has('m', id),
-            person: true, mark: monogram(m.from),
+            person: true, who: m.from, mark: monogram(m.from),
             title: m.from || 'Teacher', body: m.subject || m.preview, when: m.time, label: 'Message',
             href: id ? '/messages?thread=' + encodeURIComponent(id) : '/messages',
           };
@@ -279,7 +280,7 @@
   const short = (w) => String(w || '').replace(/\s+ago$/i, '');
   function rowHTML(it, showKind) {
     const av = it.person
-      ? `<span class="avb-av avb-me${it.mark ? '' : ' avb-anon'}" aria-hidden="true">${it.mark ? esc(it.mark) : PERSON}</span>`
+      ? `<span class="avb-av avb-me${it.mark ? '' : ' avb-anon'}"${it.mark && window.AveragesAvatar ? ` style="background:${esc(window.AveragesAvatar.background(it.who))}"` : ''} aria-hidden="true">${it.mark ? esc(window.AveragesAvatar ? window.AveragesAvatar.initials(it.who) || it.mark : it.mark) : PERSON}</span>`
       : `<span class="avb-av"${it.color ? ` style="background:${esc(it.color)}"` : ''} aria-hidden="true">${esc(it.mark)}</span>`;
     const right = it.score ? `<span class="avb-score">${esc(it.score)}</span>` : it.when ? `<span class="avb-w">${esc(short(it.when))}</span>` : '';
     const meta = [showKind ? it.label : '', it.sub, it.score && it.when ? short(it.when) : ''].filter(Boolean).join(' · ');
