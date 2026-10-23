@@ -197,6 +197,10 @@
     cursor: pointer;
     flex-shrink: 0;
   }
+
+  /* A photo has no ring (2026-10-23, Martin: "remove the ugly border if it is a custom upload");
+     the letter avatars keep theirs. Same size: the border goes clear and the photo fills it. */
+  .profile-btn.has-photo { border-color: transparent; background-origin: border-box; background-repeat: no-repeat; }
   .profile-menu {
     position: absolute;
     top: calc(100% + 10px);
@@ -3436,8 +3440,10 @@
         el.style.backgroundSize = 'cover';
         el.style.backgroundPosition = 'center';
         el.textContent = '';
+        el.classList.add('has-photo');   // no ring around a photo (2026-10-23)
       } else {
         // Back to the stylesheet's monogram gradient (not 'none', which would hide it).
+        el.classList.remove('has-photo');
         el.style.backgroundImage = '';
         el.style.backgroundSize = '';
         el.style.backgroundPosition = '';

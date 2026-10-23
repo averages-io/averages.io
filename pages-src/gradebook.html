@@ -219,6 +219,10 @@
     cursor: pointer;
     flex-shrink: 0;
   }
+
+  /* A photo has no ring (2026-10-23, Martin: "remove the ugly border if it is a custom upload");
+     the letter avatars keep theirs. Same size: the border goes clear and the photo fills it. */
+  .profile-btn.has-photo { border-color: transparent; background-origin: border-box; background-repeat: no-repeat; }
   .profile-menu {
     position: absolute;
     top: calc(100% + 10px);
@@ -2073,6 +2077,7 @@
         profileBtn.style.backgroundSize = 'cover';
         profileBtn.style.backgroundPosition = 'center';
         profileBtn.textContent = '';
+        profileBtn.classList.add('has-photo');
       } else if (profile.name) {
         if (window.AveragesAvatar) window.AveragesAvatar.paint(profileBtn, profile.name);   // initials on their own color (2026-10-23, averages-avatar.js)
         else profileBtn.textContent = (function (n) { var p = String(n).trim().split(/\s+/).filter(Boolean); var f = function (w) { return w ? Array.from(w)[0] : ''; }; return (f(p[0]) + (p.length > 1 ? f(p[p.length - 1]) : '')).toUpperCase(); })(profile.name);
