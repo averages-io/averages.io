@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@tensorflow/tfjs": "^4.22.0",
-    "next": "16.4.0",
+    "next": "16.4.3",
     "nsfwjs": "^4.2.1",
     "react": "19.3.0",
     "react-dom": "19.3.0"
