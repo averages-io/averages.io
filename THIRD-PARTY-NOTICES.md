@@ -166,6 +166,23 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
 
 ---
 
+## JSZip and pdf.js (served by the app)
+
+**Files:** `public/vendor/jszip-3.10.1/jszip.min.js`,
+`public/vendor/pdfjs-4.10.38/pdf.min.mjs`, `public/vendor/pdfjs-4.10.38/pdf.worker.min.mjs`
+
+Used by Course Materials ("Download Folder" zips, PDF previews). Served from this
+repository since 2026-10-23 instead of cdnjs, so no code from another site runs
+inside the app. The files are npm's `jszip@3.10.1` (`dist/`) and
+`pdfjs-dist@4.10.38` (`build/`), unmodified (byte for byte the same as cdnjs's copies).
+
+- **JSZip:** https://github.com/Stuk/jszip. Dual licensed, MIT or GPLv3; used under
+  **MIT**. Full text: `public/vendor/jszip-3.10.1/LICENSE.md`.
+- **pdf.js:** https://github.com/mozilla/pdf.js. **Apache-2.0**. Full text:
+  `public/vendor/pdfjs-4.10.38/LICENSE`.
+
+---
+
 ## Runtime dependencies
 
 These are installed from npm at build time rather than committed here, so their
