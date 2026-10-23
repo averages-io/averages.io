@@ -18,6 +18,7 @@
  * shipping an app whose NSFW filter or live-data wiring quietly did nothing.
  */
 
+import { execFileSync } from "node:child_process";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
@@ -52,6 +53,39 @@ fs.writeFileSync(
     `// Our /js scripts' addresses with a version, so browsers can keep them (see public/_headers).\n` +
     `export const JS = ${JSON.stringify(JS_VERSIONED, null, 2)} as const;\n`
 );
+
+/**
+ * The version on the sign-in page and in Settings › About (2026-10-23, Martin:
+ * "update the version number every time the app builds itself on Cloudflare").
+ * Pages write __AVERAGES_VERSION__ (and __AVERAGES_COMMIT__ for the exact
+ * commit, shown on hover); this fills them in on every port.
+ *
+ *   Beta <package.json version> (build <n>)
+ *
+ * <n> counts the commits up to the one being built, so every push that
+ * Cloudflare builds goes up by at least one. Workers Builds says which commit
+ * (WORKERS_CI_COMMIT_SHA). If its copy of the repo is shallow and can't count,
+ * the build's own time stands in (Pacific time). Outside Cloudflare it says
+ * "local build", so building here doesn't change the ported pages each time.
+ * To move to 0.2.0 and so on, change "version" in package.json.
+ */
+function buildVersion() {
+  const pkg = JSON.parse(fs.readFileSync(path.resolve(HERE, "../package.json"), "utf8"));
+  const base = String(pkg.version || "0.0.0");
+  const sha = String(process.env.WORKERS_CI_COMMIT_SHA || "").slice(0, 7);
+  if (!process.env.WORKERS_CI) return { label: `Beta ${base} (local build)`, commit: "local build" };
+  const git = (...args) => execFileSync("git", args, { cwd: path.resolve(HERE, ".."), encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
+  let count = "";
+  try {
+    if (git("rev-parse", "--is-shallow-repository") === "false") count = git("rev-list", "--count", "HEAD");
+  } catch { /* no git here: the time stands in */ }
+  const when = new Date().toLocaleString("en-US", { timeZone: "America/Los_Angeles", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+  const build = /^\d+$/.test(count) ? `build ${count}` : `build ${when}`;
+  return { label: `Beta ${base} (${build})`, commit: sha ? `Commit ${sha}, built ${when} Pacific` : `Built ${when} Pacific` };
+}
+const VERSION = buildVersion();
+const escapeText = (v) => v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+console.log(`  version: ${VERSION.label}`);
 
 /** '/js/averages-x.js' in a page script -> its versioned address. */
 function versionJsRefs(script, file) {
@@ -145,7 +179,9 @@ function maskEmbeddedBlocks(html) {
 }
 
 function extract(srcPath) {
-  const html = fs.readFileSync(srcPath, "utf8");
+  const html = fs.readFileSync(srcPath, "utf8")
+    .replaceAll("__AVERAGES_VERSION__", escapeText(VERSION.label))
+    .replaceAll("__AVERAGES_COMMIT__", escapeText(VERSION.commit));
   const styles = [...html.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/gi)].map((m) => m[1]);
   const scripts = [...html.matchAll(/<script(?![^>]*src=)[^>]*>([\s\S]*?)<\/script>/gi)].map((m) => m[1]);
   const title = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
