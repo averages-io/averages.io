@@ -193,6 +193,9 @@ const SPECS: Record<string, SkeletonSpec[]> = {
    * Class column snapping wider when it does.
    */
   grades: [
+    // Stand-in text in the page's markup (2026-10-23, Martin: "why is it flashing a random class
+    // emoji then reverting or a random class name"): shimmer in its place while the data loads.
+    { sel: "#courseCountSub", count: 1, reveal: false, row: () => `<span data-skel>${bar("64px", 10)}</span>` },
     {
       sel: "#gradesBody",
       count: 6,
@@ -225,6 +228,9 @@ const SPECS: Record<string, SkeletonSpec[]> = {
    * shorter than the rows that replace it.
    */
   courses: [
+    // Stand-in text in the page's markup (2026-10-23, Martin: "why is it flashing a random class
+    // emoji then reverting or a random class name"): shimmer in its place while the data loads.
+    { sel: "#courseCountSub", count: 1, reveal: false, row: () => `<span data-skel>${bar("64px", 10)}</span>` },
     {
       sel: "#coursesBody",
       count: 6,
@@ -263,6 +269,11 @@ const SPECS: Record<string, SkeletonSpec[]> = {
    * `.gb-assign-row` list.
    */
   gradebook: [
+    // Stand-in text in the page's markup (2026-10-23, Martin: "why is it flashing a random class
+    // emoji then reverting or a random class name"): shimmer in its place while the data loads.
+    { sel: "#gbTitle", count: 1, reveal: false, row: () => `<span data-skel>${bar("46%", 22)}</span>` },
+    { sel: "#sheetEmoji", count: 1, reveal: false, row: () => "" },
+    { sel: "#sheetTitle", count: 1, reveal: false, row: () => `<span data-skel>${bar("220px", 24)}</span>` },
     {
       sel: "#curVal",
       reveal: false,
@@ -323,6 +334,10 @@ const SPECS: Record<string, SkeletonSpec[]> = {
   ],
 
   assignment: [
+    // Stand-in text in the page's markup (2026-10-23, Martin: "why is it flashing a random class
+    // emoji then reverting or a random class name"): shimmer in its place while the data loads.
+    { sel: "#classLink", count: 1, reveal: false, row: () => `<span data-skel>${bar("96px", 10)}</span>` },
+    { sel: "#gradebookLink", count: 1, reveal: false, row: () => `<span data-skel>${bar("72px", 10)}</span>` },
     // `#assignTitle` is a plain <h1 class="title"> the page fills with
     // textContent, so one bar standing in for the line is the whole of it.
     { sel: "#assignTitle", count: 1, reveal: false, row: () => `<span data-skel>${bar("62%", 22)}</span>` },
@@ -337,6 +352,11 @@ const SPECS: Record<string, SkeletonSpec[]> = {
         <div class="material-actions">${dot(28)}</div>
       </div>`,
     },
+  ],
+
+  // Settings (2026-10-23): only the storage figure, which showed a made-up "128 MB" first.
+  settings: [
+    { sel: "#cacheSizeValue", count: 1, reveal: false, row: () => `<span data-skel>${bar("44px", 9)}</span>` },
   ],
 
   messages: [
@@ -361,6 +381,9 @@ const SPECS: Record<string, SkeletonSpec[]> = {
   ],
 
   contacts: [
+    // Stand-in text in the page's markup (2026-10-23, Martin: "why is it flashing a random class
+    // emoji then reverting or a random class name"): shimmer in its place while the data loads.
+    { sel: "#contactsHeading", count: 1, reveal: false, row: () => `<span data-skel>${bar("128px", 14)}</span>` },
     {
       // contactRowHTML() in contacts.html. The row's Email quick-action is
       // a real <a>; a span keeps the same 30px box without being a link.
@@ -398,6 +421,10 @@ const SPECS: Record<string, SkeletonSpec[]> = {
    * and guessing a color before the grade loads would be a claim, not a shape.
    */
   "course-home": [
+    // Stand-in text in the page's markup (2026-10-23, Martin: "why is it flashing a random class
+    // emoji then reverting or a random class name"): shimmer in its place while the data loads.
+    { sel: "#bannerIcon", count: 1, reveal: false, row: () => "" },
+    { sel: "#hubTitle", count: 1, reveal: false, row: () => `<span data-skel>${bar("220px", 24)}</span>` },
     {
       // Current grade, under the projected grade in the course banner (2026-10-01).
       sel: "#curVal",
@@ -454,6 +481,10 @@ const SPECS: Record<string, SkeletonSpec[]> = {
    * reserving room for one on every tile would invent starred files.
    */
   "course-materials": [
+    // Stand-in text in the page's markup (2026-10-23, Martin: "why is it flashing a random class
+    // emoji then reverting or a random class name"): shimmer in its place while the data loads.
+    { sel: "#sheetEmoji", count: 1, reveal: false, row: () => "" },
+    { sel: "#sheetTitle", count: 1, reveal: false, row: () => `<span data-skel>${bar("220px", 24)}</span>` },
     {
       sel: "#itemGrid",
       count: 10,
