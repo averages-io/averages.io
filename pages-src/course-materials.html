@@ -6,13 +6,13 @@
 <title>Averages — Course Materials</title>
 <link rel="stylesheet" href="https://use.typekit.net/gsk6off.css">
 <!-- JSZip (2026-09-03, per Martin's "save the whole folder to their
-     computer" request) — loaded from cdnjs so "Download Folder" can build
+     computer" request) — served from /vendor (cdnjs until 2026-10-23) so "Download Folder" can build
      a real .zip client-side; there's no backend to zip on. `defer` so it
      doesn't block the page while loading — the download handler only
      needs it once a user actually clicks Download Folder, well after
      load. Same "needs a real internet connection to work" caveat as the
      Typekit stylesheet above (this sandboxed preview can't reach either). -->
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script defer src="/vendor/jszip-3.10.1/jszip.min.js"></script>
 <style>
   /* ---------- Shared design system — copied verbatim from course-home.html
      so this page reads as the same app. See architecture-decisions.md re:
@@ -32,9 +32,11 @@
     --window-radius-lg: 22px;
     --window-radius-md: 14px;
     --window-radius-sm: 10px;
-    --course-color: #a67a22;
-    --course-color-dark: #8a6519;
-    --course-color-tint: rgba(166, 122, 34, 0.14);
+    /* Neutral until the class's own color arrives (2026-10-23): this used to be a
+       sample class's gold, which flashed before every real class. */
+    --course-color: #6E7582;
+    --course-color-dark: #535B6B;
+    --course-color-tint: rgba(110, 117, 130, 0.14);
   }
 
   /* Finder-window palette (2026-08-28: unified with the rest of the app —
@@ -3317,7 +3319,7 @@
 
     // Whole-folder download (2026-09-03, per Martin: "Allow users to save
     // the whole folder to their computer") — builds a real .zip client-
-    // side via JSZip (loaded from cdnjs, see the <script> tag in <head>),
+    // side via JSZip (served from /vendor, see the <script> tag in <head>),
     // recursing through the folder's own `folders`/`files` tree so the
     // zip's own internal structure matches what's on screen. Each file
     // inside gets the same placeholder-text-blob treatment
@@ -3332,7 +3334,7 @@
       (node.folders || []).forEach(sub => addFolderToZip(zipFolder.folder(sub.name), sub));
     }
     async function downloadFolderAsZip(folder) {
-      // JSZip loads with `defer` from cdnjs — if this sandboxed preview
+      // JSZip loads with `defer` from /vendor — if this sandboxed preview
       // (or any offline browser) can't reach it, there's nothing to zip
       // with. Reuses the existing Get Info overlay for the message rather
       // than a native alert(), so it looks like the rest of this app.
@@ -4243,7 +4245,8 @@
     const PREVIEW_IMG = ['png', 'jpg', 'jpeg', 'gif', 'webp'];
     const PREVIEW_MAX = { img: 8 * 1024 * 1024, pdf: 10 * 1024 * 1024 };
     const PREVIEW_KEY = 'averages_previews';
-    const PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/';
+    // pdf.js 4.10.38, served by the app itself (2026-10-23; npm's pdfjs-dist build, byte for byte the same as cdnjs's).
+    const PDFJS = '/vendor/pdfjs-4.10.38/';
     function previewsOn() {
       if (!MATERIALS_LIVE || document.body.classList.contains('potato-mode')) return false;
       try { if (navigator.connection && navigator.connection.saveData) return false; } catch {}

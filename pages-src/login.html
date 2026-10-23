@@ -657,6 +657,9 @@
   .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
   .signin-foot { margin: 0; font-size: 0.85rem; font-weight: 700; color: rgba(255, 255, 255, 0.85); text-align: center; }
   .signin-foot a { color: inherit; font-weight: 800; text-decoration: underline; text-underline-offset: 2px; }
+  /* The build, linked to the code on GitHub (2026-10-23): underlined only on hover. */
+  .signin-foot a.build-link { font-weight: inherit; text-decoration: none; }
+  .signin-foot a.build-link:hover, .signin-foot a.build-link:focus-visible { text-decoration: underline; outline: none; }
   .dev-keys { margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--line); }
   .dev-keys[hidden] { display: none; }
   .dev-keys-label { margin: 0 0 8px; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-muted); text-align: center; }
@@ -823,7 +826,7 @@
 
       </div>
     </main>
-    <p class="signin-foot"><span title="__AVERAGES_COMMIT__">__AVERAGES_VERSION__</span> · <a href="https://github.com/averages-io/averages.io/issues" target="_blank" rel="noopener">Report a bug on GitHub</a></p>
+    <p class="signin-foot"><span>Beta __AVERAGES_BASE__ (<a class="build-link" href="https://github.com/averages-io/averages.io/commits/main/" target="_blank" rel="noopener noreferrer" title="__AVERAGES_COMMIT__">Build __AVERAGES_BUILD__</a>)</span> · <a href="https://github.com/averages-io/averages.io/issues" target="_blank" rel="noopener">Report a bug on GitHub</a></p>
   </div>
   </div>
 

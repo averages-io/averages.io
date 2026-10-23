@@ -3642,7 +3642,8 @@
         TEACHERS[composeId] = {
           name,
           course: params.get('dept') || '',
-          color: params.get('color') || '#83849a',
+          // Only a plain hex color from the address (2026-10-23): it lands in a style attribute.
+          color: /^#[0-9a-f]{6}$/i.test(params.get('color') || '') ? params.get('color') : '#83849a',
         };
       }
       startNewThreadWith(composeId);

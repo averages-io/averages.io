@@ -889,6 +889,9 @@
   .about-block a.about-name:hover,
   .about-block a[aria-label="Averages on GitHub"]:hover .about-logo { opacity: 0.85; }
   .about-version { font-size: 0.76rem; color: var(--text-faint); margin: 4px 0 0; }
+  /* The build, linked to the code on GitHub (2026-10-23): underlined only on hover. */
+  .about-version .build-link { color: inherit; text-decoration: none; text-underline-offset: 2px; }
+  .about-version .build-link:hover, .about-version .build-link:focus-visible { text-decoration: underline; outline: none; }
 
   .list-row {
     display: flex;
@@ -1422,7 +1425,7 @@
               <a class="about-name" href="https://github.com/averages-io" target="_blank" rel="noopener" style="text-decoration:none;">Averages</a>
               <!-- Filled in on every build (2026-10-23): scripts/port-pages.mjs, from package.json's
                    version and the build's commit. Change the number in package.json. -->
-              <p class="about-version" title="__AVERAGES_COMMIT__">__AVERAGES_VERSION__</p>
+              <p class="about-version">Beta __AVERAGES_BASE__ (<a class="build-link" href="https://github.com/averages-io/averages.io/commits/main/" target="_blank" rel="noopener noreferrer" title="__AVERAGES_COMMIT__">Build __AVERAGES_BUILD__</a>)</p>
             </div>
             <div class="settings-group" style="margin-top: 18px;">
               <a class="list-row" href="https://averages.io/privacy-policy" target="_blank" rel="noopener">Privacy Policy <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></a>
@@ -4454,6 +4457,9 @@
       const PRICE = '$2.99/month.';
       const OFFER = 'Notifications, calendar sync and early features. ' + PRICE;
       let billing = null;   // GET /billing/status, once it answers
+      // Signed in, nothing is picked until /billing/status answers (2026-10-23): a Plus member used to
+      // see Classic picked first, then the dot jump to Plus.
+      let loaded = !LIVE;
       let busy = false;
 
       function say(text, bad) {
@@ -4468,6 +4474,7 @@
       const hasPlus = () => !!(billing && billing.plus);
       function current() {
         if (incognito) return 'incognito';
+        if (!loaded) return '';
         return hasPlus() ? 'plus' : 'classic';
       }
       function plusDesc() {
@@ -4505,6 +4512,7 @@
           const res = await fetch(averagesApiBase() + '/billing/status', { credentials: 'include', cache: 'no-store' });
           billing = res.ok ? await res.json() : null;
         } catch (e) { billing = null; }
+        loaded = true;
         render();
         return billing;
       }
@@ -4542,6 +4550,7 @@
       }
       function close() { overlay.classList.remove('show'); picks.incognito.focus(); }
       function pick(mode) {
+        if (!loaded) return;   // still finding out whether they have Plus
         const now = current();
         if (busy || mode === now || picks[mode].getAttribute('aria-disabled') === 'true') return;
         say('');

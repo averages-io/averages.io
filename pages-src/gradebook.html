@@ -39,9 +39,11 @@
        course-home.html — everything specific to "whose gradebook this
        is" reads from these instead of a fixed color, so the one page
        genuinely serves any of the six sample courses via ?course=. */
-    --course-color: #a67a22;
-    --course-color-dark: #8a6519;
-    --course-color-tint: rgba(166, 122, 34, 0.14);
+    /* Neutral until the class's own color arrives (2026-10-23): this used to be a
+       sample class's gold, which flashed before every real class. */
+    --course-color: #6E7582;
+    --course-color-dark: #535B6B;
+    --course-color-tint: rgba(110, 117, 130, 0.14);
   }
 
   * { box-sizing: border-box; }
@@ -838,7 +840,8 @@
         <div class="section-head-row">
           <h2>Assignments</h2>
           <span class="course-total" id="gradeSummaryTotal"></span>
-          <button class="gb-open-calc-btn" id="openCalcBtn" type="button">
+          <!-- Hidden until there's a gradebook to calculate with (2026-10-23): renderCategories() shows it. -->
+          <button class="gb-open-calc-btn" id="openCalcBtn" type="button" style="display:none">
             <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="11" x2="8.01" y2="11"/><line x1="12" y1="11" x2="12.01" y2="11"/><line x1="16" y1="11" x2="16.01" y2="11"/><line x1="8" y1="15" x2="8.01" y2="15"/><line x1="12" y1="15" x2="12.01" y2="15"/><line x1="16" y1="15" x2="16.01" y2="15"/><line x1="8" y1="19" x2="8.01" y2="19"/><line x1="12" y1="19" x2="12.01" y2="19"/></svg>
             Final Grade Calculator
           </button>
