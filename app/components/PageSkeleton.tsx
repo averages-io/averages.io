@@ -357,6 +357,11 @@ const SPECS: Record<string, SkeletonSpec[]> = {
   // Settings (2026-10-23): only the storage figure, which showed a made-up "128 MB" first.
   settings: [
     { sel: "#cacheSizeValue", count: 1, reveal: false, row: () => `<span data-skel>${bar("44px", 9)}</span>` },
+    // The School rows (2026-10-23): sample values in the markup, so shimmer until the page fills them.
+    { sel: "#schoolNameValue", count: 1, reveal: false, row: () => `<span data-skel>${bar("132px", 9)}</span>` },
+    { sel: "#schoolLmsValue", count: 1, reveal: false, row: () => `<span data-skel>${bar("120px", 9)}</span>` },
+    { sel: "#schoolDistrictValue", count: 1, reveal: false, row: () => `<span data-skel>${bar("160px", 9)}</span>` },
+    { sel: "#studentIdValue", count: 1, reveal: false, row: () => `<span data-skel>${bar("56px", 9)}</span>` },
   ],
 
   messages: [

@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import "./lib/averages-loading.css";
 // Help popups for Canva and Google Drive (2026-10-21): the styles for public/js/averages-help.js.
 import "./lib/averages-help.css";
+// Letter avatars: initials centered on the capitals, not the line box (2026-10-25).
+import "./lib/averages-avatar.css";
 // Our /js scripts' versioned addresses (2026-10-20; generated, see scripts/port-pages.mjs).
 import { JS } from "./lib/js-version";
 

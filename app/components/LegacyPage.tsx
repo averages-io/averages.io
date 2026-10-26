@@ -11,6 +11,7 @@ import * as loading from "../lib/averages-loading";
 // window.AveragesLoading.skelBar / revealRows / rise / chartSkeleton / calm.
 if (typeof window !== "undefined") (window as any).AveragesLoading = loading;
 import { THEME_BOOT_JS } from "../lib/theme-boot";
+import { SPLASH_CSS, SPLASH_JS, SPLASH_MIN_MS } from "../lib/splash";
 import { JS } from "../lib/js-version";
 
 /**
@@ -290,6 +291,7 @@ export default function LegacyPage({
       // skeleton up and show a retry message instead.
       if (requiresAuth && session.mode === "live" && bundle === null) {
         setMode(session.mode);
+        (window as any).__averagesSplash?.hide();
         setPhase("error");
         return;
       }
@@ -317,6 +319,8 @@ export default function LegacyPage({
       // greeting and Settings' profile card when no name is saved on this
       // device. Replaces the sample "Martin" / "M" those used to fall back to.
       (window as any).__AVERAGES_NAME__ = typeof session.name === "string" ? session.name : "";
+      // How they signed in (2026-10-23): "schoology" or "google" (Classroom). Settings' School section uses it.
+      (window as any).__AVERAGES_PROVIDER__ = session.mode === "live" ? (session.provider === "google" ? "google" : "schoology") : "";
       // Incognito (2026-10-05): nothing about the student is stored on our
       // servers, so Sync, connected apps and notifications are off. It's on
       // when the API says so (signed in as under 13, which can't be switched
@@ -333,6 +337,16 @@ export default function LegacyPage({
       // Incognito keeps Google Drive / OneDrive (2026-10-14): they connect in
       // this browser only (public/js/averages-cloud.js), and any connection our
       // server held is forgotten there. Sign-out clears them like everything else.
+
+      // First-open logo splash (2026-10-24, app/lib/splash.ts): it stays at
+      // least SPLASH_MIN_MS so it never just flickers. The data waits for it,
+      // so the rows rise as the logo fades instead of underneath it.
+      const splash = (window as any).__averagesSplash;
+      if (splash?.on) {
+        const left = SPLASH_MIN_MS - (performance.now() - splash.at);
+        if (left > 0) await new Promise((done) => window.setTimeout(done, left));
+        if (cancelled) return;
+      }
 
       setMode(session.mode);
       // The placeholders' heights and shimmer positions, read before they're
@@ -455,6 +469,8 @@ export default function LegacyPage({
      * worse than no animation at all.
      */
     revealContent(containerRef.current, pageId, snapRef.current, (pageId ? REVEAL_SELECTORS[pageId] ?? [] : []).filter((sel) => !held.includes(sel)));
+    // The first-open splash (if it's up) fades as the rows rise.
+    (window as any).__averagesSplash?.hide();
 
     // Notifications bell (2026-10-19, public/js/averages-bell.js): next to the
     // profile picture on every signed-in page, drawn from the data this page
@@ -593,6 +609,9 @@ export default function LegacyPage({
         component knows, because the page tells it.
       */}
       {usesSavedTheme && <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_JS }} />}
+      {/* First-open logo splash: signed-in pages, only when this tab has no saved grades yet (app/lib/splash.ts). */}
+      {requiresAuth && <style dangerouslySetInnerHTML={{ __html: SPLASH_CSS }} />}
+      {requiresAuth && <script dangerouslySetInnerHTML={{ __html: SPLASH_JS }} />}
       <style dangerouslySetInnerHTML={{ __html: styleCss }} />
       <style dangerouslySetInnerHTML={{ __html: SKELETON_CSS }} />
       {phase === "error" && (

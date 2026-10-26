@@ -1,0 +1,43 @@
+/*
+ * Initials sit dead center in every letter avatar (2026-10-25, Martin: "fix
+ * the letters in the letter profiles not being centered").
+ *
+ * Flex/grid centering puts the line box in the middle, not the letters. How
+ * far the capitals sit from the middle of that box depends on the font's
+ * ascent and descent, so the same initials sat up to 2px high on some fonts
+ * (measured: Arial/Helvetica-style fonts 1.6px high, FreeSans 2px) and
+ * centered on others.
+ *
+ * `text-box: trim-both cap alphabetic` trims the line box to exactly the
+ * capitals (cap height down to the baseline), and `align-content: center`
+ * centers that box, so the letters land in the middle with any font. That
+ * needs a block container: text-box does nothing on a flex or grid one.
+ *
+ * Only where text-box is supported (Chrome/Edge 133+, Safari 18.2+). Other
+ * browsers keep the flex/grid centering they had. Avatars holding an icon
+ * or photo (svg/img) are left alone.
+ *
+ * Every avatar listed here is display:flex or grid on its own page, all
+ * block-level, so block is the like-for-like swap. :root raises specificity
+ * above the pages' own single-class rules.
+ */
+@supports (text-box: trim-both cap alphabetic) {
+  :root :is(
+    .profile-btn,
+    .profile-card-avatar,
+    .tu-avatar,
+    .tc-avatar,
+    .announce-avatar,
+    .contact-avatar,
+    .contact-modal-avatar,
+    .msgs-avatar,
+    .msgs-thread-avatar,
+    .avb-av
+  ):not(:has(svg, img)) {
+    display: block;
+    align-content: center;
+    text-align: center;
+    white-space: nowrap;
+    text-box: trim-both cap alphabetic;
+  }
+}

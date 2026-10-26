@@ -28,6 +28,7 @@ import {
   type ExtraName,
   type ExtraRequest,
 } from "./extras";
+import { SPLASH_KEY } from "./splash";
 
 export type Mode = "live" | "demo" | "out";
 
@@ -199,6 +200,7 @@ function under13(): boolean {
 /** Drops every cached answer about who's signed in and their data. */
 export function forgetSession(): void {
   cacheClear(SESSION_CACHE);
+  cacheClear(SPLASH_KEY);
   cacheClear(BUNDLE_CACHE);
   cacheClear(FILES_CACHE);
   cacheClear(SUBS_CACHE);
@@ -381,6 +383,8 @@ export async function signOut(): Promise<void> {
   setSignedInHint(false);
   cacheClear(SESSION_CACHE);
   cacheClear(BUNDLE_CACHE);
+  // The next sign-in in this tab gets the first-open logo again (app/lib/splash.ts).
+  cacheClear(SPLASH_KEY);
   cacheClear(FILES_CACHE);
   cacheClear(SUBS_CACHE);
   clearExtras();
