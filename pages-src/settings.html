@@ -653,13 +653,48 @@
   .plus-hero-btn:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
   .plus-hero-btn[hidden], #plusNotifBtn[hidden], #plusCalBtn[hidden], #plusPayBlock[hidden], .plus-perk-state[hidden] { display: none; }
   .plus-hero-btn[aria-disabled="true"] { opacity: 0.6; cursor: default; transform: none; }
-  .plus-perk { justify-content: flex-start; }
-  .plus-perk .settings-row-text { flex: 1; }
-  /* Feature icons: a soft Punch tint with the icon in deep Punch (5:1 on the tile), the app's own
-     icon recipe (1.75 strokes, square ends). */
-  .plus-perk-icon { flex: none; width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; color: #A3302A; background: color-mix(in srgb, #FF7A50 18%, var(--panel-bg)); }
-  body.dark-mode .plus-perk-icon { color: #FF9A72; background: color-mix(in srgb, #FF7A50 16%, var(--panel-bg)); }
-  .plus-perk-icon svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: butt; stroke-linejoin: miter; }
+  /* ---------- Plus feature cards (2026-10-26) ----------
+     Two per row where there's room, one on phones. The stage on top holds a small drawing of the
+     feature; the body has the name, one line, and Set up / a status for members. */
+  .plus-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+  .plus-card { display: flex; flex-direction: column; border-radius: var(--window-radius-md); background: var(--panel-inner); overflow: hidden; }
+  .plus-card-stage { position: relative; height: 128px; display: grid; place-items: center; overflow: hidden; background: radial-gradient(circle at 50% 120%, color-mix(in srgb, #FF7A50 30%, transparent), transparent 70%), color-mix(in srgb, #FF7A50 10%, var(--panel-inner)); }
+  .plus-card-body { flex: 1; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 16px; }
+  .plus-card-body .settings-row-desc { margin: 0; }
+  .plus-card-btn, .plus-card-state { margin-top: auto; }
+  .plus-card-btn { margin-top: 12px; }
+  .plus-card-state { padding-top: 8px; }
+  /* The drawings. Their own small palette so they read the same in light and dark mode. */
+  .pv-toast { display: flex; gap: 8px; width: 216px; padding: 12px; border-radius: 12px; background: #fff; box-shadow: 0 8px 20px rgba(20, 21, 31, 0.14); color: #14151f; text-align: left; }
+  .pv-toast-app { flex: none; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; background: #FFEDE6; }
+  .pv-toast-app svg { width: 18px; height: 18px; }
+  .pv-toast-body { display: flex; flex-direction: column; min-width: 0; font-size: 0.66rem; line-height: 1.35; }
+  .pv-toast-top { display: flex; justify-content: space-between; color: #4b4d63; }
+  .pv-toast-top b { font-weight: 700; }
+  .pv-toast-top i { font-style: normal; }
+  .pv-toast-title { font-weight: 800; font-size: 0.72rem; }
+  .pv-toast-text { color: #4b4d63; }
+  .pv-cal { display: grid; grid-template-columns: repeat(5, 40px); gap: 4px; padding: 8px; border-radius: 12px; background: #fff; box-shadow: 0 8px 20px rgba(20, 21, 31, 0.14); }
+  .pv-cal-day { display: flex; flex-direction: column; align-items: center; gap: 4px; height: 84px; padding-top: 4px; border-radius: 8px; color: #4b4d63; font-size: 0.56rem; }
+  .pv-cal-day b { font-weight: 700; }
+  .pv-cal-day i { font-style: normal; font-weight: 800; font-size: 0.78rem; color: #14151f; }
+  .pv-cal-day.is-today { background: #f1f1f4; }
+  .pv-cal-day.is-today i { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; background: #E5484D; color: #fff; }
+  .pv-cal-day em { width: 36px; padding: 2px 0; border-radius: 4px; background: #FFE3D8; color: #8A2A12; font-style: normal; font-weight: 800; text-align: center; }
+  .pv-cal-day em.alt { background: #DDE7FA; color: #1F4A9C; }
+  .pv-early { display: flex; flex-direction: column; gap: 8px; width: 216px; }
+  .pv-early-row { display: flex; align-items: center; justify-content: space-between; padding: 12px; border-radius: 12px; background: #fff; box-shadow: 0 8px 20px rgba(20, 21, 31, 0.14); color: #14151f; font-size: 0.72rem; font-weight: 800; }
+  .pv-early-row.is-dim { box-shadow: none; background: rgba(255, 255, 255, 0.55); color: #4b4d63; font-weight: 700; }
+  .pv-early-tag { padding: 2px 8px; border-radius: 999px; background: linear-gradient(135deg, #FF7A50, #E5484D); color: #2A0A05; font-size: 0.62rem; }
+  .pv-early-when { font-size: 0.62rem; }
+  .pv-phone { position: absolute; top: 20px; display: flex; flex-direction: column; gap: 8px; width: 96px; height: 140px; padding: 24px 8px 8px; border-radius: 20px; background: #fff; box-shadow: 0 0 0 4px #14151f, 0 8px 20px rgba(20, 21, 31, 0.2); }
+  .pv-phone-notch { position: absolute; top: 8px; left: 50%; width: 32px; height: 8px; margin-left: -16px; border-radius: 999px; background: #14151f; }
+  .pv-phone-row { display: flex; align-items: center; gap: 4px; padding: 4px; border-radius: 6px; background: #f1f1f4; }
+  .pv-phone-row i { flex: none; width: 8px; height: 8px; border-radius: 50%; }
+  .pv-phone-row b { flex: 1; height: 4px; border-radius: 2px; background: #c7c7cd; }
+  .pv-phone-row em { font-style: normal; font-weight: 900; font-size: 0.56rem; color: #14151f; }
+  body.dark-mode .plus-card-stage { background: radial-gradient(circle at 50% 120%, color-mix(in srgb, #FF7A50 26%, transparent), transparent 70%), color-mix(in srgb, #FF7A50 8%, var(--panel-inner)); }
+  body.dark-mode .pv-early-row.is-dim { background: rgba(255, 255, 255, 0.12); color: #c9cad3; }
   .plus-perk-state { font-size: 0.78rem; }
   /* In its own section the Calendar sync row doesn't need the Plus tag. */
   [data-section="plus"] .plus-tag { display: none !important; }
@@ -1288,7 +1323,7 @@
             <!-- Hero (redone 2026-10-26, Martin: "make the plus section look better"): the brand's dark
                  card with the logo in Punch and the loading screen's warm glow in the corner. -->
             <div class="plus-hero">
-              <svg class="plus-hero-mark" aria-hidden="true" focusable="false" viewBox="-8 -8 470 470"><defs><linearGradient id="plusMarkGrad" x1="0" y1="0" x2="0" y2="454" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FF7A50"/><stop offset="1" stop-color="#E5484D"/></linearGradient></defs><path fill="url(#plusMarkGrad)" fill-rule="evenodd" d="M0.02 452.75C0.15 442.97 5.78 407.10 10.02 389.00C11.63 382.12 15.00 367.50 17.51 356.50C28.03 310.27 40.89 265.53 58.60 213.50C77.33 158.47 85.57 136.89 103.25 96.50C118.88 60.79 129.55 39.21 141.04 20.00C144.17 14.78 147.92 8.14 149.38 5.25L152.03 0.00L226.00 0.00L299.97 0.00L302.62 5.25C304.08 8.14 307.83 14.78 310.96 20.00C322.28 38.92 336.94 68.63 348.06 95.18C350.75 101.61 354.55 110.26 356.49 114.41C367.49 137.90 397.74 222.92 410.96 267.50C419.09 294.91 429.04 332.52 434.49 356.50C437.00 367.50 440.37 382.12 441.98 389.00C446.22 407.10 451.85 442.97 451.98 452.75C452.00 453.74 436.27 454.00 376.64 454.00L301.28 454.00L299.60 442.75C296.88 424.51 291.11 392.27 288.63 381.50L286.34 371.50L223.34 371.24L160.34 370.99L158.19 380.33C155.44 392.33 149.65 424.19 147.53 439.00C146.63 445.32 145.66 451.29 145.38 452.25C144.90 453.90 140.55 454.00 72.43 454.00C15.14 454.00 0.00 453.74 0.02 452.75ZM184.00 348.25C189.69 345.41 191.44 335.66 187.41 329.29C184.35 324.47 172.42 324.01 167.19 328.51C164.78 330.58 164.50 331.51 164.50 337.31C164.50 344.14 166.09 347.25 170.50 349.05C173.93 350.46 180.35 350.07 184.00 348.25ZM274.28 347.02C284.17 342.33 288.64 332.80 287.74 318.33C286.79 303.07 279.66 295.00 265.16 292.75C256.25 291.37 245.93 293.01 240.22 296.71C232.38 301.79 228.36 311.77 229.23 323.96C230.09 335.93 235.58 344.50 244.50 347.78C249.77 349.72 251.32 349.90 260.50 349.59C267.31 349.35 270.66 348.73 274.28 347.02ZM220.00 325.25L220.00 301.50L209.50 301.50L199.00 301.50L199.00 325.25L199.00 349.00L209.50 349.00L220.00 349.00L220.00 325.25ZM252.40 330.90C250.89 329.22 250.50 327.26 250.50 321.31C250.50 314.35 250.70 313.66 253.31 311.41C256.89 308.33 260.44 308.35 263.55 311.45C265.70 313.61 266.00 314.79 266.00 321.23C266.00 330.70 264.56 333.00 258.60 333.00C255.51 333.00 253.78 332.41 252.40 330.90ZM218.38 292.67C221.03 290.93 222.25 286.49 221.33 281.90C220.47 277.58 215.94 275.01 209.18 275.00C200.42 275.00 197.08 277.76 197.03 285.08C197.01 288.68 197.53 290.15 199.48 291.98C203.75 295.99 212.81 296.32 218.38 292.67ZM258.58 254.35C258.23 253.44 256.13 245.45 253.90 236.60C244.34 198.58 227.57 140.97 224.09 134.18L222.37 130.84L216.22 150.67C207.52 178.73 204.15 190.56 195.49 223.50C191.29 239.45 187.63 253.29 187.36 254.25C186.90 255.89 189.07 256.00 223.04 256.00C256.26 256.00 259.16 255.87 258.58 254.35Z"/></svg>
+              <svg class="plus-hero-mark" aria-hidden="true" focusable="false" viewBox="-8 -8 470 470"><defs><linearGradient id="plusMarkGrad" x1="0" y1="0" x2="0" y2="454" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FF7A50"/><stop offset="1" stop-color="#E5484D"/></linearGradient></defs><path id="plusLogoPath" fill="url(#plusMarkGrad)" fill-rule="evenodd" d="M0.02 452.75C0.15 442.97 5.78 407.10 10.02 389.00C11.63 382.12 15.00 367.50 17.51 356.50C28.03 310.27 40.89 265.53 58.60 213.50C77.33 158.47 85.57 136.89 103.25 96.50C118.88 60.79 129.55 39.21 141.04 20.00C144.17 14.78 147.92 8.14 149.38 5.25L152.03 0.00L226.00 0.00L299.97 0.00L302.62 5.25C304.08 8.14 307.83 14.78 310.96 20.00C322.28 38.92 336.94 68.63 348.06 95.18C350.75 101.61 354.55 110.26 356.49 114.41C367.49 137.90 397.74 222.92 410.96 267.50C419.09 294.91 429.04 332.52 434.49 356.50C437.00 367.50 440.37 382.12 441.98 389.00C446.22 407.10 451.85 442.97 451.98 452.75C452.00 453.74 436.27 454.00 376.64 454.00L301.28 454.00L299.60 442.75C296.88 424.51 291.11 392.27 288.63 381.50L286.34 371.50L223.34 371.24L160.34 370.99L158.19 380.33C155.44 392.33 149.65 424.19 147.53 439.00C146.63 445.32 145.66 451.29 145.38 452.25C144.90 453.90 140.55 454.00 72.43 454.00C15.14 454.00 0.00 453.74 0.02 452.75ZM184.00 348.25C189.69 345.41 191.44 335.66 187.41 329.29C184.35 324.47 172.42 324.01 167.19 328.51C164.78 330.58 164.50 331.51 164.50 337.31C164.50 344.14 166.09 347.25 170.50 349.05C173.93 350.46 180.35 350.07 184.00 348.25ZM274.28 347.02C284.17 342.33 288.64 332.80 287.74 318.33C286.79 303.07 279.66 295.00 265.16 292.75C256.25 291.37 245.93 293.01 240.22 296.71C232.38 301.79 228.36 311.77 229.23 323.96C230.09 335.93 235.58 344.50 244.50 347.78C249.77 349.72 251.32 349.90 260.50 349.59C267.31 349.35 270.66 348.73 274.28 347.02ZM220.00 325.25L220.00 301.50L209.50 301.50L199.00 301.50L199.00 325.25L199.00 349.00L209.50 349.00L220.00 349.00L220.00 325.25ZM252.40 330.90C250.89 329.22 250.50 327.26 250.50 321.31C250.50 314.35 250.70 313.66 253.31 311.41C256.89 308.33 260.44 308.35 263.55 311.45C265.70 313.61 266.00 314.79 266.00 321.23C266.00 330.70 264.56 333.00 258.60 333.00C255.51 333.00 253.78 332.41 252.40 330.90ZM218.38 292.67C221.03 290.93 222.25 286.49 221.33 281.90C220.47 277.58 215.94 275.01 209.18 275.00C200.42 275.00 197.08 277.76 197.03 285.08C197.01 288.68 197.53 290.15 199.48 291.98C203.75 295.99 212.81 296.32 218.38 292.67ZM258.58 254.35C258.23 253.44 256.13 245.45 253.90 236.60C244.34 198.58 227.57 140.97 224.09 134.18L222.37 130.84L216.22 150.67C207.52 178.73 204.15 190.56 195.49 223.50C191.29 239.45 187.63 253.29 187.36 254.25C186.90 255.89 189.07 256.00 223.04 256.00C256.26 256.00 259.16 255.87 258.58 254.35Z"/></svg>
               <div class="plus-hero-text">
                 <p class="plus-hero-title">Averages Plus</p>
                 <p class="plus-hero-status" id="plusHeroStatus">$2.99 a month. Cancel anytime.</p>
@@ -1298,38 +1333,70 @@
             <p class="settings-row-desc plus-msg" id="plusPageMsg" role="status" hidden></p>
 
             <p class="settings-subhead">Plus features</p>
-            <div class="settings-group">
-              <div class="settings-row plus-perk">
-                <span class="plus-perk-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 9a6 6 0 0 1 12 0v5l2 3H4l2-3z"/><path d="M10 20h4"/></svg></span>
-                <div class="settings-row-text">
+            <!-- Feature cards (2026-10-26, Martin picked "mini previews"; the icons were "the most
+                 funky part"): each card shows a small drawing of the feature itself instead of an
+                 icon, like Discord's Nitro page. The drawings are plain HTML, decorative only. -->
+            <div class="plus-cards">
+              <div class="plus-card">
+                <div class="plus-card-stage" aria-hidden="true">
+                  <div class="pv-toast">
+                    <span class="pv-toast-app"><svg viewBox="-8 -8 470 470"><use href="#plusLogoPath"/></svg></span>
+                    <span class="pv-toast-body">
+                      <span class="pv-toast-top"><b>Averages.io</b><i>now</i></span>
+                      <span class="pv-toast-title">New grade in Biology</span>
+                      <span class="pv-toast-text">Lab 4: A (94%)</span>
+                    </span>
+                  </div>
+                </div>
+                <div class="plus-card-body">
                   <p class="settings-row-label">Browser notifications</p>
                   <p class="settings-row-desc">New grades, assignments, due dates, messages and announcements, even with Averages.io closed.</p>
+                  <button class="btn-secondary plus-card-btn" type="button" id="plusNotifBtn" hidden>Set up</button>
                 </div>
-                <button class="btn-secondary" type="button" id="plusNotifBtn" hidden>Set up</button>
               </div>
-              <div class="settings-row plus-perk">
-                <span class="plus-perk-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5h16v15H4z"/><path d="M4 10h16M8 3v4M16 3v4"/><path d="M8 14h3v3H8z" fill="currentColor" stroke="none"/></svg></span>
-                <div class="settings-row-text">
+              <div class="plus-card">
+                <div class="plus-card-stage" aria-hidden="true">
+                  <div class="pv-cal">
+                    <span class="pv-cal-day"><b>Mon</b><i>27</i></span>
+                    <span class="pv-cal-day"><b>Tue</b><i>28</i><em>Lab 4</em></span>
+                    <span class="pv-cal-day is-today"><b>Wed</b><i>29</i></span>
+                    <span class="pv-cal-day"><b>Thu</b><i>30</i><em>Essay</em><em class="alt">Quiz</em></span>
+                    <span class="pv-cal-day"><b>Fri</b><i>31</i></span>
+                  </div>
+                </div>
+                <div class="plus-card-body">
                   <p class="settings-row-label">Calendar sync</p>
                   <p class="settings-row-desc">Your due dates in Google Calendar or Apple Calendar, kept up to date.</p>
+                  <button class="btn-secondary plus-card-btn" type="button" id="plusCalBtn" hidden>Set up</button>
                 </div>
-                <button class="btn-secondary" type="button" id="plusCalBtn" hidden>Set up</button>
               </div>
-              <div class="settings-row plus-perk">
-                <span class="plus-perk-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M11 3l1.8 5.2L18 10l-5.2 1.8L11 17l-1.8-5.2L4 10l5.2-1.8z"/><path d="M18 15l.9 2.1L21 18l-2.1.9L18 21l-.9-2.1L15 18l2.1-.9z" fill="currentColor" stroke="none"/></svg></span>
-                <div class="settings-row-text">
+              <div class="plus-card">
+                <div class="plus-card-stage" aria-hidden="true">
+                  <div class="pv-early">
+                    <span class="pv-early-row"><span class="pv-early-name">Study planner</span><span class="pv-early-tag">Early</span></span>
+                    <span class="pv-early-row is-dim"><span class="pv-early-name">Everyone</span><span class="pv-early-when">in 2 weeks</span></span>
+                  </div>
+                </div>
+                <div class="plus-card-body">
                   <p class="settings-row-label">New features early</p>
                   <p class="settings-row-desc">Try new features about two weeks before everyone else.</p>
+                  <span class="settings-row-value plus-perk-state plus-card-state" id="plusEarlyState" hidden>On</span>
                 </div>
-                <span class="settings-row-value plus-perk-state" id="plusEarlyState" hidden>On</span>
               </div>
-              <div class="settings-row plus-perk">
-                <span class="plus-perk-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 3h10v18H7z"/><path d="M11 18h2"/></svg></span>
-                <div class="settings-row-text">
+              <div class="plus-card">
+                <div class="plus-card-stage" aria-hidden="true">
+                  <div class="pv-phone">
+                    <span class="pv-phone-notch"></span>
+                    <span class="pv-phone-row"><i style="background:#2e7d4f"></i><b></b><em>A</em></span>
+                    <span class="pv-phone-row"><i style="background:#3b6fd1"></i><b></b><em>B+</em></span>
+                    <span class="pv-phone-row"><i style="background:#b3541e"></i><b></b><em>A-</em></span>
+                  </div>
+                </div>
+                <div class="plus-card-body">
                   <p class="settings-row-label">The iPhone app</p>
                   <p class="settings-row-desc">Included when it comes out.</p>
+                  <span class="settings-row-value plus-perk-state plus-card-state">Coming soon</span>
                 </div>
-                <span class="settings-row-value plus-perk-state">Coming soon</span>
               </div>
             </div>
 
@@ -2619,7 +2686,7 @@
           if (!label || !shown(el)) return;
           out.push({ label, extra: clean(extra), section: sec, path: sub && sub.toLowerCase() !== secLabel.toLowerCase() ? `${secLabel} › ${sub}` : secLabel, el });
         };
-        secEl.querySelectorAll('.settings-subhead, .settings-row, .profile-card, [data-action="signout"], .notif-test, .list-row').forEach(el => {
+        secEl.querySelectorAll('.settings-subhead, .settings-row, .plus-card, .profile-card, [data-action="signout"], .notif-test, .list-row').forEach(el => {
           if (el.classList.contains('settings-subhead')) {
             sub = clean(el.textContent);
             // Subheads with no rows of their own are settings themselves.
