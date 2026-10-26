@@ -340,10 +340,20 @@
   .settings-result-label { font-weight: 800; font-size: 0.88rem; line-height: 1.25; }
   .settings-result-label mark { background: none; color: var(--accent); }
   .settings-result-path { font-weight: 700; font-size: 0.72rem; color: var(--text-muted); }
-  /* The setting a result opened: a short ring so the eye lands on it. */
-  .search-hit { border-radius: var(--window-radius-sm); box-shadow: 0 0 0 2px var(--accent) inset; }
-  /* Shows at once, then fades after a moment (the delay is only on the way out). */
-  .search-hit.search-hit-fade { box-shadow: 0 0 0 2px transparent inset; transition: box-shadow 0.6s ease 1.2s; }
+  /* The setting a result opened, marked for a moment so the eye lands on it (redone 2026-10-26,
+     Martin: the ring "doesn't go all the way around and looks funky"; an inset ring on a row never
+     matched its group's rounded corners, and focusing the switch inside added a second ring).
+     - A row in a group gets an accent tint across the whole row; the group's rounded corners clip it.
+     - A heading turns the accent color.
+     - A button or card gets a ring outside it, which follows its own rounded shape.
+     Each shows at once, then fades after a moment (the delay is only on the way out). */
+  .search-hit-row { background-color: color-mix(in srgb, var(--accent) 16%, transparent); }
+  .search-hit-row.search-hit-fade { background-color: transparent; transition: background-color 0.6s ease 1.2s; }
+  .settings-subhead.search-hit-text { color: var(--accent); }
+  .settings-subhead.search-hit-text.search-hit-fade { color: var(--text-faint); transition: color 0.6s ease 1.2s; }
+  .search-hit-ring { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 55%, transparent); }
+  .search-hit-ring.search-hit-fade { box-shadow: 0 0 0 3px transparent; transition: box-shadow 0.6s ease 1.2s; }
+  .search-hit-focus:focus { outline: none; }
   .settings-no-results {
     color: var(--text-faint);
     font-size: 0.8rem;
@@ -2723,13 +2733,21 @@
       const target = r.el;
       requestAnimationFrame(() => {
         try { target.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) { target.scrollIntoView(); }
-        document.querySelectorAll('.search-hit').forEach(x => x.classList.remove('search-hit', 'search-hit-fade'));
-        target.classList.add('search-hit');
-        // Potato mode has no transitions, so the ring just stays until it's removed below.
+        const HIT = ['search-hit-row', 'search-hit-text', 'search-hit-ring', 'search-hit-fade'];
+        document.querySelectorAll('.search-hit-row, .search-hit-text, .search-hit-ring').forEach(x => x.classList.remove(...HIT));
+        const kind = target.matches('.settings-row, .list-row') ? 'search-hit-row'
+          : target.matches('.settings-subhead') ? 'search-hit-text' : 'search-hit-ring';
+        target.classList.add(kind);
+        // Potato mode has no transitions, so the mark just stays until it's removed below.
         if (!document.body.classList.contains('potato-mode')) requestAnimationFrame(() => requestAnimationFrame(() => target.classList.add('search-hit-fade')));
-        setTimeout(() => target.classList.remove('search-hit', 'search-hit-fade'), 2200);
-        const focusable = target.matches('button, a, input') ? target : target.querySelector('input, button, a');
-        if (focusable) { try { focusable.focus({ preventScroll: true }); } catch (e) {} }
+        setTimeout(() => target.classList.remove(...HIT), 2200);
+        // Keyboard and screen reader users land on the setting itself (Tab goes on to its switch
+        // or button), without a focus ring on top of the mark.
+        if (!target.matches('button, a, input')) {
+          if (!target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1');
+          target.classList.add('search-hit-focus');
+          try { target.focus({ preventScroll: true }); } catch (e) {}
+        }
       });
     }
     function runSearch() {
