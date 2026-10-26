@@ -2354,6 +2354,16 @@
           cloud.state = 'ready';
           // Google's sign-in script loads now, so Connect can open its window straight away.
           if (cfg.google) K.prepareGoogle().catch(() => {});
+          // Back from connecting (2026-10-26): Google Drive and OneDrive connect by leaving this
+          // page and coming back to it, so say how it went (the steps come back from the draft below).
+          const back = typeof K.connectResult === 'function' ? K.connectResult() : null;
+          if (back) {
+            const name = back.app === 'gdrive' ? 'Google Drive' : 'OneDrive';
+            if (back.result === 'connected') { connectedHere.add(back.app); showFlash(`${name} is connected.`); }
+            else if (back.result === 'cancelled') showFlash(`${name} wasn’t connected.`, true);
+            else if (back.result === 'drive_not_allowed') showFlash(K.messageFor('drive_not_allowed'), true);
+            else showFlash(`Couldn’t connect ${name}. Try again, or connect later in Settings.`, true);
+          }
         } catch {
           cloud.state = 'error';
         }
@@ -2653,6 +2663,73 @@
       `;
     }
 
+    // ---------- Draft: keep the steps when the page is left and comes back (2026-10-26) ----------
+    // Martin: connecting an app here and signing in to it "resets your progress but keeps the
+    // app auth". Google Drive and OneDrive connect by leaving this page for Google or Microsoft
+    // and coming back, which reloaded onboarding at step 1 with every choice gone. Now the
+    // choices are kept in this tab (sessionStorage, cleared by sign-out and when onboarding is
+    // done) whenever the page is left, and put back when it loads again, on the same step.
+    const ONBOARD_DRAFT = 'averages_onboard_draft';
+    function saveDraft() {
+      if (!accountMode) return;   // nothing picked yet
+      const sel = swatchGrid.querySelector('.swatch.selected');
+      const pickable = [...swatchGrid.querySelectorAll('.swatch[role="button"]')];
+      const rootStyle = getComputedStyle(document.documentElement);
+      const draft = {
+        step: (document.querySelector('.step-tab.active') || {}).dataset?.step || 'mode',
+        mode: accountMode,
+        dark: !!darkModeToggle.checked,
+        swatch: sel ? pickable.indexOf(sel) : -1,
+        upload: !!(sel && sel.classList.contains('upload')),
+        accent: rootStyle.getPropertyValue('--accent').trim(),
+        header: rootStyle.getPropertyValue('--header-text').trim() === '#14151f' ? 'light' : 'dark',
+        bg: sel && sel.classList.contains('upload') ? selectedBackgroundValue : null,
+        features: Object.fromEntries([...featuresList.querySelectorAll('input[data-key]')].map(c => [c.dataset.key, c.checked])),
+        name: nameInput.value,
+        email: emailInput.value,
+      };
+      try { sessionStorage.setItem(ONBOARD_DRAFT, JSON.stringify(draft)); }
+      catch (e) {
+        // An uploaded background too big for this tab's storage: keep everything else.
+        try { draft.bg = null; draft.upload = false; draft.swatch = -1; sessionStorage.setItem(ONBOARD_DRAFT, JSON.stringify(draft)); } catch (e2) {}
+      }
+    }
+    window.addEventListener('pagehide', saveDraft);
+    (function restoreDraft() {
+      let d = null;
+      try { d = JSON.parse(sessionStorage.getItem(ONBOARD_DRAFT) || 'null'); } catch (e) {}
+      if (!d || typeof d !== 'object') return;
+      const modeBtn = document.querySelector(`.mode-option[data-mode="${d.mode}"]`);
+      if (modeBtn && !modeBtn.hidden) setMode(d.mode);
+      else if (d.mode === 'plus') { const classic = document.querySelector('.mode-option[data-mode="classic"]'); if (classic && !classic.hidden) setMode('classic'); }
+      if (typeof d.dark === 'boolean' && darkModeToggle.checked !== d.dark) { darkModeToggle.checked = d.dark; darkModeToggle.dispatchEvent(new Event('change')); }
+      const pickable = [...swatchGrid.querySelectorAll('.swatch[role="button"]')];
+      const hex = /^#[0-9a-f]{3,8}$/i.test(String(d.accent || '')) ? d.accent : '';
+      if (d.upload && typeof d.bg === 'string' && /^data:image\/(png|jpe?g|webp);base64,/.test(d.bg) && hex) {
+        uploadSwatch.dataset.accent = hex;
+        selectSwatch(uploadSwatch);
+        applyAccent(hex);
+        applyBackground(d.bg);
+        applyHeaderTextMode(d.header === 'light' ? 'light' : 'dark');
+        showAccentPicker(hex);
+        selectedBackgroundValue = d.bg;
+      } else if (Number.isInteger(d.swatch) && pickable[d.swatch] && !pickable[d.swatch].classList.contains('upload')) {
+        const el = pickable[d.swatch];
+        el.click();
+        // White and black have their own accent picker: keep the one they chose.
+        if (hex && (el.classList.contains('white') || el.classList.contains('black'))) { applyAccent(hex); showAccentPicker(hex); el.dataset.accent = hex; }
+      }
+      if (d.features && typeof d.features === 'object') {
+        featuresList.querySelectorAll('input[data-key]').forEach(c => {
+          const v = d.features[c.dataset.key];
+          if (typeof v === 'boolean' && c.checked !== v && !c.closest('[hidden]')) { c.checked = v; c.dispatchEvent(new Event('change')); }
+        });
+      }
+      if (typeof d.name === 'string') { nameInput.value = d.name.slice(0, 60); nameInput.dispatchEvent(new Event('input')); }
+      if (typeof d.email === 'string' && !emailInput.closest('[hidden]')) { emailInput.value = d.email.slice(0, 200); emailInput.dispatchEvent(new Event('input')); }
+      if (accountMode && STEP_ORDER.includes(d.step)) goToStep(d.step);
+    })();
+
     submitBtn.addEventListener('click', () => {
       if (submitBtn.disabled) return; // already submitting
       if (!nameInput.value.trim()) {
@@ -2694,6 +2771,7 @@
         // Plus is Classic with the subscription (2026-10-21).
         const savedMode = accountMode === 'plus' ? 'classic' : (accountMode || 'incognito');
         localStorage.setItem('schoolagy_account_mode', savedMode);   // 2026-10-04
+        try { sessionStorage.removeItem('averages_onboard_draft'); } catch (e) {}   // done: no draft to come back to
         {
           let opts = {};
           try { opts = JSON.parse(localStorage.getItem('schoolagy_settings_options') || '{}') || {}; } catch {}

@@ -1014,6 +1014,18 @@
   .sheet-tab-action { margin-left: auto; background: var(--panel-inner); border: none; border-radius: 999px; padding: 8px 16px; font: inherit; font-weight: 800; font-size: 0.76rem; color: var(--text-dark); cursor: pointer; }
   .sheet-tab-action:hover { background: var(--border); }
   .sheet-tab-action:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
+  /* Open in Schoology sits right after Course info (2026-10-26). */
+  .sheet-tab-action + .sheet-tab-out { margin-left: -16px; }
+  .sheet-tab-out { display: inline-flex; align-items: center; gap: 4px; text-decoration: none; white-space: nowrap; }
+  .sheet-tab-out[hidden] { display: none; }
+  .sheet-tab-out svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: butt; stroke-linejoin: miter; }
+  /* Phones: the two buttons move under the tabs instead of squeezing them (Course info used to wrap onto two lines). */
+  @media (max-width: 520px) {
+    .sheet-tabs { flex-wrap: wrap; column-gap: 20px; row-gap: 0; }
+    .sheet-tabs::before { content: ""; order: 1; flex-basis: 100%; height: 0; }
+    .sheet-tab-action { order: 2; margin: 12px 0 16px; white-space: nowrap; }
+    .sheet-tab-action + .sheet-tab-out { margin-left: -12px; }
+  }
   .week-wrap { position: relative; padding: 0 44px; }
   .week-nav { position: absolute; top: 50%; transform: translateY(-50%); width: 32px; height: 32px; border-radius: 50%; border: none; background: var(--panel-inner); color: var(--text-muted); display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
   .week-nav.prev { left: 0; }
@@ -1177,6 +1189,8 @@
         <button class="sheet-tab" type="button" data-href="course-materials.html">Materials</button>
         <button class="sheet-tab" type="button" data-href="gradebook.html">Grades</button>
         <button class="sheet-tab-action" id="infoBtn" type="button" aria-haspopup="dialog">Course info</button>
+        <!-- Open in Schoology (2026-10-26): this class on the school's own Schoology, filled in below. -->
+        <a class="sheet-tab-action sheet-tab-out" id="openLmsBtn" target="_blank" rel="noopener noreferrer" hidden><span id="openLmsLabel">Open in Schoology</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 13v6H5V8h6"/><path d="M15 3h6v6"/><path d="M10 14L21 3"/></svg></a>
       </nav>
     </section>
 
@@ -2723,6 +2737,26 @@
     function openInfoModal() { infoModal.classList.add('show'); document.getElementById('modalCloseBtn').focus(); }
     function closeInfoModal() { infoModal.classList.remove('show'); document.getElementById('infoBtn').focus(); }
     document.getElementById('infoBtn').addEventListener('click', openInfoModal);
+    // Open in Schoology (2026-10-26): this class's materials on the school's own Schoology
+    // (the address picked on the sign-in page, else app.schoology.com). Signed-in Google
+    // Classroom: the class's own Classroom page. Hidden in the preview and the demo.
+    (function openLms() {
+      const btn = document.getElementById('openLmsBtn');
+      if (!btn || !AV_LIVE) return;
+      let href = '';
+      if (AV_CLASSROOM) {
+        if (/^https:\/\/classroom\.google\.com\//.test(String(course.link || ''))) href = course.link;
+        document.getElementById('openLmsLabel').textContent = 'Open in Google Classroom';
+      } else if (avgIsId(course.id)) {
+        let host = '';
+        try { const s = JSON.parse(localStorage.getItem('averages_login_school') || 'null'); host = String((s && s.schoology && s.schoology.domain) || '').toLowerCase(); } catch (e) {}
+        if (!/^(?=.{4,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/.test(host)) host = 'app.schoology.com';
+        href = 'https://' + host + '/course/' + course.id + '/materials';
+      }
+      if (!href) return;
+      btn.href = href;
+      btn.hidden = false;
+    })();
     document.getElementById('modalCloseBtn').addEventListener('click', closeInfoModal);
     infoModal.addEventListener('click', e => { if (e.target === infoModal) closeInfoModal(); });
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && infoModal.classList.contains('show')) closeInfoModal(); });

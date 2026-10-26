@@ -4918,7 +4918,11 @@
           : 'Nothing stored on our servers. No sync, Canva or notifications.';
         descs.classic.textContent = 'Settings sync across devices. Connect Canva, Google Drive and OneDrive.';
         descs.plus.textContent = plusDesc();
-        const canClassic = !locked && (is13 || !incognito);
+        // Signed in, the API decides (2026-10-26, Martin: switching to Incognito "hides all the other
+        // options"): a session it didn't lock to Incognito is 13+, so Classic and Plus stay offered.
+        // The device's own 13+ note could be missing (sign-out clears it; a synced account skips
+        // onboarding), which hid both and left no way back. The preview and the demo still use the note.
+        const canClassic = !locked && (LIVE || is13 || !incognito);
         rows.classic.hidden = !canClassic;
         const manageable = !!(billing && billing.manageable);
         rows.plus.hidden = !((billingOn() && canClassic) || manageable || hasPlus());
