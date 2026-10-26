@@ -630,6 +630,127 @@ export async function loadExtras(pageId: string, search: string, who = "", opts:
 }
 
 /**
+ * The account's synced copy, written to this device (2026-10-26). Shared by
+ * the onboarding restore and the every-page pull below; Settings has its own
+ * copy of the same steps (applySyncedSettings) for its pull.
+ *
+ * Writes settings (keeping this browser's own notifications on/off),
+ * appearance, dark mode and the profile. A picture stored as an "r2:..."
+ * reference is reused when this device already has that version, otherwise
+ * downloaded from /media; one that can't be downloaded keeps whatever this
+ * device shows. Records what Settings needs to know this device matches the
+ * account (schoolagy_sync_meta, averages_sync_media), so it neither
+ * re-downloads nor re-uploads the pictures. Returns the storage keys whose
+ * value changed.
+ */
+async function adoptSyncedRecord(remote: any, stamp: string, ask: (path: string) => Promise<Response>): Promise<string[]> {
+  const ls = window.localStorage;
+  const readJson = (k: string) => {
+    try {
+      return JSON.parse(ls.getItem(k) || "null");
+    } catch {
+      return null;
+    }
+  };
+  const MEDIA_REF = /^r2:(photo|background):([A-Za-z0-9._-]{1,128})$/;
+  const known: Record<string, { v?: string; h?: string; pending?: boolean }> = readJson("averages_sync_media") || {};
+  const media: Record<string, unknown> = { ...known };
+  const isImage = (v: unknown) => typeof v === "string" && /^data:image\//.test(v);
+  const hashOf = async (text: string) => {
+    const d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+    return Array.from(new Uint8Array(d).slice(0, 12), (b) => b.toString(16).padStart(2, "0")).join("");
+  };
+  const toDataUrl = (blob: Blob) =>
+    new Promise<string>((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(String(r.result));
+      r.onerror = () => reject(r.error);
+      r.readAsDataURL(blob);
+    });
+  // undefined = leave this device's picture as it is.
+  const picture = async (kind: "photo" | "background", ref: unknown, local: unknown): Promise<unknown> => {
+    if (typeof ref !== "string" || !ref.startsWith("r2:")) return ref;
+    const m = MEDIA_REF.exec(ref);
+    if (!m || m[1] !== kind) return undefined;
+    const have = known[kind];
+    if (have && have.v === m[2] && !have.pending && isImage(local)) return local;
+    try {
+      const r = await ask(`/media/${kind}`);
+      if (!r.ok) return undefined;
+      const url = await toDataUrl(await r.blob());
+      if (!isImage(url)) return undefined;
+      media[kind] = { v: (r.headers.get("X-Media-Version") || m[2]).replace(/"/g, ""), h: await hashOf(url) };
+      return url;
+    } catch {
+      return undefined;
+    }
+  };
+  const localAppearance = readJson("schoolagy_appearance");
+  const localProfile = readJson("schoolagy_profile");
+  const next: Record<string, string> = {};
+  if (remote.settingsOptions && typeof remote.settingsOptions === "object") {
+    // Notifications on/off belongs to each browser, not the account.
+    const options = { ...remote.settingsOptions };
+    delete options.browserNotifications;
+    const mine = (readJson("schoolagy_settings_options") || {}).browserNotifications;
+    if (mine !== undefined) options.browserNotifications = mine;
+    next.schoolagy_settings_options = JSON.stringify(options);
+  }
+  if (remote.appearance && typeof remote.appearance === "object") {
+    const appearance = { ...remote.appearance };
+    const bg = await picture("background", appearance.background, localAppearance && localAppearance.background);
+    if (bg === undefined) {
+      if (localAppearance && localAppearance.background != null) appearance.background = localAppearance.background;
+      else delete appearance.background;
+    } else appearance.background = bg;
+    next.schoolagy_appearance = JSON.stringify(appearance);
+  }
+  if (remote.darkMode === "dark" || remote.darkMode === "light") next.schoolagy_dark_mode = remote.darkMode;
+  if (remote.profile && typeof remote.profile === "object") {
+    const profile = { ...remote.profile };
+    const photo = await picture("photo", profile.photo, localProfile && localProfile.photo);
+    if (photo === undefined) {
+      if (localProfile && localProfile.photo) profile.photo = localProfile.photo;
+      else delete profile.photo;
+    } else profile.photo = photo;
+    next.schoolagy_profile = JSON.stringify(profile);
+    if (typeof profile.name === "string" && profile.name.trim()) next.schoolagy_profile_name = profile.name.trim();
+  }
+  const changed: string[] = [];
+  for (const [k, v] of Object.entries(next)) {
+    if (ls.getItem(k) !== v) {
+      ls.setItem(k, v);
+      changed.push(k);
+    }
+  }
+  ls.setItem("averages_sync_media", JSON.stringify(media));
+  ls.setItem("schoolagy_sync_meta", JSON.stringify({ settingsUpdatedAt: stamp }));
+  return changed;
+}
+
+function apiAsk(ms: number) {
+  return async (path: string) => {
+    const ctrl = new AbortController();
+    const t = window.setTimeout(() => ctrl.abort(), ms);
+    try {
+      return await fetch(`${API_BASE}${path}`, { credentials: "include", signal: ctrl.signal });
+    } finally {
+      window.clearTimeout(t);
+    }
+  };
+}
+
+/** The account's synced copy, or null (none yet, Incognito, an error). */
+async function fetchSyncedRecord(ask: (path: string) => Promise<Response>): Promise<{ settings: any; stamp: string } | null> {
+  const res = await ask("/sync/settings");
+  if (!res.ok) return null;
+  const record = await res.json();
+  const settings = record && record.settings;
+  const stamp = record && typeof record.settingsUpdatedAt === "string" ? record.settingsUpdatedAt : "";
+  return settings && typeof settings === "object" && stamp ? { settings, stamp } : null;
+}
+
+/**
  * Signing back in on a cleared device (2026-10-26, Martin: "i am having to
  * always go thru onboarding even tho I have sync across devices on, when i
  * sign out"). Sign-out wipes this device, including the "onboarding done"
@@ -637,93 +758,54 @@ export async function loadExtras(pageId: string, search: string, who = "", opts:
  * started at onboarding again.
  *
  * The onboarding page asks this first (LegacyPage). When the account has a
- * synced copy (Classic syncs; Incognito never stores one), it's written back
- * to this device the way Settings' applySyncedSettings does: settings,
- * appearance, dark mode, the profile, and the two pictures from /media. Then
- * onboarding is marked done and the caller goes to Home. Also records what
- * Settings needs to know this device already matches the account
- * (schoolagy_sync_meta, averages_sync_media), so it neither re-downloads nor
- * re-uploads the pictures. Returns false (onboarding runs as usual) when
- * there's no copy, or on any error or after 4 s.
+ * synced copy (Classic syncs; Incognito never stores one), it's written to
+ * this device (adoptSyncedRecord), onboarding is marked done, and the caller
+ * goes to Home. Returns false (onboarding runs as usual) when there's no
+ * copy, or on any error or after 4 s.
  */
 export async function restoreSyncedSetup(): Promise<boolean> {
-  const ask = async (path: string) => {
-    const ctrl = new AbortController();
-    const t = window.setTimeout(() => ctrl.abort(), 4000);
-    try {
-      return await fetch(`${API_BASE}${path}`, { credentials: "include", signal: ctrl.signal });
-    } finally {
-      window.clearTimeout(t);
-    }
-  };
   try {
-    const res = await ask("/sync/settings");
-    if (!res.ok) return false;
-    const record = await res.json();
-    const remote = record && record.settings;
-    const stamp = record && typeof record.settingsUpdatedAt === "string" ? record.settingsUpdatedAt : "";
-    if (!remote || typeof remote !== "object" || !stamp) return false;
-
-    const MEDIA_REF = /^r2:(photo|background):([A-Za-z0-9._-]{1,128})$/;
-    const media: Record<string, { v: string; h: string }> = {};
-    const hashOf = async (text: string) => {
-      const d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
-      return Array.from(new Uint8Array(d).slice(0, 12), (b) => b.toString(16).padStart(2, "0")).join("");
-    };
-    const toDataUrl = (blob: Blob) =>
-      new Promise<string>((resolve, reject) => {
-        const r = new FileReader();
-        r.onload = () => resolve(String(r.result));
-        r.onerror = () => reject(r.error);
-        r.readAsDataURL(blob);
-      });
-    // An "r2:..." picture reference comes down as the picture itself; one
-    // that can't be fetched is left out (Settings' next pull tries again).
-    const picture = async (kind: "photo" | "background", ref: unknown): Promise<unknown> => {
-      if (typeof ref !== "string" || !ref.startsWith("r2:")) return ref;
-      const m = MEDIA_REF.exec(ref);
-      if (!m || m[1] !== kind) return null;
-      try {
-        const r = await ask(`/media/${kind}`);
-        if (!r.ok) return null;
-        const url = await toDataUrl(await r.blob());
-        if (!/^data:image\//.test(url)) return null;
-        media[kind] = { v: (r.headers.get("X-Media-Version") || m[2]).replace(/"/g, ""), h: await hashOf(url) };
-        return url;
-      } catch {
-        return null;
-      }
-    };
-    let appearance = remote.appearance;
-    let profile = remote.profile;
-    if (appearance && typeof appearance === "object") {
-      const bg = await picture("background", appearance.background);
-      appearance = { ...appearance };
-      if (bg === null) delete appearance.background;
-      else appearance.background = bg;
-    }
-    if (profile && typeof profile === "object") {
-      const photo = await picture("photo", profile.photo);
-      profile = { ...profile };
-      if (photo === null) delete profile.photo;
-      else profile.photo = photo;
-    }
-    const ls = window.localStorage;
-    if (remote.settingsOptions && typeof remote.settingsOptions === "object") {
-      // Notifications on/off belongs to each browser, not the account (Settings doesn't sync it either).
-      const options = { ...remote.settingsOptions };
-      delete options.browserNotifications;
-      ls.setItem("schoolagy_settings_options", JSON.stringify(options));
-    }
-    if (appearance && typeof appearance === "object") ls.setItem("schoolagy_appearance", JSON.stringify(appearance));
-    if (remote.darkMode === "dark" || remote.darkMode === "light") ls.setItem("schoolagy_dark_mode", remote.darkMode);
-    if (profile && typeof profile === "object") ls.setItem("schoolagy_profile", JSON.stringify(profile));
-    if (profile && typeof profile.name === "string" && profile.name.trim()) ls.setItem("schoolagy_profile_name", profile.name.trim());
-    if (Object.keys(media).length) ls.setItem("averages_sync_media", JSON.stringify(media));
-    ls.setItem("schoolagy_sync_meta", JSON.stringify({ settingsUpdatedAt: stamp }));
-    ls.setItem("schoolagy_onboarded", "1");
+    const ask = apiAsk(4000);
+    const record = await fetchSyncedRecord(ask);
+    if (!record) return false;
+    await adoptSyncedRecord(record.settings, record.stamp, ask);
+    window.localStorage.setItem("schoolagy_onboarded", "1");
     return true;
   } catch {
     return false;
+  }
+}
+
+/**
+ * Sync pull on every page (2026-10-26; the gap found 10-21: the account's
+ * synced settings only came down when Settings was opened, so a change made
+ * on another device didn't show up here until then).
+ *
+ * Signed-in pages call this a moment after they've drawn, and again when the
+ * tab comes back into view, at most once every 5 minutes per tab
+ * (SYNC_PULL_EVERY_MS). When the account's copy is newer than what this
+ * device last agreed with (schoolagy_sync_meta), it's written here and the
+ * changed keys are returned so the page can repaint without a reload. Only
+ * Settings ever pushes, after its own pull, so this can't send anything old
+ * back up.
+ */
+export const SYNC_PULL_EVERY_MS = 5 * 60 * 1000;
+const SYNC_PULLED_AT = "averages_sync_pulled_at";
+export async function pullSyncedSettings(): Promise<string[]> {
+  try {
+    const last = Number(cacheGet(SYNC_PULLED_AT) || 0);
+    if (Date.now() - last < SYNC_PULL_EVERY_MS) return [];
+    cacheSet(SYNC_PULLED_AT, String(Date.now()));
+    const ask = apiAsk(8000);
+    const record = await fetchSyncedRecord(ask);
+    if (!record) return [];
+    let meta = "";
+    try {
+      meta = (JSON.parse(window.localStorage.getItem("schoolagy_sync_meta") || "null") || {}).settingsUpdatedAt || "";
+    } catch {}
+    if (meta === record.stamp) return [];
+    return await adoptSyncedRecord(record.settings, record.stamp, ask);
+  } catch {
+    return [];
   }
 }

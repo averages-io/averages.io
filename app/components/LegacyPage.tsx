@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { API_BASE, BELL_UPDATES_MAX_AGE_MS, getSession, loadBundle, loadExtras, restoreSyncedSetup, signOut, startExtras, waitForExtras, type ExtrasRun, type Mode } from "../lib/averages";
+import { API_BASE, BELL_UPDATES_MAX_AGE_MS, getSession, loadBundle, loadExtras, pullSyncedSettings, restoreSyncedSetup, signOut, startExtras, waitForExtras, type ExtrasRun, type Mode } from "../lib/averages";
 import { SPLASH_KEY } from "../lib/splash";
 import { EXTRAS_LATE_GIVE_UP_MS, LATE_EXTRAS, mergeExtras, mergeLateExtra, type ExtraName } from "../lib/extras";
 import { installNsfwGlobal, preloadNsfwModel } from "../lib/nsfw";
@@ -123,6 +123,29 @@ function touchCalendarIfOn(): void {
  *      (the NSFW check) exist BEFORE the page's script runs, since it reads
  *      them synchronously at top level.
  */
+/** The profile button again, from the saved profile (after a sync pull changed it). Same rules as each page's own. */
+function repaintProfileButtons(): void {
+  let profile: any = null;
+  try {
+    profile = JSON.parse(window.localStorage.getItem("schoolagy_profile") || "null");
+  } catch {}
+  const name = (profile && typeof profile.name === "string" && profile.name.trim()) || (window as any).__AVERAGES_NAME__ || "";
+  const photo = profile && typeof profile.photo === "string" && /^data:image\//.test(profile.photo) ? profile.photo : "";
+  document.querySelectorAll<HTMLElement>(".profile-btn").forEach((btn) => {
+    if (photo) {
+      btn.style.backgroundImage = `url("${photo}")`;
+      btn.style.backgroundSize = "cover";
+      btn.style.backgroundPosition = "center";
+      btn.textContent = "";
+      btn.classList.add("has-photo");
+    } else {
+      btn.style.backgroundImage = "";
+      btn.classList.remove("has-photo");
+      (window as any).AveragesAvatar?.paint(btn, name);
+    }
+  });
+}
+
 export default function LegacyPage({
   title,
   styleCss,
@@ -578,6 +601,39 @@ export default function LegacyPage({
       .catch(() => { if (!cancelled) bell.setData(null); });
     return () => { cancelled = true; };
   }, [phase, requiresAuth, mode]);
+
+  /**
+   * Sync pull on every page (2026-10-26, app/lib/averages.ts pullSyncedSettings):
+   * a moment after the page has drawn, and when the tab comes back into view,
+   * signed-in Classic pages pick up settings changed on another device. What
+   * changed is repainted in place: the theme and each page's own background
+   * through the same storage events another tab's change would fire, and the
+   * profile button. Settings pulls for itself; onboarding restores instead.
+   */
+  useEffect(() => {
+    if (phase !== "ready" || !requiresAuth || mode !== "live" || pageId === "settings" || pageId === "onboarding") return;
+    if ((window as any).__AVERAGES_INCOGNITO__?.on) return;
+    let cancelled = false;
+    const run = () => {
+      pullSyncedSettings().then((changed) => {
+        if (cancelled || !changed.length) return;
+        for (const key of changed) {
+          try {
+            window.dispatchEvent(new StorageEvent("storage", { key, newValue: window.localStorage.getItem(key), storageArea: window.localStorage }));
+          } catch {}
+        }
+        if (changed.includes("schoolagy_profile")) repaintProfileButtons();
+      });
+    };
+    const first = window.setTimeout(run, 1500);
+    const onVisible = () => { if (document.visibilityState === "visible") run(); };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(first);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [phase, requiresAuth, mode, pageId]);
 
   /**
    * Loading state, reworked 2026-09-16.
