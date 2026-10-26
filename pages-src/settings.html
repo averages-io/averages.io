@@ -397,6 +397,10 @@
   .settings-row.is-disabled .toggle { cursor: not-allowed; filter: grayscale(1); }
   .settings-row.is-disabled .toggle input { pointer-events: none; }
   .settings-row-value { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; flex-shrink: 0; }
+  /* Their Schoology address (2026-10-23): a link, underlined on hover. */
+  .settings-row-value .school-link { color: inherit; text-decoration: none; text-underline-offset: 2px; overflow-wrap: anywhere; }
+  .settings-row-value .school-link:hover, .settings-row-value .school-link:focus-visible { text-decoration: underline; outline: none; }
+  #schoolHead[hidden], #schoolGroup[hidden], #schoolGroup .settings-row[hidden] { display: none; }
 
   /* ---------- Integrations (2026-10-04) ---------- */
   .integ-status { display: inline-flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 0.72rem; font-weight: 800; color: var(--text-faint); }
@@ -1331,19 +1335,26 @@
             </div>
             <p class="settings-row-desc plus-msg" id="plusMsg" role="status" hidden></p>
 
-            <p class="settings-subhead">School</p>
-            <div class="settings-group">
-              <div class="settings-row">
+            <!-- School (2026-10-23): signed in, the school picked on the sign-in page and a link to
+                 their own Schoology (like nmusd.schoology.com); see schoolSection() below. The
+                 sample values are only for the preview and the demo. -->
+            <p class="settings-subhead" id="schoolHead">School</p>
+            <div class="settings-group" id="schoolGroup">
+              <div class="settings-row" id="schoolNameRow">
                 <div class="settings-row-text"><p class="settings-row-label">School</p></div>
-                <span class="settings-row-value">Hill Valley High School</span>
+                <span class="settings-row-value" id="schoolNameValue">Hill Valley High School</span>
               </div>
-              <div class="settings-row">
+              <div class="settings-row" id="schoolLmsRow">
+                <div class="settings-row-text"><p class="settings-row-label">Schoology</p></div>
+                <span class="settings-row-value" id="schoolLmsValue"><a class="school-link" id="schoolLmsLink" href="https://app.schoology.com" target="_blank" rel="noopener noreferrer">app.schoology.com</a></span>
+              </div>
+              <div class="settings-row" id="schoolDistrictRow">
                 <div class="settings-row-text"><p class="settings-row-label">District</p></div>
-                <span class="settings-row-value">Hill Valley Unified School District</span>
+                <span class="settings-row-value" id="schoolDistrictValue">Hill Valley Unified School District</span>
               </div>
-              <div class="settings-row">
+              <div class="settings-row" id="studentIdRow">
                 <div class="settings-row-text"><p class="settings-row-label">Student ID</p></div>
-                <span class="settings-row-value">S-48219</span>
+                <span class="settings-row-value" id="studentIdValue">S-48219</span>
               </div>
             </div>
 
@@ -3983,6 +3994,36 @@
     function isSyncOn() {
       return AVERAGES_MODE === 'live' && !AVERAGES_INCOGNITO;
     }
+
+    /*
+     * Settings › Account › School (2026-10-23, Martin: "add a line … that has the schoology link like
+     * nmusd.schoology.com"). Signed in, it shows the school picked on the sign-in page (saved on this
+     * device, averages_login_school) and a link to their own Schoology, and leaves out the District and
+     * Student ID rows: no real values exist for those, and they used to show the sample school's to
+     * everyone. Nothing known about the school (signed in on another device): the section hides.
+     * The preview and the demo keep the sample school.
+     */
+    (function schoolSection() {
+      if (window.__AVERAGES_MODE__ !== 'live') return;
+      const $ = id => document.getElementById(id);
+      const lms = window.__AVERAGES_PROVIDER__ === 'google' ? 'classroom' : 'schoology';
+      let saved = null;
+      try { saved = (JSON.parse(localStorage.getItem('averages_login_school') || 'null') || {})[lms] || null; } catch {}
+      const HOST = /^(?=.{4,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/;
+      const domain = saved && HOST.test(String(saved.domain || '').toLowerCase()) ? String(saved.domain).toLowerCase() : '';
+      const name = saved && typeof saved.name === 'string' && saved.name.trim() && saved.name !== 'Your school' ? saved.name.trim().slice(0, 120) : '';
+      $('schoolDistrictRow').hidden = true;
+      $('studentIdRow').hidden = true;
+      $('schoolNameRow').hidden = !name;
+      if (name) $('schoolNameValue').textContent = name;
+      // Schoology only: Classroom has no school address to link to.
+      const link = $('schoolLmsLink');
+      $('schoolLmsRow').hidden = !(lms === 'schoology' && domain);
+      if (lms === 'schoology' && domain) { link.href = 'https://' + domain; link.textContent = domain; }
+      const any = !$('schoolNameRow').hidden || !$('schoolLmsRow').hidden;
+      $('schoolHead').hidden = !any;
+      $('schoolGroup').hidden = !any;
+    })();
 
     function averagesApiBase() {
       // Mirrors app/lib/averages.ts's API_BASE — this app has no shared
