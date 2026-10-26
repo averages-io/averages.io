@@ -323,15 +323,6 @@ function forgetPushOnThisDevice(): Promise<void> {
 const OUR_STORAGE_KEY = /^(schoolagy_|averages_)/;
 
 /** Whether this device was syncing settings to the account when signing out. */
-function syncWasOn(): boolean {
-  try {
-    const raw = window.localStorage.getItem("schoolagy_settings_options");
-    return !!raw && JSON.parse(raw)?.syncAcrossDevices === true;
-  } catch {
-    return false;
-  }
-}
-
 /**
  * Signing out leaves nothing behind on this device (Martin, 2026-10-13, and
  * 2026-10-14: "it is keeping the dark mode theme and the background still,
@@ -377,9 +368,11 @@ function clearAppCookies(): void {
 }
 
 export async function signOut(): Promise<void> {
-  // Sync off: the API also disconnects the connected apps it keeps for this
-  // student. Sync on: the account keeps them, as it keeps the settings.
-  const forgetOnServer = !syncWasOn();
+  // Connected apps are always disconnected on sign-out (2026-10-26, Martin:
+  // "integrations are not auto disconnecting ... when i sign out"). Until then
+  // only Sync off did that, and Classic always syncs, so nobody's were. Sync
+  // keeps the settings, not the connections: the next sign-in connects again.
+  const forgetOnServer = true;
   setSignedInHint(false);
   cacheClear(SESSION_CACHE);
   cacheClear(BUNDLE_CACHE);
@@ -414,8 +407,9 @@ export async function signOut(): Promise<void> {
   // how long THIS FUNCTION waits, not against the request itself — the
   // fetch keeps running in the background and still gets to clear the
   // cookie whenever its response actually lands, however long that takes.
-  // Sync off: the API also disconnects Canva, Google Drive and OneDrive,
-  // which it keeps for this student on our servers (2026-10-13).
+  // ?forget=1: the API also disconnects Canva, Google Drive and OneDrive,
+  // which it keeps for this student on our servers (2026-10-13; every
+  // sign-out since 2026-10-26).
   const deleteRequest = fetch(`${API_BASE}/auth/session${forgetOnServer ? "?forget=1" : ""}`, {
     method: "DELETE",
     credentials: "include",
@@ -633,4 +627,103 @@ export async function loadExtras(pageId: string, search: string, who = "", opts:
   const run = startExtras(pageId, search, who, opts);
   await waitForExtras(run, run.requests.map((r) => r.name));
   return run;
+}
+
+/**
+ * Signing back in on a cleared device (2026-10-26, Martin: "i am having to
+ * always go thru onboarding even tho I have sync across devices on, when i
+ * sign out"). Sign-out wipes this device, including the "onboarding done"
+ * note, and only Settings pulled the account's synced copy, so every sign-in
+ * started at onboarding again.
+ *
+ * The onboarding page asks this first (LegacyPage). When the account has a
+ * synced copy (Classic syncs; Incognito never stores one), it's written back
+ * to this device the way Settings' applySyncedSettings does: settings,
+ * appearance, dark mode, the profile, and the two pictures from /media. Then
+ * onboarding is marked done and the caller goes to Home. Also records what
+ * Settings needs to know this device already matches the account
+ * (schoolagy_sync_meta, averages_sync_media), so it neither re-downloads nor
+ * re-uploads the pictures. Returns false (onboarding runs as usual) when
+ * there's no copy, or on any error or after 4 s.
+ */
+export async function restoreSyncedSetup(): Promise<boolean> {
+  const ask = async (path: string) => {
+    const ctrl = new AbortController();
+    const t = window.setTimeout(() => ctrl.abort(), 4000);
+    try {
+      return await fetch(`${API_BASE}${path}`, { credentials: "include", signal: ctrl.signal });
+    } finally {
+      window.clearTimeout(t);
+    }
+  };
+  try {
+    const res = await ask("/sync/settings");
+    if (!res.ok) return false;
+    const record = await res.json();
+    const remote = record && record.settings;
+    const stamp = record && typeof record.settingsUpdatedAt === "string" ? record.settingsUpdatedAt : "";
+    if (!remote || typeof remote !== "object" || !stamp) return false;
+
+    const MEDIA_REF = /^r2:(photo|background):([A-Za-z0-9._-]{1,128})$/;
+    const media: Record<string, { v: string; h: string }> = {};
+    const hashOf = async (text: string) => {
+      const d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+      return Array.from(new Uint8Array(d).slice(0, 12), (b) => b.toString(16).padStart(2, "0")).join("");
+    };
+    const toDataUrl = (blob: Blob) =>
+      new Promise<string>((resolve, reject) => {
+        const r = new FileReader();
+        r.onload = () => resolve(String(r.result));
+        r.onerror = () => reject(r.error);
+        r.readAsDataURL(blob);
+      });
+    // An "r2:..." picture reference comes down as the picture itself; one
+    // that can't be fetched is left out (Settings' next pull tries again).
+    const picture = async (kind: "photo" | "background", ref: unknown): Promise<unknown> => {
+      if (typeof ref !== "string" || !ref.startsWith("r2:")) return ref;
+      const m = MEDIA_REF.exec(ref);
+      if (!m || m[1] !== kind) return null;
+      try {
+        const r = await ask(`/media/${kind}`);
+        if (!r.ok) return null;
+        const url = await toDataUrl(await r.blob());
+        if (!/^data:image\//.test(url)) return null;
+        media[kind] = { v: (r.headers.get("X-Media-Version") || m[2]).replace(/"/g, ""), h: await hashOf(url) };
+        return url;
+      } catch {
+        return null;
+      }
+    };
+    let appearance = remote.appearance;
+    let profile = remote.profile;
+    if (appearance && typeof appearance === "object") {
+      const bg = await picture("background", appearance.background);
+      appearance = { ...appearance };
+      if (bg === null) delete appearance.background;
+      else appearance.background = bg;
+    }
+    if (profile && typeof profile === "object") {
+      const photo = await picture("photo", profile.photo);
+      profile = { ...profile };
+      if (photo === null) delete profile.photo;
+      else profile.photo = photo;
+    }
+    const ls = window.localStorage;
+    if (remote.settingsOptions && typeof remote.settingsOptions === "object") {
+      // Notifications on/off belongs to each browser, not the account (Settings doesn't sync it either).
+      const options = { ...remote.settingsOptions };
+      delete options.browserNotifications;
+      ls.setItem("schoolagy_settings_options", JSON.stringify(options));
+    }
+    if (appearance && typeof appearance === "object") ls.setItem("schoolagy_appearance", JSON.stringify(appearance));
+    if (remote.darkMode === "dark" || remote.darkMode === "light") ls.setItem("schoolagy_dark_mode", remote.darkMode);
+    if (profile && typeof profile === "object") ls.setItem("schoolagy_profile", JSON.stringify(profile));
+    if (profile && typeof profile.name === "string" && profile.name.trim()) ls.setItem("schoolagy_profile_name", profile.name.trim());
+    if (Object.keys(media).length) ls.setItem("averages_sync_media", JSON.stringify(media));
+    ls.setItem("schoolagy_sync_meta", JSON.stringify({ settingsUpdatedAt: stamp }));
+    ls.setItem("schoolagy_onboarded", "1");
+    return true;
+  } catch {
+    return false;
+  }
 }

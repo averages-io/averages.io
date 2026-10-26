@@ -8,6 +8,9 @@
  * covers the page instead of the shimmer placeholders. It fades away once the
  * page has its data, so the page appears already filled in.
  *
+ * - Onboarding (2026-10-26): also while it hasn't been finished on this
+ *   device, so the check for the account's synced setup (LegacyPage,
+ *   restoreSyncedSetup) happens under the logo, not over the first step.
  * - Only when this tab has no saved bundle (`schoolagy_bundle_cache`) and
  *   hasn't shown the splash yet (`averages_splash_shown`). Every later page in
  *   the tab skips it. Sign-out clears the flag (app/lib/averages.ts), so the
@@ -43,7 +46,7 @@ export const SPLASH_CSS =
 
 export const SPLASH_JS =
   "(function(){var d=document.documentElement,api={on:false,at:0,hide:function(){}};window.__averagesSplash=api;" +
-  "try{var s=window.sessionStorage;if(s.getItem('schoolagy_bundle_cache')||s.getItem('" + SPLASH_KEY + "'))return;s.setItem('" + SPLASH_KEY + "','1');}catch(e){return;}" +
+  "try{var s=window.sessionStorage,ob=location.pathname.replace(/\\/$/,'')==='/onboard'&&localStorage.getItem('schoolagy_onboarded')!=='1';if(s.getItem('schoolagy_bundle_cache')||(s.getItem('" + SPLASH_KEY + "')&&!ob))return;s.setItem('" + SPLASH_KEY + "','1');}catch(e){return;}" +
   "var potato=false,calm=false;try{potato=(JSON.parse(localStorage.getItem('schoolagy_settings_options')||'{}')||{}).potatoMode===true;}catch(e){}" +
   "try{calm=potato||matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){}" +
   "api.on=true;api.at=performance.now();d.setAttribute('data-av-splash','');var done=false;" +

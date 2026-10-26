@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { API_BASE, BELL_UPDATES_MAX_AGE_MS, getSession, loadBundle, loadExtras, signOut, startExtras, waitForExtras, type ExtrasRun, type Mode } from "../lib/averages";
+import { API_BASE, BELL_UPDATES_MAX_AGE_MS, getSession, loadBundle, loadExtras, restoreSyncedSetup, signOut, startExtras, waitForExtras, type ExtrasRun, type Mode } from "../lib/averages";
+import { SPLASH_KEY } from "../lib/splash";
 import { EXTRAS_LATE_GIVE_UP_MS, LATE_EXTRAS, mergeExtras, mergeLateExtra, type ExtraName } from "../lib/extras";
 import { installNsfwGlobal, preloadNsfwModel } from "../lib/nsfw";
 import { SKELETON_CSS, REVEAL_SELECTORS, holdCards, revealCards, skeletonHtml, revealContent, snapshotSkeleton, type SkeletonSnapshot } from "./PageSkeleton";
@@ -246,6 +247,25 @@ export default function LegacyPage({
       if (requiresAuth && session.mode === "out") {
         window.location.href = "/";
         return;
+      }
+
+      // Back on a cleared device (2026-10-26): an account with a synced copy
+      // gets its settings back and goes to Home instead of onboarding. The
+      // first-open logo stays up through this and Home's load (splash.ts).
+      if (pageId === "onboarding" && session.mode === "live" && !session.incognito) {
+        let done = false;
+        try {
+          done = window.localStorage.getItem("schoolagy_onboarded") === "1" || window.localStorage.getItem("schoolagy_account_mode") === "incognito";
+        } catch {}
+        if (!done && (await restoreSyncedSetup())) {
+          if (cancelled) return;
+          try {
+            window.sessionStorage.removeItem(SPLASH_KEY);
+          } catch {}
+          window.location.replace("/home");
+          return;
+        }
+        if (cancelled) return;
       }
 
       installNsfwGlobal();
