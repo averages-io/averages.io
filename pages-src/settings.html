@@ -261,7 +261,7 @@
   .settings-search input {
     width: 100%;
     font: inherit;
-    font-style: italic;
+    font-style: normal;   /* what you type is upright; only the "Search" placeholder is italic (2026-10-26, Martin) */
     font-size: 0.86rem;
     color: var(--text-dark);
     background: var(--panel-inner);
@@ -317,6 +317,33 @@
     flex-shrink: 0;
   }
   .settings-nav-item[hidden] { display: none; }
+  /* Search results (2026-10-26, Martin: search should find settings, not just sections).
+     One row per matching setting, with where it lives underneath. */
+  .settings-nav-list[hidden], .settings-results[hidden] { display: none; }
+  .settings-results { display: flex; flex-direction: column; gap: 4px; }
+  .settings-result {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    border-radius: var(--window-radius-sm);
+    font: inherit;
+    color: var(--text-dark);
+    padding: 8px 12px;
+    cursor: pointer;
+  }
+  .settings-result:hover, .settings-result:focus-visible, .settings-result.first { background: var(--panel-inner); outline: none; }
+  .settings-result:focus-visible { box-shadow: 0 0 0 3px var(--accent-ring) inset; }
+  .settings-result-label { font-weight: 800; font-size: 0.88rem; line-height: 1.25; }
+  .settings-result-label mark { background: none; color: var(--accent); }
+  .settings-result-path { font-weight: 700; font-size: 0.72rem; color: var(--text-muted); }
+  /* The setting a result opened: a short ring so the eye lands on it. */
+  .search-hit { border-radius: var(--window-radius-sm); box-shadow: 0 0 0 2px var(--accent) inset; }
+  /* Shows at once, then fades after a moment (the delay is only on the way out). */
+  .search-hit.search-hit-fade { box-shadow: 0 0 0 2px transparent inset; transition: box-shadow 0.6s ease 1.2s; }
   .settings-no-results {
     color: var(--text-faint);
     font-size: 0.8rem;
@@ -604,6 +631,25 @@
   .mode-row[data-mode="plus"] .mode-pick .settings-row-label { display: inline-block; padding: 0 10px; border-radius: 999px; background: linear-gradient(135deg, #FF7A50, #E5484D); color: #2A0A05; line-height: 22px; }
   .mode-row[data-mode="plus"] .mode-pick[aria-checked="true"] .mode-radio { border-color: #E5484D; background: radial-gradient(circle, #E5484D 0 4px, transparent 4.5px); }
   .plus-msg { margin: 8px 0 0; font-weight: 700; }
+  /* ---------- Plus section (2026-10-26) ----------
+     The nav label in the Plus colors. Darker stops than the badge gradient so
+     the letters keep 4.5:1 on the sidebar (light: 4.5 to 5.4, dark: 6.8 to 8.7). */
+  .plus-word { background: linear-gradient(90deg, #AE3A10, #B02A38); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  body.dark-mode .plus-word { background-image: linear-gradient(90deg, #FF9A72, #FF7E84); }
+  .settings-nav-item.plus-nav.active { background: linear-gradient(135deg, #FF7A50, #E5484D); color: #2A0A05; }
+  .settings-nav-item.plus-nav.active .plus-word { background: none; color: #2A0A05; }
+  .plus-hero { padding: 20px; border-radius: var(--window-radius-md); background: linear-gradient(135deg, #FF7A50, #E5484D); color: #2A0A05; }
+  .plus-hero-title { margin: 0; font-size: 1.3rem; font-weight: 900; font-style: italic; }
+  .plus-hero-status { margin: 4px 0 0; font-size: 0.84rem; font-weight: 700; line-height: 1.4; }
+  .plus-hero-btn { margin-top: 16px; border: 0; border-radius: 999px; padding: 8px 20px; background: #2A0A05; color: #fff; font: inherit; font-weight: 800; font-size: 0.84rem; cursor: pointer; }
+  .plus-hero-btn:hover { background: #46140c; }
+  .plus-hero-btn:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+  .plus-hero-btn[hidden], #plusNotifBtn[hidden], #plusPayBlock[hidden] { display: none; }
+  .plus-hero-btn[aria-disabled="true"] { opacity: 0.6; cursor: default; }
+  .plus-perk { justify-content: flex-start; }
+  .plus-perk .settings-row-text { flex: 1; }
+  .plus-perk-icon { flex: none; width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; background: linear-gradient(135deg, #FF7A50, #E5484D); }
+  .plus-perk-icon svg { width: 18px; height: 18px; fill: none; stroke: #2A0A05; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
   #browserNotifToggleWrap[hidden], #notifPlusBtn[hidden], #calendarBlock[hidden], #calBtn[hidden], #calLinkRow[hidden], #calActions[hidden], #calMsg[hidden] { display: none; }
   .plus-tag[hidden] { display: none; }
   .plus-tag { display: inline-block; margin-left: 4px; padding: 0 8px; border-radius: 999px; background: linear-gradient(135deg, #FF7A50, #E5484D); color: #2A0A05; font-size: 0.66rem; font-weight: 800; line-height: 18px; vertical-align: 2px; }
@@ -1113,19 +1159,26 @@
         <div class="settings-sidebar">
           <div class="settings-search">
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-            <input type="text" id="settingsSearch" placeholder="Search" aria-label="Search settings">
+            <input type="text" id="settingsSearch" placeholder="Search" aria-label="Search settings" aria-controls="settingsResults" autocomplete="off" spellcheck="false">
           </div>
           <div class="settings-nav-list" id="settingsNavList">
-            <button class="settings-nav-item active" type="button" data-section="general">
+            <button class="settings-nav-item active" type="button" data-section="account">
+              Account
+              <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+            </button>
+            <!-- Averages Plus (2026-10-26, Martin: a Plus section "that has the letters colored", with
+                 every Plus feature and the payment settings, like Discord's Nitro page). Shown once
+                 /billing/status says Plus is on offer or they have it (see the Mode script). -->
+            <button class="settings-nav-item plus-nav" type="button" data-section="plus" hidden>
+              <span class="plus-word">Plus</span>
+              <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+            </button>
+            <button class="settings-nav-item" type="button" data-section="general">
               General
               <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
             </button>
             <button class="settings-nav-item" type="button" data-section="notifications">
               Notifications
-              <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
-            </button>
-            <button class="settings-nav-item" type="button" data-section="account">
-              Account
               <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
             </button>
             <button class="settings-nav-item" type="button" data-section="integrations">
@@ -1141,6 +1194,7 @@
               <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
             </button>
           </div>
+          <div class="settings-results" id="settingsResults" role="listbox" aria-label="Matching settings" hidden></div>
           <div class="settings-no-results" id="settingsNoResults" hidden>No matching settings</div>
         </div>
 
@@ -1149,11 +1203,186 @@
             <button class="back-btn" id="backBtn" type="button" aria-label="Back to Settings">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
             </button>
-            <h2 id="detailTitle">General</h2>
+            <h2 id="detailTitle">Account</h2>
+          </div>
+
+          <!-- ---------- Account ---------- -->
+          <div class="settings-section active" data-section="account">
+            <div class="profile-card">
+              <div class="profile-card-avatar" id="profileCardAvatar"></div>
+              <div class="profile-card-text">
+                <p class="profile-card-name" id="profileCardName"></p>
+                <p class="profile-card-email empty" id="profileCardEmail">No email added</p>
+                <p class="profile-card-verify-note" id="profileCardVerifyNote" hidden>Unverified. <button type="button" id="profileCardVerifyBtn">verify now</button></p>
+              </div>
+              <button class="btn-secondary" type="button" id="profileEditBtn">Edit</button>
+            </div>
+
+            <!-- School (2026-10-23): signed in, the school picked on the sign-in page and a link to
+                 their own Schoology (like nmusd.schoology.com); see schoolSection() below. The
+                 sample values are only for the preview and the demo. -->
+            <p class="settings-subhead" id="schoolHead">School</p>
+            <div class="settings-group" id="schoolGroup">
+              <div class="settings-row" id="schoolNameRow">
+                <div class="settings-row-text"><p class="settings-row-label">School</p></div>
+                <span class="settings-row-value" id="schoolNameValue">Hill Valley High School</span>
+              </div>
+              <div class="settings-row" id="schoolLmsRow">
+                <div class="settings-row-text"><p class="settings-row-label">Schoology</p></div>
+                <span class="settings-row-value" id="schoolLmsValue"><a class="school-link" id="schoolLmsLink" href="https://app.schoology.com" target="_blank" rel="noopener noreferrer">app.schoology.com</a></span>
+              </div>
+              <div class="settings-row" id="schoolDistrictRow">
+                <div class="settings-row-text"><p class="settings-row-label">District</p></div>
+                <span class="settings-row-value" id="schoolDistrictValue">Hill Valley Unified School District</span>
+              </div>
+              <div class="settings-row" id="studentIdRow">
+                <div class="settings-row-text"><p class="settings-row-label">Student ID</p></div>
+                <span class="settings-row-value" id="studentIdValue">S-48219</span>
+              </div>
+            </div>
+
+            <p class="settings-subhead">Mode</p>
+            <!-- Mode (2026-10-21): Classic, Plus or Incognito (that order since 2026-10-26), picked here. Plus is Classic with the
+                 Averages Plus subscription; its row only shows when billing is on (see the script). -->
+            <div class="settings-group" id="modeGroup" role="radiogroup" aria-label="Mode">
+              <div class="settings-row mode-row" data-mode="classic">
+                <button type="button" class="mode-pick" role="radio" aria-checked="false" data-mode="classic">
+                  <span class="mode-radio" aria-hidden="true"></span>
+                  <span class="settings-row-text"><span class="settings-row-label">Classic</span><span class="settings-row-desc" data-mode-desc></span></span>
+                </button>
+              </div>
+              <div class="settings-row mode-row" data-mode="plus" id="plusRow" data-feature="billing" hidden>
+                <button type="button" class="mode-pick" role="radio" aria-checked="false" data-mode="plus">
+                  <span class="mode-radio" aria-hidden="true"></span>
+                  <span class="settings-row-text"><span class="settings-row-label">Plus</span><span class="settings-row-desc" data-mode-desc></span></span>
+                </button>
+                <button class="btn-secondary" type="button" id="plusManageBtn" hidden>Manage plan</button>
+              </div>
+              <div class="settings-row mode-row" data-mode="incognito">
+                <button type="button" class="mode-pick" role="radio" aria-checked="false" data-mode="incognito">
+                  <span class="mode-radio" aria-hidden="true"></span>
+                  <span class="settings-row-text"><span class="settings-row-label">Incognito</span><span class="settings-row-desc" data-mode-desc></span></span>
+                </button>
+              </div>
+            </div>
+            <p class="settings-row-desc plus-msg" id="plusMsg" role="status" hidden></p>
+
+            <button class="btn-danger" type="button" data-action="signout">Sign Out</button>
+          </div>
+
+          <!-- ---------- Plus (2026-10-26) ---------- -->
+          <div class="settings-section" data-section="plus">
+            <div class="plus-hero">
+              <p class="plus-hero-title">Averages Plus</p>
+              <p class="plus-hero-status" id="plusHeroStatus">$2.99 a month. Cancel anytime.</p>
+              <button class="plus-hero-btn" type="button" id="plusGetBtn" hidden>Get Plus</button>
+            </div>
+            <p class="settings-row-desc plus-msg" id="plusPageMsg" role="status" hidden></p>
+
+            <p class="settings-subhead">Plus features</p>
+            <div class="settings-group">
+              <div class="settings-row plus-perk">
+                <span class="plus-perk-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span>
+                <div class="settings-row-text">
+                  <p class="settings-row-label">Browser notifications</p>
+                  <p class="settings-row-desc">New grades, assignments, due dates, messages and announcements, even with Averages.io closed.</p>
+                </div>
+                <button class="btn-secondary" type="button" id="plusNotifBtn" hidden>Set up</button>
+              </div>
+              <div class="settings-row plus-perk">
+                <span class="plus-perk-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span>
+                <div class="settings-row-text">
+                  <p class="settings-row-label">Calendar sync</p>
+                  <p class="settings-row-desc">Your due dates in Google Calendar or Apple Calendar, kept up to date.</p>
+                </div>
+              </div>
+              <div class="settings-row plus-perk">
+                <span class="plus-perk-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z"/></svg></span>
+                <div class="settings-row-text">
+                  <p class="settings-row-label">New features early</p>
+                  <p class="settings-row-desc">Try new features about two weeks before everyone else.</p>
+                </div>
+              </div>
+              <div class="settings-row plus-perk">
+                <span class="plus-perk-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg></span>
+                <div class="settings-row-text">
+                  <p class="settings-row-label">The iPhone app</p>
+                  <p class="settings-row-desc">Included when it comes out.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Calendar sync (2026-10-21), an Averages Plus perk: a private link calendar apps
+                 subscribe to. Filled in by the script below from GET /calendar/status. -->
+            <div id="calendarBlock" data-feature="calendar-sync" hidden>
+              <p class="settings-subhead">Calendar sync</p>
+              <div class="settings-group">
+                <div class="settings-row">
+                  <div class="settings-row-text">
+                    <p class="settings-row-label">Calendar sync <span class="plus-tag">Plus</span></p>
+                    <p class="settings-row-desc" id="calDesc"></p>
+                  </div>
+                  <button class="btn-secondary" type="button" id="calBtn" hidden>Get link</button>
+                </div>
+                <div class="settings-row cal-link-row" id="calLinkRow" hidden>
+                  <input class="cal-link" id="calLink" type="text" readonly aria-label="Your private calendar link">
+                  <button class="btn-secondary" type="button" id="calCopy">Copy</button>
+                </div>
+                <div class="settings-row cal-actions" id="calActions" hidden>
+                  <a class="cal-add" id="calGoogle" target="_blank" rel="noopener">Add to Google Calendar</a>
+                  <a class="cal-add" id="calApple">Add to Apple Calendar</a>
+                  <button class="cal-off" type="button" id="calOff">Turn off</button>
+                </div>
+              </div>
+              <p class="settings-row-desc plus-msg" id="calMsg" role="status" hidden></p>
+            </div>
+
+            <div id="plusPayBlock" hidden>
+              <p class="settings-subhead">Payment</p>
+              <div class="settings-group">
+                <div class="settings-row">
+                  <div class="settings-row-text">
+                    <p class="settings-row-label">Manage payment</p>
+                    <p class="settings-row-desc">Change your card, see receipts or cancel Plus.</p>
+                  </div>
+                  <button class="btn-secondary" type="button" id="plusPayBtn">Manage</button>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- ---------- General ---------- -->
-          <div class="settings-section active" data-section="general">
+          <div class="settings-section" data-section="general">
+            <p class="settings-subhead">Appearance</p>
+            <div class="settings-group">
+              <div class="settings-row">
+                <div class="settings-row-text">
+                  <p class="settings-row-label">Dark Mode</p>
+                  <p class="settings-row-desc">Switch the app to a dark color scheme.</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="darkModeToggle" aria-label="Toggle dark mode">
+                  <span class="track"><span class="thumb"></span></span>
+                </label>
+              </div>
+              <div class="settings-row">
+                <div class="settings-row-text">
+                  <p class="settings-row-label">Accent Color</p>
+                  <p class="settings-row-desc">Used for buttons, highlights, and the active tab.</p>
+                </div>
+                <button class="accent-swatch-btn" id="accentSwatchBtn" type="button" aria-label="Change accent color" aria-haspopup="true" aria-expanded="false"></button>
+              </div>
+            </div>
+
+            <p class="settings-subhead">Background &amp; Color</p>
+            <p class="settings-row-desc" style="margin: 0 0 8px;">Backgrounds set a matching accent. Change it with Accent Color above.</p>
+            <div class="swatch-grid" id="swatchGrid"></div>
+
+            <p class="settings-subhead">Window Type</p>
+            <div class="window-options">
+              <button type="button" class="window-option" id="windowOptionWindowed" data-shape="windowed" aria-pressed="false">Windowed</button>
+            </div>
+
             <p class="settings-subhead">Performance</p>
             <div class="settings-group">
               <div class="settings-row">
@@ -1184,36 +1413,6 @@
                 <button class="btn-secondary" type="button" id="clearCacheBtn">Clear Cache</button>
               </div>
             </div>
-
-            <p class="settings-subhead">Appearance</p>
-            <div class="settings-group">
-              <div class="settings-row">
-                <div class="settings-row-text">
-                  <p class="settings-row-label">Dark Mode</p>
-                  <p class="settings-row-desc">Switch the app to a dark color scheme.</p>
-                </div>
-                <label class="toggle">
-                  <input type="checkbox" id="darkModeToggle" aria-label="Toggle dark mode">
-                  <span class="track"><span class="thumb"></span></span>
-                </label>
-              </div>
-              <div class="settings-row">
-                <div class="settings-row-text">
-                  <p class="settings-row-label">Accent Color</p>
-                  <p class="settings-row-desc">Used for buttons, highlights, and the active tab.</p>
-                </div>
-                <button class="accent-swatch-btn" id="accentSwatchBtn" type="button" aria-label="Change accent color" aria-haspopup="true" aria-expanded="false"></button>
-              </div>
-            </div>
-
-            <p class="settings-subhead">Window Type</p>
-            <div class="window-options">
-              <button type="button" class="window-option" id="windowOptionWindowed" data-shape="windowed" aria-pressed="false">Windowed</button>
-            </div>
-
-            <p class="settings-subhead">Background &amp; Color</p>
-            <p class="settings-row-desc" style="margin: 0 0 8px;">Backgrounds set a matching accent. Change it with Accent Color above.</p>
-            <div class="swatch-grid" id="swatchGrid"></div>
           </div>
 
           <!-- ---------- Notifications ---------- -->
@@ -1297,70 +1496,6 @@
             </div>
           </div>
 
-          <!-- ---------- Account ---------- -->
-          <div class="settings-section" data-section="account">
-            <div class="profile-card">
-              <div class="profile-card-avatar" id="profileCardAvatar"></div>
-              <div class="profile-card-text">
-                <p class="profile-card-name" id="profileCardName"></p>
-                <p class="profile-card-email empty" id="profileCardEmail">No email added</p>
-                <p class="profile-card-verify-note" id="profileCardVerifyNote" hidden>Unverified — <button type="button" id="profileCardVerifyBtn">verify now</button></p>
-              </div>
-              <button class="btn-secondary" type="button" id="profileEditBtn">Edit</button>
-            </div>
-
-            <p class="settings-subhead">Mode</p>
-            <!-- Mode (2026-10-21): Incognito, Classic or Plus, picked here. Plus is Classic with the
-                 Averages Plus subscription; its row only shows when billing is on (see the script). -->
-            <div class="settings-group" id="modeGroup" role="radiogroup" aria-label="Mode">
-              <div class="settings-row mode-row" data-mode="incognito">
-                <button type="button" class="mode-pick" role="radio" aria-checked="false" data-mode="incognito">
-                  <span class="mode-radio" aria-hidden="true"></span>
-                  <span class="settings-row-text"><span class="settings-row-label">Incognito</span><span class="settings-row-desc" data-mode-desc></span></span>
-                </button>
-              </div>
-              <div class="settings-row mode-row" data-mode="classic">
-                <button type="button" class="mode-pick" role="radio" aria-checked="false" data-mode="classic">
-                  <span class="mode-radio" aria-hidden="true"></span>
-                  <span class="settings-row-text"><span class="settings-row-label">Classic</span><span class="settings-row-desc" data-mode-desc></span></span>
-                </button>
-              </div>
-              <div class="settings-row mode-row" data-mode="plus" id="plusRow" data-feature="billing" hidden>
-                <button type="button" class="mode-pick" role="radio" aria-checked="false" data-mode="plus">
-                  <span class="mode-radio" aria-hidden="true"></span>
-                  <span class="settings-row-text"><span class="settings-row-label">Plus</span><span class="settings-row-desc" data-mode-desc></span></span>
-                </button>
-                <button class="btn-secondary" type="button" id="plusManageBtn" hidden>Manage plan</button>
-              </div>
-            </div>
-            <p class="settings-row-desc plus-msg" id="plusMsg" role="status" hidden></p>
-
-            <!-- School (2026-10-23): signed in, the school picked on the sign-in page and a link to
-                 their own Schoology (like nmusd.schoology.com); see schoolSection() below. The
-                 sample values are only for the preview and the demo. -->
-            <p class="settings-subhead" id="schoolHead">School</p>
-            <div class="settings-group" id="schoolGroup">
-              <div class="settings-row" id="schoolNameRow">
-                <div class="settings-row-text"><p class="settings-row-label">School</p></div>
-                <span class="settings-row-value" id="schoolNameValue">Hill Valley High School</span>
-              </div>
-              <div class="settings-row" id="schoolLmsRow">
-                <div class="settings-row-text"><p class="settings-row-label">Schoology</p></div>
-                <span class="settings-row-value" id="schoolLmsValue"><a class="school-link" id="schoolLmsLink" href="https://app.schoology.com" target="_blank" rel="noopener noreferrer">app.schoology.com</a></span>
-              </div>
-              <div class="settings-row" id="schoolDistrictRow">
-                <div class="settings-row-text"><p class="settings-row-label">District</p></div>
-                <span class="settings-row-value" id="schoolDistrictValue">Hill Valley Unified School District</span>
-              </div>
-              <div class="settings-row" id="studentIdRow">
-                <div class="settings-row-text"><p class="settings-row-label">Student ID</p></div>
-                <span class="settings-row-value" id="studentIdValue">S-48219</span>
-              </div>
-            </div>
-
-            <button class="btn-danger" type="button" data-action="signout">Sign Out</button>
-          </div>
-
           <!-- ---------- Integrations (2026-10-04) ---------- -->
           <div class="settings-section" data-section="integrations">
             <p class="settings-subhead">Connected apps</p>
@@ -1371,30 +1506,6 @@
             </div>
             <p class="settings-row-desc integ-note">Averages only sees the files you pick. Disconnect anytime.</p>
             <p class="settings-row-desc integ-note integ-tm">Google Drive is a trademark of Google LLC.</p>
-            <!-- Calendar sync (2026-10-21), an Averages Plus perk: a private link calendar apps
-                 subscribe to. Filled in by the script below from GET /calendar/status. -->
-            <div id="calendarBlock" data-feature="calendar-sync" hidden>
-              <p class="settings-subhead">Calendar</p>
-              <div class="settings-group">
-                <div class="settings-row">
-                  <div class="settings-row-text">
-                    <p class="settings-row-label">Calendar sync <span class="plus-tag">Plus</span></p>
-                    <p class="settings-row-desc" id="calDesc"></p>
-                  </div>
-                  <button class="btn-secondary" type="button" id="calBtn" hidden>Get link</button>
-                </div>
-                <div class="settings-row cal-link-row" id="calLinkRow" hidden>
-                  <input class="cal-link" id="calLink" type="text" readonly aria-label="Your private calendar link">
-                  <button class="btn-secondary" type="button" id="calCopy">Copy</button>
-                </div>
-                <div class="settings-row cal-actions" id="calActions" hidden>
-                  <a class="cal-add" id="calGoogle" target="_blank" rel="noopener">Add to Google Calendar</a>
-                  <a class="cal-add" id="calApple">Add to Apple Calendar</a>
-                  <button class="cal-off" type="button" id="calOff">Turn off</button>
-                </div>
-              </div>
-              <p class="settings-row-desc plus-msg" id="calMsg" role="status" hidden></p>
-            </div>
             <p class="settings-subhead">Editing</p>
             <div class="settings-group">
               <div class="settings-row">
@@ -1910,17 +2021,7 @@
     narrowQuery.addEventListener('change', syncResponsiveView);
 
     // ------------------------------------------------------------------
-    // Search — matches against every individual setting inside a
-    // section (row labels, descriptions, list-row links, the window
-    // type/background headings, etc.), not just the five section names
-    // in the sidebar. Typing "sync" now surfaces Privacy
-    // because that section's own text contains "Sync Customizations
-    // Across Devices," even though the word "sync" appears nowhere in
-    // the nav item itself. Indexed once up front — the sections' text
-    // content doesn't change after the swatch grid and other JS-built
-    // pieces render on load, so there's no need to re-index per
-    // keystroke.
-    // ------------------------------------------------------------------
+    // Search: see "Search (2026-10-26)" further down.
 
     // ------------------------------------------------------------------
     // Integrations (2026-10-04, per Martin). Canva's review requires both a
@@ -2432,27 +2533,171 @@
       }
     })();
 
+    // ------------------------------------------------------------------
+    // Search (2026-10-26, Martin: "make the search function on the settings
+    // page search for settings/options as well"). Typing lists every
+    // matching setting (Dark Mode, Clear Cache, Sign Out...) with the section
+    // it lives in; picking one opens that section, scrolls to it and rings it
+    // for a moment. Sections whose name matches are listed too. Built fresh on
+    // every keystroke from what's on the page, so rows that are hidden right
+    // now (Plus while billing is off, an empty School section) never show up.
+    // Every word typed has to match; extra words people use for a setting
+    // (wallpaper, log out, theme...) are in SEARCH_ALSO.
+    // ------------------------------------------------------------------
     const searchInput = document.getElementById('settingsSearch');
     const noResults = document.getElementById('settingsNoResults');
-    const sectionSearchIndex = {};
-    function buildSearchIndex() {
-      sections.forEach(sec => {
-        sectionSearchIndex[sec.dataset.section] = sec.textContent.toLowerCase();
+    const resultsBox = document.getElementById('settingsResults');
+    const navList = document.getElementById('settingsNavList');
+    const SEARCH_ALSO = {
+      'potato pc mode': 'performance speed slow fast lag animations effects chromebook',
+      'file previews': 'thumbnails pictures images pdf',
+      'cache': 'storage space clear data memory',
+      'dark mode': 'theme night black light',
+      'accent color': 'theme colour highlight tint',
+      'background & color': 'wallpaper theme picture photo colour backdrop',
+      'window type': 'layout windowed shape',
+      'browser notifications': 'alerts push notify',
+      'grade updates': 'scores marks alerts',
+      'due date reminders': 'deadlines alerts',
+      'incognito': 'mode privacy private account plan',
+      'classic': 'mode account plan',
+      'plus': 'mode subscription billing pay plan premium upgrade manage',
+      'manage payment': 'plus card billing receipts invoice cancel subscription plan',
+      'new features early': 'plus beta preview early access',
+      'the iphone app': 'plus ios apple phone mobile',
+      'edit profile': 'name email photo picture avatar pfp account',
+      'sign out': 'log out logout leave account',
+      'canva': 'connect disconnect apps design',
+      'google drive': 'connect disconnect apps files gdrive',
+      'onedrive': 'connect disconnect apps files microsoft',
+      'calendar sync': 'ical ics google apple calendar link subscribe',
+      'open files in': 'editor word powerpoint excel default',
+      'sync across devices': 'privacy devices backup cloud',
+      'schoology': 'school lms link',
+      'privacy policy': 'terms legal data',
+      'help center': 'support help faq',
+      'send feedback': 'bug report suggestion',
+    };
+    const sectionName = (sec) => {
+      const item = document.querySelector(`.settings-nav-item[data-section="${sec}"]`);
+      return item ? item.textContent.trim() : sec;
+    };
+    const clean = (t) => String(t || '').replace(/\s+/g, ' ').trim();
+    const shown = (el) => !el.closest('[hidden]');
+    // Everything searchable, as { label, extra, section, path, el }.
+    function searchEntries() {
+      const out = [];
+      sections.forEach(secEl => {
+        const sec = secEl.dataset.section;
+        const navItem = document.querySelector(`.settings-nav-item[data-section="${sec}"]`);
+        if (navItem && navItem.hidden) return;   // Plus while it isn't offered
+        const secLabel = sectionName(sec);
+        let sub = '';
+        const add = (label, el, extra) => {
+          label = clean(label);
+          if (!label || !shown(el)) return;
+          out.push({ label, extra: clean(extra), section: sec, path: sub && sub.toLowerCase() !== secLabel.toLowerCase() ? `${secLabel} › ${sub}` : secLabel, el });
+        };
+        secEl.querySelectorAll('.settings-subhead, .settings-row, .profile-card, [data-action="signout"], .notif-test, .list-row').forEach(el => {
+          if (el.classList.contains('settings-subhead')) {
+            sub = clean(el.textContent);
+            // Subheads with no rows of their own are settings themselves.
+            if (/^(Window Type|Background & Color)$/.test(sub)) add(sub, el, el.nextElementSibling && el.nextElementSibling.textContent);
+            return;
+          }
+          if (el.classList.contains('profile-card')) return add('Edit Profile', el, el.textContent);
+          // Sign Out sits under no heading of its own (the last one is Mode).
+          if (el.matches('[data-action="signout"]')) { const was = sub; sub = ''; add(el.textContent, el, ''); sub = was; return; }
+          if (el.matches('.notif-test, .list-row')) return add(el.textContent, el, '');
+          const label = el.querySelector('.settings-row-label');
+          if (!label) return;
+          const desc = Array.from(el.querySelectorAll('.settings-row-desc, .settings-row-value')).map(d => d.textContent).join(' ');
+          add(label.textContent.replace(/\bPlus\b(?=\s*$)/, '').trim() || label.textContent, el, desc);
+        });
+      });
+      return out;
+    }
+    const escHtml = (t) => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    function markLabel(label, words) {
+      // Accent-colors the first place each word shows up in the label.
+      const low = label.toLowerCase();
+      const hits = [];
+      words.forEach(w => { const k = low.indexOf(w); if (k >= 0) hits.push([k, k + w.length]); });
+      hits.sort((a, b) => a[0] - b[0]);
+      let html = '', at = 0;
+      hits.forEach(([a, b]) => { if (a < at) return; html += escHtml(label.slice(at, a)) + '<mark>' + escHtml(label.slice(a, b)) + '</mark>'; at = b; });
+      return html + escHtml(label.slice(at));
+    }
+    let currentResults = [];
+    function openResult(r) {
+      showSection(r.section, { showDetail: true });
+      if (!r.el) return;
+      const target = r.el;
+      requestAnimationFrame(() => {
+        try { target.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) { target.scrollIntoView(); }
+        document.querySelectorAll('.search-hit').forEach(x => x.classList.remove('search-hit', 'search-hit-fade'));
+        target.classList.add('search-hit');
+        // Potato mode has no transitions, so the ring just stays until it's removed below.
+        if (!document.body.classList.contains('potato-mode')) requestAnimationFrame(() => requestAnimationFrame(() => target.classList.add('search-hit-fade')));
+        setTimeout(() => target.classList.remove('search-hit', 'search-hit-fade'), 2200);
+        const focusable = target.matches('button, a, input') ? target : target.querySelector('input, button, a');
+        if (focusable) { try { focusable.focus({ preventScroll: true }); } catch (e) {} }
       });
     }
-    searchInput.addEventListener('input', () => {
+    function runSearch() {
       const q = searchInput.value.trim().toLowerCase();
-      let anyVisible = false;
-      navItems.forEach(item => {
-        const name = item.dataset.section;
-        const match = !q
-          || item.textContent.toLowerCase().includes(q)
-          || (sectionSearchIndex[name] || '').includes(q);
-        item.hidden = !match;
-        if (match) anyVisible = true;
-      });
-      noResults.hidden = anyVisible;
+      const words = q.split(/\s+/).filter(Boolean);
+      if (!words.length) {
+        currentResults = [];
+        resultsBox.hidden = true;
+        resultsBox.textContent = '';
+        navList.hidden = false;
+        noResults.hidden = true;
+        return;
+      }
+      const sectionHits = Array.from(navItems)
+        .filter(item => !item.hidden && words.every(w => item.textContent.toLowerCase().includes(w)))
+        .map(item => ({ label: item.textContent.trim(), section: item.dataset.section, path: 'Section', el: null, score: 0 }));
+      const settingHits = searchEntries().map(e => {
+        const label = e.label.toLowerCase();
+        const also = SEARCH_ALSO[label] || '';
+        const hay = `${label} ${e.extra.toLowerCase()} ${e.path.toLowerCase()} ${also}`;
+        if (!words.every(w => hay.includes(w))) return null;
+        const score = label.startsWith(q) ? 1 : words.every(w => label.includes(w)) ? 2 : words.some(w => label.includes(w)) ? 3 : 4;
+        return Object.assign(e, { score });
+      }).filter(Boolean);
+      // Same setting twice (a label that is also its subhead): keep one.
+      const seen = new Set();
+      currentResults = sectionHits.concat(settingHits.sort((a, b) => a.score - b.score))
+        .filter(r => { const k = r.section + '|' + r.label.toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; })
+        .slice(0, 12);
+      resultsBox.innerHTML = currentResults.map((r, i) =>
+        `<button type="button" class="settings-result${i === 0 ? ' first' : ''}" role="option" data-i="${i}"><span class="settings-result-label">${markLabel(r.label, words)}</span><span class="settings-result-path">${escHtml(r.path)}</span></button>`
+      ).join('');
+      navList.hidden = true;
+      resultsBox.hidden = !currentResults.length;
+      noResults.hidden = !!currentResults.length;
+    }
+    searchInput.addEventListener('input', runSearch);
+    resultsBox.addEventListener('click', (e) => {
+      const btn = e.target.closest('.settings-result');
+      if (btn && currentResults[+btn.dataset.i]) openResult(currentResults[+btn.dataset.i]);
     });
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && currentResults[0]) { e.preventDefault(); openResult(currentResults[0]); }
+      else if (e.key === 'ArrowDown' && currentResults.length) { e.preventDefault(); resultsBox.querySelector('.settings-result').focus(); }
+      else if (e.key === 'Escape' && searchInput.value) { e.preventDefault(); searchInput.value = ''; runSearch(); }
+    });
+    resultsBox.addEventListener('keydown', (e) => {
+      const all = Array.from(resultsBox.querySelectorAll('.settings-result'));
+      const k = all.indexOf(document.activeElement);
+      if (k < 0) return;
+      if (e.key === 'ArrowDown' && all[k + 1]) { e.preventDefault(); all[k + 1].focus(); }
+      if (e.key === 'ArrowUp') { e.preventDefault(); (all[k - 1] || searchInput).focus(); }
+      if (e.key === 'Escape') { e.preventDefault(); searchInput.focus(); }
+    });
+    // Kept for the call at the bottom of the page (the old section-text index); nothing to build now.
+    function buildSearchIndex() {}
 
     // ------------------------------------------------------------------
     // Dark mode toggle — same re-theming approach as onboarding.html/
@@ -2547,6 +2792,9 @@
     function saveSettingsOption(key, value) {
       try {
         const opts = loadSettingsOptions();
+        // Unchanged: nothing to save or sync (2026-10-26). Pages set some options again on
+        // every load, and each of those used to push this device's whole copy to the account.
+        if (JSON.stringify(opts[key]) === JSON.stringify(value)) return;
         opts[key] = value;
         localStorage.setItem(AVERAGES_SETTINGS_OPTIONS_KEY, JSON.stringify(opts));
       } catch {}
@@ -3726,7 +3974,7 @@
     }
 
     // Notifications need Plus (2026-10-21): the switch is swapped for Get Plus,
-    // which opens Account and picks Plus there (Stripe checkout).
+    // which opens the Plus section and starts checkout there (2026-10-26).
     function showNotifPlus(justTurnedOff) {
       setNotifUi(false);
       browserNotifToggle.disabled = true;
@@ -3736,9 +3984,8 @@
       notifDesc.textContent = 'Part of Averages Plus: get notified when things change.';
       if (justTurnedOff) showNotifMsg(notifMsg, 'Notifications turned off: they’re part of Averages Plus now.');
       btn.addEventListener('click', () => {
-        showSection('account', { showDetail: true });
-        const plus = document.querySelector('.mode-pick[data-mode="plus"]');
-        if (plus) { plus.focus(); plus.click(); }
+        showSection('plus', { showDetail: true });
+        document.getElementById('plusGetBtn').click();
       });
     }
 
@@ -4036,6 +4283,7 @@
     }
 
     // What actually gets synced — see the scope note above.
+    var DEVICE_ONLY_OPTION = 'browserNotifications';   // var: read by functions that can run before this line
     function collectSyncedSettings() {
       const readJSON = (key) => {
         try {
@@ -4045,8 +4293,13 @@
       };
       let darkMode = null;
       try { darkMode = localStorage.getItem(AVERAGES_DARK_MODE_KEY); } catch {}
+      // Whether notifications are on is this browser's own state (each browser
+      // subscribes itself), so it isn't synced (2026-10-26): two browsers with
+      // different answers kept overwriting each other's copy.
+      const options = readJSON(AVERAGES_SETTINGS_OPTIONS_KEY);
+      if (options && typeof options === 'object') delete options[DEVICE_ONLY_OPTION];
       return {
-        settingsOptions: readJSON(AVERAGES_SETTINGS_OPTIONS_KEY),
+        settingsOptions: options,
         appearance: readJSON(AVERAGES_APPEARANCE_KEY),
         darkMode,
         profile: readJSON(AVERAGES_PROFILE_KEY),
@@ -4066,7 +4319,13 @@
         profile = { ...profile, photo: await pictureFromRef('photo', profile.photo, local.profile && local.profile.photo) };
       }
       try {
-        if (remote.settingsOptions) localStorage.setItem(AVERAGES_SETTINGS_OPTIONS_KEY, JSON.stringify(remote.settingsOptions));
+        if (remote.settingsOptions) {
+          const mine = loadSettingsOptions()[DEVICE_ONLY_OPTION];
+          const next = { ...remote.settingsOptions };
+          delete next[DEVICE_ONLY_OPTION];
+          if (mine !== undefined) next[DEVICE_ONLY_OPTION] = mine;
+          localStorage.setItem(AVERAGES_SETTINGS_OPTIONS_KEY, JSON.stringify(next));
+        }
         if (appearance) localStorage.setItem(AVERAGES_APPEARANCE_KEY, JSON.stringify(appearance));
         if (remote.darkMode) localStorage.setItem(AVERAGES_DARK_MODE_KEY, remote.darkMode);
         if (profile) localStorage.setItem(AVERAGES_PROFILE_KEY, JSON.stringify(profile));
@@ -4329,8 +4588,17 @@
     // Debounced so a burst of writes (dragging the accent-color picker,
     // say) becomes one PUT instead of one per pixel.
     let syncPushTimer = null;
+    // Background switching back and forth (2026-10-26, Martin: "my background and color are
+    // getting saved twice and are in conflict"). A push could go out while this page was still
+    // pulling (anything saved during load schedules one), sending this device's OLD copy over the
+    // account's newer one with a newer timestamp; the next load then adopted that old copy, and
+    // two devices or tabs kept flipping each other. Now pushes wait until the first pull is done,
+    // and are dropped if the pull adopts the account's copy (the page reloads with it).
+    // var: these can be read before this line runs.
+    var syncPullSettled = false, syncPushQueued = false;
     function schedulePushSyncSettings() {
       if (!isSyncOn()) return;
+      if (!syncPullSettled) { syncPushQueued = true; return; }
       clearTimeout(syncPushTimer);
       syncPushTimer = setTimeout(pushSyncSettingsNow, 800);
     }
@@ -4400,7 +4668,17 @@
     // current values instead of this page needing to duplicate every one
     // of those render calls a second time here.
     async function pullSyncSettingsNow() {
-      if (!isSyncOn()) return;
+      let reloading = false;
+      try { reloading = await pullSyncSettingsOnce(); } finally {
+        if (!reloading) {
+          syncPullSettled = true;
+          if (syncPushQueued) { syncPushQueued = false; schedulePushSyncSettings(); }
+        }
+      }
+    }
+    // True when it adopted the account's copy and is reloading the page.
+    async function pullSyncSettingsOnce() {
+      if (!isSyncOn()) return false;
       try { await retryPendingPictures(); } catch {}
       try {
         const res = await fetch(averagesApiBase() + '/sync/settings', { credentials: 'include' });
@@ -4446,6 +4724,7 @@
         await applySyncedSettings(record.settings);
         saveSyncMeta(remoteStamp);
         window.location.reload();
+        return true;
       } catch {
         // No network / API down — render from whatever's already local.
       }
@@ -4488,6 +4767,14 @@
       const CONFIRM_DEFAULT = confirmBody.textContent;
       const msg = document.getElementById('plusMsg');
       const manageBtn = document.getElementById('plusManageBtn');
+      // The Plus section (2026-10-26): its nav item, hero, perks and payment.
+      const plusNav = document.querySelector('.settings-nav-item[data-section="plus"]');
+      const heroStatus = document.getElementById('plusHeroStatus');
+      const getBtn = document.getElementById('plusGetBtn');
+      const pageMsg = document.getElementById('plusPageMsg');
+      const payBlock = document.getElementById('plusPayBlock');
+      const payBtn = document.getElementById('plusPayBtn');
+      const notifBtn = document.getElementById('plusNotifBtn');
       const rows = {}, picks = {}, descs = {};
       document.querySelectorAll('#modeGroup .mode-row').forEach(r => {
         const m = r.dataset.mode;
@@ -4510,9 +4797,11 @@
       let busy = false;
 
       function say(text, bad) {
-        msg.textContent = text || '';
-        msg.classList.toggle('bad', !!bad);
-        msg.hidden = !text;
+        [msg, pageMsg].forEach(m => {
+          m.textContent = text || '';
+          m.classList.toggle('bad', !!bad);
+          m.hidden = !text;
+        });
       }
       function day(ms) {
         try { return new Date(ms).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' }); } catch (e) { return ''; }
@@ -4545,6 +4834,18 @@
         rows.plus.hidden = !((billingOn() && canClassic) || manageable || hasPlus());
         rows.plus.classList.toggle('is-past-due', !!(billing && billing.status === 'past_due'));
         manageBtn.hidden = !manageable;
+        // Plus section: shown when Plus is on offer to them, or they have (or are paying for) it.
+        const plusShown = !rows.plus.hidden;
+        plusNav.hidden = !plusShown;
+        heroStatus.textContent = hasPlus() || (incognito && manageable) ? plusDesc() : '$2.99 a month. Cancel anytime.';
+        getBtn.hidden = !loaded || hasPlus() || !(billingOn() && canClassic);
+        getBtn.setAttribute('aria-disabled', String(busy));
+        payBlock.hidden = !manageable;
+        payBtn.disabled = busy;
+        notifBtn.hidden = !hasPlus();
+        if (loaded && !plusShown && document.querySelector('.settings-section.active[data-section="plus"]')) {
+          showSection('account', { showDetail: settingsCard.dataset.view === 'detail' });
+        }
         const now = current();
         Object.keys(picks).forEach(m => {
           picks[m].setAttribute('aria-checked', String(m === now));
@@ -4636,6 +4937,14 @@
         shown[(i + (e.key === 'ArrowUp' || e.key === 'ArrowLeft' ? -1 : 1) + shown.length) % shown.length].focus();
       });
       manageBtn.addEventListener('click', () => { say(''); openStripe('portal'); });
+      getBtn.addEventListener('click', () => { if (getBtn.getAttribute('aria-disabled') !== 'true') pick('plus'); });
+      payBtn.addEventListener('click', () => {
+        say('');
+        // Stripe's portal always comes back to Account; this brings them back here instead.
+        try { sessionStorage.setItem('averages_portal_back', 'plus'); } catch (e) {}
+        openStripe('portal');
+      });
+      notifBtn.addEventListener('click', () => showSection('notifications', { showDetail: true }));
 
       document.getElementById('modeConfirmCancel').addEventListener('click', close);
       document.getElementById('modeConfirmClose').addEventListener('click', close);
@@ -4681,7 +4990,7 @@
         if (back) {
           u.searchParams.delete('billing');
           window.history.replaceState(window.history.state, '', u.pathname + u.search + u.hash);
-          if (!settingsStartSection) settingsStartSection = 'account';
+          if (!settingsStartSection) settingsStartSection = 'plus';   // the Plus section (2026-10-26); render() falls back to Account
         }
       } catch (e) {}
       render();
@@ -4793,9 +5102,8 @@
         else if (action === 'new') {
           if (window.confirm('Make a new link? The old one will stop working.')) make(true);
         } else if (action === 'plus') {
-          showSection('account', { showDetail: true });
-          const plus = document.querySelector('.mode-pick[data-mode="plus"]');
-          if (plus) { plus.focus(); plus.click(); }
+          showSection('plus', { showDetail: true });
+          document.getElementById('plusGetBtn').click();
         }
       });
       document.getElementById('calCopy').addEventListener('click', async () => {
@@ -4836,13 +5144,16 @@
     (function () {
       const u = new URL(window.location.href);
       const wanted = u.searchParams.get('section');
-      if (wanted && ['general', 'account', 'integrations', 'notifications', 'privacy', 'about'].includes(wanted)) {
-        if (!settingsStartSection) settingsStartSection = wanted;
+      let back = null;
+      try { back = sessionStorage.getItem('averages_portal_back'); sessionStorage.removeItem('averages_portal_back'); } catch (e) {}
+      if (wanted && ['account', 'plus', 'general', 'integrations', 'notifications', 'privacy', 'about'].includes(wanted)) {
+        // Back from Stripe's portal (it always returns to Account) after Manage payment in Plus.
+        if (!settingsStartSection) settingsStartSection = wanted === 'account' && back === 'plus' ? 'plus' : wanted;
         u.searchParams.delete('section');
         try { window.history.replaceState(window.history.state, '', u.pathname + u.search + u.hash); } catch (e) {}
       }
     })();
-    showSection(settingsStartSection || 'general', { showDetail: !!settingsStartSection });
+    showSection(settingsStartSection || 'account', { showDetail: !!settingsStartSection });   // Account opens first (2026-10-26 order)
     pullSyncSettingsNow();
   </script>
   <script>
