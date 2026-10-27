@@ -227,6 +227,8 @@ export async function signIn(key: string, secret: string): Promise<SignInResult>
     cacheClear(FILES_CACHE);
     cacheClear(SUBS_CACHE);
     clearExtras();
+    // The next page picks up the logo the sign-in screen put up (splash.ts).
+    cacheClear(SPLASH_KEY);
     setSignedInHint(true);
     return { ok: true, demo: !!data?.demo };
   } catch {
