@@ -720,6 +720,8 @@
   .cal-off { margin-left: auto; color: var(--grade-bad); }
   .cal-add:focus-visible, .cal-off:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring); border-radius: 4px; }
   .plus-msg.bad { color: var(--grade-bad); }
+  #plusFeatures[hidden], #plusPlanRow[hidden], #plusStatusRow[hidden], #plusNextRow[hidden] { display: none; }
+  .plus-status-val.bad { color: var(--grade-bad); }
   select.settings-select {
     font: inherit;
     font-weight: 700;
@@ -1342,6 +1344,9 @@
             </div>
             <p class="settings-row-desc plus-msg" id="plusPageMsg" role="status" hidden></p>
 
+            <!-- Members see their plan and payment instead of the feature cards (2026-10-27, Martin:
+                 "when you subscribe to Plus, can the plus page just show payment details"). -->
+            <div id="plusFeatures">
             <p class="settings-subhead">Plus features</p>
             <!-- Feature cards (2026-10-26, Martin picked "mini previews"; the icons were "the most
                  funky part"): each card shows a small drawing of the feature itself instead of an
@@ -1409,6 +1414,42 @@
                 </div>
               </div>
             </div>
+            </div>
+
+            <!-- Your plan (2026-10-27): what they pay and when, for members (and anyone with a Stripe
+                 customer, so receipts and cancelling are always one click away). Never card details:
+                 those stay on Stripe's page, behind Manage. -->
+            <div id="plusPayBlock" hidden>
+              <p class="settings-subhead" id="plusPayTitle">Payment</p>
+              <div class="settings-group">
+                <div class="settings-row" id="plusPlanRow" hidden>
+                  <div class="settings-row-text">
+                    <p class="settings-row-label">Plan</p>
+                    <p class="settings-row-desc" id="plusPlanDesc">Averages Plus</p>
+                  </div>
+                  <span class="settings-row-value" id="plusPlanPrice"></span>
+                </div>
+                <div class="settings-row" id="plusStatusRow" hidden>
+                  <div class="settings-row-text">
+                    <p class="settings-row-label">Status</p>
+                  </div>
+                  <span class="settings-row-value plus-status-val" id="plusStatusVal"></span>
+                </div>
+                <div class="settings-row" id="plusNextRow" hidden>
+                  <div class="settings-row-text">
+                    <p class="settings-row-label" id="plusNextLabel">Next payment</p>
+                  </div>
+                  <span class="settings-row-value" id="plusNextVal"></span>
+                </div>
+                <div class="settings-row">
+                  <div class="settings-row-text">
+                    <p class="settings-row-label">Manage payment</p>
+                    <p class="settings-row-desc">Change your card, see receipts or cancel Plus.</p>
+                  </div>
+                  <button class="btn-secondary" type="button" id="plusPayBtn">Manage</button>
+                </div>
+              </div>
+            </div>
 
             <!-- Calendar sync (2026-10-21), an Averages Plus perk: a private link calendar apps
                  subscribe to. Filled in by the script below from GET /calendar/status. -->
@@ -1435,18 +1476,6 @@
               <p class="settings-row-desc plus-msg" id="calMsg" role="status" hidden></p>
             </div>
 
-            <div id="plusPayBlock" hidden>
-              <p class="settings-subhead">Payment</p>
-              <div class="settings-group">
-                <div class="settings-row">
-                  <div class="settings-row-text">
-                    <p class="settings-row-label">Manage payment</p>
-                    <p class="settings-row-desc">Change your card, see receipts or cancel Plus.</p>
-                  </div>
-                  <button class="btn-secondary" type="button" id="plusPayBtn">Manage</button>
-                </div>
-              </div>
-            </div>
           </div>
 
           <!-- ---------- General ---------- -->
@@ -2701,6 +2730,8 @@
           out.push({ label, extra: clean(extra), section: sec, path: sub && sub.toLowerCase() !== secLabel.toLowerCase() ? `${secLabel} › ${sub}` : secLabel, el });
         };
         secEl.querySelectorAll('.settings-subhead, .settings-row, .plus-card, .profile-card, [data-action="signout"], .notif-test, .list-row').forEach(el => {
+          // Not what's hidden right now (2026-10-27: a member's Plus page hides the feature cards).
+          if (el.closest('[hidden]')) return;
           if (el.classList.contains('settings-subhead')) {
             sub = clean(el.textContent);
             // Subheads with no rows of their own are settings themselves.
@@ -4887,6 +4918,15 @@
       const notifBtn = document.getElementById('plusNotifBtn');
       const calBtn = document.getElementById('plusCalBtn');
       const earlyState = document.getElementById('plusEarlyState');
+      const featuresBox = document.getElementById('plusFeatures');
+      const payTitle = document.getElementById('plusPayTitle');
+      const planRow = document.getElementById('plusPlanRow');
+      const planPrice = document.getElementById('plusPlanPrice');
+      const statusRow = document.getElementById('plusStatusRow');
+      const statusVal = document.getElementById('plusStatusVal');
+      const nextRow = document.getElementById('plusNextRow');
+      const nextLabel = document.getElementById('plusNextLabel');
+      const nextVal = document.getElementById('plusNextVal');
       const rows = {}, picks = {}, descs = {};
       document.querySelectorAll('#modeGroup .mode-row').forEach(r => {
         const m = r.dataset.mode;
@@ -4934,6 +4974,36 @@
         if (s.renewsAt) return 'Renews ' + day(s.renewsAt) + '.';
         return 'You have Plus. Thanks!';
       }
+      // What they pay, from GET /billing/status's price ({ amount in cents, currency, interval }),
+      // in their own currency: "$2.99 a month", "€34.99 a year". Empty when Stripe hasn't said yet.
+      function priceText(p) {
+        if (!p || typeof p.amount !== 'number' || !p.currency) return '';
+        let money = '';
+        try { money = new Intl.NumberFormat(undefined, { style: 'currency', currency: p.currency.toUpperCase() }).format(p.amount / 100); }
+        catch (e) { return ''; }
+        const n = p.intervalCount > 1 ? p.intervalCount : 1;
+        const unit = { day: 'day', week: 'week', month: 'month', year: 'year' }[p.interval] || '';
+        if (!unit) return money;
+        return n === 1 ? money + ' a ' + unit : money + ' every ' + n + ' ' + unit + 's';
+      }
+      // Your plan (2026-10-27): members see this instead of the feature cards.
+      function renderPlan() {
+        const member = hasPlus();
+        const s = billing || {};
+        featuresBox.hidden = member;
+        payTitle.textContent = member ? 'Your plan' : 'Payment';
+        planRow.hidden = statusRow.hidden = !member;
+        const price = priceText(s.price);
+        planPrice.textContent = price;
+        planPrice.hidden = !price;
+        const pastDue = s.status === 'past_due';
+        const ending = !!(s.cancelAtPeriodEnd && s.renewsAt);
+        statusVal.textContent = pastDue ? 'Payment failed' : ending ? 'Canceled' : s.status === 'trialing' ? 'Free trial' : 'Active';
+        statusVal.classList.toggle('bad', pastDue);
+        nextRow.hidden = !member || !s.renewsAt || pastDue;
+        nextLabel.textContent = ending ? 'Plus ends' : 'Next payment';
+        nextVal.textContent = s.renewsAt ? day(s.renewsAt) + (!ending && price ? ' · ' + price.replace(/ (a|every) .*$/, '') : '') : '';
+      }
       function render() {
         descs.incognito.textContent = locked
           ? 'You’re under 13, so Averages.io stays in Incognito mode.'
@@ -4965,6 +5035,7 @@
         notifBtn.hidden = !hasPlus();
         calBtn.hidden = !hasPlus() || document.getElementById('calendarBlock').hidden;
         earlyState.hidden = !hasPlus();
+        renderPlan();
         if (loaded && !plusShown && document.querySelector('.settings-section.active[data-section="plus"]')) {
           showSection('account', { showDetail: settingsCard.dataset.view === 'detail' });
         }
