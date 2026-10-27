@@ -4553,12 +4553,19 @@
         linkTeacherIn(el('sheetMeta'), course.teacher, course.name);
       };
       const ARROW = { up: '↗', down: '↘', flat: '–' };
-      if (course.grade) {
-        el('sheetCurVal').innerHTML = `<span class="sheet-letter">${esc(course.grade)}</span><span class="sheet-pct">${esc(course.pct)}%</span>`;
-        el('sheetPredVal').innerHTML = `<span class="sheet-letter"><span class="arrow">${ARROW[course.trend] || ''}</span>${esc(course.predicted)}</span><span class="sheet-pct">${esc(course.predictedPct)}%</span>`;
-      } else {
-        document.querySelector('.sheet-score').hidden = true;
+      // A function since 2026-10-27 so live grades can paint it again;
+      // data-live marks the values that roll (public/js/averages-live.js).
+      function paintSheetScore() {
+        const id = esc(course.id);
+        document.querySelector('.sheet-score').hidden = !course.grade;
+        if (!course.grade) return;
+        el('sheetCurVal').innerHTML = `<span class="sheet-letter" data-live="${id}:grade">${esc(course.grade)}</span><span class="sheet-pct" data-live="${id}:pct">${esc(course.pct)}%</span>`;
+        el('sheetPredVal').innerHTML = `<span class="sheet-letter"><span class="arrow">${ARROW[course.trend] || ''}</span><span data-live="${id}:predicted">${esc(course.predicted)}</span></span><span class="sheet-pct" data-live="${id}:predictedPct">${esc(course.predictedPct)}%</span>`;
       }
+      paintSheetScore();
+      window.__averagesLiveGrades = function (changed) {
+        if (changed.includes(String(course.id))) paintSheetScore();
+      };
       document.querySelectorAll('.sheet-tab[data-href]').forEach(tab => {
         tab.addEventListener('click', () => { window.location.href = `${tab.dataset.href}?course=${encodeURIComponent(course.id)}`; });
       });

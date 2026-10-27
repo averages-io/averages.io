@@ -1626,9 +1626,15 @@
       window.location.href = `course-home.html?${avgCourseQ(course.id)}`;
     });
 
-    document.getElementById('curVal').innerHTML = `<span class="${course.grade === '—' ? '' : gradeBand(course.grade)}">${escapeHtml(course.grade)}</span>${course.grade === '—' ? '' : `<span class="grade-hero-pct">${escapeHtml(course.pct)}%</span>`}`;
-    document.getElementById('predVal').innerHTML = course.predicted === '—' ? '<span class="grade-hero-trend flat">—</span>' : `<span class="grade-hero-trend ${escapeHtml(course.trend)}"><span class="arrow">${TREND_ARROW[course.trend]}</span>${escapeHtml(course.predicted)}</span><span class="grade-hero-pct">${escapeHtml(course.predictedPct)}%</span>`;
-    document.getElementById('predBlock').setAttribute('aria-label', `Why is ${course.name} predicted ${course.predicted}, ${course.predictedPct} percent? Show reasoning.`);
+    // Current and Predicted (a function since 2026-10-27, so live grades can
+    // paint them again; data-live marks the values that roll).
+    function paintHero() {
+      const id = escapeHtml(course.id);
+      document.getElementById('curVal').innerHTML = `<span class="${course.grade === '—' ? '' : gradeBand(course.grade)}" data-live="${id}:grade">${escapeHtml(course.grade)}</span>${course.grade === '—' ? '' : `<span class="grade-hero-pct" data-live="${id}:pct">${escapeHtml(course.pct)}%</span>`}`;
+      document.getElementById('predVal').innerHTML = course.predicted === '—' ? '<span class="grade-hero-trend flat">—</span>' : `<span class="grade-hero-trend ${escapeHtml(course.trend)}"><span class="arrow">${TREND_ARROW[course.trend]}</span><span data-live="${id}:predicted">${escapeHtml(course.predicted)}</span></span><span class="grade-hero-pct" data-live="${id}:predictedPct">${escapeHtml(course.predictedPct)}%</span>`;
+      document.getElementById('predBlock').setAttribute('aria-label', `Why is ${course.name} predicted ${course.predicted}, ${course.predictedPct} percent? Show reasoning.`);
+    }
+    paintHero();
     // The grading period is sample text: the API doesn't send one (2026-10-06).
     if (AV_LIVE) document.getElementById('gradingPeriodNote').style.display = 'none';
     else document.getElementById('gradingPeriodNote').textContent = `Grading period: ${GRADING_PERIOD}`;
@@ -1658,7 +1664,9 @@
     }
     function renderCategories() {
       const gb = GRADEBOOK[course.id];
-      document.getElementById('gradeSummaryTotal').textContent = course.grade === '—' ? 'No overall grade yet' : `${course.pct}% overall`;
+      const total = document.getElementById('gradeSummaryTotal');
+      total.textContent = course.grade === '—' ? 'No overall grade yet' : `${course.pct}% overall`;
+      total.setAttribute('data-live', `${course.id}:total`);
       // No gradebook for this class (signed in, nothing graded or listed yet).
       const hasGb = !!gb && Array.isArray(gb.categories) && gb.categories.length > 0;
       document.getElementById('openCalcBtn').style.display = hasGb ? '' : 'none';
@@ -1692,6 +1700,14 @@
       }).join('');
     }
     renderCategories();
+    // Live grades (2026-10-27, public/js/averages-live.js): this class's grade
+    // moved while the page was open. `course` and GRADEBOOK are already
+    // updated in place (GRADEBOOK once the full grades land, a moment later).
+    window.__averagesLiveGrades = function (changed) {
+      if (!changed.includes(String(course.id))) return;
+      paintHero();
+      renderCategories();
+    };
     // Clicking a row opens that assignment (2026-10-04, per Martin). The row's
     // graded state rides along in sessionStorage (this tab only, never the URL)
     // for items assignment.html has no record of.

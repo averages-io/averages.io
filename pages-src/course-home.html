@@ -2114,7 +2114,16 @@
     const TREND_ARROW = { up: '↗', down: '↘', flat: '–' };
     const TREND_WORD = { up: 'Trending up', down: 'Trending down', flat: 'Holding steady' };
 
-    document.getElementById('curVal').innerHTML = `<span class="sheet-letter">${escapeHtml(course.grade)}</span>${course.grade === '—' ? '' : `<span class="sheet-pct">${escapeHtml(course.pct)}%</span>`}`;
+    // Current and Projected grade (a function since 2026-10-27, so live
+    // grades can paint them again; data-live marks the values that roll).
+    function paintGradeSheet() {
+      const id = escapeHtml(course.id);
+      document.getElementById('curVal').innerHTML = `<span class="sheet-letter" data-live="${id}:grade">${escapeHtml(course.grade)}</span>${course.grade === '—' ? '' : `<span class="sheet-pct" data-live="${id}:pct">${escapeHtml(course.pct)}%</span>`}`;
+      document.getElementById('predVal').innerHTML = course.predicted === '—' ? '<span class="sheet-letter">—</span>' : `<span class="sheet-letter"><span class="arrow">${TREND_ARROW[course.trend]}</span><span data-live="${id}:predicted">${escapeHtml(course.predicted)}</span></span><span class="sheet-pct" data-live="${id}:predictedPct">${escapeHtml(course.predictedPct)}%</span>`;
+      const b = document.getElementById('curBlock');
+      if (b && course.grade) b.setAttribute('aria-label', `Current grade ${course.grade}, ${course.pct} percent. See grades`);
+    }
+    paintGradeSheet();
 
     // Current grade opens this course's Grades tab (2026-10-04, per Martin).
     (function () {
@@ -2125,7 +2134,6 @@
       b.addEventListener('click', go);
       b.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
     })();
-    document.getElementById('predVal').innerHTML = course.predicted === '—' ? '<span class="sheet-letter">—</span>' : `<span class="sheet-letter"><span class="arrow">${TREND_ARROW[course.trend]}</span>${escapeHtml(course.predicted)}</span><span class="sheet-pct">${escapeHtml(course.predictedPct)}%</span>`;
 
     // ------------------------------------------------------------------
     // Assignment-score history behind the Predicted-grade reasoning
@@ -2692,7 +2700,17 @@
     };
     document.getElementById('modalPeriod').textContent = course.period;
     document.getElementById('modalSection').textContent = course.section;
-    document.getElementById('modalGrade').textContent = course.grade === '—' ? '—' : `${course.grade} (${course.pct}%)`;
+    function paintModalGrade() {
+      document.getElementById('modalGrade').textContent = course.grade === '—' ? '—' : `${course.grade} (${course.pct}%)`;
+    }
+    paintModalGrade();
+    // Live grades (2026-10-27, public/js/averages-live.js): this class's grade
+    // moved while the page was open. `course` is already updated in place.
+    window.__averagesLiveGrades = function (changed) {
+      if (!changed.includes(String(course.id))) return;
+      paintGradeSheet();
+      paintModalGrade();
+    };
     document.getElementById('modalDesc').textContent = course.desc || '';
     // Signed in (2026-10-06): a row with nothing to show is left out.
     if (AV_LIVE) ['modalTeacher', 'modalPeriod', 'modalSection'].forEach(id => {

@@ -1931,8 +1931,8 @@
               <span class="course-name">${escapeHtml(c.name)}</span>
             </div>
           </td>
-          <td><span class="grade-val ${gradeBand(c.grade)}">${escapeHtml(c.grade)}${c.grade === '—' ? '' : `<span class="grade-pct">${escapeHtml(c.pct)}%</span>`}</span></td>
-          <td><span class="trend has-popup ${escapeHtml(c.trend)}" tabindex="0" role="button" aria-haspopup="true" aria-label="${c.predicted === '—' ? `${escapeHtml(c.name)} has no grades yet. Show more.` : `Why is ${escapeHtml(c.name)} predicted ${escapeHtml(c.predicted)}, ${escapeHtml(c.predictedPct)} percent? Show reasoning.`}" data-course="${escapeHtml(c.id)}"><span class="arrow">${TREND_ARROW[c.trend]}</span>${escapeHtml(c.predicted)}${c.predicted === '—' ? '' : `<span class="grade-pct">(${escapeHtml(c.predictedPct)}%)</span>`}</span></td>
+          <td><span class="grade-val ${gradeBand(c.grade)}"><span data-live="${escapeHtml(c.id)}:grade">${escapeHtml(c.grade)}</span>${c.grade === '—' ? '' : `<span class="grade-pct" data-live="${escapeHtml(c.id)}:pct">${escapeHtml(c.pct)}%</span>`}</span></td>
+          <td><span class="trend has-popup ${escapeHtml(c.trend)}" tabindex="0" role="button" aria-haspopup="true" aria-label="${c.predicted === '—' ? `${escapeHtml(c.name)} has no grades yet. Show more.` : `Why is ${escapeHtml(c.name)} predicted ${escapeHtml(c.predicted)}, ${escapeHtml(c.predictedPct)} percent? Show reasoning.`}" data-course="${escapeHtml(c.id)}"><span class="arrow">${TREND_ARROW[c.trend]}</span><span data-live="${escapeHtml(c.id)}:predicted">${escapeHtml(c.predicted)}</span>${c.predicted === '—' ? '' : `<span class="grade-pct" data-live="${escapeHtml(c.id)}:predictedPct">(${escapeHtml(c.predictedPct)}%)</span>`}</span></td>
           <td class="updated">${escapeHtml(c.updated)}</td>
         `;
         gradesBody.appendChild(tr);
@@ -3243,6 +3243,14 @@
     renderSummary();
     sumSchedule();
     applyWidgetPrefs();
+    // Live grades (2026-10-27, public/js/averages-live.js): a grade moved while
+    // Home was open. COURSES and RECENT_GRADES are already updated in place;
+    // redraw what shows them and the changed numbers roll.
+    window.__averagesLiveGrades = function () {
+      renderGradesTable();
+      renderRecentGrades();
+      renderSummary();
+    };
     applyColumnOrder();
     applyWidgetSizes();
   </script>
