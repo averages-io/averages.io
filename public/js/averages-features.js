@@ -35,7 +35,9 @@
     'turnin-feature', 'messaging-features', 'notifications-features',
     'billing', 'calendar-sync',
   ];
-  const DEFAULTS = { 'maintenance-banner': false, 'coursematerialpreview-feature': false, billing: false };
+  // Averages Plus shows first and hides if it turns out to be off (2026-10-26, Martin: "show plus
+  // then check"), instead of staying hidden until the API says it's on.
+  const DEFAULTS = { 'maintenance-banner': false, 'coursematerialpreview-feature': false, billing: true };
   const NAMES = {
     'canva-integration': 'Canva is', 'onedrive-integration': 'OneDrive is', 'drive-integration': 'Google Drive is',
     'schoology-signin': 'Signing in with Schoology is',
