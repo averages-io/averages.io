@@ -2448,8 +2448,12 @@
       document.body.appendChild(disc);
       // The same confirm serves Google Drive and OneDrive (2026-10-05).
       const DISC_TEXT = {
-        canva: ['Disconnect Canva?', 'Averages.io forgets your Canva account and Drafts. Designs stay in Canva.'],
-        gdrive: ['Disconnect Google Drive?', 'Averages.io stops using your Google Drive in this browser and forgets your Google Drive drafts. Files it saved stay in your Drive, in the Averages.io folder. To remove Averages.io completely, also remove it in your Google Account\'s third-party connections.'],
+        // Canva and Google Drive are also removed on their side now (2026-10-26): the API revokes
+        // the connection. Not Drive for a Google sign-in, since that would sign them out too.
+        canva: ['Disconnect Canva?', 'Averages.io is removed from your Canva account and forgets your Drafts. Designs stay in Canva. To connect again, you\'ll approve it in Canva again.'],
+        gdrive: window.__AVERAGES_PROVIDER__ === 'google'
+          ? ['Disconnect Google Drive?', 'Averages.io stops using your Google Drive and forgets your Google Drive drafts. Files it saved stay in your Drive, in the Averages.io folder. Averages.io stays in your Google Account because you sign in with Google.']
+          : ['Disconnect Google Drive?', 'Averages.io is removed from your Google Account and forgets your Google Drive drafts. Files it saved stay in your Drive, in the Averages.io folder.'],
         onedrive: ['Disconnect OneDrive?', 'Averages.io stops using your OneDrive in this browser and forgets the files you added. Files it saved stay in your OneDrive, in Apps/Averages.io. To remove Averages.io completely, also remove it in your Microsoft account\'s app permissions.'],
       };
       let discApp = 'canva';
