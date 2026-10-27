@@ -33,7 +33,7 @@
     'schoology-signin', 'test-signin',
     'maintenance-banner', 'coursematerialpreview-feature',
     'turnin-feature', 'messaging-features', 'notifications-features',
-    'billing', 'calendar-sync',
+    'billing', 'calendar-sync', 'live-grades',
   ];
   // Averages Plus shows first and hides if it turns out to be off (2026-10-26, Martin: "show plus
   // then check"), instead of staying hidden until the API says it's on.
