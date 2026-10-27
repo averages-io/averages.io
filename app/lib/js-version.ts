@@ -5,9 +5,10 @@ export const JS = {
   "averages-bell.js": "/js/averages-bell.js?v=27c17e6f10",
   "averages-cloud.js": "/js/averages-cloud.js?v=1b5a39cae8",
   "averages-drive-open.js": "/js/averages-drive-open.js?v=bb3393006e",
-  "averages-features.js": "/js/averages-features.js?v=de15644a66",
+  "averages-features.js": "/js/averages-features.js?v=dbcf81f95d",
   "averages-file-icons.js": "/js/averages-file-icons.js?v=08e0c20458",
   "averages-help.js": "/js/averages-help.js?v=a8425bed5d",
+  "averages-live.js": "/js/averages-live.js?v=b245e74a67",
   "averages-push.js": "/js/averages-push.js?v=8425ffe533",
   "averages-submit.js": "/js/averages-submit.js?v=2f2c2c5f0f"
 } as const;

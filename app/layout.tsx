@@ -128,6 +128,8 @@ export default function RootLayout({
         <script src={JS["averages-bell.js"]} />
         {/* Help popups (2026-10-21, Martin's design): "Before you open Canva" and "Add files from Google Drive". Styles: app/lib/averages-help.css. */}
         <script src={JS["averages-help.js"]} />
+        {/* Live grades (2026-10-27): open pages re-check grades every few minutes and roll the numbers that changed. */}
+        <script src={JS["averages-live.js"]} />
       </head>
       {/*
         No inline style on <body>, deliberately.
