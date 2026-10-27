@@ -1227,7 +1227,7 @@
             <!-- Averages Plus (2026-10-26, Martin: a Plus section "that has the letters colored", with
                  every Plus feature and the payment settings, like Discord's Nitro page). Shown once
                  /billing/status says Plus is on offer or they have it (see the Mode script). -->
-            <button class="settings-nav-item plus-nav" type="button" data-section="plus" hidden>
+            <button class="settings-nav-item plus-nav" type="button" data-section="plus">
               <span class="plus-word">Plus</span>
               <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
             </button>
@@ -1309,7 +1309,7 @@
                   <span class="settings-row-text"><span class="settings-row-label">Classic</span><span class="settings-row-desc" data-mode-desc></span></span>
                 </button>
               </div>
-              <div class="settings-row mode-row" data-mode="plus" id="plusRow" data-feature="billing" hidden>
+              <div class="settings-row mode-row" data-mode="plus" id="plusRow" data-feature="billing">
                 <button type="button" class="mode-pick" role="radio" aria-checked="false" data-mode="plus">
                   <span class="mode-radio" aria-hidden="true"></span>
                   <span class="settings-row-text"><span class="settings-row-label">Plus</span><span class="settings-row-desc" data-mode-desc></span></span>
@@ -4947,15 +4947,19 @@
         const canClassic = !locked && (LIVE || is13 || !incognito);
         rows.classic.hidden = !canClassic;
         const manageable = !!(billing && billing.manageable);
-        rows.plus.hidden = !((billingOn() && canClassic) || manageable || hasPlus());
+        // Shown first, then checked (2026-10-26, Martin: "show plus then check"): until
+        // /billing/status answers, Plus is offered to anyone who could pick Classic, and it
+        // hides if billing turns out to be off.
+        const offered = loaded ? billingOn() && canClassic : LIVE && canClassic;
+        rows.plus.hidden = !(offered || manageable || hasPlus());
         rows.plus.classList.toggle('is-past-due', !!(billing && billing.status === 'past_due'));
         manageBtn.hidden = !manageable;
         // Plus section: shown when Plus is on offer to them, or they have (or are paying for) it.
         const plusShown = !rows.plus.hidden;
         plusNav.hidden = !plusShown;
         heroStatus.textContent = hasPlus() || (incognito && manageable) ? plusDesc() : '$2.99 a month. Cancel anytime.';
-        getBtn.hidden = !loaded || hasPlus() || !(billingOn() && canClassic);
-        getBtn.setAttribute('aria-disabled', String(busy));
+        getBtn.hidden = hasPlus() || !offered;
+        getBtn.setAttribute('aria-disabled', String(busy || !loaded));   // waits for the check before checkout
         payBlock.hidden = !manageable;
         payBtn.disabled = busy;
         notifBtn.hidden = !hasPlus();
@@ -4968,7 +4972,7 @@
         Object.keys(picks).forEach(m => {
           picks[m].setAttribute('aria-checked', String(m === now));
           // Plus can only be picked while billing is on and Classic is allowed.
-          const off = busy || (m === 'plus' && !(billingOn() && canClassic) && now !== 'plus');
+          const off = busy || (m === 'plus' && !offered && now !== 'plus');
           picks[m].setAttribute('aria-disabled', String(off));
         });
       }

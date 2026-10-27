@@ -1174,7 +1174,7 @@
             </button>
             <!-- Plus (2026-10-21): Classic with the Averages Plus subscription. Shown only when
                  billing is on (GET /billing/status) and they're 13+; checkout opens when setup is done. -->
-            <button type="button" class="mode-option" data-mode="plus" role="radio" aria-checked="false" data-feature="billing" hidden>
+            <button type="button" class="mode-option" data-mode="plus" role="radio" aria-checked="false" data-feature="billing">
               <span class="mode-name">Plus <span class="mode-price">$2.99/mo</span></span>
               <span class="mode-desc">Everything in Classic, plus notifications, calendar sync and early features.</span>
             </button>
@@ -2529,15 +2529,21 @@
     let billingStatus = null;
     (async function () {
       const plusCard = document.querySelector('.mode-option[data-mode="plus"]');
-      if (!IS_13_PLUS || window.__AVERAGES_MODE__ !== 'live' || (window.__AVERAGES_INCOGNITO__ && window.__AVERAGES_INCOGNITO__.locked)) return;
+      // Shown first, then checked (2026-10-26, Martin: "show plus then check"): the card is up
+      // straight away for anyone who could get Plus, and goes away if billing turns out to be off.
+      const hidePlus = () => {
+        plusCard.hidden = true;
+        if (accountMode === 'plus') setMode(document.querySelector('.mode-option[data-mode="classic"]').hidden ? 'incognito' : 'classic');
+      };
+      if (!IS_13_PLUS || window.__AVERAGES_MODE__ !== 'live' || (window.__AVERAGES_INCOGNITO__ && window.__AVERAGES_INCOGNITO__.locked)) { plusCard.hidden = true; return; }
+      plusCard.hidden = false;
       try {
         const base = window.location.hostname.endsWith('averages.io') ? 'https://api.averages.io' : 'http://localhost:8787';
         const res = await fetch(base + '/billing/status', { credentials: 'include', cache: 'no-store' });
-        if (!res.ok) return;
+        if (!res.ok) { hidePlus(); return; }
         billingStatus = await res.json();
-      } catch (e) { return; }
-      if (!billingStatus || !billingStatus.enabled || !billingStatus.configured) return;
-      plusCard.hidden = false;
+      } catch (e) { hidePlus(); return; }
+      if (!billingStatus || !billingStatus.enabled || !billingStatus.configured) { hidePlus(); return; }
       if (billingStatus.plus) {
         plusCard.querySelector('.mode-desc').textContent = 'You have Plus: notifications, calendar sync and early features.';
         if (!accountMode) setMode('plus');
