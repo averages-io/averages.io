@@ -257,7 +257,7 @@
     cursor: pointer;
     flex-shrink: 0;
   }
-  .reorder-btn svg { width: 13px; height: 13px; stroke: #fff; fill: none; stroke-width: 2.3; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+  .reorder-btn svg { width: 13px; height: 13px; stroke: #fff; fill: none; stroke-width: 2.75; stroke-linecap: butt; stroke-linejoin: miter; flex-shrink: 0; }
   .reorder-btn:hover { background: var(--accent-dark); }
   .reorder-btn.active { background: var(--accent-dark); }
 
@@ -463,9 +463,9 @@
     height: 13px;
     fill: none;
     stroke: currentColor;
-    stroke-width: 2.4;
-    stroke-linecap: round;
-    stroke-linejoin: round;
+    stroke-width: 2.75;
+    stroke-linecap: butt;
+    stroke-linejoin: miter;
     transition: transform 150ms ease;
   }
   /* Plus rotates 45° into an × when expanded — reads as "close" without
@@ -1204,7 +1204,7 @@
     }
     const TREND_ARROW = { up: '↗', down: '↘', flat: '–' };
 
-    const BOOK_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>';
+    const BOOK_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="butt" stroke-linejoin="miter" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>';
 
     // Link to one assignment: same assignment.html?course=&title= deep link
     // home.html, assignments.html and course-home.html already use.

@@ -153,7 +153,7 @@
     cursor: pointer;
     font-family: inherit;
   }
-  .back-link svg { width: 12px; height: 12px; stroke: currentColor; fill: none; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+  .back-link svg { width: 12px; height: 12px; stroke: currentColor; fill: none; stroke-width: 3; stroke-linecap: butt; stroke-linejoin: miter; }
   .back-link:hover { color: #fff; }
   .back-link:focus-visible { outline: none; text-decoration: underline; }
 
@@ -368,7 +368,7 @@
     justify-content: center;
     cursor: pointer;
   }
-  .material-icon-btn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+  .material-icon-btn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2.4; stroke-linecap: butt; stroke-linejoin: miter; }
   .material-icon-btn:hover { background: var(--border); color: var(--text-dark); }
 
   /* ---------- Attached Materials file bars (2026-10-04, per Martin) — the
@@ -458,11 +458,11 @@
   .submit-done-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
   .submit-done-head h3 { margin: 0; }
   .submit-done-check { width: 28px; height: 28px; flex: none; border-radius: 50%; background: var(--grade-good); display: grid; place-items: center; }
-  .submit-done-check svg { width: 16px; height: 16px; stroke: #fff; fill: none; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+  .submit-done-check svg { width: 16px; height: 16px; stroke: #fff; fill: none; stroke-width: 2.25; stroke-linecap: butt; stroke-linejoin: miter; }
   /* ---------- Add Submission (2026-10-12 redesign; see openAddSubmissionModal) ---------- */
   .as-box { --as-raised: #fff; --as-ok: var(--grade-good); }
   body.dark-mode .as-box { --as-raised: #262838; }
-  .as-box .as-i { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: butt; stroke-linejoin: miter; }
+  .as-box .as-i { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: butt; stroke-linejoin: miter; }
   .as-box .as-i .as-fill, .as-box .as-i.as-tri path, .as-box .as-i.as-back path, .as-box .as-i.as-ud path { fill: currentColor; stroke: none; }
   .as-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
   .as-head h3 { margin: 0; }
@@ -496,7 +496,7 @@
   .as-drop-sub { font-size: 0.76rem; font-weight: 700; color: var(--text-faint); }
   .as-drop .as-btn { margin-top: 8px; }
   .as-big { width: 48px; height: 48px; border-radius: 50%; background: var(--panel-inner); color: var(--text-muted); display: grid; place-items: center; overflow: hidden; transition: background .3s ease, color .3s ease; }
-  .as-up { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: butt; stroke-linejoin: miter; }
+  .as-up { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.65; stroke-linecap: butt; stroke-linejoin: miter; }
   .as-upa { transform-box: view-box; }
   .as-drop.sending .as-big { background: var(--accent); color: #fff; }
   .as-drop.sending .as-upa { animation: as-fly .9s cubic-bezier(.5, 0, .3, 1) infinite; }
@@ -707,7 +707,7 @@
   .why-note a { color: var(--accent-dark); font-weight: 800; }
   .ti-acts { gap: 14px; }
   .ti-x { flex: none; width: 40px; height: 40px; border-radius: 50%; border: none; background: var(--panel-bg); color: var(--text-muted); display: grid; place-items: center; cursor: pointer; }
-  .ti-x svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2.4; stroke-linecap: round; }
+  .ti-x svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2.25; stroke-linecap: butt; stroke-linejoin: miter; }
   .ti-x:hover { color: var(--text-dark); background: var(--border); }
   .ti-x:disabled { opacity: .5; cursor: default; }
   .ti-grp { display: inline-flex; align-items: center; gap: 4px; padding: 3px; border-radius: 999px; background: var(--panel-bg); }
@@ -715,8 +715,8 @@
   .ti-pick:hover:not(:disabled) { background: var(--panel-inner); }
   .ti-pick:disabled { cursor: default; }
   .ti-t { display: inline-flex; align-items: center; gap: 7px; }
-  .ti-pick svg, .ti-hint svg, .ti-opt svg { stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
-  .ti-pick .ti-t svg { width: 16px; height: 16px; }
+  .ti-pick svg, .ti-hint svg, .ti-opt svg { stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: butt; stroke-linejoin: miter; flex: none; }
+  .ti-pick .ti-t svg { width: 16px; height: 16px; stroke-width: 2.25; }
   .ti-pick .ti-ud { width: 12px; height: 12px; color: var(--text-faint); }
   .ti-grp .draft-submit { min-height: 36px; padding: 6px 18px; }
   .ti-sep { width: 1px; height: 20px; background: var(--border); flex: none; }
@@ -735,7 +735,7 @@
   .ti-x:focus-visible, .ti-pick:focus-visible, .ti-opt:focus-visible, .ti-hint:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
   .ti-below { flex: 0 0 100%; min-width: 0; display: grid; gap: 8px; padding: 2px 0 2px; }
   .ti-hint { display: flex; align-items: center; gap: 9px; margin: 0; padding: 8px 10px; border: none; border-radius: 10px; background: transparent; font: inherit; font-size: 0.78rem; font-weight: 700; color: var(--text-dark); text-align: left; line-height: 1.4; }
-  .ti-hint svg { width: 18px; height: 18px; color: var(--text-muted); }
+  .ti-hint svg { width: 18px; height: 18px; color: var(--text-muted); stroke-width: 2; }
   button.ti-hint { width: 100%; cursor: pointer; }
   button.ti-hint:hover:not(:disabled) { background: var(--panel-bg); }
   .ti-hint .ti-chev { margin-left: auto; width: 14px; height: 14px; color: var(--text-faint); transition: transform .15s ease; }
@@ -744,9 +744,9 @@
   .ti-opt { display: grid; grid-template-columns: 16px 22px minmax(0, 1fr); gap: 10px; align-items: start; width: 100%; text-align: left; border: none; background: none; border-radius: 10px; padding: 10px 10px; font: inherit; color: var(--text-dark); cursor: pointer; }
   .ti-opt:hover:not(:disabled) { background: var(--panel-inner); }
   .ti-opt:disabled { opacity: .45; cursor: not-allowed; }
-  .ti-opt .ti-ck { width: 15px; height: 15px; margin-top: 2px; visibility: hidden; stroke-width: 2.6; }
+  .ti-opt .ti-ck { width: 15px; height: 15px; margin-top: 2px; visibility: hidden; stroke-width: 2.4; stroke-linecap: butt; stroke-linejoin: miter; }
   .ti-opt[aria-checked="true"] .ti-ck { visibility: visible; }
-  .ti-opt > svg:not(.ti-ck) { width: 20px; height: 20px; }
+  .ti-opt > svg:not(.ti-ck) { width: 20px; height: 20px; stroke-width: 1.8; }
   .ti-opt b { display: block; font-size: 0.82rem; font-weight: 800; }
   .ti-opt b + span { display: block; font-size: 0.72rem; font-weight: 600; color: var(--text-muted); margin-top: 2px; line-height: 1.35; }
   .ti-menu { position: absolute; z-index: 30; width: min(320px, calc(100% - 16px)); background: var(--panel-bg); border-radius: 16px; box-shadow: 0 18px 44px rgba(0, 0, 0, 0.28); padding: 6px; }
@@ -766,7 +766,7 @@
   @keyframes ti-sweep { from { background-position: 200% 0; } to { background-position: 0 0; } }
   .ti-lab { display: flex; align-items: center; gap: 6px; font-size: 0.68rem; font-weight: 800; color: var(--text-faint); min-width: 0; }
   .ti-lab span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .ti-lab svg { width: 14px; height: 14px; flex: none; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .ti-lab svg { width: 14px; height: 14px; flex: none; stroke: currentColor; fill: none; stroke-width: 2.55; stroke-linecap: butt; stroke-linejoin: miter; }
   .ti-seg.now .ti-lab, .ti-seg.done .ti-lab { color: var(--text-dark); }
   .ti-seg.fail .ti-lab { color: #c0392b; }
   .ti-spin { animation: ti-spin .8s linear infinite; }
@@ -992,7 +992,7 @@
   .rte-btn:hover { background: var(--border); }
   .rte-btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
   .rte-btn.active { background: var(--accent); color: #fff; }
-  .rte-btn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
+  .rte-btn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2.4; stroke-linecap: butt; stroke-linejoin: miter; pointer-events: none; }
   .rte-btn svg text { fill: currentColor; stroke: none; font-weight: 700; pointer-events: none; }
   .rte-editor {
     border-top-left-radius: 0;
@@ -1029,9 +1029,9 @@
     color: var(--text-faint);
     stroke: currentColor;
     fill: none;
-    stroke-width: 2;
-    stroke-linecap: round;
-    stroke-linejoin: round;
+    stroke-width: 2.4;
+    stroke-linecap: butt;
+    stroke-linejoin: miter;
   }
   /* The student's own comment on a submission, shown inside the preview
      popup — same italic quote treatment as .submission-comment used to
@@ -1094,7 +1094,7 @@
     margin-top: 4px;
   }
   .add-submission-btn:hover { background: var(--accent-dark); }
-  .add-submission-btn svg { width: 14px; height: 14px; stroke: #fff; fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+  .add-submission-btn svg { width: 14px; height: 14px; stroke: #fff; fill: none; stroke-width: 2.55; stroke-linecap: butt; stroke-linejoin: miter; }
   .submission-latest-tag {
     font-size: 0.6rem;
     font-weight: 800;
@@ -1162,7 +1162,7 @@
     font-weight: 600;
     line-height: 1.5;
   }
-  .submit-dropzone svg { width: 24px; height: 24px; stroke: var(--text-faint); fill: none; stroke-width: 1.8; margin-bottom: 6px; }
+  .submit-dropzone svg { width: 24px; height: 24px; stroke: var(--text-faint); fill: none; stroke-width: 1.5; margin-bottom: 6px; stroke-linecap: butt; stroke-linejoin: miter; }
   /* Solid panel background instead of the dashed upload border — this
      notice isn't a drop target, it's a redirect, so it shouldn't read as
      one (2026-09-03, quiz redirect notice). Accent-colored icon for the
@@ -1194,7 +1194,7 @@
     margin-top: 12px;
   }
   .quiz-redirect-btn:hover { background: var(--accent-dark); }
-  .quiz-redirect-btn svg { width: 13px; height: 13px; stroke: #fff; fill: none; stroke-width: 2.4; margin-bottom: 0; }
+  .quiz-redirect-btn svg { width: 13px; height: 13px; stroke: #fff; fill: none; stroke-width: 2.75; margin-bottom: 0; stroke-linecap: butt; stroke-linejoin: miter; }
 
   .feedback-box {
     background: var(--panel-inner);
@@ -1939,7 +1939,7 @@
       return `<div class="type-tiles" style="--n:${choices.length}">${choices.map(t => `<button class="type-tile" type="button" role="menuitemradio" aria-checked="${t === cur}" aria-label="${escapeHtml(turnType(t).name)}" title="${escapeHtml(turnType(t).name)}" ${attr}="${t}">${fileIcon(t, `<span class="type-tag">${escapeHtml(t.toUpperCase())}</span>`, 44)}</button>`).join('')}</div>`;
     }
 
-    const DOWNLOAD_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3M12 15l-4-4M12 15l4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>';
+    const DOWNLOAD_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M8 11l4 4 4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>';
     const PLUS_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
     // Remove button on a picked-file row in the Add Submission modal's
     // Upload tab (2026-09-04, per Martin's multi-file request).
@@ -3039,7 +3039,7 @@
       if (liveHistory.state === 'error') return '<p class="assign-empty">Couldn’t load your submissions.<button class="assign-retry" type="button" data-history-retry>Try again</button></p>';
       if (!liveHistory.revisions.length) return `
           <div class="submit-dropzone live-drop" data-dropzone>
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M12 4l-5 5M12 4l5 5"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
             <div>Nothing turned in yet. Drop files here or use Add Submission.</div>
           </div>`;
       return `<h2 style="margin-top:0;">Submission History</h2>${liveHistory.revisions.map(revisionRowHTML).join('')}`;
@@ -3275,7 +3275,7 @@
       } else if (currentStatus === 'overdue' || currentStatus === 'upcoming') {
         html += `
           <div class="submit-dropzone">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M12 4l-5 5M12 4l5 5"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
             <div>Submitting assignments isn't available in this preview yet.</div>
           </div>`;
       } else {
@@ -3340,7 +3340,7 @@
       link: AS_SVG('<path d="M10 14l4-4"/><path d="M8.5 11.5L6 14a3.5 3.5 0 0 0 5 5l2.5-2.5M15.5 12.5L18 10a3.5 3.5 0 0 0-5-5l-2.5 2.5"/>'),
       ud: AS_SVG('<path d="M7 10h10l-5-6zM7 14h10l-5 6z" class="as-fill"/>', 'as-i as-ud'),
       ck: AS_SVG('<path d="M5 12.5l4.5 4.5L19 7.5"/>', 'as-i as-ck'),
-      globe: AS_SVG('<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c-4 5-4 13 0 18M12 3c4 5 4 13 0 18"/>'),
+      globe: AS_SVG('<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c-4 5-4 13 0 18c4-5 4-13 0-18z"/>'),
       eye: AS_SVG('<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'),
       bubble: AS_SVG('<path d="M4 4h16v12H9l-5 4z"/>'),
       pen: AS_SVG('<path d="M4 20h4L19 9l-4-4L4 16z"/>'),
@@ -4562,7 +4562,7 @@
       link: tiSvg('<path d="M6.5 19a4.5 4.5 0 0 1-.4-9A6 6 0 0 1 17.6 8.5 4.3 4.3 0 0 1 17.5 19z"/>'),
       ud: '<svg class="ti-ud" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg>',
       ck: '<svg class="ti-ck" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
-      globe: tiSvg('<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>'),
+      globe: tiSvg('<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18z"/>'),
       person: tiSvg('<circle cx="9" cy="8" r="3.5"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16 11l2 2 4-4"/>'),
       chev: '<svg class="ti-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>',
       eye: tiSvg('<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'),

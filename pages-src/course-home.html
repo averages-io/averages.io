@@ -156,7 +156,7 @@
     cursor: pointer;
     font-family: inherit;
   }
-  .back-link svg { width: 12px; height: 12px; stroke: currentColor; fill: none; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+  .back-link svg { width: 12px; height: 12px; stroke: currentColor; fill: none; stroke-width: 3; stroke-linecap: butt; stroke-linejoin: miter; }
   .back-link:hover { color: #fff; }
   .back-link:focus-visible { outline: none; text-decoration: underline; }
 
@@ -339,7 +339,7 @@
     cursor: pointer;
     text-align: left;
   }
-  .course-nav-item svg { width: 16px; height: 16px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .course-nav-item svg { width: 16px; height: 16px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 2.25; stroke-linecap: butt; stroke-linejoin: miter; }
   .course-nav-item:hover { background: var(--panel-inner); color: var(--text-dark); }
   /* Full ring around the whole item (not just a left accent bar) — a
      box-shadow rather than a real border so it can't shift layout or
@@ -1018,7 +1018,7 @@
   .sheet-tab-action + .sheet-tab-out { margin-left: -16px; }
   .sheet-tab-out { display: inline-flex; align-items: center; gap: 4px; text-decoration: none; white-space: nowrap; }
   .sheet-tab-out[hidden] { display: none; }
-  .sheet-tab-out svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: butt; stroke-linejoin: miter; }
+  .sheet-tab-out svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 3; stroke-linecap: butt; stroke-linejoin: miter; }
   /* Phones: the two buttons move under the tabs instead of squeezing them (Course info used to wrap onto two lines). */
   @media (max-width: 520px) {
     .sheet-tabs { flex-wrap: wrap; column-gap: 20px; row-gap: 0; }
@@ -1032,7 +1032,7 @@
   .week-nav.next { right: 0; }
   .week-nav:hover { background: var(--border); color: var(--text-dark); }
   .week-nav:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
-  .week-nav svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+  .week-nav svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.25; stroke-linecap: butt; stroke-linejoin: miter; }
   .week-empty { margin: 0; padding: 24px 0; text-align: center; font-size: 0.8rem; font-weight: 700; color: var(--text-faint); }
   .modal-emoji-btn { width: 32px; height: 32px; border-radius: 8px; border: none; background: var(--panel-inner); display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
   .modal-emoji-btn:hover { background: var(--border); }
@@ -1135,7 +1135,7 @@
   .tc-btn { display: flex; align-items: center; justify-content: center; gap: 7px; flex: 1; background: var(--course-color); color: #fff; border: none; border-radius: 999px; padding: 10px; font: inherit; font-weight: 800; font-size: 0.82rem; cursor: pointer; text-decoration: none; }
   .tc-btn:hover { background: var(--course-color-dark); }
   .tc-btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
-  .tc-btn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2.3; stroke-linecap: round; stroke-linejoin: round; }
+  .tc-btn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2.4; stroke-linecap: butt; stroke-linejoin: miter; }
   .tc-btn.secondary { background: var(--panel-inner); color: var(--text-dark); }
   .tc-btn.secondary:hover { background: var(--border); }
   .tc-btn[hidden] { display: none; }
@@ -2318,7 +2318,7 @@
       return `Due in ${days} day${days === 1 ? '' : 's'}`;
     }
     // Small blue clock: due in under 2 days.
-    const SOON_CLOCK = '<svg class="soon-clock" viewBox="0 0 16 16" role="img" aria-label="Due within 2 days"><circle cx="8" cy="8" r="8" fill="#2f72a8"/><path d="M8 3.5V8l3 2" fill="none" stroke="#fff" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    const SOON_CLOCK = '<svg class="soon-clock" viewBox="0 0 16 16" role="img" aria-label="Due within 2 days"><circle cx="8" cy="8" r="8" fill="#2f72a8"/><path d="M8 3.5V8l3 2" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="butt" stroke-linejoin="miter"/></svg>';
     // An event opens the calendar on its date with it selected (2026-10-04).
     function eventHref(item) {
       const d = upDate(item);

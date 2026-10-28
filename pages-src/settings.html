@@ -280,9 +280,8 @@
     height: 15px;
     stroke: var(--text-faint);
     fill: none;
-    stroke-width: 2;
-    pointer-events: none;
-  }
+    stroke-width: 2.4;
+    pointer-events: none; stroke-linecap: butt; stroke-linejoin: miter; }
 
   .settings-nav-list { display: flex; flex-direction: column; gap: 2px; }
   .settings-nav-item {
@@ -310,9 +309,9 @@
     height: 14px;
     stroke: currentColor;
     fill: none;
-    stroke-width: 2.4;
-    stroke-linecap: round;
-    stroke-linejoin: round;
+    stroke-width: 2.55;
+    stroke-linecap: butt;
+    stroke-linejoin: miter;
     opacity: 0.7;
     flex-shrink: 0;
   }
@@ -387,7 +386,7 @@
     cursor: pointer;
     flex-shrink: 0;
   }
-  .back-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+  .back-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2.25; stroke-linecap: butt; stroke-linejoin: miter; }
   .back-btn:hover { color: var(--text-dark); }
   .detail-head h2 {
     margin: 0;
@@ -468,14 +467,14 @@
   .pick-btn.empty { opacity: .5; }
   .pick-btn:hover { background: var(--panel-inner); }
   .pick-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring); }
-  .pick-chev { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; transition: transform 0.15s ease; }
+  .pick-chev { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2.55; stroke-linecap: butt; stroke-linejoin: miter; transition: transform 0.15s ease; }
   .pick-btn[aria-expanded="true"] .pick-chev { transform: rotate(180deg); }
   .pick-menu { position: fixed; z-index: 300; min-width: 180px; background: var(--panel-bg); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 18px 44px -14px rgba(0,0,0,0.45); padding: 6px; display: flex; flex-direction: column; gap: 2px; }
   .pick-menu[hidden] { display: none; }
   .pick-opt { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: 100%; border: none; background: none; border-radius: 11px; padding: 9px 12px; font: inherit; font-weight: 700; font-size: 0.83rem; color: var(--text-dark); text-align: left; cursor: pointer; }
   .pick-opt:hover, .pick-opt:focus-visible { background: var(--panel-inner); outline: none; }
   .pick-opt[aria-selected="true"] { color: var(--accent); }
-  .pick-check { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; visibility: hidden; }
+  .pick-check { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2.4; stroke-linecap: butt; stroke-linejoin: miter; visibility: hidden; }
   .pick-opt[aria-selected="true"] .pick-check { visibility: visible; }
   @media (prefers-reduced-motion: reduce) { .pick-chev { transition: none; } }
   .integ-hint[hidden] { display: none; }
@@ -700,7 +699,7 @@
   .pv-early-tag { padding: 2px 8px; border-radius: 999px; background: linear-gradient(135deg, #FF7A50, #E5484D); color: #2A0A05; font-size: 0.62rem; }
   .pv-early-when { font-size: 0.62rem; }
   .pv-phone { position: absolute; top: 20px; display: flex; flex-direction: column; gap: 8px; width: 96px; height: 140px; padding: 24px 8px 8px; border-radius: 20px; background: #fff; box-shadow: 0 0 0 4px #14151f, 0 8px 20px rgba(20, 21, 31, 0.2); }
-  .pv-phone-notch { position: absolute; top: 8px; left: 50%; width: 32px; height: 8px; margin-left: -16px; border-radius: 999px; background: #14151f; }
+  /* No notch or island (2026-10-28): Apple asks apps not to draw replicas of its hardware, so this is a generic phone. */
   .pv-phone-row { display: flex; align-items: center; gap: 4px; padding: 4px; border-radius: 6px; background: #f1f1f4; }
   .pv-phone-row i { flex: none; width: 8px; height: 8px; border-radius: 50%; }
   .pv-phone-row b { flex: 1; height: 4px; border-radius: 2px; background: #c7c7cd; }
@@ -1035,7 +1034,7 @@
     cursor: pointer;
   }
   .list-row:hover { background: var(--panel-bg); }
-  .list-row svg { width: 14px; height: 14px; stroke: var(--text-faint); fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+  .list-row svg { width: 14px; height: 14px; stroke: var(--text-faint); fill: none; stroke-width: 2.55; stroke-linecap: butt; stroke-linejoin: miter; flex-shrink: 0; }
 
 
   /* ---------- Bottom nav — identical component to every other page ---------- */
@@ -1411,7 +1410,6 @@
               <div class="plus-card">
                 <div class="plus-card-stage" aria-hidden="true">
                   <div class="pv-phone">
-                    <span class="pv-phone-notch"></span>
                     <span class="pv-phone-row"><i style="background:#2e7d4f"></i><b></b><em>A</em></span>
                     <span class="pv-phone-row"><i style="background:#3b6fd1"></i><b></b><em>B+</em></span>
                     <span class="pv-phone-row"><i style="background:#b3541e"></i><b></b><em>A-</em></span>
@@ -1712,9 +1710,9 @@
               <p class="about-version">Beta __AVERAGES_BASE__ (<a class="build-link" href="https://github.com/averages-io/averages.io/commits/main/" target="_blank" rel="noopener noreferrer" title="__AVERAGES_COMMIT__">Build __AVERAGES_BUILD__</a>)</p>
             </div>
             <div class="settings-group" style="margin-top: 18px;">
-              <a class="list-row" href="https://averages.io/privacy-policy" target="_blank" rel="noopener">Privacy Policy <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></a>
-              <a class="list-row" href="https://averages.io/support" target="_blank" rel="noopener">Help Center <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></a>
-              <a class="list-row" href="https://github.com/averages-io/averages.io/discussions" target="_blank" rel="noopener">Send Feedback <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></a>
+              <a class="list-row" href="https://averages.io/privacy-policy" target="_blank" rel="noopener">Privacy Policy <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+              <a class="list-row" href="https://averages.io/support" target="_blank" rel="noopener">Help Center <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+              <a class="list-row" href="https://github.com/averages-io/averages.io/discussions" target="_blank" rel="noopener">Send Feedback <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
             </div>
           </div>
         </div>
@@ -3789,9 +3787,9 @@
       swatchGrid.appendChild(el);
     });
 
-    const uploadIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path d="M12 16V4M12 4l-4 4M12 4l4 4" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke-linecap="round" stroke-linejoin="round"/>
+    const uploadIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="butt" stroke-linejoin="miter" aria-hidden="true">
+      <path d="M12 16V4M8 8l4-4 4 4" vector-effect="non-scaling-stroke"/>
+      <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" vector-effect="non-scaling-stroke"/>
     </svg>`;
     const uploadSwatch = document.createElement('div');
     uploadSwatch.className = 'swatch upload';

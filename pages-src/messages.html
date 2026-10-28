@@ -284,7 +284,7 @@
     align-items: center;
     justify-content: center;
   }
-  .msgs-compose-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2.4; stroke-linecap: round; }
+  .msgs-compose-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2.25; stroke-linecap: butt; stroke-linejoin: miter; }
   .msgs-compose-btn:hover { background: var(--accent-dark); }
   .msgs-compose-btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
   /* Search bar "morph": .msgs-search-wrap's own width is fixed by the
@@ -326,7 +326,7 @@
     transition: width 0.22s ease, opacity 0.16s ease;
   }
   .msgs-search-clear.show { width: 30px; opacity: 1; }
-  .msgs-search-clear svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2.3; stroke-linecap: round; }
+  .msgs-search-clear svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2.4; stroke-linecap: butt; stroke-linejoin: miter; }
   .msgs-search-clear:hover { color: var(--text-dark); }
   .msgs-search-clear:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); border-radius: 50%; }
 
@@ -370,7 +370,7 @@
     background: var(--panel-inner);
     color: var(--text-muted);
   }
-  .msgs-media-chip svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+  .msgs-media-chip svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2.4; stroke-linecap: butt; stroke-linejoin: miter; }
   .msgs-search-result-row {
     display: flex;
     align-items: center;
@@ -413,7 +413,7 @@
   }
   .msgs-filter-btn:hover { background: var(--panel-inner); }
   .msgs-filter-btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
-  .msgs-filter-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; }
+  .msgs-filter-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: butt; stroke-linejoin: miter; }
   .msgs-filter-menu {
     position: absolute;
     top: calc(100% + 6px);
@@ -478,7 +478,7 @@
      matches its button's text color, including the .delete variant above
      -- avoids the kind of specificity/contrast bug the composer's link
      styling hit earlier this project (see architecture-decisions.md). */
-  .msgs-row-context-menu-item svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2.1; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+  .msgs-row-context-menu-item svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2.4; stroke-linecap: butt; stroke-linejoin: miter; flex-shrink: 0; }
 
   /* Scrolls on its own within the fixed-height panel -- .msgs-list-head
      (the + / search / filter row above it) stays put. */
@@ -523,7 +523,7 @@
      rows above -- automatically via currentColor, same reasoning as the
      context-menu icons. */
   .msgs-pin-icon { display: inline-flex; vertical-align: -2px; margin-right: 3px; }
-  .msgs-pin-icon svg { width: 11px; height: 11px; stroke: currentColor; fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+  .msgs-pin-icon svg { width: 11px; height: 11px; stroke: currentColor; fill: none; stroke-width: 3.25; stroke-linecap: butt; stroke-linejoin: miter; }
   .msgs-thread-row-time { font-size: 0.66rem; font-weight: 700; color: var(--text-faint); flex-shrink: 0; }
   /* Thread subject — distinguishes multiple separate threads with the
      same person (2026-09-01), the same way an email subject line does. */
@@ -555,7 +555,7 @@
     text-align: center;
     padding: 20px;
   }
-  .msgs-thread-empty svg { width: 42px; height: 42px; stroke: var(--text-faint); fill: none; stroke-width: 1.6; opacity: 0.55; }
+  .msgs-thread-empty svg { width: 42px; height: 42px; stroke: var(--text-faint); fill: none; stroke-width: 1.15; opacity: 0.55; stroke-linecap: butt; stroke-linejoin: miter; }
   .msgs-thread-empty p { margin: 0; max-width: 220px; line-height: 1.4; }
   .msgs-thread-empty .hint { font-size: 0.76rem; font-weight: 600; opacity: 0.8; }
 
@@ -579,7 +579,7 @@
     margin-right: 2px;
     flex-shrink: 0;
   }
-  .msgs-back-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+  .msgs-back-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: butt; stroke-linejoin: miter; }
   .msgs-back-btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); border-radius: 50%; }
   .msgs-thread-avatar { width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; font-size: 0.88rem; position: relative; overflow: hidden; }
   /* Wraps the avatar + name/course block so it can be swapped out as one
@@ -616,7 +616,7 @@
   .msgs-thread-subject-trigger[aria-expanded="true"] { color: var(--accent); }
   .msgs-thread-subject-trigger:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); border-radius: 4px; }
   #threadSubjectTriggerLabel { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .msgs-thread-subject-chevron { width: 11px; height: 11px; stroke: currentColor; fill: none; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; transition: transform 0.15s ease; }
+  .msgs-thread-subject-chevron { width: 11px; height: 11px; stroke: currentColor; fill: none; stroke-width: 3.25; stroke-linecap: butt; stroke-linejoin: miter; flex-shrink: 0; transition: transform 0.15s ease; }
   .msgs-thread-subject-trigger[aria-expanded="true"] .msgs-thread-subject-chevron { transform: rotate(180deg); }
   .msgs-thread-subject-menu {
     position: absolute;
@@ -744,7 +744,7 @@
   /* The pinned "New Message" row's icon avatar -- a plain "+" instead of
      a person's initial, since no recipient may be chosen yet. */
   .msgs-avatar-new { background: var(--accent); }
-  .msgs-avatar-new svg { width: 18px; height: 18px; stroke: #fff; fill: none; stroke-width: 2.4; stroke-linecap: round; }
+  .msgs-avatar-new svg { width: 18px; height: 18px; stroke: #fff; fill: none; stroke-width: 2; stroke-linecap: butt; stroke-linejoin: miter; }
 
   /* Scrolls on its own within the fixed-height panel -- .msgs-thread-header
      (who you're texting) above and .msgs-composer (send box) below both
@@ -847,7 +847,9 @@
   }
   .msgs-send-btn:hover { background: var(--accent-dark); }
   .msgs-send-btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
-  .msgs-send-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+  .msgs-send-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2.25; stroke-linecap: butt; stroke-linejoin: miter; 
+    /* Optical centering (2026-10-28): the plane's weight sits up and right of its box, so it moves down-left a little. */
+    transform: translate(-0.75px, 0.75px); }
   .msgs-send-btn:disabled { background: var(--text-faint); cursor: not-allowed; }
   .msgs-attach-btn:disabled { cursor: not-allowed; opacity: 0.5; }
   .msgs-attach-btn:disabled:hover { background: none; color: var(--text-muted); }
@@ -866,7 +868,7 @@
   }
   .msgs-attach-btn:hover { background: var(--panel-inner); color: var(--text-dark); }
   .msgs-attach-btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
-  .msgs-attach-btn svg { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 2.1; stroke-linecap: round; stroke-linejoin: round; }
+  .msgs-attach-btn svg { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 2.1; stroke-linecap: butt; stroke-linejoin: miter; }
   /* Preview of files picked via the attach button, shown inside the
      message box (.msgs-composer-box) above the text line until sent (or
      removed individually). Lives inside the same bordered box as the
@@ -943,7 +945,7 @@
   }
   .msgs-pending-attachment-tile-remove:hover { background: var(--accent-dark); }
   .msgs-pending-attachment-tile-remove:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
-  .msgs-pending-attachment-tile-remove svg { width: 11px; height: 11px; stroke: currentColor; fill: none; stroke-width: 2.6; stroke-linecap: round; }
+  .msgs-pending-attachment-tile-remove svg { width: 11px; height: 11px; stroke: currentColor; fill: none; stroke-width: 3.25; stroke-linecap: butt; stroke-linejoin: miter; }
 
   /* Link detection while typing (2026-09-04, per Martin: "when you type
      a link, make it have the blue color and the underline"). #composerInput
@@ -1176,7 +1178,7 @@
   }
   .contact-modal-btn:hover { background: var(--accent-dark); }
   .contact-modal-btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
-  .contact-modal-btn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2.3; stroke-linecap: round; stroke-linejoin: round; }
+  .contact-modal-btn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2.4; stroke-linecap: butt; stroke-linejoin: miter; }
   .contact-modal-btn.secondary { background: var(--panel-inner); color: var(--text-dark); }
   .contact-modal-btn.secondary:hover { background: var(--border); }
   /* The To box's selected-recipient state (see selectToPerson) — visually
@@ -2471,7 +2473,7 @@
       if (!pendingThread) return '';
       return `
         <div class="msgs-thread-row active new-message" data-id="__new__" tabindex="0" role="button" aria-label="New Message draft">
-          <span class="msgs-avatar msgs-avatar-new" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>
+          <span class="msgs-avatar msgs-avatar-new" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span>
           <div class="msgs-thread-row-text">
             <div class="msgs-thread-row-top">
               <span class="msgs-thread-row-name">New Message</span>

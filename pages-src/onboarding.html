@@ -870,9 +870,9 @@
     width: 22px;
     height: 22px;
     fill: none;
-    stroke-width: 2.2;
-    stroke-linecap: round;
-    stroke-linejoin: round;
+    stroke-width: 1.65;
+    stroke-linecap: butt;
+    stroke-linejoin: miter;
   }
   .verify-icon.verify-x { stroke: #d92626; }
   .verify-icon.verify-check { stroke: #1f9d55; }
@@ -2016,9 +2016,9 @@
       closeBgCrop();
     });
 
-    const uploadIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path d="M12 16V4M12 4l-4 4M12 4l4 4" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke-linecap="round" stroke-linejoin="round"/>
+    const uploadIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="butt" stroke-linejoin="miter" aria-hidden="true">
+      <path d="M12 16V4M8 8l4-4 4 4" vector-effect="non-scaling-stroke"/>
+      <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" vector-effect="non-scaling-stroke"/>
     </svg>`;
 
     const uploadSwatch = document.createElement('div');

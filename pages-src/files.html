@@ -240,7 +240,7 @@
   /* ---------- Search bar — same pill input treatment used across the
      app (messages.html's search, the color-swatch popups, etc.). ---------- */
   .contacts-search-wrap { position: relative; margin: 14px 0 4px; }
-  .contacts-search-wrap svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 15px; height: 15px; stroke: var(--text-faint); fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
+  .contacts-search-wrap svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 15px; height: 15px; stroke: var(--text-faint); fill: none; stroke-width: 2.4; stroke-linecap: butt; stroke-linejoin: miter; pointer-events: none; }
   #contactsSearch {
     width: 100%;
     border: none;
@@ -292,7 +292,7 @@
   }
   .contact-email-btn:hover { background: var(--accent); color: #fff; }
   .contact-email-btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
-  .contact-email-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+  .contact-email-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2.55; stroke-linecap: butt; stroke-linejoin: miter; }
   .contacts-empty { font-size: 0.8rem; color: var(--text-faint); font-style: italic; padding: 10px 0; }
 
   /* ---------- Contact detail modal — same .modal-overlay/.modal-box
@@ -365,7 +365,7 @@
   }
   .contact-modal-btn:hover { background: var(--accent-dark); }
   .contact-modal-btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
-  .contact-modal-btn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2.3; stroke-linecap: round; stroke-linejoin: round; }
+  .contact-modal-btn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2.4; stroke-linecap: butt; stroke-linejoin: miter; }
   .contact-modal-btn.secondary { background: var(--panel-inner); color: var(--text-dark); }
   .contact-modal-btn.secondary:hover { background: var(--border); }
 
@@ -500,7 +500,7 @@
   .fx { display: grid; grid-template-columns: 236px minmax(0, 1fr); min-height: 0; }
   .fx-side { padding: 18px 14px; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 4px; min-width: 0; }
   .fx-search { display: flex; align-items: center; gap: 8px; background: var(--panel-inner); border-radius: 999px; padding: 0 14px; color: var(--text-faint); margin-bottom: 12px; }
-  .fx-search svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; flex: none; }
+  .fx-search svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2.4; stroke-linecap: butt; flex: none; stroke-linejoin: miter; }
   .fx-search input { flex: 1; min-width: 0; border: none; background: none; font: inherit; font-size: 0.84rem; font-weight: 600; color: var(--text-dark); padding: 10px 0; outline: none; }
   .fx-search:focus-within { box-shadow: 0 0 0 2px var(--accent-ring); }
   .fx-nav { display: flex; flex-direction: column; gap: 2px; }
@@ -525,7 +525,7 @@
   .fx-add { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--panel-bg); border-radius: 999px; padding: 8px 16px; font: inherit; font-size: 0.8rem; font-weight: 800; color: var(--text-dark); cursor: pointer; white-space: nowrap; }
   .fx-add:hover { background: var(--panel-inner); }
   a.fx-add { text-decoration: none; }
-  .fx-add svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2.4; stroke-linecap: round; }
+  .fx-add svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2.55; stroke-linecap: butt; stroke-linejoin: miter; }
   .fx-chips { display: none; }
   .fx-sec { font-size: 0.7rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-faint); margin: 22px 0 10px; }
   .fx-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
@@ -590,7 +590,7 @@
   .fx-menu-item small { display: block; margin-top: 2px; font-size: 0.7rem; font-weight: 600; color: var(--text-muted); }
   .fx-menu-item > span:first-child { min-width: 0; }
   .fx-next { display: inline-flex; flex-shrink: 0; }
-  .fx-next svg { width: 14px; height: 14px; fill: none; stroke: var(--text-muted); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+  .fx-next svg { width: 14px; height: 14px; fill: none; stroke: var(--text-muted); stroke-width: 2.55; stroke-linecap: butt; stroke-linejoin: miter; }
   .fx-soon { font-size: 0.66rem; font-weight: 800; color: var(--text-faint); white-space: nowrap; }
   /* 2026-10-06: Drive, OneDrive and Canva tiles have their own ... menu, and
      the Attach chooser can be long (every class), so the menu scrolls. */
