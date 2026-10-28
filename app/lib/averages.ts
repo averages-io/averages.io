@@ -436,6 +436,17 @@ export interface Bundle {
 }
 
 /**
+ * The student's time zone (2026-10-28): their pick in Settings > Time Zone
+ * (public/js/averages-tz.js), else this device's. Sent to the API as ?tz= so
+ * due times, "overdue" and "today" are worked out in it.
+ */
+export function studentTimeZone(): string {
+  const w = window as unknown as { averagesTimeZone?: () => string };
+  if (typeof w.averagesTimeZone === "function") return w.averagesTimeZone() || "";
+  return Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+}
+
+/**
  * Fetches the adapted data bundle.
  *
  * In demo mode the API returns an empty bundle on purpose, which is the signal
@@ -458,11 +469,11 @@ export async function loadBundle(): Promise<Bundle | null | "signed_out"> {
   }
 
   try {
-    // The device's time zone, so Google Classroom's UTC due dates show on the
-    // right day (Schoology's bundle ignores it).
+    // The student's time zone (Settings > Time Zone, else this device's), so
+    // Schoology's local due times and Classroom's UTC ones land on the right day.
     let tz = "";
     try {
-      tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+      tz = studentTimeZone();
     } catch {
       /* the API falls back to its own guess */
     }

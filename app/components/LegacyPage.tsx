@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { API_BASE, BELL_UPDATES_MAX_AGE_MS, getSession, loadBundle, loadExtras, pullSyncedSettings, restoreSyncedSetup, signOut, startExtras, waitForExtras, type ExtrasRun, type Mode } from "../lib/averages";
+import { API_BASE, BELL_UPDATES_MAX_AGE_MS, getSession, loadBundle, loadExtras, pullSyncedSettings, restoreSyncedSetup, signOut, startExtras, studentTimeZone, waitForExtras, type ExtrasRun, type Mode } from "../lib/averages";
 import { SPLASH_KEY } from "../lib/splash";
 import { EXTRAS_LATE_GIVE_UP_MS, LATE_EXTRAS, mergeExtras, mergeLateExtra, type ExtraName } from "../lib/extras";
 import { installNsfwGlobal, preloadNsfwModel } from "../lib/nsfw";
@@ -83,7 +83,14 @@ function touchCalendarIfOn(): void {
   } catch {
     return;
   }
-  fetch(`${API_BASE}/calendar/touch`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: "{}" })
+  // The student's zone rides along (2026-10-28), so the feed follows Settings > Time Zone.
+  let tz = "";
+  try {
+    tz = studentTimeZone();
+  } catch {
+    /* the feed keeps its zone */
+  }
+  fetch(`${API_BASE}/calendar/touch`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify(tz ? { tz: tz.slice(0, 64) } : {}) })
     .then((r) => (r.ok ? r.json() : null))
     .then((d) => {
       if (d && d.on === false) {

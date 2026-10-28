@@ -8,7 +8,8 @@ export const JS = {
   "averages-features.js": "/js/averages-features.js?v=dbcf81f95d",
   "averages-file-icons.js": "/js/averages-file-icons.js?v=08e0c20458",
   "averages-help.js": "/js/averages-help.js?v=a8425bed5d",
-  "averages-live.js": "/js/averages-live.js?v=b245e74a67",
-  "averages-push.js": "/js/averages-push.js?v=8425ffe533",
-  "averages-submit.js": "/js/averages-submit.js?v=2f2c2c5f0f"
+  "averages-live.js": "/js/averages-live.js?v=382960428c",
+  "averages-push.js": "/js/averages-push.js?v=76e8e6b827",
+  "averages-submit.js": "/js/averages-submit.js?v=ec094ed157",
+  "averages-tz.js": "/js/averages-tz.js?v=b318d4e42d"
 } as const;

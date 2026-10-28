@@ -118,6 +118,8 @@ export default function RootLayout({
           data-feature-off on <html>, hence suppressHydrationWarning there.
         */}
         <script src={JS["averages-features.js"]} />
+        {/* Time zone (2026-10-28): averagesTimeZone(), the student's pick in Settings or this device's zone. Before anything that talks to the API. */}
+        <script src={JS["averages-tz.js"]} />
         {/* File type icons (2026-10-09): AveragesFileIcons, used by Files, the assignment page and course materials. */}
         <script src={JS["averages-file-icons.js"]} />
         {/* "Open with → Averages.io" from Google Drive (2026-10-09): keeps the chosen file for the Files page. */}

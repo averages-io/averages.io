@@ -181,7 +181,7 @@ export function extrasFor(pageId: string, search: string, now: Date): ExtraReque
         const start = ymd(addDays(now, -(hub ? HUB_DAYS_BACK : CALENDAR_DAYS_BACK)));
         const end = ymd(addDays(now, hub ? HUB_DAYS_AHEAD : CALENDAR_DAYS_AHEAD));
         const forCourse = hub ? course : "";
-        const query = `start=${start}&end=${end}${forCourse ? `&course=${encodeURIComponent(forCourse)}` : ""}`;
+        const query = `start=${start}&end=${end}${forCourse ? `&course=${encodeURIComponent(forCourse)}` : ""}${zoneParam()}`;
         out.push({ name, path: `/data/events?${query}`, cacheKey: key(start, end, forCourse), course: forCourse });
         break;
       }
@@ -318,4 +318,15 @@ export function mergeLateExtra(data: Data, req: Pick<ExtraRequest, "name" | "cou
     data.COURSES = before;
   }
   return true;
+}
+
+/** "&tz=<zone>" (2026-10-28): Classroom's UTC times land on the student's day (Settings > Time Zone, else this device's). */
+function zoneParam(): string {
+  try {
+    const w = window as unknown as { averagesTimeZone?: () => string };
+    const tz = typeof w.averagesTimeZone === "function" ? w.averagesTimeZone() : Intl.DateTimeFormat().resolvedOptions().timeZone;
+    return tz ? `&tz=${encodeURIComponent(tz)}` : "";
+  } catch {
+    return "";
+  }
 }
