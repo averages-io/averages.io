@@ -631,6 +631,8 @@
   .mode-pick { flex: 1; min-width: 0; display: flex; align-items: flex-start; gap: 12px; margin: -4px; padding: 4px; border: none; border-radius: 8px; background: none; font: inherit; color: inherit; text-align: left; cursor: pointer; }
   .mode-pick:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring); }
   .mode-pick[aria-disabled="true"] { cursor: default; }
+  /* A locked option (e.g. Classic/Incognito while subscribed) reads as unavailable. */
+  .mode-pick[aria-disabled="true"]:not([aria-checked="true"]) { opacity: 0.5; }
   .mode-pick .settings-row-label, .mode-pick .settings-row-desc { display: block; }
   .mode-radio { flex: none; width: 20px; height: 20px; margin-top: 0; box-sizing: border-box; border-radius: 50%; border: 2px solid var(--text-faint); }
   .mode-pick:hover:not([aria-disabled="true"]) .mode-radio { border-color: var(--text-muted); }
@@ -5005,10 +5007,20 @@
         nextVal.textContent = s.renewsAt ? day(s.renewsAt) + (!ending && price ? ' · ' + price.replace(/ (a|every) .*$/, '') : '') : '';
       }
       function render() {
+        // While someone has Plus, the other modes are locked until the subscription
+        // ends (2026-10-28, Martin). Switching to Classic or Incognito means dropping
+        // Plus, which has to go through Cancel in Manage payment; when it ends, hasPlus()
+        // turns false and these unlock on their own. (A cancelled-but-still-active plan
+        // still counts as Plus until its end date, so it stays locked until then.)
+        const plusLock = hasPlus();
         descs.incognito.textContent = locked
           ? 'You’re under 13, so Averages.io stays in Incognito mode.'
-          : 'Nothing stored on our servers. No sync, Canva or notifications.';
-        descs.classic.textContent = 'Settings sync across devices. Connect Canva, Google Drive and OneDrive.';
+          : plusLock
+            ? 'Locked while you have Plus. Cancel Plus in Manage payment, then switch once it ends.'
+            : 'Nothing stored on our servers. No sync, Canva or notifications.';
+        descs.classic.textContent = plusLock
+          ? 'Part of Plus. To drop to plain Classic, cancel Plus in Manage payment.'
+          : 'Settings sync across devices. Connect Canva, Google Drive and OneDrive.';
         descs.plus.textContent = plusDesc();
         // Signed in, the API decides (2026-10-26, Martin: switching to Incognito "hides all the other
         // options"): a session it didn't lock to Incognito is 13+, so Classic and Plus stay offered.
@@ -5043,7 +5055,10 @@
         Object.keys(picks).forEach(m => {
           picks[m].setAttribute('aria-checked', String(m === now));
           // Plus can only be picked while billing is on and Classic is allowed.
-          const off = busy || (m === 'plus' && !offered && now !== 'plus');
+          // While subscribed, Classic and Incognito are locked (see plusLock above).
+          const off = busy
+            || (m === 'plus' && !offered && now !== 'plus')
+            || (plusLock && m !== 'plus');
           picks[m].setAttribute('aria-disabled', String(off));
         });
       }
@@ -5093,7 +5108,15 @@
       function pick(mode) {
         if (!loaded) return;   // still finding out whether they have Plus
         const now = current();
-        if (busy || mode === now || picks[mode].getAttribute('aria-disabled') === 'true') return;
+        if (busy || mode === now) return;
+        if (picks[mode].getAttribute('aria-disabled') === 'true') {
+          // Locked to Plus (2026-10-28): a click on Classic/Incognito says how to leave,
+          // instead of doing nothing silently.
+          if (hasPlus() && (mode === 'classic' || mode === 'incognito')) {
+            say('You have Plus. Cancel it in Manage payment first; your mode options unlock when it ends.');
+          }
+          return;
+        }
         say('');
         if (mode === 'incognito') {
           confirmBody.textContent = hasPlus()
