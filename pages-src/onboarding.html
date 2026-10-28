@@ -1138,6 +1138,267 @@
   /* Integrations rows (2026-10-21, Martin): no empty space before "OneDrive" until its logo is uploaded, so the name lines up with its description. Menus keep the slot so their names stay in a column. */
   .integ-name .brand-slot { display: none; }
   .feature-title.integ-name { display: flex; align-items: center; gap: 8px; }
+
+  /* ==========================================================================
+     Fullscreen onboarding (2026-10-28, Martin's design, behind the
+     fullscreen-onboarding switch). Picking Fullscreen under Window type turns
+     this page into this view; picking Windowed turns it back. It's a second
+     face on the same steps: every choice goes through the controls above
+     (mode, dark mode, apps, Potato, name, email, Submit), so saving, Plus
+     checkout and the draft work the same. Everything here sits under .fs.
+     Design rules pass: no glow blob, neutral selection rings, rows instead of
+     three boxes in a row, no hover fades, AA contrast light and dark.
+     ========================================================================== */
+  .fs { display: none; }
+  body.fs-on { padding: 0 !important; display: block !important; background: var(--fs-sheet, #f5f5f7) !important; background-image: none !important; }
+  body.fs-on > * .page, body.fs-on .page { display: none !important; }
+  body.fs-on .fs { display: block; }
+  .fs {
+    --fs-sheet: #f5f5f7; --panel: #eaeaec; --inner: #dcdce0; --field: #ffffff;
+    --ink: #14151f; --ink-2: #44465a; --muted: #5a5c70;
+    --accent-hover: color-mix(in srgb, var(--accent) 84%, #000000);
+    --accent-text: var(--accent);
+    --focus: #2f5fb3; --good: #2e7d4f; --bad: #b8352f; --gold: #8f6200;
+    --plus-tint: color-mix(in srgb, #ff7a50 10%, var(--field)); --plus-ink: #9c2b26;
+    --note-tint: color-mix(in srgb, #2f5fb3 9%, var(--field)); --note-ink: #2f5fb3;
+    --scrim: rgba(20, 21, 31, 0.32);
+    --display: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    position: fixed; inset: 0; z-index: 1; overflow: auto; scrollbar-gutter: stable;
+    background: var(--fs-sheet); color: var(--ink);
+    font-family: var(--display); font-weight: 500; font-size: 15px; line-height: 1.4;
+    -webkit-font-smoothing: antialiased; color-scheme: light;
+  }
+  body.fs-on { --fs-sheet: #f5f5f7; }
+  body.fs-on.dark-mode { --fs-sheet: #111218; }
+  body.dark-mode .fs {
+    --fs-sheet: #111218; --panel: #1c1d26; --inner: #2c2e3c; --field: #23242f;
+    --ink: #f0f0f5; --ink-2: #c9cad6; --muted: #a3a5bd;
+    --accent-text: color-mix(in srgb, var(--accent) 45%, #ffffff);
+    --focus: #8fb0ff; --good: #6fd39a; --bad: #ff8a80; --gold: #f0c160;
+    --plus-tint: color-mix(in srgb, #ff7a50 14%, var(--field)); --plus-ink: #ffb49c;
+    --note-tint: color-mix(in srgb, #2f5fb3 24%, var(--field)); --note-ink: #9dbcff;
+    --scrim: rgba(0, 0, 0, 0.5);
+    color-scheme: dark;
+  }
+  .fs *, .fs *::before, .fs *::after { box-sizing: border-box; }
+  .fs [hidden] { display: none !important; }
+  .fs button, .fs input { font: inherit; color: inherit; }
+  .fs button { background: none; border: 0; padding: 0; cursor: pointer; }
+  .fs a { color: inherit; text-decoration: none; }
+  .fs :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 8px; }
+  .fs svg.i { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+  body.potato-mode .fs, body.potato-mode .fs * { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important; }
+  body.potato-mode .fs h1 { font-style: normal !important; transform: none !important; }
+
+  .fs-wrap { min-height: 100%; display: flex; flex-direction: column; }
+  .fs .pp-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 20px 0; }
+  .fs .pp-brand { display: inline-flex; align-items: center; gap: 12px; height: 44px; padding: 0 12px 0 8px; }
+  .fs .pp-brand svg { width: 28px; height: 28px; flex: none; }
+  .fs .pp-brand b { font-size: 18px; font-weight: 800; letter-spacing: -0.01em; color: var(--ink); }
+  .fs .pp-brand b span { color: var(--accent-text); }
+  .fs .pp-foot { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 12px; padding: 24px 16px 32px; font-size: 12px; font-weight: 700; color: var(--muted); }
+  .fs .pp-foot a:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 2px; }
+
+  .fs .pp-field { display: flex; flex-direction: column; gap: 8px; }
+  .fs .pp-field > b { font-size: 13px; font-weight: 800; color: var(--ink); }
+  .fs .pp-field > b em { font-style: normal; color: var(--bad); }
+  .fs .pp-field > b span { color: var(--muted); font-weight: 700; }
+  .fs .pp-field > small { font-size: 12px; font-weight: 700; color: var(--muted); }
+  .fs .pp-field > small.bad { color: var(--bad); }
+  .fs .pp-in { height: 48px; width: 100%; border: 0; border-radius: 12px; padding: 0 16px; background: var(--field); font-size: 15px; font-weight: 700; color: var(--ink); outline: none; box-shadow: inset 0 0 0 2px var(--inner); transition: box-shadow 0.15s ease; }
+  .fs .pp-in:focus { box-shadow: inset 0 0 0 2px var(--focus); }
+  .fs .pp-in::placeholder { color: var(--muted); font-weight: 600; }
+  .fs .pp-in.bad { box-shadow: inset 0 0 0 2px var(--bad); }
+  .fs .pp-btn { height: 48px; padding: 0 20px; border-radius: 12px; font-size: 16px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: background-color 0.15s ease; }
+  .fs .pp-btn svg.i { width: 18px; height: 18px; }
+  .fs .pp-btn.primary { background: var(--accent); color: #ffffff; }
+  .fs .pp-btn.primary:hover { background: var(--accent-hover); }
+  .fs .pp-btn.ghost { background: var(--field); color: var(--ink); }
+  .fs .pp-btn.ghost:hover { background: var(--inner); }
+  .fs .pp-btn:disabled, .fs .pp-btn:disabled:hover { background: var(--inner); color: var(--muted); cursor: default; }
+  .fs .btn { height: 36px; padding: 0 16px; border-radius: 10px; font-weight: 800; font-size: 14px; background: var(--panel); color: var(--ink); white-space: nowrap; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: background-color 0.15s ease; }
+  .fs .btn:hover { background: var(--inner); }
+  .fs .btn:disabled { color: var(--muted); cursor: default; }
+  .fs .btn:disabled:hover { background: var(--panel); }
+  .fs .lnk { height: 32px; padding: 0 12px; border-radius: 8px; font-size: 13px; font-weight: 800; color: var(--accent-text); transition: background-color 0.15s ease; }
+  .fs .lnk:hover { background: var(--inner); }
+  .fs .pp-step-in { animation: fsStepIn 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; }
+  @keyframes fsStepIn { from { opacity: 0; transform: translateY(8px); } }
+  body.potato-mode .fs .pp-step-in { animation: none; }
+  @media (prefers-reduced-motion: reduce) { .fs .pp-step-in { animation: none; } }
+
+  .fs .ob { flex: 1; width: min(820px, 100%); margin: 0 auto; padding: 16px 24px 0; }
+  .fs .ob-card { padding: 32px; border-radius: 28px; background: var(--panel); display: flex; flex-direction: column; gap: 24px; }
+  /* progress: one bar in four parts, filled up to the step you're on */
+  .fs .ob-prog { display: flex; flex-direction: column; gap: 8px; }
+  .fs .ob-segs { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+  .fs .ob-seg { display: block; width: 100%; padding: 8px 0; border-radius: 6px; }
+  .fs .ob-seg:disabled { cursor: default; }
+  .fs .ob-seg i { position: relative; display: block; height: 8px; border-radius: 4px; background: var(--inner); overflow: hidden; }
+  .fs .ob-seg i::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: var(--accent); transform-origin: left center; transform: scaleX(0); transition: transform 0.45s cubic-bezier(0.3, 0.7, 0.2, 1); }
+  .fs li.done .ob-seg i::after, .fs li.now .ob-seg i::after { transform: scaleX(1); }
+  .fs .ob-seg:not(:disabled):hover i { background: color-mix(in srgb, var(--accent) 25%, var(--inner)); }
+  .fs .ob-seg:not(:disabled):hover i::after { background: var(--accent-hover); }
+  body.potato-mode .fs .ob-seg i::after { transition: none; }
+  @media (prefers-reduced-motion: reduce) { .fs .ob-seg i::after { transition: none; } }
+  .fs .ob-where { margin: 0; display: flex; align-items: baseline; gap: 8px; font-size: 13px; font-weight: 800; color: var(--muted); }
+  .fs .ob-where b { color: var(--ink); font-weight: 800; }
+  .fs .ob-step { display: flex; flex-direction: column; gap: 20px; }
+  .fs .ob-step h1 { margin: -12px 0 0; font-family: var(--display); font-weight: 900; font-style: italic; font-size: clamp(28px, 4vw, 36px); line-height: 1.1; letter-spacing: -0.01em; transform: skewX(-2deg); transform-origin: left bottom; text-wrap: balance; }
+  .fs .ob-step h1:focus { outline: none; }
+  .fs .ob-step .lead { margin: -12px 0 0; max-width: 40em; font-size: 15px; font-weight: 600; color: var(--ink-2); line-height: 1.45; }
+  .fs .ob-sec { display: flex; flex-direction: column; gap: 8px; }
+  .fs .ob-sec > h2 { margin: 0 4px; font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .fs .ob-fine { margin: 0 4px; max-width: 56ch; font-size: 12px; font-weight: 700; color: var(--muted); line-height: 1.5; }
+  .fs .ob-note { display: flex; align-items: flex-start; gap: 12px; margin: 0; padding: 12px 16px; border-radius: 16px; background: var(--note-tint); font-size: 14px; font-weight: 700; color: var(--ink-2); line-height: 1.45; }
+  .fs .ob-note svg.i { width: 20px; height: 20px; flex: none; color: var(--note-ink); margin-top: 1px; }
+  .fs .ob-note.bad svg.i { color: var(--bad); }
+
+  /* rows (mode, apps, extras): one white group, like Settings */
+  .fs .ob-grp { display: flex; flex-direction: column; border-radius: 18px; background: var(--field); overflow: hidden; }
+  .fs .ob-row { position: relative; display: flex; align-items: center; gap: 16px; width: 100%; min-height: 64px; padding: 16px; text-align: left; color: var(--ink); }
+  .fs .ob-row + .ob-row::before { content: ""; position: absolute; left: 60px; right: 0; top: 0; border-top: 2px solid var(--panel); }
+  .fs button.ob-row { transition: background-color 0.15s ease; }
+  .fs button.ob-row:hover { background: color-mix(in srgb, var(--panel) 60%, var(--field)); }
+  .fs .ob-row[aria-disabled="true"] { cursor: default; }
+  .fs button.ob-row[aria-disabled="true"]:hover { background: none; }
+  .fs .ob-row[aria-disabled="true"] > :not(.ob-why) { opacity: 0.55; }
+  .fs .ob-ic { width: 28px; height: 28px; flex: none; display: grid; place-items: center; color: var(--ink-2); }
+  .fs .ob-ic svg.i { width: 24px; height: 24px; }
+  .fs .ob-ic .mk { width: 26px; height: 26px; display: block; background: center / contain no-repeat; }
+  .fs .ob-ic .mk.canva { width: 28px; height: 28px; border-radius: 50%; background-image: url("/brand/canva-mark.svg"); }
+  .fs .ob-ic .mk.drive { background-image: url("/brand/google-drive.png"); }
+  .fs .ob-ic.od { color: #1d5fb0; }
+  body.dark-mode .fs .ob-ic.od { color: #8fb4ec; }
+  .fs .ob-row .tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .fs .ob-row .tx > b { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 800; }
+  .fs .ob-row .tx > small { max-width: 56ch; font-size: 13px; font-weight: 600; color: var(--muted); line-height: 1.4; }
+  .fs .ob-row .tx > small.on { color: var(--good); font-weight: 800; }
+  .fs .ob-row .tx > small.who { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fs .ob-row > .btn, .fs .ob-row > .ob-st { flex: none; }
+  .fs .ob-st { display: inline-flex; align-items: center; gap: 4px; height: 32px; padding: 0 12px; border-radius: 10px; font-size: 13px; font-weight: 800; background: var(--panel); color: var(--muted); }
+  .fs .ob-st.on { background: color-mix(in srgb, var(--good) 15%, var(--field)); color: var(--good); }
+  .fs .ob-st svg.i { width: 16px; height: 16px; stroke-width: 2.6; }
+  .fs .ob-row .sw { width: 40px; height: 24px; border-radius: 12px; background: var(--inner); position: relative; flex: none; transition: background-color 0.25s ease; }
+  .fs .ob-row .sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 10px; background: #ffffff; box-shadow: 0 1px 3px rgba(20, 21, 31, 0.2); transition: transform 0.38s cubic-bezier(0.34, 1.45, 0.5, 1), width 0.18s ease; }
+  .fs .ob-row .sw.on { background: var(--accent); }
+  .fs .ob-row .sw.on::after { transform: translateX(16px); }
+  .fs button.ob-row:not([aria-disabled="true"]):active .sw::after { width: 25px; }
+  .fs button.ob-row:not([aria-disabled="true"]):active .sw.on::after { transform: translateX(11px); }
+  body.potato-mode .fs .ob-row .sw, body.potato-mode .fs .ob-row .sw::after { transition: none; }
+  @media (prefers-reduced-motion: reduce) { .fs .ob-row .sw, .fs .ob-row .sw::after { transition: none; } }
+
+  /* 1. mode: a radio list (was three boxes in a row) */
+  .fs .ob-mode .rd { width: 22px; height: 22px; flex: none; border-radius: 50%; box-shadow: inset 0 0 0 2px var(--inner); display: grid; place-items: center; transition: box-shadow 0.15s ease; }
+  .fs .ob-mode[aria-checked="true"] .rd { box-shadow: inset 0 0 0 2px var(--accent); }
+  .fs .ob-mode[aria-checked="true"] .rd::after { content: ""; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); }
+  .fs .ob-mode[aria-checked="true"], .fs .ob-mode[aria-checked="true"]:hover { background: color-mix(in srgb, var(--accent) 6%, var(--field)); }
+  .fs .ob-mode.plus .ob-ic { color: var(--gold); }
+  .fs .ob-mode.plus .ob-ic svg.i { fill: currentColor; stroke: none; }
+  .fs .ob-pr { height: 24px; padding: 0 8px; border-radius: 8px; display: inline-flex; align-items: center; font-size: 12px; font-weight: 800; background: var(--plus-tint); color: var(--plus-ink); white-space: nowrap; }
+  .fs .ob-why { flex: none; font-size: 12px; font-weight: 800; color: var(--muted); }
+
+  /* 2. look */
+  .fs .ob-thms { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .fs .ob-thm { display: flex; flex-direction: column; gap: 8px; padding: 8px 8px 12px; border-radius: 18px; background: var(--field); text-align: left; transition: background-color 0.15s ease, box-shadow 0.15s ease; }
+  .fs .ob-thm:hover { box-shadow: inset 0 0 0 2px var(--inner); }
+  .fs .ob-thm[aria-pressed="true"], .fs .ob-thm[aria-pressed="true"]:hover { box-shadow: inset 0 0 0 2px var(--ink); }
+  .fs .ob-thm .ob-pv { position: relative; display: block; height: 96px; border-radius: 12px; overflow: hidden; --bg: #f5f5f7; --sd: #e4e4e9; --bar: #dcdce0; --card: #ffffff; background: var(--bg); box-shadow: inset 0 0 0 1px rgba(20, 21, 31, 0.08); }
+  .fs .ob-thm.dark .ob-pv { --bg: #1d1e27; --sd: #15161d; --bar: #3a3c4c; --card: #2a2b36; }
+  .fs .ob-thm .ob-pv i { position: absolute; display: block; border-radius: 4px; }
+  .fs .ob-thm .ob-pv .sd { left: 0; top: 0; bottom: 0; width: 20%; border-radius: 0; background: var(--sd); }
+  .fs .ob-thm .ob-pv .b1 { left: 28%; top: 16px; width: 40%; height: 8px; background: var(--bar); }
+  .fs .ob-thm .ob-pv .b2 { left: 28%; top: 36px; right: 12px; height: 44px; border-radius: 8px; background: var(--card); }
+  .fs .ob-thm .ob-pv .b3 { left: calc(28% + 12px); top: 48px; width: 28%; height: 8px; background: var(--accent); }
+  .fs .ob-thm .ob-pv .b4 { left: calc(28% + 12px); top: 64px; width: 44%; height: 6px; background: var(--bar); }
+  .fs .ob-thm.auto .ob-pv::after { content: ""; position: absolute; inset: 0; left: 50%; background: #1d1e27; }
+  .fs .ob-thm.auto .ob-pv::before { content: ""; position: absolute; z-index: 1; left: 50%; top: 36px; right: 12px; height: 44px; border-radius: 0 8px 8px 0; background: #2a2b36; }
+  .fs .ob-lays { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .fs .ob-lay .sub { padding: 0 4px; margin-top: -4px; font-size: 13px; font-weight: 600; color: var(--muted); }
+  .fs .ob-lay .ob-pv { height: auto; aspect-ratio: 16 / 9; background: none; }
+  .fs .ob-lay .ob-pv svg { display: block; width: 100%; height: 100%; }
+  .fs .ob-thm .lb { display: flex; align-items: center; gap: 8px; padding: 0 4px; font-size: 15px; font-weight: 800; color: var(--ink); }
+  .fs .ob-thm .lb svg.i { width: 18px; height: 18px; color: var(--ink-2); }
+  .fs .ob-sws { display: flex; flex-wrap: wrap; gap: 12px; padding: 16px; border-radius: 18px; background: var(--field); }
+  .fs .ob-swb { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: var(--c); color: #ffffff; transition: box-shadow 0.15s ease; }
+  .fs .ob-swb:hover { box-shadow: 0 0 0 3px var(--field), 0 0 0 5px color-mix(in srgb, var(--c) 40%, transparent); }
+  .fs .ob-swb[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--field), 0 0 0 5px var(--c); }
+  .fs .ob-swb svg.i { width: 18px; height: 18px; stroke-width: 2.6; visibility: hidden; }
+  .fs .ob-swb[aria-pressed="true"] svg.i { visibility: visible; }
+
+  /* 3. apps */
+  .fs .ob-apps { display: flex; flex-direction: column; gap: 24px; }
+
+  /* 4. you */
+  .fs .ob-me { display: flex; align-items: center; gap: 16px; padding: 16px; border-radius: 18px; background: var(--field); }
+  .fs .ob-av { width: 72px; height: 72px; flex: none; border-radius: 50%; display: grid; place-items: center; background-color: var(--ink); background-size: cover; background-position: center; color: #ffffff; font-weight: 800; font-size: 28px; line-height: 1; user-select: none; }
+  .fs .ob-av.photo { color: transparent; }
+  .fs .ob-me .tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .fs .ob-me .tx b { font-size: 15px; font-weight: 800; }
+  .fs .ob-me .tx small { font-size: 13px; font-weight: 600; color: var(--muted); }
+  .fs .ob-me .acts { display: flex; gap: 8px; flex-wrap: wrap; }
+  .fs .ob-form { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
+  .fs .ob-em { display: flex; gap: 8px; }
+  .fs .ob-em .pp-in { flex: 1; min-width: 0; }
+  .fs .ob-em .pp-btn { flex: none; }
+  .fs .ob-code { display: flex; gap: 8px; align-items: center; }
+  .fs .ob-code .pp-in { width: 168px; letter-spacing: 0.3em; font-variant-numeric: tabular-nums; text-align: center; }
+  .fs .ob-chip { height: 24px; padding: 0 12px; border-radius: 12px; display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 800; background: color-mix(in srgb, var(--good) 15%, transparent); color: var(--good); vertical-align: middle; }
+  .fs .ob-chip svg.i { width: 13px; height: 13px; }
+  .fs .ob-req { margin: 0; font-size: 12px; font-weight: 700; color: var(--muted); }
+  .fs .ob-req em { font-style: normal; color: var(--bad); }
+
+  /* the buttons at the bottom */
+  .fs .ob-nav { display: flex; align-items: center; gap: 12px; padding-top: 4px; }
+  .fs .ob-nav .hint { flex: 1; text-align: right; font-size: 13px; font-weight: 700; color: var(--muted); }
+  .fs .ob-nav .pp-btn { min-width: 132px; }
+
+  /* all set */
+  .fs .ob-done { align-items: center; text-align: center; padding: 24px 0 8px; }
+  .fs .ob-done h1 { margin: 0; }
+  .fs .ob-done .lead { margin: 0; }
+  .fs .ob-ok { width: 88px; height: 88px; border-radius: 50%; display: grid; place-items: center; background: color-mix(in srgb, var(--good) 16%, var(--field)); color: var(--good); }
+  .fs .ob-ok svg.i { width: 44px; height: 44px; stroke-width: 2.6; }
+  .fs .ob-ok.ob-pop { animation: fsPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) backwards; }
+  .fs .ob-ok.ob-pop svg.i path { stroke-dasharray: 30; stroke-dashoffset: 30; animation: fsDraw 0.4s ease-out 0.2s forwards; }
+  @keyframes fsPop { from { transform: scale(0.4); opacity: 0; } }
+  @keyframes fsDraw { to { stroke-dashoffset: 0; } }
+  body.potato-mode .fs .ob-ok.ob-pop, body.potato-mode .fs .ob-ok.ob-pop svg.i path { animation: none; stroke-dashoffset: 0; }
+  @media (prefers-reduced-motion: reduce) { .fs .ob-ok.ob-pop, .fs .ob-ok.ob-pop svg.i path { animation: none; stroke-dashoffset: 0; } }
+  .fs .ob-sum { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+  .fs .ob-sum span { height: 32px; padding: 0 12px; border-radius: 10px; display: inline-flex; align-items: center; gap: 8px; background: var(--field); font-size: 13px; font-weight: 800; color: var(--ink-2); }
+  .fs .ob-sum svg.i { width: 16px; height: 16px; }
+  .fs .ob-bar { width: min(320px, 100%); height: 6px; border-radius: 3px; background: var(--inner); overflow: hidden; }
+  .fs .ob-bar i { display: block; height: 100%; width: 100%; border-radius: 3px; background: var(--accent); transform-origin: left center; transform: scaleX(0); }
+  .fs .ob-bar.run i { animation: fsBar var(--fs-wait, 2.4s) linear forwards; }
+  @keyframes fsBar { to { transform: scaleX(1); } }
+  body.potato-mode .fs .ob-bar.run i { animation-timing-function: steps(4, end); }
+  .fs .ob-done .pp-btn { width: min(320px, 100%); }
+
+  .fs .fs-toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 8px); z-index: 80; max-width: calc(100vw - 32px); padding: 12px 16px; border-radius: 12px; background: var(--ink); color: var(--fs-sheet); font-size: 14px; font-weight: 800; box-shadow: 0 16px 40px rgba(20, 21, 31, 0.16); opacity: 0; pointer-events: none; transition: opacity 0.15s ease, transform 0.15s ease; }
+  .fs .fs-toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  @media (max-width: 760px) {
+    .fs .ob { padding: 8px 16px 0; }
+    .fs .ob-card { padding: 24px 20px; border-radius: 24px; gap: 20px; }
+    .fs .ob-thms, .fs .ob-lays { grid-template-columns: minmax(0, 1fr); }
+    .fs .ob-lay { display: grid; grid-template-columns: 112px minmax(0, 1fr); grid-template-rows: auto auto; column-gap: 12px; row-gap: 2px; align-items: center; }
+    .fs .ob-lay .ob-pv { grid-row: 1 / 3; }
+    .fs .ob-lay .lb { align-self: end; }
+    .fs .ob-lay .sub { align-self: start; margin-top: 0; }
+    .fs .ob-thm { flex-direction: row; align-items: center; padding: 8px; }
+    .fs .ob-thm .ob-pv { width: 112px; height: 64px; flex: none; }
+    .fs .ob-thm .ob-pv .b1 { top: 8px; } .fs .ob-thm .ob-pv .b2 { top: 24px; height: 28px; } .fs .ob-thm .ob-pv .b3 { top: 32px; } .fs .ob-thm .ob-pv .b4 { display: none; }
+    .fs .ob-thm.auto .ob-pv::before { top: 24px; height: 28px; }
+    .fs #fsApps .ob-row, .fs #fsExtras .ob-row { flex-wrap: wrap; row-gap: 8px; }
+    .fs #fsApps .ob-row .tx, .fs #fsExtras .ob-row:not(button) .tx { flex-basis: calc(100% - 60px); }
+    .fs #fsApps .ob-row > :is(.btn, .ob-st), .fs #fsExtras .ob-row > .btn { margin-left: 44px; }
+    .fs .ob-form { grid-template-columns: minmax(0, 1fr); }
+    .fs .ob-me { flex-wrap: wrap; }
+    .fs .ob-nav .hint { display: none; }
+    .fs .ob-nav .pp-btn { flex: 1; min-width: 0; }
+  }
+  .bg-crop-stage.round { border-radius: 50%; }
 </style>
 </head>
 <body>
@@ -1191,6 +1452,8 @@
           <h2 class="section-label">Choose your window type</h2>
           <div class="window-options">
             <button type="button" class="window-option" data-shape="windowed" aria-pressed="false">Windowed</button>
+            <!-- Fullscreen (2026-10-28): onboarding only, behind the fullscreen-onboarding switch. -->
+            <button type="button" class="window-option" data-shape="fullscreen" data-feature="fullscreen-onboarding" aria-pressed="false">Fullscreen</button>
           </div>
 
           <h2 class="section-label">Choose your background &amp; color</h2>
@@ -1329,6 +1592,94 @@
         <button class="upload-gate-continue" type="button" id="bgCropConfirmBtn">Use Background</button>
       </div>
     </div>
+  </div>
+
+
+  <!-- ---------- Fullscreen onboarding (2026-10-28, Martin's design). Shown when
+       Fullscreen is picked under Window type (fullscreen-onboarding switch on).
+       Every control here drives the ones above; see the script at the end. ---------- -->
+  <div class="fs" id="fsView" aria-hidden="true">
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="fs-i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 10.75v5.75"/><circle cx="12" cy="7.6" r="1.2" fill="currentColor" stroke="none"/></symbol>
+<symbol id="fs-i-eyeoff" viewBox="0 0 24 24"><path d="M3 3l18 18"/><path d="M10.6 6.1A9.6 9.6 0 0 1 12 6c5 0 8.5 4 9.5 6a13 13 0 0 1-2.6 3.4M6.2 7.6A13 13 0 0 0 2.5 12c1 2 4.5 6 9.5 6a9.3 9.3 0 0 0 4.2-1"/></symbol>
+<symbol id="fs-i-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 0 0-14.3-4.9L4 8"/><path d="M4 3v5h5"/><path d="M4 13a8 8 0 0 0 14.3 4.9L20 16"/><path d="M20 21v-5h-5"/></symbol>
+<symbol id="fs-i-star" viewBox="0 0 24 24"><path d="M12 3.4c.42 0 .8.24.98.62l2.06 4.2 4.62.68c.9.13 1.26 1.23.6 1.86l-3.34 3.26.79 4.6c.15.9-.79 1.58-1.6 1.16L12 17.6l-4.13 2.18c-.81.42-1.75-.26-1.6-1.16l.79-4.6-3.34-3.26c-.65-.63-.3-1.73.6-1.86l4.62-.68 2.07-4.2c.18-.38.56-.62.99-.62Z"/></symbol>
+<symbol id="fs-i-ok" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+<symbol id="fs-i-chev-l" viewBox="0 0 24 24" data-adj><g transform="translate(12.5 12) scale(1) translate(-12 -12)" style="stroke-width:calc(var(--isw, 2.2) / 1)"><path d="M14.5 6 8.5 12l6 6"/></g></symbol>
+<symbol id="fs-i-chev-r" viewBox="0 0 24 24" data-adj><g transform="translate(11.5 12) scale(1) translate(-12 -12)" style="stroke-width:calc(var(--isw, 2.2) / 1)"><path d="m9.5 6 6 6-6 6"/></g></symbol>
+<symbol id="fs-i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+<symbol id="fs-i-moon" viewBox="0 0 24 24" data-adj><g transform="translate(12.6 11.5) scale(1) translate(-12 -12)" style="stroke-width:2.2"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z"/></g></symbol>
+<symbol id="fs-i-window" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/></symbol>
+<symbol id="fs-i-bell" viewBox="0 0 24 24"><path d="M6 10a6 6 0 0 1 12 0v4.5l2 3H4l2-3Z"/><path d="M9.5 20.5h5"/></symbol>
+<symbol id="fs-i-cal" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></symbol>
+<symbol id="fs-i-bolt" viewBox="0 0 24 24"><path d="M13 3 5 14h6l-1 7 8-11h-6Z"/></symbol>
+<symbol id="fs-i-cloud" viewBox="0 0 24 24"><path d="M7 19h10.5a4.5 4.5 0 0 0 .7-8.95A6.5 6.5 0 0 0 5.8 8.6 5.2 5.2 0 0 0 7 19Z"/></symbol>
+<symbol id="fs-i-x" viewBox="0 0 24 24" data-adj><g transform="translate(12 12) scale(1.06) translate(-12 -12)" style="stroke-width:2.075"><path d="M6 6l12 12M18 6 6 18"/></g></symbol>
+<symbol id="fs-i-image" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/></symbol>
+<symbol id="fs-i-trash" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/></symbol></svg>
+    <div class="fs-wrap">
+      <div class="pp-top"><span class="pp-brand"><svg aria-hidden="true" focusable="false" viewBox="-8 -8 470 470"><defs><linearGradient id="fsLogoGrad" x1="0" y1="0" x2="0" y2="454" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FF7A50"/><stop offset="1" stop-color="#E5484D"/></linearGradient></defs><path fill="url(#fsLogoGrad)" fill-rule="evenodd" d="M0.02 452.75C0.15 442.97 5.78 407.10 10.02 389.00C11.63 382.12 15.00 367.50 17.51 356.50C28.03 310.27 40.89 265.53 58.60 213.50C77.33 158.47 85.57 136.89 103.25 96.50C118.88 60.79 129.55 39.21 141.04 20.00C144.17 14.78 147.92 8.14 149.38 5.25L152.03 0.00L226.00 0.00L299.97 0.00L302.62 5.25C304.08 8.14 307.83 14.78 310.96 20.00C322.28 38.92 336.94 68.63 348.06 95.18C350.75 101.61 354.55 110.26 356.49 114.41C367.49 137.90 397.74 222.92 410.96 267.50C419.09 294.91 429.04 332.52 434.49 356.50C437.00 367.50 440.37 382.12 441.98 389.00C446.22 407.10 451.85 442.97 451.98 452.75C452.00 453.74 436.27 454.00 376.64 454.00L301.28 454.00L299.60 442.75C296.88 424.51 291.11 392.27 288.63 381.50L286.34 371.50L223.34 371.24L160.34 370.99L158.19 380.33C155.44 392.33 149.65 424.19 147.53 439.00C146.63 445.32 145.66 451.29 145.38 452.25C144.90 453.90 140.55 454.00 72.43 454.00C15.14 454.00 0.00 453.74 0.02 452.75ZM184.00 348.25C189.69 345.41 191.44 335.66 187.41 329.29C184.35 324.47 172.42 324.01 167.19 328.51C164.78 330.58 164.50 331.51 164.50 337.31C164.50 344.14 166.09 347.25 170.50 349.05C173.93 350.46 180.35 350.07 184.00 348.25ZM274.28 347.02C284.17 342.33 288.64 332.80 287.74 318.33C286.79 303.07 279.66 295.00 265.16 292.75C256.25 291.37 245.93 293.01 240.22 296.71C232.38 301.79 228.36 311.77 229.23 323.96C230.09 335.93 235.58 344.50 244.50 347.78C249.77 349.72 251.32 349.90 260.50 349.59C267.31 349.35 270.66 348.73 274.28 347.02ZM220.00 325.25L220.00 301.50L209.50 301.50L199.00 301.50L199.00 325.25L199.00 349.00L209.50 349.00L220.00 349.00L220.00 325.25ZM252.40 330.90C250.89 329.22 250.50 327.26 250.50 321.31C250.50 314.35 250.70 313.66 253.31 311.41C256.89 308.33 260.44 308.35 263.55 311.45C265.70 313.61 266.00 314.79 266.00 321.23C266.00 330.70 264.56 333.00 258.60 333.00C255.51 333.00 253.78 332.41 252.40 330.90ZM218.38 292.67C221.03 290.93 222.25 286.49 221.33 281.90C220.47 277.58 215.94 275.01 209.18 275.00C200.42 275.00 197.08 277.76 197.03 285.08C197.01 288.68 197.53 290.15 199.48 291.98C203.75 295.99 212.81 296.32 218.38 292.67ZM258.58 254.35C258.23 253.44 256.13 245.45 253.90 236.60C244.34 198.58 227.57 140.97 224.09 134.18L222.37 130.84L216.22 150.67C207.52 178.73 204.15 190.56 195.49 223.50C191.29 239.45 187.63 253.29 187.36 254.25C186.90 255.89 189.07 256.00 223.04 256.00C256.26 256.00 259.16 255.87 258.58 254.35Z"/></svg><b>Averages<span>.io</span></b></span></div>
+      <main class="ob">
+        <div class="ob-card" id="fsCard">
+          <div class="ob-prog"><ol class="ob-segs" id="fsSteps" aria-label="Setup steps"></ol><p class="ob-where" id="fsCount" aria-live="polite"></p></div>
+
+          <section class="ob-step" data-fs-step="mode" aria-labelledby="fsT1">
+            <h1 id="fsT1">How should Averages work for you?</h1>
+            <p class="lead">You can change this anytime in Settings.</p>
+            <p class="ob-note" id="fsKid" hidden><svg class="i" aria-hidden="true"><use href="#fs-i-info"/></svg><span>You said you're under 13, so you'll use Incognito. U.S. privacy law doesn't let apps keep information about kids under 13 without a parent's OK.</span></p>
+            <div class="ob-grp" id="fsModes" role="radiogroup" aria-label="Mode"></div>
+          </section>
+
+          <section class="ob-step" data-fs-step="look" aria-labelledby="fsT2" hidden>
+            <h1 id="fsT2">Pick a look</h1>
+            <p class="lead">This is how it looks right now. Change it anytime in Settings.</p>
+            <div class="ob-sec"><h2 id="fsLayH">Window type</h2><div class="ob-thms ob-lays" id="fsLays" role="group" aria-labelledby="fsLayH"></div></div>
+            <div class="ob-sec"><h2 id="fsThmH">Theme</h2><div class="ob-thms" id="fsThms" role="group" aria-labelledby="fsThmH"></div></div>
+            <div class="ob-sec"><h2 id="fsAccH">Accent color</h2><div class="ob-sws" id="fsSws" role="group" aria-labelledby="fsAccH"></div><p class="ob-fine">Buttons, highlights and the page you're on.</p></div>
+          </section>
+
+          <section class="ob-step" data-fs-step="apps" aria-labelledby="fsT3" hidden>
+            <h1 id="fsT3">Connect your apps</h1>
+            <p class="lead">Edit files and turn in designs without leaving Averages. All of these are optional.</p>
+            <p class="ob-note" id="fsFlash" role="status" hidden><svg class="i" aria-hidden="true"><use href="#fs-i-info"/></svg><span></span></p>
+            <div class="ob-apps">
+              <div class="ob-sec"><div class="ob-grp" id="fsApps"></div><p class="ob-fine" id="fsAppsNote"></p></div>
+              <div class="ob-sec"><h2>Extras</h2><div class="ob-grp" id="fsExtras"></div></div>
+            </div>
+          </section>
+
+          <section class="ob-step" data-fs-step="you" aria-labelledby="fsT4" hidden>
+            <h1 id="fsT4">Last thing: you</h1>
+            <p class="lead">This is how you show up in Messages and Contacts.</p>
+            <div class="ob-me"><span class="ob-av" id="fsAv" aria-hidden="true"></span><span class="tx"><b>Profile picture</b><small id="fsAvSub">Free for everyone.</small></span><span class="acts"><button class="btn" type="button" id="fsPhoto">Add photo</button><button class="btn" type="button" id="fsPhotoRm" hidden>Remove</button></span></div>
+            <div class="ob-form">
+              <label class="pp-field"><b>First name <em>*</em></b><input class="pp-in" id="fsName" maxlength="40" autocomplete="given-name" aria-required="true" aria-describedby="fsNameMsg"><small id="fsNameMsg">First name only.</small></label>
+              <div class="pp-field" id="fsEmailF"><b id="fsEmailL">Email <span>(optional)</span></b>
+                <div class="ob-em"><input class="pp-in" id="fsEmail" type="email" autocomplete="email" placeholder="you@example.com" aria-labelledby="fsEmailL" aria-describedby="fsEmailMsg"><button class="pp-btn ghost" type="button" id="fsVerify" hidden>Verify</button></div>
+                <div class="ob-code" id="fsCodeW" hidden><input class="pp-in" id="fsCode" inputmode="numeric" maxlength="6" placeholder="000000" aria-label="6-digit code" autocomplete="one-time-code"><button class="lnk" type="button" id="fsResend">Resend</button></div>
+                <small id="fsEmailMsg">For grade reports and to sign in on new devices.</small></div>
+            </div>
+            <p class="ob-req"><em>*</em> means required</p>
+          </section>
+
+          <section class="ob-step ob-done" data-fs-step="done" aria-labelledby="fsT5" hidden>
+            <span class="ob-ok" id="fsOk" aria-hidden="true"><svg class="i"><use href="#fs-i-ok"/></svg></span>
+            <h1 id="fsT5">You're all set!</h1>
+            <p class="lead" id="fsDoneP"></p>
+            <div class="ob-sum" id="fsSum"></div>
+            <div class="ob-bar" id="fsBar" aria-hidden="true"><i></i></div>
+            <button class="pp-btn primary" type="button" id="fsHome">Go to Home now<svg class="i" aria-hidden="true"><use href="#fs-i-chev-r"/></svg></button>
+          </section>
+
+          <div class="ob-nav" id="fsNav">
+            <button class="pp-btn ghost" type="button" id="fsBack"><svg class="i" aria-hidden="true"><use href="#fs-i-chev-l"/></svg>Back</button>
+            <span class="hint" id="fsHint"></span>
+            <button class="pp-btn primary" type="button" id="fsNext">Next<svg class="i" aria-hidden="true"><use href="#fs-i-chev-r"/></svg></button>
+          </div>
+        </div>
+      </main>
+      <p class="pp-foot"><a href="https://averages.io/terms" target="_blank" rel="noopener">Terms</a><span aria-hidden="true">·</span><a href="https://averages.io/privacy-policy" target="_blank" rel="noopener">Privacy</a></p>
+    </div>
+    <div class="fs-toast" id="fsToast" role="status" aria-live="polite"></div>
   </div>
 
   <script>
@@ -1902,10 +2253,17 @@
       const ratio = (window.innerWidth || 1600) / (window.innerHeight || 1000);
       return Math.min(2.4, Math.max(1.2, ratio || 1.6));
     }
-    function openBgCrop(dataUrl, onConfirm) {
+    // opts (2026-10-28, the Fullscreen profile photo): { aspect, round, outW, title, text, confirm }.
+    const BG_CROP_TEXT = { title: 'Position Background', text: 'Drag to move it. Use the slider to zoom.', confirm: 'Use Background' };
+    function openBgCrop(dataUrl, onConfirm, opts) {
+      opts = opts || {};
       const img = new Image();
       img.onload = () => {
-        bgCropStage.style.setProperty('--bg-crop-aspect', pageAspectRatio());
+        bgCropStage.style.setProperty('--bg-crop-aspect', opts.aspect || pageAspectRatio());
+        bgCropStage.classList.toggle('round', !!opts.round);
+        document.getElementById('bgCropTitle').textContent = opts.title || BG_CROP_TEXT.title;
+        bgCropOverlay.querySelector('.bg-crop-box > p').textContent = opts.text || BG_CROP_TEXT.text;
+        document.getElementById('bgCropConfirmBtn').textContent = opts.confirm || BG_CROP_TEXT.confirm;
         bgCropOverlay.classList.add('show');
         // aspect-ratio needs the stage actually laid out before its
         // clientWidth/clientHeight mean anything — measuring
@@ -1923,6 +2281,7 @@
             offsetX: 0,
             offsetY: 0,
             onConfirm,
+            outW: opts.outW || 1600,
           };
           bgCropImg.src = dataUrl;
           bgCropZoom.value = 100;
@@ -1984,7 +2343,7 @@
       if (!bgCropState) return;
       const stageW = bgCropStage.clientWidth || 480;
       const stageH = bgCropStage.clientHeight || 300;
-      const OUTPUT_W = 1600;
+      const OUTPUT_W = bgCropState.outW || 1600;
       const OUTPUT_H = Math.round(OUTPUT_W * (stageH / stageW));
       const canvas = document.createElement('canvas');
       canvas.width = OUTPUT_W;
@@ -2478,6 +2837,8 @@
     }
 
     // ---------- Profile step ----------
+    // The photo picked in Fullscreen onboarding (2026-10-28); Windowed has no photo step.
+    let fsChosenPhoto = null;
     const nameInput = document.getElementById('nameInput');
     const nameError = document.getElementById('nameError');
     const emailInput = document.getElementById('emailInput');
@@ -2792,7 +3153,7 @@
           name: nameInput.value.trim(),
           email: emailVal,
           emailVerified: false,
-          photo: null,
+          photo: fsChosenPhoto,
         }));
         const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
         if (accent) {
@@ -2835,6 +3196,384 @@
         completeState.classList.add('show');
       }, 650);
     });
+
+
+    // ==================================================================
+    // Fullscreen onboarding (2026-10-28, Martin's design; switch:
+    // fullscreen-onboarding, off by default). Picking Fullscreen under
+    // Window type turns this page into the Fullscreen view (#fsView);
+    // picking Windowed turns it back. It's only a second face: every
+    // choice goes through the controls above (setMode, the dark mode
+    // switch, the integration rows, Potato, the name and email boxes,
+    // Submit), so saving, Plus checkout, the draft and the redirect to
+    // Home work exactly as they do Windowed. Nothing about Fullscreen is
+    // saved for the rest of the app: it's for onboarding only for now.
+    // ==================================================================
+    (function fullscreenOnboarding() {
+      const view = document.getElementById('fsView');
+      const fsBtn = document.querySelector('.window-option[data-shape="fullscreen"]');
+      const winBtn = document.querySelector('.window-option[data-shape="windowed"]');
+      const page = document.querySelector('.page');
+      if (!view || !fsBtn || !winBtn) return;
+      const $ = id => document.getElementById(id);
+      const ico = n => `<svg class="i" aria-hidden="true"><use href="#fs-i-${n}"/></svg>`;
+      const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+      const calm = () => document.body.classList.contains('potato-mode') || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+      const allowed = () => !!(window.AveragesFeatures && window.AveragesFeatures.on('fullscreen-onboarding'));
+      const FS_DRAFT = 'averages_onboard_fs';
+      const STEPS = [['mode', 'Mode'], ['look', 'Look'], ['apps', 'Apps'], ['you', 'You']];
+      const TO_LIVE = { mode: 'mode', look: 'theme', apps: 'features', you: 'profile' };
+      const FROM_LIVE = { mode: 'mode', theme: 'look', features: 'apps', profile: 'you' };
+      const ACCENTS = [['punch', 'Punch', '#b8352f'], ['blue', 'Blue', '#2f5fb3'], ['green', 'Green', '#2e7d4f'], ['plum', 'Plum', '#7a3fa0'],
+                       ['orange', 'Orange', '#b25600'], ['teal', 'Teal', '#0f7470'], ['graphite', 'Graphite', '#44465a']];
+      const LAY_FULL = "<svg viewBox=\"0 0 240 135\" preserveAspectRatio=\"xMidYMid slice\" aria-hidden=\"true\"><rect width=\"240\" height=\"135\" fill=\"#e4e4e9\"/><rect x=\"8\" y=\"6\" width=\"9\" height=\"9\" rx=\"2.5\" style=\"fill:var(--accent)\"/><rect x=\"21\" y=\"8.5\" width=\"24\" height=\"4\" rx=\"2\" fill=\"#14151f\" opacity=\".75\"/><rect x=\"98\" y=\"5.5\" width=\"44\" height=\"10\" rx=\"5\" fill=\"#dcdce0\"/><circle cx=\"228\" cy=\"10.5\" r=\"5\" fill=\"#9a9cab\"/><rect x=\"200\" y=\"6\" width=\"20\" height=\"9\" rx=\"3\" fill=\"#dcdce0\"/><rect x=\"8\" y=\"28\" width=\"8\" height=\"8\" rx=\"2\" fill=\"color-mix(in srgb, var(--accent) 35%, #f5f5f7)\"/><rect x=\"8\" y=\"40\" width=\"8\" height=\"8\" rx=\"2\" fill=\"#c9cad3\"/><rect x=\"8\" y=\"52\" width=\"8\" height=\"8\" rx=\"2\" fill=\"#c9cad3\"/><rect x=\"8\" y=\"64\" width=\"8\" height=\"8\" rx=\"2\" fill=\"#c9cad3\"/><rect x=\"8\" y=\"76\" width=\"8\" height=\"8\" rx=\"2\" fill=\"#c9cad3\"/><rect x=\"8\" y=\"88\" width=\"8\" height=\"8\" rx=\"2\" fill=\"#c9cad3\"/><path d=\"M24 32a10 10 0 0 1 10-10h206v113H24Z\" fill=\"#f5f5f7\"/><rect x=\"34\" y=\"31\" width=\"58\" height=\"9\" rx=\"3\" fill=\"#14151f\"/><rect x=\"34\" y=\"44\" width=\"34\" height=\"4\" rx=\"2\" fill=\"#9a9cab\"/><rect x=\"34\" y=\"55\" width=\"128\" height=\"74\" rx=\"7\" fill=\"#eaeaec\"/><rect x=\"42\" y=\"64\" width=\"9\" height=\"9\" rx=\"2.5\" fill=\"#dcdce0\"/><rect x=\"56\" y=\"65.5\" width=\"46\" height=\"3.5\" rx=\"1.75\" fill=\"#44465a\" opacity=\".7\"/><rect x=\"138\" y=\"65.5\" width=\"16\" height=\"4\" rx=\"2\" style=\"fill:var(--accent)\" opacity=\"0.25\"/><rect x=\"42\" y=\"79\" width=\"9\" height=\"9\" rx=\"2.5\" fill=\"#dcdce0\"/><rect x=\"56\" y=\"80.5\" width=\"38\" height=\"3.5\" rx=\"1.75\" fill=\"#44465a\" opacity=\".7\"/><rect x=\"138\" y=\"80.5\" width=\"16\" height=\"4\" rx=\"2\" style=\"fill:var(--accent)\" opacity=\"1\"/><rect x=\"42\" y=\"94\" width=\"9\" height=\"9\" rx=\"2.5\" fill=\"#dcdce0\"/><rect x=\"56\" y=\"95.5\" width=\"50\" height=\"3.5\" rx=\"1.75\" fill=\"#44465a\" opacity=\".7\"/><rect x=\"138\" y=\"95.5\" width=\"16\" height=\"4\" rx=\"2\" style=\"fill:var(--accent)\" opacity=\"0.25\"/><rect x=\"42\" y=\"109\" width=\"9\" height=\"9\" rx=\"2.5\" fill=\"#dcdce0\"/><rect x=\"56\" y=\"110.5\" width=\"34\" height=\"3.5\" rx=\"1.75\" fill=\"#44465a\" opacity=\".7\"/><rect x=\"138\" y=\"110.5\" width=\"16\" height=\"4\" rx=\"2\" style=\"fill:var(--accent)\" opacity=\"0.25\"/><rect x=\"168\" y=\"55\" width=\"64\" height=\"74\" rx=\"7\" fill=\"#eaeaec\"/><rect x=\"175\" y=\"63\" width=\"34\" height=\"4\" rx=\"2\" fill=\"#14151f\" opacity=\".75\"/><rect x=\"175\" y=\"72\" width=\"50\" height=\"18\" rx=\"4\" fill=\"#ffffff\"/><rect x=\"179\" y=\"77\" width=\"9\" height=\"9\" rx=\"2.5\" style=\"fill:var(--accent)\"/><rect x=\"192\" y=\"79\" width=\"26\" height=\"3.5\" rx=\"1.75\" fill=\"#44465a\" opacity=\".7\"/><rect x=\"175\" y=\"96\" width=\"44\" height=\"3.5\" rx=\"1.75\" fill=\"#44465a\" opacity=\".5\"/><rect x=\"175\" y=\"105\" width=\"36\" height=\"3.5\" rx=\"1.75\" fill=\"#44465a\" opacity=\".5\"/></svg>";
+      const LAY_WIN = "<svg viewBox=\"0 0 240 135\" preserveAspectRatio=\"xMidYMid slice\" aria-hidden=\"true\"><rect width=\"240\" height=\"135\" fill=\"#2f3142\"/><circle cx=\"40\" cy=\"120\" r=\"70\" fill=\"#ff7a50\" opacity=\".28\"/><circle cx=\"210\" cy=\"10\" r=\"60\" fill=\"#e5484d\" opacity=\".2\"/><rect x=\"44\" y=\"12\" width=\"50\" height=\"10\" rx=\"3\" fill=\"#ffffff\" transform=\"skewX(-8)\"/><rect x=\"42\" y=\"26\" width=\"26\" height=\"4\" rx=\"2\" fill=\"#ffffff\" opacity=\".65\"/><circle cx=\"195\" cy=\"20\" r=\"7\" fill=\"#c9cad3\"/><rect x=\"38\" y=\"36\" width=\"164\" height=\"70\" rx=\"9\" fill=\"#eaeaec\"/><rect x=\"47\" y=\"44\" width=\"40\" height=\"5\" rx=\"2.5\" fill=\"#14151f\" opacity=\".85\"/><rect x=\"47\" y=\"56\" width=\"3\" height=\"8\" rx=\"1.5\" fill=\"#2e7d4f\"/><rect x=\"53\" y=\"57.5\" width=\"40\" height=\"3.5\" rx=\"1.75\" fill=\"#44465a\" opacity=\".75\"/><rect x=\"128\" y=\"57.5\" width=\"26\" height=\"3.5\" rx=\"1.75\" fill=\"#9a9cab\"/><rect x=\"174\" y=\"57.5\" width=\"16\" height=\"3.5\" rx=\"1.75\" fill=\"#9a9cab\"/><rect x=\"47\" y=\"68\" width=\"3\" height=\"8\" rx=\"1.5\" fill=\"#2f5fb3\"/><rect x=\"53\" y=\"69.5\" width=\"32\" height=\"3.5\" rx=\"1.75\" fill=\"#44465a\" opacity=\".75\"/><rect x=\"128\" y=\"69.5\" width=\"26\" height=\"3.5\" rx=\"1.75\" fill=\"#9a9cab\"/><rect x=\"174\" y=\"69.5\" width=\"16\" height=\"3.5\" rx=\"1.75\" fill=\"#9a9cab\"/><rect x=\"47\" y=\"80\" width=\"3\" height=\"8\" rx=\"1.5\" fill=\"#b8352f\"/><rect x=\"53\" y=\"81.5\" width=\"44\" height=\"3.5\" rx=\"1.75\" fill=\"#44465a\" opacity=\".75\"/><rect x=\"128\" y=\"81.5\" width=\"26\" height=\"3.5\" rx=\"1.75\" fill=\"#9a9cab\"/><rect x=\"174\" y=\"81.5\" width=\"16\" height=\"3.5\" rx=\"1.75\" fill=\"#9a9cab\"/><rect x=\"47\" y=\"92\" width=\"3\" height=\"8\" rx=\"1.5\" fill=\"#b25600\"/><rect x=\"53\" y=\"93.5\" width=\"30\" height=\"3.5\" rx=\"1.75\" fill=\"#44465a\" opacity=\".75\"/><rect x=\"128\" y=\"93.5\" width=\"26\" height=\"3.5\" rx=\"1.75\" fill=\"#9a9cab\"/><rect x=\"174\" y=\"93.5\" width=\"16\" height=\"3.5\" rx=\"1.75\" fill=\"#9a9cab\"/><rect x=\"44\" y=\"114\" width=\"152\" height=\"14\" rx=\"5\" fill=\"#eaeaec\"/><rect x=\"52\" y=\"119.5\" width=\"10\" height=\"3\" rx=\"1.5\" fill=\"#6b6d80\"/><rect x=\"69\" y=\"119.5\" width=\"10\" height=\"3\" rx=\"1.5\" fill=\"#6b6d80\"/><rect x=\"86\" y=\"119.5\" width=\"10\" height=\"3\" rx=\"1.5\" fill=\"#6b6d80\"/><rect x=\"103\" y=\"119.5\" width=\"10\" height=\"3\" rx=\"1.5\" fill=\"#6b6d80\"/><rect x=\"120\" y=\"119.5\" width=\"10\" height=\"3\" rx=\"1.5\" fill=\"#6b6d80\"/><rect x=\"137\" y=\"119.5\" width=\"10\" height=\"3\" rx=\"1.5\" fill=\"#6b6d80\"/><rect x=\"154\" y=\"119.5\" width=\"10\" height=\"3\" rx=\"1.5\" fill=\"#6b6d80\"/><rect x=\"171\" y=\"119.5\" width=\"10\" height=\"3\" rx=\"1.5\" fill=\"#6b6d80\"/><rect x=\"188\" y=\"119.5\" width=\"10\" height=\"3\" rx=\"1.5\" fill=\"#6b6d80\"/><rect x=\"69\" y=\"124.5\" width=\"10\" height=\"1.6\" rx=\".8\" style=\"fill:var(--accent)\"/></svg>";
+      const DARK_KEY = 'schoolagy_dark_mode';
+      const INCOG = () => window.__AVERAGES_INCOGNITO__ || null;
+      const KID = () => !IS_13_PLUS || !!(INCOG() && INCOG().locked);
+      const liveMode = k => document.querySelector(`.mode-option[data-mode="${k}"]`);
+      const shown = el => !!el && !el.hidden && !el.closest('[hidden]') && getComputedStyle(el).display !== 'none';
+
+      let on = false, step = 'mode', seen = ['mode'], theme = null, photo = null, verified = false, codeSent = false, finishing = false;
+      // Fullscreen has its own accent colors. Coming in with a background's accent, it starts on Punch;
+      // going back to Windowed without picking one puts the background's accent back.
+      let accentBefore = null;
+
+      function toast(text) { const t = $('fsToast'); t.textContent = text; t.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 2600); }
+      const idx = s => STEPS.findIndex(x => x[0] === s);
+
+      // ---------- the steps across the top ----------
+      function stepsDraw() {
+        const cur = idx(step), done = step === 'done';
+        $('fsSteps').innerHTML = STEPS.map(([k, t], i) => {
+          const st = done || i < cur ? 'done' : i === cur ? 'now' : '';
+          const can = seen.includes(k) && !done && i !== cur && (k === 'mode' || !!accountMode);
+          return `<li class="${st}"${i === cur ? ' aria-current="step"' : ''}><button class="ob-seg" type="button" data-fs-to="${k}"${can ? '' : ' disabled'} aria-label="Step ${i + 1}, ${t}${st === 'done' ? ', done' : st === 'now' ? ', you are here' : ''}" title="${t}"><i></i></button></li>`;
+        }).join('');
+        $('fsCount').innerHTML = done ? '<b>All done</b>' : `Step ${cur + 1} of ${STEPS.length}<span aria-hidden="true">·</span><b>${STEPS[cur][1]}</b>`;
+      }
+
+      // ---------- 1. mode (the cards above decide what's offered) ----------
+      const MODE_ICON = { incognito: 'eyeoff', classic: 'refresh', plus: 'star' };
+      function modesDraw() {
+        $('fsKid').hidden = !KID();
+        $('fsModes').innerHTML = ['incognito', 'classic', 'plus'].map(k => {
+          const b = liveMode(k);
+          if (!b) return '';
+          const kidOff = KID() && k !== 'incognito';
+          if (b.hidden && !(k === 'classic' && kidOff)) return '';
+          const name = k === 'incognito' ? 'Incognito' : k === 'classic' ? 'Classic' : 'Plus';
+          const desc = (b.querySelector('.mode-desc') || {}).textContent || '';
+          const price = k === 'plus' && !(billingStatus && billingStatus.plus) ? ((b.querySelector('.mode-price') || {}).textContent || '').replace('/mo', ' a month') : '';
+          return `<button class="ob-row ob-mode${k === 'plus' ? ' plus' : ''}" type="button" role="radio" data-fs-mode="${k}" aria-checked="${accountMode === k}"${kidOff ? ' aria-disabled="true"' : ''}>`
+            + `<span class="ob-ic">${ico(MODE_ICON[k])}</span><span class="tx"><b>${name}${price ? `<span class="ob-pr">${esc(price)}</span>` : ''}</b><small>${esc(desc.replace(/\s*Ages 13\+\.?$/, ''))}</small></span>`
+            + (kidOff ? '<span class="ob-why">Ages 13 and up</span>' : '<span class="rd" aria-hidden="true"></span>') + '</button>';
+        }).join('');
+        const btns = [...$('fsModes').querySelectorAll('[data-fs-mode]')];
+        const sel = btns.find(b => b.getAttribute('aria-checked') === 'true') || btns.find(b => b.getAttribute('aria-disabled') !== 'true');
+        btns.forEach(b => b.tabIndex = b === sel ? 0 : -1);
+      }
+      $('fsModes').addEventListener('click', e => {
+        const m = e.target.closest('[data-fs-mode]'); if (!m) return;
+        if (m.getAttribute('aria-disabled') === 'true') { toast('Classic and Plus are for ages 13 and up.'); return; }
+        const b = liveMode(m.dataset.fsMode); if (b) b.click();
+        modesDraw(); navDraw(); stepsDraw();
+        const again = $('fsModes').querySelector(`[data-fs-mode="${m.dataset.fsMode}"]`); if (again) again.focus({ preventScroll: true });
+      });
+      $('fsModes').addEventListener('keydown', e => {
+        if (!['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp'].includes(e.key)) return;
+        e.preventDefault();
+        const ms = [...$('fsModes').querySelectorAll('[data-fs-mode]:not([aria-disabled="true"])')];
+        const i = ms.indexOf(document.activeElement);
+        const n = ms[(i + (e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : -1) + ms.length) % ms.length];
+        if (n) n.click();
+      });
+
+      // ---------- 2. look ----------
+      function currentTheme() {
+        if (theme) return theme;
+        let v = null; try { v = localStorage.getItem(DARK_KEY); } catch (e) {}
+        return v === 'dark' ? 'dark' : v === 'light' ? 'light' : 'auto';
+      }
+      const osDark = () => !!(window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);
+      function setTheme(v) {
+        theme = v;
+        if (v === 'auto') {
+          try { localStorage.removeItem(DARK_KEY); } catch (e) {}
+          darkModeToggle.checked = osDark();
+          applyDarkMode(darkModeToggle.checked);
+        } else if (darkModeToggle.checked !== (v === 'dark')) {
+          darkModeToggle.checked = v === 'dark';
+          darkModeToggle.dispatchEvent(new Event('change'));
+        } else {
+          try { localStorage.setItem(DARK_KEY, v); } catch (e) {}
+        }
+      }
+      if (window.matchMedia) matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if (currentTheme() === 'auto') { darkModeToggle.checked = osDark(); applyDarkMode(darkModeToggle.checked); } });
+      function accentNow() { return getComputedStyle(document.documentElement).getPropertyValue('--accent').trim().toLowerCase(); }
+      function lookDraw() {
+        $('fsLays').innerHTML = [['fullscreen', 'Fullscreen', 'Uses the whole screen. Our new look.'], ['windowed', 'Windowed', 'A window over your own background.']].map(([v, t, sub]) =>
+          `<button class="ob-thm ob-lay" type="button" data-fs-lay="${v}" aria-pressed="${v === 'fullscreen'}"><span class="ob-pv" aria-hidden="true">${v === 'fullscreen' ? LAY_FULL : LAY_WIN}</span><span class="lb">${t}</span><small class="sub">${sub}</small></button>`).join('');
+        const th = currentTheme();
+        $('fsThms').innerHTML = [['light', 'Light', 'sun'], ['dark', 'Dark', 'moon'], ['auto', 'Auto', 'window']].map(([v, t, ic]) =>
+          `<button class="ob-thm ${v}" type="button" data-fs-thm="${v}" aria-pressed="${th === v}"><span class="ob-pv" aria-hidden="true"><i class="sd"></i><i class="b1"></i><i class="b2"></i><i class="b3"></i><i class="b4"></i></span><span class="lb">${ico(ic)}${t}</span></button>`).join('');
+        const a = accentNow();
+        $('fsSws').innerHTML = ACCENTS.map(([k, n, c]) => `<button class="ob-swb" type="button" style="--c:${c}" data-fs-acc="${c}" aria-pressed="${a === c}" aria-label="${n}" title="${n}">${ico('ok')}</button>`).join('');
+      }
+      $('fsLays').addEventListener('click', e => { const b = e.target.closest('[data-fs-lay]'); if (b && b.dataset.fsLay === 'windowed') leave(); });
+      $('fsThms').addEventListener('click', e => { const b = e.target.closest('[data-fs-thm]'); if (!b) return; setTheme(b.dataset.fsThm); lookDraw(); const again = $('fsThms').querySelector(`[data-fs-thm="${b.dataset.fsThm}"]`); if (again) again.focus({ preventScroll: true }); });
+      $('fsSws').addEventListener('click', e => {
+        const b = e.target.closest('[data-fs-acc]'); if (!b) return;
+        applyAccent(b.dataset.fsAcc);
+        accentBefore = null;
+        lookDraw();
+        const again = $('fsSws').querySelector(`[data-fs-acc="${b.dataset.fsAcc}"]`); if (again) again.focus({ preventScroll: true });
+      });
+
+      // ---------- 3. apps: the integration rows above, shown as rows here ----------
+      const APP_ORDER = [['gdrive', '<span class="mk drive"></span>', ''], ['canva', '<span class="mk canva"></span>', ''], ['onedrive', ico('cloud'), ' od']];
+      function appsDraw() {
+        const block = $('integrationsCategory');
+        const rows = APP_ORDER.map(([id, logo, cls]) => {
+          const row = block && block.querySelector(`.integ-row[data-app="${id}"]`);
+          if (!row || !shown(row)) return '';
+          const name = (row.querySelector('.integ-name') || {}).textContent || id;
+          const desc = (row.querySelector('.feature-desc') || {}).textContent || '';
+          const st = row.querySelector('.integ-status');
+          const stText = st ? st.textContent.trim() : '';
+          const live = row.querySelector('.integ-btn');
+          const soon = row.querySelector('.integ-soon');
+          let action = '', note = '', off = false;
+          if (/^Connected/.test(stText)) {
+            const who = stText.replace(/^Connected( as )?/, '');
+            action = `<span class="ob-st on">${ico('ok')}Connected</span>`;
+            if (who) note = `<small class="who" title="${esc(who)}">As ${esc(who)}</small>`;
+          } else if (/Incognito/.test(stText)) { action = '<span class="ob-st">Off in Incognito</span>'; off = true; }
+          else if (soon) { action = '<span class="ob-st">Coming soon</span>'; off = true; }
+          else {
+            if (stText && !/^Not connected$/.test(stText)) note = `<small>${esc(stText)}</small>`;
+            if (live) action = `<button class="btn" type="button" data-fs-app="${id}"${live.disabled ? ' disabled' : ''}>${esc(live.textContent.trim())}</button>`;
+          }
+          return `<div class="ob-row"${off ? ' aria-disabled="true"' : ''}><span class="ob-ic${cls}">${logo}</span><span class="tx"><b>${esc(name.trim())}</b><small>${esc(desc)}</small>${note}</span>${action}</div>`;
+        }).join('');
+        $('fsApps').innerHTML = rows || '<div class="ob-row"><span class="tx"><small>No apps to connect right now.</small></span></div>';
+        const n = block && block.querySelector('.integ-note');
+        $('fsAppsNote').textContent = (n ? n.textContent.trim() + ' ' : '') + 'Google Drive is a trademark of Google LLC.';
+        const f = block && block.querySelector('.integ-flash');
+        const flash = $('fsFlash');
+        flash.hidden = !f || f.hidden || !f.textContent.trim();
+        flash.classList.toggle('bad', !!(f && f.classList.contains('bad')));
+        flash.querySelector('span').textContent = f ? f.textContent : '';
+        extrasDraw();
+      }
+      $('fsApps').addEventListener('click', e => {
+        const b = e.target.closest('[data-fs-app]'); if (!b || b.disabled) return;
+        const live = document.querySelector(`#integrationsCategory .integ-row[data-app="${b.dataset.fsApp}"] .integ-btn`);
+        if (live && !live.disabled) live.click();   // inside this click, so sign-in windows can open
+        appsDraw();
+        const again = $('fsApps').querySelector(`[data-fs-app="${b.dataset.fsApp}"]`); if (again) again.focus({ preventScroll: true });
+      });
+      function extrasDraw() {
+        const plusOffered = shown(liveMode('plus')) && !KID();
+        let plus = '';
+        if (accountMode === 'plus') plus = `<div class="ob-row"><span class="ob-ic">${ico('bell')}</span><span class="tx"><b>Notifications and calendar sync</b><small>Part of Plus. Turn them on in Settings after checkout.</small></span></div>`;
+        else if (plusOffered) plus = `<div class="ob-row"><span class="ob-ic">${ico('bell')}</span><span class="tx"><b>Notifications and calendar sync</b><small>Come with Plus.</small></span><button class="btn" type="button" data-fs-see-plus>See Plus</button></div>`;
+        const potato = !!(potatoToggle && potatoToggle.checked);
+        $('fsExtras').innerHTML = plus
+          + `<button class="ob-row" type="button" role="switch" aria-checked="${potato}" data-fs-potato><span class="ob-ic">${ico('bolt')}</span><span class="tx"><b>Potato PC Mode</b><small>Turns off animations and effects for Chromebooks and older computers.</small></span><span class="sw${potato ? ' on' : ''}" aria-hidden="true"></span></button>`;
+      }
+      $('fsExtras').addEventListener('click', e => {
+        if (e.target.closest('[data-fs-see-plus]')) { go('mode'); return; }
+        if (e.target.closest('[data-fs-potato]') && potatoToggle) { potatoToggle.click(); extrasDraw(); const t = $('fsExtras').querySelector('[data-fs-potato]'); if (t) t.focus({ preventScroll: true }); }
+      });
+
+      // ---------- 4. you ----------
+      const emailOk = v => isValidEmail(v);
+      function avDraw() {
+        const a = $('fsAv');
+        a.classList.toggle('photo', !!photo);
+        if (photo) { a.style.backgroundImage = `url("${photo}")`; a.style.backgroundColor = ''; a.textContent = ''; }
+        else if (window.AveragesAvatar) window.AveragesAvatar.paint(a, nameInput.value || '');
+        else { a.style.backgroundImage = ''; a.textContent = (nameInput.value || '?').charAt(0).toUpperCase(); }
+        $('fsPhoto').textContent = photo ? 'Change photo' : 'Add photo';
+        $('fsPhotoRm').hidden = !photo;
+      }
+      function emailDraw() {
+        const v = $('fsEmail').value.trim(), msg = $('fsEmailMsg');
+        $('fsEmailF').hidden = !!document.getElementById('emailBlock').hidden;
+        $('fsVerify').hidden = !v || verified || !emailOk(v);
+        $('fsCodeW').hidden = !codeSent || verified || !emailOk(v);
+        msg.classList.remove('bad');
+        $('fsEmail').classList.remove('bad');
+        if (verified) msg.innerHTML = `<span class="ob-chip">${ico('ok')}Verified</span>`;
+        else if (v && !emailOk(v)) msg.textContent = "That doesn't look like an email address yet.";
+        else if (!$('fsCodeW').hidden) msg.textContent = `Enter the 6-digit code we sent to ${v}.`;
+        else msg.textContent = 'For grade reports and to sign in on new devices.';
+      }
+      let prefilled = false;
+      function youDraw() {
+        if (!nameInput.value && typeof window.__AVERAGES_NAME__ === 'string') {
+          const first = (window.__AVERAGES_NAME__.trim().split(/\s+/)[0] || '').replace(/[^\p{L}\p{M}'-]/gu, '').slice(0, 40);
+          if (first) { nameInput.value = first; nameInput.dispatchEvent(new Event('input')); prefilled = true; }
+        }
+        $('fsName').value = nameInput.value;
+        $('fsNameMsg').textContent = prefilled ? 'From Schoology. You can change it.' : 'First name only.';
+        $('fsNameMsg').classList.remove('bad'); $('fsName').classList.remove('bad');
+        $('fsEmail').value = emailInput.value;
+        avDraw(); emailDraw();
+      }
+      $('fsName').addEventListener('input', e => {
+        const caret = e.target.selectionStart;
+        nameInput.value = e.target.value;
+        nameInput.dispatchEvent(new Event('input'));   // first name only: spaces come out
+        if (e.target.value !== nameInput.value) { const c = Math.max(0, caret - (e.target.value.length - nameInput.value.length)); e.target.value = nameInput.value; e.target.setSelectionRange(c, c); }
+        if (nameInput.value.trim()) { $('fsName').classList.remove('bad'); const m = $('fsNameMsg'); m.classList.remove('bad'); m.textContent = prefilled ? 'From Schoology. You can change it.' : 'First name only.'; }
+        avDraw();
+      });
+      $('fsName').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('fsNext').click(); } });
+      $('fsEmail').addEventListener('input', e => { emailInput.value = e.target.value.trim(); emailInput.dispatchEvent(new Event('input')); verified = false; codeSent = false; emailDraw(); });
+      $('fsEmail').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('fsNext').click(); } });
+      // Pretend code (same as Windowed's Verify): any 6 digits work until there's a real code email.
+      $('fsVerify').addEventListener('click', () => { codeSent = true; emailDraw(); $('fsCode').value = ''; $('fsCode').focus(); });
+      $('fsResend').addEventListener('click', () => toast('Sent a new code.'));
+      $('fsCode').addEventListener('input', e => { e.target.value = e.target.value.replace(/\D/g, '').slice(0, 6); if (e.target.value.length === 6) { verified = true; emailDraw(); $('fsNext').focus({ preventScroll: true }); } });
+
+      // Profile picture: the same scan as backgrounds, then a round crop.
+      const photoInput = document.createElement('input');
+      photoInput.type = 'file'; photoInput.accept = 'image/png,image/jpeg'; photoInput.style.display = 'none';
+      document.body.appendChild(photoInput);
+      wireUploadInput(photoInput);
+      $('fsPhoto').addEventListener('click', () => requestPhotoUpload({
+        fileInput: photoInput, allowedMimes: ['image/png', 'image/jpeg'], allowedLabel: 'PNG or JPG',
+        onAccepted: file => {
+          const r = new FileReader();
+          r.onload = () => openBgCrop(r.result, url => { photo = url; fsChosenPhoto = url; avDraw(); $('fsPhoto').focus({ preventScroll: true }); },
+            { aspect: 1, round: true, outW: 512, title: 'Position Photo', text: 'Drag to move it. Use the slider to zoom.', confirm: 'Use Photo' });
+          r.readAsDataURL(file);
+        },
+      }));
+      $('fsPhotoRm').addEventListener('click', () => { photo = null; fsChosenPhoto = null; avDraw(); $('fsPhoto').focus(); });
+
+      // ---------- moving between steps ----------
+      function navDraw() {
+        const last = step === 'you';
+        $('fsNav').hidden = step === 'done';
+        $('fsBack').hidden = step === 'mode';
+        const need = step === 'mode' && !accountMode;
+        const next = $('fsNext');
+        if (!finishing) { next.innerHTML = last ? `Finish${ico('ok')}` : `Next${ico('chev-r')}`; next.disabled = need; }
+        $('fsHint').textContent = need ? 'Pick one to continue.' : step === 'apps' ? 'You can skip these and connect later.' : '';
+      }
+      function draw(s) { if (s === 'mode') modesDraw(); else if (s === 'look') lookDraw(); else if (s === 'apps') appsDraw(); else if (s === 'you') youDraw(); else if (s === 'done') doneDraw(); }
+      function go(s, focus = true) {
+        if (s !== 'mode' && s !== 'done' && !accountMode) s = 'mode';
+        step = s;
+        if (!seen.includes(s) && s !== 'done') seen.push(s);
+        if (TO_LIVE[s]) goToStep(TO_LIVE[s]);   // keeps the page's own step (and its draft) in step
+        view.querySelectorAll('.ob-step').forEach(el => {
+          const show = el.dataset.fsStep === s;
+          el.hidden = !show;
+          if (show && !calm()) { el.classList.remove('pp-step-in'); void el.offsetWidth; el.classList.add('pp-step-in'); }
+        });
+        draw(s); stepsDraw(); navDraw();
+        view.scrollTo({ top: 0, behavior: calm() ? 'auto' : 'smooth' });
+        if (focus) { const h = view.querySelector(`.ob-step[data-fs-step="${s}"] h1`); h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: true }); }
+      }
+      $('fsSteps').addEventListener('click', e => { const b = e.target.closest('[data-fs-to]'); if (b && !b.disabled) go(b.dataset.fsTo); });
+      $('fsBack').addEventListener('click', () => go(STEPS[Math.max(0, idx(step) - 1)][0]));
+      $('fsNext').addEventListener('click', () => {
+        if (finishing) return;
+        if (step === 'mode' && !accountMode) return;
+        if (step !== 'you') { go(STEPS[idx(step) + 1][0]); return; }
+        if (!nameInput.value.trim()) { $('fsName').classList.add('bad'); const m = $('fsNameMsg'); m.textContent = 'Add your first name.'; m.classList.add('bad'); $('fsName').focus(); return; }
+        const em = emailInput.value.trim();
+        if (em && !emailOk(em)) { $('fsEmail').classList.add('bad'); const m = $('fsEmailMsg'); m.textContent = "That doesn't look like an email address yet."; m.classList.add('bad'); $('fsEmail').focus(); return; }
+        finishing = true;
+        const next = $('fsNext'); next.disabled = true; next.textContent = 'Creating your profile…';
+        $('fsBack').disabled = true;
+        try { sessionStorage.removeItem(FS_DRAFT); } catch (e) {}
+        submitBtn.click();   // saves everything and heads to Home (or Plus checkout)
+      });
+      // The page says it's done: show "all set" while it moves on.
+      new MutationObserver(() => { if (on && completeState.classList.contains('show') && step !== 'done') go('done'); }).observe(completeState, { attributes: true, attributeFilter: ['class'] });
+
+      function doneDraw() {
+        const ok = $('fsOk'); ok.classList.remove('ob-pop'); if (!calm()) { void ok.offsetWidth; ok.classList.add('ob-pop'); }
+        const checkout = accountMode === 'plus' && !(billingStatus && billingStatus.plus);
+        $('fsDoneP').textContent = checkout ? 'Taking you to Plus checkout next.' : `Welcome to Averages, ${nameInput.value.trim()}. Taking you to Home.`;
+        const modeName = { incognito: 'Incognito', classic: 'Classic', plus: 'Plus' }[accountMode] || 'Incognito';
+        const th = currentTheme();
+        const apps = [...document.querySelectorAll('#integrationsCategory .integ-status.on')].length;
+        $('fsSum').innerHTML = `<span>${ico(MODE_ICON[accountMode] || 'eyeoff')}${modeName}</span><span>${ico(th === 'dark' ? 'moon' : th === 'auto' ? 'window' : 'sun')}${th === 'auto' ? 'Auto' : th === 'dark' ? 'Dark' : 'Light'} theme</span>`
+          + (apps ? `<span>${ico('cloud')}${apps} app${apps === 1 ? '' : 's'} connected</span>` : '')
+          + (potatoToggle && potatoToggle.checked ? `<span>${ico('bolt')}Potato PC Mode</span>` : '');
+        const bar = $('fsBar'); bar.style.setProperty('--fs-wait', '1.8s'); bar.classList.remove('run'); void bar.offsetWidth; bar.classList.add('run');
+        $('fsHome').focus({ preventScroll: true });
+      }
+      $('fsHome').addEventListener('click', () => {
+        if (typeof window.__averagesOnboardFinish === 'function') window.__averagesOnboardFinish();
+        else window.location.href = '/home';
+      });
+
+      // ---------- in and out ----------
+      function enter(opts = {}) {
+        if (on || !allowed()) return false;
+        on = true;
+        document.body.classList.add('fs-on');
+        view.setAttribute('aria-hidden', 'false');
+        if (page) page.inert = true;
+        windowOptions.forEach(o => { const me = o === fsBtn; o.classList.toggle('selected', me); o.setAttribute('aria-pressed', String(me)); });
+        const a = accentNow();
+        if (!ACCENTS.some(x => x[2] === a)) { accentBefore = a; applyAccent(ACCENTS[0][2]); }
+        if (opts.seen) seen = opts.seen;
+        const live = (document.querySelector('.step-tab.active') || {}).dataset;
+        const s = opts.step || FROM_LIVE[live && live.step] || 'look';
+        STEPS.slice(0, Math.max(0, idx(s)) + 1).forEach(([k]) => { if (!seen.includes(k)) seen.push(k); });
+        go(s, opts.focus !== false);
+        return true;
+      }
+      function leave() {
+        if (!on) return;
+        on = false;
+        document.body.classList.remove('fs-on');
+        view.setAttribute('aria-hidden', 'true');
+        if (page) page.inert = false;
+        if (accentBefore) { applyAccent(accentBefore); accentBefore = null; }
+        winBtn.click();
+        goToStep(TO_LIVE[step] || 'theme');
+        winBtn.focus({ preventScroll: true });
+      }
+      fsBtn.addEventListener('click', () => { if (!enter()) { winBtn.click(); } });
+
+      // Everything above can change on its own (Plus showing, an app connecting): follow it.
+      const redraw = () => { if (!on) return; if (step === 'mode') { modesDraw(); navDraw(); } else if (step === 'apps') appsDraw(); else if (step === 'you') emailDraw(); };
+      const mo = new MutationObserver(redraw);
+      mo.observe(document.getElementById('modeOptions'), { subtree: true, attributes: true, childList: true, characterData: true });
+      const integ = document.getElementById('integrationsCategory');
+      if (integ) mo.observe(integ, { subtree: true, attributes: true, childList: true, characterData: true });
+      // The switch can go off (or come in late): Fullscreen only while it's on.
+      if (window.AveragesFeatures && window.AveragesFeatures.ready) Promise.resolve(window.AveragesFeatures.ready).then(() => { if (on && !allowed()) leave(); else if (!on && pending) restore(); });
+
+      // Left for Google or Microsoft sign-in and came back: same view, same step.
+      window.addEventListener('pagehide', () => {
+        if (finishing) return;
+        try {
+          const d = { on, step, seen, theme, photo: photo && photo.length < 400000 ? photo : null };
+          sessionStorage.setItem(FS_DRAFT, JSON.stringify(d));
+        } catch (e) {}
+      });
+      let pending = null;
+      try { pending = JSON.parse(sessionStorage.getItem(FS_DRAFT) || 'null'); } catch (e) {}
+      function restore() {
+        const d = pending; pending = null;
+        if (!d || typeof d !== 'object') return;
+        if (d.theme === 'auto') setTheme('auto'); else if (d.theme === 'light' || d.theme === 'dark') theme = d.theme;
+        if (typeof d.photo === 'string' && /^data:image\/(png|jpe?g|webp);base64,/.test(d.photo)) { photo = d.photo; fsChosenPhoto = d.photo; }
+        if (d.on && STEPS.some(x => x[0] === d.step)) enter({ step: d.step, seen: Array.isArray(d.seen) ? d.seen.filter(k => STEPS.some(x => x[0] === k)) : undefined, focus: false });
+      }
+      if (pending && allowed()) restore();
+      window.__averagesFullscreen = { enter, leave, isOn: () => on };
+    })();
   </script>
 </body>
 </html>
