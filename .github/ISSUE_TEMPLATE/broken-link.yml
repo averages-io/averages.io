@@ -1,0 +1,40 @@
+name: Broken link
+description: A link in Averages.io went to the Page Not Found screen.
+title: "Broken link: "
+labels: ["broken link"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for telling us. The page filled in the link for you. Issues are public, so please don't include your password, student ID or grades.
+  - type: input
+    id: link
+    attributes:
+      label: Broken link
+      description: The address that went to Page Not Found.
+      placeholder: https://app.averages.io/...
+    validations:
+      required: true
+  - type: input
+    id: came-from
+    attributes:
+      label: Came from
+      description: The page you were on before, if you know it.
+      placeholder: https://app.averages.io/home
+    validations:
+      required: false
+  - type: textarea
+    id: looking-for
+    attributes:
+      label: What were you trying to open?
+      description: For example, a class page, an assignment, or a file.
+      placeholder: I clicked the Lab 4 assignment on my Home page...
+    validations:
+      required: false
+  - type: textarea
+    id: anything-else
+    attributes:
+      label: Anything else?
+      description: Your device and browser help too, like "Chromebook, Chrome".
+    validations:
+      required: false
