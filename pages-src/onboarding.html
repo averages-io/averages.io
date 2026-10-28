@@ -1141,7 +1141,7 @@
 
   /* ==========================================================================
      Fullscreen onboarding (2026-10-28, Martin's design, behind the
-     fullscreen-onboarding switch). Picking Fullscreen under Window type turns
+     fullscreen switch). Picking Fullscreen under Window type turns
      this page into this view; picking Windowed turns it back. It's a second
      face on the same steps: every choice goes through the controls above
      (mode, dark mode, apps, Potato, name, email, Submit), so saving, Plus
@@ -1452,8 +1452,8 @@
           <h2 class="section-label">Choose your window type</h2>
           <div class="window-options">
             <button type="button" class="window-option" data-shape="windowed" aria-pressed="false">Windowed</button>
-            <!-- Fullscreen (2026-10-28): onboarding only, behind the fullscreen-onboarding switch. -->
-            <button type="button" class="window-option" data-shape="fullscreen" data-feature="fullscreen-onboarding" aria-pressed="false">Fullscreen</button>
+            <!-- Fullscreen (2026-10-28): onboarding only, behind the fullscreen switch. -->
+            <button type="button" class="window-option" data-shape="fullscreen" data-feature="fullscreen" aria-pressed="false">Fullscreen</button>
           </div>
 
           <h2 class="section-label">Choose your background &amp; color</h2>
@@ -1596,7 +1596,7 @@
 
 
   <!-- ---------- Fullscreen onboarding (2026-10-28, Martin's design). Shown when
-       Fullscreen is picked under Window type (fullscreen-onboarding switch on).
+       Fullscreen is picked under Window type (fullscreen switch on).
        Every control here drives the ones above; see the script at the end. ---------- -->
   <div class="fs" id="fsView" aria-hidden="true">
     <svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="fs-i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 10.75v5.75"/><circle cx="12" cy="7.6" r="1.2" fill="currentColor" stroke="none"/></symbol>
@@ -3147,6 +3147,8 @@
           if (potatoPick) opts.potatoMode = potatoPick.checked;
           // Sync is always on in Classic and Plus, never in Incognito (2026-10-21).
           opts.syncAcrossDevices = savedMode === 'classic';
+          // Fullscreen or Windowed (2026-10-28): which pages the app opens (app/lib/theme-boot.ts).
+          opts.windowType = document.body.classList.contains('fs-on') ? 'fullscreen' : 'windowed';
           localStorage.setItem('schoolagy_settings_options', JSON.stringify(opts));
         }
         localStorage.setItem('schoolagy_profile', JSON.stringify({
@@ -3200,14 +3202,14 @@
 
     // ==================================================================
     // Fullscreen onboarding (2026-10-28, Martin's design; switch:
-    // fullscreen-onboarding, off by default). Picking Fullscreen under
+    // fullscreen, off by default). Picking Fullscreen under
     // Window type turns this page into the Fullscreen view (#fsView);
     // picking Windowed turns it back. It's only a second face: every
     // choice goes through the controls above (setMode, the dark mode
     // switch, the integration rows, Potato, the name and email boxes,
     // Submit), so saving, Plus checkout, the draft and the redirect to
-    // Home work exactly as they do Windowed. Nothing about Fullscreen is
-    // saved for the rest of the app: it's for onboarding only for now.
+    // Home work exactly as they do Windowed. Finishing here saves
+    // windowType 'fullscreen', so the app opens the Fullscreen pages (/fs/).
     // ==================================================================
     (function fullscreenOnboarding() {
       const view = document.getElementById('fsView');
@@ -3219,7 +3221,7 @@
       const ico = n => `<svg class="i" aria-hidden="true"><use href="#fs-i-${n}"/></svg>`;
       const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
       const calm = () => document.body.classList.contains('potato-mode') || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
-      const allowed = () => !!(window.AveragesFeatures && window.AveragesFeatures.on('fullscreen-onboarding'));
+      const allowed = () => !!(window.AveragesFeatures && window.AveragesFeatures.on('fullscreen'));
       const FS_DRAFT = 'averages_onboard_fs';
       const STEPS = [['mode', 'Mode'], ['look', 'Look'], ['apps', 'Apps'], ['you', 'You']];
       const TO_LIVE = { mode: 'mode', look: 'theme', apps: 'features', you: 'profile' };

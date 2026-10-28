@@ -33,12 +33,12 @@
     'schoology-signin', 'test-signin',
     'maintenance-banner', 'coursematerialpreview-feature',
     'turnin-feature', 'messaging-features', 'notifications-features',
-    'billing', 'calendar-sync', 'live-grades', 'fullscreen-onboarding',
+    'billing', 'calendar-sync', 'live-grades', 'fullscreen',
   ];
   // Averages Plus shows first and hides if it turns out to be off (2026-10-26, Martin: "show plus
   // then check"), instead of staying hidden until the API says it's on.
-  // Fullscreen onboarding (2026-10-28) stays hidden until the API says it's on.
-  const DEFAULTS = { 'maintenance-banner': false, 'coursematerialpreview-feature': false, billing: true, 'fullscreen-onboarding': false };
+  // Fullscreen (2026-10-28) stays hidden until the API says it's on.
+  const DEFAULTS = { 'maintenance-banner': false, 'coursematerialpreview-feature': false, billing: true, fullscreen: false };
   const NAMES = {
     'canva-integration': 'Canva is', 'onedrive-integration': 'OneDrive is', 'drive-integration': 'Google Drive is',
     'schoology-signin': 'Signing in with Schoology is',

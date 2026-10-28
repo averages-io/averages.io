@@ -54,6 +54,8 @@ const pageFiles = [];
     const full = path.join(dir, entry.name);
     if (entry.isDirectory()) walk(full);
     else if (entry.name === "page.tsx" || entry.name === "not-found.tsx") {
+      // Hand-written routes aren't ported pages (2026-10-28: /signout).
+      if (path.relative(APP_DIR, full) === path.join("signout", "page.tsx")) continue;
       pageFiles.push(full);
     }
   }

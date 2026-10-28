@@ -1491,6 +1491,8 @@
             <p class="settings-subhead">Window Type</p>
             <div class="window-options">
               <button type="button" class="window-option" id="windowOptionWindowed" data-shape="windowed" aria-pressed="false">Windowed</button>
+              <!-- Fullscreen (2026-10-28): the new pages (/fs/), behind the fullscreen switch. -->
+              <button type="button" class="window-option" id="windowOptionFullscreen" data-shape="fullscreen" data-feature="fullscreen" aria-pressed="false">Fullscreen</button>
             </div>
 
             <p class="settings-subhead">Appearance</p>
@@ -3353,12 +3355,18 @@
     // option can be added as a second .window-option without touching
     // this handler.
     // ------------------------------------------------------------------
+    // Fullscreen (2026-10-28, behind the fullscreen switch): saved as
+    // settingsOptions.windowType, and the app then opens the Fullscreen pages
+    // (/fs/, see app/lib/fs-boot.ts). Its own Settings page has the way back.
     const windowOptions = document.querySelectorAll('.window-option');
     windowOptions.forEach(opt => {
       opt.addEventListener('click', () => {
         windowOptions.forEach(o => { o.classList.remove('selected'); o.setAttribute('aria-pressed', 'false'); });
         opt.classList.add('selected');
         opt.setAttribute('aria-pressed', 'true');
+        const full = opt.dataset.shape === 'fullscreen';
+        saveSettingsOption('windowType', full ? 'fullscreen' : 'windowed');
+        if (full) { try { sessionStorage.removeItem('averages_fs_off'); } catch (e) {} window.location.href = '/fs/settings.html'; }
       });
     });
     windowOptions[0].classList.add('selected');

@@ -7,6 +7,8 @@ import "./lib/averages-help.css";
 import "./lib/averages-avatar.css";
 // Our /js scripts' versioned addresses (2026-10-20; generated, see scripts/port-pages.mjs).
 import { JS } from "./lib/js-version";
+// Fullscreen pages (2026-10-28): the early redirect.
+import { FS_BOOT_JS } from "./lib/fs-boot";
 
 /**
  * Link previews (2026-10-07, Martin): what iMessage, Discord, Slack, Gmail
@@ -83,6 +85,8 @@ export default function RootLayout({
           one: its requests send cookies, and a connection opened for
           cookie-less requests isn't reused for those.
         */}
+        {/* Fullscreen (2026-10-28): a student who picked it goes to /fs/ before anything paints. See app/lib/fs-boot.ts. */}
+        <script dangerouslySetInnerHTML={{ __html: FS_BOOT_JS }} />
         <link rel="preconnect" href="https://api.averages.io" />
         <link rel="preconnect" href="https://use.typekit.net" />
         <link rel="preconnect" href="https://p.typekit.net" crossOrigin="anonymous" />
