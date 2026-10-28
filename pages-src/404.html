@@ -3925,12 +3925,14 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (history.length > 1 && !offsite) history.back(); else location.href = 'home.html';
   });
   $('nfReport').addEventListener('click', () => {
-    // A GitHub issue, filled in (2026-10-28, Martin). The template
-    // (.github/ISSUE_TEMPLATE/broken-link.md) adds the "broken link" label,
-    // which a URL can't do for people without write access.
-    const u = 'https://github.com/averages-io/averages.io/issues/new?template=broken-link.md'
+    // A GitHub issue form, filled in (2026-10-28, Martin). The form
+    // (.github/ISSUE_TEMPLATE/broken-link.yml) has a text box per question;
+    // these query names are its field ids. It also adds the "broken link"
+    // label, which a URL can't do for people without write access.
+    const u = 'https://github.com/averages-io/averages.io/issues/new?template=broken-link.yml'
       + '&title=' + encodeURIComponent('Broken link: ' + location.host + location.pathname)
-      + '&body=' + encodeURIComponent('Broken link: ' + location.href + '\nCame from: ' + (document.referrer || '(opened directly)') + '\n\nWhat were you trying to open?\n');
+      + '&link=' + encodeURIComponent(location.href)
+      + '&came-from=' + encodeURIComponent(document.referrer || '(opened directly)');
     window.open(u, '_blank', 'noopener');
   });
   if (!EMOJI_SVG['🧭']) EMOJI_SVG['🧭'] = "<svg aria-hidden=\"true\" focusable=\"false\" viewBox=\"0 0 36 36\"><circle fill=\"#F4900C\" cx=\"18\" cy=\"18\" r=\"18\"/><circle fill=\"#FFD983\" cx=\"18\" cy=\"18\" r=\"14.5\"/><circle fill=\"#F5F8FA\" cx=\"18\" cy=\"18\" r=\"13\"/><path fill=\"#CCD6DD\" d=\"M18 8l1.531 6.304 5.54-3.375-3.375 5.54L28 18l-6.304 1.531 3.375 5.54-5.54-3.375L18 28l-1.531-6.304-5.54 3.375 3.375-5.54L8 18l6.304-1.531-3.375-5.54 5.54 3.375z\"/><g class=\"nf-needle\"><path fill=\"#292F33\" d=\"M17.343 20.748l8.777 5.381-5.379-8.778z\"/><path fill=\"#DD2E44\" d=\"M18.657 15.267L9.879 9.886l5.38 8.779z\"/></g><circle fill=\"#8899A6\" cx=\"18\" cy=\"18.008\" r=\"3.055\"/><circle fill=\"#F5F8FA\" cx=\"18\" cy=\"18.008\" r=\"1.648\"/></svg>";
