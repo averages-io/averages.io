@@ -233,7 +233,7 @@
    */
   function refreshBundle(data) {
     var tz = '';
-    try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) { /* the API guesses */ }
+    try { tz = (window.averagesTimeZone ? window.averagesTimeZone() : Intl.DateTimeFormat().resolvedOptions().timeZone) || ''; } catch (e) { /* the API guesses */ }
     return fetch(API + '/data/bundle' + (tz ? '?tz=' + encodeURIComponent(tz) : ''), { credentials: 'include', cache: 'no-store' })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (bundle) {

@@ -201,7 +201,7 @@
     const json = sub.toJSON();
     // Time zone (2026-10-07): Schoology due times are local, so "due within a day" needs it.
     let tz = '';
-    try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) {}
+    try { tz = (window.averagesTimeZone ? window.averagesTimeZone() : Intl.DateTimeFormat().resolvedOptions().timeZone) || ''; } catch (e) {}
     const r = await api('POST', '/push/subscribe', { subscription: { endpoint: json.endpoint, keys: json.keys }, types: cleanTypes(types), tz: String(tz).slice(0, 64) });
     if (!r.ok) {
       try {
@@ -294,7 +294,7 @@
     // Noted first, so several tabs opening at once don't all post.
     setLocal(TOUCHED_KEY, String(Date.now()));
     let tz = '';
-    try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) {}
+    try { tz = (window.averagesTimeZone ? window.averagesTimeZone() : Intl.DateTimeFormat().resolvedOptions().timeZone) || ''; } catch (e) {}
     const r = await api('POST', '/push/touch', { tz: String(tz).slice(0, 64) });
     if (!r.ok) return fail(codeOf(r));
     if (r.data && r.data.on === false) {

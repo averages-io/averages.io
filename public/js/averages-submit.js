@@ -188,7 +188,7 @@
   /** The student's time zone, so "when" in a revision reads in their own time (as /data/bundle). */
   function tzQuery(first) {
     let tz = '';
-    try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch {}
+    try { tz = (window.averagesTimeZone ? window.averagesTimeZone() : Intl.DateTimeFormat().resolvedOptions().timeZone) || ''; } catch {}
     return tz ? `${first ? '?' : '&'}tz=${enc(tz)}` : '';
   }
 
