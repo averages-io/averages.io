@@ -16,7 +16,7 @@
 .avh-hp-scrim [hidden] { display: none !important; }
 :where(.avh-hp-scrim) button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; } /* low priority, so the popup's own button styles win */
 .avh-hp-scrim button:focus-visible, .avh-hp-scrim [tabindex]:focus-visible, .avh-hp-scrim input:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
-.avh-hp-scrim svg.avh-i { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: butt; stroke-linejoin: miter; flex: none; }
+.avh-hp-scrim svg.avh-i { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: butt; stroke-linejoin: miter; flex: none; }
 .avh-hp-scrim .avh-btn { height: 36px; padding: 0 16px; border-radius: 10px; font-weight: 800; font-size: 14px; background: var(--panel); white-space: nowrap; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
 .avh-hp-scrim .avh-btn:hover { background: var(--inner); }
 .avh-hp-scrim .avh-btn.avh-primary { background: var(--accent); color: #ffffff; }
