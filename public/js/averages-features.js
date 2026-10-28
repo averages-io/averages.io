@@ -133,7 +133,7 @@
     else document.addEventListener('DOMContentLoaded', fn, { once: true });
   }
 
-  const WARN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l9.5 17h-19z"/><path d="M12 10v4.5M12 17.5v.01"/></svg>';
+  const WARN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="butt" stroke-linejoin="miter" aria-hidden="true"><path d="M12 3.5l9 16.5H3z"/><path d="M12 9.5v5"/><path d="M12 17v.01" stroke-linecap="square"/></svg>';
   function dismissedKey(text) { return 'averages_banner_x:' + text; }
   function banner() {
     const old = document.getElementById('avfBanner');

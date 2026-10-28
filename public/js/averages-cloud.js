@@ -1660,7 +1660,7 @@
 .avod-x{flex:none;width:32px;height:32px;border:none;border-radius:50%;background:var(--panel-inner,#dcdce0);color:var(--text-muted,#4b4d63);font:inherit;font-size:.9rem;line-height:1;cursor:pointer}
 .avod-x:hover{color:var(--text-dark,#14151f)}
 .avod-search{display:flex;align-items:center;gap:8px;margin:0 20px;padding:0 16px;border-radius:999px;background:var(--panel-inner,#dcdce0);color:var(--text-faint,#83849a)}
-.avod-search svg{flex:none;width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
+.avod-search svg{flex:none;width:15px;height:15px;fill:none;stroke:currentColor;stroke-width: 2.4;stroke-linecap: butt; stroke-linejoin: miter; }
 .avod-search input{flex:1;min-width:0;padding:10px 0;border:none;background:none;outline:none;font:inherit;font-size:.86rem;font-weight:600;color:var(--text-dark,#14151f)}
 .avod-search input::placeholder{color:var(--text-faint,#83849a)}
 .avod-search:focus-within{box-shadow:0 0 0 2px var(--accent-ring,rgba(217,74,43,.35))}
@@ -1668,7 +1668,7 @@
 .avod-crumbs button{max-width:200px;padding:4px 8px;border:none;border-radius:8px;background:none;font:inherit;color:var(--text-muted,#4b4d63);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
 .avod-crumbs button:hover{background:var(--panel-inner,#dcdce0);color:var(--text-dark,#14151f)}
 .avod-crumbs [aria-current]{max-width:240px;padding:4px 8px;color:var(--text-dark,#14151f);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.avod-crumbs svg{flex:none;width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;opacity:.6}
+.avod-crumbs svg{flex:none;width:12px;height:12px;fill:none;stroke:currentColor;stroke-width: 3;stroke-linecap: butt;stroke-linejoin: miter;opacity:.6}
 .avod-list{flex:1;min-height:0;margin:0 8px;padding:0 4px 8px;overflow-y:auto;outline:none}
 .avod-row{display:flex;align-items:center;gap:12px;width:100%;min-height:52px;margin:0;padding:8px;border:none;border-radius:12px;background:none;font:inherit;text-align:left;color:var(--text-dark,#14151f);cursor:pointer;box-sizing:border-box}
 .avod-row:hover{background:var(--panel-inner,#dcdce0)}
@@ -1684,7 +1684,7 @@
 .avod-name b{display:block;font-size:.86rem;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .avod-name small{display:block;margin-top:2px;font-size:.72rem;font-weight:700;color:var(--text-faint,#83849a)}
 .avod-chev{flex:none;display:flex;color:var(--text-faint,#83849a)}
-.avod-chev svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.avod-chev svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width: 2.55;stroke-linecap: butt;stroke-linejoin: miter}
 .avod-msg{margin:0;padding:32px 16px;text-align:center;font-size:.86rem;font-weight:600;color:var(--text-muted,#4b4d63)}
 .avod-msg .avod-btn{margin-top:12px}
 .avod-more{display:block;margin:8px auto 4px;padding:8px 16px;border:1px solid var(--border,#cfcfd6);border-radius:999px;background:var(--panel-bg,#eaeaec);font:inherit;font-size:.8rem;font-weight:800;color:var(--text-dark,#14151f);cursor:pointer}

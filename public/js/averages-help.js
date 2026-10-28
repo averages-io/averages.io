@@ -33,7 +33,7 @@ const SPRITE = `<svg id="avh-sprite" width="0" height="0" style="position:absolu
 <symbol id="avh-i-doc" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M9 12h6M9 16h6"/></symbol>
 </svg>`;
 const $ = id => document.getElementById(id);
-const ico = n => `<svg class="avh-i"><use href="#avh-i-${n}"/></svg>`;
+const ico = n => `<svg class="avh-i" aria-hidden="true"><use href="#avh-i-${n}"/></svg>`;
 const calm = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const store = {
   get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (_) { return null; } },
