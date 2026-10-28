@@ -1760,6 +1760,12 @@
       return new Set(c.messages.filter(m => m.from === 'them' && m.authorId).map(m => m.authorId)).size > 1;
     }
 
+    // The student's time zone (2026-10-28, Settings > Time Zone), so message times read in it.
+    function msgZone() {
+      let tz = '';
+      try { tz = (window.averagesTimeZone ? window.averagesTimeZone() : Intl.DateTimeFormat().resolvedOptions().timeZone) || ''; } catch (e) {}
+      return tz ? '&tz=' + encodeURIComponent(tz) : '';
+    }
     function liveFetch(path, body) {
       const init = { method: body ? 'POST' : 'GET', credentials: 'include' };
       if (body) {
@@ -1855,7 +1861,7 @@
       if (c.load === 'ready' || c.localThread) return Promise.resolve();
       if (c.load === 'loading' && c.loading) return c.loading;
       c.load = 'loading';
-      c.loading = liveFetch('/messages/thread?id=' + encodeURIComponent(c.id)).then(data => {
+      c.loading = liveFetch('/messages/thread?id=' + encodeURIComponent(c.id) + msgZone()).then(data => {
         const list = Array.isArray(data && data.messages) ? data.messages : [];
         const loaded = list.filter(m => m && typeof m === 'object').map(m => {
           const mine = m.from === 'me';

@@ -2366,7 +2366,7 @@
       materialsEl.setAttribute('aria-busy', 'true');
       try {
         let tz = '';
-        try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch {}
+        try { tz = (window.averagesTimeZone ? window.averagesTimeZone() : Intl.DateTimeFormat().resolvedOptions().timeZone) || ''; } catch {}
         const res = await fetch(`${averagesApiBase()}/data/assignment?section=${encodeURIComponent(item.courseId)}&id=${encodeURIComponent(item.id)}${tz ? '&tz=' + encodeURIComponent(tz) : ''}`, { credentials: 'include' });
         if (res.status === 401) { window.location.href = '/'; return; }
         if (!res.ok) throw new Error('status ' + res.status);

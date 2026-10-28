@@ -1324,10 +1324,12 @@
       else if (AV_DATA.EVENTS_PARTIAL) { note.textContent = 'Some classes’ events didn’t load this time.'; note.hidden = false; }
     }
 
+    // The wall clock in the student's time zone (2026-10-28, Settings > Time Zone; public/js/averages-tz.js).
+    function avWall(x) { return window.averagesWallClock ? window.averagesWallClock(x) : (x == null ? new Date() : new Date(x)); }
     function ymd(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
     function isSameDay(a, b) { return ymd(a) === ymd(b); }
     function startOfDay(d) { const n = new Date(d); n.setHours(0, 0, 0, 0); return n; }
-    const TODAY = startOfDay(new Date());
+    const TODAY = startOfDay(avWall());
 
     function eventsOn(dateStr) { return EVENTS.filter(e => e.date === dateStr); }
     function eventsForDate(d) { return eventsOn(ymd(d)); }

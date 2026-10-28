@@ -735,6 +735,14 @@
     padding: 6px 10px;
     cursor: pointer;
   }
+  select.settings-select:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring); }
+  /* Time Zone (2026-10-28) */
+  #tzPickRow[hidden] { display: none; }
+  .tz-select { flex: 0 1 auto; max-width: 240px; min-width: 0; }
+  @media (max-width: 520px) {
+    #tzPickRow { flex-wrap: wrap; }
+    .tz-select { max-width: none; width: 100%; }
+  }
 
   /* ---------- Account: profile card ---------- */
   .profile-card {
@@ -1510,6 +1518,27 @@
             <p class="settings-subhead">Window Type</p>
             <div class="window-options">
               <button type="button" class="window-option" id="windowOptionWindowed" data-shape="windowed" aria-pressed="false">Windowed</button>
+            </div>
+
+            <p class="settings-subhead" id="tzHead">Time Zone</p>
+            <div class="settings-group" id="tzGroup">
+              <div class="settings-row">
+                <div class="settings-row-text">
+                  <p class="settings-row-label">Set Automatically</p>
+                  <p class="settings-row-desc" id="tzAutoDesc">Uses this device's time zone.</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="tzAutoToggle" aria-label="Set time zone automatically" checked>
+                  <span class="track"><span class="thumb"></span></span>
+                </label>
+              </div>
+              <div class="settings-row" id="tzPickRow" hidden>
+                <div class="settings-row-text">
+                  <p class="settings-row-label"><label for="tzSelect">Time Zone</label></p>
+                  <p class="settings-row-desc" id="tzPickDesc">Due times, Today and Overdue use this zone.</p>
+                </div>
+                <select class="settings-select tz-select" id="tzSelect"></select>
+              </div>
             </div>
 
             <p class="settings-subhead">Performance</p>
@@ -3005,6 +3034,127 @@
       // Off: forget the pictures already made in this tab.
       if (!filePreviewsToggle.checked) { try { sessionStorage.removeItem('averages_previews'); } catch {} }
     });
+
+    // ------------------------------------------------------------------
+    // Time Zone (2026-10-28, Martin): automatic (this device's zone) or one
+    // picked by hand, stored as settingsOptions.timeZone ('auto' or an IANA
+    // name) and synced with the other settings. Every API call that works
+    // out due times, Today and Overdue sends it as ?tz= (public/js/averages-tz.js).
+    // Schoology's due times are the school's wall-clock time, read in this
+    // zone, so a device set to the wrong zone (a Chromebook on UTC) showed
+    // work due at the wrong hour or overdue early. Picking a zone fixes that.
+    // ------------------------------------------------------------------
+    (function timeZoneSetting() {
+      const autoToggle = document.getElementById('tzAutoToggle');
+      const pickRow = document.getElementById('tzPickRow');
+      const select = document.getElementById('tzSelect');
+      const autoDesc = document.getElementById('tzAutoDesc');
+      if (!autoToggle || !pickRow || !select) return;
+      const device = () => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) { return ''; } };
+      const valid = (z) => window.averagesValidTimeZone ? window.averagesValidTimeZone(z) : (() => { try { new Intl.DateTimeFormat('en-US', { timeZone: z }); return true; } catch (e) { return false; } })();
+      const COMMON = [
+        ['America/Los_Angeles', 'Pacific Time'], ['America/Denver', 'Mountain Time'], ['America/Phoenix', 'Arizona'],
+        ['America/Chicago', 'Central Time'], ['America/New_York', 'Eastern Time'], ['America/Anchorage', 'Alaska'],
+        ['Pacific/Honolulu', 'Hawaii'], ['America/Puerto_Rico', 'Atlantic Time'], ['UTC', 'UTC'],
+      ];
+      function offsetOf(z) {
+        try {
+          const p = new Intl.DateTimeFormat('en-US', { timeZone: z, timeZoneName: 'shortOffset' }).formatToParts(new Date());
+          const n = p.find(x => x.type === 'timeZoneName');
+          return n ? n.value.replace('-', '−') : '';
+        } catch (e) { return ''; }
+      }
+      function placeName(z) {
+        const parts = z.split('/');
+        const city = parts[parts.length - 1].replace(/_/g, ' ');
+        return parts.length > 1 ? `${city} (${parts.slice(0, -1).join(', ').replace(/_/g, ' ')})` : city;
+      }
+      function nowIn(z) {
+        try { return new Date().toLocaleTimeString('en-US', { timeZone: z, hour: 'numeric', minute: '2-digit' }); } catch (e) { return ''; }
+      }
+      function allZones() {
+        let list = [];
+        try { if (typeof Intl.supportedValuesOf === 'function') list = Intl.supportedValuesOf('timeZone'); } catch (e) {}
+        if (!list.length) list = COMMON.map(c => c[0]);
+        const seen = new Set(COMMON.map(c => c[0]));
+        return list.filter(z => !seen.has(z) && valid(z));
+      }
+      function fill(selected) {
+        const opt = (z, text) => { const o = document.createElement('option'); o.value = z; o.textContent = text; return o; };
+        select.textContent = '';
+        const common = document.createElement('optgroup');
+        common.label = 'Common';
+        COMMON.forEach(([z, name]) => { if (valid(z)) common.appendChild(opt(z, `${name} · ${offsetOf(z)}`)); });
+        select.appendChild(common);
+        const every = document.createElement('optgroup');
+        every.label = 'All time zones';
+        allZones().forEach(z => every.appendChild(opt(z, `${placeName(z)} · ${offsetOf(z)}`)));
+        select.appendChild(every);
+        // A synced zone this browser doesn't list still shows as picked.
+        if (selected && !Array.from(select.options).some(o => o.value === selected)) select.appendChild(opt(selected, placeName(selected)));
+        select.value = selected || device() || 'UTC';
+        if (select.selectedIndex < 0) select.value = 'America/Los_Angeles';
+      }
+      let filled = false;
+      function render() {
+        const stored = loadSettingsOptions().timeZone;
+        const manual = typeof stored === 'string' && stored !== 'auto' && valid(stored) ? stored : '';
+        const dev = device();
+        autoToggle.checked = !manual;
+        pickRow.hidden = !manual;
+        autoDesc.textContent = dev ? `Uses this device's zone: ${placeName(dev)}, ${nowIn(dev)} now.` : "Uses this device's time zone.";
+        if (manual || !filled) { fill(manual || dev); filled = true; }
+      }
+      // Due times are worked out on the server in the zone sent, so anything
+      // already fetched in the old zone goes, and reminders and the calendar
+      // link hear about the new zone now rather than at tomorrow's check-in.
+      function zoneChanged() {
+        try {
+          ['schoolagy_bundle_cache', 'averages_live_at'].forEach(k => sessionStorage.removeItem(k));
+          const drop = [];
+          for (let i = 0; i < sessionStorage.length; i++) { const k = sessionStorage.key(i); if (k && k.startsWith('averages_extras_')) drop.push(k); }
+          drop.forEach(k => sessionStorage.removeItem(k));
+        } catch (e) {}
+        const tz = (window.averagesTimeZone ? window.averagesTimeZone() : device()) || '';
+        let pushOn = false, calOn = false;
+        try {
+          pushOn = !!localStorage.getItem('averages_push_endpoint');
+          calOn = localStorage.getItem('averages_calendar_on') === '1';
+          localStorage.removeItem('averages_push_touched');
+          if (calOn) localStorage.setItem('averages_calendar_touched', String(Date.now()));
+        } catch (e) {}
+        if (pushOn && AVERAGES_MODE !== 'demo') {
+          const loader = window.AveragesPush ? Promise.resolve(window.AveragesPush) : (typeof loadPushScript === 'function' ? loadPushScript() : Promise.resolve(null));
+          loader.then(p => p && typeof p.touchIfDue === 'function' && p.touchIfDue()).catch(() => {});
+        }
+        if (calOn && tz && AVERAGES_MODE !== 'demo') {
+          fetch(averagesApiBase() + '/calendar/touch', {
+            method: 'POST', credentials: 'include',
+            headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tz: tz.slice(0, 64) }),
+          }).catch(() => {});
+        }
+      }
+      autoToggle.addEventListener('change', () => {
+        if (autoToggle.checked) {
+          saveSettingsOption('timeZone', 'auto');
+        } else {
+          if (!filled) fill(device());
+          if (!valid(select.value)) select.value = 'America/Los_Angeles';
+          saveSettingsOption('timeZone', select.value);
+        }
+        render();
+        zoneChanged();
+        if (!autoToggle.checked) select.focus();
+      });
+      select.addEventListener('change', () => {
+        if (!valid(select.value)) return;
+        saveSettingsOption('timeZone', select.value);
+        zoneChanged();
+      });
+      render();
+      // The synced copy can change it (another device picked a zone).
+      window.addEventListener('storage', (e) => { if (e.key === AVERAGES_SETTINGS_OPTIONS_KEY) render(); });
+    })();
 
     // ------------------------------------------------------------------
     // Cache — 2026-09-08, per Martin: "why is the cache not accurate,
@@ -5298,7 +5448,7 @@
         btn.disabled = true;
         say(replacing ? 'Making a new link…' : 'Making your link…');
         let tz = '';
-        try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) {}
+        try { tz = (window.averagesTimeZone ? window.averagesTimeZone() : Intl.DateTimeFormat().resolvedOptions().timeZone) || ''; } catch (e) {}
         try {
           const res = await fetch(averagesApiBase() + '/calendar', {
             method: 'POST', credentials: 'include',

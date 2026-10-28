@@ -1816,10 +1816,12 @@
     // it's missing it failed, which the widget says rather than "none yet".
     const HOME_CLASSROOM = HOME_LIVE && (HOME_DATA.platform === 'classroom' || HOME_DATA.PEOPLE_PLATFORM === 'classroom');
     let UPDATES_FAILED = HOME_LIVE && !Array.isArray(HOME_DATA.COURSE_UPDATES);
+    // The wall clock in the student's time zone (2026-10-28, Settings > Time Zone; public/js/averages-tz.js).
+    function avWall(x) { return window.averagesWallClock ? window.averagesWallClock(x) : (x == null ? new Date() : new Date(x)); }
     // Today's date, signed in; the sample's own date in demo. The markup ships
     // empty (2026-10-14) so no sample date shows while the page loads.
     if (HOME_LIVE) {
-      const now = new Date();
+      const now = avWall();
       document.getElementById('homeDate').textContent = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
       document.getElementById('todayDate').textContent = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
     } else {
@@ -1827,7 +1829,7 @@
       document.getElementById('todayDate').textContent = 'Mon, Aug 24';
     }
     // "Now" for due math: real time when signed in; the demo's own Monday, Aug 24.
-    const REF_NOW = HOME_LIVE ? new Date() : new Date(2026, 7, 24, 8, 0);
+    const REF_NOW = HOME_LIVE ? avWall() : new Date(2026, 7, 24, 8, 0);
     const RECENT_GRADES = HOME_LIVE ? (Array.isArray(HOME_DATA.RECENT_GRADES) ? HOME_DATA.RECENT_GRADES : []) : [
       { title: 'Molarity Practice Set', courseId: 'apchem', when: '2h ago', letter: 'A-', pct: 90, pts: '18/20', isNew: true },
       { title: 'Essay 2: Rhetorical Analysis', courseId: 'english10', when: '3h ago', letter: 'D+', pct: 68, pts: '27/40', isNew: true },
@@ -2154,7 +2156,7 @@
     const SHORT_DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     function dayStart(d) { return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
     function dueDateOf(item) {
-      if (item.dueAt) { const d = new Date(item.dueAt); if (!isNaN(d)) return d; }
+      if (item.dueAt) { const d = avWall(item.dueAt); if (!isNaN(d)) return d; }
       try { const d = parseMockDate(String(item.due || '')); return isNaN(d) ? null : d; } catch { return null; }
     }
     function daysAway(d) { return Math.round((dayStart(d) - dayStart(REF_NOW)) / 86400000); }

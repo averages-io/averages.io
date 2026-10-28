@@ -2232,7 +2232,7 @@
       COURSE_EVENTS.length = 0;
       const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
       const WD = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-      const now = new Date();
+      const now = avWall();
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       (Array.isArray(AV_DATA.EVENTS) ? AV_DATA.EVENTS : []).forEach(e => {
         if (!e || e.type !== 'teacher' || String(e.source) !== String(course.id)) return;
@@ -2248,10 +2248,12 @@
     const UP_TYPE_EMOJI = { assignment: '📝', discussion: '💬', assessment: '📋', event: '🗓️' };
     const FULL_MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
     const FULL_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    // The wall clock in the student's time zone (2026-10-28, Settings > Time Zone; public/js/averages-tz.js).
+    function avWall(x) { return window.averagesWallClock ? window.averagesWallClock(x) : (x == null ? new Date() : new Date(x)); }
     // "Fri Aug 21" (or a full `dueAt` timestamp) -> Date. Sample dates have no
     // year; the mock's year is 2026 (same convention as the rest of the page).
     function upDate(item) {
-      if (item.dueAt) { const d = new Date(item.dueAt); if (!isNaN(d)) return d; }
+      if (item.dueAt) { const d = avWall(item.dueAt); if (!isNaN(d)) return d; }
       const m = String(item.due || '').match(/\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s+(\d{1,2})(?:,?\s+(\d{4}))?/i);
       if (!m) return null;
       const mi = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'].indexOf(m[1].toLowerCase());
@@ -2263,7 +2265,7 @@
     // "Now" for due math: the real time with live data; with the sample data
     // (August 2026) the mock's own today, Aug 24 2026 8:00 AM.
     const IS_SAMPLE = !AV_LIVE;
-    const REF_NOW = IS_SAMPLE ? new Date(2026, 7, 24, 8, 0) : new Date();
+    const REF_NOW = IS_SAMPLE ? new Date(2026, 7, 24, 8, 0) : avWall();
     // Exact due moment: `dueAt`, or the date + time (11:59 PM if none given).
     function dueMoment(item) {
       const d = upDate(item);
