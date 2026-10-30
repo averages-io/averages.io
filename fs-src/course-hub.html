@@ -141,7 +141,7 @@
   .nav .side-kbd { margin-left: auto; font-size: 11px; line-height: 20px; padding: 0 4px; background: var(--inner); color: var(--muted); }
   .nav a:hover .side-kbd { background: var(--field); }
   /* Search turns into a search bar once the sidebar opens (an icon on the closed rail) */
-  .nav #sideSearch { transition: background .12s ease, box-shadow .12s ease; }
+  .nav #sideSearch { transition: background .12s ease, box-shadow .12s ease; margin-bottom: 8px; } /* a little room between Search and the pages under it (2026-10-30) */
   .side:is(:hover, .hold, :has(:focus-visible)) #sideSearch, .app.pinned .side #sideSearch { background: var(--field); box-shadow: inset 0 0 0 2px var(--inner); color: var(--muted); transition-delay: .12s; }
   .side:is(:hover, .hold, :has(:focus-visible)) #sideSearch:hover, .app.pinned .side #sideSearch:hover { background: color-mix(in srgb, var(--inner) 35%, var(--field)); color: var(--ink-2); }
   .side:is(:hover, .hold, :has(:focus-visible)) #sideSearch .side-kbd, .app.pinned .side #sideSearch .side-kbd { background: var(--panel); }
