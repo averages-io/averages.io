@@ -30,7 +30,7 @@
   function put(k, v) { try { rawSet.call(LS, k, v); } catch (e) { /* storage off */ } }
   function drop(k) { try { LS.removeItem(k); } catch (e) { /* storage off */ } }
   function json(k) { try { return JSON.parse(get(k) || 'null'); } catch (e) { return null; } }
-  var page = (window.location.pathname.match(/\/fs\/([a-z0-9-]+)\.html$/) || [])[1] || 'home';
+  var page = (window.location.pathname.match(/\/fs\/([a-z0-9-]+)(?:\.html)?\/?$/) || [])[1] || 'home';
   var FROM = page === '404' ? new URLSearchParams(window.location.search).get('from') : null;
 
   // ---------- back to Windowed ----------
@@ -66,13 +66,20 @@
 
   // ---------- accent ----------
   var ACCENTS = { punch: ['#b8352f', '#9c2b26'], blue: ['#2f5fb3', '#264d93'], green: ['#2e7d4f', '#246340'], plum: ['#7a3fa0', '#663486'], orange: ['#b25600', '#964800'], teal: ['#0f7470', '#0b5e5b'], graphite: ['#44465a', '#33354a'] };
+  function savedAccent() { var a = String((json('schoolagy_appearance') || {}).accent || '').toLowerCase(); return /^#[0-9a-f]{6}$/.test(a) ? a : ''; }
   function accentKey() {
-    var a = ((json('schoolagy_appearance') || {}).accent || '').toLowerCase();
+    var a = savedAccent();
     for (var k in ACCENTS) if (ACCENTS[k][0] === a) return k;
-    return 'punch';
+    return a ? 'custom' : 'punch';
   }
+  // A color that isn't one of Fullscreen's seven (one picked from a background in Windowed) is used as it is,
+  // darkened just enough for white text on it (AA), with a hover a step darker.
+  function shade(hex, f) { var n = parseInt(hex.slice(1), 16), r = n >> 16, g = (n >> 8) & 255, b = n & 255; return '#' + [r, g, b].map(function (v) { return Math.round(v * f).toString(16).padStart(2, '0'); }).join(''); }
+  function lumOf(hex) { var n = parseInt(hex.slice(1), 16); return [n >> 16, (n >> 8) & 255, n & 255].map(function (v) { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }).reduce(function (t, v, i) { return t + v * [0.2126, 0.7152, 0.0722][i]; }, 0); }
+  function readable(hex) { var h = hex, i = 0; while (1.05 / (lumOf(h) + 0.05) < 4.5 && i++ < 40) h = shade(h, 0.94); return h; }
   function applyAccent(k) {
-    var c = ACCENTS[k] || ACCENTS.punch;
+    var c = ACCENTS[k];
+    if (!c) { var a = savedAccent(); c = a ? [readable(a), shade(readable(a), 0.85)] : ACCENTS.punch; }
     root.style.setProperty('--accent', c[0]);
     root.style.setProperty('--accent-hover', c[1]);
   }
@@ -96,6 +103,7 @@
 
   // ...and back again when the Fullscreen pages change them.
   function saveOption(k, v) { var o = json('schoolagy_settings_options') || {}; o[k] = v; put('schoolagy_settings_options', JSON.stringify(o)); }
+  var lastSig = {};
   Storage.prototype.setItem = function (k, v) {
     rawSet.call(this, k, v);
     if (this !== LS) return;
@@ -119,6 +127,8 @@
         if (typeof p.photo === 'string') cur.photo = /^data:image\//.test(p.photo) ? p.photo : null;
         put('schoolagy_profile', JSON.stringify(cur));
       }
+      var sig = k === 'fsset' ? (function (o) { return (o.theme || '') + '|' + (o.accent || ''); })(JSON.parse(v) || {}) : k + v;
+      if ((k === 'fsset' || k === 'fsmock_potato' || k === 'fsmock_profile2') && sig !== lastSig[k] && window.FSX && window.FSX.syncPush) { var first = !(k in lastSig); lastSig[k] = sig; if (!first) window.FSX.syncPush(); }   // the account's copy follows real changes
     } catch (e) { /* not JSON: leave it */ }
   };
 
@@ -160,9 +170,7 @@
     .then(function (r) { return r.ok ? r.json() : null; })
     .then(function (j) { if (j && j.features && j.features.fullscreen === false) off(); })
     .catch(function () { /* API unreachable: stay */ });
-  fetch(API + '/auth/me', { credentials: 'include', cache: 'no-store' })
-    .then(function (r) { if (r.status === 401) window.location.replace('/'); })
-    .catch(function () { /* offline: stay */ });
+  // Sign-in is checked by averages-fs-data.js, which loads the page's data.
 
   // The address of a page that wasn't found, so the 404 page shows the real one.
   if (FROM && FROM.charAt(0) === '/') { try { window.history.replaceState(null, '', FROM); } catch (e) { /* keep /fs/404.html */ } }

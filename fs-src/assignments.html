@@ -1123,20 +1123,15 @@
   /* buttons: a little taller and rounder, they lift on hover and squish when pressed */
   .btn { height: 38px; border-radius: 12px; font-size: 15px; transition: background-color .15s ease, transform .25s var(--spring), box-shadow .2s ease; }
   .btn.sm { height: 32px; border-radius: 10px; font-size: 13px; }
-  .btn.primary { background: linear-gradient(135deg, var(--warm-a), var(--warm-b)); box-shadow: 0 8px 16px -10px rgba(184, 53, 47, .9); }
-  .btn.primary:hover { background: linear-gradient(135deg, var(--warm-a-hover), var(--warm-b-hover)); }
-  .btn.primary:disabled, .btn.primary:disabled:hover { box-shadow: none; } /* a grayed-out button loses the red glow too */
+  .btn.primary { background: var(--accent); box-shadow: none; }
+  .btn.primary:hover { background: var(--accent-hover); }
   .chip { height: 44px; border-radius: 14px; box-shadow: var(--card-shadow); transition: background-color .15s ease, transform .25s var(--spring); }
   /* the shortcut chips each get their own color */
   .chip svg.i { color: var(--chip-c, var(--ink-2)); }
   .chip:nth-child(5n + 1) { --chip-c: var(--warm-a); } .chip:nth-child(5n + 2) { --chip-c: var(--sky); } .chip:nth-child(5n + 3) { --chip-c: var(--mint); } .chip:nth-child(5n + 4) { --chip-c: var(--grape); } .chip:nth-child(5n + 5) { --chip-c: #c98a00; }
-  /* sticker tags: New pops off the page a little */
-  .newtag { background: var(--sun) !important; color: var(--ink) !important; border-radius: 8px; transform: translate(var(--tx, 0px), var(--ty, 0px)) rotate(var(--tilt, -4deg)); box-shadow: 0 0 0 2px var(--field), 0 3px 8px -2px rgba(20, 21, 31, .25); will-change: transform; backface-visibility: hidden; } /* always drawn on its own layer, so hovering a row never redraws the text thinner or bolder */
-  /* soft shapes floating behind the top of the page */
+  /* New tags: a filled yellow label */
+  .newtag { background: var(--sun) !important; color: var(--ink) !important; border-radius: 8px;  will-change: transform; backface-visibility: hidden; } /* always drawn on its own layer, so hovering a row never redraws the text thinner or bolder */
   .wrap { position: relative; isolation: isolate; }
-  .wrap::before, .wrap::after { content: ""; position: absolute; z-index: -1; pointer-events: none; border-radius: 50%; filter: blur(2px); }
-  .wrap::before { top: -40px; right: 4%; width: 380px; height: 300px; background: radial-gradient(closest-side, color-mix(in srgb, var(--sun) 34%, transparent), transparent); }
-  .wrap::after { top: 60px; right: 22%; width: 260px; height: 220px; background: radial-gradient(closest-side, color-mix(in srgb, var(--bubble) 20%, transparent), transparent); }
   /* empty states get a doodle */
   :is(.nt-empty, .ag-none, .mp-none, .mdet-empty, .list-empty, .sv-empty)::before { content: ""; display: block; width: 120px; height: 72px; margin: 0 auto 12px; background: var(--life-doodle) center / contain no-repeat; }
   /* the toast bounces in */
@@ -1146,17 +1141,13 @@
     body:not(.potato-mode) .btn:not(:disabled):active, body:not(.potato-mode) .chip:active, body:not(.potato-mode) .ibtn:active { transform: scale(.95); transition-duration: .08s; }
     body:not(.potato-mode) .ibtn { transition: background-color .15s ease, transform .25s var(--spring); }
     body:not(.potato-mode) .toast.show { animation: lifeToast .45s var(--spring); }
-    body:not(.potato-mode) .wrap::before { animation: lifeFloat 14s ease-in-out infinite alternate; }
-    body:not(.potato-mode) .wrap::after { animation: lifeFloat 18s ease-in-out -6s infinite alternate-reverse; }
     /* icon tiles wiggle when you point at their row */
     body:not(.potato-mode) :is(.arow, .mrow, .mp-row, .ag-row, .nt-row, .pin, .gr-row, .crow, tr, .item, .mi):hover :is(.ktile, .nt-tile, .badge, .emo) { animation: lifeWiggle .5s var(--spring); }
     body:not(.potato-mode) .newtag { animation: lifeSticker .5s var(--spring) backwards; }
   }
-  @keyframes lifeFloat { from { transform: translate(0, 0) scale(1); } to { transform: translate(-24px, 16px) scale(1.08); } }
   @keyframes lifeWiggle { 0% { transform: none; } 30% { transform: rotate(-9deg) scale(1.08); } 60% { transform: rotate(6deg) scale(1.08); } 100% { transform: none; } }
-  @keyframes lifeSticker { from { transform: rotate(-14deg) scale(.6); opacity: 0; } }
+  @keyframes lifeSticker { from { transform: scale(.6); opacity: 0; } }
   @keyframes lifeToast { 0% { transform: translate(-50%, 16px) scale(.9); } 100% { transform: translate(-50%, 0) scale(1); } }
-  .potato-mode .wrap::before, .potato-mode .wrap::after { display: none; }
   /* ===== end Life layer ===== */
   /* ===== What-if grades: one popup for the whole app (Home, Grades, course hubs) ===== */
   .wi-scrim { position: fixed; inset: 0; z-index: 95; background: var(--scrim); display: flex; justify-content: center; align-items: center; padding: 24px 16px; }
@@ -1737,14 +1728,13 @@
   button.hub-logo:focus-visible { outline: 2px solid var(--focus); outline-offset: 4px; }
   /* a hint that the emoji opens Course info (same tooltip as the top bar buttons) */
   button.hub-logo { position: relative; }
-  /* the hint sits outside the tilted emoji, so it stays upright and crisp whatever angle the emoji is at */
+  /* the hint sits outside the emoji button, so hovering it never moves the hint */
   .hub-logo-w { position: relative; flex: none; display: grid; }
   .hub-tip { position: absolute; bottom: calc(100% + 12px); left: 0; right: 0; margin: 0 auto; width: max-content; z-index: 70; padding: 4px 8px; border-radius: 8px;
-    background: rgba(70, 72, 86, .72); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); color: #ffffff; font-size: 12px; font-weight: 800; line-height: 16px; white-space: nowrap;
+    background: #464856; color: #ffffff; font-size: 12px; font-weight: 800; line-height: 16px; white-space: nowrap;
     pointer-events: none; opacity: 0; transition: opacity .15s ease; -webkit-font-smoothing: antialiased; }
   .hub-logo:hover + .hub-tip, .hub-logo:focus-visible + .hub-tip { opacity: 1; transition-delay: .25s; }
   @media (hover: none) { .hub-tip { display: none; } }
-  .potato-mode .hub-tip { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(70, 72, 86, .88); }
   .hub-info { display: inline-flex; align-items: center; gap: 8px; height: 28px; padding: 0 12px; margin: -4px 0; border-radius: 8px; color: var(--ink-2); font-weight: 800; font-size: 14px; background: var(--panel); }
   .hub-info:hover { background: var(--inner); color: var(--ink); }
   .hub-info svg.i { width: 16px; height: 16px; }
@@ -2239,7 +2229,7 @@
   .aw-class b { display: block; color: var(--ink); font-weight: 800; }
   .aw-class svg.i { flex: none; color: var(--muted); margin-top: 2px; }
   /* ---------- Updates tab ---------- */
-  .up { grid-column: 1 / -1; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+  section.up { grid-column: 1 / -1; min-width: 0; display: flex; flex-direction: column; gap: 16px; }   /* section: the bare .up also matched the green "+2.4" chips (.gr-d.up) and broke their row */
   .up[hidden] { display: none; }
   .up-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
   .up-bar .mp-types button em { font-style: normal; margin-left: 8px; color: var(--muted); font-variant-numeric: tabular-nums; }
@@ -2254,8 +2244,7 @@
   .up-post { display: flex; flex-direction: column; gap: 12px; padding: 20px 20px; border-radius: 20px; background: var(--panel); box-shadow: var(--card-shadow); transition: background-color .15s ease; }
   .up-post.pinned { background: color-mix(in srgb, var(--class-c, var(--accent)) 7%, var(--panel)); }
   .up-top { display: flex; align-items: center; gap: 12px; }
-  .up-kind { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; flex: none; background: var(--field); transform: rotate(-4deg); }
-  .up-post:nth-child(odd) .up-kind { transform: rotate(4deg); }
+  .up-kind { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; flex: none; background: var(--field); }
   .up-kind svg { width: 24px; height: 24px; }
   .up-ttl { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
   .up-ttl b { display: inline-flex; align-items: center; gap: 4px; font-size: 15px; font-weight: 900; }
@@ -2835,7 +2824,7 @@
   .upd { display: flex; flex-direction: column; gap: 4px; padding: 8px; border-radius: 12px; color: var(--ink); }
   .upd:hover { background: var(--inner); }
   .upd p { margin: 0; font-size: 14px; font-weight: 600; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-  .upd .newtag { align-self: flex-start; margin-left: -8px; } /* the sticker drops onto the top corner of the text (the overlap is set by the life script) */
+  .upd .newtag { align-self: flex-start; }
   .upd .newtag + p { padding-top: 2px; }
   .upd small { color: var(--muted); font-weight: 700; font-size: 13px; }
   .rail .panel .arow .tx small { white-space: normal; }
@@ -2886,8 +2875,7 @@
   }
 
   /* ---------- Assignments page ---------- */
-  .hub-logo.as-logo { transform: rotate(4deg); }
-  @media (prefers-reduced-motion: no-preference) { body:not(.potato-mode) .hub-logo.as-logo:hover { transform: rotate(-4deg) scale(1.05); } }
+  @media (prefers-reduced-motion: no-preference) { body:not(.potato-mode) .hub-logo.as-logo:hover { transform: scale(1.05); } }
   .as-h .hub-meta { gap: 8px 20px; }
   .as-h .hub-meta .gm { gap: 8px; }
   .as-h .hub-meta .gm[data-skel] { color: color-mix(in srgb, var(--muted) 55%, transparent); }
@@ -3024,10 +3012,9 @@
     .as-act .btn { width: 36px; padding: 0; } .as-act .btn .l { display: none; }
   }
   /* ===== Life layer for the course page ===== */
-  /* the class logo becomes a sticker, with a blob of the class color behind the header */
+  /* the course header */
   .hub-h { position: relative; }
-  .hub-h::before { content: ""; position: absolute; z-index: -1; left: -60px; top: -70px; width: 360px; height: 280px; border-radius: 50%; pointer-events: none; background: radial-gradient(closest-side, color-mix(in srgb, var(--class-c, var(--mint)) 30%, transparent), transparent); }
-  .hub-logo { border-radius: 28px; transform: rotate(-4deg); box-shadow: 0 0 0 5px var(--field), 0 12px 24px -12px rgba(20, 21, 31, .45); transition: transform .35s var(--spring); }
+  .hub-logo { border-radius: 28px; box-shadow: 0 0 0 5px var(--field), 0 12px 24px -12px rgba(20, 21, 31, .45); transition: transform .35s var(--spring); }
   .hub-t h1 { font-size: 44px; }
   .hub-tab { border-radius: 12px; transition: background-color .15s ease, transform .25s var(--spring); }
   .hub-tab.on { background: var(--ink); box-shadow: 0 8px 16px -10px rgba(20, 21, 31, .8); }
@@ -3040,14 +3027,10 @@
   .hub-acts .pill.sync { height: 38px; border-radius: 12px; padding: 0 16px 0 12px; font-size: 15px; }
   .hub-acts .pill.sync svg { width: 20px; height: 20px; }
   @media (prefers-reduced-motion: no-preference) {
-    body:not(.potato-mode) .hub-logo:hover { transform: rotate(3deg) scale(1.04); }
+    body:not(.potato-mode) .hub-logo:hover { transform: scale(1.04); }
     body:not(.potato-mode) .hub-tab:active { transform: scale(.95); }
-    body:not(.potato-mode) .hub-h::before { animation: lifeFloat 16s ease-in-out infinite alternate; }
   }
-  .potato-mode .hub-h::before { display: none; }
-  @media (max-width: 680px) { .hub-t h1 { font-size: 34px; } .hub-logo { transform: rotate(-3deg); } }
-  /* on the course page the shapes belong to something: no loose blobs in the corner */
-  .wrap::before, .wrap::after { display: none; }
+  @media (max-width: 680px) { .hub-t h1 { font-size: 34px; } }
   /* ===== end Life layer for the course page ===== */
 </style>
 <style id="avh-css">
@@ -3290,14 +3273,14 @@
   <aside class="side" id="side" aria-label="Sidebar">
     <nav class="nav" aria-label="Pages">
       <a href="#" title="Search" id="sideSearch" aria-keyshortcuts="Control+K Meta+K"><svg class="i"><use href="#i-search"/></svg><span class="fade">Search</span><kbd class="fade side-kbd" id="sideKbd">Ctrl K</kbd></a>
-      <a href="#" title="Home" data-toast="Home"><svg class="i"><use href="#i-home"/></svg><span class="fade">Home</span></a>
-      <a href="#" title="Courses" data-toast="the Courses page"><svg class="i"><use href="#i-binder"/></svg><span class="fade">Courses</span></a>
-      <a href="#" title="Grades" data-toast="the Grades page"><svg class="i"><use href="#i-chart"/></svg><span class="fade">Grades</span></a>
+      <a href="/fs/home.html" data-go="/fs/home.html" title="Home" data-was="Home"><svg class="i"><use href="#i-home"/></svg><span class="fade">Home</span></a>
+      <a href="/fs/courses.html" data-go="/fs/courses.html" title="Courses" data-was="the Courses page"><svg class="i"><use href="#i-binder"/></svg><span class="fade">Courses</span></a>
+      <a href="/fs/grades.html" data-go="/fs/grades.html" title="Grades" data-was="the Grades page"><svg class="i"><use href="#i-chart"/></svg><span class="fade">Grades</span></a>
       <a href="#" title="Assignments" class="on" aria-current="page"><svg class="i"><use href="#i-inbox"/></svg><span class="fade">Assignments</span><em class="count fade" id="cntAssign"></em><i class="pip" id="pipAssign"></i></a>
-      <a href="#" title="Calendar" data-toast="the Calendar page"><svg class="i"><use href="#i-cal"/></svg><span class="fade">Calendar</span></a>
-      <a href="#" title="Files" data-toast="the Files page"><svg class="i"><use href="#i-folder"/></svg><span class="fade">Files</span></a>
-      <a href="#" title="Messages" data-toast="the Messages page"><svg class="i"><use href="#i-msg"/></svg><span class="fade">Messages</span><em class="count fade" id="cntMsg"></em><i class="pip" id="pipMsg"></i></a>
-      <a href="#" title="Contacts" data-toast="the Contacts page"><svg class="i"><use href="#i-users"/></svg><span class="fade">Contacts</span></a>
+      <a href="/fs/calendar.html" data-go="/fs/calendar.html" title="Calendar" data-was="the Calendar page"><svg class="i"><use href="#i-cal"/></svg><span class="fade">Calendar</span></a>
+      <a href="/fs/files.html" data-go="/fs/files.html" title="Files" data-was="the Files page"><svg class="i"><use href="#i-folder"/></svg><span class="fade">Files</span></a>
+      <a href="/fs/messages.html" data-go="/fs/messages.html" title="Messages" data-was="the Messages page"><svg class="i"><use href="#i-msg"/></svg><span class="fade">Messages</span><em class="count fade" id="cntMsg"></em><i class="pip" id="pipMsg"></i></a>
+      <a href="/fs/contacts.html" data-go="/fs/contacts.html" title="Contacts" data-was="the Contacts page"><svg class="i"><use href="#i-users"/></svg><span class="fade">Contacts</span></a>
     </nav>
     <div class="divider" role="separator"></div>
     <div class="side-h fade"><span>Your classes</span></div>
@@ -3668,7 +3651,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const store = { get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
   if (store.get('fsmock_potato') === true) document.body.classList.add('potato-mode');
   const calm = () => document.body.classList.contains('potato-mode') || matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const PROFILE = Object.assign({ name: 'John Appleseed', photo: 'data:image/jpeg;base64,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' }, store.get('fsmock_profile2') || {});
+  const PROFILE = Object.assign({ name: FSD.me.name, photo: FSD.me.photo }, store.get('fsmock_profile2') || {});
   const EMOJI_SVG = {
       "🧪": "<svg aria-hidden=\"true\" focusable=\"false\" viewBox=\"0 0 36 36\"><path fill=\"#CCD6DD\" d=\"M14.563 14.414 25.47 3.505l6.961 6.962-10.908 10.908z\"/><path fill=\"#68E090\" d=\"M8.103 34.399C2.5 34 1.5 30.062 1.635 27.932c.322-5.07 15.601-16.551 15.601-16.551l12.517 1.93c.001 0-17.389 21.392-21.65 21.088z\"/><path fill=\"#8899A6\" d=\"M32.326 3.708C29.405.787 26.104-.649 24.954.502c-.013.013-.022.031-.034.044-.006.006-.015.008-.021.014L2.295 23.164a7.43 7.43 0 0 0-2.19 5.288c0 1.997.778 3.875 2.19 5.287a7.429 7.429 0 0 0 5.288 2.19 7.426 7.426 0 0 0 5.287-2.189l22.604-22.604c.007-.007.009-.016.015-.023.013-.012.03-.02.043-.033 1.151-1.15-.285-4.451-3.206-7.372zM10.75 31.619c-.846.846-1.97 1.311-3.166 1.311s-2.321-.466-3.167-1.312a4.448 4.448 0 0 1-1.312-3.167c0-1.196.466-2.32 1.311-3.166L25.412 4.29c.622 1.144 1.56 2.394 2.749 3.584 1.189 1.189 2.44 2.127 3.584 2.749L10.75 31.619z\"/><path fill=\"#17BF63\" d=\"M29.196 13.144c-.058.379-2.627.751-5.691.343-3.063-.408-5.482-1.223-5.403-1.82.08-.597 2.627-.751 5.691-.343s5.495 1.224 5.403 1.82zM10.84 23.247a.794.794 0 1 1-1.123-1.124.794.794 0 0 1 1.123 1.124zm3.317 2.615a1.298 1.298 0 1 1-1.835-1.836 1.298 1.298 0 0 1 1.835 1.836zm1.677-5.324a1.222 1.222 0 0 1-1.726-1.726 1.22 1.22 0 1 1 1.726 1.726zm-6.868 8.858a1.489 1.489 0 1 1-2.105-2.106 1.489 1.489 0 0 1 2.105 2.106zm11.396-9.158a1.058 1.058 0 1 1-1.496-1.497 1.058 1.058 0 0 1 1.496 1.497zm-1.207-4.288a.693.693 0 1 1-.979-.98.693.693 0 0 1 .979.98z\"/><ellipse cx=\"30.817\" cy=\"5.223\" fill=\"#CCD6DD\" rx=\"1.184\" ry=\"4.847\" transform=\"rotate(-45.001 30.817 5.223)\"/></svg>",
       "🧬": "<svg aria-hidden=\"true\" focusable=\"false\" viewBox=\"0 0 36 36\"><path fill=\"#77B255\" d=\"m3.019 26.246 3.432 3.432-.923.922-3.432-3.431z\"/><path fill=\"#FFD983\" d=\"m6.362 29.587 3.431 3.432-.923.923-3.43-3.432z\"/><path fill=\"#FFAC33\" d=\"m6.273 24.237 3.432 3.432-.923.923L5.35 25.16z\"/><path fill=\"#EA596E\" d=\"m8.998 26.962 3.432 3.432-.923.923-3.431-3.432zm3.909-9.359 3.431 3.432-.923.923-3.431-3.432z\"/><path fill=\"#FFAC33\" d=\"m15.631 20.329 3.432 3.431-.923.923-3.432-3.431z\"/><path fill=\"#77B255\" d=\"m14.97 14.377 3.432 3.432-.922.923-3.432-3.432z\"/><path fill=\"#FFD983\" d=\"m18.277 17.683 3.432 3.432-.923.923-3.432-3.432z\"/><path fill=\"#FFAC33\" d=\"m17.616 11.731 3.432 3.432-.923.922-3.432-3.431z\"/><path fill=\"#EA596E\" d=\"m20.923 15.038 3.432 3.431-.923.923-3.431-3.432zM24.387 4.96l3.432 3.432-.923.922-3.432-3.431z\"/><path fill=\"#FFAC33\" d=\"m27.694 8.267 3.432 3.431-.923.923-3.432-3.432z\"/><path fill=\"#77B255\" d=\"m27.013 2.252 3.432 3.432-.923.923-3.432-3.432z\"/><path fill=\"#FFD983\" d=\"m30.36 5.6 3.432 3.431-.923.923-3.432-3.431z\"/><path fill=\"#9266CC\" d=\"M24.922.812c-2.52 2.52-2.601 6.145-2.396 9.806.501.028 1.002.061 1.502.094.39.026.775.051 1.159.074-.198-3.286-.199-6.299 1.606-8.104.727-.703.955-1.653.447-2.166-.535-.54-1.542-.497-2.318.296z\"/><path fill=\"#3B88C3\" d=\"m13.146 25.65-.153-2.66c-.026-.445-.058-.899-.074-1.332-.296-.296-2.466-.349-2.653-.162.013.44.047.884.071 1.327.028.502.126 2.275.149 2.66.054.91.096 1.806.086 2.656.259.259 2.371.437 2.645.162a36.931 36.931 0 0 0-.071-2.651z\"/><path fill=\"#55ACEE\" d=\"m13.22 28.3-2.649-.162c-.026 2.209-.384 4.145-1.687 5.448a1.322 1.322 0 1 0 1.87 1.871c2.423-2.422 2.467-7.174 2.466-7.157z\"/><path fill=\"#9266CC\" d=\"M25.354 13.447c-.501-.028-1.003-.061-1.503-.094-.389-.026-.775-.051-1.158-.074.198 3.285.199 6.299-1.607 8.104-1.804 1.804-4.813 1.805-8.094 1.607-.386-.023-2.159-.14-2.656-.168-3.667-.206-7.297-.126-9.82 2.397a1.322 1.322 0 0 0 1.871 1.87c1.805-1.804 4.815-1.806 8.098-1.608.385.023 2.161.14 2.66.168 3.662.205 7.289.125 9.811-2.396 2.521-2.52 2.603-6.145 2.398-9.806z\"/><path fill=\"#744EAA\" d=\"M25.354 13.447c-.028-.501-.145-2.277-.168-2.66a51.95 51.95 0 0 1-.064-1.332c-.336-.021-2.1-.133-2.653-.163.013.44.032.883.056 1.326.028.501.145 2.277.168 2.661.055.914.091 1.804.081 2.656.333.021 2.094.132 2.645.162a36.316 36.316 0 0 0-.065-2.65z\"/><path fill=\"#55ACEE\" d=\"M35.581 8.827c-.42-.436-1.385-.601-2.291.353-1.805 1.805-4.817 1.806-8.104 1.607-.384-.023-2.16-.141-2.661-.169-3.66-.205-7.286-.123-9.806 2.397-2.215 2.215-2.545 5.284-2.453 8.48.553.03 2.319.142 2.653.162-.098-2.755.113-5.214 1.671-6.772 1.805-1.805 4.818-1.805 8.104-1.607.383.023 2.16.14 2.661.168 3.661.205 7.286.124 9.806-2.396.886-.869.84-1.787.42-2.223z\"/></svg>",
@@ -3735,16 +3718,9 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const letter = p => CUTS.find(([c]) => p >= c)[1];
   const gcls = p => p >= 90 ? 'ga' : p >= 80 ? 'gb' : 'gc';
 
-  // Sample data, the same classes as the Home mock. From Schoology: the section (title, teacher, period, room),
-  // the student's grade over the quarter, and what's due. "updates" is how many changes came in since your last visit.
-  const CLASSES = [
-    { id: 'alg',  name: 'Algebra II',   teacher: 'Mr. Okafor',  period: 1, room: 'Room 204', students: 31, pct: 95.1, trend: [91.2, 92.4, 93.0, 92.1, 93.8, 94.4, 94.9, 95.1], due: 1, missing: 0, updates: 1, next: ['Quiz 5', 'Fri'] },
-    { id: 'chem', name: 'AP Chemistry', teacher: 'Dr. Park',    period: 2, room: 'Room 118', students: 28, pct: 87.4, trend: [84.1, 85.0, 86.2, 85.4, 86.8, 87.9, 86.9, 87.4], due: 3, missing: 1, updates: 3, next: ['Unit 3 Test', 'Thu'] },
-    { id: 'eng',  name: 'English 10',   teacher: 'Ms. Grant',   period: 3, room: 'Room 131', students: 30, pct: 78.3, trend: [83.5, 82.9, 81.4, 80.6, 81.2, 79.4, 78.8, 78.3], due: 2, missing: 1, updates: 1, next: ['Of Mice and Men essay', 'Fri'] },
-    { id: 'hist', name: 'U.S. History', teacher: 'Mr. Delgado', period: 4, room: 'Room 214', students: 32, pct: 91.0, trend: [89.0, 90.2, 90.8, 91.5, 90.6, 91.2, 90.7, 91.0], due: 1, missing: 0, updates: 0, next: ['DBQ final draft', 'Mon'] },
-    { id: 'chin', name: 'Chinese II',   teacher: 'Ms. Lin',     period: 5, room: 'Room 110', students: 24, pct: 84.2, trend: [86.0, 85.1, 84.6, 83.2, 83.9, 84.8, 84.0, 84.2], due: 1, missing: 0, updates: 0, next: ['Lesson 7 vocab quiz', 'Wed'] },
-    { id: 'art',  name: 'Art & Design', teacher: 'Ms. Reyes',   period: 6, room: 'Studio B', students: 26, pct: 97.0, trend: [95.0, 96.2, 96.0, 96.8, 97.4, 96.9, 97.2, 97.0], due: 0, missing: 0, updates: 1, next: null },
-  ];
+  // From Schoology: each section (title, teacher, period), the student's grade (and how it's moved on the days
+  // they've opened Averages), and what's due. "updates" is how many course updates they haven't opened.
+  const CLASSES = FSD.CLASSES.map(c => Object.assign({}, c));   // the student's classes (averages-fs-data.js)
   CLASSES.forEach(c => { const s = courseSubject(c.name); c.emoji = s[1]; c.color = s[2]; });
   const C = Object.fromEntries(CLASSES.map(c => [c.id, c]));
   const badge = c => `<span class="badge" style="--c:${c.color}" aria-hidden="true">${EMOJI_SVG[c.emoji] || EMOJI_SVG['📚']}</span>`;
@@ -3753,34 +3729,16 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   /* ===== Notifications (shared by Home and the course pages) =====
      One list for every class. On a course page the window opens on that class, with All classes one tap away.
      The page can set NT_HOOKS before this: here (the class this page is about) and onChange(). */
-  const NT_CLASSES = { chem: 'AP Chemistry', alg: 'Algebra II', eng: 'English 10', hist: 'U.S. History', chin: 'Chinese II', art: 'Art & Design' };
-  const NT_LAST = 'Thursday at 8:12 PM';
+  const NT_CLASSES = Object.fromEntries(FSD.CLASSES.map(c => [c.id, c.name]));
+  const NT_LAST = FSX.lastVisit();
   // Notifications are updates to class data (a grade posted, something new, something changed), not a to-do list.
   // Missing and due work lives on Home and in each class's Assigned card instead.
-  const NT_ITEMS = [
-    { id: 'chem-graded-m14', ago: 4300, c: 'chem', k: 'graded', t: 'Lab 4 pre-lab', got: 9, of: 10, d: 'Graded Oct 16 · Class average 81%', note: 'Clear plan. Double check your units in question 3.' },
-    { id: 'alg-graded-q4', ago: 120, c: 'alg', k: 'graded', t: 'Quiz 4', got: 19, of: 20, d: 'Graded 2 hours ago · Class average 84%' },
-    { id: 'eng-graded-ne', ago: 9000, c: 'eng', k: 'graded', t: 'Narrative essay', got: 38, of: 50, d: 'Graded Tue · Class average 80%', note: 'Strong opening. The ending needs one more scene.' },
-    { id: 'hist-graded-c5', ago: 1500, c: 'hist', k: 'graded', ic: '📈', t: 'Ch. 5 quiz', got: 18, of: 20, d: 'Score changed from 16 to 18 · Yesterday' },
-    { id: 'alg-graded-h43', ago: 121, c: 'alg', k: 'graded', t: 'Homework 4.3', got: 10, of: 10, d: 'Graded 2 hours ago · Class average 92%' },
-    { id: 'eng-graded-vq6', ago: 9100, c: 'eng', k: 'graded', t: 'Vocab quiz 6', got: 17, of: 20, d: 'Graded Tue · Class average 83%' },
-    { id: 'chem-new-m5', ago: 300, c: 'chem', k: 'new', kind: 'file', t: 'Lab 4 data.xlsx', d: 'File · Posted today' },
-    { id: 'chem-new-m7', ago: 2900, c: 'chem', k: 'new', kind: 'file', t: 'Unit 3 Notes.pdf', d: 'File · Posted 2 days ago' },
-    { id: 'chem-new-m1', ago: 22, c: 'chem', k: 'new', kind: 'file', t: 'Unit 3 Test Review.pdf', d: 'File · Posted 22 min ago' },
-    { id: 'alg-new-qc', ago: 125, c: 'alg', k: 'new', kind: 'file', t: 'Quiz 4 corrections.pdf', d: 'File · Posted 2 hours ago' },
-    { id: 'art-new-d9', ago: 300, c: 'art', k: 'new', kind: 'assignment', t: 'Portfolio Review Sign-up', d: 'Assignment · Posted today' },
-    { id: 'chem-chg-m6', ago: 1400, c: 'chem', k: 'changed', ic: 'due', t: 'Unit 3 Test moved to Thu, Oct 22', d: 'Was Tue, Oct 20 · Yesterday' },
-    { id: 'chem-chg-m2', ago: 7200, c: 'chem', k: 'changed', ic: 'material', t: 'Lab Report #4 has a new attachment', d: 'Lab report template.docx · Oct 14' },
-    { id: 'hist-chg-ft', ago: 180, c: 'hist', k: 'changed', ic: 'due', t: 'Field Trip Form is now due Fri', d: 'Was due Thu · 3 hours ago' },
-    { id: 'chem-ann-1', ago: 21, c: 'chem', k: 'ann', t: 'The Unit 3 Test review sheet is posted. It covers stoichiometry and limiting reagents. The test is next Thursday.', d: 'Dr. Park · 22 minutes ago' },
-    { id: 'alg-ann-1', ago: 118, c: 'alg', k: 'ann', t: 'Quiz 4 grades are in. The class average was 84%. Corrections are due Friday.', d: 'Mr. Okafor · 2 hours ago' },
-    { id: 'chem-msg-1', ago: 330, c: 'chem', k: 'msg', t: 'Dr. Park replied: Lab Report #4 extension', d: 'Sure, Friday works. · 10:42 AM' },
-    { id: 'eng-msg-1', ago: 420, c: 'eng', k: 'msg', t: 'Ms. Grant replied: Missing essay', d: 'Your Of Mice and Men essay is still missing. · 9:15 AM' },
-  ];
+  const NT_ITEMS = FSD.NT;   // real: recent grades, course updates and messages (see averages-fs-data.js)
   // each kind of update gets its own picture; the tile behind it takes the class's color
   const NT_ICON = {"message": "<svg aria-hidden=\"true\" focusable=\"false\" viewBox=\"0 0 36 36\"><path fill=\"#BDDDF4\" d=\"M18 1C8.059 1 0 7.268 0 15c0 4.368 2.574 8.268 6.604 10.835C6.08 28.144 4.859 31.569 2 35c5.758-.96 9.439-3.761 11.716-6.416 1.376.262 2.805.416 4.284.416 9.941 0 18-6.268 18-14S27.941 1 18 1z\"/><circle cx=\"18\" cy=\"15\" r=\"2\" fill=\"#2A6797\"/><circle cx=\"26\" cy=\"15\" r=\"2\" fill=\"#2A6797\"/><circle cx=\"10\" cy=\"15\" r=\"2\" fill=\"#2A6797\"/></svg>", "due": "<svg aria-hidden=\"true\" focusable=\"false\" viewBox=\"0 0 36 36\"><path fill=\"#E0E7EC\" d=\"M36 32a4 4 0 0 1-4 4H4a4 4 0 0 1-4-4V9a4 4 0 0 1 4-4h28a4 4 0 0 1 4 4v23z\"/><path fill=\"#66757F\" d=\"M23.657 19.12H17.87c-1.22 0-1.673-.791-1.673-1.56 0-.791.429-1.56 1.673-1.56h8.184c1.154 0 1.628 1.04 1.628 1.628 0 .452-.249.927-.52 1.492l-5.607 11.395c-.633 1.266-.882 1.717-1.899 1.717-1.244 0-1.877-.949-1.877-1.605 0-.271.068-.474.226-.791l5.652-10.716zM10.889 19h-.5c-1.085 0-1.538-.731-1.538-1.5 0-.792.565-1.5 1.538-1.5h2.015c.972 0 1.515.701 1.515 1.605V30.47c0 1.13-.558 1.763-1.53 1.763s-1.5-.633-1.5-1.763V19z\"/><path fill=\"#DD2F45\" d=\"M34 0h-3.277c.172.295.277.634.277 1a2 2 0 0 1-4 0c0-.366.105-.705.277-1H8.723C8.895.295 9 .634 9 1a2 2 0 0 1-4 0c0-.366.105-.705.277-1H2a2 2 0 0 0-2 2v11h36V2a2 2 0 0 0-2-2z\"/><path fill=\"#F5F8FA\" d=\"M13.182 4.604c0-.5.32-.78.75-.78.429 0 .749.28.749.78v5.017h1.779c.51 0 .73.38.72.72a.7.7 0 0 1-.72.659h-2.498c-.49 0-.78-.319-.78-.819V4.604zm-6.91 0c0-.5.32-.78.75-.78s.75.28.75.78v3.488c0 .92.589 1.649 1.539 1.649.909 0 1.529-.769 1.529-1.649V4.604c0-.5.319-.78.749-.78s.75.28.75.78v3.568c0 1.679-1.38 2.949-3.028 2.949-1.669 0-3.039-1.25-3.039-2.949V4.604zM5.49 9.001c0 1.679-1.069 2.119-1.979 2.119-.689 0-1.839-.27-1.839-1.14 0-.269.23-.609.56-.609.4 0 .75.37 1.199.37.56 0 .56-.52.56-.84V4.604c0-.5.32-.78.749-.78.431 0 .75.28.75.78v4.397z\"/><path fill=\"#F4ABBA\" d=\"M32 10a1 1 0 1 0 2 0 1 1 0 0 0-2 0m0-3a1 1 0 1 0 2 0 1 1 0 0 0-2 0m-3 3a1 1 0 1 0 2 0 1 1 0 0 0-2 0m0-3a1 1 0 1 0 2 0 1 1 0 0 0-2 0m-3 3a1 1 0 1 0 2 0 1 1 0 0 0-2 0m0-3a1 1 0 1 0 2 0 1 1 0 0 0-2 0m-3 0a1 1 0 1 0 2 0 1 1 0 0 0-2 0m0 3a1 1 0 1 0 2 0 1 1 0 0 0-2 0\"/></svg>", "update": "<svg aria-hidden=\"true\" focusable=\"false\" viewBox=\"0 0 36 36\"><path fill=\"#3B88C3\" d=\"M14 19c-3.314 0-6 2.687-6 6s2.686 6 6 6 6-2.687 6-6-2.687-6-6-6zm0 10c-2.209 0-4-1.791-4-4s1.791-4 4-4 4 1.791 4 4-1.791 4-4 4z\"/><path fill=\"#55ACEE\" d=\"M1.783 14.023v.02C.782 14.263 0 15.939 0 18s.782 3.737 1.783 3.956v.021l28.701 7.972V6.064L1.783 14.023z\"/><ellipse fill=\"#269\" cx=\"31\" cy=\"18\" rx=\"5\" ry=\"12\"/></svg>", "material": "<svg aria-hidden=\"true\" focusable=\"false\" viewBox=\"0 0 36 36\"><path fill=\"#99AAB5\" d=\"M35.354 25.254c.217-2.391-.513-4.558-2.057-6.102L17.033 2.89c-.391-.391-1.024-.391-1.414 0-.391.391-.391 1.024 0 1.414l16.264 16.263c1.116 1.117 1.642 2.717 1.479 4.506-.159 1.748-.957 3.456-2.188 4.686-1.23 1.23-2.938 2.027-4.685 2.187-1.781.161-3.39-.362-4.506-1.479L3.598 12.082c-.98-.98-1.059-2.204-.953-3.058.15-1.196.755-2.401 1.66-3.307 1.7-1.7 4.616-2.453 6.364-.707l14.85 14.849c1.119 1.12.026 2.803-.708 3.536-.733.735-2.417 1.826-3.535.707L9.962 12.789c-.391-.391-1.024-.39-1.414 0-.391.391-.391 1.023 0 1.414l11.313 11.314c1.859 1.858 4.608 1.05 6.363-.707 1.758-1.757 2.565-4.507.708-6.364L12.083 3.597c-2.62-2.62-6.812-1.673-9.192.706C1.677 5.517.864 7.147.661 8.775c-.229 1.833.312 3.509 1.523 4.721l18.384 18.385c1.365 1.365 3.218 2.094 5.281 2.094.27 0 .544-.013.82-.037 2.206-.201 4.362-1.209 5.918-2.765 1.558-1.556 2.565-3.713 2.767-5.919z\"/></svg>", "new": "<svg aria-hidden=\"true\" focusable=\"false\" viewBox=\"0 0 36 36\"><path fill=\"#CCD6DD\" d=\"M31 32c0 2.209-1.791 4-4 4H5c-2.209 0-4-1.791-4-4V4c0-2.209 1.791-4 4-4h22c2.209 0 4 1.791 4 4v28z\"/><path fill=\"#99AAB5\" d=\"M27 24c0 .553-.447 1-1 1H6c-.552 0-1-.447-1-1 0-.553.448-1 1-1h20c.553 0 1 .447 1 1zm-16 4c0 .553-.448 1-1 1H6c-.552 0-1-.447-1-1 0-.553.448-1 1-1h4c.552 0 1 .447 1 1zM27 8c0 .552-.447 1-1 1H6c-.552 0-1-.448-1-1s.448-1 1-1h20c.553 0 1 .448 1 1zm0 4c0 .553-.447 1-1 1H6c-.552 0-1-.447-1-1 0-.553.448-1 1-1h20c.553 0 1 .447 1 1zm0 4c0 .553-.447 1-1 1H6c-.552 0-1-.447-1-1 0-.553.448-1 1-1h20c.553 0 1 .447 1 1zm0 4c0 .553-.447 1-1 1H6c-.552 0-1-.447-1-1 0-.553.448-1 1-1h20c.553 0 1 .447 1 1z\"/><path fill=\"#66757F\" d=\"M31 6.272c-.827-.535-1.837-.579-2.521-.023l-.792.646-1.484 1.211-.1.08-2.376 1.938-11.878 9.686c-.437.357-.793 1.219-1.173 2.074-.378.85-.969 2.852-1.443 4.391-.148.25-1.065 1.846-.551 2.453.52.615 2.326.01 2.568-.076 1.626-.174 3.731-.373 4.648-.58.924-.211 1.854-.395 2.291-.752.008-.006.01-.018.017-.023l11.858-9.666.792-.646.144-.118V6.272z\"/><path fill=\"#D99E82\" d=\"M18.145 22.526s-1.274-1.881-2.117-2.553c-.672-.843-2.549-2.116-2.549-2.116-.448-.446-1.191-.48-1.629-.043-.437.438-.793 1.366-1.173 2.291-.472 1.146-1.276 4.154-1.768 5.752-.083.272.517-.45.503-.21-.01.187.027.394.074.581l-.146.159.208.067c.025.082.05.154.068.21l.159-.146c.187.047.394.084.58.074.24-.014-.483.587-.21.503 1.598-.493 4.607-1.296 5.752-1.768.924-.381 1.854-.736 2.291-1.174.439-.435.406-1.178-.043-1.627z\"/><path fill=\"#EA596E\" d=\"M25.312 4.351c-.876.875-.876 2.293 0 3.168l3.167 3.168c.876.874 2.294.874 3.168 0l3.169-3.168c.874-.875.874-2.293 0-3.168l-3.169-3.168c-.874-.875-2.292-.875-3.168 0l-3.167 3.168z\"/><path fill=\"#FFCC4D\" d=\"M11.849 17.815l3.17 3.17 3.165 3.166 11.881-11.879-6.337-6.336-11.879 11.879z\"/><path fill=\"#292F33\" d=\"M11.298 26.742s-2.06 1.133-2.616.576c-.557-.558.581-2.611.581-2.611s1.951.036 2.035 2.035z\"/><path fill=\"#CCD6DD\" d=\"M23.728 5.935l3.96-3.96 6.336 6.337-3.96 3.96z\"/><path fill=\"#99AAB5\" d=\"M26.103 3.558l.792-.792 6.336 6.335-.792.792zM24.52 5.142l.791-.791 6.336 6.335-.792.792z\"/></svg>"};
   const ntIcon = it => it.ic && NT_ICON[it.ic] ? NT_ICON[it.ic] : it.ic ? (EMOJI_SVG[it.ic] || '') : it.k === 'graded' ? (EMOJI_SVG['📊'] || '') : it.k === 'new' ? NT_ICON[it.kind === 'assignment' ? 'new' : 'material'] : it.k === 'changed' ? NT_ICON.update : it.k === 'ann' ? NT_ICON.update : NT_ICON.message;
-  const NT_SEEN = new Set();
+  const NT_SEEN = new Set(FSD.NT_SEEN_IDS);
+  { const add = NT_SEEN.add.bind(NT_SEEN); NT_SEEN.add = id => { const it = NT_ITEMS.find(x => x.id === id); if (it) FSX.seen.mark(it.kind, it.raw); return add(id); }; }   // marked here = marked in Windowed too
   const NT = Object.assign({ here: null, onChange: () => {} }, typeof NT_HOOKS === 'object' ? NT_HOOKS : {});
   let ntEl = null, ntFrom = null, ntScope = NT.here || 'all';
   const ntIsSeen = id => NT_SEEN.has(id);
@@ -3796,7 +3754,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     return `<span class="nt-tile" style="--c:${col}" aria-hidden="true">${ntIcon(it)}</span>`;
   }
   function ntRow(it, all) {
-    const cls = NT_CLASSES[it.c], sub = (all ? cls + ' · ' : '') + it.d;
+    const cls = NT_CLASSES[it.c] || 'Messages', sub = (all ? cls + ' · ' : '') + it.d;
     let end = '';
     if (it.k === 'graded') { const p = it.got / it.of * 100; end = `<span class="nt-end"><b class="${gcls(p)}">${letter(p)}</b>${it.got} / ${it.of}</span>`; }
     return `<div class="nt-row nt-k-${it.k}" role="button" tabindex="0" data-ntgo="${it.id}">${ntTile(it)}<span class="nt-tx"><b class="${it.k === 'ann' ? 'long' : ''}">${esc(it.t)}</b><small>${esc(sub)}</small>${it.note ? `<span class="nt-note">${ico('msg')}<span>${esc(it.note)}</span></span>` : ''}</span>${end}</div>`;
@@ -3902,7 +3860,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       return; }
     if (e.target.closest('[data-ntseen]')) { const n = ntLive(ntScope).length, label = ntScope === 'all' ? 'everything' : NT_CLASSES[ntScope]; ntLive(ntScope).forEach(it => NT_SEEN.add(it.id)); ntBadge(); NT.onChange(); ntRefresh(true); toast(`Marked ${label} as seen. That's ${n} ${n === 1 ? 'notification' : 'notifications'}.`); return; }
     const go = e.target.closest('[data-ntgo]');
-    if (go) { const it = NT_ITEMS.find(x => x.id === go.dataset.ntgo); NT_SEEN.add(it.id); ntBadge(); NT.onChange(); ntClose(true); toast(`In the app, this opens ${it.k === 'msg' ? 'the conversation' : it.k === 'ann' ? 'the announcement' : it.k === 'changed' ? 'what changed' : it.t} in ${NT_CLASSES[it.c]}.`); }
+    if (go) { const it = NT_ITEMS.find(x => x.id === go.dataset.ntgo); NT_SEEN.add(it.id); ntBadge(); NT.onChange(); ntClose(true); if (it.k === 'msg') FSX.go('messages', { thread: it.thread }); else if (it.k === 'graded') FSX.hub(it.c, 'grades', { a: it.aid }); else FSX.hub(it.c, 'updates', { update: it.raw }); }
   }
   document.addEventListener('keydown', e => {
     if (!ntEl) return;
@@ -3913,7 +3871,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   /* ===== end Notifications ===== */
 
   // ---------- frame: sidebar classes, avatar, pin, menu, toast (same as Home) ----------
-  $('sideClasses').innerHTML = CLASSES.map(c => `<a href="#" title="${esc(c.name)} · ${letter(c.pct)} ${c.pct.toFixed(1)}%" data-toast="the ${esc(c.name)} course hub">${badge(c)}<span class="fade">${esc(c.name)}</span></a>`).join('');
+  $('sideClasses').innerHTML = CLASSES.map(c => `<a href="${FSX.hubUrl(c.id)}" title="${esc(c.name)} · ${letter(c.pct)} ${c.pct.toFixed(1)}%" data-go="${FSX.hubUrl(c.id)}">${badge(c)}<span class="fade">${esc(c.name)}</span></a>`).join('');
   const inkCv = document.createElement('canvas'), inkC2 = inkCv.getContext('2d', { willReadFrequently: true }), inkMemo = new Map();
   function inkOf(text, cs) {
     const key = `${cs.fontStyle}|${cs.fontWeight}|${cs.fontFamily}|${text}`;
@@ -4013,7 +3971,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   addEventListener('resize', () => { if (window.devicePixelRatio !== inkDpr) { inkDpr = window.devicePixelRatio; centerInk(); } }); // zoom or another screen
   const reInk = () => { inkMemo.clear(); centerInk(); }; // a font finished loading: measure again
   if (document.fonts) { document.fonts.ready.then(reInk); document.fonts.addEventListener('loadingdone', reInk); }
-  $('cntAssign').textContent = 9; $('cntMsg').textContent = 2; centerInk();
+  { const a = FSD.counts.assign, m = FSD.counts.msg; $('cntAssign').textContent = a || ''; $('cntAssign').hidden = !a; $('cntMsg').textContent = m || ''; $('cntMsg').hidden = !m; if ($('pipAssign')) $('pipAssign').hidden = !a; if ($('pipMsg')) $('pipMsg').hidden = !m; } centerInk();
   document.querySelectorAll('[data-av]').forEach(el => { el.textContent = PROFILE.name.charAt(0); el.classList.toggle('photo', !!PROFILE.photo); el.style.backgroundImage = PROFILE.photo ? `url("${PROFILE.photo}")` : ''; });
   const app = $('app');
   function setPinned(on) {
@@ -4032,7 +3990,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (meMenu) { meClose(); return; }
     const potato = document.body.classList.contains('potato-mode'), btn = $('meBtn');
     document.body.insertAdjacentHTML('beforeend', `<div class="pop me-pop" role="menu" aria-label="Profile and settings">
-      <div class="pv"><span class="av-wrap"><span class="av" data-av></span></span><span class="t" style="min-width:0"><b style="display:block;font-weight:800">${esc(PROFILE.name)}</b><small style="color:var(--muted);font-weight:600">Lincoln High</small></span></div>
+      <div class="pv"><span class="av-wrap"><span class="av" data-av></span></span><span class="t" style="min-width:0"><b style="display:block;font-weight:800">${esc(PROFILE.name)}</b><small style="color:var(--muted);font-weight:600">${esc(FSD.me.school || FSD.me.email || 'Schoology')}</small></span></div>
       <div class="hr"></div>
       ${meItem('profile', 'user', 'Edit profile', 'Name and photo')}
       ${typeof CZ_ON === 'function' && CZ_ON() ? meItem('customize', 'sliders', 'Customize this page', 'Choose your default view') : ''}
@@ -4063,7 +4021,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       }
       
       meClose(true);
-      toast({ profile: 'In the app, this opens Edit profile, where you change your name and photo.', customize: 'In the app, this opens Customize Home on the Home page.', settings: 'In the app, this opens Settings.', signout: 'In the app, this signs you out.' }[k]);
+      ({ profile: () => FSX.go('settings', { section: 'account' }), customize: () => FSX.go('home', { customize: 1 }), settings: () => FSX.go('settings'), signout: () => FSX.signOut() }[k] || (() => {}))();
     });
   }
   function meClose(refocus) {
@@ -4087,7 +4045,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   function toast(text) { const t = $('toast'); t.textContent = text; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2600); }
 
 
-  document.addEventListener('click', e => { const t = e.target.closest('[data-toast]'); if (t) { e.preventDefault(); toast(`In the app, this opens ${t.dataset.toast}.`); } });
+  document.addEventListener('click', e => { const t = e.target.closest('[data-toast]'); if (t) { e.preventDefault(); if (!FSX.open(t.dataset.toast)) toast('That isn\'t ready yet.'); } });
   const IS_MAC = /mac|iphone|ipad|ipod/i.test(navigator.userAgentData?.platform || navigator.platform || '');
   $('sideKbd').textContent = IS_MAC ? '⌘K' : 'Ctrl K';
   // search here finds an assignment: the sidebar's Search, Ctrl K, / and T all jump to it
@@ -4111,7 +4069,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const cmark = (s, q) => { const w = cwords(q).sort((a, b) => b.length - a.length)[0], t = String(s); if (!w) return esc(t); const i = t.toLowerCase().indexOf(w); return i < 0 ? esc(t) : esc(t.slice(0, i)) + '<mark>' + esc(t.slice(i, i + w.length)) + '</mark>' + esc(t.slice(i + w.length)); };
   let cmdk = null, cmdkFrom = null;
   const crow = (attrs, lead, th, sub, cls = '') => `<button class="mi${cls}" ${attrs}>${lead}<span class="tx"><b>${th}</b>${sub ? `<small>${esc(sub)}</small>` : ''}</span></button>`;
-  const cclass = (c, q) => crow(`data-toast="the ${esc(c.name)} course hub"`, badge(c), cmark(c.name, q), `${c.teacher} · ${letter(c.pct)} · ${c.pct.toFixed(1)}%`);
+  const cclass = (c, q) => crow(`data-go="${FSX.hubUrl(c.id)}"`, badge(c), cmark(c.name, q), `${c.teacher} · ${letter(c.pct)} · ${c.pct.toFixed(1)}%`);
   function cmdkRender() {
     const q = cmdk.querySelector('input').value.trim(), res = cmdk.querySelector('.cmdk-res'); let html = '';
     const page = ([p, ic]) => crow(p === HERE ? 'data-cmdkx' : `data-toast="the ${p} page"`, ico(ic), cmark(p, q), p === HERE ? "You're here" : '');
@@ -4119,7 +4077,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       html += `<div class="lbl">Quick actions</div>` + crow('data-cmdkmsg=""', ico('msg'), 'Message a teacher', 'Start a new message', ' s-cmd') + crow('data-toast="Turn in, on the Assignments page"', ico('upload'), 'Turn in an assignment', 'Pick from what you have due', ' s-cmd')
         + (HERE ? crow('data-cmdkhere=""', ico('search'), `Search ${esc(HERE)}`, 'Just this page. You can also press / or T', ' s-cmd') : '');
       html += `<div class="lbl">Your classes</div>` + CLASSES.map(c => cclass(c, '')).join('');
-      html += `<div class="s-tip">${ico('bolt')}<span>Or type a command, like <b>message Dr. Park</b> or <b>open grades</b></span></div>`;
+      html += `<div class="s-tip">${ico('bolt')}<span>Or type a command, like <b>message ${esc(FSD.exampleTeacher)}</b> or <b>open grades</b></span></div>`;
     } else {
       // "message ..." picks a teacher; "open ..." or "go to ..." is the same as typing the name
       const m = q.match(/^(message|msg|email|text|write to|ask)\b\s*(.*)$/i), o = q.match(/^(open|go to|goto|show)\b\s*(.*)$/i), qq = o ? o[2] : q;
@@ -4129,7 +4087,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       const cs = m ? [] : CLASSES.filter(c => chit(qq, c.name + ' ' + c.teacher)); if (cs.length) html += `<div class="lbl">Classes</div>` + cs.map(c => cclass(c, qq)).join('');
       const ps = m ? [] : GO_PAGES.filter(([p]) => chit(qq, p)); if (ps.length) html += `<div class="lbl">Go to</div>` + ps.map(page).join('');
       if (HERE && !m) html += crow(`data-cmdkhere="${esc(qq)}"`, ico('search'), `Search ${esc(HERE)} for "${esc(qq)}"`, 'Just this page', ' s-cmd');
-      if (!html) html = `<div class="cmdk-empty">Nothing for "${esc(q)}". Try a class, a page, or a command like "message Dr. Park".</div>`;
+      if (!html) html = `<div class="cmdk-empty">Nothing for "${esc(q)}". Try a class, a page, or a command like "message ${esc(FSD.exampleTeacher)}".</div>`;
     }
     res.innerHTML = html; const f = res.querySelector('.mi'); if (f) f.classList.add('sel');
   }
@@ -4144,7 +4102,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     cmdk.addEventListener('click', e => {
       if (e.target === cmdk || e.target.closest('[data-cmdkx]')) { cmdkClose(); return; }
       const g = e.target.closest('[data-cmdkgo]'); if (g) { const k = g.dataset.cmdkgo; cmdkClose(false); if (typeof window.CMDK_GO === 'function') window.CMDK_GO(k); return; }
-      const mg = e.target.closest('[data-cmdkmsg]'); if (mg) { const id = mg.dataset.cmdkmsg; cmdkClose(false); if (typeof window.CMDK_MSG === 'function') window.CMDK_MSG(id); else toast(id ? `In the app, this opens a new message to ${C[id].teacher} on the Messages page.` : 'In the app, this opens a new message on the Messages page.'); return; }
+      const mg = e.target.closest('[data-cmdkmsg]'); if (mg) { const id = mg.dataset.cmdkmsg; cmdkClose(false); if (typeof window.CMDK_MSG === 'function') window.CMDK_MSG(id); else FSX.go('messages', { compose: id || 'new' }); return; }
       const h = e.target.closest('[data-cmdkhere]'); if (h) { const v = h.dataset.cmdkhere; cmdkClose(false); findFocus(); const el = document.activeElement; if (v && el && 'value' in el) { el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); } return; }
     });
     cmdk.querySelector('input').addEventListener('input', cmdkRender);
@@ -4157,7 +4115,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       el.firstElementChild.animate([{ transform: 'none' }, { transform: 'translateY(-6px) scale(.98)' }], { duration: 160, easing: 'cubic-bezier(.4, 0, 1, 1)', fill: 'forwards' }).onfinish = () => el.remove(); }
     if (back && cmdkFrom && cmdkFrom.isConnected && cmdkFrom.focus) cmdkFrom.focus({ preventScroll: true });
   }
-  document.addEventListener('click', e => { if (cmdk && e.target.closest('.cmdk [data-toast]')) cmdkClose(false); }, true);
+  document.addEventListener('click', e => { if (cmdk && e.target.closest('.cmdk [data-toast], .cmdk [data-go]')) cmdkClose(false); }, true);
   document.addEventListener('keydown', e => {
     if (!cmdk) return;
     if (e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); cmdkClose(); return; }
@@ -4171,43 +4129,25 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
 
 
   // ---------- Assignments ----------
-  // Every class's assignments in one list, from Schoology's sections/{id}/assignments plus your submissions and grades.
-  // Today is Thursday, Oct 15 (the same week as Home). st: missing, due, turned (waiting for a grade) or graded.
-  const TODAY = 15;
-  const WEEK = [['Mon', 12], ['Tue', 13], ['Wed', 14], ['Thu', 15], ['Fri', 16]];
-  const A = (id, c, t, kind, day, date, time, pts, st, extra = {}) => Object.assign({ id, c, t, kind, day, date, time, pts, st }, extra);
-  const ASG = [
-    A('a1', 'eng', 'Of Mice and Men essay', 'assignment', 'Wed', 14, '11:59 PM', 50, 'missing', { desc: 'Five paragraphs on loneliness in chapters 1 to 3. Use at least two quotes from the book.', note: 'Half credit until Friday' }),
-    A('a2', 'chem', 'Homework 3.1: Mole ratios', 'assignment', 'Tue', 13, '11:59 PM', 10, 'missing', { desc: 'Problems 1 to 8 on mole ratios from balanced equations.' }),
-    A('a3', 'alg', 'Unit 3 Practice Set', 'assignment', 'Thu', 15, '3:00 PM', 20, 'due', { desc: 'Problems 1 to 24 on page 142. Show your work for full credit.' }),
-    A('a4', 'chem', 'Lab Report #4', 'assignment', 'Thu', 15, '11:59 PM', 50, 'due', { desc: 'Titration lab. Include your data table, the calculations and an error analysis.', note: 'Dr. Park said Friday is fine' }),
-    A('a5', 'hist', 'Field Trip Form', 'assignment', 'Fri', 16, '7:45 AM', 5, 'due', { desc: 'Bring the signed form to Room 214 before first period.', paper: true }),
-    A('a6', 'chin', 'Lesson 7 Vocab', 'assignment', 'Fri', 16, '8:00 AM', 10, 'due', { desc: 'Write each word three times with pinyin and one example sentence.' }),
-    A('a7', 'eng', 'Chapter 4 Reading Log', 'assignment', 'Mon', 19, '11:59 PM', 10, 'due', { desc: "One paragraph on how Crooks is treated, plus three questions for Tuesday's discussion." }),
-    A('a8', 'chem', 'Worksheet 3.2: Limiting reagents', 'assignment', 'Mon', 19, '11:59 PM', 20, 'due', { desc: 'Problems 1 to 12. Show your work for each one.' }),
-    A('a9', 'alg', 'Quiz 5: Logarithms', 'test', 'Wed', 21, '9:15 AM', 20, 'due', { desc: 'Covers sections 3.4 to 3.6. Calculators allowed.', fresh: true }),
-    A('a10', 'chem', 'Unit 3 Test', 'test', 'Thu', 22, '8:00 AM', 100, 'due', { desc: 'Stoichiometry and limiting reagents. One page of notes allowed.' }),
-    A('a11', 'art', 'Portfolio Review Sign-up', 'assignment', 'Tue', 27, '3:30 PM', 5, 'due', { desc: 'Pick a 10 minute slot with Ms. Reyes and bring three finished pieces.', fresh: true }),
-    A('a12', 'hist', 'DBQ final draft', 'assignment', 'Mon', 26, '11:59 PM', 50, 'due', { desc: 'Your full DBQ essay. Use at least four of the seven documents.' }),
-    A('a13', 'eng', 'Chapter 3 Reading Log', 'assignment', 'Tue', 13, '11:59 PM', 10, 'turned', { turned: 'Oct 13', sent: [{ name: 'Ch 3 reading log.docx', size: '24 KB' }], desc: 'One paragraph on George and Lennie\'s plan, plus three questions.' }),
-    A('a14', 'alg', 'Homework 3.3', 'assignment', 'Wed', 14, '11:59 PM', 10, 'turned', { turned: 'Oct 14', sent: [{ name: 'HW 3.3.pdf', size: '410 KB' }], desc: 'Section 3.3, problems 1 to 30, odd numbers only.' }),
-    A('a15', 'art', 'Sketchbook week 7', 'assignment', 'Wed', 14, '3:30 PM', 10, 'turned', { turned: 'Oct 14', sent: [{ name: 'Sketchbook week 7.jpg', size: '2.1 MB' }], desc: 'Three gesture drawings and one value study.' }),
-    A('a16', 'chem', 'Lab 4 pre-lab', 'assignment', 'Mon', 12, '11:59 PM', 10, 'graded', { got: 9, graded: 'Today', sent: [{ name: 'Prelab 4.pdf', size: '220 KB' }], turned: 'Oct 12', desc: 'Safety questions and a plan for the titration.' }),
-    A('a17', 'alg', 'Quiz 4', 'test', 'Wed', 14, '9:15 AM', 20, 'graded', { got: 19, graded: 'Today', desc: 'Sections 3.1 to 3.3.' }),
-    A('a18', 'art', 'Still life', 'assignment', 'Tue', 13, '3:30 PM', 50, 'graded', { got: 48, graded: 'Yesterday', turned: 'Oct 13', sent: [{ name: 'Still life final.jpg', size: '3.4 MB' }], desc: 'A finished still life in charcoal or graphite.' }),
-    A('a19', 'eng', 'Narrative essay', 'assignment', 'Fri', 9, '11:59 PM', 50, 'graded', { got: 38, graded: 'Oct 13', turned: 'Oct 9', sent: [{ name: 'Narrative essay.docx', size: '48 KB' }], desc: 'A personal narrative, 800 to 1,000 words.' }),
-    A('a20', 'hist', 'DBQ outline', 'assignment', 'Fri', 9, '11:59 PM', 25, 'graded', { got: 23, graded: 'Oct 12', turned: 'Oct 9', sent: [{ name: 'DBQ outline.pdf', size: '160 KB' }], desc: 'Thesis, three claims and which documents back each one.' }),
-  ];
+  // Every class's assignments (averages-fs-data.js): what's due, what's missing, what's turned in and waiting, and
+  // what was graded in the last three weeks. Dates are days from today (0 is today); WEEK is this week, Monday to Friday.
+  const TODAY = 0, DAY0 = FSD.fmt.startOfDay(Date.now()), DOW = (new Date().getDay() + 6) % 7;   // DOW: 0 is Monday
+  const WEEK = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'].map((d, i) => [d, i - DOW, new Date(DAY0 + (i - DOW) * 864e5).getDate()]);
+  const WEEK_END = Math.max(0, 4 - DOW), NEXT_END = 4 - DOW + 7;   // this Friday and next, as days from today
+  const ASG = FSD.ASG.map(a => Object.assign({}, a, { date: a.off, desc: '' }));
   const KIND_L = { assignment: 'Assignment', test: 'Test' };
-  const monthDay = d => `Oct ${d}`;
-  const dueWhen = a => a.date === TODAY ? 'Today' : a.date === TODAY + 1 ? 'Tomorrow' : `${a.day}, ${monthDay(a.date)}`;
-  const canTurnIn = a => a.kind === 'assignment' && !a.paper;
+  const kindL = a => a.disc ? 'Discussion' : KIND_L[a.kind];
+  const monthDay = d => FSD.fmt.shortDate(DAY0 + d * 864e5);
+  const longDay = d => new Date(DAY0 + d * 864e5).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+  const dueWhen = a => a.date == null ? 'No due date' : a.date === TODAY ? 'Today' : a.date === TODAY + 1 ? 'Tomorrow' : `${a.day}, ${monthDay(a.date)}`;
+  const canTurnIn = a => FSD.canTurnIn(a);
   const isTodo = a => a.st === 'missing' || a.st === 'due';
   const AS = { type: store.get('fsasg_type') || 'todo', c: '', q: '', seen: new Set(store.get('fsasg_seen') || []) };
   const isNew = a => a.fresh && !AS.seen.has(a.id);
   const TYPES = [['todo', 'To do'], ['missing', 'Missing'], ['turned', 'Turned in'], ['graded', 'Graded'], ['all', 'All']];
   const ofType = (a, t) => t === 'all' ? true : t === 'todo' ? isTodo(a) : a.st === t;
   const hit = a => (!AS.c || a.c === AS.c) && (!AS.q || (a.t + ' ' + C[a.c].name + ' ' + C[a.c].teacher).toLowerCase().includes(AS.q));
+  if (AS.c && !C[AS.c]) AS.c = '';
   const shown = () => ASG.filter(a => ofType(a, AS.type) && hit(a));
 
   // which group a row is in: missing, then by when it's due, then what's turned in and graded
@@ -4215,10 +4155,10 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (a.st === 'missing') return 'missing';
     if (a.st === 'turned') return 'turned';
     if (a.st === 'graded') return 'graded';
-    return a.date === TODAY ? 'today' : a.date <= 16 ? 'week' : a.date <= 23 ? 'next' : 'later';
+    return a.date == null ? 'later' : a.date <= TODAY ? 'today' : a.date <= WEEK_END ? 'week' : a.date <= NEXT_END ? 'next' : 'later';
   }
   const GROUPS = [['missing', 'Missing'], ['today', 'Due today'], ['week', 'Later this week'], ['next', 'Next week'], ['later', 'Later'], ['turned', 'Turned in, waiting for a grade'], ['graded', 'Graded recently']];
-  const dueSort = (x, y) => x.date - y.date || x.time.localeCompare(y.time);
+  const dueSort = (x, y) => (x.dueAt || 9e15) - (y.dueAt || 9e15);
 
   // turned in: a filled circle with a check, so it reads as done at a glance (not the empty checkbox)
   const OK_DOT = '<svg class="i as-okd" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="currentColor" stroke="none"/><path d="M7.6 12.4l3 3 5.8-6.2" fill="none" stroke="#ffffff" stroke-width="1.75" stroke-linecap="butt" stroke-linejoin="miter"/></svg>';
@@ -4226,21 +4166,23 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   function stChip(a) {
     if (a.st === 'missing') return `<span class="as-st miss">${ico('alert')}Missing</span>`;
     if (a.st === 'turned') return `<span class="as-st done">${OK_DOT}Turned in ${esc(a.turned)}</span>`;
-    if (a.st === 'graded') { const p = a.got / a.pts * 100; return `<span class="as-st gr"><b class="${gcls(p)}">${letter(p)}</b>${a.got} / ${a.pts}</span>`; }
-    if (a.date === TODAY) return `<span class="as-st today">${ico('clock')}Due ${esc(a.time)}</span>`;
+    if (a.st === 'graded') { if (!a.pts) return `<span class="as-st gr">${a.got} points</span>`; const p = a.got / a.pts * 100; return `<span class="as-st gr"><b class="${gcls(p)}">${letter(p)}</b>${a.got} / ${a.pts}</span>`; }
+    if (a.date == null) return '<span class="as-st">No due date</span>';
+    if (a.date <= TODAY) return `<span class="as-st today">${ico('clock')}Due ${esc(a.time)}</span>`;
     const d = a.date - TODAY; return `<span class="as-st">${d === 1 ? 'Tomorrow' : `In ${d} days`}</span>`;
   }
   function actHTML(a) {
     // the red button is only for what's late or due today; the rest stay quiet
-    if (a.st === 'graded') return `<button class="btn sm" data-toast="${esc(a.t)} on the Grades page" aria-label="See your grade on ${esc(a.t)}">${ico('chart')}<span class="l">See grade</span></button>`;
+    if (a.st === 'graded') return `<button class="btn sm" data-go="${FSX.hubUrl(a.c, 'grades', { a: a.id })}" aria-label="See your grade on ${esc(a.t)}">${ico('chart')}<span class="l">See grade</span></button>`;
     if (a.st === 'turned') return `<button class="btn sm" data-asturnin="${a.id}" aria-label="See what you turned in for ${esc(a.t)}">${ico('ok')}<span class="l">View</span></button>`;
-    if (!canTurnIn(a)) return `<span class="as-inclass">${a.kind === 'test' ? 'In class' : 'On paper'}</span>`;
+    if (!canTurnIn(a)) return `<button class="btn sm" data-go="${FSX.hubUrl(a.c, 'assignments', { a: a.id })}" aria-label="Open ${esc(a.t)}">${ico('up')}<span class="l">${a.disc ? 'Reply' : a.kind === 'test' ? 'Open test' : 'Open'}</span></button>`;
     return `<button class="btn sm${a.st === 'missing' || a.date === TODAY ? ' primary' : ''}" data-asturnin="${a.id}" aria-label="Turn in ${esc(a.t)}">${ico('upload')}<span class="l">Turn in</span></button>`;
   }
   function rowHTML(a) {
     const c = C[a.c], late = a.st === 'missing';
-    const sub = `${c.name} · ${KIND_L[a.kind]} · ${a.pts} points${a.note ? ' · ' + a.note : ''}`;
-    const due = a.st === 'graded' ? `<span class="as-due"><b>Graded ${esc(a.graded)}</b><small>Was due ${esc(monthDay(a.date))}</small></span>`
+    const sub = [c.name, kindL(a), a.pts ? a.pts + ' points' : '', a.outside ? 'On Schoology' : '', a.st === 'graded' ? a.note : ''].filter(Boolean).join(' · ');
+    const due = a.st === 'graded' ? `<span class="as-due"><b>Graded ${esc(a.graded)}</b><small>${a.date != null ? 'Was due ' + esc(monthDay(a.date)) : ''}</small></span>`
+      : a.st === 'turned' ? `<span class="as-due"><b>Turned in ${esc(a.turned)}</b><small>${a.date != null ? 'Due ' + esc(monthDay(a.date)) : ''}</small></span>`
       : `<span class="as-due${late ? ' bad' : ''}"><b>${late ? 'Was due ' + esc(monthDay(a.date)) : esc(dueWhen(a))}</b><small>${esc(a.time)}</small></span>`;
     return `<div class="as-row" role="link" tabindex="0" data-asgo="${a.id}" aria-label="${esc(a.t)}, ${esc(c.name)}">${badge(c)}<span class="as-tx"><b><span>${esc(a.t)}</span>${isNew(a) ? '<span class="newtag">New</span>' : ''}</b><small>${esc(sub)}</small></span>${due}${stChip(a)}<span class="as-act">${actHTML(a)}</span></div>`;
   }
@@ -4251,7 +4193,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       $('asList').innerHTML = `<div class="as-none"><b>${what}</b>${AS.c ? `in ${esc(C[AS.c].name)}.` : AS.type === 'todo' || AS.type === 'missing' ? 'New assignments from your classes show up here.' : 'Try another filter.'}</div>`;
     } else {
       $('asList').innerHTML = GROUPS.map(([k, label]) => { const l = list.filter(a => bucket(a) === k).sort(k === 'graded' || k === 'turned' ? (x, y) => y.date - x.date : dueSort); if (!l.length) return '';
-        const sub = k === 'missing' ? 'Turn these in as soon as you can' : k === 'today' ? 'Thursday, Oct 15' : k === 'week' ? 'Friday, Oct 16' : k === 'next' ? 'Oct 19 to 23' : '';
+        const sub = k === 'missing' ? 'Turn these in as soon as you can' : k === 'today' ? longDay(0) : k === 'week' ? 'Through ' + longDay(WEEK_END) : k === 'next' ? `${monthDay(NEXT_END - 4)} to ${monthDay(NEXT_END)}` : '';
         return `<div class="as-grp"><div class="as-gh"><h3${k === 'missing' ? ' class="bad"' : ''}>${label}</h3><span>${l.length}${sub ? ' · ' + sub : ''}</span></div><div class="as-box">${l.map(rowHTML).join('')}</div></div>`; }).join('');
     }
     if (anim && !calm()) $('asList').querySelectorAll('.as-gh, .as-row, .as-none').forEach((el, i) => el.animate && el.animate([{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: 320, delay: Math.min(i * 25, 300), easing: 'cubic-bezier(.2, .8, .2, 1)', fill: 'backwards' }));
@@ -4291,20 +4233,20 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   document.addEventListener('pointerdown', e => { if (ddOpen && !e.target.closest('#asCls')) ddHide(false); });
   function asMeta() {
     // four short facts, like the Courses and Grades headers: what's late, today, the rest of the week, and what's in
-    const miss = ASG.filter(a => a.st === 'missing').length, today = ASG.filter(a => a.st === 'due' && a.date === TODAY).length, week = ASG.filter(a => a.st === 'due' && a.date >= TODAY && a.date <= 16).length;
+    const miss = ASG.filter(a => a.st === 'missing').length, today = ASG.filter(a => a.st === 'due' && a.date === TODAY).length, week = ASG.filter(a => a.st === 'due' && a.date != null && a.date >= TODAY && a.date <= WEEK_END).length;
     const turned = ASG.filter(a => a.st === 'turned').length;
     const m = (icon, n, txt, cls = '') => `<span class="gm${cls}">${icon.startsWith('<') ? icon : ico(icon)}<span class="t"><b data-n="${n}" data-dp="0">${n}</b> ${txt}</span></span>`;
     $('asMeta').innerHTML = (miss ? m('alert', miss, 'missing', ' bad') : '') + m('clock', today, 'due today') + m('cal', week, 'due by Friday') + m(OK_RING, turned, 'turned in');
   }
   function asWeek() {
-    const due = ASG.filter(a => (a.st === 'due' || a.st === 'missing' || a.st === 'turned' || a.st === 'graded') && a.date >= 12 && a.date <= 16);
-    $('asWeek').innerHTML = `<div class="wk">${WEEK.map(([d, n]) => { const l = due.filter(a => a.date === n), open = l.filter(isTodo).length;
-      return `<div class="wk-d${n === TODAY ? ' today' : n < TODAY ? ' past' : ''}" title="${esc(l.map(a => a.t).join(', ') || 'Nothing due')}"><small>${n === TODAY ? 'Today' : d}</small><b>${n}</b><span class="wk-dots" aria-hidden="true">${l.map(a => `<i style="--c:${C[a.c].color}"></i>`).join('')}</span><span class="wk-n">${l.length ? (open ? `${open} to do` : 'Done') : 'Free'}</span></div>`; }).join('')}</div>`
-      + `<p class="wk-note">${ASG.filter(a => isTodo(a) && a.date <= 16).length} left to do by Friday, ${ASG.filter(a => a.st === 'due' && a.date > 16).length} more next week and after.</p>`;
+    const due = ASG.filter(a => a.date != null && a.date >= WEEK[0][1] && a.date <= WEEK[4][1]);
+    $('asWeek').innerHTML = `<div class="wk">${WEEK.map(([d, n, dom]) => { const l = due.filter(a => a.date === n), open = l.filter(isTodo).length;
+      return `<div class="wk-d${n === TODAY ? ' today' : n < TODAY ? ' past' : ''}" title="${esc(l.map(a => a.t).join(', ') || 'Nothing due')}"><small>${n === TODAY ? 'Today' : d}</small><b>${dom}</b><span class="wk-dots" aria-hidden="true">${l.map(a => `<i style="--c:${C[a.c].color}"></i>`).join('')}</span><span class="wk-n">${l.length ? (open ? `${open} to do` : 'Done') : 'Free'}</span></div>`; }).join('')}</div>`
+      + `<p class="wk-note">${ASG.filter(a => isTodo(a) && a.date != null && a.date <= WEEK_END).length} left to do by Friday, ${ASG.filter(a => a.st === 'due' && (a.date == null || a.date > WEEK_END)).length} more next week and after.</p>`;
   }
   function asByCls() {
     $('asByCls').innerHTML = CLASSES.map(c => { const l = ASG.filter(a => a.c === c.id), todo = l.filter(isTodo).length, miss = l.filter(a => a.st === 'missing').length, next = l.filter(a => a.st === 'due').sort(dueSort)[0];
-      return `<button class="ac-row" data-ascls="${c.id}" aria-pressed="${AS.c === c.id}" style="--c:${c.color}">${badge(c)}<span class="tx"><b>${esc(c.name)}</b><small>${miss ? `<span class="bad">${miss} missing</span> · ` : ''}${next ? `Next: ${esc(next.t)}, ${esc(next.date === TODAY ? 'today' : next.day)}` : 'Nothing due'}</small></span><span class="ac-n${todo ? '' : ' z'}" aria-label="${todo} to do">${todo}</span></button>`; }).join('');
+      return `<button class="ac-row" data-ascls="${c.id}" aria-pressed="${AS.c === c.id}" style="--c:${c.color}">${badge(c)}<span class="tx"><b>${esc(c.name)}</b><small>${miss ? `<span class="bad">${miss} missing</span> · ` : ''}${next ? `Next: ${esc(next.t)}${next.date == null ? '' : ', ' + esc(next.date === TODAY ? 'today' : next.day)}` : 'Nothing due'}</small></span><span class="ac-n${todo ? '' : ' z'}" aria-label="${todo} to do">${todo}</span></button>`; }).join('');
   }
   // the count next to the class button: the digits are drawn by their ink, so they sit dead center like the sidebar's counts
   function inkCenter(root, sel) {
@@ -4376,7 +4318,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   $('asClear').addEventListener('click', e => { e.preventDefault(); $('asFind').value = ''; AS.q = ''; asList(true); $('asFind').focus(); asSearchSync(); });
   $('asList').addEventListener('click', e => {
     if (e.target.closest('button, a')) return; const r = e.target.closest('[data-asgo]'); if (!r) return; const a = ASG.find(x => x.id === r.dataset.asgo);
-    toast(`In the app, this opens the ${a.t} assignment page in ${C[a.c].name}.`);
+    FSX.hub(a.c, 'assignments', { a: a.id });
   });
   $('asList').addEventListener('keydown', e => { const r = e.target.closest('[data-asgo]'); if (r && e.target === r && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); r.click(); } });
   // New goes away once you've rested on it or tabbed to it
@@ -4394,23 +4336,23 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const TI_BY = {};
   const tiItem = a => {
     const it = TI_BY[a.id] || (TI_BY[a.id] = { id: a.id, kind: canTurnIn(a) ? 'assignment' : 'test', c: a.c, name: a.t, desc: a.desc || '', pts: a.pts, ago: 0,
-      turned: a.turned || null, sent: a.sent ? a.sent.slice() : undefined, got: a.st === 'graded' ? a.got : undefined });
-    Object.assign(it, { due: a.st === 'missing' ? -1 : a.date - TODAY, dueTxt: `${a.date === TODAY ? 'today' : `${a.day}, Oct ${a.date}`} · ${a.time}`, a });
+      turned: a.st === 'turned' || a.st === 'graded' ? a.turned || 'earlier' : null, sent: a.sent ? a.sent.slice() : undefined, got: a.st === 'graded' ? a.got : undefined });
+    Object.assign(it, { due: a.st === 'missing' ? -1 : a.date == null ? 99 : a.date - TODAY, dueTxt: a.date == null ? '' : `${a.date === TODAY ? 'today' : `${a.day}, ${monthDay(a.date)}`} · ${a.time}`, a });
     return it;
   };
   const MATERIALS = { find: f => ASG.map(tiItem).find(f), filter: f => ASG.map(tiItem).filter(f) };
   const tile = m => badge(C[m.c]);
   const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
   const where = m => `the ${m.name} assignment page`;
-  const tiGoPage = id => { const a = ASG.find(x => x.id === id); toast(`In the app, this opens the ${a.t} assignment page in ${C[a.c].name}.`); };
-  const status = m => m.turned ? '<span class="due">Turned in</span>' : m.due < 0 ? '<span class="due late">Missing</span>' : m.due === 0 ? `<span class="due today">${esc(m.a.time)}</span>` : `<span class="due">${esc(m.a.day)}</span>`;
+  const tiGoPage = id => { const a = ASG.find(x => x.id === id); FSX.hub(a.c, 'assignments', { a: a.id }); };
+  const status = m => m.turned ? '<span class="due">Turned in</span>' : m.due < 0 ? '<span class="due late">Missing</span>' : m.due === 0 ? `<span class="due today">${esc(m.a.time)}</span>` : `<span class="due">${esc(m.a.day || '')}</span>`;
   const closeMenu = () => { if (typeof meClose === 'function') meClose(); };
-  const TEACH = () => { const m = MATERIALS.find(x => x.id === tiSel); return m ? C[m.c].teacher : 'your teacher'; };
-  const CLASSOF = () => { const m = MATERIALS.find(x => x.id === tiSel); return m ? `${C[m.c].name} · ${C[m.c].teacher}` : ''; };
+  const TEACH = () => { const m = MATERIALS.find(x => x.id === tiSel); return (m && C[m.c].teacher) || 'your teacher'; };
+  const CLASSOF = () => { const m = MATERIALS.find(x => x.id === tiSel); return m ? [C[m.c].name, C[m.c].teacher].filter(Boolean).join(' · ') : ''; };
   const HUB_TAB = '', ntBadge = () => {}, renderComing = () => {}, agRender = () => {}, agCounts = () => {};
   // once it's turned in, it moves to Turned in on this page
   const renderList = () => {
-    Object.values(TI_BY).filter(m => m.turned).forEach(m => { const a = m.a; if (a.st === 'missing' || a.st === 'due') { a.st = 'turned'; a.turned = 'just now'; a.sent = m.sent; } });
+    Object.values(TI_BY).filter(m => m.turned).forEach(m => { const a = m.a; if (a.st === 'missing' || a.st === 'due') { a.st = 'turned'; a.turned = 'Today'; a.sent = m.sent; } });
     asMeta(); asTypes(); asCls(); asList(false); asWeek(); asByCls();
   };
   // ---------- Turn in: one popup with every assignment in the class ----------
@@ -4422,18 +4364,16 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   // Add from another app: what each one lists in the mock, and what a copy can be saved as.
   // (Names only, no app logos.) kind picks the copy formats.
   const SOURCES = {
-    drive:    { name: 'Google Drive', mark: ['#188038', '<path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h4.6l2 2.4h8.4A1.5 1.5 0 0 1 21 9.9v7.6a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5z"/>'], files: [['Lab 4 report', 'gdoc', 'Edited 2 hours ago'], ['Titration data', 'gsheet', 'Edited yesterday'], ['Lab 4 slides', 'gslides', 'Edited Oct 14']] },
-    canva:    { name: 'Canva', mark: ['#0b8a91', '<path d="M15.6 3.6l4.8 4.8-9.3 9.3-5.4.6.6-5.4z"/><path d="M4 20.5h16" stroke="#fff" stroke-width="2" fill="none"/>'], files: [['Lab 4 poster', 'design', 'Edited today'], ['Titration diagram', 'design', 'Edited Oct 13']] },
-    onedrive: { name: 'OneDrive', mark: ['#0F6CBD', '<path d="M6.75 19.5a4.75 4.75 0 0 1-.55-9.47 6.25 6.25 0 0 1 11.95 1.97 3.75 3.75 0 0 1-.4 7.5z" transform="translate(.16 -.9)"/>'], files: [['Lab 4 report.docx', 'docx', '48 KB · Edited today'], ['Error analysis.xlsx', 'xlsx', '22 KB · Edited Oct 15']] },
+    drive:    { name: 'Google Drive', mark: ['#188038', '<path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h4.6l2 2.4h8.4A1.5 1.5 0 0 1 21 9.9v7.6a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5z"/>'], files: [] },
+    canva:    { name: 'Canva', mark: ['#0b8a91', '<path d="M15.6 3.6l4.8 4.8-9.3 9.3-5.4.6.6-5.4z"/><path d="M4 20.5h16" stroke="#fff" stroke-width="2" fill="none"/>'], files: [] },
+    onedrive: { name: 'OneDrive', mark: ['#0F6CBD', '<path d="M6.75 19.5a4.75 4.75 0 0 1-.55-9.47 6.25 6.25 0 0 1 11.95 1.97 3.75 3.75 0 0 1-.4 7.5z" transform="translate(.16 -.9)"/>'], files: [] },
   };
   // What each app's picker shows, in folders (sample files). kind picks the copy formats.
   const TF = (name, items) => ({ folder: true, name, items }), TFi = (name, kind, sub) => ({ name, kind, sub });
-  const TREES = {
-    // Google Drive only lets Averages.io see files opened with it (no folders), so its list is flat, with Add a file on top
-    drive: TF('Google Drive', [TFi('Lab 4 report', 'gdoc', 'Edited 2 hours ago'), TFi('Titration data', 'gsheet', 'Edited yesterday'), TFi('Lab 4 slides', 'gslides', 'Edited Oct 14'), TFi('Lab 3 report', 'gdoc', 'Edited Oct 1')]),
-    canva: TF('Your designs', [TF('School', [TFi('Lab 4 poster', 'design', 'Edited today'), TFi('Titration diagram', 'design', 'Edited Oct 13')]), TF('Science fair', [TFi('Trifold board', 'design', 'Edited Oct 2')]), TFi('Untitled design', 'design', 'Edited Sep 28')]),
-    onedrive: TF('My files', [TF('Documents', [TFi('Lab 4 report.docx', 'docx', '48 KB · Edited today'), TFi('Error analysis.xlsx', 'xlsx', '22 KB · Edited Oct 15')]), TF('School', [TF('Chemistry', [TFi('Lab notes.docx', 'docx', '31 KB · Edited Oct 8')]), TFi('Schedule.xlsx', 'xlsx', '12 KB · Edited Aug 20')]), TFi('Resume.docx', 'docx', '40 KB · Edited Sep 3')]),
-  };
+  // The student's own files and designs (averages-fs-turnin.js), loaded when the picker opens. Google Drive only lets
+  // Averages.io see files opened with it (no folders), so every list is flat; Add a file brings in more.
+  const TREES = { drive: TF('Google Drive', []), canva: TF('Your designs', []), onedrive: TF('Your OneDrive files', []) };
+
   // Add from an app: a popup with that app's folders. Tick files in any folder (or search), then Add.
   let pk = null;
   const pkFiles = (node, path = []) => node.items.flatMap(i => i.folder ? pkFiles(i, path.concat(i.name)) : [{ ...i, path }]);
@@ -4442,12 +4382,17 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (i.folder) { const n = i.items.length; return `<button class="pk-row" data-pkf="${idx}"><span class="pk-ico pk-fold">${ico('folder')}</span><span class="pk-n"><b>${esc(i.name)}</b><small>Folder · ${plural(n, 'item')}</small></span>${ico('chev-r')}</button>`; }
     const key = (i.path || pk.trail.slice(1).map(t => t.name)).concat(i.name).join('/'), got = pkHas(pk.k, i.name), on = pk.sel.has(key);
     const sub = got ? 'Already added' : pk.q && i.path ? `In ${[SOURCES[pk.k].name].concat(i.path).join(' / ')}` : i.sub;
-    return `<button class="pk-row file${on ? ' on' : ''}${got ? ' added' : ''}" data-pkfile="${idx}" role="checkbox" aria-checked="${on || got}"${got ? ' disabled' : ''}><span class="mp-ck" aria-hidden="true">${ico('ok')}</span><span class="pk-ico avfi-host">${fileIco('x.' + KIND_EXT[i.kind], 34)}</span><span class="pk-n"><b>${esc(i.name)}</b><small>${esc(sub)}</small></span></button>`;
+    return `<button class="pk-row file${on ? ' on' : ''}${got ? ' added' : ''}" data-pkfile="${idx}" role="checkbox" aria-checked="${on || got}"${got ? ' disabled' : ''}><span class="mp-ck" aria-hidden="true">${ico('ok')}</span><span class="pk-ico avfi-host">${fileIco('x.' + (KIND_EXT[i.kind] || i.kind), 34)}</span><span class="pk-n"><b>${esc(i.name)}</b><small>${esc(sub)}</small></span></button>`;
   }
   function pkShown() { return pk.q ? pkFiles(TREES[pk.k]).filter(i => i.name.toLowerCase().includes(pk.q.toLowerCase())) : pk.trail[pk.trail.length - 1].items.slice().sort((a, b) => (b.folder ? 1 : 0) - (a.folder ? 1 : 0)); }
   function pkDraw() {
     if (!pk) return; const el = pk.el, here = pk.trail[pk.trail.length - 1], list = pkShown();
-    el.querySelector('.pk-crumbs').innerHTML = pk.k === 'drive' && !pk.q ? `<button class="pk-addf" data-pkdrive>${ico('plus')}Add a file</button><span class="pk-note">Only files you've opened with Averages.io show here.</span>` : pk.q ? `<button data-pkcrumb="0">${esc(TREES[pk.k].name)}</button>${ico('chev-r')}<span aria-current="page">Results for “${esc(pk.q)}”</span>`
+    if (pk.state && pk.state !== 'ok') {
+      el.querySelector('.pk-crumbs').innerHTML = '';
+      el.querySelector('.pk-list').innerHTML = `<p class="pk-msg">${pk.state === 'loading' ? `Loading your ${SOURCES[pk.k].name}…` : pk.state === 'connect' ? `Connect ${SOURCES[pk.k].name} to add from it.</p><p class="pk-msg"><button class="btn primary" data-pkconnect>Connect ${SOURCES[pk.k].name}</button>` : `${esc(pk.msg || 'Couldn\'t load your files.')}</p><p class="pk-msg"><button class="btn" data-pkretry>Try again</button>`}</p>`;
+      el.querySelector('.pk-count').textContent = ''; el.querySelector('[data-pkadd]').disabled = true; return;
+    }
+    el.querySelector('.pk-crumbs').innerHTML = pk.k === 'drive' && !pk.q ? `<button class="pk-addf" data-pkdrive>${ico('plus')}Add a file</button><span class="pk-note">Only files you've opened with Averages.io show here.</span>` : pk.k === 'onedrive' && !pk.q ? `<button class="pk-addf" data-pkod>${ico('plus')}Pick from all of OneDrive</button><span class="pk-note">Files you've used with Averages.io show here.</span>` : pk.q ? `<button data-pkcrumb="0">${esc(TREES[pk.k].name)}</button>${ico('chev-r')}<span aria-current="page">Results for “${esc(pk.q)}”</span>`
       : pk.trail.map((t, i) => i === pk.trail.length - 1 ? `<span aria-current="page">${esc(t.name)}</span>` : `<button data-pkcrumb="${i}">${esc(t.name)}</button>${ico('chev-r')}`).join('');
     el.querySelector('.pk-list').innerHTML = list.length ? list.map(pkRow).join('') : `<p class="pk-msg">${pk.q ? `Nothing in your ${SOURCES[pk.k].name} matches “${esc(pk.q)}”.` : 'This folder is empty.'}</p>`;
     const n = pk.sel.size; el.querySelector('.pk-count').textContent = n ? `${plural(n, 'file')} picked` : 'Tick the files to add';
@@ -4471,23 +4416,37 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       if (e.target === el || e.target.closest('[data-pkclose]')) { pkClose(); return; }
       const pkd = e.target.closest('[data-pkdrive]');
       if (pkd && window.AveragesHelp && !pkd._helped) { window.AveragesHelp.open('drive', { from: pkd, onContinue: () => { if (!pk) return; pkd._helped = true; pkd.click(); pkd._helped = false; } }); return; }
-      if (pkd) { // in the app, Google Drive opens and you open the file there with Averages for Drive; then it shows up here
-        const pool = [['Chem notes', 'gdoc'], ['Titration graph', 'gsheet'], ['Lab 4 photos', 'gslides'], ['Error analysis draft', 'gdoc']], items = TREES.drive.items, have = new Set(items.map(x => x.name)), nx = pool.find(x => !have.has(x[0]));
-        if (nx) { items.unshift(TFi(nx[0], nx[1], 'Just added from Google Drive')); pk.sel.set(nx[0], items[0]); }
-        toast(nx ? `Added "${nx[0]}" from Google Drive for this mock.` : 'In the app, this opens Google Drive in a new tab.'); pkDraw();
-        if (nx && !calm()) { const r = el.querySelector('.pk-row.file'); if (r) r.animate([{ opacity: 0, transform: 'translateY(-6px)' }, { opacity: 1, transform: 'none' }], { duration: 260, easing: 'cubic-bezier(.2, .8, .2, 1)' }); }
+      if (pkd) { // Google Drive opens: open the file there with Averages.io for Drive, and it shows up here
+        FSX.newTab('https://drive.google.com/drive/my-drive'); pkClose();
+        toast('In Google Drive, right-click the file, then Open with, then Averages.io for Drive. It shows up here after that.');
+        return;
+      }
+      if (e.target.closest('[data-pkconnect]')) { FST.connect(pk.k).then(() => pkLoad(pk && pk.k)).catch(err => { if (pk) { pk.state = 'error'; pk.msg = FST.message(err); pkDraw(); } }); return; }
+      if (e.target.closest('[data-pkretry]')) { pkLoad(pk.k); return; }
+      if (e.target.closest('[data-pkod]')) { // OneDrive's own picker: any file in their OneDrive
+        FST.pickOneDrive().then(list => { if (!pk) return; const items = TREES.onedrive.items, have = new Set(items.map(x => x.id));
+          list.forEach(f => { if (f.id && !have.has(f.id)) { items.unshift(f); have.add(f.id); } pk.sel.set(f.name, items.find(x => x.id === f.id)); }); pkDraw(); })
+          .catch(err => { if (err && err.code === 'popup_closed') return; toast(FST.message(err)); });
         return;
       }
       const fo = e.target.closest('[data-pkf]'); if (fo) { pk.trail.push(pkShown()[+fo.dataset.pkf]); pkDraw(); const r = el.querySelector('.pk-row'); if (r) r.focus(); return; }
       const cr = e.target.closest('[data-pkcrumb]'); if (cr) { pk.trail = pk.trail.slice(0, +cr.dataset.pkcrumb + 1); pk.q = ''; el.querySelector('[data-pkq]').value = ''; pkDraw(); return; }
       const fi = e.target.closest('[data-pkfile]'); if (fi && !fi.disabled) { const i = pkShown()[+fi.dataset.pkfile], key = (i.path || pk.trail.slice(1).map(t => t.name)).concat(i.name).join('/'); pk.sel.has(key) ? pk.sel.delete(key) : pk.sel.set(key, i); pkDraw(); const again = el.querySelector(`[data-pkfile="${fi.dataset.pkfile}"]`); if (again) again.focus(); return; }
       if (e.target.closest('[data-pkadd]')) {
-        const k2 = pk.k, add = [...pk.sel.values()].map(i => ({ src: k2, name: i.name, kind: i.kind, mode: 'copy', fmt: FORMATS[i.kind][0][0], fresh: true }));
+        const k2 = pk.k, add = [...pk.sel.values()].map(i => ({ src: k2, id: i.id, designId: i.designId, mime: i.mime, name: i.name, kind: i.kind, mode: 'copy', fmt: FST.formats(Object.assign({ src: k2 }, i))[0][0], fresh: true }));
         pkClose(); DRAFT[tiSel] = (DRAFT[tiSel] || []).concat(add); tiRender(); return;
       }
     });
     el.querySelector('[data-pkq]').addEventListener('input', e => { pk.q = e.target.value.trim(); pkDraw(); });
     pkDraw(); el.querySelector('[data-pkq]').focus({ preventScroll: true });
+    pkLoad(k);
+  }
+  // the app's real list (inside the click that opened the picker, so a sign-in window can open)
+  function pkLoad(k) {
+    if (!pk || pk.k !== k) return;
+    pk.state = 'loading'; pkDraw();
+    FST.list(k).then(items => { if (!pk || pk.k !== k) return; TREES[k].items = items; pk.trail = [TREES[k]]; pk.state = 'ok'; pkDraw(); })
+      .catch(err => { if (!pk || pk.k !== k) return; pk.state = err && err.code === 'not_connected' ? 'connect' : 'error'; pk.msg = FST.message(err); pkDraw(); });
   }
   // the picker is on top: Escape and Tab belong to it while it's open
   document.addEventListener('keydown', e => {
@@ -4515,19 +4474,20 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const baseName = n => n.replace(/\.[a-z0-9]+$/i, '');
   // what the teacher will get: the copy's file name, or the app's own name for a link
   const shownName = f => f.src === 'local' ? f.name : f.mode === 'link' ? baseName(f.name) : baseName(f.name) + '.' + f.fmt;
-  const shownSub = f => f.src === 'local' ? f.size : f.mode === 'link' ? `Link to ${SOURCES[f.src].name} · ${TEACH()} can view` : `${SOURCES[f.src].name} · sent as ${FORMATS[f.kind].find(x => x[0] === f.fmt)[1]}`;
-  const busy = f => f.until && Date.now() < f.until;
-  // start the upload animation; a link has nothing to upload
-  function tiStart(f, verb) {
-    if (calm() || (f.src !== 'local' && f.mode === 'link')) { f.until = 0; return; }
-    f.ms = 1200 + Math.round(Math.random() * 1200); f.t0 = Date.now(); f.until = f.t0 + f.ms; f.verb = verb;
-    if (!f.bytes) f.bytes = (120 + Math.round(Math.random() * 900)) * 1024;
+  const shownSub = f => f.src === 'local' ? (f.state === 'failed' ? f.err || 'Couldn\'t upload' : f.size) : f.mode === 'link' ? `Link to ${SOURCES[f.src].name} · ${TEACH()} can view` : `${SOURCES[f.src].name} · sent as ${(FST.formats(f).find(x => x[0] === f.fmt) || [, String(f.fmt).toUpperCase()])[1]}`;
+  const busy = f => f.state === 'uploading';
+  // A file from this device goes up to Schoology as soon as it's added (averages-fs-turnin.js); Turn in then sends the ids.
+  function tiStart(f) {
+    const m = MATERIALS.find(x => x.id === tiSel); if (!m || f.src !== 'local' || !f.file) return;
+    f.state = 'uploading'; f.frac = 0; f.t0 = Date.now(); f.verb = 'Uploading…'; f.err = ''; f.ctl = new AbortController();
+    f.job = FST.upload(m.c, m.id, f.file, f.name, x => { f.frac = x; }, f.ctl.signal)
+      .then(r => { f.fileId = r.fileId; f.state = 'done'; f.justDone = true; if (ti && tiSel === m.id && !tiSending) { saveNote(); tiRender(); } return r.fileId; })
+      .catch(err => { f.state = 'failed'; f.err = FST.message(err); if (ti && tiSel === m.id && !tiSending) { saveNote(); tiRender(); } throw err; });
+    f.job.catch(() => {});
     tiTicker();
-    setTimeout(() => { if (!ti) return; f.justDone = true; saveNote(); tiRender(); }, f.ms + 30);
   }
-  // keeps the numbers next to each bar in step with it (the bar itself is a CSS animation)
+  // keeps each bar and the numbers next to it in step with the real upload
   let tiTick = 0;
-  const easeUp = x => 1 - Math.pow(1 - x, 1.6);
   function tiTicker() {
     if (tiTick) return;
     tiTick = setInterval(() => {
@@ -4536,12 +4496,11 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       fs.forEach((f, i) => {
         if (!busy(f)) return;
         const row = ti.querySelector(`.ti-file[data-fi="${i}"]`); if (!row) return;
-        const x = Math.min(1, (now - f.t0) / f.ms), sz = row.querySelector('[data-upsz]'), secs = Math.max(1, Math.ceil((f.until - now) / 1000));
-        if (sz) sz.textContent = `${fmtSize(f.bytes * x)} of ${fmtSize(f.bytes)} \u00b7 ${secs === 1 ? 'about a second' : 'about ' + secs + ' seconds'} left`;
+        const x = Math.min(1, f.frac || 0), sz = row.querySelector('[data-upsz]'), bar = row.querySelector('.ti-prog i'), secs = x > .08 ? Math.max(1, Math.ceil((now - f.t0) * (1 - x) / x / 1000)) : 0;
+        if (bar) bar.style.width = Math.round(x * 100) + '%';
+        if (sz) sz.textContent = `${fmtSize(f.bytes * x)} of ${fmtSize(f.bytes)}${secs ? ` \u00b7 ${secs === 1 ? 'about a second' : 'about ' + secs + ' seconds'} left` : ''}`;
       });
-      const drop = ti.querySelector('.ti-drop');
-      if (drop) drop.classList.add('sending');
-    }, 80);
+    }, 120);
   }
   const fmtSize = b => b < 1024 * 1024 ? Math.max(1, Math.round(b / 1024)) + ' KB' : (b / 1024 / 1024).toFixed(1) + ' MB';
   const fileIco = (n, size = 38) => window.AveragesFileIcons ? AveragesFileIcons.html(n, { size }) : ico('doc');
@@ -4578,7 +4537,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   function tiDetailBase() {
     const m = MATERIALS.find(x => x.id === tiSel); if (!m) return '';
     const gp = m.got != null ? m.got / m.pts * 100 : null;
-    let head = `<div class="ti-head">${tile(m)}<div><h3>${esc(m.name)}</h3><small>${m.turned ? `Turned in ${esc(m.turned)}` : m.dueTxt ? `Due ${esc(m.dueTxt)}` : 'No due date'} · ${m.pts} points</small></div>${gp != null ? `<span class="ti-grade" aria-label="Graded ${letter(gp)}, ${m.got} of ${m.pts}"><b class="${gcls(gp)}">${letter(gp)}</b><small>${m.got} / ${m.pts}</small></span>` : ''}${tiFull ? '' : `<button class="btn sm ti-openas" data-toast="${esc(where(m))}">Open assignment</button>`}</div>
+    let head = `<div class="ti-head">${tile(m)}<div><h3>${esc(m.name)}</h3><small>${m.turned ? `Turned in ${esc(m.turned)}` : m.dueTxt ? `Due ${esc(m.dueTxt)}` : 'No due date'} · ${m.pts} points</small></div>${gp != null ? `<span class="ti-grade" aria-label="Graded ${letter(gp)}, ${m.got} of ${m.pts}"><b class="${gcls(gp)}">${letter(gp)}</b><small>${m.got} / ${m.pts}</small></span>` : ''}${tiFull ? '' : `<button class="btn sm ti-openas" data-go="${FSX.hubUrl(m.c, 'assignments', { a: m.id })}">Open assignment</button>`}</div>
       <p class="ti-desc">${esc(m.desc)}</p>`;
     if (tiInline) head = '';
     if (tiDone(m)) {
@@ -4705,17 +4664,18 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
         return `<button class="ti-pk avfi-host${fresh ? ' new' : ''}${got ? ' added' : ''}" data-pickfrom="${k}:${i}"${got ? ' disabled aria-disabled="true"' : ''}>${fileIco('x.' + KIND_EXT[kind], 36)}<span class="tx"><b>${esc(n)}</b><small>${got ? 'Already added' : esc(sub)}</small></span>${got ? ico('ok') : ico('plus')}</button>`; }).join('')}</div>`;
   }
   function tiFileRow(f, i) {
-    const up = busy(f), left = up ? f.until - Date.now() : 0;
+    const up = busy(f);
     const icon = f.src !== 'local' && f.mode === 'link' ? fileIco('link') : fileIco(shownName(f));
     const state = up ? ''
       : f.src !== 'local' ? ''
+      : f.state === 'failed' ? `<button class="btn sm" data-reup="${i}">${ico('refresh')}Try again</button>`
       : `<span class="ti-st ok${f.justDone ? ' just' : ''}">${ico('ok')}Uploaded</span>`;
     const opts = f.src === 'local' ? '' : `<div class="ti-opts">
         <div class="ti-seg" role="radiogroup" aria-label="How to send ${esc(f.name)}" data-mode="${f.mode}"><span class="ti-seg-pill" aria-hidden="true"></span>
-          <button role="radio" aria-checked="${f.mode === 'copy'}" data-mode-set="${i}:copy">${ico('copy')}Send as a copy</button><button role="radio" aria-checked="${f.mode === 'link'}" data-mode-set="${i}:link">${ico('link')}Send as a link</button></div>
-        <div class="ti-fmt" role="radiogroup" aria-label="File type"${f.mode === 'copy' ? '' : ' hidden'}><span>File type</span>${FORMATS[f.kind].map(([x, n]) => `<button role="radio" aria-checked="${f.fmt === x}" class="avfi-host${f.fmt === x ? ' on' : ''}" data-fmt-set="${i}:${x}" title="${n}" aria-label="${n}">${window.AveragesFileIcons ? AveragesFileIcons.html('x.' + x, { size: 38, className: 'both' }) : fileIco('x.' + x, 34)}</button>`).join('')}</div></div>`;
+          <button role="radio" aria-checked="${f.mode === 'copy'}" data-mode-set="${i}:copy">${ico('copy')}Send as a copy</button>${f.src === 'canva' ? '' : `<button role="radio" aria-checked="${f.mode === 'link'}" data-mode-set="${i}:link">${ico('link')}Send as a link</button>`}</div>
+        <div class="ti-fmt" role="radiogroup" aria-label="File type"${f.mode === 'copy' ? '' : ' hidden'}><span>File type</span>${FST.formats(f).map(([x, n]) => `<button role="radio" aria-checked="${f.fmt === x}" class="avfi-host${f.fmt === x ? ' on' : ''}" data-fmt-set="${i}:${x}" title="${n}" aria-label="${n}">${window.AveragesFileIcons ? AveragesFileIcons.html('x.' + x, { size: 38, className: 'both' }) : fileIco('x.' + x, 34)}</button>`).join('')}</div></div>`;
     const html = `<div class="ti-file avfi-host${f.fresh && !calm() ? ' fresh' : ''}${up ? ' uploading' : ''}" data-fi="${i}"><div class="ti-file-top">${icon}<span class="tx"><b>${esc(shownName(f))}</b><small>${esc(shownSub(f))}</small></span>${state}<button class="ti-x" data-unpick="${i}" aria-label="Remove ${esc(shownName(f))}">${ico('x')}</button></div>
-      ${up ? `<div class="ti-up"><div class="ti-prog" aria-hidden="true"><i style="animation-duration:${f.ms}ms;animation-delay:-${f.ms - left}ms"></i></div><div class="ti-up-t"><span data-upsz>${esc(f.verb)}</span></div></div>` : ''}${opts}</div>`;
+      ${up ? `<div class="ti-up"><div class="ti-prog" aria-hidden="true"><i style="animation:none;width:${Math.round((f.frac || 0) * 100)}%"></i></div><div class="ti-up-t"><span data-upsz>${esc(f.verb)}</span></div></div>` : ''}${opts}</div>`;
     f.fresh = false; f.justDone = false;
     return html;
   }
@@ -4728,8 +4688,8 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (tiDone(m)) return `<span class="note">${m.got != null ? 'This one is graded, so it can\'t be turned in again.' : `You can turn in a new version until it's graded. ${TEACH()} sees the newest one.`}</span>${m.got == null ? `<button class="btn${tiInline ? ' primary' : ''}" ${tiInline ? 'data-tiagain="1"' : 'data-tiagainpage'}>${ico('upload')}Turn in again</button>` : ''}<button class="btn" data-ticlose>Close</button>`;
     if (tiSending) return `<span class="note ti-stepnote" data-stepnote>${esc(tiSending.steps[0].label)}…</span>${stepsHTML(tiSending)}<button class="btn" disabled title="Can't cancel while it's being turned in">Cancel</button><button class="btn primary sending" disabled><span class="ti-spin" aria-hidden="true"></span>Turning in…</button>`;
     if (m.writing) { const w = wordCount(m.answer); return `<span class="note">${w ? `${w} ${w === 1 ? 'word' : 'words'} · turned in as a written answer` : 'Write something to turn it in'}</span><button class="btn" data-ticlose>Cancel</button><button class="btn primary" data-tisend${w ? '' : ' disabled'}>${ico('upload')}Turn in</button>`; }
-    const fs = DRAFT[m.id] || [], n = fs.length, wait = fs.filter(busy).length;
-    return `<span class="note">${wait ? `Uploading ${wait} ${wait === 1 ? 'file' : 'files'}…` : n ? `${n} ${n === 1 ? 'file' : 'files'} ready` : 'Add at least one file'}</span><button class="btn" data-ticlose>Cancel</button><button class="btn primary" data-tisend${n && !wait ? '' : ' disabled'}>${ico('upload')}Turn in</button>`;
+    const fs = DRAFT[m.id] || [], n = fs.length, wait = fs.filter(busy).length, bad = fs.filter(f => f.state === 'failed').length;
+    return `<span class="note${m.sendErr ? ' bad' : ''}">${m.sendErr ? esc(m.sendErr) : wait ? `Uploading ${wait} ${wait === 1 ? 'file' : 'files'}…` : bad ? `${bad} ${bad === 1 ? 'file' : 'files'} didn't upload. Try again or remove ${bad === 1 ? 'it' : 'them'}.` : n ? `${n} ${n === 1 ? 'file' : 'files'} ready` : 'Add at least one file'}</span><button class="btn" data-ticlose>Cancel</button><button class="btn primary" data-tisend${n && !wait && !bad ? '' : ' disabled'}>${ico('upload')}Turn in</button>`;
   }
   const STEP_I = {
     copy: '<path d="M8 8h12v12H8z"/><path d="M16 8V4H4v12h4"/>', link: '<path d="M10 14a4.2 4.2 0 0 0 6 0l3-3a4.2 4.2 0 0 0-6-6l-1.2 1.2"/><path d="M14 10a4.2 4.2 0 0 0-6 0l-3 3a4.2 4.2 0 0 0 6 6l1.2-1.2"/>',
@@ -4744,6 +4704,62 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (links.length) st.push({ k: 'link', short: 'Links', label: links.length === 1 ? 'Making a share link' : 'Making share links', ms: 500 });
     st.push({ k: 'attach', short: 'Attach', label: `Attaching ${fs.length} ${fs.length === 1 ? 'file' : 'files'}`, ms: 700 }, { k: 'send', short: 'Send', label: 'Turning it in on Schoology', ms: 900 }, { k: 'look', short: 'Check', label: 'Making sure it went through', ms: 500 });
     return st;
+  }
+  // ---------- the real turn-in: each step runs when the one before it is done ----------
+  function tiStepTo(k) {
+    const R = tiSending; if (!R || !ti) return; const i = R.steps.findIndex(x => x.k === k); if (i < 0) return; R.at = i;
+    const x = R.steps[i];
+    ti.querySelectorAll('.ti-step').forEach((g, j) => { g.className = 'ti-step' + (j < i ? ' done' : j === i ? ' now' : ''); const si = g.querySelector('.ti-si'); if (si) si.outerHTML = stepIco(j < i ? 'check' : j === i ? 'spin' : R.steps[j].k); });
+    const note = ti.querySelector('[data-stepnote]'); if (note) note.textContent = x.label + '…';
+    const bar = ti.querySelector('.ti-steps'); if (bar) bar.setAttribute('aria-valuenow', i);
+    ti.querySelectorAll('.aw-seg').forEach((g, j) => { const cls = j < i ? 'done' : j === i ? 'now' : 'next'; if (g.dataset.cls === cls) return; const t = document.createElement('div'); t.innerHTML = awSegHTML(R.steps[j], j, cls); t.firstElementChild.dataset.cls = cls; g.replaceWith(t.firstElementChild); });
+    const head = ti.querySelector('[data-awh]'); if (head) head.textContent = x.label + '…';
+    const right = ti.querySelector('[data-awr]'); if (right) right.textContent = `Step ${i + 1} of ${R.steps.length}`;
+  }
+  function tiStepsDone(m) {
+    const R = tiSending; if (!R || !ti) return;
+    ti.querySelectorAll('.ti-step').forEach(g => { g.className = 'ti-step done ok'; const si = g.querySelector('.ti-si'); if (si) si.outerHTML = stepIco('check'); });
+    const note = ti.querySelector('[data-stepnote]'); if (note) note.textContent = 'Turned in';
+    ti.querySelectorAll('.aw-seg').forEach((g, j) => { const t = document.createElement('div'); t.innerHTML = awSegHTML(R.steps[j], j, 'done'); t.firstElementChild.classList.add('ok'); g.replaceWith(t.firstElementChild); });
+    const head = ti.querySelector('[data-awh]'); if (head) { head.innerHTML = `${stepIco('check')}Turned in`; head.classList.add('ok'); }
+    const right = ti.querySelector('[data-awr]'); if (right) right.textContent = m.writing ? 'Written answer sent to Schoology' : `${plural((DRAFT[m.id] || []).length, 'file')} sent to Schoology`;
+    tiLog('<span class="aw-lok">✓ turned in</span>');
+    const log = ti.querySelector('[data-awlog]'); if (log) m.sentLog = log.innerHTML;
+  }
+  function tiLog(line) {
+    const log = ti && ti.querySelector('[data-awlog]'); if (!log) return;
+    log.querySelectorAll('.cur').forEach(x => x.classList.remove('cur'));
+    log.insertAdjacentHTML('beforeend', `<span class="aw-ln cur">${line}</span>`); log.scrollTop = log.scrollHeight;
+  }
+  async function tiSendReal(m, id, tokens, note) {
+    const said = (verb, what) => tiLog(`<span class="aw-lm">${verb}</span> <span class="aw-lu">${esc(what)}</span>`), ok = t => tiLog(`  <span class="aw-lok">← ${esc(t)}</span>`);
+    if (m.writing) {
+      tiStepTo('pen'); said('SAVE', 'your answer'); ok('ready');
+      tiStepTo('send'); said('POST', 'Schoology · written answer'); await FST.write(m.c, m.id, m.answer); ok('turned in');
+      tiStepTo('look'); said('GET', 'Schoology · your turn-ins'); await FST.history(m.c, m.id).catch(() => []); ok('it\'s there');
+      return;
+    }
+    const fs = DRAFT[id] || [], ids = [];
+    for (const f of fs.filter(f => f.src !== 'local' && f.mode !== 'link')) {
+      tiStepTo('copy'); said('GET', `${SOURCES[f.src].name} · ${shownName(f)}`);
+      const got = await FST.fetch(f, tokens); ok(got.length > 1 ? `${got.length} files` : 'got it');
+      for (const g of got) { said('PUT', `Schoology · ${g.name}`); ids.push((await FST.upload(m.c, m.id, g.blob, g.name)).fileId); ok('stored'); }
+    }
+    for (const f of fs.filter(f => f.src !== 'local' && f.mode === 'link')) {
+      tiStepTo('link'); said('POST', `${SOURCES[f.src].name} · view link for ${f.name}`);
+      const got = await FST.fetch(f, tokens); ok('anyone with the link can view');
+      for (const g of got) { said('PUT', `Schoology · ${g.name}`); ids.push((await FST.upload(m.c, m.id, g.blob, g.name)).fileId); ok('stored'); }
+    }
+    tiStepTo('attach');
+    const local = [];
+    for (const f of fs.filter(f => f.src === 'local')) {
+      if (f.state !== 'done') { if (f.state !== 'uploading') tiStart(f); said('PUT', `Schoology · ${f.name}`); await f.job; ok('stored'); }
+      local.push(f.fileId);
+    }
+    tiStepTo('send'); said('POST', `Schoology · turn in ${plural(local.length + ids.length, 'file')}${note ? ' with a note' : ''}`);
+    const res = await FST.turnIn(m.c, m.id, local.concat(ids), note); ok(res.description === 'failed' ? 'turned in (the note didn\'t go on: add it on Schoology)' : 'turned in');
+    if (res.description === 'failed') toast('Turned in, but the note didn\'t go on. Add it as a comment on Schoology.');
+    tiStepTo('look'); said('GET', 'Schoology · your turn-ins'); await FST.history(m.c, m.id).catch(() => []); ok('it\'s there');
   }
   const stepsHTML = R => `<div class="ti-steps" role="progressbar" aria-label="Turning in" aria-valuemin="0" aria-valuemax="${R.steps.length}" aria-valuenow="0">${R.steps.map((x, i) => `<div class="ti-step${i ? '' : ' now'}" style="flex:${x.ms} 1 0;--ms:${x.ms}ms" title="${esc(x.label)}"><span class="ti-track"><i></i></span><span class="ti-slab">${stepIco(i ? x.k : 'spin')}<span>${esc(x.short)}</span></span></div>`).join('')}</div>`;
   function runSteps(R, done) {
@@ -4798,6 +4814,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     const fresh = (MATERIALS.find(x => x.id === tiSel) || {}).justTurned;
     main.classList.toggle('still', !!tiShown && !fresh);
     if (tiShown && tiShown !== tiSel) main.scrollTop = 0;
+    tiEnsure(MATERIALS.find(x => x.id === tiSel));
     main.innerHTML = tiDetail();
     tiShown = tiSel;
     ti.querySelector('.ti-foot').innerHTML = tiFoot();
@@ -4810,9 +4827,24 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (tiInline) awModePlace();
     if (tiInline && typeof awDraftsDraw === 'function') awDraftsDraw();
   }
+  // The real assignment: its description and points, and what's been turned in (every version, newest last).
+  function tiEnsure(m) {
+    if (!m || m._loaded) return; m._loaded = 'loading';
+    FST.load(m.c, m.id).then(r => {
+      m._loaded = 'yes'; const d = r.detail;
+      if (d) { if (d.description) m.desc = d.description; if (typeof d.maxPoints === 'number' && d.maxPoints > 0) m.pts = d.maxPoints; if (d.score && d.score.possible > 0) m.got = d.score.earned; }
+      const revs = (r.revisions || []).filter(v => !v.draft), sentOf = v => (v.files || []).map(f => ({ name: f.name, size: FST.size(f.size) || 'File' })).concat(v.text ? [{ name: 'Written answer', size: 'Text', write: true }] : []);
+      const text = v => v.text ? esc(v.text).replace(/\n/g, '<br>') : undefined;
+      if (revs.length && !m.justTurned) {
+        const [last, ...older] = revs;
+        Object.assign(m, { turned: last.when || 'earlier', sent: sentOf(last), answerSent: text(last), prev: older.reverse().map(v => ({ turned: v.when || 'earlier', sent: sentOf(v), answerSent: text(v) })) });
+      }
+      if (ti && !tiSending) tiRender();
+    }).catch(() => { m._loaded = 'failed'; });
+  }
   function tiAdd(list) {
     if (!list || !list.length) return;
-    const add = [...list].map(f => ({ src: 'local', name: f.name, size: fmtSize(f.size), bytes: f.size || 1024, fresh: true }));
+    const add = [...list].map(f => ({ src: 'local', name: f.name, size: fmtSize(f.size), bytes: f.size || 1024, file: f, fresh: true }));
     add.forEach(f => tiStart(f, 'Uploading…'));
     DRAFT[tiSel] = (DRAFT[tiSel] || []).concat(add); saveNote(); tiRender();
   }
@@ -4848,26 +4880,25 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       const r = e.target.closest('[data-ti]'); if (r) { saveNote(); tiSel = r.dataset.ti; tiRender(true); return; }
       const x = e.target.closest('[data-unpick]');
       if (x) { // the row folds away, then the list redraws
-        saveNote(); const row = x.closest('.ti-file'), go = () => { DRAFT[tiSel].splice(+x.dataset.unpick, 1); tiRender(); };
+        saveNote(); const gone = DRAFT[tiSel][+x.dataset.unpick]; if (gone && gone.ctl && busy(gone)) gone.ctl.abort();
+        const row = x.closest('.ti-file'), go = () => { DRAFT[tiSel].splice(+x.dataset.unpick, 1); tiRender(); };
         if (calm() || !row.animate) go(); else { row.style.overflow = 'hidden'; row.animate([{ opacity: 1, height: row.offsetHeight + 'px' }, { opacity: 0, height: '0px', paddingTop: '0px', paddingBottom: '0px' }], { duration: 220, easing: 'cubic-bezier(.4, 0, .2, 1)' }).onfinish = go; }
         return;
       }
+      const ru = e.target.closest('[data-reup]'); if (ru) { const f = DRAFT[tiSel][+ru.dataset.reup]; if (f) { tiStart(f); tiRender(); } return; }
       const sb = e.target.closest('[data-src]'); if (sb) { tiPick(sb.dataset.src); return; }
       const dra = e.target.closest('[data-driveadd]');
       if (dra && window.AveragesHelp && !dra._helped) { window.AveragesHelp.open('drive', { from: dra, onContinue: () => { if (!ti || !dra.isConnected) return; dra._helped = true; dra.click(); dra._helped = false; } }); return; }
       if (dra) {
-        // In the app, Google Drive opens and you open the file there with Averages for Drive; then it shows up here.
-        const pool = [['Chem notes', 'gdoc'], ['Titration graph', 'gsheet'], ['Lab 4 photos', 'gslides'], ['Error analysis draft', 'gdoc']];
-        const have = new Set(SOURCES.drive.files.map(x => x[0])), nx = pool.find(x => !have.has(x[0]));
-        SOURCES.drive.files.forEach(x => { x[3] = false; });
-        if (nx) SOURCES.drive.files.unshift([nx[0], nx[1], 'Just added from Google Drive', true]);
-        toast(nx ? `Added "${nx[0]}" from Google Drive for this mock.` : 'In the app, this opens Google Drive in a new tab.');
-        saveNote(); tiRender(); return;
+        // Google Drive opens: open the file there with Averages.io for Drive, and it shows up in Add from Google Drive.
+        FSX.newTab('https://drive.google.com/drive/my-drive');
+        toast('In Google Drive, right-click the file, then Open with, then Averages.io for Drive. It shows up here after that.');
+        return;
       }
       const pf = e.target.closest('[data-pickfrom]');
       if (pf) {
         const [k, i] = pf.dataset.pickfrom.split(':'), [n, kind] = SOURCES[k].files[+i];
-        const f = { src: k, name: n, kind, mode: 'copy', fmt: FORMATS[kind][0][0], fresh: true };
+        const f = { src: k, name: n, kind, mode: 'copy', fmt: FST.formats({ src: k, kind, name: n })[0][0], fresh: true };
         saveNote(); DRAFT[tiSel] = (DRAFT[tiSel] || []).concat([f]); tiSrc = null; tiRender(); return;
       }
       const ms = e.target.closest('[data-mode-set]');
@@ -4898,11 +4929,23 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       const send = e.target.closest('[data-tisend]');
       if (send && !send.disabled && !tiSending) {
         const m = MATERIALS.find(y => y.id === tiSel), id = tiSel; saveNote();
+        const note = (m.noteDraft || '').trim(), prevLen = (m.prev || []).length, was = { turned: m.turned, sent: m.sent, answerSent: m.answerSent, note: m.note, sentLog: m.sentLog };
+        // sign-in windows (Google Drive, OneDrive) have to open inside this click, before anything is awaited
+        const tokens = m.writing ? {} : FST.tokensFor((DRAFT[id] || []).filter(f => f.src !== 'local'));
+        m.sendErr = '';
+        const failed = err => {
+          tiSending = false; if (ti) { ti.classList.remove('busy'); const mn = ti.querySelector('.ti-main'); if (mn) mn.classList.remove('sending'); }
+          if (m.prev && m.prev.length > prevLen) m.prev.length = prevLen;
+          Object.assign(m, was); m.sendErr = 'Nothing was turned in. ' + FST.message(err);
+          if (ti) { if (tiInline) awResize(() => tiRender()); else tiRender(); const ed = ti.querySelector('#tiEd'); if (ed) ed.contentEditable = 'true'; }
+          toast(m.sendErr);
+        };
         const finish = () => {
+          FSX.refresh();
           tiSending = false; if (ti) { ti.classList.remove('busy'); ti.querySelector('.ti-main').classList.remove('sending'); }
           m.again = false; m.turnedClock = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }); awOpen[id] = new Set([(m.prev || []).length + 1]); delete awOpen[id + ':again']; m.noteDraft = '';
-          if (m.writing) { const w = wordCount(m.answer); Object.assign(m, { turned: 'just now', justTurned: true, writing: false, answerSent: m.answer, note: (m.noteDraft || '').trim(), sent: [{ name: 'Written answer', size: `${w} ${w === 1 ? 'word' : 'words'}`, write: true }] }); }
-          else { Object.assign(m, { turned: 'just now', justTurned: true, sent: DRAFT[id].map(f => ({ name: shownName(f), size: shownSub(f), link: f.src !== 'local' && f.mode === 'link' })), note: (m.noteDraft || '').trim() }); delete DRAFT[id]; }
+          if (m.writing) { const w = wordCount(m.answer); Object.assign(m, { turned: 'just now', justTurned: true, writing: false, answerSent: m.answer, note, sent: [{ name: 'Written answer', size: `${w} ${w === 1 ? 'word' : 'words'}`, write: true }] }); }
+          else { Object.assign(m, { turned: 'just now', justTurned: true, sent: DRAFT[id].map(f => ({ name: shownName(f), size: shownSub(f), link: f.src !== 'local' && f.mode === 'link' })), note }); delete DRAFT[id]; }
           if (!ti) { renderList(); renderComing(); ntBadge(); if (HUB_TAB === 'assignments') agRender(false); agCounts(); return; }
           if (tiInline) { const st = document.querySelector('#mpBox .mp-vstatus'); if (st) st.innerHTML = status(m); const fx = document.querySelector('#mpBox .aw-facts'); if (fx) fx.outerHTML = awFacts(m); }
           tiSel = id; tiShown = id; if (tiInline) awResize(() => tiRender()); else tiRender(); renderList(); renderComing(); ntBadge(); if (HUB_TAB === 'assignments') agRender(false); agCounts(); toast(`Turned in ${m.name}.`);
@@ -4916,8 +4959,9 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
         ti.querySelectorAll('.ti-file').forEach((r, i) => r.style.setProperty('--i', i));
         ti.querySelector('.ti-main').classList.add('sending');
         const ed = ti.querySelector('#tiEd'); if (ed) ed.contentEditable = 'false';
-        if (calm()) { setTimeout(finish, 200); return; }
-        if (tiInline) { awResize(() => { ti.querySelector('.ti-main').innerHTML = awSendHTML(tiSending); ti.querySelector('.ti-foot').innerHTML = tiFoot(); }); awRun(tiSending, m, finish); } else runSteps(tiSending, finish);
+        if (tiInline) awResize(() => { ti.querySelector('.ti-main').innerHTML = awSendHTML(tiSending); ti.querySelector('.ti-foot').innerHTML = tiFoot(); });
+        tiLog(`<span class="aw-lb"># turning in ${esc(m.name)} for ${esc(TEACH())}</span>`);
+        tiSendReal(m, id, tokens, note).then(() => { tiStepsDone(m); setTimeout(finish, calm() ? 200 : 900); }, failed);
         return;
       }
     });
@@ -5011,45 +5055,32 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     $('asMeta').querySelectorAll('.gm').forEach((el, i) => el.animate && el.animate([{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: 480, delay: 40 + i * 60, easing: 'cubic-bezier(.16, 1, .3, 1)', fill: 'backwards' }));
     $('asMeta').querySelectorAll('[data-n]').forEach((el, k) => { const to = +el.dataset.n, t0 = performance.now() + 40 + k * 60; el.textContent = '0'; const step = now => { const p = Math.min(1, Math.max(0, (now - t0) / 560)), e = 1 - Math.pow(1 - p, 3); el.textContent = Math.round(to * e); if (p < 1) requestAnimationFrame(step); }; requestAnimationFrame(step); });
   }
-  let loading = false, spin = null;
+  let loading = false;
+  $('syncLabel').textContent = FSX.synced(); $('refresh').setAttribute('aria-label', 'Refresh your assignments. ' + FSX.synced() + '.');
   $('refresh').addEventListener('click', () => {
     if (loading) return; loading = true;
     const b = $('refresh'), icon = b.querySelector('svg');
     b.classList.add('loading'); b.setAttribute('aria-busy', 'true'); $('syncLabel').textContent = 'Syncing…';
-    if (!calm() && icon.animate) spin = icon.animate([{ transform: 'rotate(0deg)' }, { transform: 'rotate(360deg)' }], { duration: 800, iterations: Infinity });
-    const sk = (icon2, w) => `<span class="gm" data-skel>${ico(icon2)}<span class="skel-bar" style="width:${w}px;height:12px"></span></span>`;
-    $('asMeta').innerHTML = sk('alert', 64) + sk('clock', 80) + sk('cal', 100) + sk('check', 76);
-    $('asTypes').querySelectorAll('em').forEach(em => { em.innerHTML = bar('12px', 10, '5px'); });
-    ddHide(false); $('asCls').querySelectorAll('em').forEach(em => { em.innerHTML = bar('10px', 10, '5px'); });
-    setTimeout(metaLand, 500 + Math.random() * 600);
-    let left = PARTS.length;
-    PARTS.forEach(([id, render, sel]) => {
-      lockOf(id).forEach(el => { el.classList.add('sync-wait'); el.inert = true; }); $(id).innerHTML = SKEL[id]();
-      setTimeout(() => {
-        lockOf(id).forEach(el => { el.classList.remove('sync-wait'); el.inert = false; }); land(id, render, sel);
-        if (--left) return;
-        loading = false; b.classList.remove('loading'); b.removeAttribute('aria-busy');
-        if (spin) { const a = ((spin.currentTime || 0) % 800) / 800 * 360; spin.cancel(); spin = null; if (!calm()) icon.animate([{ transform: `rotate(${a}deg)` }, { transform: 'rotate(360deg)' }], { duration: Math.max(160, (360 - a) / 360 * 800), easing: 'cubic-bezier(.25, .7, .35, 1)' }); }
-        $('syncLabel').textContent = 'Synced just now'; b.setAttribute('aria-label', 'Refresh your assignments. Synced just now.');
-        toast('Your assignments are up to date.');
-      }, 500 + Math.random() * 2200);
-    });
+    if (!calm() && icon.animate) icon.animate([{ transform: 'rotate(0deg)' }, { transform: 'rotate(360deg)' }], { duration: 800, iterations: Infinity });
+    FSX.reloadFresh('Your assignments are up to date.');
   });
 
   // the glow behind the header matches the pencil in the logo
   if (!EMOJI_SVG['📝']) EMOJI_SVG['📝'] = "<svg aria-hidden=\"true\" focusable=\"false\" viewBox=\"0 0 36 36\"><path fill=\"#CCD6DD\" d=\"M31 32a4 4 0 0 1-4 4H5a4 4 0 0 1-4-4V4a4 4 0 0 1 4-4h22a4 4 0 0 1 4 4v28z\"/><path fill=\"#99AAB5\" d=\"M27 24a1 1 0 0 1-1 1H6a1 1 0 1 1 0-2h20a1 1 0 0 1 1 1zm-16 4a1 1 0 0 1-1 1H6a1 1 0 1 1 0-2h4a1 1 0 0 1 1 1zM27 8a1 1 0 0 1-1 1H6a1 1 0 0 1 0-2h20a1 1 0 0 1 1 1zm0 4a1 1 0 0 1-1 1H6a1 1 0 1 1 0-2h20a1 1 0 0 1 1 1zm0 4a1 1 0 0 1-1 1H6a1 1 0 1 1 0-2h20a1 1 0 0 1 1 1zm0 4a1 1 0 0 1-1 1H6a1 1 0 1 1 0-2h20a1 1 0 0 1 1 1z\"/><path fill=\"#66757F\" d=\"M31 6.272c-.827-.535-1.837-.579-2.521-.023l-.792.646-1.484 1.211-.1.08-2.376 1.938-11.878 9.686c-.437.357-.793 1.219-1.173 2.074-.378.85-.969 2.852-1.443 4.391-.148.25-1.065 1.846-.551 2.453.52.615 2.326.01 2.568-.076 1.626-.174 3.731-.373 4.648-.58.924-.211 1.854-.395 2.291-.752.008-.006.01-.018.017-.023l11.858-9.666.792-.646.144-.118V6.272z\"/><path fill=\"#D99E82\" d=\"M18.145 22.526s-1.274-1.881-2.117-2.553c-.672-.843-2.549-2.116-2.549-2.116-.448-.446-1.191-.48-1.629-.043-.437.438-.793 1.366-1.173 2.291-.472 1.146-1.276 4.154-1.768 5.752-.083.272.517-.45.503-.21-.01.187.027.394.074.581l-.146.159.208.067c.025.082.05.154.068.21l.159-.146c.187.047.394.084.58.074.24-.014-.483.587-.21.503 1.598-.493 4.607-1.296 5.752-1.768.924-.381 1.854-.736 2.291-1.174.439-.435.406-1.178-.043-1.627z\"/><path fill=\"#EA596E\" d=\"M25.312 4.351a2.238 2.238 0 0 0 0 3.168l3.167 3.168a2.242 2.242 0 0 0 3.168 0l3.169-3.168a2.242 2.242 0 0 0 0-3.168l-3.169-3.168a2.24 2.24 0 0 0-3.168 0l-3.167 3.168z\"/><path fill=\"#FFCC4D\" d=\"m11.849 17.815 3.17 3.17 3.165 3.166 11.881-11.879-6.337-6.336-11.879 11.879z\"/><path fill=\"#292F33\" d=\"M11.298 26.742s-2.06 1.133-2.616.576c-.557-.558.581-2.611.581-2.611s1.951.036 2.035 2.035z\"/><path fill=\"#CCD6DD\" d=\"m23.728 5.935 3.96-3.96 6.336 6.337-3.96 3.96z\"/><path fill=\"#99AAB5\" d=\"m26.103 3.558.792-.792 6.336 6.335-.792.792zM24.52 5.142l.791-.791 6.336 6.335-.792.792z\"/></svg>";
   $('asLogo').style.setProperty('--c', '#c8692e'); document.querySelector('.hub-h').style.setProperty('--class-c', '#f26a1b'); $('asLogo').innerHTML = EMOJI_SVG['📝'] || EMOJI_SVG['📚'] || '';
   asRender(false); ntInit();
+  if (FSX.q.get('turnin')) setTimeout(() => tiPopup.open(FSX.q.get('a') || undefined), 300);
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { mpPill($('asTypes'), false); inkMemo.clear(); asCls(); });
   addEventListener('resize', () => mpPill($('asTypes'), false));
 
   // search anything: this page's assignments
   window.CMDK_HERE = q => ({ label: 'Assignments', rows: ASG.filter(a => chit(q, a.t + ' ' + C[a.c].name)).map(a => ({ key: a.id, lead: badge(C[a.c]), t: cmark(a.t, q), sub: `${C[a.c].name}${a.st === 'missing' ? ' · Missing' : a.time ? ' · Due ' + a.time : ''}` })) });
-  window.CMDK_GO = id => { const r = $('asList').querySelector(`[data-asgo="${id}"]`), a = ASG.find(x => x.id === id); if (r) { r.scrollIntoView({ block: 'center', behavior: calm() ? 'auto' : 'smooth' }); r.focus({ preventScroll: true }); } toast(`In the app, this opens the ${a.t} assignment page in ${C[a.c].name}.`); };
+  window.CMDK_GO = id => { const r = $('asList').querySelector(`[data-asgo="${id}"]`), a = ASG.find(x => x.id === id); if (r) { r.scrollIntoView({ block: 'center', behavior: calm() ? 'auto' : 'smooth' }); r.focus({ preventScroll: true }); } FSX.hub(a.c, 'assignments', { a: a.id }); };
 /* ===== Life layer script: New stickers land at their own angle, in one of a few set spots on their item =====
    The tilt, nudge and overlap come from the item's text, so a sticker lands the same way every time the list redraws.
    Each one lands differently: high or low on the end of the word before it, or somewhere along the top of the line under it, always covering 2 to 4px, or the top of the line under it, so the text stays readable. */
 (() => {
+  return; // design rules: New tags sit straight, in line with their text (no tilt, no landing spots)
   const TILTS = [-12, -9, -6, -3, 4, 7, 10, 13];
   const hash = s => { let h = 7; for (const ch of s) h = Math.imul(h ^ ch.charCodeAt(0), 0x5bd1e995); h ^= h >>> 15; h = Math.imul(h, 0x27d4eb2d); h ^= h >>> 13; return h >>> 1; };
   const seedOf = el => { const host = el.closest('[data-mid], [data-mpid], [data-agopen], [data-gw], [data-rgw], [data-gdopen], [role="row"], .upd, button, a, li, tr') || el.parentNode; return hash((host ? host.textContent : '') + el.textContent); };
@@ -5498,7 +5529,7 @@ window.AveragesHelp = {
   // the mock's way in: hpOpen('canva' | 'drive', the button, { prepare, onGo })
   function hpOpen(k, from, opts = {}) {
     window.AveragesHelp.open(k, { from, prepare: opts.prepare || null,
-      onContinue: v => { if (opts.onGo) opts.onGo(v); else toast(`In the app, this opens ${k === 'canva' ? 'Canva' : 'Google Drive in a new tab'}.`); } });
+      onContinue: v => { if (opts.onGo) opts.onGo(v); else FSX.newTab(k === 'canva' ? 'https://www.canva.com/projects' : 'https://drive.google.com/drive/my-drive'); } });
   }
 
   window.hpOpen = hpOpen;

@@ -1123,20 +1123,15 @@
   /* buttons: a little taller and rounder, they lift on hover and squish when pressed */
   .btn { height: 38px; border-radius: 12px; font-size: 15px; transition: background-color .15s ease, transform .25s var(--spring), box-shadow .2s ease; }
   .btn.sm { height: 32px; border-radius: 10px; font-size: 13px; }
-  .btn.primary { background: linear-gradient(135deg, var(--warm-a), var(--warm-b)); box-shadow: 0 8px 16px -10px rgba(184, 53, 47, .9); }
-  .btn.primary:hover { background: linear-gradient(135deg, var(--warm-a-hover), var(--warm-b-hover)); }
-  .btn.primary:disabled, .btn.primary:disabled:hover { box-shadow: none; } /* a grayed-out button loses the red glow too */
+  .btn.primary { background: var(--accent); box-shadow: none; }
+  .btn.primary:hover { background: var(--accent-hover); }
   .chip { height: 44px; border-radius: 14px; box-shadow: var(--card-shadow); transition: background-color .15s ease, transform .25s var(--spring); }
   /* the shortcut chips each get their own color */
   .chip svg.i { color: var(--chip-c, var(--ink-2)); }
   .chip:nth-child(5n + 1) { --chip-c: var(--warm-a); } .chip:nth-child(5n + 2) { --chip-c: var(--sky); } .chip:nth-child(5n + 3) { --chip-c: var(--mint); } .chip:nth-child(5n + 4) { --chip-c: var(--grape); } .chip:nth-child(5n + 5) { --chip-c: #c98a00; }
-  /* sticker tags: New pops off the page a little */
-  .newtag { background: var(--sun) !important; color: var(--ink) !important; border-radius: 8px; transform: translate(var(--tx, 0px), var(--ty, 0px)) rotate(var(--tilt, -4deg)); box-shadow: 0 0 0 2px var(--field), 0 3px 8px -2px rgba(20, 21, 31, .25); will-change: transform; backface-visibility: hidden; } /* always drawn on its own layer, so hovering a row never redraws the text thinner or bolder */
-  /* soft shapes floating behind the top of the page */
+  /* New tags: a filled yellow label */
+  .newtag { background: var(--sun) !important; color: var(--ink) !important; border-radius: 8px;  will-change: transform; backface-visibility: hidden; } /* always drawn on its own layer, so hovering a row never redraws the text thinner or bolder */
   .wrap { position: relative; isolation: isolate; }
-  .wrap::before, .wrap::after { content: ""; position: absolute; z-index: -1; pointer-events: none; border-radius: 50%; filter: blur(2px); }
-  .wrap::before { top: -40px; right: 4%; width: 380px; height: 300px; background: radial-gradient(closest-side, color-mix(in srgb, var(--sun) 34%, transparent), transparent); }
-  .wrap::after { top: 60px; right: 22%; width: 260px; height: 220px; background: radial-gradient(closest-side, color-mix(in srgb, var(--bubble) 20%, transparent), transparent); }
   /* empty states get a doodle */
   :is(.nt-empty, .ag-none, .mp-none, .mdet-empty, .list-empty, .sv-empty)::before { content: ""; display: block; width: 120px; height: 72px; margin: 0 auto 12px; background: var(--life-doodle) center / contain no-repeat; }
   /* the toast bounces in */
@@ -1146,17 +1141,13 @@
     body:not(.potato-mode) .btn:not(:disabled):active, body:not(.potato-mode) .chip:active, body:not(.potato-mode) .ibtn:active { transform: scale(.95); transition-duration: .08s; }
     body:not(.potato-mode) .ibtn { transition: background-color .15s ease, transform .25s var(--spring); }
     body:not(.potato-mode) .toast.show { animation: lifeToast .45s var(--spring); }
-    body:not(.potato-mode) .wrap::before { animation: lifeFloat 14s ease-in-out infinite alternate; }
-    body:not(.potato-mode) .wrap::after { animation: lifeFloat 18s ease-in-out -6s infinite alternate-reverse; }
     /* icon tiles wiggle when you point at their row */
     body:not(.potato-mode) :is(.arow, .mrow, .mp-row, .ag-row, .nt-row, .pin, .gr-row, .crow, tr, .item, .mi):hover :is(.ktile, .nt-tile, .badge, .emo) { animation: lifeWiggle .5s var(--spring); }
     body:not(.potato-mode) .newtag { animation: lifeSticker .5s var(--spring) backwards; }
   }
-  @keyframes lifeFloat { from { transform: translate(0, 0) scale(1); } to { transform: translate(-24px, 16px) scale(1.08); } }
   @keyframes lifeWiggle { 0% { transform: none; } 30% { transform: rotate(-9deg) scale(1.08); } 60% { transform: rotate(6deg) scale(1.08); } 100% { transform: none; } }
-  @keyframes lifeSticker { from { transform: rotate(-14deg) scale(.6); opacity: 0; } }
+  @keyframes lifeSticker { from { transform: scale(.6); opacity: 0; } }
   @keyframes lifeToast { 0% { transform: translate(-50%, 16px) scale(.9); } 100% { transform: translate(-50%, 0) scale(1); } }
-  .potato-mode .wrap::before, .potato-mode .wrap::after { display: none; }
   /* ===== end Life layer ===== */
   /* ===== What-if grades: one popup for the whole app (Home, Grades, course hubs) ===== */
   .wi-scrim { position: fixed; inset: 0; z-index: 95; background: var(--scrim); display: flex; justify-content: center; align-items: center; padding: 24px 16px; }
@@ -1860,7 +1851,7 @@
     <div class="wrap">
       <main class="center">
         <div class="hello">
-          <div class="tx"><h1 id="greet">Good afternoon, John!</h1><p class="date">Thursday, October 15</p></div>
+          <div class="tx"><h1 id="greet">Hello!</h1><p class="date" id="todayDate"></p></div>
           <button class="pill sync" id="refresh" aria-label="Refresh everything on Home. Synced 2 minutes ago." title="Refresh everything on Home"><svg class="i"><use href="#i-refresh"/></svg><span id="syncLabel">Synced 2 min ago</span></button>
         </div>
 
@@ -1937,7 +1928,7 @@
         </section>
 
         <section class="qcard" id="promo">
-          <div class="qh"><b>Quarter 1</b><span class="qleft">15 days left</span><button class="ibtn" id="promoX" aria-label="Hide the Quarter 1 card"><svg class="i"><use href="#i-x"/></svg></button></div>
+          <div class="qh"><b>This term</b><span class="qleft"></span><button class="ibtn" id="promoX" aria-label="Hide the This term card"><svg class="i"><use href="#i-x"/></svg></button></div>
           <p id="promoText">2 classes could still go up a letter.</p>
           <button class="btn primary qbtn" data-details="takes" aria-haspopup="dialog">See what it takes</button>
         </section>
@@ -2273,7 +2264,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   if (store.get('fsmock_potato') === true) document.body.classList.add('potato-mode');
 
   // ---------- sample data (mock only) ----------
-  const PROFILE = Object.assign({ name: 'John Appleseed', photo: 'data:image/jpeg;base64,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' }, store.get('fsmock_profile2') || {});
+  const PROFILE = Object.assign({ name: FSD.me.name, photo: FSD.me.photo }, store.get('fsmock_profile2') || {});
   const firstName = () => (PROFILE.name.trim().split(/\s+/)[0] || 'there');
 
   // Subject table and Twemoji SVGs, copied from pages-src/courses.html (Twemoji: CC-BY 4.0, see THIRD-PARTY-NOTICES)
@@ -2346,122 +2337,85 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const nextUp = p => { const i = CUTS.findIndex(([c]) => p >= c); return i > 0 ? CUTS[i - 1] : null; };
 
   // pts = points possible so far, rem = points still to come this quarter
-  const CLASSES = [
-    { id: 'chem', short: 'CH', name: 'AP Chemistry', teacher: 'Dr. Park',    pct: 87.4, c: 1, pts: 480, rem: 150, room: 'Room 118', recent: [['Quiz 4', '17 / 20'], ['Lab Report #3', '44 / 50'], ['Unit 2 Test', '86 / 100']] },
-    { id: 'alg',  short: 'A2', name: 'Algebra II',   teacher: 'Mr. Okafor',  pct: 95.1, c: 2, pts: 450, rem: 120, room: 'Room 204', recent: [['Quiz 4', '19 / 20'], ['Homework 3.2', '10 / 10'], ['Unit 2 Test', '94 / 100']] },
-    { id: 'eng',  short: 'EN', name: 'English 10',   teacher: 'Ms. Grant',   pct: 78.3, c: 3, pts: 400, rem: 100, room: 'Room 131', recent: [['Reading check 6', '8 / 10'], ['Vocab quiz 3', '17 / 20'], ['Narrative essay', '38 / 50']] },
-    { id: 'hist', short: 'US', name: 'U.S. History', teacher: 'Mr. Delgado', pct: 91.0, c: 4, pts: 500, rem: null, room: 'Room 214', recent: [['Ch. 5 quiz', '18 / 20'], ['DBQ outline', '23 / 25'], ['Unit 1 Test', '88 / 100']] },
-    { id: 'chin', short: 'ZH', name: 'Chinese II',   teacher: 'Ms. Lin',     pct: 84.2, c: 5, pts: 300, rem: null, room: 'Room 110', recent: [['Lesson 6 quiz', '16 / 20'], ['Dictation 5', '9 / 10'], ['Oral check 2', '21 / 25']] },
-    { id: 'art',  short: 'AR', name: 'Art & Design', teacher: 'Ms. Reyes',   pct: 97.0, c: 6, pts: 200, rem: 50,  room: 'Studio B', recent: [['Still life', '48 / 50'], ['Sketchbook week 6', '10 / 10'], ['Color study', '24 / 25']] },
-  ];
-  // Projected grade + recent graded scores, the same shape as home.html's predicted/predictedPct/trend and HISTORY
-  const DATES = ['Sep 4', 'Sep 15', 'Sep 26', 'Oct 6', 'Oct 13'];
-  const PROJ = {
-    chem: { predictedPct: 91.4, points: [82, 84, 86, 89, 90] },
-    alg:  { predictedPct: 95.0, points: [94, 96, 93, 97, 95] },
-    eng:  { predictedPct: 72.6, points: [86, 82, 79, 77, 74] },
-    hist: { predictedPct: 91.3, points: [89, 93, 88, 92, 91] },
-    chin: { predictedPct: 87.5, points: [78, 81, 83, 85, 86] },
-    art:  { predictedPct: 97.2, points: [96, 98, 95, 97, 97] },
-  };
+  // The student's classes (averages-fs-data.js), in Home's shape: short name, teacher, the period (shown where the design
+  // had a room), points graded so far and still to come (from the gradebook), the last three scores, the projected
+  // grade and the scores it comes from.
+  const CLASSES = FSD.CLASSES.map((x, i) => {
+    const gb = (FSD.gradebook[x.id] || {}).categories || [];
+    let pts = 0, rem = 0, left = false;
+    gb.forEach(k => (k.assignments || []).forEach(a => { if (a.graded && typeof a.score === 'number') pts += a.points || 0; else if (a.due && a.due > Date.now() && a.points > 0) { rem += a.points; left = true; } }));
+    const recent = FSD.WORK.filter(w => w.c === x.id && !w.missing).slice(0, 3).map(w => [w.n, `${w.got} / ${w.of}`]);
+    const points = x.points.length ? x.points : [x.pct];
+    return { id: x.id, short: x.short, name: x.name, teacher: x.teacher || 'Your teacher', teacherIds: x.teacherIds, pct: x.pct, c: i + 1, pts, rem: left && pts ? rem : null,
+      room: x.hasPeriod ? 'Period ' + x.period : (x.code || 'Schoology class'), recent, predictedPct: x.predictedPct, points, dates: x.dates.length ? x.dates : ['Now'], updated: x.updated || '' };
+  });
   // The projection starts from the most recent graded assignment, so its direction is latest score to projected grade
   // (a point or more either way), not the oldest score on the chart to the newest.
-  CLASSES.forEach(c => { Object.assign(c, PROJ[c.id], { dates: DATES }); const d = c.predictedPct - c.points[c.points.length - 1]; c.trend = d >= 1 ? 'up' : d <= -1 ? 'down' : 'flat'; });
-  const UPDATED = { chem: '2h ago', alg: '1d ago', eng: '3h ago', hist: '5h ago', chin: '1d ago', art: '2d ago' };
-  CLASSES.forEach(c => { c.updated = UPDATED[c.id]; });
-  // Weighted grading categories, the shape of Schoology's sections/{id}/grading_categories (title, weight) with each
-  // category's current percent and points so far from the student's grades. Weights add up to 100.
-  const CATS = {
-    chem: [['Tests', 50, 85.0, 300], ['Labs', 30, 89.0, 120], ['Homework', 20, 91.6, 60]],
-    alg:  [['Tests', 60, 94.0, 250], ['Quizzes', 25, 96.0, 100], ['Homework', 15, 98.0, 100]],
-    eng:  [['Essays', 40, 72.0, 150], ['Reading checks', 30, 82.0, 100], ['Participation', 30, 83.0, 150]],
-    hist: [['Tests', 50, 89.0, 300], ['Projects', 30, 93.0, 100], ['Homework', 20, 93.3, 100]],
-    chin: [['Tests', 40, 81.0, 120], ['Quizzes', 30, 85.0, 80], ['Speaking', 30, 87.5, 100]],
-    art:  [['Projects', 70, 97.0, 150], ['Sketchbook', 30, 97.0, 50]],
-  };
+  CLASSES.forEach(c => { const d = c.predictedPct - c.points[c.points.length - 1]; c.trend = d >= 1 ? 'up' : d <= -1 ? 'down' : 'flat'; });
+  // Each class's grading categories, from its gradebook: name, weight %, your % (null: nothing graded yet), points so far.
+  const CATS = FSD.CATS;
   CLASSES.forEach(c => { const s = courseSubject(c.name); c.emoji = s[1]; c.color = s[2]; });
   const ORDER = CLASSES.map(c => c.id);
   const C = Object.fromEntries(CLASSES.map(c => [c.id, c]));
   const badge = c => `<span class="badge" style="--c:${c.color}" aria-hidden="true">${EMOJI_SVG[c.emoji] || EMOJI_SVG['📚']}</span>`;
   const gcls = p => p >= 90 ? 'ga' : p >= 80 ? 'gb' : 'gc';
   const grade = p => `<span class="gr ${gcls(p)}">${letter(p)}</span>`;
-  const dtile = d => d.k === 'late' ? `<span class="dtile late" aria-hidden="true"><small>${d.day}</small><b>${d.date.split(' ')[1]}</b></span>`
+  const dtile = d => d.k === 'late' ? `<span class="dtile late" aria-hidden="true"><small>${d.day}</small><b>${String(d.date).split(' ')[1] || ''}</b></span>`
     : `<span class="dtile ${d.date === TODAY ? 'today' : ''}" aria-hidden="true"><small>${d.date === TODAY ? 'Today' : d.day}</small><b>${d.date.split(' ')[1]}</b></span>`;
 
-  let DUE = [
-    { id: 'd1', c: 'eng',  t: 'Of Mice and Men Essay', k: 'late',  date: 'Oct 14', day: 'Wed', time: '11:59 PM', pts: 50, desc: 'Five paragraphs on loneliness in chapters 1 to 3. Use at least two quotes from the book.' },
-    { id: 'd2', c: 'alg',  t: 'Unit 3 Practice Set',   k: 'today', date: 'Oct 15', day: 'Thu', time: '3:00 PM',  pts: 20, desc: 'Problems 1 to 24 on page 142. Show your work for full credit.' },
-    { id: 'd3', c: 'chem', t: 'Lab Report #4',         k: 'today', date: 'Oct 15', day: 'Thu', time: '11:59 PM', pts: 50, desc: 'Titration lab. Include your data table, the calculations and an error analysis.' },
-    { id: 'd5', c: 'hist', t: 'Field Trip Form',       k: '',      date: 'Oct 16', day: 'Fri', time: '7:45 AM',  pts: 5,  desc: 'Bring the signed form to Room 214 before first period.' },
-    { id: 'd4', c: 'chin', t: 'Lesson 7 Vocab',        k: '',      date: 'Oct 16', day: 'Fri', time: '8:00 AM',  pts: 10, desc: 'Write each word three times with pinyin and one example sentence.' },
-    { id: 'd7', c: 'eng',  t: 'Chapter 4 Reading Log', k: '',      date: 'Oct 19', day: 'Mon', time: '11:59 PM', pts: 10, tag: 'Oct 19', long: 'Monday', desc: 'One paragraph on how Crooks is treated, plus three questions for Tuesday\'s discussion.' },
-    { id: 'd8', c: 'alg',  t: 'Quiz 5: Logarithms',    kind: 'test', k: '',      date: 'Oct 21', day: 'Wed', time: '9:15 AM',  pts: 20, tag: 'Oct 21', long: 'next Wednesday', desc: 'Covers sections 3.4 to 3.6. Calculators allowed.' },
-    { id: 'd6', c: 'chem', t: 'Unit 3 Test',           kind: 'test', k: '',      date: 'Oct 22', day: 'Thu', time: '8:00 AM', pts: 100, tag: 'Oct 22', long: 'next Thursday', desc: 'Stoichiometry and limiting reagents. One page of notes allowed.' },
-    { id: 'd9', c: 'art',  t: 'Portfolio Review Sign-up', k: '',   date: 'Oct 27', day: 'Tue', time: '3:30 PM',  pts: 5,  tag: 'Oct 27', long: 'Tuesday, Oct 27', desc: 'Pick a 10 minute slot with Ms. Reyes and bring three finished pieces.' },
-  ];
-  const DONE = [];
-  // Newest graded work first: from users/{id}/grades (grade, max_points, timestamp) plus the assignment title
-  const GRADED = [
-    { id: 'g1', c: 'alg',  t: 'Quiz 4',            got: 19, of: 20, when: '2 hours ago', isNew: true },
-    { id: 'g2', c: 'chem', t: 'Quiz 4',            got: 17, of: 20, when: 'Yesterday',   isNew: true,
-      comment: 'Check question 6, the mole ratio is flipped. Redo it by Friday for half the points back.', commentNew: true },
-    { id: 'g3', c: 'eng',  t: 'Narrative essay',   got: 38, of: 50, when: 'Tue',         isNew: false,
-      comment: 'Strong opening paragraph. Your conclusion repeats the intro, so push it one step further.', commentNew: false },
-    { id: 'g4', c: 'hist', t: 'DBQ outline',       got: 23, of: 25, when: 'Mon',         isNew: false },
-    { id: 'g5', c: 'chin', t: 'Dictation 5',       got: 9,  of: 10, when: 'Oct 9',       isNew: false },
-  ];
+  // What's due (late, today, then the rest), and what's turned in, from every class (averages-fs-data.js). Each has its
+  // date label ("Oct 29"), weekday, time, days from today (off) and points; the description loads when it's opened.
+  const DAY0 = FSD.fmt.startOfDay(Date.now());
+  const longWhen = off => off <= 6 ? new Date(DAY0 + off * 864e5).toLocaleDateString('en-US', { weekday: 'long' }) : off <= 13 ? 'next ' + new Date(DAY0 + off * 864e5).toLocaleDateString('en-US', { weekday: 'long' }) : new Date(DAY0 + off * 864e5).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+  const toDue = a => ({ id: a.id, c: a.c, t: a.t, k: a.st === 'missing' ? 'late' : a.off === 0 ? 'today' : '', date: a.dueAt ? FSD.fmt.shortDate(a.dueAt) : '', day: a.day || '', time: a.time || '', pts: a.pts,
+    off: a.off == null ? 99 : a.off, kind: a.kind === 'test' ? 'test' : undefined, canTurnIn: FSD.canTurnIn(a), tag: a.off != null && a.off > 6 ? FSD.fmt.shortDate(a.dueAt) : '', long: a.off != null && a.off > 1 ? longWhen(a.off) : '', desc: '', a });
+  let DUE = FSD.ASG.filter(a => (a.st === 'missing' || a.st === 'due') && a.dueAt).sort((x, y) => (x.st === 'missing' ? 0 : 1) - (y.st === 'missing' ? 0 : 1) || x.dueAt - y.dueAt).map(toDue);
+  const DONE = FSD.ASG.filter(a => a.st === 'turned').map(a => Object.assign(toDue(a), { turned: a.turned }));
+  // Newest graded work first (the gradebook), with the teacher's comment when there is one
+  const GRADED = FSD.WORK.filter(w => !w.missing).slice(0, 12).map(w => ({ id: w.id, c: w.c, t: w.n, got: w.got, of: w.of, when: w.on || 'Earlier', isNew: w.fresh, comment: w.note || undefined, commentNew: !!(w.note && w.fresh) }));
   const dueText = d => d.k === 'late' ? 'Late' : d.k === 'today' ? d.time : (d.tag || d.day);
   const dueTag = d => `<span class="due ${d.k}">${esc(dueText(d))}</span>`;
-  const dueLong = d => d.k === 'late' ? `was due yesterday at ${d.time}` : d.k === 'today' ? `due today at ${d.time}` : d.long ? `due ${d.long}, ${d.time}` : `due ${d.day} at ${d.time}`;
+  const dueLong = d => d.k === 'late' ? `was due ${d.off === -1 ? 'yesterday' : d.date} at ${d.time}` : d.k === 'today' ? `due today at ${d.time}` : d.long ? `due ${d.long}, ${d.time}` : `due ${d.day} at ${d.time}`;
 
-  const WEEK = [['Mon', 'Oct 12'], ['Tue', 'Oct 13'], ['Wed', 'Oct 14'], ['Thu', 'Oct 15'], ['Fri', 'Oct 16']];
-  const TODAY = 'Oct 15';
+  const DOW = (new Date().getDay() + 6) % 7;   // 0 is Monday
+  const WEEK = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'].map((d, i) => [d, FSD.fmt.shortDate(DAY0 + (i - DOW) * 864e5)]);
+  const TODAY = FSD.fmt.shortDate(DAY0);
 
-  const THREADS = [
-    { id: 'park',   who: 'Dr. Park',   c: 'chem', subject: 'Lab Report #4 extension', unread: true,  when: '10:42 AM', msgs: [
-      { me: true,  t: 'Could I turn in Lab Report #4 on Friday? I was out sick Tuesday.', at: 'Yesterday' },
-      { me: false, t: 'Sure, Friday works. Feel better.', at: '10:42 AM' } ] },
-    { id: 'grant',  who: 'Ms. Grant',  c: 'eng',  subject: 'Missing essay', unread: true,  when: '9:15 AM', msgs: [
-      { me: false, t: 'Your Of Mice and Men essay is still missing. You can turn it in until Friday for half credit.', at: '9:15 AM' } ] },
-    { id: 'parkrev', who: 'Dr. Park',  c: 'chem', subject: 'Unit 3 test review', unread: false, when: 'Tue', msgs: [
-      { me: true,  t: 'Will the review sheet have answers?', at: 'Tue' },
-      { me: false, t: 'Yes, I will post the answer key Wednesday after school.', at: 'Tue' } ] },
-    { id: 'okafor', who: 'Mr. Okafor', c: 'alg',  subject: 'Open-note test?', unread: false, when: 'Mon', msgs: [
-      { me: true,  t: 'Is the Unit 3 test open-note?', at: 'Mon' },
-      { me: false, t: 'One page of notes, front and back.', at: 'Mon' } ] },
-  ];
+  // Schoology's inbox (teachers only in the app): each conversation with its newest message. The whole conversation
+  // opens on the Messages page; replying from Home goes straight to Schoology.
+  const MSG = (FSD.raw.messages && Array.isArray(FSD.raw.messages.CONVERSATIONS)) ? FSD.raw.messages : null, PEOPLE_N = (MSG && MSG.PEOPLE) || {};
+  const classOfPerson = pid => (CLASSES.find(c => (c.teacherIds || []).includes(String(pid))) || {}).id || '';
+  const THREADS = (MSG ? MSG.CONVERSATIONS.map(t => ({ id: String(t.id), who: (PEOPLE_N[t.personId] || {}).name || 'Schoology', pid: String(t.personId || ''), c: classOfPerson(t.personId), subject: t.subject || 'No subject', unread: !!t.unread && !FSX.seen.has('m', t.id), when: t.time || '', msgs: [{ me: false, t: t.preview || '', at: t.time || '' }] }))
+    : FSD.messages.map(m => ({ id: String(m.id), who: m.from || 'Schoology', pid: '', c: m.courseId || classOfPerson(''), subject: m.subject || 'No subject', unread: !!m.unread && !FSX.seen.has('m', m.id), when: m.time || '', msgs: [{ me: false, t: m.preview || '', at: m.time || '' }] })))
+    .map(t => Object.assign(t, { c: C[t.c] ? t.c : '' }));
   const T = id => THREADS.find(t => t.id === id);
 
   // Course files, the API's adaptCourseFiles shape: Materials documents plus files attached to assignments (Schoology
   // documents' file-attachments carry the timestamp). `mine` marks the student's own file, which isn't a class material.
-  const FILES = [
-    { id: 'f5', name: 'Unit 3 Test Review.pdf',     c: 'chem', type: 'PDF',            size: '860 KB', when: '22 minutes ago', ago: 22,   from: 'Dr. Park', folder: 'Unit 3: Stoichiometry',   isNew: true },
-    { id: 'f6', name: 'Quiz 4 corrections.pdf',     c: 'alg',  type: 'PDF',            size: '240 KB', when: '2 hours ago',    ago: 120,  from: 'Mr. Okafor', folder: 'Unit 2: Linear equations', isNew: true },
-    { id: 'f3', name: 'Lab 4 data.xlsx',            c: 'chem', type: 'Excel workbook', size: '22 KB',  when: 'Today',          ago: 480,  from: 'Dr. Park', folder: 'Unit 3: Stoichiometry',   isNew: false },
-    { id: 'f1', name: 'Unit 3 Notes.pdf',           c: 'chem', type: 'PDF',            size: '1.2 MB', when: '2 days ago',     ago: 2880, from: 'Dr. Park', folder: 'Unit 3: Stoichiometry',   isNew: false },
-    { id: 'f4', name: 'Lesson 7 vocab list.pdf',    c: 'chin', type: 'PDF',            size: '310 KB', when: 'Mon',            ago: 4320, from: 'Ms. Lin', folder: 'Lesson 7: At school',    isNew: false },
-    { id: 'f2', name: 'Of Mice and Men draft.docx', c: 'eng',  type: 'Word document',  size: '48 KB',  when: 'Yesterday',      ago: 1440, mine: true },
-  ];
-  // Drafts the student started from an assignment page: Canva designs come from the API, Google Drive files from this browser
-  const DRAFTS = [
-    { id: 'r1', name: 'Of Mice and Men Essay',  app: 'Google Docs', due: 'd1', edited: '2 hours ago' },
-    { id: 'r2', name: 'Lab Report #4 analysis', app: 'Google Docs', due: 'd3', edited: 'Yesterday' },
-    { id: 'r3', name: 'Portfolio cover',        app: 'Canva',       due: 'd9', edited: 'Mon' },
-  ];
+  // Class files (GET /data/files): teachers' Materials documents and files on assignments, newest first. "New" is
+  // posted in the last two days.
+  const TYPE_N = { pdf: 'PDF', docx: 'Word document', doc: 'Word document', xlsx: 'Excel workbook', xls: 'Excel workbook', pptx: 'PowerPoint', ppt: 'PowerPoint', png: 'Picture', jpg: 'Picture', jpeg: 'Picture', gif: 'Picture', txt: 'Text', csv: 'Spreadsheet', mp4: 'Video', mp3: 'Audio', zip: 'Zip file' };
+  const FILES = ((FSD.raw.files && FSD.raw.files.files) || []).filter(f => C[f.course]).slice(0, 60).map(f => {
+    const ago = f.at ? Math.max(0, Math.round((Date.now() - f.at) / 60000)) : 99999;
+    return { id: String(f.id), name: f.name, c: f.course, type: TYPE_N[f.ext] || (f.ext ? f.ext.toUpperCase() + ' file' : 'File'), size: FSA_SIZE(f.size), when: f.at ? (ago < 60 ? `${ago} minutes ago` : ago < 1440 ? `${Math.round(ago / 60)} hours ago` : FSD.fmt.dayLabel(f.at, Date.now())) : 'Earlier', ago, from: C[f.course].teacher, folder: f.parentTitle || '', isNew: ago < 2880, src: f };
+  });
+  function FSA_SIZE(b) { return !b ? '' : b < 1048576 ? Math.max(1, Math.round(b / 1024)) + ' KB' : (b / 1048576).toFixed(1) + ' MB'; }
+  // Drafts started from an assignment page: Canva designs (GET /canva/drafts, one call per assignment), for the work
+  // that's due soonest. Asked for only while the Drafts card is showing.
+  const DRAFTS = [];
+  let draftsAsked = false;
+  function loadDrafts() {
+    if (draftsAsked || state.hidden.has('drafts')) return; draftsAsked = true;
+    Promise.all(DUE.filter(d => d.canTurnIn).slice(0, 8).map(d => FSX.api(`/canva/drafts?section=${encodeURIComponent(d.c)}&assignment=${encodeURIComponent(d.id)}`)
+      .then(j => (j.drafts || []).map(x => ({ id: String(x.designId), name: x.title || 'Canva design', app: 'Canva', due: d.id, edited: x.updatedAt ? FSD.fmt.dayLabel(x.updatedAt, Date.now()) : '' }))).catch(() => [])))
+      .then(lists => { DRAFTS.splice(0, DRAFTS.length, ...lists.flat()); renderDrafts(); });
+  }
   const F = id => FILES.find(f => f.id === id);
 
   // Same shape as the API's COURSE_UPDATES (sections/{id}/updates): body text, who posted, class, time. Updates have no title.
   // "New" means posted in the last 24 hours, as in the API's adaptUpdates().
-  const FEED = [
-    { id: 'u1', when: '22 minutes ago', c: 'chem', from: 'Dr. Park',    isNew: true,  body: 'The Unit 3 Test review sheet is posted. It covers stoichiometry and limiting reagents. The test is next Thursday in class.' },
-    { id: 'u2', when: '2 hours ago',    c: 'alg',  from: 'Mr. Okafor',  isNew: true,  body: 'Quiz 4 grades are in. The class average was 84%. Corrections are due Monday for half the missed points back.' },
-    { id: 'u3', when: 'Yesterday',      c: 'eng',  from: 'Ms. Grant',   isNew: false, body: 'I updated the essay rubric. It now gives 10 points for using quotes from the text, so check it before you turn in.' },
-    { id: 'u4', when: 'Mon',            c: 'hist', from: 'Mr. Delgado', isNew: false, body: 'Field trip forms are due Friday. Bring the signed form to Room 214 before first period.' },
-    { id: 'u5', when: 'Oct 9',          c: 'chin', from: 'Ms. Lin',     isNew: false, body: 'New seats for the rest of the quarter. The seating chart is posted by the door.' },
-    { id: 'u6', when: 'Oct 8',          c: 'art',  from: 'Ms. Reyes',   isNew: false, body: 'Portfolio review sign-ups are open. Pick a 10 minute slot on Oct 27 or Oct 28.' },
-    { id: 'u7', when: 'Oct 6',          c: 'chem', from: 'Dr. Park',    isNew: false, body: 'Take the lab safety quiz before the titration lab. You need 100% to do the lab, and you can retake it.' },
-    { id: 'u8', when: 'Oct 2',          c: 'eng',  from: 'Ms. Grant',   isNew: false, body: 'Book club sign-ups are open. Pick a book from the list by Oct 9. Groups meet on Fridays.' },
-  ];
+  // Course updates (sections/{id}/updates): who posted, the class, when, the text. New: not opened yet.
+  const FEED = FSD.updates.filter(u => C[u.courseId]).map(u => ({ id: String(u.id), when: u.when || '', c: u.courseId, from: u.from || C[u.courseId].teacher, isNew: !!u.unread && !FSX.seen.has('u', u.id), body: u.body || '' }));
   const U = id => FEED.find(u => u.id === id);
 
   // Notification type icons: Twemoji SVGs copied from pages-src/course-home.html (CC-BY 4.0)
@@ -2473,7 +2427,8 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const NOTIF_LABEL = { grade: 'Grade posted', message: 'New message', due: 'Due date', update: 'Course update', new: 'New assignment', comment: 'Teacher comment', material: 'New material' };
   // Notifications, the way averages.api's notify.ts sorts them: grades, messages, announcements (course updates),
   // due within the next day, and new work posted. Built from the same lists Home shows, so the counts always agree.
-  const minsAgo = w => { const m = String(w).match(/(\d+)\s*(minute|hour)/); if (m) return +m[1] * (m[2] === 'hour' ? 60 : 1);
+  const minsAgo = w => FSD.fmt.agoMin(w);
+  const minsAgoOld = w => { const m = String(w).match(/(\d+)\s*(minute|hour)/); if (m) return +m[1] * (m[2] === 'hour' ? 60 : 1);
     const t = String(w).match(/^(\d{1,2}):(\d\d)\s*(AM|PM)$/); if (t) return Math.max(0, 19 * 60 - ((+t[1] % 12 + (t[3] === 'PM' ? 12 : 0)) * 60 + +t[2]));
     return /just now/i.test(w) ? 0 : /yesterday/i.test(w) ? 1440 : 3000; };
   const NOTIFS = [
@@ -2481,34 +2436,38 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     // a grade's comment (shown only when its comment_status lets the student see it)
     ...GRADED.filter(g => g.comment && g.commentNew).map(g => ({ id: 'nc-' + g.id, type: 'comment', t: `${C[g.c].teacher} commented on ${g.t}`, s: `"${g.comment.length > 60 ? g.comment.slice(0, 58) + '…' : g.comment}" · ${g.when}`, go: 'graded:' + g.id, unread: true, ago: minsAgo(g.when) + 1 })),
     ...FILES.filter(f => f.isNew && !f.mine).map(f => ({ id: 'nf-' + f.id, type: 'material', t: `New in ${C[f.c].name}: ${f.name}`, s: `Posted ${f.when}`, go: 'file:' + f.id, unread: true, ago: f.ago })),
-    ...THREADS.filter(t => t.unread).map(t => ({ id: 'nm-' + t.id, type: 'message', t: `${t.who} replied`, s: `${t.subject} · ${t.when}`, go: 'thread:' + t.id, unread: true, ago: minsAgo(t.when) })),
-    ...FEED.filter(u => u.isNew).map(u => ({ id: 'nu-' + u.id, type: 'update', t: `New update in ${C[u.c].name}`, s: `${u.from} · ${u.when}`, go: 'update:' + u.id, unread: true, ago: minsAgo(u.when) })),
+    ...THREADS.filter(t => t.unread).map(t => ({ id: 'nm-' + t.id, type: 'message', t: `${t.who} wrote`, s: `${t.subject} · ${t.when}`, go: 'thread:' + t.id, unread: true, ago: minsAgo(t.when) })),
+    ...FEED.filter(u => u.isNew).slice(0, 8).map(u => ({ id: 'nu-' + u.id, type: 'update', t: `New update in ${C[u.c].name}`, s: `${u.from} · ${u.when}`, go: 'update:' + u.id, unread: true, ago: minsAgo(u.when) })),
     ...DUE.filter(d => d.k === 'today').map(d => ({ id: 'nd-' + d.id, type: 'due', t: `${d.t} is due today`, s: `${C[d.c].name} · ${d.time}`, go: 'due:' + d.id, unread: true, ago: 600 })),
-    { id: 'nn-d9', type: 'new', t: 'New assignment: Portfolio Review Sign-up', s: 'Art & Design · new since your last visit', go: 'due:d9', unread: true, ago: 180 },
-    { id: 'nd-d1', type: 'due', t: 'Of Mice and Men Essay is late', s: 'English 10 · was due yesterday', go: 'due:d1', unread: false, ago: 1200 },
+    ...DUE.filter(d => d.k === 'late').map(d => ({ id: 'nd-' + d.id, type: 'due', t: `${d.t} is late`, s: `${C[d.c].name} · was due ${d.date}`, go: 'due:' + d.id, unread: false, ago: 1440 * Math.max(1, -d.off) })),
   ].sort((x, y) => x.ago - y.ago);
 
-  let RECENT = [
-    { kind: 'Course',     label: 'AP Chemistry',     go: 'class:chem' },
-    { kind: 'Assignment', label: 'Lab Report #4',    go: 'due:d3' },
-    { kind: 'Files',      label: 'Unit 3 Notes.pdf', go: 'file:f1' },
-    { kind: 'Messages',   label: 'Dr. Park',         go: 'thread:park' },
-  ];
+  // what you opened lately (this browser only)
+  let RECENT = (store.get('fs_home_recent') || []).filter(r => r && r.go && typeof r.label === 'string').slice(0, 4);
   function touchRecent(kind, label, go) {
-    RECENT = [{ kind, label, go }, ...RECENT.filter(r => r.go !== go)].slice(0, 4);
+    RECENT = [{ kind, label, go }, ...RECENT.filter(r => r.go !== go)].slice(0, 4); store.set('fs_home_recent', RECENT);
     renderRecent();
   }
 
-  const WEEKS = ['Aug 24', 'Aug 31', 'Sep 7', 'Sep 14', 'Sep 21', 'Sep 28', 'Oct 5', 'Oct 12'];
-  const AVG = [86.1, 86.8, 86.4, 87.5, 88.3, 87.9, 88.8, 89.2];
-  const TURNED = [4, 6, 5, 7, 3, 6, 5, 6];
+  // The charts' last 8 weeks (Mondays). Grades: each class's grade at the end of each week, worked out from its gradebook
+  // (averages-fs-data.js). Turned in: work turned in each week (Schoology's turn-ins), else graded work by its due week.
+  const WEEKS = FSD.WEEKS, WEEK_AT = FSD.weekStarts;
+  const wkOf = ms => { if (!ms) return -1; for (let i = WEEK_AT.length - 1; i >= 0; i--) if (ms >= WEEK_AT[i]) return ms < WEEK_AT[i] + 7 * 864e5 || i === WEEK_AT.length - 1 ? i : -1; return -1; };
+  const AVG = WEEKS.map((_, i) => FSD.CLASSES.length ? Math.round(FSD.CLASSES.reduce((t, c) => t + c.trend[i], 0) / FSD.CLASSES.length * 10) / 10 : 0);
   // Unweighted 4.0 scale, the same points as GPA_SCALE in averages.api adapt.ts and grades.html
   const GP = { 'A+': 4, A: 4, 'A-': 3.7, 'B+': 3.3, B: 3, 'B-': 2.7, 'C+': 2.3, C: 2, 'C-': 1.7, 'D+': 1.3, D: 1, 'D-': 0.7, F: 0 };
-  const GPA = [3.22, 3.25, 3.24, 3.28, 3.33, 3.31, 3.36, 3.38];
-  const TURNED_BY = {
-    chem: [1, 1, 1, 2, 1, 1, 1, 2], alg: [1, 2, 1, 1, 1, 1, 1, 1], eng: [1, 1, 1, 1, 0, 1, 1, 0],
-    hist: [1, 1, 0, 1, 0, 1, 1, 1], chin: [0, 1, 1, 1, 1, 1, 0, 1], art: [0, 0, 1, 1, 0, 1, 1, 1],
-  };
+  const GPA = WEEKS.map((_, i) => FSD.CLASSES.length ? Math.round(FSD.CLASSES.reduce((t, c) => t + GP[letter(c.trend[i])], 0) / FSD.CLASSES.length * 100) / 100 : 0);
+  const TURNED_BY = Object.fromEntries(CLASSES.map(c => [c.id, WEEKS.map(() => 0)]));
+  const LATE_BY = Object.fromEntries(CLASSES.map(c => [c.id, WEEKS.map(() => 0)]));
+  const MISS_BY = Object.fromEntries(CLASSES.map(c => [c.id, WEEKS.map(() => 0)]));
+  FSD.ASG.concat(FSD.WORK.filter(w => !w.missing && !FSD.ASG.some(a => a.id === w.id)).map(w => ({ id: w.id, c: w.c, st: 'graded', gradedAt: w.at, dueAt: null }))).forEach(a => {
+    if (!TURNED_BY[a.c]) return;
+    const sub = FSD.subs[a.c + ':' + a.id];
+    const at = sub && sub.at ? sub.at : a.st === 'graded' ? (a.dueAt || a.gradedAt) : 0, k = wkOf(at);
+    if (k >= 0 && (sub || a.st === 'graded')) { TURNED_BY[a.c][k]++; if (sub && a.dueAt && sub.at > a.dueAt) LATE_BY[a.c][k]++; }
+    if (a.st === 'missing') { const m = wkOf(a.dueAt); if (m >= 0) MISS_BY[a.c][m]++; }
+  });
+  const TURNED = WEEKS.map((_, i) => Object.values(TURNED_BY).reduce((t, v) => t + v[i], 0));
 
   // Every shortcut the app can offer under the search bar. kind: pop (a quick popup), details (the big window), open (a page), run (does it here)
   const SC_GROUPS = [['do', 'Do something'], ['pages', 'Go to a page'], ['classes', 'Your classes']];
@@ -2522,7 +2481,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     { id: 'edit',     g: 'do', label: 'Edit shortcuts',       icon: 'sliders', kind: 'pop', pop: 'shortcuts', look: 'edit', short: 'Edit', kw: 'customize change pick' },
     { id: 'p-courses', g: 'pages', label: 'Courses',          icon: 'binder',    kind: 'open', where: 'the Courses page', kw: 'classes' },
     { id: 'p-grades', g: 'pages', label: 'Grades',            icon: 'chart',   kind: 'open', where: 'the Grades page' },
-    { id: 'p-gb',     g: 'pages', label: 'Gradebook',         icon: 'table',   kind: 'open', where: 'the Gradebook', kw: 'scores grades' },
+    { id: 'p-gb',     g: 'pages', label: 'Gradebook',         icon: 'table',   kind: 'open', where: 'the Grades page', kw: 'scores grades' },
     { id: 'p-asg',    g: 'pages', label: 'Assignments',       icon: 'inbox',   kind: 'open', where: 'the Assignments page' },
     { id: 'p-cal',    g: 'pages', label: 'Calendar',          icon: 'cal',     kind: 'open', where: 'the Calendar' },
     { id: 'p-files',  g: 'pages', label: 'Files',             icon: 'folder',  kind: 'open', where: 'Files' },
@@ -2546,12 +2505,10 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const scAll = () => SC.concat(CLASSES.map(c => scOf('c-' + c.id)));
 
   // On time vs. late vs. missing, from Schoology submissions (each revision carries a late flag) against assignments that were due
-  const MISS_BY = { eng: [0, 0, 0, 0, 0, 0, 0, 1] }; // the Of Mice and Men essay, the one overdue assignment
-  const LATE_BY = { alg: [0, 1, 0, 0, 0, 0, 0, 0], chem: [0, 0, 0, 1, 0, 0, 0, 0], art: [0, 0, 0, 0, 0, 0, 1, 0] };
   const sumBy = (map, i) => Object.values(map).reduce((a, v) => a + v[i], 0);
   const MISS_W = WEEKS.map((_, i) => sumBy(MISS_BY, i)), LATE_W = WEEKS.map((_, i) => sumBy(LATE_BY, i));
   const DUE_W = i => TURNED[i] + MISS_W[i], ONTIME_W = i => TURNED[i] - LATE_W[i];
-  const RATE = WEEKS.map((_, i) => Math.round(ONTIME_W(i) / DUE_W(i) * 1000) / 10);
+  const RATE = WEEKS.map((_, i) => DUE_W(i) ? Math.round(ONTIME_W(i) / DUE_W(i) * 1000) / 10 : 100);
   const tot = (f, from) => WEEKS.slice(from).reduce((a, _, j) => a + f(from + j), 0);
 
   // Home's default layout: what shows, and in what order
@@ -2578,7 +2535,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   state.scRows = loadRows();
   const SECTIONS = [
     ['classes', 'Grades', 'secClasses'], ['graded', 'Recently graded', 'secGraded'], ['materials', 'New materials', 'secMaterials'], ['grades', 'Grade trends', 'secGrades'],
-    ['due', 'Assignments', 'secDue'], ['messages', 'Messages', 'secMessages'], ['drafts', 'Drafts', 'secDrafts'], ['quarter', 'Quarter card', 'promo'], ['updates', 'Course updates', 'feedCard'],
+    ['due', 'Assignments', 'secDue'], ['messages', 'Messages', 'secMessages'], ['drafts', 'Drafts', 'secDrafts'], ['quarter', 'This term card', 'promo'], ['updates', 'Course updates', 'feedCard'],
   ];
 
   // ---------- rendering ----------
@@ -2603,6 +2560,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     document.querySelectorAll('[data-name]').forEach(el => { el.textContent = PROFILE.name; });
     const h = new Date().getHours();
     $('greet').textContent = `Good ${h < 12 ? 'morning' : h < 18 ? 'afternoon' : 'evening'}, ${firstName()}!`;
+    $('todayDate').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
   }
   function renderSide() {
     $('sideClasses').innerHTML = sortedClasses().map(c =>
@@ -2646,9 +2604,9 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   function renderDue() {
     const late = DUE.filter(d => d.k === 'late'), up = sortedDue().filter(d => d.k !== 'late');
     let html = `<div class="sum-card" id="sumCard" role="region" aria-roledescription="carousel" aria-label="Summary"><div class="sum-view" aria-live="polite"></div><div class="sum-dots" role="group" aria-label="Choose an item"></div><button class="sum-pause" aria-pressed="false" aria-label="Pause the summary" title="Pause">${ico('pause')}</button></div>`;
-    if (late.length) html += `<div class="grp bad">Overdue <em>${late.length}</em></div>` + late.map(d => `<div class="arow" data-open="due:${d.id}" role="link" tabindex="0">${badge(C[d.c])}<span class="tx"><b>${esc(d.t)}</b><small>${esc(C[d.c].name)} · ${esc(dueLong(d))}</small></span><button class="btn primary sm" data-open="turnin:${d.id}">Turn in</button></div>`).join('');
+    if (late.length) html += `<div class="grp bad">Overdue <em>${late.length}</em></div>` + late.map(d => `<div class="arow" data-open="due:${d.id}" role="link" tabindex="0">${badge(C[d.c])}<span class="tx"><b>${esc(d.t)}</b><small>${esc(C[d.c].name)} · ${esc(dueLong(d))}</small></span>${d.canTurnIn ? `<button class="btn primary sm" data-open="turnin:${d.id}">Turn in</button>` : `<button class="btn sm" data-open="due:${d.id}">Open</button>`}</div>`).join('');
     const ASG_SHOWN = 6, more = up.length - ASG_SHOWN;
-    if (up.length) html += `<div class="grp">Upcoming</div>` + up.slice(0, ASG_SHOWN).map(d => `<a class="arow" href="#" data-open="due:${d.id}">${badge(C[d.c])}<span class="tx"><b>${esc(d.t)}</b><small>${esc(C[d.c].name)} · ${d.pts} points</small></span>${dueTag(d)}</a>`).join('');
+    if (up.length) html += `<div class="grp">Upcoming</div>` + up.slice(0, ASG_SHOWN).map(d => `<a class="arow" href="#" data-open="due:${d.id}">${badge(C[d.c])}<span class="tx"><b>${esc(d.t)}</b><small>${esc(C[d.c].name)}${d.pts ? ` · ${d.pts} points` : ''}</small></span>${dueTag(d)}</a>`).join('');
     if (more > 0) html += `<a class="all" href="#" data-open="page:Assignments">${more} more due later</a>`;
     $('asgBox').innerHTML = html + (DUE.length ? '' : `<div class="list-empty">Nothing due. You're all caught up.</div>`);
     sumMount();
@@ -2666,10 +2624,10 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     b.setAttribute('aria-pressed', sum.userPaused); b.setAttribute('aria-label', sum.userPaused ? 'Play the summary' : 'Pause the summary'); b.title = sum.userPaused ? 'Play' : 'Pause';
     b.querySelector('use').setAttribute('href', sum.userPaused ? '#i-play' : '#i-pause'); $('sumCard').classList.toggle('held', sum.userPaused);
   }
-  const daysOut = d => +d.date.split(' ')[1] - 15;
+  const daysOut = d => d.off;
   function buildSummaryCats() {
     const up = DUE.filter(d => d.k !== 'late'), tests = up.filter(d => d.kind === 'test'), work = up.filter(d => d.kind !== 'test');
-    const tile = d => { const n = daysOut(d); return { top: n === 0 ? 'Today' : n === 1 ? 'Tmrw' : d.day, num: d.date.split(' ')[1], color: C[d.c].color }; };
+    const tile = d => { const n = daysOut(d); return { top: n === 0 ? 'Today' : n === 1 ? 'Tmrw' : d.day, num: String(d.date).split(' ')[1] || '', color: C[d.c].color }; };
     const cats = [];
     if (tests.length) cats.push({ key: 'test', label: 'Next test', desc: 'Your upcoming quizzes and tests', items: tests.slice(0, 5).map(d => { const n = daysOut(d);
       return { ...tile(d), title: d.t, go: 'due:' + d.id, meta: `${C[d.c].name} · ${n === 0 ? 'Today' : n === 1 ? 'Tomorrow' : `In ${n} days`}` }; }) });
@@ -2677,7 +2635,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       return { ...tile(d), title: d.t, go: 'due:' + d.id, meta: `${C[d.c].name} · ${n === 0 ? `Due today at ${d.time}` : n === 1 ? 'Due tomorrow' : `Due in ${n} days`}` }; }) });
     const today = up.filter(d => d.k === 'today'), late = DUE.filter(d => d.k === 'late').length;
     const meta = [today.length ? `${today[0].t}, ${C[today[0].c].name}${today.length > 1 ? ` + ${today.length - 1} more` : ''}` : '', late ? `${late} overdue` : 'Nothing overdue'].filter(Boolean).join(' · ');
-    cats.push({ key: 'today', label: 'Today', desc: 'A summary of today', items: [{ top: 'Thu', num: '15', color: 'var(--accent)', go: 'page:Calendar',
+    cats.push({ key: 'today', label: 'Today', desc: 'A summary of today', items: [{ top: new Date().toLocaleDateString('en-US', { weekday: 'short' }), num: String(new Date().getDate()), color: 'var(--accent)', go: 'page:Calendar',
       title: today.length ? `${today.length} thing${today.length > 1 ? 's' : ''} due today` : 'Nothing due today', meta }] });
     return cats;
   }
@@ -2864,7 +2822,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   function renderPromo() {
     // classes with points posted that can still go up, plus classes projected to go up when the points aren't posted
     const n = CLASSES.filter(c => { const t = takes(c); return t.ok || (t.unknown && c.predictedPct >= t.cut); }).length;
-    $('promoText').textContent = `${n === 0 ? 'No classes' : n === 1 ? '1 class' : n + ' classes'} could still go up a letter before it ends Oct 30.`;
+    $('promoText').textContent = `${n === 0 ? 'No classes' : n === 1 ? '1 class' : n + ' classes'} could still go up a letter this term.`;
   }
   const secId = k => SECTIONS.find(x => x[0] === k)[2];
   function applyOrder() {
@@ -3077,7 +3035,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     $('avgDelta').className = 'delta ' + (dAvg >= 0 ? 'up' : 'down');
     $('avgDelta').innerHTML = `${ico(dAvg >= 0 ? 'up' : 'downr')}${Math.abs(dAvg).toFixed(1)}%`; $('avgNote').textContent = `vs. ${ago} ago`;
     $('turnTotal').textContent = s.bv.reduce((a, b) => a + b, 0);
-    $('turnNote').textContent = state.range === 8 ? 'this quarter' : 'last 4 weeks';
+    $('turnNote').textContent = state.range === 8 ? 'last 8 weeks' : 'last 4 weeks';
     $('statAvg').hidden = !state.charts.avg;
     $('statTurn').hidden = !state.charts.turn;
     $('statGpa').hidden = !state.charts.gpa;
@@ -3276,7 +3234,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
 
   // ---------- search: what shows before you type, and the keyboard hints ----------
   const searchFoot = `<div class="pop-foot s-foot" aria-hidden="true"><span><kbd>${ico('kup')}</kbd><kbd>${ico('kdown')}</kbd> to move</span><span><kbd>Enter</kbd> to open</span><span><kbd>Esc</kbd> to close</span></div>`;
-  const srecent = () => store.get('fsmock_srecent') || ['Lab Report', 'Ms. Grant'];
+  const srecent = () => store.get('fsmock_srecent') || [];
   function pushRecent(q) { q = q.trim(); if (!q) return; store.set('fsmock_srecent', [q, ...srecent().filter(x => x.toLowerCase() !== q.toLowerCase())].slice(0, 5)); }
   function searchHome() {
     const rec = srecent();
@@ -3288,7 +3246,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       mi({ attrs: 'data-go="turnin"', lead: ico('upload'), t: 'Turn in an assignment' }) +
       mi({ attrs: 'data-go="whatif"', lead: ico('calc'), t: 'What-if grades' }) +
       mi({ attrs: 'data-go="teachers"', lead: ico('msg'), t: 'Message a teacher' }) +
-      `<div class="s-tip">${ico('bolt')}<span>Or type a command, like <b>message Ms. Grant</b>, <b>turn in Lab Report</b> or <b>open calendar</b></span></div>` + searchFoot };
+      `<div class="s-tip">${ico('bolt')}<span>Or type a command, like <b>message ${esc(FSD.exampleTeacher)}</b>, <b>turn in</b> or <b>open calendar</b></span></div>` + searchFoot };
   }
 
   // ---------- popover contents ----------
@@ -3315,7 +3273,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       const actHtml = acts.length && tab === 'all' ? `<div class="lbl">Actions</div>${acts.map(cmdRow).join('')}` : '';
       let body;
       if (!total && acts.length) return { label: 'Search results', search: true, html: fixHtml + actHtml + searchFoot };
-      if (!total) body = `<div class="s-empty"><b>No results for "${esc(typed)}"</b><span>Try a class, an assignment, a file, a teacher, or a command like "message Ms. Grant".</span></div>`;
+      if (!total) body = `<div class="s-empty"><b>No results for "${esc(typed)}"</b><span>Try a class, an assignment, a file, a teacher, or a command like "message ${esc(FSD.exampleTeacher)}".</span></div>`;
       else if (tab === 'all') body = actHtml + Object.keys(G).filter(k => G[k].length).map(k => `<div class="lbl">${NAMES[k]}<span class="ct">${G[k].length}</span></div>${G[k].slice(0, 3).join('')}${G[k].length > 3 ? `<button class="mi more-res" data-act="stab" data-arg="${k}">See all ${G[k].length} ${NAMES[k].toLowerCase()}${ico('fwd')}</button>` : ''}`).join('');
       else body = G[tab].length ? `<div class="lbl">${NAMES[tab]}<span class="ct">${G[tab].length}</span></div>${G[tab].join('')}` : `<div class="s-empty"><b>Nothing in ${NAMES[tab].toLowerCase()}</b><span>Switch to All to see every match.</span></div>`;
       return { label: 'Search results', search: true, html: fixHtml + tabs + body + searchFoot };
@@ -3368,10 +3326,10 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     },
 
     week() {
-      return { label: 'This week', wide: true, html: head('This week', 'Oct 12 to 16', { page: 'Calendar', pageLabel: 'Open Calendar' }) + `<div class="week">${WEEK.map(([dn, date]) => {
+      return { label: 'This week', wide: true, html: head('This week', `${WEEK[0][1]} to ${WEEK[4][1]}`, { page: 'Calendar', pageLabel: 'Open Calendar' }) + `<div class="week">${WEEK.map(([dn, date]) => {
         const items = DUE.filter(d => d.date === date);
         const done = DONE.filter(d => d.date === date);
-        return `<div class="day"><span class="dtile${date === TODAY ? ' today' : ''}"><small>${date === TODAY ? 'Today' : dn}</small><b>${date.split(' ')[1]}</b></span><div class="items">${
+        return `<div class="day"><span class="dtile${date === TODAY ? ' today' : ''}"><small>${date === TODAY ? 'Today' : dn}</small><b>${String(date).split(' ')[1] || ''}</b></span><div class="items">${
           items.map(dueRow).join('') + done.map(d => mi({ attrs: 'disabled', cls: 'dis', lead: ico('ok'), t: d.t, sub: C[d.c].name, end: '<span class="due done">Done</span>' })).join('') ||
           '<div class="none">Nothing due</div>'}</div></div>`;
       }).join('')}</div>` };
@@ -3430,7 +3388,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     me() {
       const potato = document.body.classList.contains('potato-mode');
       return { label: 'Profile and settings', html:
-        `<div class="pv"><span class="av-wrap"><span class="av" data-av></span></span><span class="t" style="min-width:0"><b style="display:block;font-weight:800">${esc(PROFILE.name)}</b><small style="color:var(--muted);font-weight:600">Lincoln High</small></span></div>
+        `<div class="pv"><span class="av-wrap"><span class="av" data-av></span></span><span class="t" style="min-width:0"><b style="display:block;font-weight:800">${esc(PROFILE.name)}</b><small style="color:var(--muted);font-weight:600">${esc(FSD.me.school || FSD.me.email || 'Schoology')}</small></span></div>
         <div class="hr"></div>
         ${mi({ attrs: 'data-go="profile"', lead: ico('user'), t: 'Edit profile', sub: 'Name and photo' })}
         ${mi({ attrs: 'data-go="customize"', lead: ico('sliders'), t: 'Customize Home', sub: 'Choose which sections show' })}
@@ -3530,7 +3488,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
         } };
     },
     nav(which) {
-      if (which === 'grades') return { label: 'Grades', html: head('Grades', 'Quarter 1') + sortedClasses().map(classRow).join('') +
+      if (which === 'grades') return { label: 'Grades', html: head('Grades', 'This term') + sortedClasses().map(classRow).join('') +
         `<div class="hr"></div><div class="note">Overall average 89.2%. Predicted letter grades update as new scores come in.</div>` };
       if (which === 'assignments') return { label: 'Assignments', html: head('Assignments', `${DUE.length} open`) +
         (DUE.length ? sortedDue().map(dueRow).join('') : '<div class="note">Nothing open.</div>') +
@@ -3567,11 +3525,11 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       touchRecent('Course', c.name, 'class:' + id);
       return { label: c.name, html: head(c.name, `${c.teacher} · ${c.room}`, { lead: badge(c) }) +
         `<div class="kv"><div><small>Current grade</small><b>${c.pct.toFixed(1)}% <span class="${gcls(c.pct)}">${letter(c.pct)}</span></b></div>${c.rem != null
-          ? `<div><small>Points left this quarter</small><b>${c.rem}</b></div>`
+          ? `<div><small>Points still to come</small><b>${c.rem}</b></div>`
           : `<div><small>Projected grade</small><b><span class="trend ${c.trend}" id="projChip" tabindex="0" role="button" aria-haspopup="true" aria-expanded="false" aria-label="Why is ${esc(c.name)} projected ${letter(c.predictedPct)}, ${c.predictedPct} percent? Show the trend."><span class="arrow" aria-hidden="true">${TREND_ARROW[c.trend]}</span>${letter(c.predictedPct)}<span class="tp">${c.predictedPct.toFixed(1)}%</span></span></b></div>`}</div>
         <div class="lbl">Recent scores</div>
         ${c.recent.map(([n, s]) => `<div class="mi" style="cursor:default">${ico('ok')}<span class="tx"><b>${esc(n)}</b></span><span class="end">${esc(s)}</span></div>`).join('')}
-        <div class="note">${t.top ? 'Already at the top letter grade.' : t.unknown ? `${esc(c.teacher)} hasn't posted how many points are left, so this shows your projected grade. Hover it to see the trend.` : t.ok ? `Average ${t.need.toFixed(1)}% on what's left to reach ${t.up}.` : `${t.up} is out of reach this quarter (it would take ${t.need.toFixed(1)}%).`}</div>
+        <div class="note">${t.top ? 'Already at the top letter grade.' : t.unknown ? `${esc(c.teacher)} hasn't posted how many points are left, so this shows your projected grade. Hover it to see the trend.` : t.ok ? `Average ${t.need.toFixed(1)}% on what's left to reach ${t.up}.` : `${t.up} is out of reach this term (it would take ${t.need.toFixed(1)}%).`}</div>
         <div class="acts split"><button class="btn" data-go="whatif:${c.id}">${ico('calc')}What-if grades</button><button class="btn" data-go="compose:${c.id}">${ico('msg')}Message ${esc(c.teacher)}</button></div>`,
         wire(el) { const chip = el.querySelector('#projChip'); if (chip) bindTrend(chip, c); } };
     },
@@ -3583,10 +3541,11 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       const c = C[d.c], done = DONE.includes(d);
       touchRecent('Assignment', d.t, 'due:' + id);
       return { label: d.t, html: head(d.t, c.name, { lead: badge(c) }) +
-        `<div class="kv"><div><small>Due</small><b style="font-size:15px">${d.k === 'today' ? 'Today' : d.tag ? d.day + ' ' + d.tag : d.day}, ${esc(d.time)}</b></div><div><small>Worth</small><b style="font-size:15px">${d.pts} points</b></div></div>
+        `<div class="kv"><div><small>Due</small><b style="font-size:15px">${d.k === 'today' ? 'Today' : d.tag ? d.day + ' ' + d.tag : d.day}, ${esc(d.time)}</b></div><div><small>Worth</small><b style="font-size:15px">${d.pts ? d.pts + ' points' : 'Not set'}</b></div></div>
         <div class="meta">${done ? '<span class="due done">Turned in</span>' : dueTag(d)}</div>
-        <p class="body">${esc(d.desc)}</p>
-        <div class="acts split">${done ? '' : `<button class="btn primary" data-go="turnin:${d.id}">${ico('upload')}Turn in</button>`}<button class="btn" data-go="compose:${c.id}">${ico('msg')}Message ${esc(c.teacher)}</button></div>` };
+        <p class="body" id="dueDesc">${esc(d.desc || 'Loading the details…')}</p>
+        <div class="acts split">${done || !d.canTurnIn ? `<button class="btn" data-go="class:${c.id}">${badge(c)}Open in class</button>` : `<button class="btn primary" data-go="turnin:${d.id}">${ico('upload')}Turn in</button>`}<button class="btn" data-go="compose:${c.id}">${ico('msg')}Message ${esc(c.teacher)}</button></div>`,
+        wire(el) { if (d.desc) return; FST.load(d.c, d.id).then(r => { const x = r.detail; d.desc = (x && x.description) || 'No description from your teacher.'; if (x && x.maxPoints) d.pts = x.maxPoints; const b = el.querySelector('#dueDesc'); if (b) b.textContent = d.desc; }).catch(() => { const b = el.querySelector('#dueDesc'); if (b) b.textContent = 'Couldn\'t load the details. Open it in class to see them.'; }); } };
     },
     alldue() {
       return { label: 'Due soon', html: head('Due soon', `${DUE.length} open`) + (DUE.length ? sortedDue().map(dueRow).join('') : '<div class="note">Nothing due. You\'re all caught up.</div>') };
@@ -3629,14 +3588,13 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     },
     quarter() {
       return { label: 'Grading period', html: `<div class="lbl">Grading period</div>` +
-        mi({ attrs: 'data-act="close"', lead: check(true), t: 'Quarter 1', sub: 'Aug 24 to Oct 30 · in progress' }) +
-        mi({ attrs: 'disabled', cls: 'dis', lead: check(false), t: 'Quarter 2', sub: 'Starts Nov 2' }) +
-        mi({ attrs: 'disabled', cls: 'dis', lead: check(false), t: 'Semester 1', sub: 'Final grades post Jan 22' }) };
+        mi({ attrs: 'data-act="close"', lead: check(true), t: 'This term', sub: 'In progress · from Schoology' }) +
+        `<div class="note">Your grades are for the grading period Schoology shows now. Earlier terms are on Schoology.</div>` };
     },
     whatif(cid) {
-      const c = C[cid || 'chem'];
+      const c = C[cid] || CLASSES[0]; if (!c) return { label: 'What-if grades', html: head('What-if grades') + '<div class="note">No classes yet.</div>' };
       const classItems = CLASSES.map(x => ({ value: x.id, lead: badge(x), label: x.name, sub: `${letter(x.pct)} · ${x.pct.toFixed(1)}%` }));
-      const catItems = id => CATS[id].map(([n, w, p], i) => ({ value: String(i), label: n, sub: `${w}% of grade · now ${p.toFixed(1)}%` }));
+      const catItems = id => (CATS[id] || []).map(([n, w, p], i) => ({ value: String(i), label: n, sub: `${w}% of grade · ${p == null ? 'nothing graded yet' : 'now ' + p.toFixed(1) + '%'}` }));
       return { label: 'What-if grades', wide: true, html: head('What-if grades', 'Try a score before you get it back') +
         `<div class="fld"><label for="wiClass" id="wiClassL">Class</label><div class="csel" id="wiClassBox"></div></div>
         <div class="fld"><label for="wiCat" id="wiCatL">Category</label><div class="csel" id="wiCatBox"></div></div>
@@ -3651,10 +3609,10 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
             const s = parseFloat(sc.value), o = parseFloat(out.value);
             if (!(o > 0) || !(s >= 0)) { res.innerHTML = 'Enter a score and the points it is out of.'; return; }
             // the new score only moves its own category; the class grade moves by that category's weight
-            const total = cats.reduce((a, x) => a + x[1], 0);
-            const catNext = (cp * cpts / 100 + s) / (cpts + o) * 100;
-            const now = k.pct, next = now + (w / total) * (catNext - cp), diff = next - now;
-            res.innerHTML = `<span class="wi-cat">${esc(cn)}: ${cp.toFixed(1)}% ${arrowR} ${catNext.toFixed(1)}%</span>
+            const wg = cats.filter(x => x[2] != null).reduce((a, x) => a + x[1], 0);
+            const catNext = ((cp || 0) * cpts / 100 + s) / (cpts + o) * 100;
+            const now = k.pct, next = cp == null ? (wg ? (now * wg + catNext * w) / (wg + w) : catNext) : now + (w / (wg || w)) * (catNext - cp), diff = next - now;
+            res.innerHTML = `<span class="wi-cat">${esc(cn)}: ${cp == null ? 'nothing yet' : cp.toFixed(1) + '%'} ${arrowR} ${catNext.toFixed(1)}%</span>
               ${now.toFixed(1)}% ${letter(now)} ${arrowR} <b>${next.toFixed(1)}% ${letter(next)}</b><br><span style="color:${diff >= 0 ? 'var(--good)' : 'var(--bad)'}">${diff >= 0 ? '+' : ''}${diff.toFixed(1)} points</span> in ${esc(k.name)}`;
           };
           [sc, out].forEach(x => x.addEventListener('input', calc));
@@ -4141,7 +4099,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     },
     openpage(p) {
       closePop();
-      if (p.includes(':')) openPage(p); else toast(`In the app, this opens the ${p} page.`);
+      openPage(p.includes(':') ? p : 'page:' + p);
     },
     submit(id) {
       const drop = cur.el.querySelector('#tiDrop');
@@ -4155,28 +4113,28 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       renderAll();
       toast(`Turned in ${d.t}`);
     },
-    send(id) {
+    send(id, btn) {
       const ta = cur.el.querySelector('#reply'), t = T(id);
       if (!ta.value.trim()) { cur.el.querySelector('#replyErr').hidden = false; ta.focus(); return; }
-      t.msgs.push({ me: true, t: ta.value.trim(), at: 'Just now' });
-      t.when = 'Just now';
-      swap('thread', id);
-      const ch = cur.el.querySelector('#chat'); ch.scrollTop = ch.scrollHeight;
-      toast(`Sent to ${t.who}`);
+      const text = ta.value.trim(); if (btn) btn.disabled = true;
+      FSX.reply(id, text).then(() => {
+        t.msgs.push({ me: true, t: text, at: 'Just now' }); t.when = 'Just now';
+        if (cur && cur.arg === id) { swap('thread', id); const ch = cur.el.querySelector('#chat'); if (ch) ch.scrollTop = ch.scrollHeight; }
+        toast(`Sent to ${t.who}`);
+      }, e => { if (btn) btn.disabled = false; toast(FSX.msgError(e)); });
     },
     compose(cid) {
       const subj = cur.el.querySelector('#cmpSubj'), ta = cur.el.querySelector('#cmpBody'), c = C[cid], err = cur.el.querySelector('#cmpErr');
       const s = subj.value.trim().replace(/\s+/g, ' ');
       if (!s) { err.textContent = 'Add a subject so your teacher knows what this is about.'; err.hidden = false; subj.focus(); return; }
       if (!ta.value.trim()) { err.textContent = 'Write a message first.'; err.hidden = false; ta.focus(); return; }
-      // same teacher + same subject continues that conversation; a new subject starts a new one
-      let t = THREADS.find(x => x.c === cid && x.subject.toLowerCase() === s.toLowerCase());
-      if (!t) { t = { id: 't' + Date.now(), who: c.teacher, c: cid, subject: s, unread: false, when: 'Just now', msgs: [] }; THREADS.unshift(t); }
-      t.msgs.push({ me: true, t: ta.value.trim(), at: 'Just now' });
-      t.when = 'Just now';
-      // the conversation itself lives on the Messages page, so sending hands off there
-      closePop(); touchRecent('Messages', t.subject, 'thread:' + t.id);
-      toast(`Sent to ${c.teacher}. In the app, this opens "${t.subject}" in Messages.`);
+      if (!(c.teacherIds || []).length) { err.textContent = 'Schoology doesn\'t list a teacher for this class, so there\'s no one to send it to.'; err.hidden = false; return; }
+      const text = ta.value.trim(), send = cur.el.querySelector('[data-act="compose"]'); if (send) send.disabled = true;
+      FSX.send(c.teacherIds.slice(0, 1), s, text).then(r => {
+        const t = { id: String(r.id || 'new' + Date.now()), who: c.teacher, c: cid, subject: s, unread: false, when: 'Just now', msgs: [{ me: true, t: text, at: 'Just now' }] };
+        THREADS.unshift(t); closePop(); touchRecent('Messages', t.subject, 'thread:' + t.id);
+        toast(`Sent to ${c.teacher}.`);
+      }, e2 => { if (send) send.disabled = false; err.textContent = FSX.msgError(e2); err.hidden = false; });
     },
     notif(id) {
       const n = NOTIFS.find(x => x.id === id);
@@ -4190,7 +4148,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       renderCounts(); swap('notifs');
     },
     window(kind) {
-      if (kind === 'windowed') toast('Windowed is the current card layout. This mock only shows Fullscreen.');
+      if (kind === 'windowed') window.__fsNav && window.__fsNav('switches every page to the classic windowed look');
     },
     potato(_, btn) {
       const on = document.body.classList.toggle('potato-mode');
@@ -4206,7 +4164,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
         <div class="acts"><button class="btn" data-go="me">Cancel</button><button class="btn primary" data-act="signout2">Sign out</button></div></div>`;
       cur.el.querySelector('#signoutArea .btn').focus();
     },
-    signout2() { closePop(); toast('This is a mock, so you stay signed in.'); },
+    signout2() { closePop(); FSX.signOut(); },
     saveprofile() {
       const v = cur.el.querySelector('#pfName').value.trim();
       if (!v) { const e = cur.el.querySelector('#pfErr'); e.textContent = 'Enter a name.'; e.hidden = false; return; }
@@ -4218,7 +4176,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     nophoto() { PROFILE.photo = ''; store.set('fsmock_profile2', PROFILE); renderAvatar(); swap('profile'); },
     section(k) {
       state.hidden.has(k) ? state.hidden.delete(k) : state.hidden.add(k);
-      applySections(); swap('customize');
+      applySections(); if (k === 'drafts') loadDrafts(); swap('customize');
       const b = cur && cur.el.querySelector(`[data-act="section"][data-arg="${k}"]`); if (b) b.focus();
     },
     sumfirst(k) {
@@ -4294,8 +4252,8 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   // Home's assignments in the shape the popup reads (the course hub's materials); state like what you sent lives on these
   const TI_BY = {};
   const tiItem = d => {
-    const it = TI_BY[d.id] || (TI_BY[d.id] = { id: d.id, kind: 'assignment', c: d.c, name: d.t, desc: d.desc || '', pts: d.pts, ago: 0 });
-    Object.assign(it, { due: d.k === 'late' ? -1 : daysOut(d), dueTxt: `${d.k === 'today' ? 'today' : `${d.day}, ${d.date}`} · ${d.time}`, d });
+    const it = TI_BY[d.id] || (TI_BY[d.id] = { id: d.id, kind: d.canTurnIn ? 'assignment' : 'test', c: d.c, name: d.t, desc: d.desc || '', pts: d.pts || 0, ago: 0, turned: d.turned || null, sent: d.a && d.a.sent ? d.a.sent.slice() : undefined });
+    Object.assign(it, { due: d.k === 'late' ? -1 : daysOut(d), dueTxt: d.date ? `${d.k === 'today' ? 'today' : `${d.day}, ${d.date}`} · ${d.time}` : '', d });
     return it;
   };
   const MATERIALS = { find: f => DUE.concat(DONE).map(tiItem).find(f), filter: f => DUE.concat(DONE).map(tiItem).filter(f) };
@@ -4305,14 +4263,14 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const tiGoPage = id => openPage('due:' + id); // Home has no assignment pages in the mock, so this says where it goes
   const status = m => m.turned ? `<span class="due">Turned in</span>` : dueTag(m.d);
   const closeMenu = () => { if (typeof closePop === 'function') closePop(); };
-  const TEACH = () => { const m = MATERIALS.find(x => x.id === tiSel); return m ? C[m.c].teacher : 'your teacher'; };
-  const CLASSOF = () => { const m = MATERIALS.find(x => x.id === tiSel); return m ? `${C[m.c].name} · ${C[m.c].teacher}` : ''; };
+  const TEACH = () => { const m = MATERIALS.find(x => x.id === tiSel); return (m && FSD.C[m.c] && FSD.C[m.c].teacher) || 'your teacher'; };
+  const CLASSOF = () => { const m = MATERIALS.find(x => x.id === tiSel); return m ? [C[m.c].name, FSD.C[m.c] && FSD.C[m.c].teacher].filter(Boolean).join(' · ') : ''; };
   // after it's turned in: it moves out of Assignments on Home, like the quick Turn in did
   const HUB_TAB = '', ntBadge = () => {}, renderComing = () => {}, agRender = () => {}, agCounts = () => {};
   const renderList = () => {
     Object.values(TI_BY).filter(m => m.turned && DUE.some(d => d.id === m.id)).forEach(m => {
       const d = DUE.find(x => x.id === m.id); DUE = DUE.filter(x => x.id !== m.id); DONE.push(d);
-      TURNED[TURNED.length - 1] += 1; TURNED_BY[d.c][TURNED.length - 1] += 1;
+      TURNED[TURNED.length - 1] += 1; if (TURNED_BY[d.c]) TURNED_BY[d.c][TURNED.length - 1] += 1;
       NOTIFS.forEach(n => { if (n.go === 'due:' + m.id) n.unread = false; });
     });
     renderAll();
@@ -4326,18 +4284,16 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   // Add from another app: what each one lists in the mock, and what a copy can be saved as.
   // (Names only, no app logos.) kind picks the copy formats.
   const SOURCES = {
-    drive:    { name: 'Google Drive', mark: ['#188038', '<path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h4.6l2 2.4h8.4A1.5 1.5 0 0 1 21 9.9v7.6a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5z"/>'], files: [['Lab 4 report', 'gdoc', 'Edited 2 hours ago'], ['Titration data', 'gsheet', 'Edited yesterday'], ['Lab 4 slides', 'gslides', 'Edited Oct 14']] },
-    canva:    { name: 'Canva', mark: ['#0b8a91', '<path d="M15.6 3.6l4.8 4.8-9.3 9.3-5.4.6.6-5.4z"/><path d="M4 20.5h16" stroke="#fff" stroke-width="2" fill="none"/>'], files: [['Lab 4 poster', 'design', 'Edited today'], ['Titration diagram', 'design', 'Edited Oct 13']] },
-    onedrive: { name: 'OneDrive', mark: ['#0F6CBD', '<path d="M6.75 19.5a4.75 4.75 0 0 1-.55-9.47 6.25 6.25 0 0 1 11.95 1.97 3.75 3.75 0 0 1-.4 7.5z" transform="translate(.16 -.9)"/>'], files: [['Lab 4 report.docx', 'docx', '48 KB · Edited today'], ['Error analysis.xlsx', 'xlsx', '22 KB · Edited Oct 15']] },
+    drive:    { name: 'Google Drive', mark: ['#188038', '<path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h4.6l2 2.4h8.4A1.5 1.5 0 0 1 21 9.9v7.6a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5z"/>'], files: [] },
+    canva:    { name: 'Canva', mark: ['#0b8a91', '<path d="M15.6 3.6l4.8 4.8-9.3 9.3-5.4.6.6-5.4z"/><path d="M4 20.5h16" stroke="#fff" stroke-width="2" fill="none"/>'], files: [] },
+    onedrive: { name: 'OneDrive', mark: ['#0F6CBD', '<path d="M6.75 19.5a4.75 4.75 0 0 1-.55-9.47 6.25 6.25 0 0 1 11.95 1.97 3.75 3.75 0 0 1-.4 7.5z" transform="translate(.16 -.9)"/>'], files: [] },
   };
   // What each app's picker shows, in folders (sample files). kind picks the copy formats.
   const TF = (name, items) => ({ folder: true, name, items }), TFi = (name, kind, sub) => ({ name, kind, sub });
-  const TREES = {
-    // Google Drive only lets Averages.io see files opened with it (no folders), so its list is flat, with Add a file on top
-    drive: TF('Google Drive', [TFi('Lab 4 report', 'gdoc', 'Edited 2 hours ago'), TFi('Titration data', 'gsheet', 'Edited yesterday'), TFi('Lab 4 slides', 'gslides', 'Edited Oct 14'), TFi('Lab 3 report', 'gdoc', 'Edited Oct 1')]),
-    canva: TF('Your designs', [TF('School', [TFi('Lab 4 poster', 'design', 'Edited today'), TFi('Titration diagram', 'design', 'Edited Oct 13')]), TF('Science fair', [TFi('Trifold board', 'design', 'Edited Oct 2')]), TFi('Untitled design', 'design', 'Edited Sep 28')]),
-    onedrive: TF('My files', [TF('Documents', [TFi('Lab 4 report.docx', 'docx', '48 KB · Edited today'), TFi('Error analysis.xlsx', 'xlsx', '22 KB · Edited Oct 15')]), TF('School', [TF('Chemistry', [TFi('Lab notes.docx', 'docx', '31 KB · Edited Oct 8')]), TFi('Schedule.xlsx', 'xlsx', '12 KB · Edited Aug 20')]), TFi('Resume.docx', 'docx', '40 KB · Edited Sep 3')]),
-  };
+  // The student's own files and designs (averages-fs-turnin.js), loaded when the picker opens. Google Drive only lets
+  // Averages.io see files opened with it (no folders), so every list is flat; Add a file brings in more.
+  const TREES = { drive: TF('Google Drive', []), canva: TF('Your designs', []), onedrive: TF('Your OneDrive files', []) };
+
   // Add from an app: a popup with that app's folders. Tick files in any folder (or search), then Add.
   let pk = null;
   const pkFiles = (node, path = []) => node.items.flatMap(i => i.folder ? pkFiles(i, path.concat(i.name)) : [{ ...i, path }]);
@@ -4346,12 +4302,17 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (i.folder) { const n = i.items.length; return `<button class="pk-row" data-pkf="${idx}"><span class="pk-ico pk-fold">${ico('folder')}</span><span class="pk-n"><b>${esc(i.name)}</b><small>Folder · ${plural(n, 'item')}</small></span>${ico('chev-r')}</button>`; }
     const key = (i.path || pk.trail.slice(1).map(t => t.name)).concat(i.name).join('/'), got = pkHas(pk.k, i.name), on = pk.sel.has(key);
     const sub = got ? 'Already added' : pk.q && i.path ? `In ${[SOURCES[pk.k].name].concat(i.path).join(' / ')}` : i.sub;
-    return `<button class="pk-row file${on ? ' on' : ''}${got ? ' added' : ''}" data-pkfile="${idx}" role="checkbox" aria-checked="${on || got}"${got ? ' disabled' : ''}><span class="mp-ck" aria-hidden="true">${ico('ok')}</span><span class="pk-ico avfi-host">${fileIco('x.' + KIND_EXT[i.kind], 34)}</span><span class="pk-n"><b>${esc(i.name)}</b><small>${esc(sub)}</small></span></button>`;
+    return `<button class="pk-row file${on ? ' on' : ''}${got ? ' added' : ''}" data-pkfile="${idx}" role="checkbox" aria-checked="${on || got}"${got ? ' disabled' : ''}><span class="mp-ck" aria-hidden="true">${ico('ok')}</span><span class="pk-ico avfi-host">${fileIco('x.' + (KIND_EXT[i.kind] || i.kind), 34)}</span><span class="pk-n"><b>${esc(i.name)}</b><small>${esc(sub)}</small></span></button>`;
   }
   function pkShown() { return pk.q ? pkFiles(TREES[pk.k]).filter(i => i.name.toLowerCase().includes(pk.q.toLowerCase())) : pk.trail[pk.trail.length - 1].items.slice().sort((a, b) => (b.folder ? 1 : 0) - (a.folder ? 1 : 0)); }
   function pkDraw() {
     if (!pk) return; const el = pk.el, here = pk.trail[pk.trail.length - 1], list = pkShown();
-    el.querySelector('.pk-crumbs').innerHTML = pk.k === 'drive' && !pk.q ? `<button class="pk-addf" data-pkdrive>${ico('plus')}Add a file</button><span class="pk-note">Only files you've opened with Averages.io show here.</span>` : pk.q ? `<button data-pkcrumb="0">${esc(TREES[pk.k].name)}</button>${ico('chev-r')}<span aria-current="page">Results for “${esc(pk.q)}”</span>`
+    if (pk.state && pk.state !== 'ok') {
+      el.querySelector('.pk-crumbs').innerHTML = '';
+      el.querySelector('.pk-list').innerHTML = `<p class="pk-msg">${pk.state === 'loading' ? `Loading your ${SOURCES[pk.k].name}…` : pk.state === 'connect' ? `Connect ${SOURCES[pk.k].name} to add from it.</p><p class="pk-msg"><button class="btn primary" data-pkconnect>Connect ${SOURCES[pk.k].name}</button>` : `${esc(pk.msg || 'Couldn\'t load your files.')}</p><p class="pk-msg"><button class="btn" data-pkretry>Try again</button>`}</p>`;
+      el.querySelector('.pk-count').textContent = ''; el.querySelector('[data-pkadd]').disabled = true; return;
+    }
+    el.querySelector('.pk-crumbs').innerHTML = pk.k === 'drive' && !pk.q ? `<button class="pk-addf" data-pkdrive>${ico('plus')}Add a file</button><span class="pk-note">Only files you've opened with Averages.io show here.</span>` : pk.k === 'onedrive' && !pk.q ? `<button class="pk-addf" data-pkod>${ico('plus')}Pick from all of OneDrive</button><span class="pk-note">Files you've used with Averages.io show here.</span>` : pk.q ? `<button data-pkcrumb="0">${esc(TREES[pk.k].name)}</button>${ico('chev-r')}<span aria-current="page">Results for “${esc(pk.q)}”</span>`
       : pk.trail.map((t, i) => i === pk.trail.length - 1 ? `<span aria-current="page">${esc(t.name)}</span>` : `<button data-pkcrumb="${i}">${esc(t.name)}</button>${ico('chev-r')}`).join('');
     el.querySelector('.pk-list').innerHTML = list.length ? list.map(pkRow).join('') : `<p class="pk-msg">${pk.q ? `Nothing in your ${SOURCES[pk.k].name} matches “${esc(pk.q)}”.` : 'This folder is empty.'}</p>`;
     const n = pk.sel.size; el.querySelector('.pk-count').textContent = n ? `${plural(n, 'file')} picked` : 'Tick the files to add';
@@ -4375,23 +4336,37 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       if (e.target === el || e.target.closest('[data-pkclose]')) { pkClose(); return; }
       const pkd = e.target.closest('[data-pkdrive]');
       if (pkd && window.AveragesHelp && !pkd._helped) { window.AveragesHelp.open('drive', { from: pkd, onContinue: () => { if (!pk) return; pkd._helped = true; pkd.click(); pkd._helped = false; } }); return; }
-      if (pkd) { // in the app, Google Drive opens and you open the file there with Averages for Drive; then it shows up here
-        const pool = [['Chem notes', 'gdoc'], ['Titration graph', 'gsheet'], ['Lab 4 photos', 'gslides'], ['Error analysis draft', 'gdoc']], items = TREES.drive.items, have = new Set(items.map(x => x.name)), nx = pool.find(x => !have.has(x[0]));
-        if (nx) { items.unshift(TFi(nx[0], nx[1], 'Just added from Google Drive')); pk.sel.set(nx[0], items[0]); }
-        toast(nx ? `Added "${nx[0]}" from Google Drive for this mock.` : 'In the app, this opens Google Drive in a new tab.'); pkDraw();
-        if (nx && !calm()) { const r = el.querySelector('.pk-row.file'); if (r) r.animate([{ opacity: 0, transform: 'translateY(-6px)' }, { opacity: 1, transform: 'none' }], { duration: 260, easing: 'cubic-bezier(.2, .8, .2, 1)' }); }
+      if (pkd) { // Google Drive opens: open the file there with Averages.io for Drive, and it shows up here
+        FSX.newTab('https://drive.google.com/drive/my-drive'); pkClose();
+        toast('In Google Drive, right-click the file, then Open with, then Averages.io for Drive. It shows up here after that.');
+        return;
+      }
+      if (e.target.closest('[data-pkconnect]')) { FST.connect(pk.k).then(() => pkLoad(pk && pk.k)).catch(err => { if (pk) { pk.state = 'error'; pk.msg = FST.message(err); pkDraw(); } }); return; }
+      if (e.target.closest('[data-pkretry]')) { pkLoad(pk.k); return; }
+      if (e.target.closest('[data-pkod]')) { // OneDrive's own picker: any file in their OneDrive
+        FST.pickOneDrive().then(list => { if (!pk) return; const items = TREES.onedrive.items, have = new Set(items.map(x => x.id));
+          list.forEach(f => { if (f.id && !have.has(f.id)) { items.unshift(f); have.add(f.id); } pk.sel.set(f.name, items.find(x => x.id === f.id)); }); pkDraw(); })
+          .catch(err => { if (err && err.code === 'popup_closed') return; toast(FST.message(err)); });
         return;
       }
       const fo = e.target.closest('[data-pkf]'); if (fo) { pk.trail.push(pkShown()[+fo.dataset.pkf]); pkDraw(); const r = el.querySelector('.pk-row'); if (r) r.focus(); return; }
       const cr = e.target.closest('[data-pkcrumb]'); if (cr) { pk.trail = pk.trail.slice(0, +cr.dataset.pkcrumb + 1); pk.q = ''; el.querySelector('[data-pkq]').value = ''; pkDraw(); return; }
       const fi = e.target.closest('[data-pkfile]'); if (fi && !fi.disabled) { const i = pkShown()[+fi.dataset.pkfile], key = (i.path || pk.trail.slice(1).map(t => t.name)).concat(i.name).join('/'); pk.sel.has(key) ? pk.sel.delete(key) : pk.sel.set(key, i); pkDraw(); const again = el.querySelector(`[data-pkfile="${fi.dataset.pkfile}"]`); if (again) again.focus(); return; }
       if (e.target.closest('[data-pkadd]')) {
-        const k2 = pk.k, add = [...pk.sel.values()].map(i => ({ src: k2, name: i.name, kind: i.kind, mode: 'copy', fmt: FORMATS[i.kind][0][0], fresh: true }));
+        const k2 = pk.k, add = [...pk.sel.values()].map(i => ({ src: k2, id: i.id, designId: i.designId, mime: i.mime, name: i.name, kind: i.kind, mode: 'copy', fmt: FST.formats(Object.assign({ src: k2 }, i))[0][0], fresh: true }));
         pkClose(); DRAFT[tiSel] = (DRAFT[tiSel] || []).concat(add); tiRender(); return;
       }
     });
     el.querySelector('[data-pkq]').addEventListener('input', e => { pk.q = e.target.value.trim(); pkDraw(); });
     pkDraw(); el.querySelector('[data-pkq]').focus({ preventScroll: true });
+    pkLoad(k);
+  }
+  // the app's real list (inside the click that opened the picker, so a sign-in window can open)
+  function pkLoad(k) {
+    if (!pk || pk.k !== k) return;
+    pk.state = 'loading'; pkDraw();
+    FST.list(k).then(items => { if (!pk || pk.k !== k) return; TREES[k].items = items; pk.trail = [TREES[k]]; pk.state = 'ok'; pkDraw(); })
+      .catch(err => { if (!pk || pk.k !== k) return; pk.state = err && err.code === 'not_connected' ? 'connect' : 'error'; pk.msg = FST.message(err); pkDraw(); });
   }
   // the picker is on top: Escape and Tab belong to it while it's open
   document.addEventListener('keydown', e => {
@@ -4419,19 +4394,20 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const baseName = n => n.replace(/\.[a-z0-9]+$/i, '');
   // what the teacher will get: the copy's file name, or the app's own name for a link
   const shownName = f => f.src === 'local' ? f.name : f.mode === 'link' ? baseName(f.name) : baseName(f.name) + '.' + f.fmt;
-  const shownSub = f => f.src === 'local' ? f.size : f.mode === 'link' ? `Link to ${SOURCES[f.src].name} · ${TEACH()} can view` : `${SOURCES[f.src].name} · sent as ${FORMATS[f.kind].find(x => x[0] === f.fmt)[1]}`;
-  const busy = f => f.until && Date.now() < f.until;
-  // start the upload animation; a link has nothing to upload
-  function tiStart(f, verb) {
-    if (calm() || (f.src !== 'local' && f.mode === 'link')) { f.until = 0; return; }
-    f.ms = 1200 + Math.round(Math.random() * 1200); f.t0 = Date.now(); f.until = f.t0 + f.ms; f.verb = verb;
-    if (!f.bytes) f.bytes = (120 + Math.round(Math.random() * 900)) * 1024;
+  const shownSub = f => f.src === 'local' ? (f.state === 'failed' ? f.err || 'Couldn\'t upload' : f.size) : f.mode === 'link' ? `Link to ${SOURCES[f.src].name} · ${TEACH()} can view` : `${SOURCES[f.src].name} · sent as ${(FST.formats(f).find(x => x[0] === f.fmt) || [, String(f.fmt).toUpperCase()])[1]}`;
+  const busy = f => f.state === 'uploading';
+  // A file from this device goes up to Schoology as soon as it's added (averages-fs-turnin.js); Turn in then sends the ids.
+  function tiStart(f) {
+    const m = MATERIALS.find(x => x.id === tiSel); if (!m || f.src !== 'local' || !f.file) return;
+    f.state = 'uploading'; f.frac = 0; f.t0 = Date.now(); f.verb = 'Uploading…'; f.err = ''; f.ctl = new AbortController();
+    f.job = FST.upload(m.c, m.id, f.file, f.name, x => { f.frac = x; }, f.ctl.signal)
+      .then(r => { f.fileId = r.fileId; f.state = 'done'; f.justDone = true; if (ti && tiSel === m.id && !tiSending) { saveNote(); tiRender(); } return r.fileId; })
+      .catch(err => { f.state = 'failed'; f.err = FST.message(err); if (ti && tiSel === m.id && !tiSending) { saveNote(); tiRender(); } throw err; });
+    f.job.catch(() => {});
     tiTicker();
-    setTimeout(() => { if (!ti) return; f.justDone = true; saveNote(); tiRender(); }, f.ms + 30);
   }
-  // keeps the numbers next to each bar in step with it (the bar itself is a CSS animation)
+  // keeps each bar and the numbers next to it in step with the real upload
   let tiTick = 0;
-  const easeUp = x => 1 - Math.pow(1 - x, 1.6);
   function tiTicker() {
     if (tiTick) return;
     tiTick = setInterval(() => {
@@ -4440,12 +4416,11 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       fs.forEach((f, i) => {
         if (!busy(f)) return;
         const row = ti.querySelector(`.ti-file[data-fi="${i}"]`); if (!row) return;
-        const x = Math.min(1, (now - f.t0) / f.ms), sz = row.querySelector('[data-upsz]'), secs = Math.max(1, Math.ceil((f.until - now) / 1000));
-        if (sz) sz.textContent = `${fmtSize(f.bytes * x)} of ${fmtSize(f.bytes)} \u00b7 ${secs === 1 ? 'about a second' : 'about ' + secs + ' seconds'} left`;
+        const x = Math.min(1, f.frac || 0), sz = row.querySelector('[data-upsz]'), bar = row.querySelector('.ti-prog i'), secs = x > .08 ? Math.max(1, Math.ceil((now - f.t0) * (1 - x) / x / 1000)) : 0;
+        if (bar) bar.style.width = Math.round(x * 100) + '%';
+        if (sz) sz.textContent = `${fmtSize(f.bytes * x)} of ${fmtSize(f.bytes)}${secs ? ` \u00b7 ${secs === 1 ? 'about a second' : 'about ' + secs + ' seconds'} left` : ''}`;
       });
-      const drop = ti.querySelector('.ti-drop');
-      if (drop) drop.classList.add('sending');
-    }, 80);
+    }, 120);
   }
   const fmtSize = b => b < 1024 * 1024 ? Math.max(1, Math.round(b / 1024)) + ' KB' : (b / 1024 / 1024).toFixed(1) + ' MB';
   const fileIco = (n, size = 38) => window.AveragesFileIcons ? AveragesFileIcons.html(n, { size }) : ico('doc');
@@ -4482,7 +4457,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   function tiDetailBase() {
     const m = MATERIALS.find(x => x.id === tiSel); if (!m) return '';
     const gp = m.got != null ? m.got / m.pts * 100 : null;
-    let head = `<div class="ti-head">${tile(m)}<div><h3>${esc(m.name)}</h3><small>${m.turned ? `Turned in ${esc(m.turned)}` : m.dueTxt ? `Due ${esc(m.dueTxt)}` : 'No due date'} · ${m.pts} points</small></div>${gp != null ? `<span class="ti-grade" aria-label="Graded ${letter(gp)}, ${m.got} of ${m.pts}"><b class="${gcls(gp)}">${letter(gp)}</b><small>${m.got} / ${m.pts}</small></span>` : ''}${tiFull ? '' : `<button class="btn sm ti-openas" data-toast="${esc(where(m))}">Open assignment</button>`}</div>
+    let head = `<div class="ti-head">${tile(m)}<div><h3>${esc(m.name)}</h3><small>${m.turned ? `Turned in ${esc(m.turned)}` : m.dueTxt ? `Due ${esc(m.dueTxt)}` : 'No due date'} · ${m.pts} points</small></div>${gp != null ? `<span class="ti-grade" aria-label="Graded ${letter(gp)}, ${m.got} of ${m.pts}"><b class="${gcls(gp)}">${letter(gp)}</b><small>${m.got} / ${m.pts}</small></span>` : ''}${tiFull ? '' : `<button class="btn sm ti-openas" data-go="${FSX.hubUrl(m.c, 'assignments', { a: m.id })}">Open assignment</button>`}</div>
       <p class="ti-desc">${esc(m.desc)}</p>`;
     if (tiInline) head = '';
     if (tiDone(m)) {
@@ -4609,17 +4584,18 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
         return `<button class="ti-pk avfi-host${fresh ? ' new' : ''}${got ? ' added' : ''}" data-pickfrom="${k}:${i}"${got ? ' disabled aria-disabled="true"' : ''}>${fileIco('x.' + KIND_EXT[kind], 36)}<span class="tx"><b>${esc(n)}</b><small>${got ? 'Already added' : esc(sub)}</small></span>${got ? ico('ok') : ico('plus')}</button>`; }).join('')}</div>`;
   }
   function tiFileRow(f, i) {
-    const up = busy(f), left = up ? f.until - Date.now() : 0;
+    const up = busy(f);
     const icon = f.src !== 'local' && f.mode === 'link' ? fileIco('link') : fileIco(shownName(f));
     const state = up ? ''
       : f.src !== 'local' ? ''
+      : f.state === 'failed' ? `<button class="btn sm" data-reup="${i}">${ico('refresh')}Try again</button>`
       : `<span class="ti-st ok${f.justDone ? ' just' : ''}">${ico('ok')}Uploaded</span>`;
     const opts = f.src === 'local' ? '' : `<div class="ti-opts">
         <div class="ti-seg" role="radiogroup" aria-label="How to send ${esc(f.name)}" data-mode="${f.mode}"><span class="ti-seg-pill" aria-hidden="true"></span>
-          <button role="radio" aria-checked="${f.mode === 'copy'}" data-mode-set="${i}:copy">${ico('copy')}Send as a copy</button><button role="radio" aria-checked="${f.mode === 'link'}" data-mode-set="${i}:link">${ico('link')}Send as a link</button></div>
-        <div class="ti-fmt" role="radiogroup" aria-label="File type"${f.mode === 'copy' ? '' : ' hidden'}><span>File type</span>${FORMATS[f.kind].map(([x, n]) => `<button role="radio" aria-checked="${f.fmt === x}" class="avfi-host${f.fmt === x ? ' on' : ''}" data-fmt-set="${i}:${x}" title="${n}" aria-label="${n}">${window.AveragesFileIcons ? AveragesFileIcons.html('x.' + x, { size: 38, className: 'both' }) : fileIco('x.' + x, 34)}</button>`).join('')}</div></div>`;
+          <button role="radio" aria-checked="${f.mode === 'copy'}" data-mode-set="${i}:copy">${ico('copy')}Send as a copy</button>${f.src === 'canva' ? '' : `<button role="radio" aria-checked="${f.mode === 'link'}" data-mode-set="${i}:link">${ico('link')}Send as a link</button>`}</div>
+        <div class="ti-fmt" role="radiogroup" aria-label="File type"${f.mode === 'copy' ? '' : ' hidden'}><span>File type</span>${FST.formats(f).map(([x, n]) => `<button role="radio" aria-checked="${f.fmt === x}" class="avfi-host${f.fmt === x ? ' on' : ''}" data-fmt-set="${i}:${x}" title="${n}" aria-label="${n}">${window.AveragesFileIcons ? AveragesFileIcons.html('x.' + x, { size: 38, className: 'both' }) : fileIco('x.' + x, 34)}</button>`).join('')}</div></div>`;
     const html = `<div class="ti-file avfi-host${f.fresh && !calm() ? ' fresh' : ''}${up ? ' uploading' : ''}" data-fi="${i}"><div class="ti-file-top">${icon}<span class="tx"><b>${esc(shownName(f))}</b><small>${esc(shownSub(f))}</small></span>${state}<button class="ti-x" data-unpick="${i}" aria-label="Remove ${esc(shownName(f))}">${ico('x')}</button></div>
-      ${up ? `<div class="ti-up"><div class="ti-prog" aria-hidden="true"><i style="animation-duration:${f.ms}ms;animation-delay:-${f.ms - left}ms"></i></div><div class="ti-up-t"><span data-upsz>${esc(f.verb)}</span></div></div>` : ''}${opts}</div>`;
+      ${up ? `<div class="ti-up"><div class="ti-prog" aria-hidden="true"><i style="animation:none;width:${Math.round((f.frac || 0) * 100)}%"></i></div><div class="ti-up-t"><span data-upsz>${esc(f.verb)}</span></div></div>` : ''}${opts}</div>`;
     f.fresh = false; f.justDone = false;
     return html;
   }
@@ -4632,8 +4608,8 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (tiDone(m)) return `<span class="note">${m.got != null ? 'This one is graded, so it can\'t be turned in again.' : `You can turn in a new version until it's graded. ${TEACH()} sees the newest one.`}</span>${m.got == null ? `<button class="btn${tiInline ? ' primary' : ''}" ${tiInline ? 'data-tiagain="1"' : 'data-tiagainpage'}>${ico('upload')}Turn in again</button>` : ''}<button class="btn" data-ticlose>Close</button>`;
     if (tiSending) return `<span class="note ti-stepnote" data-stepnote>${esc(tiSending.steps[0].label)}…</span>${stepsHTML(tiSending)}<button class="btn" disabled title="Can't cancel while it's being turned in">Cancel</button><button class="btn primary sending" disabled><span class="ti-spin" aria-hidden="true"></span>Turning in…</button>`;
     if (m.writing) { const w = wordCount(m.answer); return `<span class="note">${w ? `${w} ${w === 1 ? 'word' : 'words'} · turned in as a written answer` : 'Write something to turn it in'}</span><button class="btn" data-ticlose>Cancel</button><button class="btn primary" data-tisend${w ? '' : ' disabled'}>${ico('upload')}Turn in</button>`; }
-    const fs = DRAFT[m.id] || [], n = fs.length, wait = fs.filter(busy).length;
-    return `<span class="note">${wait ? `Uploading ${wait} ${wait === 1 ? 'file' : 'files'}…` : n ? `${n} ${n === 1 ? 'file' : 'files'} ready` : 'Add at least one file'}</span><button class="btn" data-ticlose>Cancel</button><button class="btn primary" data-tisend${n && !wait ? '' : ' disabled'}>${ico('upload')}Turn in</button>`;
+    const fs = DRAFT[m.id] || [], n = fs.length, wait = fs.filter(busy).length, bad = fs.filter(f => f.state === 'failed').length;
+    return `<span class="note${m.sendErr ? ' bad' : ''}">${m.sendErr ? esc(m.sendErr) : wait ? `Uploading ${wait} ${wait === 1 ? 'file' : 'files'}…` : bad ? `${bad} ${bad === 1 ? 'file' : 'files'} didn't upload. Try again or remove ${bad === 1 ? 'it' : 'them'}.` : n ? `${n} ${n === 1 ? 'file' : 'files'} ready` : 'Add at least one file'}</span><button class="btn" data-ticlose>Cancel</button><button class="btn primary" data-tisend${n && !wait && !bad ? '' : ' disabled'}>${ico('upload')}Turn in</button>`;
   }
   const STEP_I = {
     copy: '<path d="M8 8h12v12H8z"/><path d="M16 8V4H4v12h4"/>', link: '<path d="M10 14a4.2 4.2 0 0 0 6 0l3-3a4.2 4.2 0 0 0-6-6l-1.2 1.2"/><path d="M14 10a4.2 4.2 0 0 0-6 0l-3 3a4.2 4.2 0 0 0 6 6l1.2-1.2"/>',
@@ -4648,6 +4624,62 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (links.length) st.push({ k: 'link', short: 'Links', label: links.length === 1 ? 'Making a share link' : 'Making share links', ms: 500 });
     st.push({ k: 'attach', short: 'Attach', label: `Attaching ${fs.length} ${fs.length === 1 ? 'file' : 'files'}`, ms: 700 }, { k: 'send', short: 'Send', label: 'Turning it in on Schoology', ms: 900 }, { k: 'look', short: 'Check', label: 'Making sure it went through', ms: 500 });
     return st;
+  }
+  // ---------- the real turn-in: each step runs when the one before it is done ----------
+  function tiStepTo(k) {
+    const R = tiSending; if (!R || !ti) return; const i = R.steps.findIndex(x => x.k === k); if (i < 0) return; R.at = i;
+    const x = R.steps[i];
+    ti.querySelectorAll('.ti-step').forEach((g, j) => { g.className = 'ti-step' + (j < i ? ' done' : j === i ? ' now' : ''); const si = g.querySelector('.ti-si'); if (si) si.outerHTML = stepIco(j < i ? 'check' : j === i ? 'spin' : R.steps[j].k); });
+    const note = ti.querySelector('[data-stepnote]'); if (note) note.textContent = x.label + '…';
+    const bar = ti.querySelector('.ti-steps'); if (bar) bar.setAttribute('aria-valuenow', i);
+    ti.querySelectorAll('.aw-seg').forEach((g, j) => { const cls = j < i ? 'done' : j === i ? 'now' : 'next'; if (g.dataset.cls === cls) return; const t = document.createElement('div'); t.innerHTML = awSegHTML(R.steps[j], j, cls); t.firstElementChild.dataset.cls = cls; g.replaceWith(t.firstElementChild); });
+    const head = ti.querySelector('[data-awh]'); if (head) head.textContent = x.label + '…';
+    const right = ti.querySelector('[data-awr]'); if (right) right.textContent = `Step ${i + 1} of ${R.steps.length}`;
+  }
+  function tiStepsDone(m) {
+    const R = tiSending; if (!R || !ti) return;
+    ti.querySelectorAll('.ti-step').forEach(g => { g.className = 'ti-step done ok'; const si = g.querySelector('.ti-si'); if (si) si.outerHTML = stepIco('check'); });
+    const note = ti.querySelector('[data-stepnote]'); if (note) note.textContent = 'Turned in';
+    ti.querySelectorAll('.aw-seg').forEach((g, j) => { const t = document.createElement('div'); t.innerHTML = awSegHTML(R.steps[j], j, 'done'); t.firstElementChild.classList.add('ok'); g.replaceWith(t.firstElementChild); });
+    const head = ti.querySelector('[data-awh]'); if (head) { head.innerHTML = `${stepIco('check')}Turned in`; head.classList.add('ok'); }
+    const right = ti.querySelector('[data-awr]'); if (right) right.textContent = m.writing ? 'Written answer sent to Schoology' : `${plural((DRAFT[m.id] || []).length, 'file')} sent to Schoology`;
+    tiLog('<span class="aw-lok">✓ turned in</span>');
+    const log = ti.querySelector('[data-awlog]'); if (log) m.sentLog = log.innerHTML;
+  }
+  function tiLog(line) {
+    const log = ti && ti.querySelector('[data-awlog]'); if (!log) return;
+    log.querySelectorAll('.cur').forEach(x => x.classList.remove('cur'));
+    log.insertAdjacentHTML('beforeend', `<span class="aw-ln cur">${line}</span>`); log.scrollTop = log.scrollHeight;
+  }
+  async function tiSendReal(m, id, tokens, note) {
+    const said = (verb, what) => tiLog(`<span class="aw-lm">${verb}</span> <span class="aw-lu">${esc(what)}</span>`), ok = t => tiLog(`  <span class="aw-lok">← ${esc(t)}</span>`);
+    if (m.writing) {
+      tiStepTo('pen'); said('SAVE', 'your answer'); ok('ready');
+      tiStepTo('send'); said('POST', 'Schoology · written answer'); await FST.write(m.c, m.id, m.answer); ok('turned in');
+      tiStepTo('look'); said('GET', 'Schoology · your turn-ins'); await FST.history(m.c, m.id).catch(() => []); ok('it\'s there');
+      return;
+    }
+    const fs = DRAFT[id] || [], ids = [];
+    for (const f of fs.filter(f => f.src !== 'local' && f.mode !== 'link')) {
+      tiStepTo('copy'); said('GET', `${SOURCES[f.src].name} · ${shownName(f)}`);
+      const got = await FST.fetch(f, tokens); ok(got.length > 1 ? `${got.length} files` : 'got it');
+      for (const g of got) { said('PUT', `Schoology · ${g.name}`); ids.push((await FST.upload(m.c, m.id, g.blob, g.name)).fileId); ok('stored'); }
+    }
+    for (const f of fs.filter(f => f.src !== 'local' && f.mode === 'link')) {
+      tiStepTo('link'); said('POST', `${SOURCES[f.src].name} · view link for ${f.name}`);
+      const got = await FST.fetch(f, tokens); ok('anyone with the link can view');
+      for (const g of got) { said('PUT', `Schoology · ${g.name}`); ids.push((await FST.upload(m.c, m.id, g.blob, g.name)).fileId); ok('stored'); }
+    }
+    tiStepTo('attach');
+    const local = [];
+    for (const f of fs.filter(f => f.src === 'local')) {
+      if (f.state !== 'done') { if (f.state !== 'uploading') tiStart(f); said('PUT', `Schoology · ${f.name}`); await f.job; ok('stored'); }
+      local.push(f.fileId);
+    }
+    tiStepTo('send'); said('POST', `Schoology · turn in ${plural(local.length + ids.length, 'file')}${note ? ' with a note' : ''}`);
+    const res = await FST.turnIn(m.c, m.id, local.concat(ids), note); ok(res.description === 'failed' ? 'turned in (the note didn\'t go on: add it on Schoology)' : 'turned in');
+    if (res.description === 'failed') toast('Turned in, but the note didn\'t go on. Add it as a comment on Schoology.');
+    tiStepTo('look'); said('GET', 'Schoology · your turn-ins'); await FST.history(m.c, m.id).catch(() => []); ok('it\'s there');
   }
   const stepsHTML = R => `<div class="ti-steps" role="progressbar" aria-label="Turning in" aria-valuemin="0" aria-valuemax="${R.steps.length}" aria-valuenow="0">${R.steps.map((x, i) => `<div class="ti-step${i ? '' : ' now'}" style="flex:${x.ms} 1 0;--ms:${x.ms}ms" title="${esc(x.label)}"><span class="ti-track"><i></i></span><span class="ti-slab">${stepIco(i ? x.k : 'spin')}<span>${esc(x.short)}</span></span></div>`).join('')}</div>`;
   function runSteps(R, done) {
@@ -4702,6 +4734,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     const fresh = (MATERIALS.find(x => x.id === tiSel) || {}).justTurned;
     main.classList.toggle('still', !!tiShown && !fresh);
     if (tiShown && tiShown !== tiSel) main.scrollTop = 0;
+    tiEnsure(MATERIALS.find(x => x.id === tiSel));
     main.innerHTML = tiDetail();
     tiShown = tiSel;
     ti.querySelector('.ti-foot').innerHTML = tiFoot();
@@ -4714,9 +4747,24 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (tiInline) awModePlace();
     if (tiInline && typeof awDraftsDraw === 'function') awDraftsDraw();
   }
+  // The real assignment: its description and points, and what's been turned in (every version, newest last).
+  function tiEnsure(m) {
+    if (!m || m._loaded) return; m._loaded = 'loading';
+    FST.load(m.c, m.id).then(r => {
+      m._loaded = 'yes'; const d = r.detail;
+      if (d) { if (d.description) m.desc = d.description; if (typeof d.maxPoints === 'number' && d.maxPoints > 0) m.pts = d.maxPoints; if (d.score && d.score.possible > 0) m.got = d.score.earned; }
+      const revs = (r.revisions || []).filter(v => !v.draft), sentOf = v => (v.files || []).map(f => ({ name: f.name, size: FST.size(f.size) || 'File' })).concat(v.text ? [{ name: 'Written answer', size: 'Text', write: true }] : []);
+      const text = v => v.text ? esc(v.text).replace(/\n/g, '<br>') : undefined;
+      if (revs.length && !m.justTurned) {
+        const [last, ...older] = revs;
+        Object.assign(m, { turned: last.when || 'earlier', sent: sentOf(last), answerSent: text(last), prev: older.reverse().map(v => ({ turned: v.when || 'earlier', sent: sentOf(v), answerSent: text(v) })) });
+      }
+      if (ti && !tiSending) tiRender();
+    }).catch(() => { m._loaded = 'failed'; });
+  }
   function tiAdd(list) {
     if (!list || !list.length) return;
-    const add = [...list].map(f => ({ src: 'local', name: f.name, size: fmtSize(f.size), bytes: f.size || 1024, fresh: true }));
+    const add = [...list].map(f => ({ src: 'local', name: f.name, size: fmtSize(f.size), bytes: f.size || 1024, file: f, fresh: true }));
     add.forEach(f => tiStart(f, 'Uploading…'));
     DRAFT[tiSel] = (DRAFT[tiSel] || []).concat(add); saveNote(); tiRender();
   }
@@ -4752,26 +4800,25 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       const r = e.target.closest('[data-ti]'); if (r) { saveNote(); tiSel = r.dataset.ti; tiRender(true); return; }
       const x = e.target.closest('[data-unpick]');
       if (x) { // the row folds away, then the list redraws
-        saveNote(); const row = x.closest('.ti-file'), go = () => { DRAFT[tiSel].splice(+x.dataset.unpick, 1); tiRender(); };
+        saveNote(); const gone = DRAFT[tiSel][+x.dataset.unpick]; if (gone && gone.ctl && busy(gone)) gone.ctl.abort();
+        const row = x.closest('.ti-file'), go = () => { DRAFT[tiSel].splice(+x.dataset.unpick, 1); tiRender(); };
         if (calm() || !row.animate) go(); else { row.style.overflow = 'hidden'; row.animate([{ opacity: 1, height: row.offsetHeight + 'px' }, { opacity: 0, height: '0px', paddingTop: '0px', paddingBottom: '0px' }], { duration: 220, easing: 'cubic-bezier(.4, 0, .2, 1)' }).onfinish = go; }
         return;
       }
+      const ru = e.target.closest('[data-reup]'); if (ru) { const f = DRAFT[tiSel][+ru.dataset.reup]; if (f) { tiStart(f); tiRender(); } return; }
       const sb = e.target.closest('[data-src]'); if (sb) { tiPick(sb.dataset.src); return; }
       const dra = e.target.closest('[data-driveadd]');
       if (dra && window.AveragesHelp && !dra._helped) { window.AveragesHelp.open('drive', { from: dra, onContinue: () => { if (!ti || !dra.isConnected) return; dra._helped = true; dra.click(); dra._helped = false; } }); return; }
       if (dra) {
-        // In the app, Google Drive opens and you open the file there with Averages for Drive; then it shows up here.
-        const pool = [['Chem notes', 'gdoc'], ['Titration graph', 'gsheet'], ['Lab 4 photos', 'gslides'], ['Error analysis draft', 'gdoc']];
-        const have = new Set(SOURCES.drive.files.map(x => x[0])), nx = pool.find(x => !have.has(x[0]));
-        SOURCES.drive.files.forEach(x => { x[3] = false; });
-        if (nx) SOURCES.drive.files.unshift([nx[0], nx[1], 'Just added from Google Drive', true]);
-        toast(nx ? `Added "${nx[0]}" from Google Drive for this mock.` : 'In the app, this opens Google Drive in a new tab.');
-        saveNote(); tiRender(); return;
+        // Google Drive opens: open the file there with Averages.io for Drive, and it shows up in Add from Google Drive.
+        FSX.newTab('https://drive.google.com/drive/my-drive');
+        toast('In Google Drive, right-click the file, then Open with, then Averages.io for Drive. It shows up here after that.');
+        return;
       }
       const pf = e.target.closest('[data-pickfrom]');
       if (pf) {
         const [k, i] = pf.dataset.pickfrom.split(':'), [n, kind] = SOURCES[k].files[+i];
-        const f = { src: k, name: n, kind, mode: 'copy', fmt: FORMATS[kind][0][0], fresh: true };
+        const f = { src: k, name: n, kind, mode: 'copy', fmt: FST.formats({ src: k, kind, name: n })[0][0], fresh: true };
         saveNote(); DRAFT[tiSel] = (DRAFT[tiSel] || []).concat([f]); tiSrc = null; tiRender(); return;
       }
       const ms = e.target.closest('[data-mode-set]');
@@ -4802,11 +4849,23 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       const send = e.target.closest('[data-tisend]');
       if (send && !send.disabled && !tiSending) {
         const m = MATERIALS.find(y => y.id === tiSel), id = tiSel; saveNote();
+        const note = (m.noteDraft || '').trim(), prevLen = (m.prev || []).length, was = { turned: m.turned, sent: m.sent, answerSent: m.answerSent, note: m.note, sentLog: m.sentLog };
+        // sign-in windows (Google Drive, OneDrive) have to open inside this click, before anything is awaited
+        const tokens = m.writing ? {} : FST.tokensFor((DRAFT[id] || []).filter(f => f.src !== 'local'));
+        m.sendErr = '';
+        const failed = err => {
+          tiSending = false; if (ti) { ti.classList.remove('busy'); const mn = ti.querySelector('.ti-main'); if (mn) mn.classList.remove('sending'); }
+          if (m.prev && m.prev.length > prevLen) m.prev.length = prevLen;
+          Object.assign(m, was); m.sendErr = 'Nothing was turned in. ' + FST.message(err);
+          if (ti) { if (tiInline) awResize(() => tiRender()); else tiRender(); const ed = ti.querySelector('#tiEd'); if (ed) ed.contentEditable = 'true'; }
+          toast(m.sendErr);
+        };
         const finish = () => {
+          FSX.refresh();
           tiSending = false; if (ti) { ti.classList.remove('busy'); ti.querySelector('.ti-main').classList.remove('sending'); }
           m.again = false; m.turnedClock = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }); awOpen[id] = new Set([(m.prev || []).length + 1]); delete awOpen[id + ':again']; m.noteDraft = '';
-          if (m.writing) { const w = wordCount(m.answer); Object.assign(m, { turned: 'just now', justTurned: true, writing: false, answerSent: m.answer, note: (m.noteDraft || '').trim(), sent: [{ name: 'Written answer', size: `${w} ${w === 1 ? 'word' : 'words'}`, write: true }] }); }
-          else { Object.assign(m, { turned: 'just now', justTurned: true, sent: DRAFT[id].map(f => ({ name: shownName(f), size: shownSub(f), link: f.src !== 'local' && f.mode === 'link' })), note: (m.noteDraft || '').trim() }); delete DRAFT[id]; }
+          if (m.writing) { const w = wordCount(m.answer); Object.assign(m, { turned: 'just now', justTurned: true, writing: false, answerSent: m.answer, note, sent: [{ name: 'Written answer', size: `${w} ${w === 1 ? 'word' : 'words'}`, write: true }] }); }
+          else { Object.assign(m, { turned: 'just now', justTurned: true, sent: DRAFT[id].map(f => ({ name: shownName(f), size: shownSub(f), link: f.src !== 'local' && f.mode === 'link' })), note }); delete DRAFT[id]; }
           if (!ti) { renderList(); renderComing(); ntBadge(); if (HUB_TAB === 'assignments') agRender(false); agCounts(); return; }
           if (tiInline) { const st = document.querySelector('#mpBox .mp-vstatus'); if (st) st.innerHTML = status(m); const fx = document.querySelector('#mpBox .aw-facts'); if (fx) fx.outerHTML = awFacts(m); }
           tiSel = id; tiShown = id; if (tiInline) awResize(() => tiRender()); else tiRender(); renderList(); renderComing(); ntBadge(); if (HUB_TAB === 'assignments') agRender(false); agCounts(); toast(`Turned in ${m.name}.`);
@@ -4820,8 +4879,9 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
         ti.querySelectorAll('.ti-file').forEach((r, i) => r.style.setProperty('--i', i));
         ti.querySelector('.ti-main').classList.add('sending');
         const ed = ti.querySelector('#tiEd'); if (ed) ed.contentEditable = 'false';
-        if (calm()) { setTimeout(finish, 200); return; }
-        if (tiInline) { awResize(() => { ti.querySelector('.ti-main').innerHTML = awSendHTML(tiSending); ti.querySelector('.ti-foot').innerHTML = tiFoot(); }); awRun(tiSending, m, finish); } else runSteps(tiSending, finish);
+        if (tiInline) awResize(() => { ti.querySelector('.ti-main').innerHTML = awSendHTML(tiSending); ti.querySelector('.ti-foot').innerHTML = tiFoot(); });
+        tiLog(`<span class="aw-lb"># turning in ${esc(m.name)} for ${esc(TEACH())}</span>`);
+        tiSendReal(m, id, tokens, note).then(() => { tiStepsDone(m); setTimeout(finish, calm() ? 200 : 900); }, failed);
         return;
       }
     });
@@ -4899,21 +4959,19 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   // A class or a recent opens its own page in the app. The mock has no other pages, so it says where it would go.
   function openPage(go) {
     const [k, a] = go.split(':');
-    let kind, label, where;
-    if (k === 'class') { kind = 'Course'; label = C[a].name; where = `the ${label} course page`; }
-    else if (k === 'due') { const d = DUE.find(x => x.id === a) || DONE.find(x => x.id === a); kind = 'Assignment'; label = d.t; where = `the ${label} assignment page`; }
-    else if (k === 'file') { kind = 'Files'; const f = F(a); label = f.name; if (f.isNew) { f.isNew = false; renderMaterials(); } where = `${label} in Files`; }
-    else if (k === 'draft') { const r = DRAFTS.find(x => x.id === a), d = DUE.find(x => x.id === r.due); kind = 'Assignment'; label = d.t; where = `the ${d.t} assignment page with your ${r.app} draft open`; }
-    else if (k === 'thread') { const th = T(a); kind = 'Messages'; label = th.subject; where = `the "${label}" conversation in Messages`; }
-    else if (k === 'update') { const u = U(a); if (u.isNew) { u.isNew = false; renderFeed(); } kind = 'Updates'; label = C[u.c].name; where = `this update on the ${label} class page`; }
-    else if (k === 'turnin') { tiPopup.open(a); return; } // the Turn in popup, for just this assignment
-    else if (k === 'graded') { const g = GRADED.find(x => x.id === a); g.isNew = false; renderGraded(); kind = 'Assignment'; label = g.t; where = `${g.t} in ${C[g.c].name}, with your score and comments`; }
-    else if (k === 'page') { toast(`In the app, this opens the ${a} page.`); return; }
-    else if (k === 'sc') { toast(`In the app, this opens ${scOf(a).where}.`); return; }
-    else return;
-    touchRecent(kind, label, go);
-    if (NOTIFS.some(n => n.go === go && n.unread)) { NOTIFS.forEach(n => { if (n.go === go) n.unread = false; }); renderCounts(); }
-    toast(`In the app, this opens ${where}.`);
+    const PG = { Courses: 'courses', Grades: 'grades', Assignments: 'assignments', Calendar: 'calendar', Files: 'files', Messages: 'messages', Contacts: 'contacts', Settings: 'settings', Home: 'home', Notifications: 'home' };
+    const SCP = { 'p-courses': 'courses', 'p-grades': 'grades', 'p-gb': 'grades', 'p-asg': 'assignments', 'p-cal': 'calendar', 'p-files': 'files', 'p-msg': 'messages' };
+    let kind, label;
+    if (k === 'class') { kind = 'Course'; label = C[a].name; touchRecent(kind, label, go); FSX.hub(a); return; }
+    if (k === 'due') { const d = DUE.find(x => x.id === a) || DONE.find(x => x.id === a); if (!d) return; touchRecent('Assignment', d.t, go); FSX.hub(d.c, 'assignments', { a: d.id }); return; }
+    if (k === 'file') { const f = F(a); if (!f) return; if (f.isNew) { f.isNew = false; renderMaterials(); } touchRecent('Files', f.name, go); FSX.newTab(FSX.fileUrl(f.src, true)); return; }
+    if (k === 'draft') { const r = DRAFTS.find(x => x.id === a), d = r && DUE.find(x => x.id === r.due); if (r && r.url) { FSX.newTab(r.url); return; } if (d) FSX.hub(d.c, 'assignments', { a: d.id }); return; }
+    if (k === 'thread') { const th = T(a); if (th) { th.unread = false; FSX.seen.mark('m', a); touchRecent('Messages', th.subject, go); } FSX.go('messages', { thread: a }); return; }
+    if (k === 'update') { const u = U(a); if (u) { FSX.seen.mark('u', a); touchRecent('Updates', C[u.c].name, go); FSX.hub(u.c, 'updates', { update: a }); } return; }
+    if (k === 'turnin') { tiPopup.open(a); return; } // the Turn in popup, for just this assignment
+    if (k === 'graded') { const g = GRADED.find(x => x.id === a); if (g) { FSX.seen.mark('g', a); touchRecent('Assignment', g.t, go); FSX.hub(g.c, 'grades', { a: g.id }); } return; }
+    if (k === 'page') { FSX.go(PG[a] || String(a).toLowerCase()); return; }
+    if (k === 'sc') { FSX.go(SCP[a] || 'home'); return; }
   }
   document.addEventListener('click', e => {
     const o = e.target.closest('[data-open]'), inner = e.target.closest('[data-pop]');
@@ -5048,7 +5106,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     k === 'classes' ? renderClasses() : renderDue();
   }));
   // Section titles go to their own pages in the app; the mock has no other pages
-  document.querySelectorAll('.to-page').forEach(a => a.addEventListener('click', () => toast(`In the app, this opens the ${a.dataset.page} page.`)));
+  document.querySelectorAll('.to-page').forEach(a => a.addEventListener('click', e => { e.preventDefault(); openPage('page:' + a.dataset.page); }));
   $('side').addEventListener('transitionend', e => { if (e.propertyName === 'width') place(); });
   const bar = (w, h = 10, r) => `<span class="skel-bar" style="width:${w};height:${h}px${r ? ';border-radius:' + r : ''}"></span>`;
   const skelRow = (i, lead) => `<div class="li" data-skel>${lead}<span class="skel-tx">${bar(['64%', '50%', '72%', '56%', '60%', '46%'][i % 6], 12)}${bar(['36%', '44%', '30%', '40%', '34%', '42%'][i % 6], 9)}</span>${bar('34px', 14)}</div>`;
@@ -5164,28 +5222,16 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     ], { duration: toOver + back });
   }
   let loading = false;
+  $('syncLabel').textContent = FSX.synced(); $('refresh').setAttribute('aria-label', 'Refresh everything on Home. ' + FSX.synced() + '.');
   $('refresh').addEventListener('click', () => {
     if (loading) return;
     loading = true; closePop();
     const b = $('refresh');
     b.classList.add('loading'); b.setAttribute('aria-busy', 'true'); b.setAttribute('aria-label', 'Refreshing everything on Home'); $('syncLabel').textContent = 'Syncing…';
-    startSpin(b.querySelector('svg'));
-    showSkeleton(); CHART_IDS.forEach(id => chartsLoading.add(id));
-    // each part is its own request (grades, assignments, messages, updates...), so each lands on its own, anywhere from half a second to 3 seconds
-    const PARTS = [{ id: 'gradesRows', render: renderClasses }, { id: 'gradedRows', render: renderGraded }, { id: 'matRows', render: renderMaterials }, { id: 'asgBox', render: renderDue }, { id: 'draftRows', render: renderDrafts },
-      { id: 'msgBox', render: renderMessages }, { id: 'feed', grow: 'feedWrap', render: renderFeed }];
-    const jobs = [...PARTS.map(part => () => landRows(part)), ...CHART_IDS.map(id => () => landChart(id))];
-    let left = jobs.length;
-    jobs.forEach(job => setTimeout(() => {
-      job();
-      if (--left) return;
-      renderSide(); renderCounts(); renderPromo();
-      b.classList.remove('loading'); b.removeAttribute('aria-busy'); b.setAttribute('aria-label', 'Refresh everything on Home. Synced just now.'); $('syncLabel').textContent = 'Synced just now';
-      stopSpin(b.querySelector('svg'));
-      loading = false;
-      toast('Everything on Home is up to date.');
-    }, fetchMs()));
+    startSpin(b.querySelector('svg')); showSkeleton();
+    FSX.reloadFresh('Everything on Home is up to date.');
   });
+  if (FSX.q.get('customize')) setTimeout(() => { const me = document.querySelector('#meBtn, [data-pop="me"]'); if (me && typeof openPop === 'function') { openPop(me, 'customize'); } }, 400);
   $('promoX').addEventListener('click', () => { state.hidden.add('quarter'); applySections(); toast('Hidden. Bring it back from your profile menu under Customize Home.'); });
 
   // the class list fades at the bottom when there are more classes to scroll to
@@ -5195,34 +5241,16 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   /* ===== Notifications (shared by Home and the course pages) =====
      One list for every class. On a course page the window opens on that class, with All classes one tap away.
      The page can set NT_HOOKS before this: here (the class this page is about) and onChange(). */
-  const NT_CLASSES = { chem: 'AP Chemistry', alg: 'Algebra II', eng: 'English 10', hist: 'U.S. History', chin: 'Chinese II', art: 'Art & Design' };
-  const NT_LAST = 'Thursday at 8:12 PM';
+  const NT_CLASSES = Object.fromEntries(FSD.CLASSES.map(c => [c.id, c.name]));
+  const NT_LAST = FSX.lastVisit();
   // Notifications are updates to class data (a grade posted, something new, something changed), not a to-do list.
   // Missing and due work lives on Home and in each class's Assigned card instead.
-  const NT_ITEMS = [
-    { id: 'chem-graded-m14', ago: 4300, c: 'chem', k: 'graded', t: 'Lab 4 pre-lab', got: 9, of: 10, d: 'Graded Oct 16 · Class average 81%', note: 'Clear plan. Double check your units in question 3.' },
-    { id: 'alg-graded-q4', ago: 120, c: 'alg', k: 'graded', t: 'Quiz 4', got: 19, of: 20, d: 'Graded 2 hours ago · Class average 84%' },
-    { id: 'eng-graded-ne', ago: 9000, c: 'eng', k: 'graded', t: 'Narrative essay', got: 38, of: 50, d: 'Graded Tue · Class average 80%', note: 'Strong opening. The ending needs one more scene.' },
-    { id: 'hist-graded-c5', ago: 1500, c: 'hist', k: 'graded', ic: '📈', t: 'Ch. 5 quiz', got: 18, of: 20, d: 'Score changed from 16 to 18 · Yesterday' },
-    { id: 'alg-graded-h43', ago: 121, c: 'alg', k: 'graded', t: 'Homework 4.3', got: 10, of: 10, d: 'Graded 2 hours ago · Class average 92%' },
-    { id: 'eng-graded-vq6', ago: 9100, c: 'eng', k: 'graded', t: 'Vocab quiz 6', got: 17, of: 20, d: 'Graded Tue · Class average 83%' },
-    { id: 'chem-new-m5', ago: 300, c: 'chem', k: 'new', kind: 'file', t: 'Lab 4 data.xlsx', d: 'File · Posted today' },
-    { id: 'chem-new-m7', ago: 2900, c: 'chem', k: 'new', kind: 'file', t: 'Unit 3 Notes.pdf', d: 'File · Posted 2 days ago' },
-    { id: 'chem-new-m1', ago: 22, c: 'chem', k: 'new', kind: 'file', t: 'Unit 3 Test Review.pdf', d: 'File · Posted 22 min ago' },
-    { id: 'alg-new-qc', ago: 125, c: 'alg', k: 'new', kind: 'file', t: 'Quiz 4 corrections.pdf', d: 'File · Posted 2 hours ago' },
-    { id: 'art-new-d9', ago: 300, c: 'art', k: 'new', kind: 'assignment', t: 'Portfolio Review Sign-up', d: 'Assignment · Posted today' },
-    { id: 'chem-chg-m6', ago: 1400, c: 'chem', k: 'changed', ic: 'due', t: 'Unit 3 Test moved to Thu, Oct 22', d: 'Was Tue, Oct 20 · Yesterday' },
-    { id: 'chem-chg-m2', ago: 7200, c: 'chem', k: 'changed', ic: 'material', t: 'Lab Report #4 has a new attachment', d: 'Lab report template.docx · Oct 14' },
-    { id: 'hist-chg-ft', ago: 180, c: 'hist', k: 'changed', ic: 'due', t: 'Field Trip Form is now due Fri', d: 'Was due Thu · 3 hours ago' },
-    { id: 'chem-ann-1', ago: 21, c: 'chem', k: 'ann', t: 'The Unit 3 Test review sheet is posted. It covers stoichiometry and limiting reagents. The test is next Thursday.', d: 'Dr. Park · 22 minutes ago' },
-    { id: 'alg-ann-1', ago: 118, c: 'alg', k: 'ann', t: 'Quiz 4 grades are in. The class average was 84%. Corrections are due Friday.', d: 'Mr. Okafor · 2 hours ago' },
-    { id: 'chem-msg-1', ago: 330, c: 'chem', k: 'msg', t: 'Dr. Park replied: Lab Report #4 extension', d: 'Sure, Friday works. · 10:42 AM' },
-    { id: 'eng-msg-1', ago: 420, c: 'eng', k: 'msg', t: 'Ms. Grant replied: Missing essay', d: 'Your Of Mice and Men essay is still missing. · 9:15 AM' },
-  ];
+  const NT_ITEMS = FSD.NT;   // real: recent grades, course updates and messages (see averages-fs-data.js)
   // each kind of update gets its own picture; the tile behind it takes the class's color
   const NT_ICON = {"message": "<svg aria-hidden=\"true\" focusable=\"false\" viewBox=\"0 0 36 36\"><path fill=\"#BDDDF4\" d=\"M18 1C8.059 1 0 7.268 0 15c0 4.368 2.574 8.268 6.604 10.835C6.08 28.144 4.859 31.569 2 35c5.758-.96 9.439-3.761 11.716-6.416 1.376.262 2.805.416 4.284.416 9.941 0 18-6.268 18-14S27.941 1 18 1z\"/><circle cx=\"18\" cy=\"15\" r=\"2\" fill=\"#2A6797\"/><circle cx=\"26\" cy=\"15\" r=\"2\" fill=\"#2A6797\"/><circle cx=\"10\" cy=\"15\" r=\"2\" fill=\"#2A6797\"/></svg>", "due": "<svg aria-hidden=\"true\" focusable=\"false\" viewBox=\"0 0 36 36\"><path fill=\"#E0E7EC\" d=\"M36 32a4 4 0 0 1-4 4H4a4 4 0 0 1-4-4V9a4 4 0 0 1 4-4h28a4 4 0 0 1 4 4v23z\"/><path fill=\"#66757F\" d=\"M23.657 19.12H17.87c-1.22 0-1.673-.791-1.673-1.56 0-.791.429-1.56 1.673-1.56h8.184c1.154 0 1.628 1.04 1.628 1.628 0 .452-.249.927-.52 1.492l-5.607 11.395c-.633 1.266-.882 1.717-1.899 1.717-1.244 0-1.877-.949-1.877-1.605 0-.271.068-.474.226-.791l5.652-10.716zM10.889 19h-.5c-1.085 0-1.538-.731-1.538-1.5 0-.792.565-1.5 1.538-1.5h2.015c.972 0 1.515.701 1.515 1.605V30.47c0 1.13-.558 1.763-1.53 1.763s-1.5-.633-1.5-1.763V19z\"/><path fill=\"#DD2F45\" d=\"M34 0h-3.277c.172.295.277.634.277 1a2 2 0 0 1-4 0c0-.366.105-.705.277-1H8.723C8.895.295 9 .634 9 1a2 2 0 0 1-4 0c0-.366.105-.705.277-1H2a2 2 0 0 0-2 2v11h36V2a2 2 0 0 0-2-2z\"/><path fill=\"#F5F8FA\" d=\"M13.182 4.604c0-.5.32-.78.75-.78.429 0 .749.28.749.78v5.017h1.779c.51 0 .73.38.72.72a.7.7 0 0 1-.72.659h-2.498c-.49 0-.78-.319-.78-.819V4.604zm-6.91 0c0-.5.32-.78.75-.78s.75.28.75.78v3.488c0 .92.589 1.649 1.539 1.649.909 0 1.529-.769 1.529-1.649V4.604c0-.5.319-.78.749-.78s.75.28.75.78v3.568c0 1.679-1.38 2.949-3.028 2.949-1.669 0-3.039-1.25-3.039-2.949V4.604zM5.49 9.001c0 1.679-1.069 2.119-1.979 2.119-.689 0-1.839-.27-1.839-1.14 0-.269.23-.609.56-.609.4 0 .75.37 1.199.37.56 0 .56-.52.56-.84V4.604c0-.5.32-.78.749-.78.431 0 .75.28.75.78v4.397z\"/><path fill=\"#F4ABBA\" d=\"M32 10a1 1 0 1 0 2 0 1 1 0 0 0-2 0m0-3a1 1 0 1 0 2 0 1 1 0 0 0-2 0m-3 3a1 1 0 1 0 2 0 1 1 0 0 0-2 0m0-3a1 1 0 1 0 2 0 1 1 0 0 0-2 0m-3 3a1 1 0 1 0 2 0 1 1 0 0 0-2 0m0-3a1 1 0 1 0 2 0 1 1 0 0 0-2 0m-3 0a1 1 0 1 0 2 0 1 1 0 0 0-2 0m0 3a1 1 0 1 0 2 0 1 1 0 0 0-2 0\"/></svg>", "update": "<svg aria-hidden=\"true\" focusable=\"false\" viewBox=\"0 0 36 36\"><path fill=\"#3B88C3\" d=\"M14 19c-3.314 0-6 2.687-6 6s2.686 6 6 6 6-2.687 6-6-2.687-6-6-6zm0 10c-2.209 0-4-1.791-4-4s1.791-4 4-4 4 1.791 4 4-1.791 4-4 4z\"/><path fill=\"#55ACEE\" d=\"M1.783 14.023v.02C.782 14.263 0 15.939 0 18s.782 3.737 1.783 3.956v.021l28.701 7.972V6.064L1.783 14.023z\"/><ellipse fill=\"#269\" cx=\"31\" cy=\"18\" rx=\"5\" ry=\"12\"/></svg>", "material": "<svg aria-hidden=\"true\" focusable=\"false\" viewBox=\"0 0 36 36\"><path fill=\"#99AAB5\" d=\"M35.354 25.254c.217-2.391-.513-4.558-2.057-6.102L17.033 2.89c-.391-.391-1.024-.391-1.414 0-.391.391-.391 1.024 0 1.414l16.264 16.263c1.116 1.117 1.642 2.717 1.479 4.506-.159 1.748-.957 3.456-2.188 4.686-1.23 1.23-2.938 2.027-4.685 2.187-1.781.161-3.39-.362-4.506-1.479L3.598 12.082c-.98-.98-1.059-2.204-.953-3.058.15-1.196.755-2.401 1.66-3.307 1.7-1.7 4.616-2.453 6.364-.707l14.85 14.849c1.119 1.12.026 2.803-.708 3.536-.733.735-2.417 1.826-3.535.707L9.962 12.789c-.391-.391-1.024-.39-1.414 0-.391.391-.391 1.023 0 1.414l11.313 11.314c1.859 1.858 4.608 1.05 6.363-.707 1.758-1.757 2.565-4.507.708-6.364L12.083 3.597c-2.62-2.62-6.812-1.673-9.192.706C1.677 5.517.864 7.147.661 8.775c-.229 1.833.312 3.509 1.523 4.721l18.384 18.385c1.365 1.365 3.218 2.094 5.281 2.094.27 0 .544-.013.82-.037 2.206-.201 4.362-1.209 5.918-2.765 1.558-1.556 2.565-3.713 2.767-5.919z\"/></svg>", "new": "<svg aria-hidden=\"true\" focusable=\"false\" viewBox=\"0 0 36 36\"><path fill=\"#CCD6DD\" d=\"M31 32c0 2.209-1.791 4-4 4H5c-2.209 0-4-1.791-4-4V4c0-2.209 1.791-4 4-4h22c2.209 0 4 1.791 4 4v28z\"/><path fill=\"#99AAB5\" d=\"M27 24c0 .553-.447 1-1 1H6c-.552 0-1-.447-1-1 0-.553.448-1 1-1h20c.553 0 1 .447 1 1zm-16 4c0 .553-.448 1-1 1H6c-.552 0-1-.447-1-1 0-.553.448-1 1-1h4c.552 0 1 .447 1 1zM27 8c0 .552-.447 1-1 1H6c-.552 0-1-.448-1-1s.448-1 1-1h20c.553 0 1 .448 1 1zm0 4c0 .553-.447 1-1 1H6c-.552 0-1-.447-1-1 0-.553.448-1 1-1h20c.553 0 1 .447 1 1zm0 4c0 .553-.447 1-1 1H6c-.552 0-1-.447-1-1 0-.553.448-1 1-1h20c.553 0 1 .447 1 1zm0 4c0 .553-.447 1-1 1H6c-.552 0-1-.447-1-1 0-.553.448-1 1-1h20c.553 0 1 .447 1 1z\"/><path fill=\"#66757F\" d=\"M31 6.272c-.827-.535-1.837-.579-2.521-.023l-.792.646-1.484 1.211-.1.08-2.376 1.938-11.878 9.686c-.437.357-.793 1.219-1.173 2.074-.378.85-.969 2.852-1.443 4.391-.148.25-1.065 1.846-.551 2.453.52.615 2.326.01 2.568-.076 1.626-.174 3.731-.373 4.648-.58.924-.211 1.854-.395 2.291-.752.008-.006.01-.018.017-.023l11.858-9.666.792-.646.144-.118V6.272z\"/><path fill=\"#D99E82\" d=\"M18.145 22.526s-1.274-1.881-2.117-2.553c-.672-.843-2.549-2.116-2.549-2.116-.448-.446-1.191-.48-1.629-.043-.437.438-.793 1.366-1.173 2.291-.472 1.146-1.276 4.154-1.768 5.752-.083.272.517-.45.503-.21-.01.187.027.394.074.581l-.146.159.208.067c.025.082.05.154.068.21l.159-.146c.187.047.394.084.58.074.24-.014-.483.587-.21.503 1.598-.493 4.607-1.296 5.752-1.768.924-.381 1.854-.736 2.291-1.174.439-.435.406-1.178-.043-1.627z\"/><path fill=\"#EA596E\" d=\"M25.312 4.351c-.876.875-.876 2.293 0 3.168l3.167 3.168c.876.874 2.294.874 3.168 0l3.169-3.168c.874-.875.874-2.293 0-3.168l-3.169-3.168c-.874-.875-2.292-.875-3.168 0l-3.167 3.168z\"/><path fill=\"#FFCC4D\" d=\"M11.849 17.815l3.17 3.17 3.165 3.166 11.881-11.879-6.337-6.336-11.879 11.879z\"/><path fill=\"#292F33\" d=\"M11.298 26.742s-2.06 1.133-2.616.576c-.557-.558.581-2.611.581-2.611s1.951.036 2.035 2.035z\"/><path fill=\"#CCD6DD\" d=\"M23.728 5.935l3.96-3.96 6.336 6.337-3.96 3.96z\"/><path fill=\"#99AAB5\" d=\"M26.103 3.558l.792-.792 6.336 6.335-.792.792zM24.52 5.142l.791-.791 6.336 6.335-.792.792z\"/></svg>"};
   const ntIcon = it => it.ic && NT_ICON[it.ic] ? NT_ICON[it.ic] : it.ic ? (EMOJI_SVG[it.ic] || '') : it.k === 'graded' ? (EMOJI_SVG['📊'] || '') : it.k === 'new' ? NT_ICON[it.kind === 'assignment' ? 'new' : 'material'] : it.k === 'changed' ? NT_ICON.update : it.k === 'ann' ? NT_ICON.update : NT_ICON.message;
-  const NT_SEEN = new Set();
+  const NT_SEEN = new Set(FSD.NT_SEEN_IDS);
+  { const add = NT_SEEN.add.bind(NT_SEEN); NT_SEEN.add = id => { const it = NT_ITEMS.find(x => x.id === id); if (it) FSX.seen.mark(it.kind, it.raw); return add(id); }; }   // marked here = marked in Windowed too
   const NT = Object.assign({ here: null, onChange: () => {} }, typeof NT_HOOKS === 'object' ? NT_HOOKS : {});
   let ntEl = null, ntFrom = null, ntScope = NT.here || 'all';
   const ntIsSeen = id => NT_SEEN.has(id);
@@ -5238,7 +5266,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     return `<span class="nt-tile" style="--c:${col}" aria-hidden="true">${ntIcon(it)}</span>`;
   }
   function ntRow(it, all) {
-    const cls = NT_CLASSES[it.c], sub = (all ? cls + ' · ' : '') + it.d;
+    const cls = NT_CLASSES[it.c] || 'Messages', sub = (all ? cls + ' · ' : '') + it.d;
     let end = '';
     if (it.k === 'graded') { const p = it.got / it.of * 100; end = `<span class="nt-end"><b class="${gcls(p)}">${letter(p)}</b>${it.got} / ${it.of}</span>`; }
     return `<div class="nt-row nt-k-${it.k}" role="button" tabindex="0" data-ntgo="${it.id}">${ntTile(it)}<span class="nt-tx"><b class="${it.k === 'ann' ? 'long' : ''}">${esc(it.t)}</b><small>${esc(sub)}</small>${it.note ? `<span class="nt-note">${ico('msg')}<span>${esc(it.note)}</span></span>` : ''}</span>${end}</div>`;
@@ -5344,7 +5372,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       return; }
     if (e.target.closest('[data-ntseen]')) { const n = ntLive(ntScope).length, label = ntScope === 'all' ? 'everything' : NT_CLASSES[ntScope]; ntLive(ntScope).forEach(it => NT_SEEN.add(it.id)); ntBadge(); NT.onChange(); ntRefresh(true); toast(`Marked ${label} as seen. That's ${n} ${n === 1 ? 'notification' : 'notifications'}.`); return; }
     const go = e.target.closest('[data-ntgo]');
-    if (go) { const it = NT_ITEMS.find(x => x.id === go.dataset.ntgo); NT_SEEN.add(it.id); ntBadge(); NT.onChange(); ntClose(true); toast(`In the app, this opens ${it.k === 'msg' ? 'the conversation' : it.k === 'ann' ? 'the announcement' : it.k === 'changed' ? 'what changed' : it.t} in ${NT_CLASSES[it.c]}.`); }
+    if (go) { const it = NT_ITEMS.find(x => x.id === go.dataset.ntgo); NT_SEEN.add(it.id); ntBadge(); NT.onChange(); ntClose(true); if (it.k === 'msg') FSX.go('messages', { thread: it.thread }); else if (it.k === 'graded') FSX.hub(it.c, 'grades', { a: it.aid }); else FSX.hub(it.c, 'updates', { update: it.raw }); }
   }
   document.addEventListener('keydown', e => {
     if (!ntEl) return;
@@ -5354,7 +5382,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   function ntInit() { const b = $('ntBtn'); if (b) b.addEventListener('click', () => ntEl ? ntClose() : ntOpen()); ntBadge(); }
   /* ===== end Notifications ===== */
 
-  renderAll();
+  renderAll(); loadDrafts();
   ntInit();
   // redraw only when the charts' area really changes width (the observer also fires once on start, which needs nothing)
   let statsW = $('stats').offsetWidth;
@@ -5420,20 +5448,11 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
    Any button with data-whatif opens it (data-whatif="chem" picks the class). Pick a class and a category, type a score,
    and it shows what your grade would be. A new score only moves its own category; the class grade moves by that
    category's weight. Nothing here is saved to Schoology. */
-const WI_CLASSES = [
-  { id: 'alg', name: 'Algebra II', pct: 95.1 }, { id: 'chem', name: 'AP Chemistry', pct: 87.4 }, { id: 'eng', name: 'English 10', pct: 78.3 },
-  { id: 'hist', name: 'U.S. History', pct: 91.0 }, { id: 'chin', name: 'Chinese II', pct: 84.2 }, { id: 'art', name: 'Art & Design', pct: 97.0 },
-];
-// each category: name, weight %, your % now, points graded so far (the same numbers as Home)
-const WI_CATS = {
-  chem: [['Tests', 50, 85.0, 300], ['Labs', 30, 89.0, 120], ['Homework', 20, 91.6, 60]],
-  alg:  [['Tests', 60, 94.0, 250], ['Quizzes', 25, 96.0, 100], ['Homework', 15, 98.0, 100]],
-  eng:  [['Essays', 40, 72.0, 150], ['Reading checks', 30, 82.0, 100], ['Participation', 30, 83.0, 150]],
-  hist: [['Tests', 50, 89.0, 300], ['Projects', 30, 93.0, 100], ['Homework', 20, 93.3, 100]],
-  chin: [['Tests', 40, 81.0, 120], ['Quizzes', 30, 85.0, 80], ['Speaking', 30, 87.5, 100]],
-  art:  [['Projects', 70, 97.0, 150], ['Sketchbook', 30, 97.0, 50]],
-};
-const WI = { cls: (() => { try { return JSON.parse(localStorage.getItem('wi_class')) || 'chem'; } catch (_) { return 'chem'; } })(), cat: 0, score: '45', out: '50' };
+// the student's classes and their real grading categories (averages-fs-data.js): name, weight %, your % so far
+// (null when nothing in it is graded yet), points graded so far
+const WI_CLASSES = FSD.CLASSES.map(c => ({ id: c.id, name: c.name, pct: c.pct }));
+const WI_CATS = FSD.CATS;
+const WI = { cls: (() => { try { const v = JSON.parse(localStorage.getItem('wi_class')); return WI_CATS[v] ? v : (WI_CLASSES[0] || {}).id; } catch (_) { return (WI_CLASSES[0] || {}).id; } })(), cat: 0, score: '45', out: '50' };
 let wiEl = null, wiFrom = null;
 const wiCuts = [[97, 'A+'], [93, 'A'], [90, 'A-'], [87, 'B+'], [83, 'B'], [80, 'B-'], [77, 'C+'], [73, 'C'], [70, 'C-'], [67, 'D+'], [63, 'D'], [60, 'D-'], [0, 'F']];
 const wiLetter = p => wiCuts.find(([c]) => p >= c)[1];
@@ -5448,26 +5467,26 @@ function wiBadge(c) {
   return { html: `<span class="badge" style="--c:${sub[2]}" aria-hidden="true">${svg}</span>`, color: sub[2] };
 }
 function wiHTML() {
-  const c = WI_CLASSES.find(x => x.id === WI.cls) || WI_CLASSES[1], cats = WI_CATS[c.id];
+  const c = WI_CLASSES.find(x => x.id === WI.cls) || WI_CLASSES[0], cats = WI_CATS[c.id];
   return `<div class="wi-top"><div><h2 id="wiT">What-if grades</h2><p>Try a score before you get it back. Nothing here changes your real grade.</p></div><button type="button" class="wi-x" data-wix aria-label="Close">${wiIco('x')}</button></div>
     <div><div class="wi-l" id="wiCL">Class</div><div class="wi-chips" role="radiogroup" aria-labelledby="wiCL">${WI_CLASSES.map(x => { const b = wiBadge(x); return `<button type="button" class="wi-chip" role="radio" data-wicls="${x.id}" aria-checked="${x.id === c.id}" style="--c:${b.color}">${b.html}<span>${wiEsc(wiName(x))}<small>${wiLetter(x.pct)} · ${x.pct.toFixed(1)}%</small></span></button>`; }).join('')}</div></div>
-    <div><div class="wi-l" id="wiKL">Category</div><div class="wi-chips" role="radiogroup" aria-labelledby="wiKL">${cats.map(([n, w, p], i) => `<button type="button" class="wi-chip wi-cat" role="radio" data-wicat="${i}" aria-checked="${i === WI.cat}" style="--c:${wiBadge(c).color}"><span>${wiEsc(n)}<small>${w}% of grade · now ${p.toFixed(1)}%</small></span></button>`).join('')}</div></div>
+    <div><div class="wi-l" id="wiKL">Category</div><div class="wi-chips" role="radiogroup" aria-labelledby="wiKL">${cats.map(([n, w, p], i) => `<button type="button" class="wi-chip wi-cat" role="radio" data-wicat="${i}" aria-checked="${i === WI.cat}" style="--c:${wiBadge(c).color}"><span>${wiEsc(n)}<small>${w}% of grade · ${p == null ? 'nothing graded yet' : 'now ' + p.toFixed(1) + '%'}</small></span></button>`).join('')}</div></div>
     <div class="wi-row"><label>If I score<input id="wiS" type="number" inputmode="decimal" min="0" step="any" value="${wiEsc(WI.score)}"></label><label>Out of<input id="wiO" type="number" inputmode="decimal" min="1" step="any" value="${wiEsc(WI.out)}"></label></div>
     <div class="wi-pre" role="group" aria-label="Quick scores"><span>Try</span>${[100, 90, 80, 70].map(p => `<button type="button" data-wipre="${p}">${p}%</button>`).join('')}</div>
     <div class="wi-res" id="wiRes" aria-live="polite"></div>
     <div class="wi-acts"><button type="button" class="btn" data-wireset>${wiIco('refresh')}Reset</button><span class="wi-note">Only on this screen. Schoology isn't changed.</span><button type="button" class="btn primary" data-wix>Done</button></div>`;
 }
 function wiCalc() {
-  if (!wiEl) return;
-  const c = WI_CLASSES.find(x => x.id === WI.cls) || WI_CLASSES[1], cats = WI_CATS[c.id], [cn, w, cp, cpts] = cats[WI.cat] || cats[0];
+  if (!wiEl || !WI_CLASSES.length) return;
+  const c = WI_CLASSES.find(x => x.id === WI.cls) || WI_CLASSES[0], cats = WI_CATS[c.id], [cn, w, cp, cpts] = cats[WI.cat] || cats[0];
   const s = parseFloat(WI.score), o = parseFloat(WI.out), res = wiEl.querySelector('#wiRes');
   if (!(o > 0) || !(s >= 0)) { res.innerHTML = '<div class="wi-msg">Type a score and the points it is out of.</div>'; return; }
-  const total = cats.reduce((a, x) => a + x[1], 0), catNext = (cp * cpts / 100 + s) / (cpts + o) * 100;
-  const now = c.pct, next = now + (w / total) * (catNext - cp), diff = next - now, k = Math.abs(diff) < .05 ? 'flat' : diff > 0 ? 'up' : 'down';
+  const wg = cats.filter(x => x[2] != null).reduce((a, x) => a + x[1], 0), catNext = ((cp || 0) * cpts / 100 + s) / (cpts + o) * 100;
+  const now = c.pct, next = cp == null ? (wg ? (now * wg + catNext * w) / (wg + w) : catNext) : now + (w / (wg || w)) * (catNext - cp), diff = next - now, k = Math.abs(diff) < .05 ? 'flat' : diff > 0 ? 'up' : 'down';
   const moved = wiLetter(next) !== wiLetter(now);
   res.innerHTML = `<div class="wi-g"><small>Now</small><b>${now.toFixed(1)}%<span>${wiLetter(now)}</span></b></div><span class="wi-arrow" aria-hidden="true">${wiIco('fwd')}</span>
     <div class="wi-g to"><small>Would be${moved ? `<span class="wi-new">${diff > 0 ? 'Up' : 'Down'} a letter</span>` : ''}</small><b>${next.toFixed(1)}%<span>${wiLetter(next)}</span></b></div>
-    <div class="wi-foot2"><span>${wiEsc(cn)}: ${cp.toFixed(1)}% to ${catNext.toFixed(1)}%</span><span class="wi-d ${k}">${k === 'flat' ? 'No change' : (diff > 0 ? '+' : '-') + Math.abs(diff).toFixed(1) + ' points'}</span></div>`;
+    <div class="wi-foot2"><span>${wiEsc(cn)}: ${cp == null ? 'nothing yet' : cp.toFixed(1) + '%'} to ${catNext.toFixed(1)}%</span><span class="wi-d ${k}">${k === 'flat' ? 'No change' : (diff > 0 ? '+' : '-') + Math.abs(diff).toFixed(1) + ' points'}</span></div>`;
   if (moved && !wiCalm()) { const t = res.querySelector('.wi-new'); if (t && t.animate) t.animate([{ transform: 'rotate(-4deg) scale(.6)', opacity: 0 }, { transform: 'rotate(-4deg) scale(1.12)', opacity: 1, offset: .6 }, { transform: 'rotate(-4deg)' }], { duration: 380, easing: 'cubic-bezier(.34, 1.56, .64, 1)' }); }
 }
 function wiRender(focusSel) { wiEl.querySelector('.wi-pop').innerHTML = wiHTML(); wiWire(); wiCalc(); if (focusSel) { const f = wiEl.querySelector(focusSel); if (f) f.focus(); } }
@@ -5478,6 +5497,7 @@ function wiWire() {
 }
 function wiOpen(cid) {
   if (wiEl) return;
+  if (!WI_CLASSES.length) { if (typeof toast === 'function') toast('No classes to try scores in yet.'); return; }
   if (cid && WI_CATS[cid]) { if (cid !== WI.cls) WI.cat = 0; WI.cls = cid; }
   wiFrom = document.activeElement;
   if (typeof cmdkClose === 'function') cmdkClose();
@@ -5513,6 +5533,7 @@ document.addEventListener('keydown', e => {
    The tilt, nudge and overlap come from the item's text, so a sticker lands the same way every time the list redraws.
    Each one lands differently: high or low on the end of the word before it, or somewhere along the top of the line under it, always covering 2 to 4px, or the top of the line under it, so the text stays readable. */
 (() => {
+  return; // design rules: New tags sit straight, in line with their text (no tilt, no landing spots)
   const TILTS = [-12, -9, -6, -3, 4, 7, 10, 13];
   const hash = s => { let h = 7; for (const ch of s) h = Math.imul(h ^ ch.charCodeAt(0), 0x5bd1e995); h ^= h >>> 15; h = Math.imul(h, 0x27d4eb2d); h ^= h >>> 13; return h >>> 1; };
   const seedOf = el => { const host = el.closest('[data-mid], [data-mpid], [data-agopen], [data-gw], [data-rgw], [data-gdopen], [role="row"], .upd, button, a, li, tr') || el.parentNode; return hash((host ? host.textContent : '') + el.textContent); };
@@ -5961,7 +5982,7 @@ window.AveragesHelp = {
   // the mock's way in: hpOpen('canva' | 'drive', the button, { prepare, onGo })
   function hpOpen(k, from, opts = {}) {
     window.AveragesHelp.open(k, { from, prepare: opts.prepare || null,
-      onContinue: v => { if (opts.onGo) opts.onGo(v); else toast(`In the app, this opens ${k === 'canva' ? 'Canva' : 'Google Drive in a new tab'}.`); } });
+      onContinue: v => { if (opts.onGo) opts.onGo(v); else FSX.newTab(k === 'canva' ? 'https://www.canva.com/projects' : 'https://drive.google.com/drive/my-drive'); } });
   }
 
   window.hpOpen = hpOpen;

@@ -1123,20 +1123,15 @@
   /* buttons: a little taller and rounder, they lift on hover and squish when pressed */
   .btn { height: 38px; border-radius: 12px; font-size: 15px; transition: background-color .15s ease, transform .25s var(--spring), box-shadow .2s ease; }
   .btn.sm { height: 32px; border-radius: 10px; font-size: 13px; }
-  .btn.primary { background: linear-gradient(135deg, var(--warm-a), var(--warm-b)); box-shadow: 0 8px 16px -10px rgba(184, 53, 47, .9); }
-  .btn.primary:hover { background: linear-gradient(135deg, var(--warm-a-hover), var(--warm-b-hover)); }
-  .btn.primary:disabled, .btn.primary:disabled:hover { box-shadow: none; } /* a grayed-out button loses the red glow too */
+  .btn.primary { background: var(--accent); box-shadow: none; }
+  .btn.primary:hover { background: var(--accent-hover); }
   .chip { height: 44px; border-radius: 14px; box-shadow: var(--card-shadow); transition: background-color .15s ease, transform .25s var(--spring); }
   /* the shortcut chips each get their own color */
   .chip svg.i { color: var(--chip-c, var(--ink-2)); }
   .chip:nth-child(5n + 1) { --chip-c: var(--warm-a); } .chip:nth-child(5n + 2) { --chip-c: var(--sky); } .chip:nth-child(5n + 3) { --chip-c: var(--mint); } .chip:nth-child(5n + 4) { --chip-c: var(--grape); } .chip:nth-child(5n + 5) { --chip-c: #c98a00; }
-  /* sticker tags: New pops off the page a little */
-  .newtag { background: var(--sun) !important; color: var(--ink) !important; border-radius: 8px; transform: translate(var(--tx, 0px), var(--ty, 0px)) rotate(var(--tilt, -4deg)); box-shadow: 0 0 0 2px var(--field), 0 3px 8px -2px rgba(20, 21, 31, .25); will-change: transform; backface-visibility: hidden; } /* always drawn on its own layer, so hovering a row never redraws the text thinner or bolder */
-  /* soft shapes floating behind the top of the page */
+  /* New tags: a filled yellow label */
+  .newtag { background: var(--sun) !important; color: var(--ink) !important; border-radius: 8px;  will-change: transform; backface-visibility: hidden; } /* always drawn on its own layer, so hovering a row never redraws the text thinner or bolder */
   .wrap { position: relative; isolation: isolate; }
-  .wrap::before, .wrap::after { content: ""; position: absolute; z-index: -1; pointer-events: none; border-radius: 50%; filter: blur(2px); }
-  .wrap::before { top: -40px; right: 4%; width: 380px; height: 300px; background: radial-gradient(closest-side, color-mix(in srgb, var(--sun) 34%, transparent), transparent); }
-  .wrap::after { top: 60px; right: 22%; width: 260px; height: 220px; background: radial-gradient(closest-side, color-mix(in srgb, var(--bubble) 20%, transparent), transparent); }
   /* empty states get a doodle */
   :is(.nt-empty, .ag-none, .mp-none, .mdet-empty, .list-empty, .sv-empty)::before { content: ""; display: block; width: 120px; height: 72px; margin: 0 auto 12px; background: var(--life-doodle) center / contain no-repeat; }
   /* the toast bounces in */
@@ -1146,17 +1141,13 @@
     body:not(.potato-mode) .btn:not(:disabled):active, body:not(.potato-mode) .chip:active, body:not(.potato-mode) .ibtn:active { transform: scale(.95); transition-duration: .08s; }
     body:not(.potato-mode) .ibtn { transition: background-color .15s ease, transform .25s var(--spring); }
     body:not(.potato-mode) .toast.show { animation: lifeToast .45s var(--spring); }
-    body:not(.potato-mode) .wrap::before { animation: lifeFloat 14s ease-in-out infinite alternate; }
-    body:not(.potato-mode) .wrap::after { animation: lifeFloat 18s ease-in-out -6s infinite alternate-reverse; }
     /* icon tiles wiggle when you point at their row */
     body:not(.potato-mode) :is(.arow, .mrow, .mp-row, .ag-row, .nt-row, .pin, .gr-row, .crow, tr, .item, .mi):hover :is(.ktile, .nt-tile, .badge, .emo) { animation: lifeWiggle .5s var(--spring); }
     body:not(.potato-mode) .newtag { animation: lifeSticker .5s var(--spring) backwards; }
   }
-  @keyframes lifeFloat { from { transform: translate(0, 0) scale(1); } to { transform: translate(-24px, 16px) scale(1.08); } }
   @keyframes lifeWiggle { 0% { transform: none; } 30% { transform: rotate(-9deg) scale(1.08); } 60% { transform: rotate(6deg) scale(1.08); } 100% { transform: none; } }
-  @keyframes lifeSticker { from { transform: rotate(-14deg) scale(.6); opacity: 0; } }
+  @keyframes lifeSticker { from { transform: scale(.6); opacity: 0; } }
   @keyframes lifeToast { 0% { transform: translate(-50%, 16px) scale(.9); } 100% { transform: translate(-50%, 0) scale(1); } }
-  .potato-mode .wrap::before, .potato-mode .wrap::after { display: none; }
   /* ===== end Life layer ===== */
   /* ===== What-if grades: one popup for the whole app (Home, Grades, course hubs) ===== */
   .wi-scrim { position: fixed; inset: 0; z-index: 95; background: var(--scrim); display: flex; justify-content: center; align-items: center; padding: 24px 16px; }
@@ -1737,14 +1728,13 @@
   button.hub-logo:focus-visible { outline: 2px solid var(--focus); outline-offset: 4px; }
   /* a hint that the emoji opens Course info (same tooltip as the top bar buttons) */
   button.hub-logo { position: relative; }
-  /* the hint sits outside the tilted emoji, so it stays upright and crisp whatever angle the emoji is at */
+  /* the hint sits outside the emoji button, so hovering it never moves the hint */
   .hub-logo-w { position: relative; flex: none; display: grid; }
   .hub-tip { position: absolute; bottom: calc(100% + 12px); left: 0; right: 0; margin: 0 auto; width: max-content; z-index: 70; padding: 4px 8px; border-radius: 8px;
-    background: rgba(70, 72, 86, .72); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); color: #ffffff; font-size: 12px; font-weight: 800; line-height: 16px; white-space: nowrap;
+    background: #464856; color: #ffffff; font-size: 12px; font-weight: 800; line-height: 16px; white-space: nowrap;
     pointer-events: none; opacity: 0; transition: opacity .15s ease; -webkit-font-smoothing: antialiased; }
   .hub-logo:hover + .hub-tip, .hub-logo:focus-visible + .hub-tip { opacity: 1; transition-delay: .25s; }
   @media (hover: none) { .hub-tip { display: none; } }
-  .potato-mode .hub-tip { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(70, 72, 86, .88); }
   .hub-info { display: inline-flex; align-items: center; gap: 8px; height: 28px; padding: 0 12px; margin: -4px 0; border-radius: 8px; color: var(--ink-2); font-weight: 800; font-size: 14px; background: var(--panel); }
   .hub-info:hover { background: var(--inner); color: var(--ink); }
   .hub-info svg.i { width: 16px; height: 16px; }
@@ -2239,7 +2229,7 @@
   .aw-class b { display: block; color: var(--ink); font-weight: 800; }
   .aw-class svg.i { flex: none; color: var(--muted); margin-top: 2px; }
   /* ---------- Updates tab ---------- */
-  .up { grid-column: 1 / -1; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+  section.up { grid-column: 1 / -1; min-width: 0; display: flex; flex-direction: column; gap: 16px; }   /* section: the bare .up also matched the green "+2.4" chips (.gr-d.up) and broke their row */
   .up[hidden] { display: none; }
   .up-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
   .up-bar .mp-types button em { font-style: normal; margin-left: 8px; color: var(--muted); font-variant-numeric: tabular-nums; }
@@ -2254,8 +2244,7 @@
   .up-post { display: flex; flex-direction: column; gap: 12px; padding: 20px 20px; border-radius: 20px; background: var(--panel); box-shadow: var(--card-shadow); transition: background-color .15s ease; }
   .up-post.pinned { background: color-mix(in srgb, var(--class-c, var(--accent)) 7%, var(--panel)); }
   .up-top { display: flex; align-items: center; gap: 12px; }
-  .up-kind { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; flex: none; background: var(--field); transform: rotate(-4deg); }
-  .up-post:nth-child(odd) .up-kind { transform: rotate(4deg); }
+  .up-kind { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; flex: none; background: var(--field); }
   .up-kind svg { width: 24px; height: 24px; }
   .up-ttl { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
   .up-ttl b { display: inline-flex; align-items: center; gap: 4px; font-size: 15px; font-weight: 900; }
@@ -2835,7 +2824,7 @@
   .upd { display: flex; flex-direction: column; gap: 4px; padding: 8px; border-radius: 12px; color: var(--ink); }
   .upd:hover { background: var(--inner); }
   .upd p { margin: 0; font-size: 14px; font-weight: 600; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-  .upd .newtag { align-self: flex-start; margin-left: -8px; } /* the sticker drops onto the top corner of the text (the overlap is set by the life script) */
+  .upd .newtag { align-self: flex-start; }
   .upd .newtag + p { padding-top: 2px; }
   .upd small { color: var(--muted); font-weight: 700; font-size: 13px; }
   .rail .panel .arow .tx small { white-space: normal; }
@@ -3080,10 +3069,9 @@
   .ph-gp { background-image: url("data:image/jpeg;base64,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") !important; }
   .ph-fs { background-image: url("data:image/jpeg;base64,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") !important; }
   /* ===== Life layer for the course page ===== */
-  /* the class logo becomes a sticker, with a blob of the class color behind the header */
+  /* the course header */
   .hub-h { position: relative; }
-  .hub-h::before { content: ""; position: absolute; z-index: -1; left: -60px; top: -70px; width: 360px; height: 280px; border-radius: 50%; pointer-events: none; background: radial-gradient(closest-side, color-mix(in srgb, var(--class-c, var(--mint)) 30%, transparent), transparent); }
-  .hub-logo { border-radius: 28px; transform: rotate(-4deg); box-shadow: 0 0 0 5px var(--field), 0 12px 24px -12px rgba(20, 21, 31, .45); transition: transform .35s var(--spring); }
+  .hub-logo { border-radius: 28px; box-shadow: 0 0 0 5px var(--field), 0 12px 24px -12px rgba(20, 21, 31, .45); transition: transform .35s var(--spring); }
   .hub-t h1 { font-size: 44px; }
   .hub-tab { border-radius: 12px; transition: background-color .15s ease, transform .25s var(--spring); }
   .hub-tab.on { background: var(--ink); box-shadow: 0 8px 16px -10px rgba(20, 21, 31, .8); }
@@ -3096,14 +3084,10 @@
   .hub-acts .pill.sync { height: 38px; border-radius: 12px; padding: 0 16px 0 12px; font-size: 15px; }
   .hub-acts .pill.sync svg { width: 20px; height: 20px; }
   @media (prefers-reduced-motion: no-preference) {
-    body:not(.potato-mode) .hub-logo:hover { transform: rotate(3deg) scale(1.04); }
+    body:not(.potato-mode) .hub-logo:hover { transform: scale(1.04); }
     body:not(.potato-mode) .hub-tab:active { transform: scale(.95); }
-    body:not(.potato-mode) .hub-h::before { animation: lifeFloat 16s ease-in-out infinite alternate; }
   }
-  .potato-mode .hub-h::before { display: none; }
-  @media (max-width: 680px) { .hub-t h1 { font-size: 34px; } .hub-logo { transform: rotate(-3deg); } }
-  /* on the course page the shapes belong to something: no loose blobs in the corner */
-  .wrap::before, .wrap::after { display: none; }
+  @media (max-width: 680px) { .hub-t h1 { font-size: 34px; } }
   /* ===== end Life layer for the course page ===== */
 </style>
 </head>
@@ -3131,13 +3115,13 @@
   <aside class="side" id="side" aria-label="Sidebar">
     <nav class="nav" aria-label="Pages">
       <a href="#" title="Search" id="sideSearch" aria-keyshortcuts="Control+K Meta+K"><svg class="i"><use href="#i-search"/></svg><span class="fade">Search</span><kbd class="fade side-kbd" id="sideKbd">Ctrl K</kbd></a>
-      <a href="#" title="Home" data-toast="Home"><svg class="i"><use href="#i-home"/></svg><span class="fade">Home</span></a>
-      <a href="#" title="Courses" data-toast="the Courses page"><svg class="i"><use href="#i-binder"/></svg><span class="fade">Courses</span></a>
-      <a href="#" title="Grades" data-toast="the Grades page"><svg class="i"><use href="#i-chart"/></svg><span class="fade">Grades</span></a>
-      <a href="#" title="Assignments" data-toast="the Assignments page"><svg class="i"><use href="#i-inbox"/></svg><span class="fade">Assignments</span><em class="count fade" id="cntAssign"></em><i class="pip" id="pipAssign"></i></a>
-      <a href="#" title="Calendar" data-toast="the Calendar page"><svg class="i"><use href="#i-cal"/></svg><span class="fade">Calendar</span></a>
-      <a href="#" title="Files" data-toast="the Files page"><svg class="i"><use href="#i-folder"/></svg><span class="fade">Files</span></a>
-      <a href="#" title="Messages" data-toast="the Messages page"><svg class="i"><use href="#i-msg"/></svg><span class="fade">Messages</span><em class="count fade" id="cntMsg"></em><i class="pip" id="pipMsg"></i></a>
+      <a href="/fs/home.html" data-go="/fs/home.html" title="Home" data-was="Home"><svg class="i"><use href="#i-home"/></svg><span class="fade">Home</span></a>
+      <a href="/fs/courses.html" data-go="/fs/courses.html" title="Courses" data-was="the Courses page"><svg class="i"><use href="#i-binder"/></svg><span class="fade">Courses</span></a>
+      <a href="/fs/grades.html" data-go="/fs/grades.html" title="Grades" data-was="the Grades page"><svg class="i"><use href="#i-chart"/></svg><span class="fade">Grades</span></a>
+      <a href="/fs/assignments.html" data-go="/fs/assignments.html" title="Assignments" data-was="the Assignments page"><svg class="i"><use href="#i-inbox"/></svg><span class="fade">Assignments</span><em class="count fade" id="cntAssign"></em><i class="pip" id="pipAssign"></i></a>
+      <a href="/fs/calendar.html" data-go="/fs/calendar.html" title="Calendar" data-was="the Calendar page"><svg class="i"><use href="#i-cal"/></svg><span class="fade">Calendar</span></a>
+      <a href="/fs/files.html" data-go="/fs/files.html" title="Files" data-was="the Files page"><svg class="i"><use href="#i-folder"/></svg><span class="fade">Files</span></a>
+      <a href="/fs/messages.html" data-go="/fs/messages.html" title="Messages" data-was="the Messages page"><svg class="i"><use href="#i-msg"/></svg><span class="fade">Messages</span><em class="count fade" id="cntMsg"></em><i class="pip" id="pipMsg"></i></a>
       <a href="#" title="Contacts" class="on" aria-current="page"><svg class="i"><use href="#i-users"/></svg><span class="fade">Contacts</span></a>
     </nav>
     <div class="divider" role="separator"></div>
@@ -3497,7 +3481,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const store = { get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
   if (store.get('fsmock_potato') === true) document.body.classList.add('potato-mode');
   const calm = () => document.body.classList.contains('potato-mode') || matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const PROFILE = Object.assign({ name: 'John Appleseed', photo: 'data:image/jpeg;base64,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' }, store.get('fsmock_profile2') || {});
+  const PROFILE = Object.assign({ name: FSD.me.name, photo: FSD.me.photo }, store.get('fsmock_profile2') || {});
   const EMOJI_SVG = {
       "🧪": "<svg aria-hidden=\"true\" focusable=\"false\" viewBox=\"0 0 36 36\"><path fill=\"#CCD6DD\" d=\"M14.563 14.414 25.47 3.505l6.961 6.962-10.908 10.908z\"/><path fill=\"#68E090\" d=\"M8.103 34.399C2.5 34 1.5 30.062 1.635 27.932c.322-5.07 15.601-16.551 15.601-16.551l12.517 1.93c.001 0-17.389 21.392-21.65 21.088z\"/><path fill=\"#8899A6\" d=\"M32.326 3.708C29.405.787 26.104-.649 24.954.502c-.013.013-.022.031-.034.044-.006.006-.015.008-.021.014L2.295 23.164a7.43 7.43 0 0 0-2.19 5.288c0 1.997.778 3.875 2.19 5.287a7.429 7.429 0 0 0 5.288 2.19 7.426 7.426 0 0 0 5.287-2.189l22.604-22.604c.007-.007.009-.016.015-.023.013-.012.03-.02.043-.033 1.151-1.15-.285-4.451-3.206-7.372zM10.75 31.619c-.846.846-1.97 1.311-3.166 1.311s-2.321-.466-3.167-1.312a4.448 4.448 0 0 1-1.312-3.167c0-1.196.466-2.32 1.311-3.166L25.412 4.29c.622 1.144 1.56 2.394 2.749 3.584 1.189 1.189 2.44 2.127 3.584 2.749L10.75 31.619z\"/><path fill=\"#17BF63\" d=\"M29.196 13.144c-.058.379-2.627.751-5.691.343-3.063-.408-5.482-1.223-5.403-1.82.08-.597 2.627-.751 5.691-.343s5.495 1.224 5.403 1.82zM10.84 23.247a.794.794 0 1 1-1.123-1.124.794.794 0 0 1 1.123 1.124zm3.317 2.615a1.298 1.298 0 1 1-1.835-1.836 1.298 1.298 0 0 1 1.835 1.836zm1.677-5.324a1.222 1.222 0 0 1-1.726-1.726 1.22 1.22 0 1 1 1.726 1.726zm-6.868 8.858a1.489 1.489 0 1 1-2.105-2.106 1.489 1.489 0 0 1 2.105 2.106zm11.396-9.158a1.058 1.058 0 1 1-1.496-1.497 1.058 1.058 0 0 1 1.496 1.497zm-1.207-4.288a.693.693 0 1 1-.979-.98.693.693 0 0 1 .979.98z\"/><ellipse cx=\"30.817\" cy=\"5.223\" fill=\"#CCD6DD\" rx=\"1.184\" ry=\"4.847\" transform=\"rotate(-45.001 30.817 5.223)\"/></svg>",
       "🧬": "<svg aria-hidden=\"true\" focusable=\"false\" viewBox=\"0 0 36 36\"><path fill=\"#77B255\" d=\"m3.019 26.246 3.432 3.432-.923.922-3.432-3.431z\"/><path fill=\"#FFD983\" d=\"m6.362 29.587 3.431 3.432-.923.923-3.43-3.432z\"/><path fill=\"#FFAC33\" d=\"m6.273 24.237 3.432 3.432-.923.923L5.35 25.16z\"/><path fill=\"#EA596E\" d=\"m8.998 26.962 3.432 3.432-.923.923-3.431-3.432zm3.909-9.359 3.431 3.432-.923.923-3.431-3.432z\"/><path fill=\"#FFAC33\" d=\"m15.631 20.329 3.432 3.431-.923.923-3.432-3.431z\"/><path fill=\"#77B255\" d=\"m14.97 14.377 3.432 3.432-.922.923-3.432-3.432z\"/><path fill=\"#FFD983\" d=\"m18.277 17.683 3.432 3.432-.923.923-3.432-3.432z\"/><path fill=\"#FFAC33\" d=\"m17.616 11.731 3.432 3.432-.923.922-3.432-3.431z\"/><path fill=\"#EA596E\" d=\"m20.923 15.038 3.432 3.431-.923.923-3.431-3.432zM24.387 4.96l3.432 3.432-.923.922-3.432-3.431z\"/><path fill=\"#FFAC33\" d=\"m27.694 8.267 3.432 3.431-.923.923-3.432-3.432z\"/><path fill=\"#77B255\" d=\"m27.013 2.252 3.432 3.432-.923.923-3.432-3.432z\"/><path fill=\"#FFD983\" d=\"m30.36 5.6 3.432 3.431-.923.923-3.432-3.431z\"/><path fill=\"#9266CC\" d=\"M24.922.812c-2.52 2.52-2.601 6.145-2.396 9.806.501.028 1.002.061 1.502.094.39.026.775.051 1.159.074-.198-3.286-.199-6.299 1.606-8.104.727-.703.955-1.653.447-2.166-.535-.54-1.542-.497-2.318.296z\"/><path fill=\"#3B88C3\" d=\"m13.146 25.65-.153-2.66c-.026-.445-.058-.899-.074-1.332-.296-.296-2.466-.349-2.653-.162.013.44.047.884.071 1.327.028.502.126 2.275.149 2.66.054.91.096 1.806.086 2.656.259.259 2.371.437 2.645.162a36.931 36.931 0 0 0-.071-2.651z\"/><path fill=\"#55ACEE\" d=\"m13.22 28.3-2.649-.162c-.026 2.209-.384 4.145-1.687 5.448a1.322 1.322 0 1 0 1.87 1.871c2.423-2.422 2.467-7.174 2.466-7.157z\"/><path fill=\"#9266CC\" d=\"M25.354 13.447c-.501-.028-1.003-.061-1.503-.094-.389-.026-.775-.051-1.158-.074.198 3.285.199 6.299-1.607 8.104-1.804 1.804-4.813 1.805-8.094 1.607-.386-.023-2.159-.14-2.656-.168-3.667-.206-7.297-.126-9.82 2.397a1.322 1.322 0 0 0 1.871 1.87c1.805-1.804 4.815-1.806 8.098-1.608.385.023 2.161.14 2.66.168 3.662.205 7.289.125 9.811-2.396 2.521-2.52 2.603-6.145 2.398-9.806z\"/><path fill=\"#744EAA\" d=\"M25.354 13.447c-.028-.501-.145-2.277-.168-2.66a51.95 51.95 0 0 1-.064-1.332c-.336-.021-2.1-.133-2.653-.163.013.44.032.883.056 1.326.028.501.145 2.277.168 2.661.055.914.091 1.804.081 2.656.333.021 2.094.132 2.645.162a36.316 36.316 0 0 0-.065-2.65z\"/><path fill=\"#55ACEE\" d=\"M35.581 8.827c-.42-.436-1.385-.601-2.291.353-1.805 1.805-4.817 1.806-8.104 1.607-.384-.023-2.16-.141-2.661-.169-3.66-.205-7.286-.123-9.806 2.397-2.215 2.215-2.545 5.284-2.453 8.48.553.03 2.319.142 2.653.162-.098-2.755.113-5.214 1.671-6.772 1.805-1.805 4.818-1.805 8.104-1.607.383.023 2.16.14 2.661.168 3.661.205 7.286.124 9.806-2.396.886-.869.84-1.787.42-2.223z\"/></svg>",
@@ -3564,16 +3548,9 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const letter = p => CUTS.find(([c]) => p >= c)[1];
   const gcls = p => p >= 90 ? 'ga' : p >= 80 ? 'gb' : 'gc';
 
-  // Sample data, the same classes as the Home mock. From Schoology: the section (title, teacher, period, room),
-  // the student's grade over the quarter, and what's due. "updates" is how many changes came in since your last visit.
-  const CLASSES = [
-    { id: 'alg',  name: 'Algebra II',   teacher: 'Mr. Okafor',  period: 1, room: 'Room 204', students: 31, pct: 95.1, trend: [91.2, 92.4, 93.0, 92.1, 93.8, 94.4, 94.9, 95.1], due: 1, missing: 0, updates: 1, next: ['Quiz 5', 'Fri'] },
-    { id: 'chem', name: 'AP Chemistry', teacher: 'Dr. Park',    period: 2, room: 'Room 118', students: 28, pct: 87.4, trend: [84.1, 85.0, 86.2, 85.4, 86.8, 87.9, 86.9, 87.4], due: 3, missing: 1, updates: 3, next: ['Unit 3 Test', 'Thu'] },
-    { id: 'eng',  name: 'English 10',   teacher: 'Ms. Grant',   period: 3, room: 'Room 131', students: 30, pct: 78.3, trend: [83.5, 82.9, 81.4, 80.6, 81.2, 79.4, 78.8, 78.3], due: 2, missing: 1, updates: 1, next: ['Of Mice and Men essay', 'Fri'] },
-    { id: 'hist', name: 'U.S. History', teacher: 'Mr. Delgado', period: 4, room: 'Room 214', students: 32, pct: 91.0, trend: [89.0, 90.2, 90.8, 91.5, 90.6, 91.2, 90.7, 91.0], due: 1, missing: 0, updates: 0, next: ['DBQ final draft', 'Mon'] },
-    { id: 'chin', name: 'Chinese II',   teacher: 'Ms. Lin',     period: 5, room: 'Room 110', students: 24, pct: 84.2, trend: [86.0, 85.1, 84.6, 83.2, 83.9, 84.8, 84.0, 84.2], due: 1, missing: 0, updates: 0, next: ['Lesson 7 vocab quiz', 'Wed'] },
-    { id: 'art',  name: 'Art & Design', teacher: 'Ms. Reyes',   period: 6, room: 'Studio B', students: 26, pct: 97.0, trend: [95.0, 96.2, 96.0, 96.8, 97.4, 96.9, 97.2, 97.0], due: 0, missing: 0, updates: 1, next: null },
-  ];
+  // From Schoology: each section (title, teacher, period), the student's grade (and how it's moved on the days
+  // they've opened Averages), and what's due. "updates" is how many course updates they haven't opened.
+  const CLASSES = FSD.CLASSES.map(c => Object.assign({}, c));   // the student's classes (averages-fs-data.js)
   CLASSES.forEach(c => { const s = courseSubject(c.name); c.emoji = s[1]; c.color = s[2]; });
   const C = Object.fromEntries(CLASSES.map(c => [c.id, c]));
   const badge = c => `<span class="badge" style="--c:${c.color}" aria-hidden="true">${EMOJI_SVG[c.emoji] || EMOJI_SVG['📚']}</span>`;
@@ -3582,34 +3559,16 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   /* ===== Notifications (shared by Home and the course pages) =====
      One list for every class. On a course page the window opens on that class, with All classes one tap away.
      The page can set NT_HOOKS before this: here (the class this page is about) and onChange(). */
-  const NT_CLASSES = { chem: 'AP Chemistry', alg: 'Algebra II', eng: 'English 10', hist: 'U.S. History', chin: 'Chinese II', art: 'Art & Design' };
-  const NT_LAST = 'Thursday at 8:12 PM';
+  const NT_CLASSES = Object.fromEntries(FSD.CLASSES.map(c => [c.id, c.name]));
+  const NT_LAST = FSX.lastVisit();
   // Notifications are updates to class data (a grade posted, something new, something changed), not a to-do list.
   // Missing and due work lives on Home and in each class's Assigned card instead.
-  const NT_ITEMS = [
-    { id: 'chem-graded-m14', ago: 4300, c: 'chem', k: 'graded', t: 'Lab 4 pre-lab', got: 9, of: 10, d: 'Graded Oct 16 · Class average 81%', note: 'Clear plan. Double check your units in question 3.' },
-    { id: 'alg-graded-q4', ago: 120, c: 'alg', k: 'graded', t: 'Quiz 4', got: 19, of: 20, d: 'Graded 2 hours ago · Class average 84%' },
-    { id: 'eng-graded-ne', ago: 9000, c: 'eng', k: 'graded', t: 'Narrative essay', got: 38, of: 50, d: 'Graded Tue · Class average 80%', note: 'Strong opening. The ending needs one more scene.' },
-    { id: 'hist-graded-c5', ago: 1500, c: 'hist', k: 'graded', ic: '📈', t: 'Ch. 5 quiz', got: 18, of: 20, d: 'Score changed from 16 to 18 · Yesterday' },
-    { id: 'alg-graded-h43', ago: 121, c: 'alg', k: 'graded', t: 'Homework 4.3', got: 10, of: 10, d: 'Graded 2 hours ago · Class average 92%' },
-    { id: 'eng-graded-vq6', ago: 9100, c: 'eng', k: 'graded', t: 'Vocab quiz 6', got: 17, of: 20, d: 'Graded Tue · Class average 83%' },
-    { id: 'chem-new-m5', ago: 300, c: 'chem', k: 'new', kind: 'file', t: 'Lab 4 data.xlsx', d: 'File · Posted today' },
-    { id: 'chem-new-m7', ago: 2900, c: 'chem', k: 'new', kind: 'file', t: 'Unit 3 Notes.pdf', d: 'File · Posted 2 days ago' },
-    { id: 'chem-new-m1', ago: 22, c: 'chem', k: 'new', kind: 'file', t: 'Unit 3 Test Review.pdf', d: 'File · Posted 22 min ago' },
-    { id: 'alg-new-qc', ago: 125, c: 'alg', k: 'new', kind: 'file', t: 'Quiz 4 corrections.pdf', d: 'File · Posted 2 hours ago' },
-    { id: 'art-new-d9', ago: 300, c: 'art', k: 'new', kind: 'assignment', t: 'Portfolio Review Sign-up', d: 'Assignment · Posted today' },
-    { id: 'chem-chg-m6', ago: 1400, c: 'chem', k: 'changed', ic: 'due', t: 'Unit 3 Test moved to Thu, Oct 22', d: 'Was Tue, Oct 20 · Yesterday' },
-    { id: 'chem-chg-m2', ago: 7200, c: 'chem', k: 'changed', ic: 'material', t: 'Lab Report #4 has a new attachment', d: 'Lab report template.docx · Oct 14' },
-    { id: 'hist-chg-ft', ago: 180, c: 'hist', k: 'changed', ic: 'due', t: 'Field Trip Form is now due Fri', d: 'Was due Thu · 3 hours ago' },
-    { id: 'chem-ann-1', ago: 21, c: 'chem', k: 'ann', t: 'The Unit 3 Test review sheet is posted. It covers stoichiometry and limiting reagents. The test is next Thursday.', d: 'Dr. Park · 22 minutes ago' },
-    { id: 'alg-ann-1', ago: 118, c: 'alg', k: 'ann', t: 'Quiz 4 grades are in. The class average was 84%. Corrections are due Friday.', d: 'Mr. Okafor · 2 hours ago' },
-    { id: 'chem-msg-1', ago: 330, c: 'chem', k: 'msg', t: 'Dr. Park replied: Lab Report #4 extension', d: 'Sure, Friday works. · 10:42 AM' },
-    { id: 'eng-msg-1', ago: 420, c: 'eng', k: 'msg', t: 'Ms. Grant replied: Missing essay', d: 'Your Of Mice and Men essay is still missing. · 9:15 AM' },
-  ];
+  const NT_ITEMS = FSD.NT;   // real: recent grades, course updates and messages (see averages-fs-data.js)
   // each kind of update gets its own picture; the tile behind it takes the class's color
   const NT_ICON = {"message": "<svg aria-hidden=\"true\" focusable=\"false\" viewBox=\"0 0 36 36\"><path fill=\"#BDDDF4\" d=\"M18 1C8.059 1 0 7.268 0 15c0 4.368 2.574 8.268 6.604 10.835C6.08 28.144 4.859 31.569 2 35c5.758-.96 9.439-3.761 11.716-6.416 1.376.262 2.805.416 4.284.416 9.941 0 18-6.268 18-14S27.941 1 18 1z\"/><circle cx=\"18\" cy=\"15\" r=\"2\" fill=\"#2A6797\"/><circle cx=\"26\" cy=\"15\" r=\"2\" fill=\"#2A6797\"/><circle cx=\"10\" cy=\"15\" r=\"2\" fill=\"#2A6797\"/></svg>", "due": "<svg aria-hidden=\"true\" focusable=\"false\" viewBox=\"0 0 36 36\"><path fill=\"#E0E7EC\" d=\"M36 32a4 4 0 0 1-4 4H4a4 4 0 0 1-4-4V9a4 4 0 0 1 4-4h28a4 4 0 0 1 4 4v23z\"/><path fill=\"#66757F\" d=\"M23.657 19.12H17.87c-1.22 0-1.673-.791-1.673-1.56 0-.791.429-1.56 1.673-1.56h8.184c1.154 0 1.628 1.04 1.628 1.628 0 .452-.249.927-.52 1.492l-5.607 11.395c-.633 1.266-.882 1.717-1.899 1.717-1.244 0-1.877-.949-1.877-1.605 0-.271.068-.474.226-.791l5.652-10.716zM10.889 19h-.5c-1.085 0-1.538-.731-1.538-1.5 0-.792.565-1.5 1.538-1.5h2.015c.972 0 1.515.701 1.515 1.605V30.47c0 1.13-.558 1.763-1.53 1.763s-1.5-.633-1.5-1.763V19z\"/><path fill=\"#DD2F45\" d=\"M34 0h-3.277c.172.295.277.634.277 1a2 2 0 0 1-4 0c0-.366.105-.705.277-1H8.723C8.895.295 9 .634 9 1a2 2 0 0 1-4 0c0-.366.105-.705.277-1H2a2 2 0 0 0-2 2v11h36V2a2 2 0 0 0-2-2z\"/><path fill=\"#F5F8FA\" d=\"M13.182 4.604c0-.5.32-.78.75-.78.429 0 .749.28.749.78v5.017h1.779c.51 0 .73.38.72.72a.7.7 0 0 1-.72.659h-2.498c-.49 0-.78-.319-.78-.819V4.604zm-6.91 0c0-.5.32-.78.75-.78s.75.28.75.78v3.488c0 .92.589 1.649 1.539 1.649.909 0 1.529-.769 1.529-1.649V4.604c0-.5.319-.78.749-.78s.75.28.75.78v3.568c0 1.679-1.38 2.949-3.028 2.949-1.669 0-3.039-1.25-3.039-2.949V4.604zM5.49 9.001c0 1.679-1.069 2.119-1.979 2.119-.689 0-1.839-.27-1.839-1.14 0-.269.23-.609.56-.609.4 0 .75.37 1.199.37.56 0 .56-.52.56-.84V4.604c0-.5.32-.78.749-.78.431 0 .75.28.75.78v4.397z\"/><path fill=\"#F4ABBA\" d=\"M32 10a1 1 0 1 0 2 0 1 1 0 0 0-2 0m0-3a1 1 0 1 0 2 0 1 1 0 0 0-2 0m-3 3a1 1 0 1 0 2 0 1 1 0 0 0-2 0m0-3a1 1 0 1 0 2 0 1 1 0 0 0-2 0m-3 3a1 1 0 1 0 2 0 1 1 0 0 0-2 0m0-3a1 1 0 1 0 2 0 1 1 0 0 0-2 0m-3 0a1 1 0 1 0 2 0 1 1 0 0 0-2 0m0 3a1 1 0 1 0 2 0 1 1 0 0 0-2 0\"/></svg>", "update": "<svg aria-hidden=\"true\" focusable=\"false\" viewBox=\"0 0 36 36\"><path fill=\"#3B88C3\" d=\"M14 19c-3.314 0-6 2.687-6 6s2.686 6 6 6 6-2.687 6-6-2.687-6-6-6zm0 10c-2.209 0-4-1.791-4-4s1.791-4 4-4 4 1.791 4 4-1.791 4-4 4z\"/><path fill=\"#55ACEE\" d=\"M1.783 14.023v.02C.782 14.263 0 15.939 0 18s.782 3.737 1.783 3.956v.021l28.701 7.972V6.064L1.783 14.023z\"/><ellipse fill=\"#269\" cx=\"31\" cy=\"18\" rx=\"5\" ry=\"12\"/></svg>", "material": "<svg aria-hidden=\"true\" focusable=\"false\" viewBox=\"0 0 36 36\"><path fill=\"#99AAB5\" d=\"M35.354 25.254c.217-2.391-.513-4.558-2.057-6.102L17.033 2.89c-.391-.391-1.024-.391-1.414 0-.391.391-.391 1.024 0 1.414l16.264 16.263c1.116 1.117 1.642 2.717 1.479 4.506-.159 1.748-.957 3.456-2.188 4.686-1.23 1.23-2.938 2.027-4.685 2.187-1.781.161-3.39-.362-4.506-1.479L3.598 12.082c-.98-.98-1.059-2.204-.953-3.058.15-1.196.755-2.401 1.66-3.307 1.7-1.7 4.616-2.453 6.364-.707l14.85 14.849c1.119 1.12.026 2.803-.708 3.536-.733.735-2.417 1.826-3.535.707L9.962 12.789c-.391-.391-1.024-.39-1.414 0-.391.391-.391 1.023 0 1.414l11.313 11.314c1.859 1.858 4.608 1.05 6.363-.707 1.758-1.757 2.565-4.507.708-6.364L12.083 3.597c-2.62-2.62-6.812-1.673-9.192.706C1.677 5.517.864 7.147.661 8.775c-.229 1.833.312 3.509 1.523 4.721l18.384 18.385c1.365 1.365 3.218 2.094 5.281 2.094.27 0 .544-.013.82-.037 2.206-.201 4.362-1.209 5.918-2.765 1.558-1.556 2.565-3.713 2.767-5.919z\"/></svg>", "new": "<svg aria-hidden=\"true\" focusable=\"false\" viewBox=\"0 0 36 36\"><path fill=\"#CCD6DD\" d=\"M31 32c0 2.209-1.791 4-4 4H5c-2.209 0-4-1.791-4-4V4c0-2.209 1.791-4 4-4h22c2.209 0 4 1.791 4 4v28z\"/><path fill=\"#99AAB5\" d=\"M27 24c0 .553-.447 1-1 1H6c-.552 0-1-.447-1-1 0-.553.448-1 1-1h20c.553 0 1 .447 1 1zm-16 4c0 .553-.448 1-1 1H6c-.552 0-1-.447-1-1 0-.553.448-1 1-1h4c.552 0 1 .447 1 1zM27 8c0 .552-.447 1-1 1H6c-.552 0-1-.448-1-1s.448-1 1-1h20c.553 0 1 .448 1 1zm0 4c0 .553-.447 1-1 1H6c-.552 0-1-.447-1-1 0-.553.448-1 1-1h20c.553 0 1 .447 1 1zm0 4c0 .553-.447 1-1 1H6c-.552 0-1-.447-1-1 0-.553.448-1 1-1h20c.553 0 1 .447 1 1zm0 4c0 .553-.447 1-1 1H6c-.552 0-1-.447-1-1 0-.553.448-1 1-1h20c.553 0 1 .447 1 1z\"/><path fill=\"#66757F\" d=\"M31 6.272c-.827-.535-1.837-.579-2.521-.023l-.792.646-1.484 1.211-.1.08-2.376 1.938-11.878 9.686c-.437.357-.793 1.219-1.173 2.074-.378.85-.969 2.852-1.443 4.391-.148.25-1.065 1.846-.551 2.453.52.615 2.326.01 2.568-.076 1.626-.174 3.731-.373 4.648-.58.924-.211 1.854-.395 2.291-.752.008-.006.01-.018.017-.023l11.858-9.666.792-.646.144-.118V6.272z\"/><path fill=\"#D99E82\" d=\"M18.145 22.526s-1.274-1.881-2.117-2.553c-.672-.843-2.549-2.116-2.549-2.116-.448-.446-1.191-.48-1.629-.043-.437.438-.793 1.366-1.173 2.291-.472 1.146-1.276 4.154-1.768 5.752-.083.272.517-.45.503-.21-.01.187.027.394.074.581l-.146.159.208.067c.025.082.05.154.068.21l.159-.146c.187.047.394.084.58.074.24-.014-.483.587-.21.503 1.598-.493 4.607-1.296 5.752-1.768.924-.381 1.854-.736 2.291-1.174.439-.435.406-1.178-.043-1.627z\"/><path fill=\"#EA596E\" d=\"M25.312 4.351c-.876.875-.876 2.293 0 3.168l3.167 3.168c.876.874 2.294.874 3.168 0l3.169-3.168c.874-.875.874-2.293 0-3.168l-3.169-3.168c-.874-.875-2.292-.875-3.168 0l-3.167 3.168z\"/><path fill=\"#FFCC4D\" d=\"M11.849 17.815l3.17 3.17 3.165 3.166 11.881-11.879-6.337-6.336-11.879 11.879z\"/><path fill=\"#292F33\" d=\"M11.298 26.742s-2.06 1.133-2.616.576c-.557-.558.581-2.611.581-2.611s1.951.036 2.035 2.035z\"/><path fill=\"#CCD6DD\" d=\"M23.728 5.935l3.96-3.96 6.336 6.337-3.96 3.96z\"/><path fill=\"#99AAB5\" d=\"M26.103 3.558l.792-.792 6.336 6.335-.792.792zM24.52 5.142l.791-.791 6.336 6.335-.792.792z\"/></svg>"};
   const ntIcon = it => it.ic && NT_ICON[it.ic] ? NT_ICON[it.ic] : it.ic ? (EMOJI_SVG[it.ic] || '') : it.k === 'graded' ? (EMOJI_SVG['📊'] || '') : it.k === 'new' ? NT_ICON[it.kind === 'assignment' ? 'new' : 'material'] : it.k === 'changed' ? NT_ICON.update : it.k === 'ann' ? NT_ICON.update : NT_ICON.message;
-  const NT_SEEN = new Set();
+  const NT_SEEN = new Set(FSD.NT_SEEN_IDS);
+  { const add = NT_SEEN.add.bind(NT_SEEN); NT_SEEN.add = id => { const it = NT_ITEMS.find(x => x.id === id); if (it) FSX.seen.mark(it.kind, it.raw); return add(id); }; }   // marked here = marked in Windowed too
   const NT = Object.assign({ here: null, onChange: () => {} }, typeof NT_HOOKS === 'object' ? NT_HOOKS : {});
   let ntEl = null, ntFrom = null, ntScope = NT.here || 'all';
   const ntIsSeen = id => NT_SEEN.has(id);
@@ -3625,7 +3584,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     return `<span class="nt-tile" style="--c:${col}" aria-hidden="true">${ntIcon(it)}</span>`;
   }
   function ntRow(it, all) {
-    const cls = NT_CLASSES[it.c], sub = (all ? cls + ' · ' : '') + it.d;
+    const cls = NT_CLASSES[it.c] || 'Messages', sub = (all ? cls + ' · ' : '') + it.d;
     let end = '';
     if (it.k === 'graded') { const p = it.got / it.of * 100; end = `<span class="nt-end"><b class="${gcls(p)}">${letter(p)}</b>${it.got} / ${it.of}</span>`; }
     return `<div class="nt-row nt-k-${it.k}" role="button" tabindex="0" data-ntgo="${it.id}">${ntTile(it)}<span class="nt-tx"><b class="${it.k === 'ann' ? 'long' : ''}">${esc(it.t)}</b><small>${esc(sub)}</small>${it.note ? `<span class="nt-note">${ico('msg')}<span>${esc(it.note)}</span></span>` : ''}</span>${end}</div>`;
@@ -3731,7 +3690,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       return; }
     if (e.target.closest('[data-ntseen]')) { const n = ntLive(ntScope).length, label = ntScope === 'all' ? 'everything' : NT_CLASSES[ntScope]; ntLive(ntScope).forEach(it => NT_SEEN.add(it.id)); ntBadge(); NT.onChange(); ntRefresh(true); toast(`Marked ${label} as seen. That's ${n} ${n === 1 ? 'notification' : 'notifications'}.`); return; }
     const go = e.target.closest('[data-ntgo]');
-    if (go) { const it = NT_ITEMS.find(x => x.id === go.dataset.ntgo); NT_SEEN.add(it.id); ntBadge(); NT.onChange(); ntClose(true); toast(`In the app, this opens ${it.k === 'msg' ? 'the conversation' : it.k === 'ann' ? 'the announcement' : it.k === 'changed' ? 'what changed' : it.t} in ${NT_CLASSES[it.c]}.`); }
+    if (go) { const it = NT_ITEMS.find(x => x.id === go.dataset.ntgo); NT_SEEN.add(it.id); ntBadge(); NT.onChange(); ntClose(true); if (it.k === 'msg') FSX.go('messages', { thread: it.thread }); else if (it.k === 'graded') FSX.hub(it.c, 'grades', { a: it.aid }); else FSX.hub(it.c, 'updates', { update: it.raw }); }
   }
   document.addEventListener('keydown', e => {
     if (!ntEl) return;
@@ -3742,7 +3701,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   /* ===== end Notifications ===== */
 
   // ---------- frame: sidebar classes, avatar, pin, menu, toast (same as Home) ----------
-  $('sideClasses').innerHTML = CLASSES.map(c => `<a href="#" title="${esc(c.name)} · ${letter(c.pct)} ${c.pct.toFixed(1)}%" data-toast="the ${esc(c.name)} course hub">${badge(c)}<span class="fade">${esc(c.name)}</span></a>`).join('');
+  $('sideClasses').innerHTML = CLASSES.map(c => `<a href="${FSX.hubUrl(c.id)}" title="${esc(c.name)} · ${letter(c.pct)} ${c.pct.toFixed(1)}%" data-go="${FSX.hubUrl(c.id)}">${badge(c)}<span class="fade">${esc(c.name)}</span></a>`).join('');
   const inkCv = document.createElement('canvas'), inkC2 = inkCv.getContext('2d', { willReadFrequently: true }), inkMemo = new Map();
   function inkOf(text, cs) {
     const key = `${cs.fontStyle}|${cs.fontWeight}|${cs.fontFamily}|${text}`;
@@ -3842,7 +3801,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   addEventListener('resize', () => { if (window.devicePixelRatio !== inkDpr) { inkDpr = window.devicePixelRatio; centerInk(); } }); // zoom or another screen
   const reInk = () => { inkMemo.clear(); centerInk(); }; // a font finished loading: measure again
   if (document.fonts) { document.fonts.ready.then(reInk); document.fonts.addEventListener('loadingdone', reInk); }
-  $('cntAssign').textContent = 9; $('cntMsg').textContent = 2; centerInk();
+  { const a = FSD.counts.assign, m = FSD.counts.msg; $('cntAssign').textContent = a || ''; $('cntAssign').hidden = !a; $('cntMsg').textContent = m || ''; $('cntMsg').hidden = !m; if ($('pipAssign')) $('pipAssign').hidden = !a; if ($('pipMsg')) $('pipMsg').hidden = !m; } centerInk();
   document.querySelectorAll('[data-av]').forEach(el => { el.textContent = PROFILE.name.charAt(0); el.classList.toggle('photo', !!PROFILE.photo); el.style.backgroundImage = PROFILE.photo ? `url("${PROFILE.photo}")` : ''; });
   const app = $('app');
   function setPinned(on) {
@@ -3861,7 +3820,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (meMenu) { meClose(); return; }
     const potato = document.body.classList.contains('potato-mode'), btn = $('meBtn');
     document.body.insertAdjacentHTML('beforeend', `<div class="pop me-pop" role="menu" aria-label="Profile and settings">
-      <div class="pv"><span class="av-wrap"><span class="av" data-av></span></span><span class="t" style="min-width:0"><b style="display:block;font-weight:800">${esc(PROFILE.name)}</b><small style="color:var(--muted);font-weight:600">Lincoln High</small></span></div>
+      <div class="pv"><span class="av-wrap"><span class="av" data-av></span></span><span class="t" style="min-width:0"><b style="display:block;font-weight:800">${esc(PROFILE.name)}</b><small style="color:var(--muted);font-weight:600">${esc(FSD.me.school || FSD.me.email || 'Schoology')}</small></span></div>
       <div class="hr"></div>
       ${meItem('profile', 'user', 'Edit profile', 'Name and photo')}
       ${typeof CZ_ON === 'function' && CZ_ON() ? meItem('customize', 'sliders', 'Customize this page', 'Choose your default view') : ''}
@@ -3892,7 +3851,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       }
       
       meClose(true);
-      toast({ profile: 'In the app, this opens Edit profile, where you change your name and photo.', customize: 'In the app, this opens Customize Home on the Home page.', settings: 'In the app, this opens Settings.', signout: 'In the app, this signs you out.' }[k]);
+      ({ profile: () => FSX.go('settings', { section: 'account' }), customize: () => FSX.go('home', { customize: 1 }), settings: () => FSX.go('settings'), signout: () => FSX.signOut() }[k] || (() => {}))();
     });
   }
   function meClose(refocus) {
@@ -3916,7 +3875,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   function toast(text) { const t = $('toast'); t.textContent = text; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2600); }
 
 
-  document.addEventListener('click', e => { const t = e.target.closest('[data-toast]'); if (t) { e.preventDefault(); toast(`In the app, this opens ${t.dataset.toast}.`); } });
+  document.addEventListener('click', e => { const t = e.target.closest('[data-toast]'); if (t) { e.preventDefault(); if (!FSX.open(t.dataset.toast)) toast('That isn\'t ready yet.'); } });
   const IS_MAC = /mac|iphone|ipad|ipod/i.test(navigator.userAgentData?.platform || navigator.platform || '');
   $('sideKbd').textContent = IS_MAC ? '⌘K' : 'Ctrl K';
   // search here finds a person: the sidebar's Search, Ctrl K, / and T all jump to it
@@ -3940,7 +3899,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const cmark = (s, q) => { const w = cwords(q).sort((a, b) => b.length - a.length)[0], t = String(s); if (!w) return esc(t); const i = t.toLowerCase().indexOf(w); return i < 0 ? esc(t) : esc(t.slice(0, i)) + '<mark>' + esc(t.slice(i, i + w.length)) + '</mark>' + esc(t.slice(i + w.length)); };
   let cmdk = null, cmdkFrom = null;
   const crow = (attrs, lead, th, sub, cls = '') => `<button class="mi${cls}" ${attrs}>${lead}<span class="tx"><b>${th}</b>${sub ? `<small>${esc(sub)}</small>` : ''}</span></button>`;
-  const cclass = (c, q) => crow(`data-toast="the ${esc(c.name)} course hub"`, badge(c), cmark(c.name, q), `${c.teacher} · ${letter(c.pct)} · ${c.pct.toFixed(1)}%`);
+  const cclass = (c, q) => crow(`data-go="${FSX.hubUrl(c.id)}"`, badge(c), cmark(c.name, q), `${c.teacher} · ${letter(c.pct)} · ${c.pct.toFixed(1)}%`);
   function cmdkRender() {
     const q = cmdk.querySelector('input').value.trim(), res = cmdk.querySelector('.cmdk-res'); let html = '';
     const page = ([p, ic]) => crow(p === HERE ? 'data-cmdkx' : `data-toast="the ${p} page"`, ico(ic), cmark(p, q), p === HERE ? "You're here" : '');
@@ -3948,7 +3907,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       html += `<div class="lbl">Quick actions</div>` + crow('data-cmdkmsg=""', ico('msg'), 'Message a teacher', 'Start a new message', ' s-cmd') + crow('data-toast="Turn in, on the Assignments page"', ico('upload'), 'Turn in an assignment', 'Pick from what you have due', ' s-cmd')
         + (HERE ? crow('data-cmdkhere=""', ico('search'), `Search ${esc(HERE)}`, 'Just this page. You can also press / or T', ' s-cmd') : '');
       html += `<div class="lbl">Your classes</div>` + CLASSES.map(c => cclass(c, '')).join('');
-      html += `<div class="s-tip">${ico('bolt')}<span>Or type a command, like <b>message Dr. Park</b> or <b>open grades</b></span></div>`;
+      html += `<div class="s-tip">${ico('bolt')}<span>Or type a command, like <b>message ${esc(FSD.exampleTeacher)}</b> or <b>open grades</b></span></div>`;
     } else {
       // "message ..." picks a teacher; "open ..." or "go to ..." is the same as typing the name
       const m = q.match(/^(message|msg|email|text|write to|ask)\b\s*(.*)$/i), o = q.match(/^(open|go to|goto|show)\b\s*(.*)$/i), qq = o ? o[2] : q;
@@ -3958,7 +3917,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       const cs = m ? [] : CLASSES.filter(c => chit(qq, c.name + ' ' + c.teacher)); if (cs.length) html += `<div class="lbl">Classes</div>` + cs.map(c => cclass(c, qq)).join('');
       const ps = m ? [] : GO_PAGES.filter(([p]) => chit(qq, p)); if (ps.length) html += `<div class="lbl">Go to</div>` + ps.map(page).join('');
       if (HERE && !m) html += crow(`data-cmdkhere="${esc(qq)}"`, ico('search'), `Search ${esc(HERE)} for "${esc(qq)}"`, 'Just this page', ' s-cmd');
-      if (!html) html = `<div class="cmdk-empty">Nothing for "${esc(q)}". Try a class, a page, or a command like "message Dr. Park".</div>`;
+      if (!html) html = `<div class="cmdk-empty">Nothing for "${esc(q)}". Try a class, a page, or a command like "message ${esc(FSD.exampleTeacher)}".</div>`;
     }
     res.innerHTML = html; const f = res.querySelector('.mi'); if (f) f.classList.add('sel');
   }
@@ -3973,7 +3932,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     cmdk.addEventListener('click', e => {
       if (e.target === cmdk || e.target.closest('[data-cmdkx]')) { cmdkClose(); return; }
       const g = e.target.closest('[data-cmdkgo]'); if (g) { const k = g.dataset.cmdkgo; cmdkClose(false); if (typeof window.CMDK_GO === 'function') window.CMDK_GO(k); return; }
-      const mg = e.target.closest('[data-cmdkmsg]'); if (mg) { const id = mg.dataset.cmdkmsg; cmdkClose(false); if (typeof window.CMDK_MSG === 'function') window.CMDK_MSG(id); else toast(id ? `In the app, this opens a new message to ${C[id].teacher} on the Messages page.` : 'In the app, this opens a new message on the Messages page.'); return; }
+      const mg = e.target.closest('[data-cmdkmsg]'); if (mg) { const id = mg.dataset.cmdkmsg; cmdkClose(false); if (typeof window.CMDK_MSG === 'function') window.CMDK_MSG(id); else FSX.go('messages', { compose: id || 'new' }); return; }
       const h = e.target.closest('[data-cmdkhere]'); if (h) { const v = h.dataset.cmdkhere; cmdkClose(false); findFocus(); const el = document.activeElement; if (v && el && 'value' in el) { el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); } return; }
     });
     cmdk.querySelector('input').addEventListener('input', cmdkRender);
@@ -3986,7 +3945,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       el.firstElementChild.animate([{ transform: 'none' }, { transform: 'translateY(-6px) scale(.98)' }], { duration: 160, easing: 'cubic-bezier(.4, 0, 1, 1)', fill: 'forwards' }).onfinish = () => el.remove(); }
     if (back && cmdkFrom && cmdkFrom.isConnected && cmdkFrom.focus) cmdkFrom.focus({ preventScroll: true });
   }
-  document.addEventListener('click', e => { if (cmdk && e.target.closest('.cmdk [data-toast]')) cmdkClose(false); }, true);
+  document.addEventListener('click', e => { if (cmdk && e.target.closest('.cmdk [data-toast], .cmdk [data-go]')) cmdkClose(false); }, true);
   document.addEventListener('keydown', e => {
     if (!cmdk) return;
     if (e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); cmdkClose(); return; }
@@ -4012,69 +3971,46 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   // Everyone here comes from your Schoology classes: your teachers, and the classmates in your sections.
   // Schoology shares teachers' school emails but not students', so classmates can only be messaged.
   // Anything a teacher or classmate wrote (names, office hours, messages) goes through esc().
-  const NOW = new Date(2026, 9, 15, 15, 5);
+  const NOW = new Date();
   const hue = s => [...s].reduce((a, c) => a + c.charCodeAt(0) * 37, 0) % 360; // the same colors as on Messages
-  const ini = n => n.replace(/^((Dr|Mr|Ms|Mrs)\.|Coach)\s+/, '').split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
-  const bare = n => n.replace(/^((Dr|Mr|Ms|Mrs)\.|Coach)\s+/, '');
-  const HOURS = { alg: 'Mon and Wed, 7:30 to 7:55 AM', chem: 'Tue and Thu after school, until 3:45 PM', eng: 'Lunch, any day. Knock first!', hist: 'Fri at lunch', chin: 'Wed after school, 3:10 to 3:40 PM', art: 'Studio B is open Tue after school' };
+  const ini = n => n.replace(/^((Dr|Mr|Ms|Mrs|Sra|Sr)\.|Coach)\s+/, '').split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  const bare = n => n.replace(/^((Dr|Mr|Ms|Mrs|Sra|Sr)\.|Coach)\s+/, '');
+  // Your teachers (GET /data/people) and your classmates (GET /data/classmates: names and Schoology pictures, class by
+  // class). Anyone else you add comes from the people Schoology lets you message (GET /messages/recipients).
   const PEOPLE = {};
-  CLASSES.forEach(c => { PEOPLE['t-' + c.id] = { id: 't-' + c.id, name: c.teacher, role: 'Teacher', c: c.id, cls: [c.id], email: bare(c.teacher).toLowerCase() + '@lincolnhigh.org', hours: HOURS[c.id] }; });
-  [['ak', 'Ava Kim', ['chem', 'eng']], ['bl', 'Ben Lee', ['chem', 'alg']], ['cm', 'Chloe Martin', ['chem', 'art']], ['dn', 'Dev Nair', ['chin', 'hist']], ['eo', 'Eli Ortiz', ['alg', 'eng']], ['fs', 'Freya Sato', ['art', 'hist']], ['gp', 'Gabe Price', ['chin', 'chem']],
-   ['hy', 'Hana Yusuf', ['eng', 'hist', 'art']], ['ib', 'Isaac Brooks', ['alg']], ['jm', 'Jade Moreno', ['chin', 'eng']], ['kt', 'Kai Turner', ['hist', 'alg']], ['lf', 'Lena Fischer', ['art', 'chin']], ['mp', 'Maya Patel', ['chem', 'alg', 'eng']], ['nr', 'Noah Reed', ['hist']]]
-    .forEach(([id, name, cs]) => { PEOPLE[id] = { id, name, role: 'Classmate', cls: cs }; });
-  // classmates who set a profile picture in Averages show it; everyone else keeps their initials
-  ['ak', 'bl', 'dn', 'gp', 'fs'].forEach(id => { PEOPLE[id].photo = true; });
-  // the district's directory: thousands of people in the app, so it's only ever searched, never listed (a sample here)
-  const LHS = 'Lincoln High School', RHS = 'Roosevelt High School', JMS = 'Jefferson Middle School', DO = 'District office';
-  const S = (id, name, title, where, school, email, hours = '') => ({ id, name, role: 'Staff', title, where, school, email, hours, cls: [], kind: 'dir' });
-  const K = (id, name, title, school) => ({ id, name, role: 'Student', title, school, cls: [], kind: 'dir' });
-  const DIR = [
-    S('d-rivera', 'Ms. Rivera', 'Counselor, last names A to L', 'Counseling office', LHS, 'rivera@lincolnhigh.org', 'Drop in before school or at lunch'),
-    S('d-hughes', 'Mr. Hughes', 'Counselor, last names M to Z', 'Counseling office', LHS, 'hughes@lincolnhigh.org', 'Book a time on the counseling page'),
-    S('d-chen', 'Mrs. Chen', 'Librarian', 'Library', LHS, 'chen@lincolnhigh.org', 'Open 7:15 AM to 4:00 PM'),
-    S('d-alvarez', 'Ms. Alvarez', 'School nurse', 'Health office', LHS, 'alvarez@lincolnhigh.org', 'All day, every school day'),
-    S('d-webb', 'Mr. Webb', 'Assistant principal', 'Main office', LHS, 'webb@lincolnhigh.org'),
-    S('d-davis', 'Coach Davis', 'Athletics director', 'Gym office', LHS, 'davis@lincolnhigh.org', 'After school at practice'),
-    S('d-foster', 'Ms. Foster', 'AP Biology teacher', 'Room 120', LHS, 'foster@lincolnhigh.org', 'Thu at lunch'),
-    S('d-singh', 'Mr. Singh', 'Spanish I teacher', 'Room 108', LHS, 'singh@lincolnhigh.org'),
-    S('d-parker', 'Ms. Parker', 'Choir teacher', 'Music room', RHS, 'parker@roosevelthigh.org'),
-    S('d-chang', 'Mr. Chang', 'Robotics coach', 'Room 12', JMS, 'chang@jeffersonms.org', 'Mon and Wed after school'),
-    S('d-ross', 'Dr. Ross', 'Superintendent', 'District office', DO, 'ross@lincolnusd.org'),
-    S('d-grant2', 'Mr. Grant', 'Front office', 'Main office', RHS, 'grant@roosevelthigh.org'),
-    K('d-shah', 'Priya Shah', 'Grade 10', LHS), K('d-walker', 'Sam Walker', 'Grade 10', LHS), K('d-nguyen', 'Tess Nguyen', 'Grade 11', LHS), K('d-romero', 'Leo Romero', 'Grade 10', LHS),
-    K('d-clark', 'Zoe Clark', 'Grade 9', LHS), K('d-park2', 'Jenna Park', 'Grade 12', LHS), K('d-santos', 'Mia Santos', 'Grade 10', RHS), K('d-avery', 'Avery Brooks', 'Grade 11', RHS),
-    K('d-lee2', 'Ben Leeds', 'Grade 10', RHS), K('d-kim2', 'Avi Kimura', 'Grade 8', JMS), K('d-ortiz2', 'Ella Ortiz', 'Grade 7', JMS), K('d-chen2', 'Max Chen', 'Grade 9', LHS),
-  ];
+  ((FSD.people && FSD.people.CONTACTS) || []).forEach(x => { const cls = (x.courses || []).filter(id => C[id]); if (!cls.length) return;
+    PEOPLE[String(x.id)] = { id: String(x.id), name: x.name || 'Teacher', role: 'Teacher', c: cls[0], cls, email: x.email || '', hours: '' }; });
+  Object.entries(FSD.classmates || {}).forEach(([cid, list]) => { if (!C[cid]) return; (list || []).forEach(m => { const id = String(m.id); if (PEOPLE[id] && PEOPLE[id].role === 'Teacher') return;
+    const q = PEOPLE[id] || (PEOPLE[id] = { id, name: m.name, role: 'Classmate', cls: [], photo: m.photo || '' }); if (!q.cls.includes(cid)) q.cls.push(cid); }); });
+  const SCHOOL = FSD.me.school || 'Your school';
+  const DIR_SAVED = store.get('fsct_dir') || {};   // people you added: { id: name }, so they show before the list loads
+  const DIR = Object.entries(DIR_SAVED).filter(([id]) => !PEOPLE[id]).map(([id, name]) => ({ id, name, role: 'Staff', title: 'In Schoology', where: '', school: SCHOOL, email: '', hours: '', cls: [], kind: 'dir' }));
+  let dirAsked = false;
+  function dirLoad() {
+    if (dirAsked) return; dirAsked = true;
+    FSX.api('/messages/recipients').then(j => { (j.recipients || []).forEach(r => { const id = String(r.id); if (PEOPLE[id] || DIR.some(x => x.id === id)) return; DIR.push({ id, name: r.name, role: 'Staff', title: 'In Schoology', where: '', school: SCHOOL, email: '', hours: '', cls: [], kind: 'dir' }); DIRP[id] = DIR[DIR.length - 1]; }); if (ac) acDrop(); }).catch(() => {});
+  }
   const DIRP = Object.fromEntries(DIR.map(p => [p.id, p]));
   const P = id => PEOPLE[id] || DIRP[id];
   const ALL = Object.values(PEOPLE);
   const TEACH = ALL.filter(p => p.role === 'Teacher').sort((a, b) => C[a.c].period - C[b.c].period);
   const MATES = ALL.filter(p => p.role !== 'Teacher').sort((a, b) => a.name.localeCompare(b.name));
-  // your conversations, the same ones as on the Messages page (last message only)
-  const at = (d, h, m) => new Date(2026, 9, d, h, m);
-  const CONV = [
-    { with: ['t-chem'], subject: 'Lab Report #4', from: 't-chem', t: 'Bring the balance reading from your lab sheet so I can check it.', when: at(15, 14, 15), unread: true },
-    { with: ['t-eng'], subject: 'Of Mice and Men essay', from: 't-eng', t: 'You can turn it in until Friday for half credit. Come see me at lunch if you want help with your thesis.', when: at(15, 7, 52), unread: true },
-    { with: ['ak', 'bl'], subject: 'Lab 4 data', from: 'ak', t: 'thank you!!', when: at(14, 21, 21) },
-    { with: ['t-alg'], subject: 'Quiz 5', from: 'me', t: 'Thank you!', when: at(14, 18, 33) },
-    { with: ['t-hist'], subject: 'Field trip form', from: 'me', t: 'Got it, thanks Mr. Delgado.', when: at(13, 16, 5) },
-    { with: ['t-chin', 'dn', 'gp'], subject: 'Dumpling day', from: 't-chin', t: 'Yes! Please label it with your name.', when: at(13, 12, 5) },
-    { with: ['t-art'], subject: 'Portfolio review', from: 't-art', t: 'Perfect, see you then.', when: at(9, 16, 1) },
-    { with: ['t-chem'], subject: 'Unit 3 test', from: 't-chem', t: 'Review sheet: https://lincolnhigh.schoology.com/course/chem/materials/unit-3-review', when: at(8, 19, 41) },
-  ];
+  // your conversations (Schoology's, newest message only), the same ones as on the Messages page
+  const MSG = (FSD.raw.messages && Array.isArray(FSD.raw.messages.CONVERSATIONS)) ? FSD.raw.messages : { CONVERSATIONS: [], me: '' };
+  const CONV = MSG.CONVERSATIONS.map(t => ({ id: String(t.id), with: (t.participants || []).map(String).filter(x => x !== String(MSG.me)).concat([String(t.personId || '')]).filter((x, i, a) => x && a.indexOf(x) === i), subject: t.subject || 'No subject', from: String(t.personId || ''), t: t.preview || '', when: new Date(t.at || Date.now()), unread: !!t.unread }));
   const fmtTime = d => d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
   const ago = d => { const days = Math.round((new Date(NOW.toDateString()) - new Date(d.toDateString())) / 864e5); return days === 0 ? fmtTime(d) : days === 1 ? 'Yesterday' : days < 7 ? d.toLocaleDateString('en-US', { weekday: 'short' }) : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); };
   function av(p) {
     if (p.role === 'Teacher') { const c = C[p.c]; return `<span class="ms-av t" style="--c:${c.color}" aria-hidden="true">${esc(ini(p.name))}${badge(c)}</span>`; }
-    return p.photo ? `<span class="ms-av ph ph-${p.id}" aria-hidden="true"></span>` : `<span class="ms-av${p.role === 'Staff' ? ' staff' : ''}" style="--h:${hue(p.name)}" aria-hidden="true">${esc(ini(p.name))}</span>`;
+    return p.photo ? `<span class="ms-av ph" style="background-image:url(&quot;${esc(p.photo)}&quot;)" aria-hidden="true"></span>` : `<span class="ms-av${p.role === 'Staff' ? ' staff' : ''}" style="--h:${hue(p.name)}" aria-hidden="true">${esc(ini(p.name))}</span>`;
   }
-  const subOf = p => p.kind ? p.title + (p.school !== LHS ? ' · ' + p.school : p.where ? ' · ' + p.where : '') : p.role === 'Teacher' ? `${C[p.c].name} · Period ${C[p.c].period}` : p.cls.map(id => C[id].name).join(', ');
+  const subOf = p => p.kind ? p.title : p.role === 'Teacher' ? [C[p.c].name, C[p.c].hasPeriod ? 'Period ' + C[p.c].period : ''].filter(Boolean).join(' · ') : p.cls.map(id => C[id].name).join(', ');
 
   // ---------- the list ----------
-  const CT = { view: 'all', q: '', open: store.get('fsct_open') || null, star: store.get('fsct_star') || ['t-chem', 'ak'], notes: store.get('fsct_notes') || {}, added: store.get('fsct_added') || ['d-rivera'] };
+  const CT = { view: 'all', q: '', open: store.get('fsct_open') || null, star: store.get('fsct_star') || [], notes: store.get('fsct_notes') || {}, added: (store.get('fsct_added') || []).filter(id => DIR_SAVED[id] || PEOPLE[id]) };
   const EXTRA = () => CT.added.map(id => DIRP[id]).filter(Boolean);
   const VIEWS = [['all', 'All'], ['teachers', 'Teachers'], ['mates', 'Classmates'], ['class', 'By class']];
-  const textOf = p => [p.name, p.role, p.email || '', p.title || '', p.where || '', p.school || '', ...p.cls.map(id => C[id].name + ' ' + C[id].room + ' period ' + C[id].period)].join(' ').toLowerCase();
+  const textOf = p => [p.name, p.role, p.email || '', p.title || '', p.where || '', p.school || '', ...p.cls.map(id => C[id].name + (C[id].hasPeriod ? ' period ' + C[id].period : ''))].join(' ').toLowerCase();
   const markQ = s => { const t = esc(s); if (!CT.q) return t; const i = s.toLowerCase().indexOf(CT.q); return i < 0 ? t : esc(s.slice(0, i)) + '<mark>' + esc(s.slice(i, i + CT.q.length)) + '</mark>' + esc(s.slice(i + CT.q.length)); };
   const starred = id => CT.star.includes(id);
   function rowHTML(p, key, sub) {
@@ -4090,10 +4026,10 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (CT.view === 'class') {
       // each class: its teacher, then your classmates in it
       CLASSES.forEach(c => {
-        const t = PEOPLE['t-' + c.id], ms = MATES.filter(p => p.cls.includes(c.id));
-        const match = CT.q && (c.name + ' ' + c.room).toLowerCase().includes(CT.q), list = [t, ...ms].filter(p => match || !CT.q || (p.name + ' ' + (p.email || '')).toLowerCase().includes(CT.q));
+        const ts = TEACH.filter(p => p.cls.includes(c.id)), ms = MATES.filter(p => p.cls.includes(c.id));
+        const match = CT.q && c.name.toLowerCase().includes(CT.q), list = [...ts, ...ms].filter(p => match || !CT.q || (p.name + ' ' + (p.email || '')).toLowerCase().includes(CT.q));
         if (!list.length) return;
-        html += lbl(`${badge(c)}${markQ(c.name)}`, `<small>Period ${c.period} · ${c.students} students</small>`) + list.map(p => rowHTML(p, c.id + ':' + p.id, p.role === 'Teacher' ? `Teacher · ${c.room}` : 'Classmate')).join('');
+        html += lbl(`${badge(c)}${markQ(c.name)}`, `<small>${[c.hasPeriod ? 'Period ' + c.period : '', c.students ? c.students + ' students' : ''].filter(Boolean).join(' · ')}</small>`) + list.map(p => rowHTML(p, c.id + ':' + p.id, p.role === 'Teacher' ? 'Teacher' : 'Classmate')).join('');
       });
     } else {
       const showT = CT.view !== 'mates', showM = CT.view !== 'teachers';
@@ -4131,24 +4067,23 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   function ctCard(animate) {
     const box = $('ctCard'), p = CT.open && P(CT.open);
     $('ct').classList.toggle('open', !!p);
-    if (!p) { box.innerHTML = `<div class="ct-empty"><span class="emo">${EMOJI_SVG['📒'] || ''}</span><b>Pick someone</b><span>Your teachers and classmates, from your Schoology classes.</span></div>`; return; }
+    if (!p) { box.innerHTML = `<div class="ct-empty"><span class="emo">${EMOJI_SVG['📒'] || ''}</span><b>${ALL.length ? 'Pick someone' : 'Nobody here yet'}</b><span>Your teachers and classmates, from your Schoology classes.</span></div>`; return; }
     const T = p.role === 'Teacher', c = T ? C[p.c] : null, on = starred(p.id);
     const convs = CONV.filter(x => x.with.includes(p.id)).sort((a, b) => b.when - a.when);
     // Teachers only for now (2026-10-28): only teachers and school staff can be messaged, not students.
     const acts = [
-      canMsg(p) ? `<button class="ct-act" data-toast="a new message to ${esc(p.name)} on the Messages page">${ico('msg')}<span>Message</span></button>` : '',
-      p.email ? `<button class="ct-act" data-toast="an email to ${esc(p.email)} in your mail app">${ico('mail')}<span>Email</span></button>` : '',
+      canMsg(p) ? `<button class="ct-act" data-ctmsg="${p.id}">${ico('msg')}<span>Message</span></button>` : '',
+      p.email ? `<a class="ct-act" href="mailto:${esc(p.email)}">${ico('mail')}<span>Email</span></a>` : '',
       p.email ? `<button class="ct-act" data-ctcopy="${esc(p.email)}">${ico('copy')}<span>Copy email</span></button>` : '',
       `<button class="ct-act" data-ctstar="${p.id}" aria-pressed="${on}">${ico('star')}<span>${on ? 'Starred' : 'Star'}</span></button>`].filter(Boolean);
     let html = `<div class="ct-hero">${av(p)}<h2>${esc(p.name)}</h2><p>${T ? `Your ${esc(c.name)} teacher` : p.kind ? esc(p.title) : `Classmate in ${p.cls.length} of your classes`}</p><div class="ct-acts" style="--n:${acts.length}">${acts.join('')}</div></div>`;
     if (T) {
-      html += `<div class="ct-sec"><h3>Class</h3><div class="ct-grp">${li(tileOf(c), `<b>${esc(c.name)}</b><span>Period ${c.period} · ${esc(c.room)} · ${c.students} students</span>`, `<svg class="i chev"><use href="#i-chev-r"/></svg>`, 'button', ` data-toast="${esc(c.name)}"`)}</div></div>`;
-      html += `<div class="ct-sec"><h3>Contact</h3><div class="ct-grp">${li('', `<small>School email</small><b>${esc(p.email)}</b>`, `<button class="ct-copy" data-ctcopy="${esc(p.email)}">${ico('copy')}Copy</button>`)}${li('', `<small>Office hours</small><b>${esc(p.hours)}</b>`)}${li('', `<small>School</small><b>Lincoln High School</b>`)}</div><p class="ct-fine">From ${esc(p.name)}'s Schoology profile.</p></div>`;
+      html += `<div class="ct-sec"><h3>${p.cls.length > 1 ? 'Classes' : 'Class'}</h3><div class="ct-grp">${p.cls.map(id => { const k = C[id]; return li(tileOf(k), `<b>${esc(k.name)}</b><span>${[k.hasPeriod ? 'Period ' + k.period : '', k.students ? k.students + ' students' : ''].filter(Boolean).join(' · ') || 'Your class'}</span>`, `<svg class="i chev"><use href="#i-chev-r"/></svg>`, 'button', ` data-go="${FSX.hubUrl(k.id)}"`); }).join('')}</div></div>`;
+      html += `<div class="ct-sec"><h3>Contact</h3><div class="ct-grp">${p.email ? li('', `<small>School email</small><b>${esc(p.email)}</b>`, `<button class="ct-copy" data-ctcopy="${esc(p.email)}">${ico('copy')}Copy</button>`) : li('', `<small>Message</small><b>Through Schoology</b>`)}${li('', `<small>School</small><b>${esc(SCHOOL)}</b>`)}</div><p class="ct-fine">From Schoology. ${p.email ? '' : 'Schoology doesn\'t share this teacher\'s email with students, so message them here.'}</p></div>`;
     } else if (p.kind) {
-      html += p.role === 'Staff' ? `<div class="ct-sec"><h3>Contact</h3><div class="ct-grp">${li('', `<small>School email</small><b>${esc(p.email)}</b>`, `<button class="ct-copy" data-ctcopy="${esc(p.email)}">${ico('copy')}Copy</button>`)}${li('', `<small>Where</small><b>${esc(p.where)}</b>`)}${p.hours ? li('', `<small>Hours</small><b>${esc(p.hours)}</b>`) : ''}${li('', `<small>School</small><b>${esc(p.school)}</b>`)}</div><p class="ct-fine">From Lincoln Unified's directory. Not in any of your classes.</p></div>`
-        : `<div class="ct-sec"><h3>School</h3><div class="ct-grp">${li('', `<small>${esc(p.title)}</small><b>${esc(p.school)}</b>`)}</div><p class="ct-fine">Not in any of your classes. Schoology doesn't share students' emails, so you can message them here but not email them.</p></div>`;
+      html += `<div class="ct-sec"><h3>Contact</h3><div class="ct-grp">${li('', `<small>Message</small><b>Through Schoology</b>`)}${li('', `<small>School</small><b>${esc(p.school)}</b>`)}</div><p class="ct-fine">Someone Schoology lets you message.</p></div>`;
     } else {
-      html += `<div class="ct-sec"><h3>Classes together</h3><div class="ct-grp">${p.cls.map(id => { const k = C[id]; return li(tileOf(k), `<b>${esc(k.name)}</b><span>Period ${k.period} · ${esc(k.teacher)}</span>`, `<svg class="i chev"><use href="#i-chev-r"/></svg>`, 'button', ` data-toast="${esc(k.name)}"`); }).join('')}</div><p class="ct-fine">Schoology doesn't share students' emails, so you can message classmates here but not email them.</p></div>`;
+      html += `<div class="ct-sec"><h3>Classes together</h3><div class="ct-grp">${p.cls.map(id => { const k = C[id]; return li(tileOf(k), `<b>${esc(k.name)}</b><span>${esc([k.hasPeriod ? 'Period ' + k.period : '', k.teacher].filter(Boolean).join(' · '))}</span>`, `<svg class="i chev"><use href="#i-chev-r"/></svg>`, 'button', ` data-go="${FSX.hubUrl(k.id)}"`); }).join('')}</div><p class="ct-fine">Schoology doesn't share students' emails, so you can message classmates here but not email them.</p></div>`;
     }
     html += `<div class="ct-sec"><h3>Conversations${convs.length ? ` <small>${convs.length}</small>` : ''}</h3>${convs.length ? `<div class="ct-grp">${convs.map(x => li(`<span class="tile" aria-hidden="true">${ico('msg')}</span>`, `<b>${esc(x.subject)}</b><span>${x.from === 'me' ? 'You: ' : x.with.length > 1 ? esc(P(x.from).role === 'Teacher' ? P(x.from).name : P(x.from).name.split(' ')[0]) + ': ' : ''}${esc(x.t)}</span>`, `<time>${ago(x.when)}</time>`, 'button', ` data-toast="your conversation about ${esc(x.subject)} on the Messages page"`)).join('')}</div>` : `<p class="ct-fine">No messages with ${esc(T ? p.name : p.name.split(' ')[0])} yet.</p>`}</div>`;
     html += `<div class="ct-sec"><h3>Notes <small id="ctSaved"></small></h3><textarea class="ct-note" id="ctNote" placeholder="Anything to remember, like when ${T ? 'they have office hours' : 'you have a project together'}. Only you can see this." aria-label="Notes about ${esc(p.name)}">${esc(CT.notes[p.id] || '')}</textarea></div>`;
@@ -4176,7 +4111,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
 
   function removeC(id) {
     const p = P(id); CT.added = CT.added.filter(x => x !== id); CT.star = CT.star.filter(x => x !== id); store.set('fsct_added', CT.added); store.set('fsct_star', CT.star);
-    if (CT.open === id) { CT.open = innerWidth > 860 ? TEACH[0].id : null; store.set('fsct_open', CT.open); }
+    if (CT.open === id) { CT.open = innerWidth > 860 && TEACH[0] ? TEACH[0].id : null; store.set('fsct_open', CT.open); }
     ctRows(); ctCard(); ctMeta(); toast(`Removed ${p.name} from your contacts.`);
   }
 
@@ -4193,7 +4128,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     return [...DIR, ...ALL].map(p => [score(p), p]).filter(x => x[0] < 9).sort((a, b) => a[0] - b[0] || a[1].name.localeCompare(b[1].name)).map(x => (x[1]._s = x[0], x[1]));
   }
   const have = id => !!PEOPLE[id] || CT.added.includes(id);
-  const acSub = p => p.kind ? `${p.title} · ${p.school}` : p.role === 'Teacher' ? `${C[p.c].name} teacher · ${LHS}` : `Classmate · ${LHS}`;
+  const acSub = p => p.kind ? `${p.title} · ${p.school}` : p.role === 'Teacher' ? `${C[p.c].name} teacher` : `Classmate · ${p.cls.map(id => C[id].name).join(', ')}`;
   function acChips() {
     const box = $('acField');
     box.querySelectorAll('.ms-chip').forEach(c => c.remove());
@@ -4202,7 +4137,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     $('acCount').textContent = ac.pick.length ? `${ac.pick.length} to add` : '';
     // who you're adding, under the field (like "People with access")
     $('acBody').innerHTML = ac.pick.length ? `<div class="ct-lbl">Adding</div>` + ac.pick.map(id => { const p = P(id); return `<div class="ac-row">${av(p)}<span class="tx"><b>${esc(p.name)}</b><small>${esc(acSub(p))}</small></span><button class="ibtn" data-acun="${id}" aria-label="Don't add ${esc(p.name)}">${ico('x')}</button></div>`; }).join('')
-      : `<div class="ac-hint">${ico('search')}<b>Start typing to find people</b><span>Search everyone in Lincoln Unified, like your counselor, the librarian or a friend at another school.</span></div>`;
+      : `<div class="ac-hint">${ico('search')}<b>Start typing to find people</b><span>Find your counselor, the librarian or anyone else Schoology lets you message.</span></div>`;
   }
   function acDrop() {
     const q = ac.q, el = $('acDrop');
@@ -4212,7 +4147,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     let k = 0;
     el.innerHTML = list.length ? list.map(p => { const h = have(p.id), on = !h && k++ === ac.sel; return `<button class="ms-opt${on ? ' on' : ''}" role="option" ${h ? 'aria-disabled="true"' : `data-acpick="${p.id}"`} aria-selected="${on}">${av(p)}<span class="tx"><b>${markIn(p.name, q)}</b><small>${markIn(acSub(p), p._s > 1 ? q : '')}${p.email && p.kind ? ' · ' + markIn(p.email, p._s > 1 ? q : '') : ''}</small></span>${h ? '<em>In contacts</em>' : ''}</button>`; }).join('')
       + (all.length > AC_MAX ? `<p class="ac-more">${all.length - AC_MAX} more. Keep typing to narrow it down.</p>` : '')
-      : `<p class="ac-more">Nobody in Lincoln Unified matches "${esc(ac.q)}".</p>`;
+      : `<p class="ac-more">${dirAsked && !DIR.length ? 'Loading who you can add…' : `Nobody matches "${esc(ac.q)}".`}</p>`;
     el.hidden = false; $('acFind').setAttribute('aria-expanded', 'true');
   }
   function acPick(id) { if (!ac.pick.includes(id)) ac.pick.push(id); ac.q = ''; ac.sel = 0; $('acFind').value = ''; acChips(); acDrop(); $('acFind').focus(); }
@@ -4221,11 +4156,11 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (ac) return; menuClose();
     document.body.insertAdjacentHTML('beforeend', `<div class="ac-scrim${calm() ? '' : ' in'}" id="acScrim"><div class="ac-box" role="dialog" aria-modal="true" aria-labelledby="acTitle">
       <div class="ac-hd"><h2 id="acTitle">Add contacts</h2></div>
-      <div class="ac-fw"><div class="ac-field" id="acField"><input id="acFind" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="acDrop" aria-autocomplete="list" aria-label="Find people in Lincoln Unified"></div>
+      <div class="ac-fw"><div class="ac-field" id="acField"><input id="acFind" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="acDrop" aria-autocomplete="list" aria-label="Find people in Schoology"></div>
         <div class="ms-find ac-drop" id="acDrop" role="listbox" aria-label="Matches" hidden></div></div>
       <div class="ac-body" id="acBody"></div>
       <div class="ac-foot"><small id="acCount"></small><button class="btn primary" id="acDone">Done</button></div></div></div>`);
-    ac = { el: $('acScrim'), q: '', pick: [], sel: 0, from: document.activeElement };
+    ac = { el: $('acScrim'), q: '', pick: [], sel: 0, from: document.activeElement }; dirLoad();
     acChips(); $('acFind').focus();
     const fi = $('acFind');
     fi.addEventListener('input', e => { ac.q = e.target.value.trim().toLowerCase(); ac.sel = 0; acDrop(); });
@@ -4251,7 +4186,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   function acClose(save) {
     if (!ac) return; const { el, pick, from } = ac; ac = null; el.remove();
     if (save && pick.length) {
-      CT.added = [...CT.added, ...pick]; store.set('fsct_added', CT.added);
+      CT.added = [...CT.added, ...pick]; store.set('fsct_added', CT.added); pick.forEach(id => { const q = P(id); if (q && q.kind) DIR_SAVED[id] = q.name; }); store.set('fsct_dir', DIR_SAVED);
       if (CT.view === 'class') { CT.view = 'all'; ctView(); }
       CT.q = ''; $('ctFind').value = ''; ctSearchSync(); openP(pick[0]); ctMeta();
       const r = $('ctRows').querySelector(`[data-ctopen="${pick[0]}"]`); if (r) r.scrollIntoView({ block: 'nearest' });
@@ -4272,11 +4207,11 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     menu = { el, from, id }; if (from) from.setAttribute('aria-expanded', 'true'); el.querySelector('button').focus({ preventScroll: true });
     el.addEventListener('click', e => {
       const a = e.target.closest('[data-ctact]'); if (!a) return; const k = a.dataset.ctact; menuClose(true);
-      if (k === 'msg') toast(`In the app, this opens a new message to ${p.name} on the Messages page.`);
+      if (k === 'msg') FSX.go('messages', { to: p.id, name: p.name });
       else if (k === 'email') copy(p.email, `Copied ${p.email}.`);
       else if (k === 'star') starToggle(id);
       else if (k === 'remove') removeC(id);
-      else if (k === 'class') { if (T) toast(`In the app, this opens ${C[p.c].name}.`); else openP(id); }
+      else if (k === 'class') { if (T) FSX.hub(p.c); else openP(id); }
     });
   }
   $('ctRows').addEventListener('contextmenu', e => { const r = e.target.closest('[data-ctopen]'); if (!r) return; e.preventDefault(); menuOpen(r.dataset.ctopen, e.clientX, e.clientY, r.querySelector('.ct-more')); });
@@ -4297,6 +4232,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     const s = e.target.closest('[data-ctstar]'); if (s) { starToggle(s.dataset.ctstar); return; }
     const rm = e.target.closest('[data-ctremove]'); if (rm) { removeC(rm.dataset.ctremove); return; }
     const cp = e.target.closest('[data-ctcopy]'); if (cp) { copy(cp.dataset.ctcopy, `Copied ${cp.dataset.ctcopy}.`); return; }
+    const mg = e.target.closest('[data-ctmsg]'); if (mg) { const q = P(mg.dataset.ctmsg); FSX.go('messages', { to: mg.dataset.ctmsg, name: q ? q.name : '' }); return; }
   });
   $('ctView').addEventListener('click', e => { const b = e.target.closest('[data-ctview]'); if (!b || b.dataset.ctview === CT.view) return; CT.view = b.dataset.ctview;
     $('ctView').querySelectorAll('[data-ctview]').forEach(x => x.setAttribute('aria-pressed', x === b)); mpPill($('ctView'), true);
@@ -4310,28 +4246,22 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
 
   // ---------- refresh: who's in your classes comes from Schoology ----------
   const bar = (w, h = 10, r) => `<span class="skel-bar" style="width:${w};height:${h}px${r ? ';border-radius:' + r : ''}"></span>`;
-  let loading = false, spin = null;
+  let loading = false;
+  $('syncLabel').textContent = FSX.synced(); $('refresh').setAttribute('aria-label', 'Refresh your contacts. ' + FSX.synced() + '.');
   $('refresh').addEventListener('click', () => {
     if (loading) return; loading = true; menuClose();
     const b = $('refresh'), icon = b.querySelector('svg');
     b.classList.add('loading'); b.setAttribute('aria-busy', 'true'); $('syncLabel').textContent = 'Syncing…';
-    if (!calm() && icon.animate) spin = icon.animate([{ transform: 'rotate(0deg)' }, { transform: 'rotate(360deg)' }], { duration: 800, iterations: Infinity });
-    $('ctMeta').innerHTML = ['user', 'users', 'binder', 'star'].map((k, i) => `<span class="gm" data-skel>${ico(k)}<span class="skel-bar" style="width:${[80, 100, 70, 70][i]}px;height:12px"></span></span>`).join('');
-    $('ctRows').classList.add('sync-wait'); $('ctRows').innerHTML = Array.from({ length: 9 }, () => `<div class="ct-row" data-skel>${bar('40px', 40, '13px')}<span class="tx">${bar('50%', 14)}<span style="display:block;margin-top:8px">${bar('70%', 11)}</span></span></div>`).join('');
-    const done = () => {
-      loading = false; b.classList.remove('loading'); b.removeAttribute('aria-busy');
-      if (spin) { const a = ((spin.currentTime || 0) % 800) / 800 * 360; spin.cancel(); spin = null; if (!calm()) icon.animate([{ transform: `rotate(${a}deg)` }, { transform: 'rotate(360deg)' }], { duration: Math.max(160, (360 - a) / 360 * 800), easing: 'cubic-bezier(.25, .7, .35, 1)' }); }
-      $('syncLabel').textContent = 'Synced just now'; b.setAttribute('aria-label', 'Refresh your contacts. Synced just now.'); toast('Your contacts are up to date.');
-    };
-    setTimeout(() => { ctMeta(); }, 500 + Math.random() * 500);
-    setTimeout(() => { $('ctRows').classList.remove('sync-wait'); ctRows(); if (!calm()) $('ctRows').querySelectorAll('.ct-row').forEach((el, i) => { el.style.animation = `averagesRise 560ms cubic-bezier(.16, 1, .3, 1) ${40 + i * 30}ms both, averagesFadeIn 420ms cubic-bezier(.33, 1, .68, 1) ${40 + i * 30}ms both`; }); done(); }, 900 + Math.random() * 900);
+    if (!calm() && icon.animate) icon.animate([{ transform: 'rotate(0deg)' }, { transform: 'rotate(360deg)' }], { duration: 800, iterations: Infinity });
+    FSX.reloadFresh('Your contacts are up to date.');
   });
 
   // the glow behind the header matches the yellow address book in the logo
   if (!EMOJI_SVG['📒']) EMOJI_SVG['📒'] = "<svg aria-hidden=\"true\" focusable=\"false\" viewBox=\"0 0 36 36\"><path fill=\"#F4900C\" d=\"M36 26c0 2.209-1.791 4-4 4H8c-2.209 0-4-1.791-4-4V6.313C4 4.104 9.791 0 12 0h18.625C33.719 0 36 2.312 36 5.375V26z\"/><path fill=\"#CCD6DD\" d=\"M34 30c0 2.209-1.791 4-4 4H10c-2.209 0-4-1.791-4-4V6c0-4.119-.021-4 5-4h19c2.209 0 4 1.791 4 4v24z\"/><path fill=\"#E1E8ED\" d=\"M32 31c0 1.657-1.343 3-3 3H7c-1.657 0-3-1.343-3-3V7c0-1.657 1.343-3 3-3h22c1.657 0 3 1.343 3 3v24z\"/><path fill=\"#FFAC33\" d=\"M32 32c0 2.209-1.791 4-4 4H9c-2.209 0-4-1.791-4-4V10c0-2.209 1.791-4 4-4h19c2.209 0 4 1.791 4 4v22z\"/><path fill=\"#FFCC4D\" d=\"M30 32c0 2.209-1.791 4-4 4H9c-2.209 0-4-1.791-4-4V12c0-2.209 1.791-4 4-4h17.335C28.544 8 30 9.456 30 11.665V32z\"/><path fill=\"#F4900C\" d=\"M9 6C7.312 6 7.269 4.078 8 3.25 8.832 2.309 10.125 2 12.438 2H14V0h-2.719C7.312 0 4 2.5 4 5.375V32c0 2.209 1.791 4 4 4h2V6H9z\"/><path fill=\"#662113\" d=\"M8.542 32.979c0 .702-.667 1.271-1.49 1.271-.822 0-1.489-.569-1.489-1.271 0-.701.667-1.271 1.489-1.271.823 0 1.49.569 1.49 1.271z\"/><path fill=\"#66757F\" d=\"M6.894 32.271c-.48.055-.792.375-1.017.729-.307.485-1.007 1-1.877 1-1.104 0-2-.671-2-1.5S2.896 31 4 31v-1.996C1.833 29.025.083 30.579.083 32.5c0 1.934 1.772 3.5 3.958 3.5 1.854 0 3.347-1.045 3.901-2.569.277-.759-.469-1.224-1.048-1.16z\"/><path fill=\"#662113\" d=\"M8.542 24.979c0 .702-.667 1.271-1.49 1.271-.822 0-1.489-.569-1.489-1.271 0-.701.667-1.271 1.489-1.271.823 0 1.49.569 1.49 1.271z\"/><path fill=\"#66757F\" d=\"M6.894 24.271c-.48.055-.792.375-1.017.729-.307.485-1.007 1-1.877 1-1.104 0-2-.671-2-1.5S2.896 23 4 23v-1.996C1.833 21.025.083 22.579.083 24.5c0 1.934 1.772 3.5 3.958 3.5 1.854 0 3.347-1.045 3.901-2.569.277-.759-.469-1.224-1.048-1.16z\"/><path fill=\"#662113\" d=\"M8.542 16.979c0 .702-.667 1.271-1.49 1.271-.822 0-1.489-.569-1.489-1.271 0-.701.667-1.271 1.489-1.271.823 0 1.49.569 1.49 1.271z\"/><path fill=\"#66757F\" d=\"M6.894 16.271c-.48.055-.792.375-1.017.729-.307.485-1.007 1-1.877 1-1.104 0-2-.671-2-1.5S2.896 15 4 15v-1.996C1.833 13.025.083 14.579.083 16.5c0 1.934 1.772 3.5 3.958 3.5 1.854 0 3.347-1.045 3.901-2.569.277-.759-.469-1.224-1.048-1.16z\"/><path fill=\"#662113\" d=\"M8.542 8.979c0 .702-.667 1.271-1.49 1.271-.822 0-1.489-.569-1.489-1.271 0-.701.667-1.271 1.489-1.271.823 0 1.49.569 1.49 1.271z\"/><path fill=\"#66757F\" d=\"M6.894 8.271c-.48.055-.792.375-1.017.729C5.57 9.485 4.87 10 4 10c-1.104 0-2-.671-2-1.5S2.896 7 4 7V5.004C1.834 5.024.083 6.579.083 8.5c0 1.934 1.772 3.5 3.958 3.5 1.854 0 3.347-1.045 3.901-2.569.277-.759-.469-1.224-1.048-1.16z\"/></svg>";
   $('ctLogo').style.setProperty('--c', '#ffac33'); document.querySelector('.hub-h').style.setProperty('--class-c', '#ffac33'); $('ctLogo').innerHTML = EMOJI_SVG['📒'] || '';
   if (CT.open && (!P(CT.open) || (DIRP[CT.open] && !CT.added.includes(CT.open)))) CT.open = null;
-  if (!CT.open && innerWidth > 860) CT.open = TEACH[0].id;
+  if (FSX.q.get('person') && P(FSX.q.get('person'))) CT.open = FSX.q.get('person');
+  if (!CT.open && innerWidth > 860 && TEACH[0]) CT.open = TEACH[0].id;
   ctMeta(); ctView(); ctRows(); ctCard(); ntInit();
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => mpPill($('ctView'), false));
 
@@ -4342,6 +4272,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
    The tilt, nudge and overlap come from the item's text, so a sticker lands the same way every time the list redraws.
    Each one lands differently: high or low on the end of the word before it, or somewhere along the top of the line under it, always covering 2 to 4px, or the top of the line under it, so the text stays readable. */
 (() => {
+  return; // design rules: New tags sit straight, in line with their text (no tilt, no landing spots)
   const TILTS = [-12, -9, -6, -3, 4, 7, 10, 13];
   const hash = s => { let h = 7; for (const ch of s) h = Math.imul(h ^ ch.charCodeAt(0), 0x5bd1e995); h ^= h >>> 15; h = Math.imul(h, 0x27d4eb2d); h ^= h >>> 13; return h >>> 1; };
   const seedOf = el => { const host = el.closest('[data-mid], [data-mpid], [data-agopen], [data-gw], [data-rgw], [data-gdopen], [role="row"], .upd, button, a, li, tr') || el.parentNode; return hash((host ? host.textContent : '') + el.textContent); };

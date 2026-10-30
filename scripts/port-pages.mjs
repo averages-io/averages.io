@@ -486,7 +486,7 @@ function generatePage(name, route, data) {
 
   const loginExtras = isLogin
     ? `
-import { getSession, signIn } from "./lib/averages";
+import { API_BASE, getSession, signIn } from "./lib/averages";
 
 const ERROR_MESSAGES: Record<string, string> = {
   invalid_credentials: "That API key and secret didn't work. Double-check you copied both from your school's Schoology /api page.",
@@ -495,6 +495,22 @@ const ERROR_MESSAGES: Record<string, string> = {
   schoology_error: "Schoology isn't responding right now. Try again in a moment.",
   server_misconfigured: "The Averages server isn't set up correctly yet. Please let us know.",
   feature_off: "Signing in this way is turned off right now. Try again later.",
+};
+
+// Sign in with Schoology (2026-10-29): when the API sends the student back with
+// ?signin_error=<code>#schoology, the Schoology screen says what went wrong.
+const SCHOOLOGY_SIGNIN_ERRORS: Record<string, string> = {
+  not_configured: "Signing in with Schoology isn't open yet. Check back soon.",
+  feature_off: "Signing in with Schoology is turned off right now. Try again later.",
+  unknown_school: "We couldn't find that school's Schoology. Pick your school from the list and try again.",
+  denied: "Schoology didn't let Averages.io in. Try again, and choose Approve or Allow on Schoology's page.",
+  expired: "That sign-in took too long or was opened in a different browser. Try again.",
+  schoology_refused: "Schoology turned down the sign-in. Try again in a moment.",
+  schoology_error: "Schoology isn't responding right now. Try again in a moment.",
+  schoology_unreachable: "Couldn't reach Schoology. Check your connection and try again.",
+  schoology_bad_answer: "Schoology sent back something unexpected. Try again in a moment.",
+  no_user_id: "Schoology didn't say which account you signed in with. Try again.",
+  server_misconfigured: "The Averages server isn't set up correctly yet. Please let us know.",
 };
 `
     : "";
@@ -529,11 +545,60 @@ const ERROR_MESSAGES: Record<string, string> = {
       };
     };
 
+    let cancelled = false;
+
+    // Sign in with Schoology (2026-10-29). The login script's Schoology button
+    // calls window.__averagesLmsSignIn(lms, domain) when it exists; until the
+    // API says it's set up (consumer key and secret in place, switch on), the
+    // button keeps saying it's coming, exactly as before.
+    fetch(\`\${API_BASE}/auth/schoology/status\`, { credentials: "omit" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((s) => {
+        if (cancelled || !s || s.on !== true) return;
+        (window as any).__averagesLmsSignIn = (lms: string, domain: string) => {
+          if (lms !== "schoology") return;
+          let under13 = true;
+          try {
+            under13 = window.localStorage.getItem("schoolagy_13plus") !== "yes";
+          } catch {}
+          const q = new URLSearchParams({ domain: String(domain || ""), under13: under13 ? "1" : "0" });
+          (window as any).__averagesLoginLogo?.show();
+          window.location.href = \`\${API_BASE}/auth/schoology/start?\${q}\`;
+        };
+      })
+      .catch(() => {});
+
+    // Back from Schoology with a problem: say what it was on the Schoology
+    // screen, and drop it from the address so a reload doesn't repeat it.
+    const params = new URLSearchParams(window.location.search);
+    const signinError = params.get("signin_error");
+    if (signinError) {
+      params.delete("signin_error");
+      const rest = params.toString();
+      try {
+        history.replaceState(history.state, "", window.location.pathname + (rest ? "?" + rest : "") + window.location.hash);
+      } catch {}
+      // The login script resets the note while it draws the Schoology screen
+      // (and when it puts back the school picked last time), so it's said
+      // again over the first 2 s, until the student does anything.
+      const text = SCHOOLOGY_SIGNIN_ERRORS[signinError] ?? "Something went wrong signing in with Schoology. Please try again.";
+      let touched = false;
+      const stop = () => { touched = true; };
+      window.addEventListener("pointerdown", stop, { once: true, capture: true });
+      window.addEventListener("keydown", stop, { once: true, capture: true });
+      const say = () => {
+        const note = document.getElementById("schoolNote");
+        if (touched || cancelled || !note) return;
+        note.textContent = text;
+        note.hidden = false;
+      };
+      [0, 150, 500, 1000, 2000].forEach((ms) => setTimeout(say, ms));
+    }
+
     // Already signed in? Don't make them do it again. The screen may still
     // be showing the loading animation from CHECKING_JS below; it stays up all
     // the way to Home when they are, and gives way to the sign-in options when
     // they aren't.
-    let cancelled = false;
     const reveal = () => document.documentElement.removeAttribute("data-av-checking");
     getSession().then((session) => {
       if (cancelled) return;

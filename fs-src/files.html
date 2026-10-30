@@ -1123,20 +1123,15 @@
   /* buttons: a little taller and rounder, they lift on hover and squish when pressed */
   .btn { height: 38px; border-radius: 12px; font-size: 15px; transition: background-color .15s ease, transform .25s var(--spring), box-shadow .2s ease; }
   .btn.sm { height: 32px; border-radius: 10px; font-size: 13px; }
-  .btn.primary { background: linear-gradient(135deg, var(--warm-a), var(--warm-b)); box-shadow: 0 8px 16px -10px rgba(184, 53, 47, .9); }
-  .btn.primary:hover { background: linear-gradient(135deg, var(--warm-a-hover), var(--warm-b-hover)); }
-  .btn.primary:disabled, .btn.primary:disabled:hover { box-shadow: none; } /* a grayed-out button loses the red glow too */
+  .btn.primary { background: var(--accent); box-shadow: none; }
+  .btn.primary:hover { background: var(--accent-hover); }
   .chip { height: 44px; border-radius: 14px; box-shadow: var(--card-shadow); transition: background-color .15s ease, transform .25s var(--spring); }
   /* the shortcut chips each get their own color */
   .chip svg.i { color: var(--chip-c, var(--ink-2)); }
   .chip:nth-child(5n + 1) { --chip-c: var(--warm-a); } .chip:nth-child(5n + 2) { --chip-c: var(--sky); } .chip:nth-child(5n + 3) { --chip-c: var(--mint); } .chip:nth-child(5n + 4) { --chip-c: var(--grape); } .chip:nth-child(5n + 5) { --chip-c: #c98a00; }
-  /* sticker tags: New pops off the page a little */
-  .newtag { background: var(--sun) !important; color: var(--ink) !important; border-radius: 8px; transform: translate(var(--tx, 0px), var(--ty, 0px)) rotate(var(--tilt, -4deg)); box-shadow: 0 0 0 2px var(--field), 0 3px 8px -2px rgba(20, 21, 31, .25); will-change: transform; backface-visibility: hidden; } /* always drawn on its own layer, so hovering a row never redraws the text thinner or bolder */
-  /* soft shapes floating behind the top of the page */
+  /* New tags: a filled yellow label */
+  .newtag { background: var(--sun) !important; color: var(--ink) !important; border-radius: 8px;  will-change: transform; backface-visibility: hidden; } /* always drawn on its own layer, so hovering a row never redraws the text thinner or bolder */
   .wrap { position: relative; isolation: isolate; }
-  .wrap::before, .wrap::after { content: ""; position: absolute; z-index: -1; pointer-events: none; border-radius: 50%; filter: blur(2px); }
-  .wrap::before { top: -40px; right: 4%; width: 380px; height: 300px; background: radial-gradient(closest-side, color-mix(in srgb, var(--sun) 34%, transparent), transparent); }
-  .wrap::after { top: 60px; right: 22%; width: 260px; height: 220px; background: radial-gradient(closest-side, color-mix(in srgb, var(--bubble) 20%, transparent), transparent); }
   /* empty states get a doodle */
   :is(.nt-empty, .ag-none, .mp-none, .mdet-empty, .list-empty, .sv-empty)::before { content: ""; display: block; width: 120px; height: 72px; margin: 0 auto 12px; background: var(--life-doodle) center / contain no-repeat; }
   /* the toast bounces in */
@@ -1146,17 +1141,13 @@
     body:not(.potato-mode) .btn:not(:disabled):active, body:not(.potato-mode) .chip:active, body:not(.potato-mode) .ibtn:active { transform: scale(.95); transition-duration: .08s; }
     body:not(.potato-mode) .ibtn { transition: background-color .15s ease, transform .25s var(--spring); }
     body:not(.potato-mode) .toast.show { animation: lifeToast .45s var(--spring); }
-    body:not(.potato-mode) .wrap::before { animation: lifeFloat 14s ease-in-out infinite alternate; }
-    body:not(.potato-mode) .wrap::after { animation: lifeFloat 18s ease-in-out -6s infinite alternate-reverse; }
     /* icon tiles wiggle when you point at their row */
     body:not(.potato-mode) :is(.arow, .mrow, .mp-row, .ag-row, .nt-row, .pin, .gr-row, .crow, tr, .item, .mi):hover :is(.ktile, .nt-tile, .badge, .emo) { animation: lifeWiggle .5s var(--spring); }
     body:not(.potato-mode) .newtag { animation: lifeSticker .5s var(--spring) backwards; }
   }
-  @keyframes lifeFloat { from { transform: translate(0, 0) scale(1); } to { transform: translate(-24px, 16px) scale(1.08); } }
   @keyframes lifeWiggle { 0% { transform: none; } 30% { transform: rotate(-9deg) scale(1.08); } 60% { transform: rotate(6deg) scale(1.08); } 100% { transform: none; } }
-  @keyframes lifeSticker { from { transform: rotate(-14deg) scale(.6); opacity: 0; } }
+  @keyframes lifeSticker { from { transform: scale(.6); opacity: 0; } }
   @keyframes lifeToast { 0% { transform: translate(-50%, 16px) scale(.9); } 100% { transform: translate(-50%, 0) scale(1); } }
-  .potato-mode .wrap::before, .potato-mode .wrap::after { display: none; }
   /* ===== end Life layer ===== */
   /* ===== What-if grades: one popup for the whole app (Home, Grades, course hubs) ===== */
   .wi-scrim { position: fixed; inset: 0; z-index: 95; background: var(--scrim); display: flex; justify-content: center; align-items: center; padding: 24px 16px; }
@@ -1737,14 +1728,13 @@
   button.hub-logo:focus-visible { outline: 2px solid var(--focus); outline-offset: 4px; }
   /* a hint that the emoji opens Course info (same tooltip as the top bar buttons) */
   button.hub-logo { position: relative; }
-  /* the hint sits outside the tilted emoji, so it stays upright and crisp whatever angle the emoji is at */
+  /* the hint sits outside the emoji button, so hovering it never moves the hint */
   .hub-logo-w { position: relative; flex: none; display: grid; }
   .hub-tip { position: absolute; bottom: calc(100% + 12px); left: 0; right: 0; margin: 0 auto; width: max-content; z-index: 70; padding: 4px 8px; border-radius: 8px;
-    background: rgba(70, 72, 86, .72); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); color: #ffffff; font-size: 12px; font-weight: 800; line-height: 16px; white-space: nowrap;
+    background: #464856; color: #ffffff; font-size: 12px; font-weight: 800; line-height: 16px; white-space: nowrap;
     pointer-events: none; opacity: 0; transition: opacity .15s ease; -webkit-font-smoothing: antialiased; }
   .hub-logo:hover + .hub-tip, .hub-logo:focus-visible + .hub-tip { opacity: 1; transition-delay: .25s; }
   @media (hover: none) { .hub-tip { display: none; } }
-  .potato-mode .hub-tip { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(70, 72, 86, .88); }
   .hub-info { display: inline-flex; align-items: center; gap: 8px; height: 28px; padding: 0 12px; margin: -4px 0; border-radius: 8px; color: var(--ink-2); font-weight: 800; font-size: 14px; background: var(--panel); }
   .hub-info:hover { background: var(--inner); color: var(--ink); }
   .hub-info svg.i { width: 16px; height: 16px; }
@@ -2239,7 +2229,7 @@
   .aw-class b { display: block; color: var(--ink); font-weight: 800; }
   .aw-class svg.i { flex: none; color: var(--muted); margin-top: 2px; }
   /* ---------- Updates tab ---------- */
-  .up { grid-column: 1 / -1; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+  section.up { grid-column: 1 / -1; min-width: 0; display: flex; flex-direction: column; gap: 16px; }   /* section: the bare .up also matched the green "+2.4" chips (.gr-d.up) and broke their row */
   .up[hidden] { display: none; }
   .up-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
   .up-bar .mp-types button em { font-style: normal; margin-left: 8px; color: var(--muted); font-variant-numeric: tabular-nums; }
@@ -2254,8 +2244,7 @@
   .up-post { display: flex; flex-direction: column; gap: 12px; padding: 20px 20px; border-radius: 20px; background: var(--panel); box-shadow: var(--card-shadow); transition: background-color .15s ease; }
   .up-post.pinned { background: color-mix(in srgb, var(--class-c, var(--accent)) 7%, var(--panel)); }
   .up-top { display: flex; align-items: center; gap: 12px; }
-  .up-kind { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; flex: none; background: var(--field); transform: rotate(-4deg); }
-  .up-post:nth-child(odd) .up-kind { transform: rotate(4deg); }
+  .up-kind { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; flex: none; background: var(--field); }
   .up-kind svg { width: 24px; height: 24px; }
   .up-ttl { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
   .up-ttl b { display: inline-flex; align-items: center; gap: 4px; font-size: 15px; font-weight: 900; }
@@ -2835,7 +2824,7 @@
   .upd { display: flex; flex-direction: column; gap: 4px; padding: 8px; border-radius: 12px; color: var(--ink); }
   .upd:hover { background: var(--inner); }
   .upd p { margin: 0; font-size: 14px; font-weight: 600; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-  .upd .newtag { align-self: flex-start; margin-left: -8px; } /* the sticker drops onto the top corner of the text (the overlap is set by the life script) */
+  .upd .newtag { align-self: flex-start; }
   .upd .newtag + p { padding-top: 2px; }
   .upd small { color: var(--muted); font-weight: 700; font-size: 13px; }
   .rail .panel .arow .tx small { white-space: normal; }
@@ -3368,10 +3357,9 @@
   .avh-hp-st kbd.avh-dots3 { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 18px; padding: 0; vertical-align: -3px; }
   .avh-hp-st kbd.avh-dots3 svg { width: 12px; height: 12px; display: block; }
   /* ===== Life layer for the course page ===== */
-  /* the class logo becomes a sticker, with a blob of the class color behind the header */
+  /* the course header */
   .hub-h { position: relative; }
-  .hub-h::before { content: ""; position: absolute; z-index: -1; left: -60px; top: -70px; width: 360px; height: 280px; border-radius: 50%; pointer-events: none; background: radial-gradient(closest-side, color-mix(in srgb, var(--class-c, var(--mint)) 30%, transparent), transparent); }
-  .hub-logo { border-radius: 28px; transform: rotate(-4deg); box-shadow: 0 0 0 5px var(--field), 0 12px 24px -12px rgba(20, 21, 31, .45); transition: transform .35s var(--spring); }
+  .hub-logo { border-radius: 28px; box-shadow: 0 0 0 5px var(--field), 0 12px 24px -12px rgba(20, 21, 31, .45); transition: transform .35s var(--spring); }
   .hub-t h1 { font-size: 44px; }
   .hub-tab { border-radius: 12px; transition: background-color .15s ease, transform .25s var(--spring); }
   .hub-tab.on { background: var(--ink); box-shadow: 0 8px 16px -10px rgba(20, 21, 31, .8); }
@@ -3384,15 +3372,16 @@
   .hub-acts .pill.sync { height: 38px; border-radius: 12px; padding: 0 16px 0 12px; font-size: 15px; }
   .hub-acts .pill.sync svg { width: 20px; height: 20px; }
   @media (prefers-reduced-motion: no-preference) {
-    body:not(.potato-mode) .hub-logo:hover { transform: rotate(3deg) scale(1.04); }
+    body:not(.potato-mode) .hub-logo:hover { transform: scale(1.04); }
     body:not(.potato-mode) .hub-tab:active { transform: scale(.95); }
-    body:not(.potato-mode) .hub-h::before { animation: lifeFloat 16s ease-in-out infinite alternate; }
   }
-  .potato-mode .hub-h::before { display: none; }
-  @media (max-width: 680px) { .hub-t h1 { font-size: 34px; } .hub-logo { transform: rotate(-3deg); } }
-  /* on the course page the shapes belong to something: no loose blobs in the corner */
-  .wrap::before, .wrap::after { display: none; }
+  @media (max-width: 680px) { .hub-t h1 { font-size: 34px; } }
   /* ===== end Life layer for the course page ===== */
+  /* real pictures (2026-10-29) */
+  .fl-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .fl-bigimg { max-width: 100%; max-height: 100%; object-fit: contain; display: block; margin: auto; border-radius: 8px; }
+  .fl-lb-fold { height: 36px; border-radius: 10px; border: 0; background: var(--field); color: var(--ink); font: inherit; font-weight: 700; padding: 0 12px; }
+  .fl-nameit input { width: 100%; border: 0; background: transparent; font: inherit; color: var(--ink); outline: none; }
 </style>
 </head>
 <body>
@@ -3419,14 +3408,14 @@
   <aside class="side" id="side" aria-label="Sidebar">
     <nav class="nav" aria-label="Pages">
       <a href="#" title="Search" id="sideSearch" aria-keyshortcuts="Control+K Meta+K"><svg class="i"><use href="#i-search"/></svg><span class="fade">Search</span><kbd class="fade side-kbd" id="sideKbd">Ctrl K</kbd></a>
-      <a href="#" title="Home" data-toast="Home"><svg class="i"><use href="#i-home"/></svg><span class="fade">Home</span></a>
-      <a href="#" title="Courses" data-toast="the Courses page"><svg class="i"><use href="#i-binder"/></svg><span class="fade">Courses</span></a>
-      <a href="#" title="Grades" data-toast="the Grades page"><svg class="i"><use href="#i-chart"/></svg><span class="fade">Grades</span></a>
-      <a href="#" title="Assignments" data-toast="the Assignments page"><svg class="i"><use href="#i-inbox"/></svg><span class="fade">Assignments</span><em class="count fade" id="cntAssign"></em><i class="pip" id="pipAssign"></i></a>
-      <a href="#" title="Calendar" data-toast="the Calendar page"><svg class="i"><use href="#i-cal"/></svg><span class="fade">Calendar</span></a>
+      <a href="/fs/home.html" data-go="/fs/home.html" title="Home" data-was="Home"><svg class="i"><use href="#i-home"/></svg><span class="fade">Home</span></a>
+      <a href="/fs/courses.html" data-go="/fs/courses.html" title="Courses" data-was="the Courses page"><svg class="i"><use href="#i-binder"/></svg><span class="fade">Courses</span></a>
+      <a href="/fs/grades.html" data-go="/fs/grades.html" title="Grades" data-was="the Grades page"><svg class="i"><use href="#i-chart"/></svg><span class="fade">Grades</span></a>
+      <a href="/fs/assignments.html" data-go="/fs/assignments.html" title="Assignments" data-was="the Assignments page"><svg class="i"><use href="#i-inbox"/></svg><span class="fade">Assignments</span><em class="count fade" id="cntAssign"></em><i class="pip" id="pipAssign"></i></a>
+      <a href="/fs/calendar.html" data-go="/fs/calendar.html" title="Calendar" data-was="the Calendar page"><svg class="i"><use href="#i-cal"/></svg><span class="fade">Calendar</span></a>
       <a href="#" title="Files" class="on" aria-current="page"><svg class="i"><use href="#i-folder"/></svg><span class="fade">Files</span></a>
-      <a href="#" title="Messages" data-toast="the Messages page"><svg class="i"><use href="#i-msg"/></svg><span class="fade">Messages</span><em class="count fade" id="cntMsg"></em><i class="pip" id="pipMsg"></i></a>
-      <a href="#" title="Contacts" data-toast="the Contacts page"><svg class="i"><use href="#i-users"/></svg><span class="fade">Contacts</span></a>
+      <a href="/fs/messages.html" data-go="/fs/messages.html" title="Messages" data-was="the Messages page"><svg class="i"><use href="#i-msg"/></svg><span class="fade">Messages</span><em class="count fade" id="cntMsg"></em><i class="pip" id="pipMsg"></i></a>
+      <a href="/fs/contacts.html" data-go="/fs/contacts.html" title="Contacts" data-was="the Contacts page"><svg class="i"><use href="#i-users"/></svg><span class="fade">Contacts</span></a>
     </nav>
     <div class="divider" role="separator"></div>
     <div class="side-h fade"><span>Your classes</span></div>
@@ -3798,7 +3787,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const store = { get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
   if (store.get('fsmock_potato') === true) document.body.classList.add('potato-mode');
   const calm = () => document.body.classList.contains('potato-mode') || matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const PROFILE = Object.assign({ name: 'John Appleseed', photo: 'data:image/jpeg;base64,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' }, store.get('fsmock_profile2') || {});
+  const PROFILE = Object.assign({ name: FSD.me.name, photo: FSD.me.photo }, store.get('fsmock_profile2') || {});
   const EMOJI_SVG = {
       "🧪": "<svg aria-hidden=\"true\" focusable=\"false\" viewBox=\"0 0 36 36\"><path fill=\"#CCD6DD\" d=\"M14.563 14.414 25.47 3.505l6.961 6.962-10.908 10.908z\"/><path fill=\"#68E090\" d=\"M8.103 34.399C2.5 34 1.5 30.062 1.635 27.932c.322-5.07 15.601-16.551 15.601-16.551l12.517 1.93c.001 0-17.389 21.392-21.65 21.088z\"/><path fill=\"#8899A6\" d=\"M32.326 3.708C29.405.787 26.104-.649 24.954.502c-.013.013-.022.031-.034.044-.006.006-.015.008-.021.014L2.295 23.164a7.43 7.43 0 0 0-2.19 5.288c0 1.997.778 3.875 2.19 5.287a7.429 7.429 0 0 0 5.288 2.19 7.426 7.426 0 0 0 5.287-2.189l22.604-22.604c.007-.007.009-.016.015-.023.013-.012.03-.02.043-.033 1.151-1.15-.285-4.451-3.206-7.372zM10.75 31.619c-.846.846-1.97 1.311-3.166 1.311s-2.321-.466-3.167-1.312a4.448 4.448 0 0 1-1.312-3.167c0-1.196.466-2.32 1.311-3.166L25.412 4.29c.622 1.144 1.56 2.394 2.749 3.584 1.189 1.189 2.44 2.127 3.584 2.749L10.75 31.619z\"/><path fill=\"#17BF63\" d=\"M29.196 13.144c-.058.379-2.627.751-5.691.343-3.063-.408-5.482-1.223-5.403-1.82.08-.597 2.627-.751 5.691-.343s5.495 1.224 5.403 1.82zM10.84 23.247a.794.794 0 1 1-1.123-1.124.794.794 0 0 1 1.123 1.124zm3.317 2.615a1.298 1.298 0 1 1-1.835-1.836 1.298 1.298 0 0 1 1.835 1.836zm1.677-5.324a1.222 1.222 0 0 1-1.726-1.726 1.22 1.22 0 1 1 1.726 1.726zm-6.868 8.858a1.489 1.489 0 1 1-2.105-2.106 1.489 1.489 0 0 1 2.105 2.106zm11.396-9.158a1.058 1.058 0 1 1-1.496-1.497 1.058 1.058 0 0 1 1.496 1.497zm-1.207-4.288a.693.693 0 1 1-.979-.98.693.693 0 0 1 .979.98z\"/><ellipse cx=\"30.817\" cy=\"5.223\" fill=\"#CCD6DD\" rx=\"1.184\" ry=\"4.847\" transform=\"rotate(-45.001 30.817 5.223)\"/></svg>",
       "🧬": "<svg aria-hidden=\"true\" focusable=\"false\" viewBox=\"0 0 36 36\"><path fill=\"#77B255\" d=\"m3.019 26.246 3.432 3.432-.923.922-3.432-3.431z\"/><path fill=\"#FFD983\" d=\"m6.362 29.587 3.431 3.432-.923.923-3.43-3.432z\"/><path fill=\"#FFAC33\" d=\"m6.273 24.237 3.432 3.432-.923.923L5.35 25.16z\"/><path fill=\"#EA596E\" d=\"m8.998 26.962 3.432 3.432-.923.923-3.431-3.432zm3.909-9.359 3.431 3.432-.923.923-3.431-3.432z\"/><path fill=\"#FFAC33\" d=\"m15.631 20.329 3.432 3.431-.923.923-3.432-3.431z\"/><path fill=\"#77B255\" d=\"m14.97 14.377 3.432 3.432-.922.923-3.432-3.432z\"/><path fill=\"#FFD983\" d=\"m18.277 17.683 3.432 3.432-.923.923-3.432-3.432z\"/><path fill=\"#FFAC33\" d=\"m17.616 11.731 3.432 3.432-.923.922-3.432-3.431z\"/><path fill=\"#EA596E\" d=\"m20.923 15.038 3.432 3.431-.923.923-3.431-3.432zM24.387 4.96l3.432 3.432-.923.922-3.432-3.431z\"/><path fill=\"#FFAC33\" d=\"m27.694 8.267 3.432 3.431-.923.923-3.432-3.432z\"/><path fill=\"#77B255\" d=\"m27.013 2.252 3.432 3.432-.923.923-3.432-3.432z\"/><path fill=\"#FFD983\" d=\"m30.36 5.6 3.432 3.431-.923.923-3.432-3.431z\"/><path fill=\"#9266CC\" d=\"M24.922.812c-2.52 2.52-2.601 6.145-2.396 9.806.501.028 1.002.061 1.502.094.39.026.775.051 1.159.074-.198-3.286-.199-6.299 1.606-8.104.727-.703.955-1.653.447-2.166-.535-.54-1.542-.497-2.318.296z\"/><path fill=\"#3B88C3\" d=\"m13.146 25.65-.153-2.66c-.026-.445-.058-.899-.074-1.332-.296-.296-2.466-.349-2.653-.162.013.44.047.884.071 1.327.028.502.126 2.275.149 2.66.054.91.096 1.806.086 2.656.259.259 2.371.437 2.645.162a36.931 36.931 0 0 0-.071-2.651z\"/><path fill=\"#55ACEE\" d=\"m13.22 28.3-2.649-.162c-.026 2.209-.384 4.145-1.687 5.448a1.322 1.322 0 1 0 1.87 1.871c2.423-2.422 2.467-7.174 2.466-7.157z\"/><path fill=\"#9266CC\" d=\"M25.354 13.447c-.501-.028-1.003-.061-1.503-.094-.389-.026-.775-.051-1.158-.074.198 3.285.199 6.299-1.607 8.104-1.804 1.804-4.813 1.805-8.094 1.607-.386-.023-2.159-.14-2.656-.168-3.667-.206-7.297-.126-9.82 2.397a1.322 1.322 0 0 0 1.871 1.87c1.805-1.804 4.815-1.806 8.098-1.608.385.023 2.161.14 2.66.168 3.662.205 7.289.125 9.811-2.396 2.521-2.52 2.603-6.145 2.398-9.806z\"/><path fill=\"#744EAA\" d=\"M25.354 13.447c-.028-.501-.145-2.277-.168-2.66a51.95 51.95 0 0 1-.064-1.332c-.336-.021-2.1-.133-2.653-.163.013.44.032.883.056 1.326.028.501.145 2.277.168 2.661.055.914.091 1.804.081 2.656.333.021 2.094.132 2.645.162a36.316 36.316 0 0 0-.065-2.65z\"/><path fill=\"#55ACEE\" d=\"M35.581 8.827c-.42-.436-1.385-.601-2.291.353-1.805 1.805-4.817 1.806-8.104 1.607-.384-.023-2.16-.141-2.661-.169-3.66-.205-7.286-.123-9.806 2.397-2.215 2.215-2.545 5.284-2.453 8.48.553.03 2.319.142 2.653.162-.098-2.755.113-5.214 1.671-6.772 1.805-1.805 4.818-1.805 8.104-1.607.383.023 2.16.14 2.661.168 3.661.205 7.286.124 9.806-2.396.886-.869.84-1.787.42-2.223z\"/></svg>",
@@ -3865,16 +3854,9 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const letter = p => CUTS.find(([c]) => p >= c)[1];
   const gcls = p => p >= 90 ? 'ga' : p >= 80 ? 'gb' : 'gc';
 
-  // Sample data, the same classes as the Home mock. From Schoology: the section (title, teacher, period, room),
-  // the student's grade over the quarter, and what's due. "updates" is how many changes came in since your last visit.
-  const CLASSES = [
-    { id: 'alg',  name: 'Algebra II',   teacher: 'Mr. Okafor',  period: 1, room: 'Room 204', students: 31, pct: 95.1, trend: [91.2, 92.4, 93.0, 92.1, 93.8, 94.4, 94.9, 95.1], due: 1, missing: 0, updates: 1, next: ['Quiz 5', 'Fri'] },
-    { id: 'chem', name: 'AP Chemistry', teacher: 'Dr. Park',    period: 2, room: 'Room 118', students: 28, pct: 87.4, trend: [84.1, 85.0, 86.2, 85.4, 86.8, 87.9, 86.9, 87.4], due: 3, missing: 1, updates: 3, next: ['Unit 3 Test', 'Thu'] },
-    { id: 'eng',  name: 'English 10',   teacher: 'Ms. Grant',   period: 3, room: 'Room 131', students: 30, pct: 78.3, trend: [83.5, 82.9, 81.4, 80.6, 81.2, 79.4, 78.8, 78.3], due: 2, missing: 1, updates: 1, next: ['Of Mice and Men essay', 'Fri'] },
-    { id: 'hist', name: 'U.S. History', teacher: 'Mr. Delgado', period: 4, room: 'Room 214', students: 32, pct: 91.0, trend: [89.0, 90.2, 90.8, 91.5, 90.6, 91.2, 90.7, 91.0], due: 1, missing: 0, updates: 0, next: ['DBQ final draft', 'Mon'] },
-    { id: 'chin', name: 'Chinese II',   teacher: 'Ms. Lin',     period: 5, room: 'Room 110', students: 24, pct: 84.2, trend: [86.0, 85.1, 84.6, 83.2, 83.9, 84.8, 84.0, 84.2], due: 1, missing: 0, updates: 0, next: ['Lesson 7 vocab quiz', 'Wed'] },
-    { id: 'art',  name: 'Art & Design', teacher: 'Ms. Reyes',   period: 6, room: 'Studio B', students: 26, pct: 97.0, trend: [95.0, 96.2, 96.0, 96.8, 97.4, 96.9, 97.2, 97.0], due: 0, missing: 0, updates: 1, next: null },
-  ];
+  // From Schoology: each section (title, teacher, period), the student's grade (and how it's moved on the days
+  // they've opened Averages), and what's due. "updates" is how many course updates they haven't opened.
+  const CLASSES = FSD.CLASSES.map(c => Object.assign({}, c));   // the student's classes (averages-fs-data.js)
   CLASSES.forEach(c => { const s = courseSubject(c.name); c.emoji = s[1]; c.color = s[2]; });
   const C = Object.fromEntries(CLASSES.map(c => [c.id, c]));
   const badge = c => `<span class="badge" style="--c:${c.color}" aria-hidden="true">${EMOJI_SVG[c.emoji] || EMOJI_SVG['📚']}</span>`;
@@ -3883,34 +3865,16 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   /* ===== Notifications (shared by Home and the course pages) =====
      One list for every class. On a course page the window opens on that class, with All classes one tap away.
      The page can set NT_HOOKS before this: here (the class this page is about) and onChange(). */
-  const NT_CLASSES = { chem: 'AP Chemistry', alg: 'Algebra II', eng: 'English 10', hist: 'U.S. History', chin: 'Chinese II', art: 'Art & Design' };
-  const NT_LAST = 'Thursday at 8:12 PM';
+  const NT_CLASSES = Object.fromEntries(FSD.CLASSES.map(c => [c.id, c.name]));
+  const NT_LAST = FSX.lastVisit();
   // Notifications are updates to class data (a grade posted, something new, something changed), not a to-do list.
   // Missing and due work lives on Home and in each class's Assigned card instead.
-  const NT_ITEMS = [
-    { id: 'chem-graded-m14', ago: 4300, c: 'chem', k: 'graded', t: 'Lab 4 pre-lab', got: 9, of: 10, d: 'Graded Oct 16 · Class average 81%', note: 'Clear plan. Double check your units in question 3.' },
-    { id: 'alg-graded-q4', ago: 120, c: 'alg', k: 'graded', t: 'Quiz 4', got: 19, of: 20, d: 'Graded 2 hours ago · Class average 84%' },
-    { id: 'eng-graded-ne', ago: 9000, c: 'eng', k: 'graded', t: 'Narrative essay', got: 38, of: 50, d: 'Graded Tue · Class average 80%', note: 'Strong opening. The ending needs one more scene.' },
-    { id: 'hist-graded-c5', ago: 1500, c: 'hist', k: 'graded', ic: '📈', t: 'Ch. 5 quiz', got: 18, of: 20, d: 'Score changed from 16 to 18 · Yesterday' },
-    { id: 'alg-graded-h43', ago: 121, c: 'alg', k: 'graded', t: 'Homework 4.3', got: 10, of: 10, d: 'Graded 2 hours ago · Class average 92%' },
-    { id: 'eng-graded-vq6', ago: 9100, c: 'eng', k: 'graded', t: 'Vocab quiz 6', got: 17, of: 20, d: 'Graded Tue · Class average 83%' },
-    { id: 'chem-new-m5', ago: 300, c: 'chem', k: 'new', kind: 'file', t: 'Lab 4 data.xlsx', d: 'File · Posted today' },
-    { id: 'chem-new-m7', ago: 2900, c: 'chem', k: 'new', kind: 'file', t: 'Unit 3 Notes.pdf', d: 'File · Posted 2 days ago' },
-    { id: 'chem-new-m1', ago: 22, c: 'chem', k: 'new', kind: 'file', t: 'Unit 3 Test Review.pdf', d: 'File · Posted 22 min ago' },
-    { id: 'alg-new-qc', ago: 125, c: 'alg', k: 'new', kind: 'file', t: 'Quiz 4 corrections.pdf', d: 'File · Posted 2 hours ago' },
-    { id: 'art-new-d9', ago: 300, c: 'art', k: 'new', kind: 'assignment', t: 'Portfolio Review Sign-up', d: 'Assignment · Posted today' },
-    { id: 'chem-chg-m6', ago: 1400, c: 'chem', k: 'changed', ic: 'due', t: 'Unit 3 Test moved to Thu, Oct 22', d: 'Was Tue, Oct 20 · Yesterday' },
-    { id: 'chem-chg-m2', ago: 7200, c: 'chem', k: 'changed', ic: 'material', t: 'Lab Report #4 has a new attachment', d: 'Lab report template.docx · Oct 14' },
-    { id: 'hist-chg-ft', ago: 180, c: 'hist', k: 'changed', ic: 'due', t: 'Field Trip Form is now due Fri', d: 'Was due Thu · 3 hours ago' },
-    { id: 'chem-ann-1', ago: 21, c: 'chem', k: 'ann', t: 'The Unit 3 Test review sheet is posted. It covers stoichiometry and limiting reagents. The test is next Thursday.', d: 'Dr. Park · 22 minutes ago' },
-    { id: 'alg-ann-1', ago: 118, c: 'alg', k: 'ann', t: 'Quiz 4 grades are in. The class average was 84%. Corrections are due Friday.', d: 'Mr. Okafor · 2 hours ago' },
-    { id: 'chem-msg-1', ago: 330, c: 'chem', k: 'msg', t: 'Dr. Park replied: Lab Report #4 extension', d: 'Sure, Friday works. · 10:42 AM' },
-    { id: 'eng-msg-1', ago: 420, c: 'eng', k: 'msg', t: 'Ms. Grant replied: Missing essay', d: 'Your Of Mice and Men essay is still missing. · 9:15 AM' },
-  ];
+  const NT_ITEMS = FSD.NT;   // real: recent grades, course updates and messages (see averages-fs-data.js)
   // each kind of update gets its own picture; the tile behind it takes the class's color
   const NT_ICON = {"message": "<svg aria-hidden=\"true\" focusable=\"false\" viewBox=\"0 0 36 36\"><path fill=\"#BDDDF4\" d=\"M18 1C8.059 1 0 7.268 0 15c0 4.368 2.574 8.268 6.604 10.835C6.08 28.144 4.859 31.569 2 35c5.758-.96 9.439-3.761 11.716-6.416 1.376.262 2.805.416 4.284.416 9.941 0 18-6.268 18-14S27.941 1 18 1z\"/><circle cx=\"18\" cy=\"15\" r=\"2\" fill=\"#2A6797\"/><circle cx=\"26\" cy=\"15\" r=\"2\" fill=\"#2A6797\"/><circle cx=\"10\" cy=\"15\" r=\"2\" fill=\"#2A6797\"/></svg>", "due": "<svg aria-hidden=\"true\" focusable=\"false\" viewBox=\"0 0 36 36\"><path fill=\"#E0E7EC\" d=\"M36 32a4 4 0 0 1-4 4H4a4 4 0 0 1-4-4V9a4 4 0 0 1 4-4h28a4 4 0 0 1 4 4v23z\"/><path fill=\"#66757F\" d=\"M23.657 19.12H17.87c-1.22 0-1.673-.791-1.673-1.56 0-.791.429-1.56 1.673-1.56h8.184c1.154 0 1.628 1.04 1.628 1.628 0 .452-.249.927-.52 1.492l-5.607 11.395c-.633 1.266-.882 1.717-1.899 1.717-1.244 0-1.877-.949-1.877-1.605 0-.271.068-.474.226-.791l5.652-10.716zM10.889 19h-.5c-1.085 0-1.538-.731-1.538-1.5 0-.792.565-1.5 1.538-1.5h2.015c.972 0 1.515.701 1.515 1.605V30.47c0 1.13-.558 1.763-1.53 1.763s-1.5-.633-1.5-1.763V19z\"/><path fill=\"#DD2F45\" d=\"M34 0h-3.277c.172.295.277.634.277 1a2 2 0 0 1-4 0c0-.366.105-.705.277-1H8.723C8.895.295 9 .634 9 1a2 2 0 0 1-4 0c0-.366.105-.705.277-1H2a2 2 0 0 0-2 2v11h36V2a2 2 0 0 0-2-2z\"/><path fill=\"#F5F8FA\" d=\"M13.182 4.604c0-.5.32-.78.75-.78.429 0 .749.28.749.78v5.017h1.779c.51 0 .73.38.72.72a.7.7 0 0 1-.72.659h-2.498c-.49 0-.78-.319-.78-.819V4.604zm-6.91 0c0-.5.32-.78.75-.78s.75.28.75.78v3.488c0 .92.589 1.649 1.539 1.649.909 0 1.529-.769 1.529-1.649V4.604c0-.5.319-.78.749-.78s.75.28.75.78v3.568c0 1.679-1.38 2.949-3.028 2.949-1.669 0-3.039-1.25-3.039-2.949V4.604zM5.49 9.001c0 1.679-1.069 2.119-1.979 2.119-.689 0-1.839-.27-1.839-1.14 0-.269.23-.609.56-.609.4 0 .75.37 1.199.37.56 0 .56-.52.56-.84V4.604c0-.5.32-.78.749-.78.431 0 .75.28.75.78v4.397z\"/><path fill=\"#F4ABBA\" d=\"M32 10a1 1 0 1 0 2 0 1 1 0 0 0-2 0m0-3a1 1 0 1 0 2 0 1 1 0 0 0-2 0m-3 3a1 1 0 1 0 2 0 1 1 0 0 0-2 0m0-3a1 1 0 1 0 2 0 1 1 0 0 0-2 0m-3 3a1 1 0 1 0 2 0 1 1 0 0 0-2 0m0-3a1 1 0 1 0 2 0 1 1 0 0 0-2 0m-3 0a1 1 0 1 0 2 0 1 1 0 0 0-2 0m0 3a1 1 0 1 0 2 0 1 1 0 0 0-2 0\"/></svg>", "update": "<svg aria-hidden=\"true\" focusable=\"false\" viewBox=\"0 0 36 36\"><path fill=\"#3B88C3\" d=\"M14 19c-3.314 0-6 2.687-6 6s2.686 6 6 6 6-2.687 6-6-2.687-6-6-6zm0 10c-2.209 0-4-1.791-4-4s1.791-4 4-4 4 1.791 4 4-1.791 4-4 4z\"/><path fill=\"#55ACEE\" d=\"M1.783 14.023v.02C.782 14.263 0 15.939 0 18s.782 3.737 1.783 3.956v.021l28.701 7.972V6.064L1.783 14.023z\"/><ellipse fill=\"#269\" cx=\"31\" cy=\"18\" rx=\"5\" ry=\"12\"/></svg>", "material": "<svg aria-hidden=\"true\" focusable=\"false\" viewBox=\"0 0 36 36\"><path fill=\"#99AAB5\" d=\"M35.354 25.254c.217-2.391-.513-4.558-2.057-6.102L17.033 2.89c-.391-.391-1.024-.391-1.414 0-.391.391-.391 1.024 0 1.414l16.264 16.263c1.116 1.117 1.642 2.717 1.479 4.506-.159 1.748-.957 3.456-2.188 4.686-1.23 1.23-2.938 2.027-4.685 2.187-1.781.161-3.39-.362-4.506-1.479L3.598 12.082c-.98-.98-1.059-2.204-.953-3.058.15-1.196.755-2.401 1.66-3.307 1.7-1.7 4.616-2.453 6.364-.707l14.85 14.849c1.119 1.12.026 2.803-.708 3.536-.733.735-2.417 1.826-3.535.707L9.962 12.789c-.391-.391-1.024-.39-1.414 0-.391.391-.391 1.023 0 1.414l11.313 11.314c1.859 1.858 4.608 1.05 6.363-.707 1.758-1.757 2.565-4.507.708-6.364L12.083 3.597c-2.62-2.62-6.812-1.673-9.192.706C1.677 5.517.864 7.147.661 8.775c-.229 1.833.312 3.509 1.523 4.721l18.384 18.385c1.365 1.365 3.218 2.094 5.281 2.094.27 0 .544-.013.82-.037 2.206-.201 4.362-1.209 5.918-2.765 1.558-1.556 2.565-3.713 2.767-5.919z\"/></svg>", "new": "<svg aria-hidden=\"true\" focusable=\"false\" viewBox=\"0 0 36 36\"><path fill=\"#CCD6DD\" d=\"M31 32c0 2.209-1.791 4-4 4H5c-2.209 0-4-1.791-4-4V4c0-2.209 1.791-4 4-4h22c2.209 0 4 1.791 4 4v28z\"/><path fill=\"#99AAB5\" d=\"M27 24c0 .553-.447 1-1 1H6c-.552 0-1-.447-1-1 0-.553.448-1 1-1h20c.553 0 1 .447 1 1zm-16 4c0 .553-.448 1-1 1H6c-.552 0-1-.447-1-1 0-.553.448-1 1-1h4c.552 0 1 .447 1 1zM27 8c0 .552-.447 1-1 1H6c-.552 0-1-.448-1-1s.448-1 1-1h20c.553 0 1 .448 1 1zm0 4c0 .553-.447 1-1 1H6c-.552 0-1-.447-1-1 0-.553.448-1 1-1h20c.553 0 1 .447 1 1zm0 4c0 .553-.447 1-1 1H6c-.552 0-1-.447-1-1 0-.553.448-1 1-1h20c.553 0 1 .447 1 1zm0 4c0 .553-.447 1-1 1H6c-.552 0-1-.447-1-1 0-.553.448-1 1-1h20c.553 0 1 .447 1 1z\"/><path fill=\"#66757F\" d=\"M31 6.272c-.827-.535-1.837-.579-2.521-.023l-.792.646-1.484 1.211-.1.08-2.376 1.938-11.878 9.686c-.437.357-.793 1.219-1.173 2.074-.378.85-.969 2.852-1.443 4.391-.148.25-1.065 1.846-.551 2.453.52.615 2.326.01 2.568-.076 1.626-.174 3.731-.373 4.648-.58.924-.211 1.854-.395 2.291-.752.008-.006.01-.018.017-.023l11.858-9.666.792-.646.144-.118V6.272z\"/><path fill=\"#D99E82\" d=\"M18.145 22.526s-1.274-1.881-2.117-2.553c-.672-.843-2.549-2.116-2.549-2.116-.448-.446-1.191-.48-1.629-.043-.437.438-.793 1.366-1.173 2.291-.472 1.146-1.276 4.154-1.768 5.752-.083.272.517-.45.503-.21-.01.187.027.394.074.581l-.146.159.208.067c.025.082.05.154.068.21l.159-.146c.187.047.394.084.58.074.24-.014-.483.587-.21.503 1.598-.493 4.607-1.296 5.752-1.768.924-.381 1.854-.736 2.291-1.174.439-.435.406-1.178-.043-1.627z\"/><path fill=\"#EA596E\" d=\"M25.312 4.351c-.876.875-.876 2.293 0 3.168l3.167 3.168c.876.874 2.294.874 3.168 0l3.169-3.168c.874-.875.874-2.293 0-3.168l-3.169-3.168c-.874-.875-2.292-.875-3.168 0l-3.167 3.168z\"/><path fill=\"#FFCC4D\" d=\"M11.849 17.815l3.17 3.17 3.165 3.166 11.881-11.879-6.337-6.336-11.879 11.879z\"/><path fill=\"#292F33\" d=\"M11.298 26.742s-2.06 1.133-2.616.576c-.557-.558.581-2.611.581-2.611s1.951.036 2.035 2.035z\"/><path fill=\"#CCD6DD\" d=\"M23.728 5.935l3.96-3.96 6.336 6.337-3.96 3.96z\"/><path fill=\"#99AAB5\" d=\"M26.103 3.558l.792-.792 6.336 6.335-.792.792zM24.52 5.142l.791-.791 6.336 6.335-.792.792z\"/></svg>"};
   const ntIcon = it => it.ic && NT_ICON[it.ic] ? NT_ICON[it.ic] : it.ic ? (EMOJI_SVG[it.ic] || '') : it.k === 'graded' ? (EMOJI_SVG['📊'] || '') : it.k === 'new' ? NT_ICON[it.kind === 'assignment' ? 'new' : 'material'] : it.k === 'changed' ? NT_ICON.update : it.k === 'ann' ? NT_ICON.update : NT_ICON.message;
-  const NT_SEEN = new Set();
+  const NT_SEEN = new Set(FSD.NT_SEEN_IDS);
+  { const add = NT_SEEN.add.bind(NT_SEEN); NT_SEEN.add = id => { const it = NT_ITEMS.find(x => x.id === id); if (it) FSX.seen.mark(it.kind, it.raw); return add(id); }; }   // marked here = marked in Windowed too
   const NT = Object.assign({ here: null, onChange: () => {} }, typeof NT_HOOKS === 'object' ? NT_HOOKS : {});
   let ntEl = null, ntFrom = null, ntScope = NT.here || 'all';
   const ntIsSeen = id => NT_SEEN.has(id);
@@ -3926,7 +3890,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     return `<span class="nt-tile" style="--c:${col}" aria-hidden="true">${ntIcon(it)}</span>`;
   }
   function ntRow(it, all) {
-    const cls = NT_CLASSES[it.c], sub = (all ? cls + ' · ' : '') + it.d;
+    const cls = NT_CLASSES[it.c] || 'Messages', sub = (all ? cls + ' · ' : '') + it.d;
     let end = '';
     if (it.k === 'graded') { const p = it.got / it.of * 100; end = `<span class="nt-end"><b class="${gcls(p)}">${letter(p)}</b>${it.got} / ${it.of}</span>`; }
     return `<div class="nt-row nt-k-${it.k}" role="button" tabindex="0" data-ntgo="${it.id}">${ntTile(it)}<span class="nt-tx"><b class="${it.k === 'ann' ? 'long' : ''}">${esc(it.t)}</b><small>${esc(sub)}</small>${it.note ? `<span class="nt-note">${ico('msg')}<span>${esc(it.note)}</span></span>` : ''}</span>${end}</div>`;
@@ -4032,7 +3996,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       return; }
     if (e.target.closest('[data-ntseen]')) { const n = ntLive(ntScope).length, label = ntScope === 'all' ? 'everything' : NT_CLASSES[ntScope]; ntLive(ntScope).forEach(it => NT_SEEN.add(it.id)); ntBadge(); NT.onChange(); ntRefresh(true); toast(`Marked ${label} as seen. That's ${n} ${n === 1 ? 'notification' : 'notifications'}.`); return; }
     const go = e.target.closest('[data-ntgo]');
-    if (go) { const it = NT_ITEMS.find(x => x.id === go.dataset.ntgo); NT_SEEN.add(it.id); ntBadge(); NT.onChange(); ntClose(true); toast(`In the app, this opens ${it.k === 'msg' ? 'the conversation' : it.k === 'ann' ? 'the announcement' : it.k === 'changed' ? 'what changed' : it.t} in ${NT_CLASSES[it.c]}.`); }
+    if (go) { const it = NT_ITEMS.find(x => x.id === go.dataset.ntgo); NT_SEEN.add(it.id); ntBadge(); NT.onChange(); ntClose(true); if (it.k === 'msg') FSX.go('messages', { thread: it.thread }); else if (it.k === 'graded') FSX.hub(it.c, 'grades', { a: it.aid }); else FSX.hub(it.c, 'updates', { update: it.raw }); }
   }
   document.addEventListener('keydown', e => {
     if (!ntEl) return;
@@ -4043,7 +4007,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   /* ===== end Notifications ===== */
 
   // ---------- frame: sidebar classes, avatar, pin, menu, toast (same as Home) ----------
-  $('sideClasses').innerHTML = CLASSES.map(c => `<a href="#" title="${esc(c.name)} · ${letter(c.pct)} ${c.pct.toFixed(1)}%" data-toast="the ${esc(c.name)} course hub">${badge(c)}<span class="fade">${esc(c.name)}</span></a>`).join('');
+  $('sideClasses').innerHTML = CLASSES.map(c => `<a href="${FSX.hubUrl(c.id)}" title="${esc(c.name)} · ${letter(c.pct)} ${c.pct.toFixed(1)}%" data-go="${FSX.hubUrl(c.id)}">${badge(c)}<span class="fade">${esc(c.name)}</span></a>`).join('');
   const inkCv = document.createElement('canvas'), inkC2 = inkCv.getContext('2d', { willReadFrequently: true }), inkMemo = new Map();
   function inkOf(text, cs) {
     const key = `${cs.fontStyle}|${cs.fontWeight}|${cs.fontFamily}|${text}`;
@@ -4143,7 +4107,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   addEventListener('resize', () => { if (window.devicePixelRatio !== inkDpr) { inkDpr = window.devicePixelRatio; centerInk(); } }); // zoom or another screen
   const reInk = () => { inkMemo.clear(); centerInk(); }; // a font finished loading: measure again
   if (document.fonts) { document.fonts.ready.then(reInk); document.fonts.addEventListener('loadingdone', reInk); }
-  $('cntAssign').textContent = 9; $('cntMsg').textContent = 2; centerInk();
+  { const a = FSD.counts.assign, m = FSD.counts.msg; $('cntAssign').textContent = a || ''; $('cntAssign').hidden = !a; $('cntMsg').textContent = m || ''; $('cntMsg').hidden = !m; if ($('pipAssign')) $('pipAssign').hidden = !a; if ($('pipMsg')) $('pipMsg').hidden = !m; } centerInk();
   document.querySelectorAll('[data-av]').forEach(el => { el.textContent = PROFILE.name.charAt(0); el.classList.toggle('photo', !!PROFILE.photo); el.style.backgroundImage = PROFILE.photo ? `url("${PROFILE.photo}")` : ''; });
   const app = $('app');
   function setPinned(on) {
@@ -4162,7 +4126,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (meMenu) { meClose(); return; }
     const potato = document.body.classList.contains('potato-mode'), btn = $('meBtn');
     document.body.insertAdjacentHTML('beforeend', `<div class="pop me-pop" role="menu" aria-label="Profile and settings">
-      <div class="pv"><span class="av-wrap"><span class="av" data-av></span></span><span class="t" style="min-width:0"><b style="display:block;font-weight:800">${esc(PROFILE.name)}</b><small style="color:var(--muted);font-weight:600">Lincoln High</small></span></div>
+      <div class="pv"><span class="av-wrap"><span class="av" data-av></span></span><span class="t" style="min-width:0"><b style="display:block;font-weight:800">${esc(PROFILE.name)}</b><small style="color:var(--muted);font-weight:600">${esc(FSD.me.school || FSD.me.email || 'Schoology')}</small></span></div>
       <div class="hr"></div>
       ${meItem('profile', 'user', 'Edit profile', 'Name and photo')}
       ${typeof CZ_ON === 'function' && CZ_ON() ? meItem('customize', 'sliders', 'Customize this page', 'Reorder or hide the sidebar sections') : ''}
@@ -4194,7 +4158,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       
       if (k === 'customize') { flCustomize(); return; }
       meClose(true);
-      toast({ profile: 'In the app, this opens Edit profile, where you change your name and photo.', customize: 'In the app, this opens Customize Home on the Home page.', settings: 'In the app, this opens Settings.', signout: 'In the app, this signs you out.' }[k]);
+      ({ profile: () => FSX.go('settings', { section: 'account' }), customize: () => FSX.go('home', { customize: 1 }), settings: () => FSX.go('settings'), signout: () => FSX.signOut() }[k] || (() => {}))();
     });
   }
   function meClose(refocus) {
@@ -4218,7 +4182,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   function toast(text) { const t = $('toast'); t.textContent = text; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2600); }
 
 
-  document.addEventListener('click', e => { const t = e.target.closest('[data-toast]'); if (t) { e.preventDefault(); toast(`In the app, this opens ${t.dataset.toast}.`); } });
+  document.addEventListener('click', e => { const t = e.target.closest('[data-toast]'); if (t) { e.preventDefault(); if (!FSX.open(t.dataset.toast)) toast('That isn\'t ready yet.'); } });
   const IS_MAC = /mac|iphone|ipad|ipod/i.test(navigator.userAgentData?.platform || navigator.platform || '');
   $('sideKbd').textContent = IS_MAC ? '⌘K' : 'Ctrl K';
   // search here finds a file: the sidebar's Search, Ctrl K, / and T all jump to it
@@ -4242,7 +4206,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const cmark = (s, q) => { const w = cwords(q).sort((a, b) => b.length - a.length)[0], t = String(s); if (!w) return esc(t); const i = t.toLowerCase().indexOf(w); return i < 0 ? esc(t) : esc(t.slice(0, i)) + '<mark>' + esc(t.slice(i, i + w.length)) + '</mark>' + esc(t.slice(i + w.length)); };
   let cmdk = null, cmdkFrom = null;
   const crow = (attrs, lead, th, sub, cls = '') => `<button class="mi${cls}" ${attrs}>${lead}<span class="tx"><b>${th}</b>${sub ? `<small>${esc(sub)}</small>` : ''}</span></button>`;
-  const cclass = (c, q) => crow(`data-toast="the ${esc(c.name)} course hub"`, badge(c), cmark(c.name, q), `${c.teacher} · ${letter(c.pct)} · ${c.pct.toFixed(1)}%`);
+  const cclass = (c, q) => crow(`data-go="${FSX.hubUrl(c.id)}"`, badge(c), cmark(c.name, q), `${c.teacher} · ${letter(c.pct)} · ${c.pct.toFixed(1)}%`);
   function cmdkRender() {
     const q = cmdk.querySelector('input').value.trim(), res = cmdk.querySelector('.cmdk-res'); let html = '';
     const page = ([p, ic]) => crow(p === HERE ? 'data-cmdkx' : `data-toast="the ${p} page"`, ico(ic), cmark(p, q), p === HERE ? "You're here" : '');
@@ -4250,7 +4214,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       html += `<div class="lbl">Quick actions</div>` + crow('data-cmdkmsg=""', ico('msg'), 'Message a teacher', 'Start a new message', ' s-cmd') + crow('data-toast="Turn in, on the Assignments page"', ico('upload'), 'Turn in an assignment', 'Pick from what you have due', ' s-cmd')
         + (HERE ? crow('data-cmdkhere=""', ico('search'), `Search ${esc(HERE)}`, 'Just this page. You can also press / or T', ' s-cmd') : '');
       html += `<div class="lbl">Your classes</div>` + CLASSES.map(c => cclass(c, '')).join('');
-      html += `<div class="s-tip">${ico('bolt')}<span>Or type a command, like <b>message Dr. Park</b> or <b>open grades</b></span></div>`;
+      html += `<div class="s-tip">${ico('bolt')}<span>Or type a command, like <b>message ${esc(FSD.exampleTeacher)}</b> or <b>open grades</b></span></div>`;
     } else {
       // "message ..." picks a teacher; "open ..." or "go to ..." is the same as typing the name
       const m = q.match(/^(message|msg|email|text|write to|ask)\b\s*(.*)$/i), o = q.match(/^(open|go to|goto|show)\b\s*(.*)$/i), qq = o ? o[2] : q;
@@ -4260,7 +4224,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       const cs = m ? [] : CLASSES.filter(c => chit(qq, c.name + ' ' + c.teacher)); if (cs.length) html += `<div class="lbl">Classes</div>` + cs.map(c => cclass(c, qq)).join('');
       const ps = m ? [] : GO_PAGES.filter(([p]) => chit(qq, p)); if (ps.length) html += `<div class="lbl">Go to</div>` + ps.map(page).join('');
       if (HERE && !m) html += crow(`data-cmdkhere="${esc(qq)}"`, ico('search'), `Search ${esc(HERE)} for "${esc(qq)}"`, 'Just this page', ' s-cmd');
-      if (!html) html = `<div class="cmdk-empty">Nothing for "${esc(q)}". Try a class, a page, or a command like "message Dr. Park".</div>`;
+      if (!html) html = `<div class="cmdk-empty">Nothing for "${esc(q)}". Try a class, a page, or a command like "message ${esc(FSD.exampleTeacher)}".</div>`;
     }
     res.innerHTML = html; const f = res.querySelector('.mi'); if (f) f.classList.add('sel');
   }
@@ -4275,7 +4239,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     cmdk.addEventListener('click', e => {
       if (e.target === cmdk || e.target.closest('[data-cmdkx]')) { cmdkClose(); return; }
       const g = e.target.closest('[data-cmdkgo]'); if (g) { const k = g.dataset.cmdkgo; cmdkClose(false); if (typeof window.CMDK_GO === 'function') window.CMDK_GO(k); return; }
-      const mg = e.target.closest('[data-cmdkmsg]'); if (mg) { const id = mg.dataset.cmdkmsg; cmdkClose(false); if (typeof window.CMDK_MSG === 'function') window.CMDK_MSG(id); else toast(id ? `In the app, this opens a new message to ${C[id].teacher} on the Messages page.` : 'In the app, this opens a new message on the Messages page.'); return; }
+      const mg = e.target.closest('[data-cmdkmsg]'); if (mg) { const id = mg.dataset.cmdkmsg; cmdkClose(false); if (typeof window.CMDK_MSG === 'function') window.CMDK_MSG(id); else FSX.go('messages', { compose: id || 'new' }); return; }
       const h = e.target.closest('[data-cmdkhere]'); if (h) { const v = h.dataset.cmdkhere; cmdkClose(false); findFocus(); const el = document.activeElement; if (v && el && 'value' in el) { el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); } return; }
     });
     cmdk.querySelector('input').addEventListener('input', cmdkRender);
@@ -4288,7 +4252,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       el.firstElementChild.animate([{ transform: 'none' }, { transform: 'translateY(-6px) scale(.98)' }], { duration: 160, easing: 'cubic-bezier(.4, 0, 1, 1)', fill: 'forwards' }).onfinish = () => el.remove(); }
     if (back && cmdkFrom && cmdkFrom.isConnected && cmdkFrom.focus) cmdkFrom.focus({ preventScroll: true });
   }
-  document.addEventListener('click', e => { if (cmdk && e.target.closest('.cmdk [data-toast]')) cmdkClose(false); }, true);
+  document.addEventListener('click', e => { if (cmdk && e.target.closest('.cmdk [data-toast], .cmdk [data-go]')) cmdkClose(false); }, true);
   document.addEventListener('keydown', e => {
     if (!cmdk) return;
     if (e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); cmdkClose(); return; }
@@ -4302,9 +4266,9 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
 
   Object.assign(EMOJI_SVG, {"📝": "<svg aria-hidden=\"true\" focusable=\"false\" viewBox=\"0 0 36 36\"><path fill=\"#CCD6DD\" d=\"M31 32a4 4 0 0 1-4 4H5a4 4 0 0 1-4-4V4a4 4 0 0 1 4-4h22a4 4 0 0 1 4 4v28z\"/><path fill=\"#99AAB5\" d=\"M27 24a1 1 0 0 1-1 1H6a1 1 0 1 1 0-2h20a1 1 0 0 1 1 1zm-16 4a1 1 0 0 1-1 1H6a1 1 0 1 1 0-2h4a1 1 0 0 1 1 1zM27 8a1 1 0 0 1-1 1H6a1 1 0 0 1 0-2h20a1 1 0 0 1 1 1zm0 4a1 1 0 0 1-1 1H6a1 1 0 1 1 0-2h20a1 1 0 0 1 1 1zm0 4a1 1 0 0 1-1 1H6a1 1 0 1 1 0-2h20a1 1 0 0 1 1 1zm0 4a1 1 0 0 1-1 1H6a1 1 0 1 1 0-2h20a1 1 0 0 1 1 1z\"/><path fill=\"#66757F\" d=\"M31 6.272c-.827-.535-1.837-.579-2.521-.023l-.792.646-1.484 1.211-.1.08-2.376 1.938-11.878 9.686c-.437.357-.793 1.219-1.173 2.074-.378.85-.969 2.852-1.443 4.391-.148.25-1.065 1.846-.551 2.453.52.615 2.326.01 2.568-.076 1.626-.174 3.731-.373 4.648-.58.924-.211 1.854-.395 2.291-.752.008-.006.01-.018.017-.023l11.858-9.666.792-.646.144-.118V6.272z\"/><path fill=\"#D99E82\" d=\"M18.145 22.526s-1.274-1.881-2.117-2.553c-.672-.843-2.549-2.116-2.549-2.116-.448-.446-1.191-.48-1.629-.043-.437.438-.793 1.366-1.173 2.291-.472 1.146-1.276 4.154-1.768 5.752-.083.272.517-.45.503-.21-.01.187.027.394.074.581l-.146.159.208.067c.025.082.05.154.068.21l.159-.146c.187.047.394.084.58.074.24-.014-.483.587-.21.503 1.598-.493 4.607-1.296 5.752-1.768.924-.381 1.854-.736 2.291-1.174.439-.435.406-1.178-.043-1.627z\"/><path fill=\"#EA596E\" d=\"M25.312 4.351a2.238 2.238 0 0 0 0 3.168l3.167 3.168a2.242 2.242 0 0 0 3.168 0l3.169-3.168a2.242 2.242 0 0 0 0-3.168l-3.169-3.168a2.24 2.24 0 0 0-3.168 0l-3.167 3.168z\"/><path fill=\"#FFCC4D\" d=\"m11.849 17.815 3.17 3.17 3.165 3.166 11.881-11.879-6.337-6.336-11.879 11.879z\"/><path fill=\"#292F33\" d=\"M11.298 26.742s-2.06 1.133-2.616.576c-.557-.558.581-2.611.581-2.611s1.951.036 2.035 2.035z\"/><path fill=\"#CCD6DD\" d=\"m23.728 5.935 3.96-3.96 6.336 6.337-3.96 3.96z\"/><path fill=\"#99AAB5\" d=\"m26.103 3.558.792-.792 6.336 6.335-.792.792zM24.52 5.142l.791-.791 6.336 6.335-.792.792z\"/></svg>", "📋": "<svg aria-hidden=\"true\" focusable=\"false\" viewBox=\"0 0 36 36\"><path fill=\"#C1694F\" d=\"M32 34a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h24a2 2 0 0 1 2 2v27z\"/><path fill=\"#FFF\" d=\"M29 32a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1h20a1 1 0 0 1 1 1v23z\"/><path fill=\"#CCD6DD\" d=\"M25 3h-4a3 3 0 1 0-6 0h-4a2 2 0 0 0-2 2v5h18V5a2 2 0 0 0-2-2z\"/><circle cx=\"18\" cy=\"3\" r=\"2\" fill=\"#292F33\"/><path fill=\"#99AAB5\" d=\"M20 14a1 1 0 0 1-1 1h-9a1 1 0 0 1 0-2h9a1 1 0 0 1 1 1zm7 4a1 1 0 0 1-1 1H10a1 1 0 0 1 0-2h16a1 1 0 0 1 1 1zm0 4a1 1 0 0 1-1 1H10a1 1 0 1 1 0-2h16a1 1 0 0 1 1 1zm0 4a1 1 0 0 1-1 1H10a1 1 0 1 1 0-2h16a1 1 0 0 1 1 1zm0 4a1 1 0 0 1-1 1h-9a1 1 0 1 1 0-2h9a1 1 0 0 1 1 1z\"/></svg>", "📁": "<svg aria-hidden=\"true\" focusable=\"false\" viewBox=\"0 0 36 36\"><path fill=\"#269\" d=\"M0 29a4 4 0 0 0 4 4h24a4 4 0 0 0 4-4V12a4 4 0 0 0-4-4h-9c-3.562 0-3-5-8.438-5H4a4 4 0 0 0-4 4v22z\"/><path fill=\"#55ACEE\" d=\"M30 10h-6.562C18 10 18.562 15 15 15H6a4 4 0 0 0-4 4v10a1 1 0 1 1-2 0 4 4 0 0 0 4 4h26a4 4 0 0 0 4-4V14a4 4 0 0 0-4-4z\"/></svg>", "💬": "<svg aria-hidden=\"true\" focusable=\"false\" viewBox=\"0 0 36 36\"><path fill=\"#BDDDF4\" d=\"M18 1C8.059 1 0 7.268 0 15c0 4.368 2.574 8.268 6.604 10.835C6.08 28.144 4.859 31.569 2 35c5.758-.96 9.439-3.761 11.716-6.416 1.376.262 2.805.416 4.284.416 9.941 0 18-6.268 18-14S27.941 1 18 1z\"/><circle cx=\"18\" cy=\"15\" r=\"2\" fill=\"#2A6797\"/><circle cx=\"26\" cy=\"15\" r=\"2\" fill=\"#2A6797\"/><circle cx=\"10\" cy=\"15\" r=\"2\" fill=\"#2A6797\"/></svg>"});
   const SOURCES = {
-    drive:    { name: 'Google Drive', mark: ['#188038', '<path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h4.6l2 2.4h8.4A1.5 1.5 0 0 1 21 9.9v7.6a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5z"/>'], files: [['Lab 4 report', 'gdoc', 'Edited 2 hours ago'], ['Titration data', 'gsheet', 'Edited yesterday'], ['Lab 4 slides', 'gslides', 'Edited Oct 14']] },
-    canva:    { name: 'Canva', mark: ['#0b8a91', '<path d="M15.6 3.6l4.8 4.8-9.3 9.3-5.4.6.6-5.4z"/><path d="M4 20.5h16" stroke="#fff" stroke-width="2" fill="none"/>'], files: [['Lab 4 poster', 'design', 'Edited today'], ['Titration diagram', 'design', 'Edited Oct 13']] },
-    onedrive: { name: 'OneDrive', mark: ['#0F6CBD', '<path d="M6.75 19.5a4.75 4.75 0 0 1-.55-9.47 6.25 6.25 0 0 1 11.95 1.97 3.75 3.75 0 0 1-.4 7.5z" transform="translate(.16 -.9)"/>'], files: [['Lab 4 report.docx', 'docx', '48 KB · Edited today'], ['Error analysis.xlsx', 'xlsx', '22 KB · Edited Oct 15']] },
+    drive:    { name: 'Google Drive', mark: ['#188038', '<path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h4.6l2 2.4h8.4A1.5 1.5 0 0 1 21 9.9v7.6a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5z"/>'], files: [] },
+    canva:    { name: 'Canva', mark: ['#0b8a91', '<path d="M15.6 3.6l4.8 4.8-9.3 9.3-5.4.6.6-5.4z"/><path d="M4 20.5h16" stroke="#fff" stroke-width="2" fill="none"/>'], files: [] },
+    onedrive: { name: 'OneDrive', mark: ['#0F6CBD', '<path d="M6.75 19.5a4.75 4.75 0 0 1-.55-9.47 6.25 6.25 0 0 1 11.95 1.97 3.75 3.75 0 0 1-.4 7.5z" transform="translate(.16 -.9)"/>'], files: [] },
   };
   const srcMark = k => k === 'canva' ? `<span class="ti-mark canva-mark" aria-hidden="true"></span>`
     : `<span class="ti-mark ${k}-mark" style="--m:${SOURCES[k].mark[0]}" aria-hidden="true">${k === 'drive' ? '' : `<svg viewBox="0 0 24 24">${SOURCES[k].mark[1]}</svg>`}</span>`;
@@ -4319,64 +4283,64 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   })('drive', ['/brand/google-drive.png', 'https://app.averages.io/brand/google-drive.png']);
 
   // ---------- Files ----------
-  // Every file in one place: what teachers posted in each class (Schoology Materials, and files attached to assignments),
-  // what you turned in, and what you've opened from Google Drive, OneDrive and Canva. ago: minutes since it changed.
+  // Every file in one place: what teachers posted in each class (Schoology Materials, and files attached to assignments,
+  // GET /data/files), what you turned in (GET /data/submissions), and your Google Drive, OneDrive and Canva (loaded when
+  // you open them, from your own sign-in: averages-fs-turnin.js). ago: minutes since it changed.
   const FF = (id, name, c, kind, src, who, when, ago, size, extra = {}) => Object.assign({ id, name, c, kind, src, who, when, ago, size }, extra);
-  const FILES = [
-    FF('f1', 'Unit 3 Test Review.pdf', 'chem', 'doc', 'class', 'Dr. Park', '22 min ago', 22, '860 KB', { isNew: true, folder: 'study', pages: 4 , tf: 'chem-u3' }),
-    FF('f2', 'Of Mice and Men essay', 'eng', 'doc', 'drive', 'You', 'Edited 2 hours ago', 130, '14 KB', { app: 'Google Docs' }),
-    FF('f3', 'Quiz 4 corrections.pdf', 'alg', 'doc', 'class', 'Mr. Okafor', '2 hours ago', 120, '240 KB', { isNew: true , tf: 'alg-u2' }),
-    FF('f4', 'Lab 4 data.xlsx', 'chem', 'sheet', 'class', 'Dr. Park', 'Today', 480, '22 KB', { folder: 'lab' , tf: 'chem-u3' }),
-    FF('f5', 'Chapter 4 questions.docx', 'eng', 'doc', 'class', 'Ms. Grant', '6 hours ago', 360, '36 KB', { isNew: true , tf: 'eng-omm' }),
-    FF('f6', 'Lab Report #4 analysis', 'chem', 'doc', 'drive', 'You', 'Edited yesterday', 1440, '18 KB', { app: 'Google Docs', folder: 'lab' }),
-    FF('f7', 'HW 3.3.pdf', 'alg', 'doc', 'turned', 'You', 'Turned in Oct 14', 1450, '410 KB'),
-    FF('f8', 'Titration data', 'chem', 'sheet', 'drive', 'You', 'Edited yesterday', 1500, '9 KB', { app: 'Google Sheets', folder: 'lab' }),
-    FF('f9', 'Field trip form.pdf', 'hist', 'doc', 'class', 'Mr. Delgado', 'Yesterday', 1700, '95 KB', { tf: 'hist-u4' }),
-    FF('f10', 'Sketchbook scans', 'art', 'image', 'onedrive', 'You', 'Edited 2 days ago', 2000, '6.8 MB', { app: 'OneDrive folder' }),
-    FF('f11', 'Logarithms intro.pptx', 'alg', 'slides', 'class', 'Mr. Okafor', '2 days ago', 2700, '3.1 MB', { tf: 'alg-u3' }),
-    FF('f12', 'Unit 3 Notes.pdf', 'chem', 'slides', 'class', 'Dr. Park', '2 days ago', 2880, '1.2 MB', { pages: 12 , tf: 'chem-u3' }),
-    FF('f13', 'Still life final.jpg', 'art', 'image', 'turned', 'You', 'Turned in Oct 13', 2900, '3.4 MB'),
-    FF('f14', 'Chem notes week 6.docx', 'chem', 'doc', 'onedrive', 'You', 'Edited Oct 13', 3000, '52 KB', { folder: 'study' }),
-    FF('f15', 'Prelab 4.pdf', 'chem', 'doc', 'turned', 'You', 'Turned in Oct 12', 4300, '220 KB'),
-    FF('f16', 'Lesson 7 vocab list.pdf', 'chin', 'doc', 'class', 'Ms. Lin', 'Mon', 4320, '310 KB', { folder: 'study' , tf: 'chin-l7' }),
-    FF('f17', 'Portfolio cover', 'art', 'design', 'canva', 'You', 'Edited Mon', 4330, '2 pages', { app: 'Canva design' }),
-    FF('f18', 'DBQ document packet.pdf', 'hist', 'doc', 'class', 'Mr. Delgado', 'Oct 11', 5800, '2.4 MB', { tf: 'hist-u4' }),
-    FF('f19', 'Lab 4 poster', 'chem', 'design', 'canva', 'You', 'Edited Oct 11', 6000, '1 page', { app: 'Canva design', folder: 'lab' }),
-    FF('f20', 'Color theory notes.pdf', 'art', 'slides', 'class', 'Ms. Reyes', 'Oct 10', 7000, '1.8 MB', { tf: 'art-ct' }),
-    FF('f21', 'Lab report template.docx', 'chem', 'doc', 'class', 'Dr. Park', 'Oct 10', 7300, '38 KB', { folder: 'lab' , tf: 'chem-u3' }),
-    FF('f22', 'DBQ outline.pdf', 'hist', 'doc', 'turned', 'You', 'Turned in Oct 9', 8640, '160 KB'),
-    FF('f23', 'Pinyin tone chart.pdf', 'chin', 'doc', 'class', 'Ms. Lin', 'Oct 6', 13000, '120 KB', { tf: 'chin-l7' }),
-    FF('f24', 'Syllabus 2026-27.pdf', 'chem', 'doc', 'class', 'Dr. Park', 'Aug 24', 75000, '340 KB'),
-  ];
-  // folders teachers made in each class's Materials (Schoology), which the files above sit in
-  const T_FOLDERS = [['chem-u3', 'chem', 'Unit 3: Stoichiometry'], ['alg-u2', 'alg', 'Unit 2: Linear equations'], ['alg-u3', 'alg', 'Unit 3: Logarithms'], ['eng-omm', 'eng', 'Of Mice and Men'],
-    ['hist-u4', 'hist', 'Unit 4: The Revolution'], ['chin-l7', 'chin', 'Lesson 7: At school'], ['art-ct', 'art', 'Color theory']];
+  const NOW = Date.now(), DAYMS = 864e5;
+  const sizeOf = b => !b ? '' : b < 1048576 ? Math.max(1, Math.round(b / 1024)) + ' KB' : (b / 1048576).toFixed(1) + ' MB';
+  const withExt = (n, x) => x && !new RegExp('\\.' + x + '$', 'i').test(n) ? `${n}.${x}` : n;
+  const kindOf = n => { const x = (String(n).match(/\.([a-z0-9]+)$/i) || [, ''])[1].toLowerCase(); return /^(ppt|pptx|key|odp)$/.test(x) ? 'slides' : /^(xls|xlsx|csv|numbers|ods)$/.test(x) ? 'sheet' : /^(png|jpe?g|gif|webp|heic|bmp|svg)$/.test(x) ? 'image' : 'doc'; };
+  const FILES = [];
+  ((FSD.raw.files && FSD.raw.files.files) || []).forEach(f => { if (!f || !C[f.course]) return; const name = withExt(f.name, f.ext);
+    FILES.push(FF('x' + f.id, name, f.course, kindOf(name), 'class', C[f.course].teacher || 'Your teacher', f.at ? FSD.fmt.dayLabel(f.at, NOW) : '', f.at ? (NOW - f.at) / 6e4 : 1e9, sizeOf(f.size), { raw: f, isNew: !!f.at && NOW - f.at < 3 * DAYMS, from: f.parentTitle || '' })); });
+  ((FSD.raw.submissions && FSD.raw.submissions.files) || []).forEach(f => { if (!f || !C[f.course]) return; const name = withExt(f.name, f.ext);
+    FILES.push(FF('s' + f.id + '-' + f.revision, name, f.course, kindOf(name), 'turned', 'You', f.at ? 'Turned in ' + FSD.fmt.dayLabel(f.at, NOW) : 'Turned in', f.at ? (NOW - f.at) / 6e4 : 1e9, sizeOf(f.size), { raw: f, from: f.assignmentTitle || '' })); });
+  // your apps' files go in when they load; they're not tied to a class, so they show under the first one's colors
+  const APP_CLASS = '__app';
+  C[APP_CLASS] = { id: APP_CLASS, name: 'Your apps', color: '#55697d', emoji: '☁️', teacher: '' };
+  const GKIND = { gdoc: 'doc', gsheet: 'sheet', gslides: 'slides', gdraw: 'image', design: 'design' };
+  const APP_NAME = { gdoc: 'Google Docs', gsheet: 'Google Sheets', gslides: 'Google Slides', gdraw: 'Google Drawings', design: 'Canva design' };
+  const APPLOAD = {};   // app -> 'loading' | 'ok' | 'connect' | 'failed'
+  const T_FOLDERS = [];   // the class folders live on each course hub's Materials tab
+  function appLoad(k) {
+    if (APPLOAD[k] === 'loading' || APPLOAD[k] === 'ok') return;
+    APPLOAD[k] = 'loading'; flRender(false);
+    (k === 'canva' ? FST.list('canva') : FST.list(k)).then(list => {
+      for (let i = FILES.length - 1; i >= 0; i--) if (FILES[i].src === k) FILES.splice(i, 1);
+      list.forEach(it => FILES.push(FF(k + ':' + it.id, it.name, APP_CLASS, GKIND[it.kind] || kindOf(it.name), k, 'You', it.sub || '', it.at ? (NOW - it.at) / 6e4 : 1e9, it.bytes ? sizeOf(it.bytes) : (k === 'canva' ? 'Design' : ''), { app: APP_NAME[it.kind], item: it })));
+      APPLOAD[k] = 'ok'; LINKED.add(k); flMeta(); flRender(true);
+    }, e => { APPLOAD[k] = e && e.code === 'not_connected' ? 'connect' : 'failed'; if (APPLOAD[k] === 'connect') LINKED.delete(k); flRender(false); if (APPLOAD[k] === 'failed') toast(FST.message(e)); });
+  }
   // folders you starred (a teacher's or yours), and the sidebar's sections: their order and which are hidden
-  const STARS = new Set(store.get('fsfiles_stars') || ['f:study', 't:chem-u3']);
+  const STARS = new Set((store.get('fsfiles_stars') || []).filter(x => x.startsWith('f:')));
   const SB_DEF = ['lib', 'star', 'apps', 'classes', 'folders'];
   const SB_NAME = { lib: 'Library', star: 'Starred', apps: 'Your apps', classes: 'Classes', folders: 'Your folders' };
   const SB_ICO = { lib: 'folder', star: 'star', apps: 'cloud', classes: 'binder', folders: 'folder' };
   const SB = (() => { const v = store.get('fsfiles_sb') || {}; const order = (v.order || []).filter(k => SB_DEF.includes(k)); SB_DEF.forEach(k => { if (!order.includes(k)) order.push(k); }); return { order, hidden: new Set((v.hidden || []).filter(k => k !== 'lib')) }; })();
   const sbSave = () => store.set('fsfiles_sb', { order: SB.order, hidden: [...SB.hidden] });
-  const MY_FOLDERS = [['study', 'Study guides'], ['lab', 'Lab 4 stuff']];
+  // your own folders (on this device): their names, and which file is in which
+  const MY_FOLDERS = store.get('fsfiles_myfolders') || [];
+  const IN_FOLDER = store.get('fsfiles_infolder') || {};
+  FILES.forEach(f => { if (IN_FOLDER[f.id]) f.folder = IN_FOLDER[f.id]; });
   const TYPES = [['doc', 'Documents'], ['slides', 'Slides'], ['sheet', 'Spreadsheets'], ['image', 'Images'], ['design', 'Designs']];
   // where the files are from: one place at a time (a class or a folder of yours counts as a place too)
   const LIB = [['all', 'All files', 'folder'], ['class', 'Course materials', 'binder'], ['turned', 'Submissions', 'upload']];
   const APPS = ['drive', 'onedrive', 'canva'];
-  const LINKED = new Set(store.get('fsfiles_linked') || APPS); // which apps are connected
+  const LINKED = new Set(); // which apps are connected (asked once the cloud script is ready)
 
   const TYPE_ICO = { doc: 'doc', slides: 'window', sheet: 'table', image: 'image', design: 'brush' };
   const WHENS = [['day', 'Today', 1440], ['week', 'This week', 10080], ['month', 'This month', 43200]];
   const SORTS = [['edited', 'Last changed'], ['name', 'Name'], ['size', 'Size']];
-  const FL = { q: '', place: 'all', type: '', when: '', sort: store.get('fsfiles_sort') || 'edited', view: store.get('fsfiles_view') || 'grid', seen: new Set(store.get('fsfiles_seen') || []) };
+  const FL = { naming: false, q: '', place: 'all', type: '', when: '', sort: store.get('fsfiles_sort') || 'edited', view: store.get('fsfiles_view') || 'grid', seen: new Set(store.get('fsfiles_seen') || []) };
   const isNew = f => f.isNew && !FL.seen.has(f.id);
   const filtering = () => !!(FL.q || FL.place !== 'all' || FL.type || FL.when);
   const inPlace = (f, p) => p === 'all' || (p.startsWith('c:') ? f.c === p.slice(2) : p.startsWith('f:') ? f.folder === p.slice(2) : p.startsWith('t:') ? f.tf === p.slice(2) : f.src === p);
   const tFolder = id => T_FOLDERS.find(x => x[0] === id);
-  const placeName = p => p === 'all' ? 'All files' : p.startsWith('t:') ? tFolder(p.slice(2))[2] : p.startsWith('c:') ? C[p.slice(2)].name : p.startsWith('f:') ? MY_FOLDERS.find(x => x[0] === p.slice(2))[1] : (LIB.find(x => x[0] === p) || [0, SOURCES[p] && SOURCES[p].name])[1];
+  const placeName = p => p === 'all' ? 'All files' : p.startsWith('t:') ? (tFolder(p.slice(2)) || [, , 'Folder'])[2] : p.startsWith('c:') ? (C[p.slice(2)] || { name: 'Class' }).name : p.startsWith('f:') ? (MY_FOLDERS.find(x => x[0] === p.slice(2)) || [, 'Folder'])[1] : (LIB.find(x => x[0] === p) || [0, SOURCES[p] && SOURCES[p].name])[1];
   const bytes = s => { const m = /([\d.]+)\s*(KB|MB)/.exec(s); return m ? +m[1] * (m[2] === 'MB' ? 1024 : 1) : 0; };
   const kindLabel = f => f.app || ({ pdf: 'PDF', docx: 'Word document', xlsx: 'Excel workbook', pptx: 'PowerPoint', jpg: 'Image', png: 'Image' })[(f.name.split('.').pop() || '').toLowerCase()] || 'File';
-  const matches = (f, skip) => (!SOURCES[f.src] || LINKED.has(f.src)) && (skip === 'q' || !FL.q || (f.name + ' ' + C[f.c].name + ' ' + f.who + ' ' + kindLabel(f)).toLowerCase().includes(FL.q))
+  const matches = (f, skip) => (!SOURCES[f.src] || LINKED.has(f.src)) && (skip === 'q' || !FL.q || (f.name + ' ' + C[f.c].name + ' ' + f.who + ' ' + kindLabel(f) + ' ' + (f.from || '')).toLowerCase().includes(FL.q))
     && (skip === 'place' || inPlace(f, FL.place)) && (skip === 'type' || !FL.type || f.kind === FL.type)
     && (skip === 'when' || !FL.when || f.ago <= WHENS.find(w => w[0] === FL.when)[2]);
   const sorted = l => l.slice().sort(FL.sort === 'name' ? (a, b) => a.name.localeCompare(b.name) : FL.sort === 'size' ? (a, b) => bytes(b.size) - bytes(a.size) : (a, b) => a.ago - b.ago);
@@ -4384,6 +4348,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
 
   // ---------- a picture of each file, drawn from what kind it is ----------
   function thumb(f) {
+    if (f.kind === 'image' && f.raw && f.src === 'class') return `<img class="fl-img" src="${esc(FSX.fileUrl(f.raw, true))}" alt="" loading="lazy">`;
     const c = C[f.c].color, h = hashOf(f.name), w = i => 34 + ((h >> (i * 3)) % 5) * 7, line = (x, y, l, o = .14) => `<rect x="${x}" y="${y}" width="${l}" height="4" rx="2" fill="#1f2230" opacity="${o}"/>`;
     const shadow = 'filter="drop-shadow(0 2px 3px rgba(20,21,31,.14))"';
     if (f.kind === 'doc') {
@@ -4410,16 +4375,16 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   }
   // the preview crops the picture to the page itself, so it sits dead center however wide the screen is
   const PAGE_BOX = { doc: '40 14 80 106', slides: '16 22 128 76', sheet: '18 16 124 100', image: '0 0 160 120', design: '46 8 68 104' };
-  const bigPage = f => thumb(f).replace('viewBox="0 0 160 120" preserveAspectRatio="xMidYMid slice"', `viewBox="${PAGE_BOX[f.kind]}" preserveAspectRatio="xMidYMid meet"`).replace('height="120" rx="4" fill="#ffffff"', 'height="106" rx="0" fill="#ffffff"').replace(/filter="drop-shadow[^"]*"/, '');
+  const bigPage = f => f.kind === 'image' && f.raw && f.src === 'class' ? `<img class="fl-bigimg" src="${esc(FSX.fileUrl(f.raw, true))}" alt="${esc(f.name)}">` : thumb(f).replace('viewBox="0 0 160 120" preserveAspectRatio="xMidYMid slice"', `viewBox="${PAGE_BOX[f.kind]}" preserveAspectRatio="xMidYMid meet"`).replace('height="120" rx="4" fill="#ffffff"', 'height="106" rx="0" fill="#ffffff"').replace(/filter="drop-shadow[^"]*"/, '');
   const srcTag = f => f.src === 'turned' ? `<span class="fl-src turned">${ico('ok')}Turned in</span>` : SOURCES[f.src] ? `<span class="fl-src">${srcMark(f.src)}${esc(SOURCES[f.src].name)}</span>` : '';
-  const whoLine = f => `${badge(C[f.c])}<span>${f.src === 'class' ? esc(f.who) + ' · ' : ''}${esc(f.when)}</span>`;
+  const whoLine = f => `${f.c === APP_CLASS ? '' : badge(C[f.c])}<span>${[f.src === 'class' ? f.who : '', f.when].filter(Boolean).map(esc).join(' · ')}</span>`;
   const nameHTML = f => `<b><span>${esc(f.name)}</span>${isNew(f) ? '<span class="newtag">New</span>' : ''}</b>`;
   const cardHTML = f => `<div class="fl-card" role="link" tabindex="0" data-flgo="${f.id}" aria-label="${esc(f.name)}, ${esc(kindLabel(f))}, ${esc(C[f.c].name)}"><span class="fl-th">${thumb(f)}${srcTag(f)}</span><span class="fl-tx">${nameHTML(f)}<small>${whoLine(f)}</small></span></div>`;
   // in the list, each file gets the app's file icon (its drawing slides up and the type shows when you point at the row)
   const icoKey = f => ({ 'Google Docs': 'gdoc', 'Google Sheets': 'gsheet', 'Google Slides': 'gslides', 'Canva design': 'canva' })[f.app] || (f.app && f.kind === 'image' ? 'jpg' : f.name);
   const listIco = f => window.AveragesFileIcons ? AveragesFileIcons.html(icoKey(f), { size: 38 }) : `<span class="fl-ri" aria-hidden="true">${thumb(f)}</span>`;
   const rowHTML = f => `<div class="fl-row avfi-host" role="link" tabindex="0" data-flgo="${f.id}" aria-label="${esc(f.name)}"><span class="fl-rn">${listIco(f)}${nameHTML(f)}</span>
-    <span class="fl-rc">${badge(C[f.c])}<span>${esc(C[f.c].name)}</span></span><span class="fl-rc">${SOURCES[f.src] ? srcMark(f.src) : ''}<span>${f.src === 'class' ? esc(f.who) : f.src === 'turned' ? 'You turned in' : esc(SOURCES[f.src].name)}</span></span><small>${esc(f.size)}</small></div>`;
+    <span class="fl-rc">${f.c === APP_CLASS ? '' : badge(C[f.c])}<span>${esc(f.c === APP_CLASS ? (f.from || '') : C[f.c].name)}</span></span><span class="fl-rc">${SOURCES[f.src] ? srcMark(f.src) : ''}<span>${f.src === 'class' ? esc(f.who) : f.src === 'turned' ? 'You turned in' : esc(SOURCES[f.src].name)}</span></span><small>${esc(f.size)}</small></div>`;
 
   // ---------- sections ----------
   function flMeta() {
@@ -4443,9 +4408,9 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     const G = {
       lib: LIB.map(([p, l, i]) => place(p, ic(i), l, true)).join(''),
       star: starred.length ? starred.map(p => p.startsWith('f:') ? folderRow(p, MY_FOLDERS.find(x => 'f:' + x[0] === p)[1]) : folderRow(p, tFolder(p.slice(2))[2], tFolder(p.slice(2))[1])).join('') : `<p class="fl-sempty">${ico('star')}Star a folder to keep it here.</p>`,
-      apps: APPS.filter(k => LINKED.has(k)).map(k => place(k, srcMark(k), SOURCES[k].name)).join('') + (LINKED.size < APPS.length ? `<button class="fl-si fl-new" data-fladd>${ic('plus')}<span>Connect an app</span></button>` : ''),
+      apps: APPS.filter(k => LINKED.has(k)).map(k => place(k, srcMark(k), SOURCES[k].name)).join('') + (LINKED.size < APPS.length ? `<button class="fl-si fl-new" data-fladd>${ic('plus')}<span>${LINKED.size ? 'Connect another app' : 'Connect an app'}</span></button>` : ''),
       classes: CLASSES.map(c => place('c:' + c.id, badge(c), c.name)).join(''),
-      folders: MY_FOLDERS.map(([id, name]) => folderRow('f:' + id, name)).join('') + `<button class="fl-si fl-new" data-toast="New folder: name it, then drag files in">${ic('plus')}<span>New folder</span></button>`,
+      folders: MY_FOLDERS.map(([id, name]) => folderRow('f:' + id, name)).join('') + (FL.naming ? `<form class="fl-si fl-new fl-nameit" data-flnewform><input id="flNewName" maxlength="40" placeholder="Folder name" aria-label="New folder name" autocomplete="off"></form>` : `<button class="fl-si fl-new" data-flnew>${ic('plus')}<span>New folder</span></button>`),
     };
     $('flSide').innerHTML = SB.order.filter(k => !SB.hidden.has(k)).map(k => `<div class="fl-sg" data-sg="${k}" aria-label="${SB_NAME[k]}">${G[k]}</div>`).join('');
     $('flSideLbl').textContent = placeName(FL.place) + (FL.type ? ' · ' + TYPES.find(t => t[0] === FL.type)[1] : '') + (FL.when ? ' · ' + WHENS.find(w => w[0] === FL.when)[1] : '');
@@ -4455,7 +4420,10 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     $('flAllT').textContent = FL.q && FL.place === 'all' ? 'Results' : placeName(FL.place);
     const extra = [FL.place.startsWith('t:') && `${C[tFolder(FL.place.slice(2))[1]].name} · ${C[tFolder(FL.place.slice(2))[1]].teacher}`, FL.type && TYPES.find(t => t[0] === FL.type)[1], FL.when && WHENS.find(w => w[0] === FL.when)[1]].filter(Boolean);
     $('flCount').innerHTML = `${list.length} ${list.length === 1 ? 'file' : 'files'}${extra.length ? ' · ' + esc(extra.join(' · ')) : ''}`;
-    $('flAll').innerHTML = !list.length ? `<div class="fl-none"><b>${FL.q ? `Nothing matches "${esc(FL.q)}"` : 'No files here'}</b>${FL.q ? `Try a different word.<br><button class="btn sm" data-flclear>Clear search</button>` : 'Files you add here show up here.'}</div>`
+    const app = SOURCES[FL.place] ? FL.place : '', st = app && APPLOAD[app];
+    $('flAll').innerHTML = st === 'loading' ? `<div class="fl-none"><b>Loading your ${esc(SOURCES[app].name)}…</b>From your own sign-in. Nothing is copied.</div>`
+      : st === 'connect' || st === 'failed' ? `<div class="fl-none"><b>${st === 'connect' ? `Connect ${esc(SOURCES[app].name)}` : `Couldn't load ${esc(SOURCES[app].name)}`}</b><button class="btn sm primary" data-flapp="${app}">${st === 'connect' ? 'Connect' : 'Try again'}</button></div>`
+      : !list.length ? `<div class="fl-none"><b>${FL.q ? `Nothing matches "${esc(FL.q)}"` : 'No files here'}</b>${FL.q ? `Try a different word.<br><button class="btn sm" data-flclear>Clear search</button>` : FL.place.startsWith('f:') ? 'Open a file and pick this folder to put it here.' : 'Files show up here as they\'re posted.'}</div>`
       : FL.view === 'list' ? `<div class="fl-list"><div class="fl-lh"><span>Name</span><span>Class</span><span>From</span><span>Size</span></div>${list.map(rowHTML).join('')}</div>` : `<div class="fl-grid">${list.map(cardHTML).join('')}</div>`;
     if (anim && !calm()) $('flAll').querySelectorAll('.fl-card, .fl-row, .fl-none').forEach((el, i) => el.animate && el.animate([{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: 320, delay: Math.min(i * 22, 300), easing: 'cubic-bezier(.2, .8, .2, 1)', fill: 'backwards' }));
   }
@@ -4476,7 +4444,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     const cls = FL.place.startsWith('c:') ? FL.place.slice(2) : '', n = fn => FILES.filter(fn).length;
     const tf = T_FOLDERS.filter(([, c]) => !cls || c === cls).sort((a, b) => CLASSES.findIndex(c => c.id === a[1]) - CLASSES.findIndex(c => c.id === b[1]));
     const mine = cls ? [] : MY_FOLDERS, nf = k => `${k} ${k === 1 ? 'file' : 'files'}`;
-    $('flFoldSub').textContent = cls ? `Made by ${C[cls].teacher}` : 'From your teachers, plus yours';
+    $('flFoldSub').textContent = 'Yours, on this device';
     $('flFolders').innerHTML = flFoldSort([...tf.map(([id, c, name]) => `<div class="fl-fold" role="button" tabindex="0" data-flplace="t:${id}" style="--c:${C[c].color}"><span class="fl-ftile tcls" aria-hidden="true">${EMOJI_SVG['📁'] || ''}${badge(C[c])}</span><span class="tx"><b>${esc(name)}</b><small>${nf(n(f => f.tf === id))} · ${esc(cls ? C[c].teacher : C[c].name)}</small></span>${starBtn('t:' + id, name)}</div>`),
       ...mine.map(([id, name]) => `<div class="fl-fold" role="button" tabindex="0" data-flplace="f:${id}"><span class="fl-ftile" aria-hidden="true">${EMOJI_SVG['📁'] || ''}</span><span class="tx"><b>${esc(name)}</b><small>${nf(n(f => f.folder === id))} · Yours</small></span>${starBtn('f:' + id, name)}</div>`)]).join('');
     [...$('flFolders').children].forEach(c => { const p = c.dataset.flplace, k = tf.findIndex(t => 't:' + t[0] === p); c.dataset.fo = k >= 0 ? k : tf.length + mine.findIndex(m => 'f:' + m[0] === p); });
@@ -4529,7 +4497,9 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       if (on && !calm()) { st.classList.remove('pop'); void st.offsetWidth; st.classList.add('pop'); }
       flSide(); flFoldOrder(); toast(on ? `Starred ${name}. It's in the sidebar now.` : `Took the star off ${name}.`); return; }
     const pl = e.target.closest('[data-flplace]');
-    if (pl) { if (FL.place === pl.dataset.flplace) return; FL.place = pl.dataset.flplace; flPicked(); return; }
+    if (pl) { if (FL.place === pl.dataset.flplace) return; FL.place = pl.dataset.flplace; if (SOURCES[FL.place] && !APPLOAD[FL.place]) appLoad(FL.place); flPicked(); return; }
+    const ap = e.target.closest('[data-flapp]'); if (ap) { const k = ap.dataset.flapp; if (APPLOAD[k] === 'connect') { FST.connect(k).then(() => { APPLOAD[k] = ''; appLoad(k); }, er => toast(FST.message(er))); } else { APPLOAD[k] = ''; appLoad(k); } return; }
+    if (e.target.closest('[data-flnew]')) { FL.naming = true; flSide(); const i = $('flNewName'); if (i) i.focus(); return; }
     const ty = e.target.closest('[data-fltype]'); if (ty) { FL.type = FL.type === ty.dataset.fltype ? '' : ty.dataset.fltype; flPicked(); return; }
     const wh = e.target.closest('[data-flwhen]'); if (wh) { FL.when = FL.when === wh.dataset.flwhen ? '' : wh.dataset.flwhen; flPicked(); return; }
     if (e.target.closest('#flSideBtn')) { flSideOpen(!$('flLayout').classList.contains('side-open')); return; }
@@ -4551,6 +4521,13 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     const fo = e.target.closest && e.target.closest('.fl-fold[data-flplace]'); if (fo && e.target === fo && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); fo.click(); }
   }, true);
   document.addEventListener('pointerdown', e => { if (ddOpen && !ddOpen.contains(e.target)) ddHide(false); });
+  document.addEventListener('submit', e => {
+    const fm = e.target.closest('[data-flnewform]'); if (!fm) return; e.preventDefault();
+    const name = $('flNewName').value.trim().slice(0, 40); FL.naming = false;
+    if (name) { const id = Date.now().toString(36); MY_FOLDERS.push([id, name]); store.set('fsfiles_myfolders', MY_FOLDERS); FL.place = 'f:' + id; toast(`Made ${name}. Open a file and pick it under Folder.`); }
+    flRender(true);
+  });
+  document.addEventListener('focusout', e => { if (e.target && e.target.id === 'flNewName' && !e.target.value.trim()) setTimeout(() => { if (FL.naming) { FL.naming = false; flSide(); } }, 120); });
   // picking something in the side panel: the list redraws and the picked item keeps focus (on a phone the panel folds away)
   function flPicked() {
     const act = document.activeElement, key = act && (act.dataset.flplace != null ? `[data-flplace="${act.dataset.flplace}"]` : act.dataset.fltype ? `[data-fltype="${act.dataset.fltype}"]` : act.dataset.flwhen ? `[data-flwhen="${act.dataset.flwhen}"]` : '');
@@ -4914,7 +4891,7 @@ window.AveragesHelp = {
   // the mock's way in: hpOpen('canva' | 'drive', the button, { prepare, onGo })
   function hpOpen(k, from, opts = {}) {
     window.AveragesHelp.open(k, { from, prepare: opts.prepare || null,
-      onContinue: v => { if (opts.onGo) opts.onGo(v); else toast(`In the app, this opens ${k === 'canva' ? 'Canva' : 'Google Drive in a new tab'}.`); } });
+      onContinue: v => { if (opts.onGo) opts.onGo(v); else FSX.newTab(k === 'canva' ? 'https://www.canva.com/projects' : 'https://drive.google.com/drive/my-drive'); } });
   }
   let af = null, afFrom = null, afApp = null, afPath = [], afSel = new Set();
   // OneDrive's picker: only the files someone chooses here are shared with Averages.io (it links to them, it doesn't copy them)
@@ -4935,9 +4912,9 @@ window.AveragesHelp = {
   const afTop = (k, title) => `<div class="af-top"><button class="me-back af-back" data-afback aria-label="Back">${ico('tri')}</button><div class="tx"><h2 id="afT">${srcMark(k)}${title}</h2></div><button class="nt-x" data-afx aria-label="Close">${ico('x')}</button></div>`;
   function afMain() {
     const row = k => { const on = LINKED.has(k), n = FILES.filter(f => f.src === k).length;
-      return `<div class="af-app${on ? ' on' : ''}">${srcMark(k)}<span class="tx"><b>${esc(SOURCES[k].name)}</b><small>${on ? `Connected · ${n} ${n === 1 ? 'file' : 'files'}` : 'Not connected'}</small></span>`
-        + (on ? `<span class="acts">${k !== 'canva' ? `<button class="btn sm primary" data-afapp="${k}">${ico('plus')}Add files</button>` : ''}<button class="btn sm af-off" data-afoff="${k}">Disconnect</button></span>` : `<button class="btn sm primary" data-afon="${k}">Connect</button>`) + `</div>`; };
-    return `<div class="af-top"><div class="tx"><h2 id="afT">Add files</h2><small>Averages.io doesn't keep copies of your files. It shows the ones in your apps, right where they are.</small></div><button class="nt-x" data-afx aria-label="Close">${ico('x')}</button></div>
+      return `<div class="af-app${on ? ' on' : ''}">${srcMark(k)}<span class="tx"><b>${esc(SOURCES[k].name)}</b><small>${on ? (APPLOAD[k] === 'ok' ? `Connected · ${n} ${n === 1 ? 'file' : 'files'}` : 'Connected') : 'Not connected'}</small></span>`
+        + (on ? `<span class="acts">${k !== 'canva' ? `<button class="btn sm primary" data-afapp="${k}">${ico('plus')}${k === 'drive' ? 'Open a file' : 'Pick files'}</button>` : ''}<button class="btn sm af-off" data-afoff="${k}">Disconnect</button></span>` : FST.configured(k) ? `<button class="btn sm primary" data-afon="${k}">Connect</button>` : '<small>Not available yet</small>') + `</div>`; };
+    return `<div class="af-top"><div class="tx"><h2 id="afT">Your apps</h2><small>Averages.io doesn't keep copies of your files. It shows the ones in your apps, right where they are.</small></div><button class="nt-x" data-afx aria-label="Close">${ico('x')}</button></div>
       <div class="af-body"><div class="af-lbl">Your apps</div><div class="af-apps">${APPS.map(row).join('')}</div></div>`;
   }
   function afOd() {
@@ -4961,7 +4938,9 @@ window.AveragesHelp = {
   function afGo(k) {
     afApp = k;
     if (k === 'drive') { const from = afFrom; afClose(true); hpOpen('drive', from); return; }
-    afPath = []; afSel.clear(); afShow('od', 1); afFocus('.af-file:not([disabled])');
+    // OneDrive's own picker: only the files picked there are shared with Averages.io
+    FST.pickOneDrive().then(list => { afClose(); let n = 0; list.forEach(it => { if (FILES.some(f => f.id === 'onedrive:' + it.id)) return; n++; FILES.unshift(FF('onedrive:' + it.id, it.name, APP_CLASS, kindOf(it.name), 'onedrive', 'You', 'Added just now', 0, it.sub || '', { item: it })); });
+      LINKED.add('onedrive'); flMeta(); flRecent(); flRender(true); if (n) toast(`Added ${n} ${n === 1 ? 'file' : 'files'} from OneDrive. They stay in your OneDrive.`); }, e => { if (!(e && e.code === 'popup_closed')) toast(FST.message(e)); });
   }
   function afOpen() {
     if (af) return; afFrom = document.activeElement;
@@ -4988,8 +4967,8 @@ window.AveragesHelp = {
       picked.forEach(f => FILES.unshift(FF('o' + (++k), f.name, f.c, f.kind, 'onedrive', 'You', 'Added just now', 0, f.size)));
       afSel.clear(); afClose(); flMeta(); flRecent(); flRender(true); toast(`Added ${picked.length} ${picked.length === 1 ? 'file' : 'files'} from OneDrive. They stay in your OneDrive.`); return;
     }
-    const on = e.target.closest('[data-afon]'); if (on) { const k = on.dataset.afon; LINKED.add(k); store.set('fsfiles_linked', [...LINKED]); afShow('main'); flMeta(); flRender(true); toast(`Connected ${SOURCES[k].name}. In the app, you'd sign in to ${SOURCES[k].name} first.`); const b = af.querySelector(`[data-afoff="${k}"]`); if (b) b.focus({ preventScroll: true }); return; }
-    const off = e.target.closest('[data-afoff]'); if (off) { const k = off.dataset.afoff; LINKED.delete(k); store.set('fsfiles_linked', [...LINKED]); if (FL.place === k) FL.place = 'all'; afShow('main'); flMeta(); flRender(true); toast(`Disconnected ${SOURCES[k].name}. Its files are still in ${SOURCES[k].name}, just not shown here.`); const b = af.querySelector(`[data-afon="${k}"]`); if (b) b.focus({ preventScroll: true }); return; }
+    const on = e.target.closest('[data-afon]'); if (on) { const k = on.dataset.afon; afClose(); FST.connect(k).then(() => { LINKED.add(k); APPLOAD[k] = ''; FL.place = k; appLoad(k); flPicked(); toast(`Connected ${SOURCES[k].name}.`); }, er => toast(FST.message(er))); return; }
+    const off = e.target.closest('[data-afoff]'); if (off) { const k = off.dataset.afoff; FST.disconnect(k).then(() => { LINKED.delete(k); APPLOAD[k] = ''; for (let i = FILES.length - 1; i >= 0; i--) if (FILES[i].src === k) FILES.splice(i, 1); if (FL.place === k) FL.place = 'all'; if (af) afShow('main'); flMeta(); flRender(true); toast(`Disconnected ${SOURCES[k].name}. Its files are still in ${SOURCES[k].name}, just not shown here.`); }, er => toast(FST.message(er))); return; }
   }
   document.addEventListener('click', e => { if (e.target.closest('[data-fladd]') && !af) { e.preventDefault(); afOpen(); } });
   document.addEventListener('keydown', e => {
@@ -5018,9 +4997,10 @@ window.AveragesHelp = {
   let lb = null, lbList = [], lbAt = 0, lbFrom = null;
   function lbHTML() {
     const f = lbList[lbAt], c = C[f.c], from = f.src === 'class' ? `From ${f.who}` : f.src === 'turned' ? 'You turned this in' : `In your ${SOURCES[f.src].name}`;
-    const open = f.src === 'class' ? `Open in ${c.name}` : f.src === 'turned' ? 'See the assignment' : `Open in ${SOURCES[f.src].name}`;
-    return `<div class="up-lb-top"><div class="tx"><b id="flLbT">${esc(f.name)}</b><small>${esc(kindLabel(f))} · ${esc(f.size)} · ${esc(c.name)} · ${esc(from)}, ${esc(f.when.replace(/^Edited /, '').replace(/^Turned in /, ''))}</small></div>${lbList.length > 1 ? `<span class="up-lb-ct">${lbAt + 1} of ${lbList.length}</span>` : ''}
-      <button class="btn fl-lb-b" data-toast="${esc(f.name)} ${f.src === 'class' ? `in ${esc(c.name)}'s Materials` : f.src === 'turned' ? `on its assignment page` : `in ${esc(SOURCES[f.src].name)}`}">${ico('link')}${open}</button><button class="btn up-lb-dl" data-fldl>${ico('dl')}Download</button><button class="up-lb-x" data-fllbx aria-label="Close">${ico('x')}</button></div>
+    const open = f.src === 'class' ? `Open in ${c.name}` : f.src === 'turned' ? 'See the assignment' : `Open in ${SOURCES[f.src].name}`, canDl = f.src === 'class' || f.src === 'turned';
+    const fold = `<select class="fl-lb-fold" data-flfold aria-label="Folder"><option value="">No folder</option>${MY_FOLDERS.map(([id, n]) => `<option value="${esc(id)}"${f.folder === id ? ' selected' : ''}>${esc(n)}</option>`).join('')}</select>`;
+    return `<div class="up-lb-top"><div class="tx"><b id="flLbT">${esc(f.name)}</b><small>${[kindLabel(f), f.size, f.c === APP_CLASS ? '' : c.name, f.from, from + (f.when ? ', ' + f.when.replace(/^Edited /, '').replace(/^Turned in /, '') : '')].filter(Boolean).map(esc).join(' · ')}</small></div>${lbList.length > 1 ? `<span class="up-lb-ct">${lbAt + 1} of ${lbList.length}</span>` : ''}
+      ${MY_FOLDERS.length ? fold : ''}<button class="btn fl-lb-b" data-flopen>${ico('link')}${open}</button>${canDl ? `<button class="btn up-lb-dl" data-fldl>${ico('dl')}Download</button>` : ''}<button class="up-lb-x" data-fllbx aria-label="Close">${ico('x')}</button></div>
       <div class="up-lb-stage"><button class="up-lb-nav" data-fllbgo="-1" aria-label="Previous file"${lbAt ? '' : ' disabled'}>${ico('chev-l')}</button><figure class="up-lb-fig fl-big" role="img" aria-label="Preview of ${esc(f.name)}">${bigPage(f)}</figure><button class="up-lb-nav" data-fllbgo="1" aria-label="Next file"${lbAt < lbList.length - 1 ? '' : ' disabled'}>${ico('chev-r')}</button></div>`;
   }
   function flOpen(id) {
@@ -5051,8 +5031,22 @@ window.AveragesHelp = {
   function lbClick(e) {
     if (e.target.closest('[data-fllbx]') || e.target === lb || e.target.classList.contains('up-lb-stage')) { lbClose(); return; }
     const g = e.target.closest('[data-fllbgo]'); if (g) { lbGo(+g.dataset.fllbgo); return; }
-    if (e.target.closest('[data-fldl]')) toast(`In the app, this downloads ${lbList[lbAt].name}.`);
+    const f = lbList[lbAt];
+    if (e.target.closest('[data-fldl]')) { const a = document.createElement('a'); a.href = fileHref(f); a.download = f.name; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove(); toast(`Downloading ${f.name}.`); return; }
+    if (e.target.closest('[data-flopen]')) {
+      if (f.src === 'class') { FSX.go('course-hub', { course: f.c }, 'materials/x' + f.raw.id); return; }
+      if (f.src === 'turned') { FSX.go('course-hub', { course: f.c }, 'materials/' + f.raw.assignment); return; }
+      if (f.src === 'canva') { toast('Opening Canva…'); FST.canvaOpen(f.item.designId).then(u => location.assign(u), er => toast(FST.canvaMessage(er && er.code))); return; }
+      if (f.item && f.item.url) { FSX.newTab(f.item.url); return; }
+      FSX.newTab(f.src === 'drive' ? 'https://drive.google.com/drive/my-drive' : 'https://onedrive.live.com/'); return;
+    }
   }
+  const fileHref = f => f.src === 'turned' ? `${FSX.apiBase}/data/submission-file?section=${encodeURIComponent(f.raw.course)}&assignment=${encodeURIComponent(f.raw.assignment)}&revision=${encodeURIComponent(f.raw.revision)}&file=${encodeURIComponent(f.raw.id)}` : FSX.fileUrl(f.raw);
+  document.addEventListener('change', e => {
+    const s2 = e.target.closest && e.target.closest('[data-flfold]'); if (!s2 || !lb) return; const f = lbList[lbAt], v = s2.value;
+    if (v) { IN_FOLDER[f.id] = v; f.folder = v; } else { delete IN_FOLDER[f.id]; delete f.folder; } store.set('fsfiles_infolder', IN_FOLDER);
+    flSide(); flSections(false); flAll(false); toast(v ? `Put in ${MY_FOLDERS.find(x => x[0] === v)[1]}.` : 'Taken out of its folder.');
+  });
   document.addEventListener('keydown', e => {
     if (!lb) return;
     if (e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); lbClose(); return; }
@@ -5080,34 +5074,22 @@ window.AveragesHelp = {
     $('flMeta').querySelectorAll('.gm').forEach((el, i) => el.animate && el.animate([{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: 480, delay: 40 + i * 60, easing: 'cubic-bezier(.16, 1, .3, 1)', fill: 'backwards' }));
     $('flMeta').querySelectorAll('[data-n]').forEach((el, k) => { const to = +el.dataset.n, t0 = performance.now() + 40 + k * 60; el.textContent = '0'; const step = now => { const p = Math.min(1, Math.max(0, (now - t0) / 560)), e = 1 - Math.pow(1 - p, 3); el.textContent = Math.round(to * e); if (p < 1) requestAnimationFrame(step); }; requestAnimationFrame(step); });
   }
-  let loading = false, spin = null;
+  let loading = false;
+  $('syncLabel').textContent = FSX.synced(); $('refresh').setAttribute('aria-label', 'Refresh your files. ' + FSX.synced() + '.');
   $('refresh').addEventListener('click', () => {
     if (loading) return; loading = true; ddHide(false);
     const b = $('refresh'), icon = b.querySelector('svg');
     b.classList.add('loading'); b.setAttribute('aria-busy', 'true'); $('syncLabel').textContent = 'Syncing…';
-    if (!calm() && icon.animate) spin = icon.animate([{ transform: 'rotate(0deg)' }, { transform: 'rotate(360deg)' }], { duration: 800, iterations: Infinity });
-    const sk = (icon2, w) => `<span class="gm" data-skel>${ico(icon2)}<span class="skel-bar" style="width:${w}px;height:12px"></span></span>`;
-    $('flMeta').innerHTML = sk('doc', 60) + sk('binder', 70) + sk('cloud', 110) + sk('bell', 130);
-    setTimeout(metaLand, 500 + Math.random() * 600);
-    $('flCount').innerHTML = bar('56px', 12);
-    let left = PARTS.length;
-    PARTS.forEach(([id, render, sel]) => {
-      lockOf(id).forEach(el => { el.classList.add('sync-wait'); el.inert = true; }); $(id).innerHTML = SKEL[id]();
-      setTimeout(() => {
-        lockOf(id).forEach(el => { el.classList.remove('sync-wait'); el.inert = false; }); land(id, render, sel); shCenter();
-        if (id === 'flRecent') flNavSync();
-        if (--left) return;
-        loading = false; b.classList.remove('loading'); b.removeAttribute('aria-busy');
-        if (spin) { const a = ((spin.currentTime || 0) % 800) / 800 * 360; spin.cancel(); spin = null; if (!calm()) icon.animate([{ transform: `rotate(${a}deg)` }, { transform: 'rotate(360deg)' }], { duration: Math.max(160, (360 - a) / 360 * 800), easing: 'cubic-bezier(.25, .7, .35, 1)' }); }
-        $('syncLabel').textContent = 'Synced just now'; b.setAttribute('aria-label', 'Refresh your files. Synced just now.');
-        toast('Your files are up to date.');
-      }, 500 + Math.random() * 2200);
-    });
+    if (!calm() && icon.animate) icon.animate([{ transform: 'rotate(0deg)' }, { transform: 'rotate(360deg)' }], { duration: 800, iterations: Infinity });
+    FSX.reloadFresh('Your files are up to date.');
   });
 
   // the glow behind the header matches the blue folder in the logo
   $('flLogo').style.setProperty('--c', '#3d8fe0'); document.querySelector('.hub-h').style.setProperty('--class-c', '#3d8fe0'); $('flLogo').innerHTML = EMOJI_SVG['📁'] || '';
   flMeta(); flRecent(); flViewSync(); flRender(false); ntInit();
+  // which apps are connected: Google Drive and OneDrive from this browser's sign-ins, Canva from our API
+  FST.ready().then(() => { ['drive', 'onedrive'].forEach(k => { if (FST.connected(k)) LINKED.add(k); }); flMeta(); flSide(); }).catch(() => {});
+  FSX.api('/canva/status').then(j => { if (j && j.connected) { LINKED.add('canva'); flMeta(); flSide(); } }).catch(() => {});
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { inkMemo.clear(); shCenter(); });
 
   // search anything: this page's files
@@ -5117,6 +5099,7 @@ window.AveragesHelp = {
    The tilt, nudge and overlap come from the item's text, so a sticker lands the same way every time the list redraws.
    Each one lands differently: high or low on the end of the word before it, or somewhere along the top of the line under it, always covering 2 to 4px, or the top of the line under it, so the text stays readable. */
 (() => {
+  return; // design rules: New tags sit straight, in line with their text (no tilt, no landing spots)
   const TILTS = [-12, -9, -6, -3, 4, 7, 10, 13];
   const hash = s => { let h = 7; for (const ch of s) h = Math.imul(h ^ ch.charCodeAt(0), 0x5bd1e995); h ^= h >>> 15; h = Math.imul(h, 0x27d4eb2d); h ^= h >>> 13; return h >>> 1; };
   const seedOf = el => { const host = el.closest('[data-mid], [data-mpid], [data-agopen], [data-gw], [data-rgw], [data-gdopen], [role="row"], .upd, button, a, li, tr') || el.parentNode; return hash((host ? host.textContent : '') + el.textContent); };

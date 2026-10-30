@@ -10,7 +10,10 @@
  *      between pages (see that file);
  *   2. its "In the app, this opens ..." messages routed through that file,
  *      so they move between pages instead of only saying so;
- *   3. a dark theme: the design is light only, so every rule with a color in
+ *   3. its scripts held back (type="text/fs-wait") until
+ *      /js/averages-fs-data.js has loaded the student's real data (window.FSD)
+ *      and runs them;
+ *   4. a dark theme: the design is light only, so every rule with a color in
  *      it gets a dark twin under html[data-theme="dark"] (see darkCss below).
  * The title drops the word "Mock". public/fs/ is generated (gitignored): edit
  * fs-src/ and rebuild. Runs from `npm run port`.
@@ -24,6 +27,25 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const SRC = path.resolve(HERE, "../fs-src");
 const OUT = path.resolve(HERE, "../public/fs");
 const JS_FILE = path.resolve(HERE, "../public/js/averages-fs.js");
+const DATA_FILE = path.resolve(HERE, "../public/js/averages-fs-data.js");
+const TURNIN_FILE = path.resolve(HERE, "../public/js/averages-fs-turnin.js");
+// pages with the Turn in popup: they also get the turning-in code (averages-fs-turnin.js)
+// The version line in Settings > About, the same as the Windowed pages' (scripts/port-pages.mjs):
+// Beta <package.json version> (Build <first 7 of the commit Cloudflare is building>), "local" elsewhere.
+import { execFileSync } from "node:child_process";
+function buildVersion() {
+  const pkg = JSON.parse(fs.readFileSync(path.resolve(HERE, "../package.json"), "utf8"));
+  const base = String(pkg.version || "0.0.0");
+  if (!process.env.WORKERS_CI) return { base, sha: "local", when: "Built on this computer" };
+  let sha = String(process.env.WORKERS_CI_COMMIT_SHA || "").trim();
+  if (!/^[0-9a-f]{7,40}$/i.test(sha)) {
+    try { sha = execFileSync("git", ["rev-parse", "HEAD"], { cwd: path.resolve(HERE, ".."), encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim(); } catch { sha = ""; }
+  }
+  const when = new Date().toLocaleString("en-US", { timeZone: "America/Los_Angeles", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+  return /^[0-9a-f]{7,40}$/i.test(sha) ? { base, sha: sha.toLowerCase(), when: `Commit ${sha.toLowerCase()}, built ${when} Pacific` } : { base, sha: "unknown", when: `Built ${when} Pacific` };
+}
+const VERSION = buildVersion();
+const TURNIN_PAGES = new Set(["home.html", "assignments.html", "course-hub.html", "files.html", "settings.html"]);
 
 // ---------- colors ----------
 function parseColor(s) {
@@ -229,20 +251,26 @@ export function darkCss(pageCss) {
 function build() {
   if (!fs.existsSync(SRC)) { console.log("  fs-src/ missing: no Fullscreen pages"); return; }
   fs.mkdirSync(OUT, { recursive: true });
-  const v = crypto.createHash("sha256").update(fs.readFileSync(JS_FILE)).digest("hex").slice(0, 10);
-  const tag = `<script src="/js/averages-fs.js?v=${v}"></script>`;
+  const ver = (f) => crypto.createHash("sha256").update(fs.readFileSync(f)).digest("hex").slice(0, 10);
+  const tag = `<script src="/js/averages-fs.js?v=${ver(JS_FILE)}"></script>\n<script src="/js/averages-fs-data.js?v=${ver(DATA_FILE)}"></script>`;
   let n = 0;
   for (const file of fs.readdirSync(SRC).filter((f) => f.endsWith(".html")).sort()) {
     let s = fs.readFileSync(path.join(SRC, file), "utf8");
     const styles = [...s.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/g)].map((m) => m[1]).join("\n");
     // 1. the link to the app, first thing in <head>
     if (!/<head>/.test(s)) throw new Error(`${file}: no <head>`);
-    s = s.replace(/<head>/, `<head>\n${tag}`);
+    s = s.replace(/const VER = "[^"]*", SHA = "[^"]*", WHEN = "[^"]*";/, `const VER = ${JSON.stringify(VERSION.base)}, SHA = ${JSON.stringify(VERSION.sha)}, WHEN = ${JSON.stringify(VERSION.when)};`);
+    s = s.replace(/<head>/, `<head>\n${tag}${TURNIN_PAGES.has(file) ? `\n<script src="/js/averages-fs-turnin.js?v=${ver(TURNIN_FILE)}"></script>` : ""}`);
     // 2. "In the app, this opens ..." moves for real
     const before = s;
     s = s.replace(/function toast\((\w+)\) \{/, (m, a) => `${m} if (window.__fsNav && window.__fsNav(${a})) return;`);
     if (s === before) throw new Error(`${file}: no toast() to route`);
-    // 3. dark theme, after the page's own styles
+    // 3. the page's own scripts wait for its real data (averages-fs-data.js runs them)
+    const at = s.indexOf("<body");
+    if (at < 0) throw new Error(`${file}: no <body>`);
+    const held = s.slice(at).replace(/<script(\s+id="[^"]*")?>/g, (m, id) => `<script type="text/fs-wait"${id || ""}>`);
+    s = s.slice(0, at) + held;
+    // 4. dark theme, after the page's own styles
     s = s.replace(/<\/head>/, `<style id="fsDark">\n${darkCss(styles)}</style>\n</head>`);
     s = s.replace(/<title>([^<]*?)\s*Mock<\/title>/, "<title>$1</title>");
     fs.writeFileSync(path.join(OUT, file), s);
