@@ -4217,7 +4217,8 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (anim && !calm()) $('asList').querySelectorAll('.as-gh, .as-row, .as-none').forEach((el, i) => el.animate && el.animate([{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: 320, delay: Math.min(i * 25, 300), easing: 'cubic-bezier(.2, .8, .2, 1)', fill: 'backwards' }));
   }
   function asTypes() {
-    $('asTypes').innerHTML = `<span class="mp-pill" aria-hidden="true"></span>` + TYPES.map(([k, l]) => `<button data-astype="${k}" aria-pressed="${AS.type === k}">${l}</button>`).join('');
+    const base = ASG.filter(a => (!AS.c || a.c === AS.c) && (!AS.att || hasAtt(a)));
+    $('asTypes').innerHTML = `<span class="mp-pill" aria-hidden="true"></span>` + TYPES.map(([k, l]) => `<button data-astype="${k}" aria-pressed="${AS.type === k}">${l}<em>${base.filter(a => ofType(a, k)).length}</em></button>`).join('');
     requestAnimationFrame(() => mpPill($('asTypes'), false));
   }
   const todoIn = c => ASG.filter(a => (!c || a.c === c) && isTodo(a)).length;
