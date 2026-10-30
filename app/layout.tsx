@@ -85,7 +85,7 @@ export default function RootLayout({
           one: its requests send cookies, and a connection opened for
           cookie-less requests isn't reused for those.
         */}
-        {/* Fullscreen (2026-10-28): a student who picked it goes to /fs/ before anything paints. See app/lib/fs-boot.ts. */}
+        {/* Fullscreen (2026-10-28): a student who picked it goes to /IS/ before anything paints. See app/lib/fs-boot.ts. */}
         <script dangerouslySetInnerHTML={{ __html: FS_BOOT_JS }} />
         <link rel="preconnect" href="https://api.averages.io" />
         <link rel="preconnect" href="https://use.typekit.net" />

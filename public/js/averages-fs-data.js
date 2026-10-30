@@ -3,7 +3,7 @@
  * inside the fs theme ... make sure everything works"). Loaded in <head>
  * right after averages-fs.js.
  *
- * Each page in /fs/ is built (scripts/build-fs.mjs) with its own scripts
+ * Each page in /IS/ is built (scripts/build-fs.mjs) with its own scripts
  * held back (<script type="text/fs-wait">). This file:
  *   1. asks the API who's signed in and loads what the page shows: the
  *      shared bundle (/data/bundle) plus the page's extras (teachers,
@@ -25,7 +25,7 @@
   var API = window.location.hostname.endsWith('averages.io') ? 'https://api.averages.io' : 'http://localhost:8787';
   var root = document.documentElement;
   var SS = window.sessionStorage, LS = window.localStorage;
-  var page = (window.location.pathname.match(/\/fs\/([a-z0-9-]+)(?:\.html)?\/?$/) || [])[1] || 'home';
+  var page = (window.location.pathname.match(/\/(?:IS|fs)\/([a-z0-9-]+)(?:\.html)?\/?$/) || [])[1] || 'home';
   var Q = new URLSearchParams(window.location.search);
   function sget(k) { try { return SS.getItem(k); } catch (e) { return null; } }
   function sset(k, v) { try { SS.setItem(k, v); } catch (e) { /* storage full or off */ } }
@@ -164,7 +164,7 @@
       var qid = Q.get('id') || '', F = window.FSD, cid = F.C[qid] ? qid : '';
       if (!cid && qid) { var a = F.ASG.filter(function (x) { return x.id === qid; })[0]; if (a) cid = a.c; }
       if (!cid && qid) Object.keys(F.gradebook).forEach(function (c) { if (!cid && F.C[c] && ((F.gradebook[c] || {}).categories || []).some(function (k) { return (k.assignments || []).some(function (x) { return String(x.id) === qid; }); })) cid = c; });
-      window.location.replace(cid ? '/fs/course-hub.html?course=' + encodeURIComponent(cid) + (cid !== qid ? '#materials/' + encodeURIComponent(qid) : (location.hash || '')) : '/fs/courses.html');
+      window.location.replace(cid ? '/IS/course-hub?course=' + encodeURIComponent(cid) + (cid !== qid ? '#materials/' + encodeURIComponent(qid) : (location.hash || '')) : '/IS/courses');
       return;
     }
     return domReady.then(runPage);
@@ -188,7 +188,7 @@
     course: courseQ,
     q: Q,
     url: function (p, params, hash) {
-      var u = '/fs/' + p + '.html', qs = [];
+      var u = '/IS/' + p, qs = [];
       Object.keys(params || {}).forEach(function (k) { if (params[k] != null && params[k] !== '') qs.push(encodeURIComponent(k) + '=' + encodeURIComponent(params[k])); });
       return u + (qs.length ? '?' + qs.join('&') : '') + (hash ? '#' + String(hash).replace(/^#/, '') : '');
     },

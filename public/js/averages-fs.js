@@ -1,6 +1,6 @@
 /*
  * The Fullscreen pages' link to the real app (2026-10-28, Martin; behind the
- * `fullscreen` switch). The pages in /fs/ are Martin's Fullscreen designs,
+ * `fullscreen` switch). The pages in /IS/ are Martin's Fullscreen designs,
  * built from fs-src/ by scripts/build-fs.mjs. They still run on their own
  * sample data (for testing with the tester account); this file joins them to
  * the app around that:
@@ -30,7 +30,7 @@
   function put(k, v) { try { rawSet.call(LS, k, v); } catch (e) { /* storage off */ } }
   function drop(k) { try { LS.removeItem(k); } catch (e) { /* storage off */ } }
   function json(k) { try { return JSON.parse(get(k) || 'null'); } catch (e) { return null; } }
-  var page = (window.location.pathname.match(/\/fs\/([a-z0-9-]+)(?:\.html)?\/?$/) || [])[1] || 'home';
+  var page = (window.location.pathname.match(/\/(?:IS|fs)\/([a-z0-9-]+)(?:\.html)?\/?$/) || [])[1] || 'home';
   var FROM = page === '404' ? new URLSearchParams(window.location.search).get('from') : null;
 
   // ---------- back to Windowed ----------
@@ -134,7 +134,7 @@
 
   // ---------- "In the app, this opens ..." ----------
   var PAGES = { Grades: 'grades', Courses: 'courses', Calendar: 'calendar', Messages: 'messages', Files: 'files', Contacts: 'contacts', Assignments: 'assignments' };
-  function go(p, hash) { window.location.href = '/fs/' + p + '.html' + (hash || ''); }
+  function go(p, hash) { window.location.href = '/IS/' + p + (hash || ''); }
   function openTab(url) { window.open(url, '_blank', 'noopener'); }
   function schoology() {
     var host = '';
@@ -173,5 +173,5 @@
   // Sign-in is checked by averages-fs-data.js, which loads the page's data.
 
   // The address of a page that wasn't found, so the 404 page shows the real one.
-  if (FROM && FROM.charAt(0) === '/') { try { window.history.replaceState(null, '', FROM); } catch (e) { /* keep /fs/404.html */ } }
+  if (FROM && FROM.charAt(0) === '/') { try { window.history.replaceState(null, '', FROM); } catch (e) { /* keep /IS/404 */ } }
 })();

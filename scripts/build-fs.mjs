@@ -1,7 +1,12 @@
 /**
  * Builds the Fullscreen pages (2026-10-28, behind the `fullscreen` switch).
  *
- *   fs-src/<page>.html  ->  public/fs/<page>.html
+ *   fs-src/<page>.html  ->  public/IS/<page>.html, served as app.averages.io/IS/<page>
+ *
+ * IS (Industry Standard) is the first Fullscreen theme (2026-10-30); more will
+ * get their own folder. The old /fs/<page> addresses (10-28 to 10-30) still
+ * work: public/fs/<page>.html is a tiny page that moves to /IS/<page>, keeping
+ * the query and the #part (a server redirect can't see the #part).
  *
  * fs-src/ holds Martin's Fullscreen designs (whole, self-contained pages with
  * their own sample data). Each one gets, at build time:
@@ -15,7 +20,7 @@
  *      and runs them;
  *   4. a dark theme: the design is light only, so every rule with a color in
  *      it gets a dark twin under html[data-theme="dark"] (see darkCss below).
- * The title drops the word "Mock". public/fs/ is generated (gitignored): edit
+ * The title drops the word "Mock". public/IS/ and public/fs/ are generated (gitignored): edit
  * fs-src/ and rebuild. Runs from `npm run port`.
  */
 import fs from "node:fs";
@@ -25,7 +30,8 @@ import { fileURLToPath } from "node:url";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const SRC = path.resolve(HERE, "../fs-src");
-const OUT = path.resolve(HERE, "../public/fs");
+const OUT = path.resolve(HERE, "../public/IS");
+const OLD = path.resolve(HERE, "../public/fs");
 const JS_FILE = path.resolve(HERE, "../public/js/averages-fs.js");
 const DATA_FILE = path.resolve(HERE, "../public/js/averages-fs-data.js");
 const TURNIN_FILE = path.resolve(HERE, "../public/js/averages-fs-turnin.js");
@@ -251,6 +257,8 @@ export function darkCss(pageCss) {
 function build() {
   if (!fs.existsSync(SRC)) { console.log("  fs-src/ missing: no Fullscreen pages"); return; }
   fs.mkdirSync(OUT, { recursive: true });
+  fs.rmSync(OLD, { recursive: true, force: true });
+  fs.mkdirSync(OLD, { recursive: true });
   const ver = (f) => crypto.createHash("sha256").update(fs.readFileSync(f)).digest("hex").slice(0, 10);
   const tag = `<script src="/js/averages-fs.js?v=${ver(JS_FILE)}"></script>\n<script src="/js/averages-fs-data.js?v=${ver(DATA_FILE)}"></script>`;
   let n = 0;
@@ -274,9 +282,12 @@ function build() {
     s = s.replace(/<\/head>/, `<style id="fsDark">\n${darkCss(styles)}</style>\n</head>`);
     s = s.replace(/<title>([^<]*?)\s*Mock<\/title>/, "<title>$1</title>");
     fs.writeFileSync(path.join(OUT, file), s);
+    // the old address moves here
+    const page = file.replace(/\.html$/, "");
+    fs.writeFileSync(path.join(OLD, file), `<!doctype html><meta charset="utf-8"><meta name="robots" content="noindex"><title>Averages.io</title><script>location.replace("/IS/${page}" + location.search + location.hash)</script><noscript><meta http-equiv="refresh" content="0; url=/IS/${page}"></noscript>\n`);
     n++;
   }
-  console.log(`  ok  ${n} Fullscreen pages -> public/fs/`);
+  console.log(`  ok  ${n} Fullscreen pages -> public/IS/ (old /fs/ addresses move there)`);
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) build();

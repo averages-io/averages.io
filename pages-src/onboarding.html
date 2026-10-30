@@ -1227,8 +1227,8 @@
   body.potato-mode .fs .pp-step-in { animation: none; }
   @media (prefers-reduced-motion: reduce) { .fs .pp-step-in { animation: none; } }
 
-  .fs .ob { flex: 1; width: min(820px, 100%); margin: 0 auto; padding: 16px 24px 0; }
-  .fs .ob-card { padding: 32px; border-radius: 28px; background: var(--panel); display: flex; flex-direction: column; gap: 24px; }
+  .fs .ob { flex: 1; width: min(948px, 100%); margin: 0 auto; padding: 16px 24px 0; } /* the card is 900px, like the Windowed onboarding card (2026-10-30) */
+  .fs .ob-card { padding: 28px; border-radius: 28px; background: var(--panel); display: flex; flex-direction: column; gap: 24px; }
   /* progress: one bar in four parts, filled up to the step you're on */
   .fs .ob-prog { display: flex; flex-direction: column; gap: 8px; }
   .fs .ob-segs { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
@@ -1314,10 +1314,35 @@
   .fs .ob-thm.auto .ob-pv::after { content: ""; position: absolute; inset: 0; left: 50%; background: #1d1e27; }
   .fs .ob-thm.auto .ob-pv::before { content: ""; position: absolute; z-index: 1; left: 50%; top: 36px; right: 12px; height: 44px; border-radius: 0 8px 8px 0; background: #2a2b36; }
   .fs .ob-lays { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  /* 2026-10-30 (Martin's design): Window type is two plain buttons, Theme is the Fullscreen theme (IS for now, more later),
+     Mode is Light / Dark / System in one compact row. Picked = the ink ring, like everywhere on this page. */
+  .fs .ob-opt { display: flex; flex-direction: column; justify-content: center; gap: 2px; min-height: 72px; padding: 12px 20px; border-radius: 16px; background: var(--field); text-align: left; color: var(--ink); transition: box-shadow 0.15s ease; }
+  .fs .ob-opt b { font-size: 16px; font-weight: 800; }
+  .fs .ob-opt small { font-size: 14px; font-weight: 500; color: var(--ink-2); }
+  .fs .ob-opt:hover, .fs .ob-mode:hover { box-shadow: inset 0 0 0 2px var(--inner); }
+  .fs .ob-opt[aria-pressed="true"], .fs .ob-opt[aria-pressed="true"]:hover, .fs .ob-mode[aria-pressed="true"], .fs .ob-mode[aria-pressed="true"]:hover { box-shadow: inset 0 0 0 2px var(--ink); }
+  .fs .ob-skin .ob-pv { height: 104px; background: color-mix(in srgb, var(--inner) 70%, var(--fs-sheet)); box-shadow: none; }
+  .fs .ob-skin .lb { align-items: baseline; }
+  .fs .ob-skin .lb small { font-size: 13px; font-weight: 600; color: var(--muted); }
+  .fs .ob-modes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .fs .ob-mode { display: flex; align-items: center; justify-content: center; gap: 8px; height: 48px; padding: 0 12px; border-radius: 14px; background: var(--field); color: var(--ink); font-size: 15px; font-weight: 800; transition: box-shadow 0.15s ease; }
+  .fs .ob-mode svg.i { width: 18px; height: 18px; color: var(--ink-2); }
   .fs .ob-lay .sub { padding: 0 4px; margin-top: -4px; font-size: 13px; font-weight: 600; color: var(--muted); }
   .fs .ob-lay .ob-pv { height: auto; aspect-ratio: 16 / 9; background: none; }
   .fs .ob-lay .ob-pv svg { display: block; width: 100%; height: 100%; }
   .fs .ob-thm .lb { display: flex; align-items: center; gap: 8px; padding: 0 4px; font-size: 15px; font-weight: 800; color: var(--ink); }
+  .fs .ob-is i { position: absolute; display: block; }
+  .fs .ob-is .lg { left: 8px; top: 7px; width: 9px; height: 9px; border-radius: 3px; background: var(--accent); }
+  .fs .ob-is .nm { left: 22px; top: 10px; width: 24px; height: 3px; border-radius: 2px; background: var(--muted); }
+  .fs .ob-is .av { right: 8px; top: 6px; width: 11px; height: 11px; border-radius: 6px; background: var(--muted); opacity: .5; }
+  .fs .ob-is .rl { left: 7px; top: 28px; width: 8px; height: 50px; background: repeating-linear-gradient(var(--inner) 0 8px, transparent 8px 14px); }
+  .fs .ob-is .sh { left: 24px; top: 22px; right: 0; bottom: 0; border-radius: 10px 0 0 0; background: var(--fs-sheet); }
+  .fs .ob-is .h { left: 34px; top: 32px; width: 54px; height: 8px; border-radius: 2px; background: var(--ink); }
+  .fs .ob-is .c1 { left: 34px; top: 50px; width: calc(66% - 40px); bottom: 0; border-radius: 6px 6px 0 0; background: var(--panel); }
+  .fs .ob-is .c2 { right: 10px; top: 50px; width: calc(34% - 24px); bottom: 0; border-radius: 6px 6px 0 0; background: var(--panel); }
+  .fs .ob-is .l1 { left: 42px; top: 60px; width: 30%; height: 3px; border-radius: 2px; background: var(--muted); opacity: .6; }
+  .fs .ob-is .l2 { left: 42px; top: 70px; width: 30%; height: 3px; border-radius: 2px; background: var(--accent); }
+  .fs .ob-is .l3 { left: 42px; top: 80px; width: 22%; height: 3px; border-radius: 2px; background: var(--muted); opacity: .6; }
   .fs .ob-thm .lb svg.i { width: 18px; height: 18px; color: var(--ink-2); }
   .fs .ob-sws { display: flex; flex-wrap: wrap; gap: 12px; padding: 16px; border-radius: 18px; background: var(--field); }
   .fs .ob-swb { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: var(--c); color: #ffffff; transition: box-shadow 0.15s ease; }
@@ -1382,6 +1407,7 @@
     .fs .ob { padding: 8px 16px 0; }
     .fs .ob-card { padding: 24px 20px; border-radius: 24px; gap: 20px; }
     .fs .ob-thms, .fs .ob-lays { grid-template-columns: minmax(0, 1fr); }
+    .fs .ob-modes { gap: 8px; } .fs .ob-mode { padding: 0 8px; font-size: 14px; }
     .fs .ob-lay { display: grid; grid-template-columns: 112px minmax(0, 1fr); grid-template-rows: auto auto; column-gap: 12px; row-gap: 2px; align-items: center; }
     .fs .ob-lay .ob-pv { grid-row: 1 / 3; }
     .fs .ob-lay .lb { align-self: end; }
@@ -1633,7 +1659,8 @@
             <h1 id="fsT2">Pick a look</h1>
             <p class="lead">This is how it looks right now. Change it anytime in Settings.</p>
             <div class="ob-sec"><h2 id="fsLayH">Window type</h2><div class="ob-thms ob-lays" id="fsLays" role="group" aria-labelledby="fsLayH"></div></div>
-            <div class="ob-sec"><h2 id="fsThmH">Theme</h2><div class="ob-thms" id="fsThms" role="group" aria-labelledby="fsThmH"></div></div>
+            <div class="ob-sec"><h2 id="fsSkinH">Theme</h2><div class="ob-thms" id="fsSkins" role="group" aria-labelledby="fsSkinH"></div></div>
+            <div class="ob-sec"><h2 id="fsThmH">Mode</h2><div class="ob-modes" id="fsThms" role="group" aria-labelledby="fsThmH"></div></div>
             <div class="ob-sec"><h2 id="fsAccH">Accent color</h2><div class="ob-sws" id="fsSws" role="group" aria-labelledby="fsAccH"></div><p class="ob-fine">Buttons, highlights and the page you're on.</p></div>
           </section>
 
@@ -3149,6 +3176,8 @@
           opts.syncAcrossDevices = savedMode === 'classic';
           // Fullscreen or Windowed (2026-10-28): which pages the app opens (app/lib/theme-boot.ts).
           opts.windowType = document.body.classList.contains('fs-on') ? 'fullscreen' : 'windowed';
+          // The Fullscreen theme (2026-10-30): 'is' (Industry Standard) is the only one so far.
+          if (opts.windowType === 'fullscreen') opts.fsTheme = 'is';
           localStorage.setItem('schoolagy_settings_options', JSON.stringify(opts));
         }
         localStorage.setItem('schoolagy_profile', JSON.stringify({
@@ -3209,7 +3238,7 @@
     // switch, the integration rows, Potato, the name and email boxes,
     // Submit), so saving, Plus checkout, the draft and the redirect to
     // Home work exactly as they do Windowed. Finishing here saves
-    // windowType 'fullscreen', so the app opens the Fullscreen pages (/fs/).
+    // windowType 'fullscreen', so the app opens the Fullscreen pages (/IS/).
     // ==================================================================
     (function fullscreenOnboarding() {
       const view = document.getElementById('fsView');
@@ -3228,8 +3257,6 @@
       const FROM_LIVE = { mode: 'mode', theme: 'look', features: 'apps', profile: 'you' };
       const ACCENTS = [['punch', 'Punch', '#b8352f'], ['blue', 'Blue', '#2f5fb3'], ['green', 'Green', '#2e7d4f'], ['plum', 'Plum', '#7a3fa0'],
                        ['orange', 'Orange', '#b25600'], ['teal', 'Teal', '#0f7470'], ['graphite', 'Graphite', '#44465a']];
-      const LAY_FULL = "<svg viewBox=\"0 0 240 135\" preserveAspectRatio=\"xMidYMid slice\" aria-hidden=\"true\"><rect width=\"240\" height=\"135\" fill=\"#e4e4e9\"/><rect x=\"8\" y=\"6\" width=\"9\" height=\"9\" rx=\"2.5\" style=\"fill:var(--accent)\"/><rect x=\"21\" y=\"8.5\" width=\"24\" height=\"4\" rx=\"2\" fill=\"#14151f\" opacity=\".75\"/><rect x=\"98\" y=\"5.5\" width=\"44\" height=\"10\" rx=\"5\" fill=\"#dcdce0\"/><circle cx=\"228\" cy=\"10.5\" r=\"5\" fill=\"#9a9cab\"/><rect x=\"200\" y=\"6\" width=\"20\" height=\"9\" rx=\"3\" fill=\"#dcdce0\"/><rect x=\"8\" y=\"28\" width=\"8\" height=\"8\" rx=\"2\" fill=\"color-mix(in srgb, var(--accent) 35%, #f5f5f7)\"/><rect x=\"8\" y=\"40\" width=\"8\" height=\"8\" rx=\"2\" fill=\"#c9cad3\"/><rect x=\"8\" y=\"52\" width=\"8\" height=\"8\" rx=\"2\" fill=\"#c9cad3\"/><rect x=\"8\" y=\"64\" width=\"8\" height=\"8\" rx=\"2\" fill=\"#c9cad3\"/><rect x=\"8\" y=\"76\" width=\"8\" height=\"8\" rx=\"2\" fill=\"#c9cad3\"/><rect x=\"8\" y=\"88\" width=\"8\" height=\"8\" rx=\"2\" fill=\"#c9cad3\"/><path d=\"M24 32a10 10 0 0 1 10-10h206v113H24Z\" fill=\"#f5f5f7\"/><rect x=\"34\" y=\"31\" width=\"58\" height=\"9\" rx=\"3\" fill=\"#14151f\"/><rect x=\"34\" y=\"44\" width=\"34\" height=\"4\" rx=\"2\" fill=\"#9a9cab\"/><rect x=\"34\" y=\"55\" width=\"128\" height=\"74\" rx=\"7\" fill=\"#eaeaec\"/><rect x=\"42\" y=\"64\" width=\"9\" height=\"9\" rx=\"2.5\" fill=\"#dcdce0\"/><rect x=\"56\" y=\"65.5\" width=\"46\" height=\"3.5\" rx=\"1.75\" fill=\"#44465a\" opacity=\".7\"/><rect x=\"138\" y=\"65.5\" width=\"16\" height=\"4\" rx=\"2\" style=\"fill:var(--accent)\" opacity=\"0.25\"/><rect x=\"42\" y=\"79\" width=\"9\" height=\"9\" rx=\"2.5\" fill=\"#dcdce0\"/><rect x=\"56\" y=\"80.5\" width=\"38\" height=\"3.5\" rx=\"1.75\" fill=\"#44465a\" opacity=\".7\"/><rect x=\"138\" y=\"80.5\" width=\"16\" height=\"4\" rx=\"2\" style=\"fill:var(--accent)\" opacity=\"1\"/><rect x=\"42\" y=\"94\" width=\"9\" height=\"9\" rx=\"2.5\" fill=\"#dcdce0\"/><rect x=\"56\" y=\"95.5\" width=\"50\" height=\"3.5\" rx=\"1.75\" fill=\"#44465a\" opacity=\".7\"/><rect x=\"138\" y=\"95.5\" width=\"16\" height=\"4\" rx=\"2\" style=\"fill:var(--accent)\" opacity=\"0.25\"/><rect x=\"42\" y=\"109\" width=\"9\" height=\"9\" rx=\"2.5\" fill=\"#dcdce0\"/><rect x=\"56\" y=\"110.5\" width=\"34\" height=\"3.5\" rx=\"1.75\" fill=\"#44465a\" opacity=\".7\"/><rect x=\"138\" y=\"110.5\" width=\"16\" height=\"4\" rx=\"2\" style=\"fill:var(--accent)\" opacity=\"0.25\"/><rect x=\"168\" y=\"55\" width=\"64\" height=\"74\" rx=\"7\" fill=\"#eaeaec\"/><rect x=\"175\" y=\"63\" width=\"34\" height=\"4\" rx=\"2\" fill=\"#14151f\" opacity=\".75\"/><rect x=\"175\" y=\"72\" width=\"50\" height=\"18\" rx=\"4\" fill=\"#ffffff\"/><rect x=\"179\" y=\"77\" width=\"9\" height=\"9\" rx=\"2.5\" style=\"fill:var(--accent)\"/><rect x=\"192\" y=\"79\" width=\"26\" height=\"3.5\" rx=\"1.75\" fill=\"#44465a\" opacity=\".7\"/><rect x=\"175\" y=\"96\" width=\"44\" height=\"3.5\" rx=\"1.75\" fill=\"#44465a\" opacity=\".5\"/><rect x=\"175\" y=\"105\" width=\"36\" height=\"3.5\" rx=\"1.75\" fill=\"#44465a\" opacity=\".5\"/></svg>";
-      const LAY_WIN = "<svg viewBox=\"0 0 240 135\" preserveAspectRatio=\"xMidYMid slice\" aria-hidden=\"true\"><rect width=\"240\" height=\"135\" fill=\"#2f3142\"/><circle cx=\"40\" cy=\"120\" r=\"70\" fill=\"#ff7a50\" opacity=\".28\"/><circle cx=\"210\" cy=\"10\" r=\"60\" fill=\"#e5484d\" opacity=\".2\"/><rect x=\"44\" y=\"12\" width=\"50\" height=\"10\" rx=\"3\" fill=\"#ffffff\" transform=\"skewX(-8)\"/><rect x=\"42\" y=\"26\" width=\"26\" height=\"4\" rx=\"2\" fill=\"#ffffff\" opacity=\".65\"/><circle cx=\"195\" cy=\"20\" r=\"7\" fill=\"#c9cad3\"/><rect x=\"38\" y=\"36\" width=\"164\" height=\"70\" rx=\"9\" fill=\"#eaeaec\"/><rect x=\"47\" y=\"44\" width=\"40\" height=\"5\" rx=\"2.5\" fill=\"#14151f\" opacity=\".85\"/><rect x=\"47\" y=\"56\" width=\"3\" height=\"8\" rx=\"1.5\" fill=\"#2e7d4f\"/><rect x=\"53\" y=\"57.5\" width=\"40\" height=\"3.5\" rx=\"1.75\" fill=\"#44465a\" opacity=\".75\"/><rect x=\"128\" y=\"57.5\" width=\"26\" height=\"3.5\" rx=\"1.75\" fill=\"#9a9cab\"/><rect x=\"174\" y=\"57.5\" width=\"16\" height=\"3.5\" rx=\"1.75\" fill=\"#9a9cab\"/><rect x=\"47\" y=\"68\" width=\"3\" height=\"8\" rx=\"1.5\" fill=\"#2f5fb3\"/><rect x=\"53\" y=\"69.5\" width=\"32\" height=\"3.5\" rx=\"1.75\" fill=\"#44465a\" opacity=\".75\"/><rect x=\"128\" y=\"69.5\" width=\"26\" height=\"3.5\" rx=\"1.75\" fill=\"#9a9cab\"/><rect x=\"174\" y=\"69.5\" width=\"16\" height=\"3.5\" rx=\"1.75\" fill=\"#9a9cab\"/><rect x=\"47\" y=\"80\" width=\"3\" height=\"8\" rx=\"1.5\" fill=\"#b8352f\"/><rect x=\"53\" y=\"81.5\" width=\"44\" height=\"3.5\" rx=\"1.75\" fill=\"#44465a\" opacity=\".75\"/><rect x=\"128\" y=\"81.5\" width=\"26\" height=\"3.5\" rx=\"1.75\" fill=\"#9a9cab\"/><rect x=\"174\" y=\"81.5\" width=\"16\" height=\"3.5\" rx=\"1.75\" fill=\"#9a9cab\"/><rect x=\"47\" y=\"92\" width=\"3\" height=\"8\" rx=\"1.5\" fill=\"#b25600\"/><rect x=\"53\" y=\"93.5\" width=\"30\" height=\"3.5\" rx=\"1.75\" fill=\"#44465a\" opacity=\".75\"/><rect x=\"128\" y=\"93.5\" width=\"26\" height=\"3.5\" rx=\"1.75\" fill=\"#9a9cab\"/><rect x=\"174\" y=\"93.5\" width=\"16\" height=\"3.5\" rx=\"1.75\" fill=\"#9a9cab\"/><rect x=\"44\" y=\"114\" width=\"152\" height=\"14\" rx=\"5\" fill=\"#eaeaec\"/><rect x=\"52\" y=\"119.5\" width=\"10\" height=\"3\" rx=\"1.5\" fill=\"#6b6d80\"/><rect x=\"69\" y=\"119.5\" width=\"10\" height=\"3\" rx=\"1.5\" fill=\"#6b6d80\"/><rect x=\"86\" y=\"119.5\" width=\"10\" height=\"3\" rx=\"1.5\" fill=\"#6b6d80\"/><rect x=\"103\" y=\"119.5\" width=\"10\" height=\"3\" rx=\"1.5\" fill=\"#6b6d80\"/><rect x=\"120\" y=\"119.5\" width=\"10\" height=\"3\" rx=\"1.5\" fill=\"#6b6d80\"/><rect x=\"137\" y=\"119.5\" width=\"10\" height=\"3\" rx=\"1.5\" fill=\"#6b6d80\"/><rect x=\"154\" y=\"119.5\" width=\"10\" height=\"3\" rx=\"1.5\" fill=\"#6b6d80\"/><rect x=\"171\" y=\"119.5\" width=\"10\" height=\"3\" rx=\"1.5\" fill=\"#6b6d80\"/><rect x=\"188\" y=\"119.5\" width=\"10\" height=\"3\" rx=\"1.5\" fill=\"#6b6d80\"/><rect x=\"69\" y=\"124.5\" width=\"10\" height=\"1.6\" rx=\".8\" style=\"fill:var(--accent)\"/></svg>";
       const DARK_KEY = 'schoolagy_dark_mode';
       const INCOG = () => window.__AVERAGES_INCOGNITO__ || null;
       const KID = () => !IS_13_PLUS || !!(INCOG() && INCOG().locked);
@@ -3313,15 +3340,21 @@
       }
       if (window.matchMedia) matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if (currentTheme() === 'auto') { darkModeToggle.checked = osDark(); applyDarkMode(darkModeToggle.checked); } });
       function accentNow() { return getComputedStyle(document.documentElement).getPropertyValue('--accent').trim().toLowerCase(); }
+      const FS_SKINS = [['is', 'IS', 'Industry Standard']];
+      let fsSkin = 'is';
       function lookDraw() {
-        $('fsLays').innerHTML = [['fullscreen', 'Fullscreen', 'Uses the whole screen. Our new look.'], ['windowed', 'Windowed', 'A window over your own background.']].map(([v, t, sub]) =>
-          `<button class="ob-thm ob-lay" type="button" data-fs-lay="${v}" aria-pressed="${v === 'fullscreen'}"><span class="ob-pv" aria-hidden="true">${v === 'fullscreen' ? LAY_FULL : LAY_WIN}</span><span class="lb">${t}</span><small class="sub">${sub}</small></button>`).join('');
+        $('fsLays').innerHTML = [['windowed', 'Windowed', 'A window over your own background.'], ['fullscreen', 'Fullscreen', 'Uses the whole screen. Our new look.']].map(([v, t, sub]) =>
+          `<button class="ob-opt" type="button" data-fs-lay="${v}" aria-pressed="${v === 'fullscreen'}"><b>${t}</b><small>${sub}</small></button>`).join('');
+        // The Fullscreen themes (2026-10-30): IS (Industry Standard) for now; more will join it here.
+        $('fsSkins').innerHTML = FS_SKINS.map(([v, t, full]) =>
+          `<button class="ob-thm ob-skin" type="button" data-fs-skin="${v}" aria-pressed="${fsSkin === v}"><span class="ob-pv ob-is" aria-hidden="true"><i class="lg"></i><i class="nm"></i><i class="av"></i><i class="rl"></i><i class="sh"></i><i class="h"></i><i class="c1"></i><i class="c2"></i><i class="l1"></i><i class="l2"></i><i class="l3"></i></span><span class="lb">${t}<small>${full}</small></span></button>`).join('');
         const th = currentTheme();
-        $('fsThms').innerHTML = [['light', 'Light', 'sun'], ['dark', 'Dark', 'moon'], ['auto', 'Auto', 'window']].map(([v, t, ic]) =>
-          `<button class="ob-thm ${v}" type="button" data-fs-thm="${v}" aria-pressed="${th === v}"><span class="ob-pv" aria-hidden="true"><i class="sd"></i><i class="b1"></i><i class="b2"></i><i class="b3"></i><i class="b4"></i></span><span class="lb">${ico(ic)}${t}</span></button>`).join('');
+        $('fsThms').innerHTML = [['light', 'Light', 'sun'], ['dark', 'Dark', 'moon'], ['auto', 'System', 'window']].map(([v, t, ic]) =>
+          `<button class="ob-mode" type="button" data-fs-thm="${v}" aria-pressed="${th === v}">${ico(ic)}${t}</button>`).join('');
         const a = accentNow();
         $('fsSws').innerHTML = ACCENTS.map(([k, n, c]) => `<button class="ob-swb" type="button" style="--c:${c}" data-fs-acc="${c}" aria-pressed="${a === c}" aria-label="${n}" title="${n}">${ico('ok')}</button>`).join('');
       }
+      $('fsSkins').addEventListener('click', e => { const b = e.target.closest('[data-fs-skin]'); if (!b) return; fsSkin = b.dataset.fsSkin; lookDraw(); const again = $('fsSkins').querySelector(`[data-fs-skin="${fsSkin}"]`); if (again) again.focus({ preventScroll: true }); });
       $('fsLays').addEventListener('click', e => { const b = e.target.closest('[data-fs-lay]'); if (b && b.dataset.fsLay === 'windowed') leave(); });
       $('fsThms').addEventListener('click', e => { const b = e.target.closest('[data-fs-thm]'); if (!b) return; setTheme(b.dataset.fsThm); lookDraw(); const again = $('fsThms').querySelector(`[data-fs-thm="${b.dataset.fsThm}"]`); if (again) again.focus({ preventScroll: true }); });
       $('fsSws').addEventListener('click', e => {
@@ -3506,7 +3539,7 @@
         const modeName = { incognito: 'Incognito', classic: 'Classic', plus: 'Plus' }[accountMode] || 'Incognito';
         const th = currentTheme();
         const apps = [...document.querySelectorAll('#integrationsCategory .integ-status.on')].length;
-        $('fsSum').innerHTML = `<span>${ico(MODE_ICON[accountMode] || 'eyeoff')}${modeName}</span><span>${ico(th === 'dark' ? 'moon' : th === 'auto' ? 'window' : 'sun')}${th === 'auto' ? 'Auto' : th === 'dark' ? 'Dark' : 'Light'} theme</span>`
+        $('fsSum').innerHTML = `<span>${ico(MODE_ICON[accountMode] || 'eyeoff')}${modeName}</span><span>${ico(th === 'dark' ? 'moon' : th === 'auto' ? 'window' : 'sun')}${th === 'auto' ? 'System' : th === 'dark' ? 'Dark' : 'Light'} theme</span>`
           + (apps ? `<span>${ico('cloud')}${apps} app${apps === 1 ? '' : 's'} connected</span>` : '')
           + (potatoToggle && potatoToggle.checked ? `<span>${ico('bolt')}Potato PC Mode</span>` : '');
         const bar = $('fsBar'); bar.style.setProperty('--fs-wait', '1.8s'); bar.classList.remove('run'); void bar.offsetWidth; bar.classList.add('run');

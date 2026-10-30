@@ -2,7 +2,7 @@
  * Fullscreen (2026-10-28, behind the `fullscreen` switch): a student who picked
  * Fullscreen (settingsOptions.windowType, set in onboarding or Settings) is
  * sent to the Fullscreen version of the page they asked for, before anything
- * paints. Those pages are static files in /fs/ (built from fs-src/ by
+ * paints. Those pages are static files in /IS/ (built from fs-src/ by
  * scripts/build-fs.mjs) and only show sample data for now: they're for
  * testing with the tester account.
  *
@@ -30,8 +30,8 @@ export const FS_BOOT_JS = `(function () {
       "/gradebook": "course-hub#grades", "/assignment": "course-hub#assignments"
     };
     var t = M[p];
-    if (!t) { location.replace("/fs/404.html?from=" + encodeURIComponent(p + location.search)); return; }
+    if (!t) { location.replace("/IS/404?from=" + encodeURIComponent(p + location.search)); return; }
     var h = t.split("#");
-    location.replace("/fs/" + h[0] + ".html" + location.search + (h[1] ? "#" + h[1] : location.hash));
+    location.replace("/IS/" + h[0] + location.search + (h[1] ? "#" + h[1] : location.hash));
   } catch (e) { /* storage off: the Windowed page */ }
 })();`;

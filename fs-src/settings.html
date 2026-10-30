@@ -3017,6 +3017,36 @@
 
   /* Appearance: theme pictures, then accent swatches */
   .sg-thms { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; width: 100%; }
+  /* Appearance (2026-10-30, Martin's design): Window as two plain buttons, the Fullscreen Theme as cards with a preview,
+     Mode as a compact row of three. Picked = an ink ring, the same as onboarding. */
+  .sg-opts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .sg-opt { display: flex; flex-direction: column; justify-content: center; gap: 2px; min-height: 64px; padding: 10px 16px; border-radius: 16px; background: var(--field); text-align: left; color: var(--ink); transition: box-shadow .15s ease; }
+  .sg-opt b { font-size: 15px; font-weight: 800; }
+  .sg-opt small { font-size: 13px; font-weight: 600; color: var(--muted); }
+  .sg-skins { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .sg-skin { display: flex; flex-direction: column; gap: 8px; padding: 6px 6px 10px; border-radius: 14px; background: var(--field); text-align: left; color: var(--ink); transition: box-shadow .15s ease; }
+  .sg-skin .lb { display: flex; align-items: baseline; gap: 8px; padding: 0 4px; }
+  .sg-skin .lb b { font-size: 15px; font-weight: 800; }
+  .sg-skin .lb small { font-size: 12px; font-weight: 600; color: var(--muted); }
+  .sg-is { position: relative; display: block; height: 88px; border-radius: 9px; overflow: hidden; background: var(--frame); }
+  .sg-is i { position: absolute; display: block; }
+  .sg-is .lg { left: 7px; top: 6px; width: 8px; height: 8px; border-radius: 2px; background: var(--accent); }
+  .sg-is .nm { left: 19px; top: 9px; width: 22px; height: 3px; border-radius: 2px; background: var(--muted); }
+  .sg-is .av { right: 7px; top: 5px; width: 10px; height: 10px; border-radius: 5px; background: var(--muted); opacity: .5; }
+  .sg-is .rl { left: 6px; top: 24px; width: 7px; height: 40px; background: repeating-linear-gradient(var(--inner) 0 7px, transparent 7px 12px); }
+  .sg-is .sh { left: 20px; top: 19px; right: 0; bottom: 0; border-radius: 9px 0 0 0; background: var(--sheet); }
+  .sg-is .h { left: 28px; top: 27px; width: 46px; height: 7px; border-radius: 2px; background: var(--ink); }
+  .sg-is .c1 { left: 28px; top: 42px; width: calc(66% - 34px); bottom: 0; border-radius: 5px 5px 0 0; background: var(--panel); }
+  .sg-is .c2 { right: 8px; top: 42px; width: calc(34% - 20px); bottom: 0; border-radius: 5px 5px 0 0; background: var(--panel); }
+  .sg-is .l1 { left: 34px; top: 50px; width: 30%; height: 3px; border-radius: 2px; background: var(--muted); opacity: .6; }
+  .sg-is .l2 { left: 34px; top: 59px; width: 30%; height: 3px; border-radius: 2px; background: var(--accent); }
+  .sg-is .l3 { left: 34px; top: 68px; width: 22%; height: 3px; border-radius: 2px; background: var(--muted); opacity: .6; }
+  .sg-modes { display: flex; flex-wrap: wrap; gap: 8px; }
+  .sg-mode { display: flex; align-items: center; gap: 6px; height: 40px; padding: 0 12px; border-radius: 12px; background: var(--panel); color: var(--ink); font-size: 14px; font-weight: 800; transition: box-shadow .15s ease, background-color .15s ease; }
+  .sg-mode svg.i { width: 16px; height: 16px; color: var(--ink-2); }
+  .sg-opt:hover, .sg-skin:hover { box-shadow: inset 0 0 0 2px var(--inner); }
+  .sg-mode:hover { background: var(--inner); }
+  .sg-opt[aria-pressed="true"], .sg-opt[aria-pressed="true"]:hover, .sg-skin[aria-pressed="true"], .sg-skin[aria-pressed="true"]:hover, .sg-mode[aria-pressed="true"], .sg-mode[aria-pressed="true"]:hover { box-shadow: inset 0 0 0 2px var(--ink); }
   .sg-thm { display: flex; flex-direction: column; gap: 8px; padding: 8px 8px 8px; border-radius: 14px; background: var(--panel); text-align: left; transition: background-color .15s ease, box-shadow .15s ease; }
   .sg-thm:hover { background: var(--inner); }
   .sg-thm[aria-pressed="true"] { box-shadow: inset 0 0 0 2px var(--accent); background: color-mix(in srgb, var(--accent) 7%, var(--panel)); }
@@ -3153,6 +3183,7 @@
   }
   @media (max-width: 520px) {
     .sg-row.wrapr .seg, .sg-row.wrapr .sg-sws { width: 100%; }
+    .sg-opts { grid-template-columns: minmax(0, 1fr); } .sg-skins { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .sg-row.wrapr .seg { display: flex; }
     .sg-row.wrapr .seg button { flex: 1; padding: 0 8px; }
     .sg-me { flex-wrap: wrap; }
@@ -3208,14 +3239,14 @@
   <aside class="side" id="side" aria-label="Sidebar">
     <nav class="nav" aria-label="Pages">
       <a href="#" title="Search" id="sideSearch" aria-keyshortcuts="Control+K Meta+K"><svg class="i"><use href="#i-search"/></svg><span class="fade">Search</span><kbd class="fade side-kbd" id="sideKbd">Ctrl K</kbd></a>
-      <a href="/fs/home.html" data-go="/fs/home.html" title="Home" data-was="Home"><svg class="i"><use href="#i-home"/></svg><span class="fade">Home</span></a>
-      <a href="/fs/courses.html" data-go="/fs/courses.html" title="Courses" data-was="the Courses page"><svg class="i"><use href="#i-binder"/></svg><span class="fade">Courses</span></a>
-      <a href="/fs/grades.html" data-go="/fs/grades.html" title="Grades" data-was="the Grades page"><svg class="i"><use href="#i-chart"/></svg><span class="fade">Grades</span></a>
-      <a href="/fs/assignments.html" data-go="/fs/assignments.html" title="Assignments" data-was="the Assignments page"><svg class="i"><use href="#i-inbox"/></svg><span class="fade">Assignments</span><em class="count fade" id="cntAssign"></em><i class="pip" id="pipAssign"></i></a>
-      <a href="/fs/calendar.html" data-go="/fs/calendar.html" title="Calendar" data-was="the Calendar page"><svg class="i"><use href="#i-cal"/></svg><span class="fade">Calendar</span></a>
-      <a href="/fs/files.html" data-go="/fs/files.html" title="Files" data-was="the Files page"><svg class="i"><use href="#i-folder"/></svg><span class="fade">Files</span></a>
-      <a href="/fs/messages.html" data-go="/fs/messages.html" title="Messages" data-was="the Messages page"><svg class="i"><use href="#i-msg"/></svg><span class="fade">Messages</span><em class="count fade" id="cntMsg"></em><i class="pip" id="pipMsg"></i></a>
-      <a href="/fs/contacts.html" data-go="/fs/contacts.html" title="Contacts" data-was="the Contacts page"><svg class="i"><use href="#i-users"/></svg><span class="fade">Contacts</span></a>
+      <a href="/IS/home" data-go="/IS/home" title="Home" data-was="Home"><svg class="i"><use href="#i-home"/></svg><span class="fade">Home</span></a>
+      <a href="/IS/courses" data-go="/IS/courses" title="Courses" data-was="the Courses page"><svg class="i"><use href="#i-binder"/></svg><span class="fade">Courses</span></a>
+      <a href="/IS/grades" data-go="/IS/grades" title="Grades" data-was="the Grades page"><svg class="i"><use href="#i-chart"/></svg><span class="fade">Grades</span></a>
+      <a href="/IS/assignments" data-go="/IS/assignments" title="Assignments" data-was="the Assignments page"><svg class="i"><use href="#i-inbox"/></svg><span class="fade">Assignments</span><em class="count fade" id="cntAssign"></em><i class="pip" id="pipAssign"></i></a>
+      <a href="/IS/calendar" data-go="/IS/calendar" title="Calendar" data-was="the Calendar page"><svg class="i"><use href="#i-cal"/></svg><span class="fade">Calendar</span></a>
+      <a href="/IS/files" data-go="/IS/files" title="Files" data-was="the Files page"><svg class="i"><use href="#i-folder"/></svg><span class="fade">Files</span></a>
+      <a href="/IS/messages" data-go="/IS/messages" title="Messages" data-was="the Messages page"><svg class="i"><use href="#i-msg"/></svg><span class="fade">Messages</span><em class="count fade" id="cntMsg"></em><i class="pip" id="pipMsg"></i></a>
+      <a href="/IS/contacts" data-go="/IS/contacts" title="Contacts" data-was="the Contacts page"><svg class="i"><use href="#i-users"/></svg><span class="fade">Contacts</span></a>
     </nav>
     <div class="divider" role="separator"></div>
     <div class="side-h fade"><span>Your classes</span></div>
@@ -4053,7 +4084,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const darkPref = () => { try { const v = localStorage.getItem('schoolagy_dark_mode'); return v === 'dark' || v === 'light' ? v : 'auto'; } catch (_) { return 'auto'; } };
   const savedFs = store.get('fsset') || {};
   const SG = { sec: (savedFs.sec && /^[a-z]+$/.test(savedFs.sec)) ? savedFs.sec : 'account', plan: 'free', mode: FSD.me.incognito || (() => { try { return localStorage.getItem('schoolagy_account_mode') === 'incognito'; } catch (_) { return false; } })() ? 'incognito' : 'classic',
-    layout: 'full', theme: darkPref(), accent: savedFs.accent || 'punch', previews: OPTS().filePreviews !== false,
+    layout: 'full', skin: 'is', theme: darkPref(), accent: savedFs.accent || 'punch', previews: OPTS().filePreviews !== false,
     notif: false, nGrades: true, nAssign: true, nDue: true, nMsgs: true, nAnn: true,
     drive: false, canva: false, onedrive: false, openIn: (() => { try { return localStorage.getItem('schoolagy_default_editor') === 'onedrive' ? 'onedrive' : 'drive'; } catch (_) { return 'drive'; } })(), cal: false };
   { const q = FSX.q.get('section'); if (q && ['account', 'plan', 'appearance', 'notifications', 'apps', 'privacy', 'about'].includes(q)) SG.sec = q; }
@@ -4070,7 +4101,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const SECS = [
     { id: 'account', t: 'Account', ic: 'user', c: '#3e64b0', d: 'You, your school and how you sign in' },
     { id: 'plan', t: 'Plan', ic: 'star', c: '#b77d00', d: 'Averages Plus and the other plans' },
-    { id: 'appearance', t: 'Appearance', ic: 'brush', c: '#7a3fa0', d: 'Colors, your start page and speed' },
+    { id: 'appearance', t: 'Appearance', ic: 'brush', c: '#7a3fa0', d: 'Window, theme, colors and speed' },
     { id: 'notifications', t: 'Notifications', ic: 'bell', c: '#d0393e', d: 'What your browser tells you about' },
     { id: 'apps', t: 'Connected apps', ic: 'link', c: '#2e7d4f', d: 'Google Drive, Canva, OneDrive and calendars' },
     { id: 'privacy', t: 'Privacy', ic: 'eyeoff', c: '#44465a', d: 'What we keep and where it syncs' },
@@ -4079,7 +4110,9 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const SEC = Object.fromEntries(SECS.map(s => [s.id, s]));
   const ACCENTS = [['punch', 'Punch', '#b8352f', '#9c2b26'], ['blue', 'Blue', '#2f5fb3', '#264d93'], ['green', 'Green', '#2e7d4f', '#246340'], ['plum', 'Plum', '#7a3fa0', '#663486'],
                    ['orange', 'Orange', '#b25600', '#964800'], ['teal', 'Teal', '#0f7470', '#0b5e5b'], ['graphite', 'Graphite', '#44465a', '#33354a']];
-  const THEMES = { light: 'Light', dark: 'Dark', auto: 'Auto' };
+  const THEMES = { light: 'Light', dark: 'Dark', auto: 'System' };
+  // the Fullscreen themes (2026-10-30): IS (Industry Standard) for now; more will join it
+  const FS_SKINS = [['is', 'IS', 'Industry Standard']];
   const STARTS = [['home', 'Home', 'home'], ['courses', 'Courses', 'binder'], ['grades', 'Grades', 'chart'], ['assignments', 'Assignments', 'inbox'], ['calendar', 'Calendar', 'cal'], ['messages', 'Messages', 'msg']];
   // what's being tried out right now: each one can be turned on by itself once New features early is on
   const EXPS = [['planner', 'Study planner', 'Splits big assignments into small steps and spreads them across the days before they\'re due.'],
@@ -4106,7 +4139,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     ['account', 'profile', 'Name and photo', 'profile picture edit name avatar'], ['account', 'email', 'Email', 'address school'], ['account', 'school', 'School', 'lincoln high district student id'], ['account', 'sgy', 'Schoology website', 'schoology url address domain site link'],
     ['account', 'signin', 'Signed in with Schoology', 'sign in password login account'], ['account', 'signout', 'Sign out', 'log out leave'],
     ['plan', 'current', 'Your plan', 'averages plus subscription renew billing'], ['plan', 'other', 'Other plans', 'free switch cancel downgrade'], ['plan', 'payment', 'Payment and receipts', 'card billing cancel receipt'], ['plan', 'early', 'New features early', 'beta preview try'], ['plan', 'experiments', 'Experiments', 'beta labs try new features study planner grade goals focus timer weekly recap'],
-    ['appearance', 'layout', 'Window', 'layout fullscreen windowed full screen background'], ['appearance', 'theme', 'Theme', 'dark mode light colors night'], ['appearance', 'accent', 'Accent color', 'color highlight buttons'], ['appearance', 'start', 'Start page', 'open first home default'],
+    ['appearance', 'layout', 'Window', 'layout fullscreen windowed full screen background'], ['appearance', 'fstheme', 'Theme', 'is industry standard look style fullscreen theme'], ['appearance', 'theme', 'Mode', 'dark mode light system auto colors night'], ['appearance', 'accent', 'Accent color', 'color highlight buttons'],
     ['appearance', 'potato', 'Potato mode', 'performance animations chromebook slow fast font'], ['appearance', 'motion', 'Reduce motion', 'animation accessibility'], ['appearance', 'previews', 'File previews', 'thumbnails images pdf'], ['appearance', 'cache', 'Saved on this device', 'cache storage clear space'],
     ['notifications', 'notif', 'Browser notifications', 'alerts push notices'], ['notifications', 'nGrades', 'Grade updates', 'scores new grade'], ['notifications', 'nAssign', 'New assignments', 'work posted homework'],
     ['notifications', 'nDue', 'Due date reminders', 'due soon remind tomorrow'], ['notifications', 'nMsgs', 'Messages', 'inbox chat'], ['notifications', 'nAnn', 'Announcements', 'updates posts course'], ['notifications', 'quiet', 'Quiet during class', 'school hours do not disturb silence'], ['notifications', 'test', 'Send a test notification', 'try check'],
@@ -4126,6 +4159,8 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const row = (id, t, sub, right = '', cls = '') => `<div class="sg-row${cls}" data-set="${id}">${tx(t, sub)}${right}</div>`;
   const tog = (id, t, sub, on, dis = false, lead = '') => `<button class="sg-row${lead ? ' has-ic' : ''}" role="switch" aria-checked="${!!on}" data-set="${id}" data-tog="${id}"${dis ? ' aria-disabled="true"' : ''}>${lead}${tx(t, sub)}<span class="sw${on ? ' on' : ''}" aria-hidden="true"></span></button>`;
   const seg = (key, opts, val, label, off = []) => `<div class="seg sg-seg" role="group" aria-label="${label}"><span class="sg-thumb" aria-hidden="true"></span>${opts.map(([v, t, ic]) => `<button data-seg="${key}" data-v="${v}" aria-pressed="${v === val}"${off.includes(v) ? ' aria-disabled="true"' : ''}>${ic ? ico(ic) : ''}${t}</button>`).join('')}</div>`;
+  // a section without the white box (Window and Theme: their buttons are the boxes)
+  const sec = (h, inner) => `<section class="sg-sec">${h ? `<h3>${h}</h3>` : ''}${inner}</section>`;
   const grp = (h, inner, fine = '') => `<section class="sg-sec">${h ? `<h3>${h}</h3>` : ''}<div class="sg-grp">${inner}</div>${fine ? `<p class="sg-fine">${fine}</p>` : ''}</section>`;
   const chip = (t, cls = '') => `<span class="sg-chip${cls}">${t}</span>`;
   const plusChip = () => `<span class="sg-chip plus">${ico('star')}Plus</span>`;
@@ -4195,10 +4230,11 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     appearance: () => {
       const potato = document.body.classList.contains('potato-mode'), rm = matchMedia('(prefers-reduced-motion: reduce)').matches;
       return `
+      ${sec('Window', `<div class="sg-opts" role="group" aria-label="Window" data-set="layout">${[['windowed', 'Windowed', 'A window over your own background.'], ['full', 'Fullscreen', 'Uses the whole screen. Our new look.']].map(([v, t, d]) => `<button class="sg-opt" data-seg="layout" data-v="${v}" aria-pressed="${SG.layout === v}"><b>${t}</b><small>${d}</small></button>`).join('')}</div>`)}
+      ${sec('Theme', `<div class="sg-skins" role="group" aria-label="Theme" data-set="fstheme">${FS_SKINS.map(([v, t, full]) => `<button class="sg-skin" data-seg="skin" data-v="${v}" aria-pressed="${SG.skin === v}"><span class="sg-is" aria-hidden="true"><i class="lg"></i><i class="nm"></i><i class="av"></i><i class="rl"></i><i class="sh"></i><i class="h"></i><i class="c1"></i><i class="c2"></i><i class="l1"></i><i class="l2"></i><i class="l3"></i></span><span class="lb"><b>${t}</b><small>${full}</small></span></button>`).join('')}</div>`)}
       ${grp('Colors',
-        `<div class="sg-row wrapr" data-set="theme">${tx('Theme', SG.theme === 'auto' ? 'Follows your device, light during the day and dark at night.' : 'How every page looks.')}<div class="sg-thms" role="group" aria-label="Theme">${[['light', 'Light', 'sun'], ['dark', 'Dark', 'moon'], ['auto', 'Auto', 'window']].map(([v, t, ic]) => `<button class="sg-thm ${v}" data-seg="theme" data-v="${v}" aria-pressed="${SG.theme === v}"><span class="sg-pv" aria-hidden="true"><i class="sd"></i><i class="b1"></i><i class="b2"></i><i class="b3"></i></span><span class="lb">${ico(ic)}${t}</span></button>`).join('')}</div></div>` +
+        `<div class="sg-row wrapr" data-set="theme">${tx('Mode', SG.theme === 'auto' ? 'Follows your device: light or dark to match it.' : 'Light, dark, or follow your device.')}<div class="sg-modes" role="group" aria-label="Mode">${[['light', 'Light', 'sun'], ['dark', 'Dark', 'moon'], ['auto', 'System', 'window']].map(([v, t, ic]) => `<button class="sg-mode" data-seg="theme" data-v="${v}" aria-pressed="${SG.theme === v}">${ico(ic)}${t}</button>`).join('')}</div></div>` +
         `<div class="sg-row wrapr" data-set="accent">${tx('Accent color', 'Buttons, highlights and the page you\'re on.')}<div class="sg-sws" role="group" aria-label="Accent color">${ACCENTS.map(([k, n, c]) => `<button class="sg-swb" style="--c:${c}" data-accent="${k}" aria-pressed="${SG.accent === k}" aria-label="${n}" title="${n}">${ico('ok')}</button>`).join('')}</div></div>`)}
-      ${grp('Layout', `<div class="sg-row wrapr" data-set="layout">${tx('Window', SG.layout === 'windowed' ? 'The classic look: a window over your own background, with tabs at the bottom.' : 'Uses the whole screen. Our new look.')}${seg('layout', [['full', 'Fullscreen'], ['windowed', 'Windowed']], SG.layout, 'Layout')}</div>`)}
       ${grp('Speed',
         tog('potato', 'Potato mode', 'Turns off animation and effects and uses the system font. Good for Chromebooks and older computers.', potato) +
         row('motion', 'Reduce motion', 'Follows your device\'s setting. Potato mode turns off motion too.', `<span class="val">${rm ? 'On' : 'Off'}</span>`) +
@@ -4498,7 +4534,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       const k = s.dataset.seg, v = s.dataset.v; if (SG[k] === v) return; SG[k] = v;
       s.parentElement.querySelectorAll('[data-seg]').forEach(b => b.setAttribute('aria-pressed', b === s)); segSync(s.parentElement.parentElement, true); sgSave(); sgNav();
       if (k === 'layout' && v === 'windowed') { saveOpt('windowType', 'windowed'); toast('Switching to Windowed…'); setTimeout(() => { location.href = '/settings'; }, 400); }
-      if (k === 'theme') { sgPane(); FSX.syncPush(); toast(v === 'dark' ? 'Dark colors on.' : v === 'auto' ? 'Pages follow your device now: light by day, dark at night.' : 'Light colors on.'); }
+      if (k === 'theme') { sgPane(); FSX.syncPush(); toast(v === 'dark' ? 'Dark colors on.' : v === 'auto' ? 'Pages follow your device now.' : 'Light colors on.'); }
       if (k === 'openIn') { try { localStorage.setItem('schoolagy_default_editor', v === 'onedrive' ? 'onedrive' : 'gdrive'); } catch (_) {} toast(`Office files open in ${APPS[v]}.`); }
       return;
     }
