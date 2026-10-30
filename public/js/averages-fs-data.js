@@ -101,7 +101,7 @@
       x.events = ['/data/events?start=' + s + '&end=' + e + zq, 'events_' + s + '_' + e];
     }
     if (page === 'messages' || page === 'home' || page === 'contacts') x.messages = ['/messages', 'messages'];
-    if (page === 'files' || page === 'home' || page === 'course-hub') x.files = ['/data/files', 'fs_files'];
+    if (page === 'files' || page === 'home' || page === 'course-hub' || page === 'assignments') x.files = ['/data/files', 'fs_files']; // assignments: Contains attachment
     // what's been turned in (files), so finished work isn't called missing
     if (page === 'assignments' || page === 'home' || page === 'course-hub' || page === 'files' || page === 'calendar') x.submissions = ['/data/submissions', 'fs_submissions'];
     if (page === 'contacts' || page === 'course-hub' || page === 'messages') x.classmates = ['/data/classmates', 'fs_classmates'];
@@ -135,7 +135,18 @@
     root.classList.remove('fs-wait');
     window.dispatchEvent(new CustomEvent('fs:ready'));
     var said = sget('averages_fs_toast'); if (said) { sdel('averages_fs_toast'); setTimeout(function () { if (typeof window.toast === 'function') window.toast(said); }, 400); }
+    setTimeout(touchPush, 1500);
   }
+  // Browser notifications keep working (2026-10-30): the Windowed pages keep the stored sign-in in step with this
+  // session once a day (LegacyPage's touchPushIfOn); the Fullscreen pages never did, so after a while the API's copy went
+  // stale and notifications stopped. Same rule here: only when this device has them on (or a turn-off still to send).
+  function touchPush() {
+    if (!lget0('averages_push_endpoint') && !lget0('averages_push_pending_delete')) return;
+    var go = function () { try { var r = window.AveragesPush && window.AveragesPush.touchIfDue && window.AveragesPush.touchIfDue(); if (r && r.catch) r.catch(function () {}); } catch (e) {} };
+    if (window.AveragesPush) { go(); return; }
+    var sc = document.createElement('script'); sc.src = '/js/averages-push.js'; sc.onload = go; document.head.appendChild(sc);
+  }
+  function lget0(k) { try { return window.localStorage.getItem(k) || ''; } catch (e) { return ''; } }
   function fail(text) {
     domReady.then(function () {
       root.classList.remove('fs-wait');

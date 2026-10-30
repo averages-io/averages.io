@@ -291,7 +291,9 @@
   .rg-row.mat:hover .fn, .rg-row.mat:focus-visible .fn { white-space: normal; overflow-wrap: anywhere; }
   .newtag { font-size: 11px; font-weight: 800; line-height: 18px; padding: 0 8px; border-radius: 9px; color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--panel)); margin-bottom: 2px; }
   .rg-row .tx { flex: 1; min-width: 0; }
-  .rg-row .tx b { display: flex; align-items: center; gap: 8px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rg-row .tx b { display: flex; align-items: center; gap: 8px; min-width: 0; font-weight: 800; } /* the name cuts off, not the New sticker (2026-10-30) */
+  .rg-row .tx b .rg-n { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rg-row .tx b .newtag { flex: none; }
   .rg-row .tx b .unread { width: 8px; height: 8px; border-radius: 50%; background: var(--punch-b); flex: none; }
   .rg-row .tx small { display: block; color: var(--muted); font-weight: 600; font-size: 13px; }
   .rg-s { display: flex; flex-direction: column; align-items: flex-end; line-height: 1.15; }
@@ -1129,8 +1131,8 @@
   /* the shortcut chips each get their own color */
   .chip svg.i { color: var(--chip-c, var(--ink-2)); }
   .chip:nth-child(5n + 1) { --chip-c: var(--warm-a); } .chip:nth-child(5n + 2) { --chip-c: var(--sky); } .chip:nth-child(5n + 3) { --chip-c: var(--mint); } .chip:nth-child(5n + 4) { --chip-c: var(--grape); } .chip:nth-child(5n + 5) { --chip-c: #c98a00; }
-  /* New tags: a filled yellow label */
-  .newtag { background: var(--sun) !important; color: var(--ink) !important; border-radius: 8px;  will-change: transform; backface-visibility: hidden; } /* always drawn on its own layer, so hovering a row never redraws the text thinner or bolder */
+  /* sticker tags: New pops off the page a little */
+  .newtag { background: var(--sun) !important; color: var(--ink) !important; border-radius: 8px; transform: translate(var(--tx, 0px), var(--ty, 0px)) rotate(var(--tilt, -4deg)); box-shadow: 0 0 0 2px var(--field), 0 3px 8px -2px rgba(20, 21, 31, .25); will-change: transform; backface-visibility: hidden; } /* always drawn on its own layer, so hovering a row never redraws the text thinner or bolder */
   .wrap { position: relative; isolation: isolate; }
   /* empty states get a doodle */
   :is(.nt-empty, .ag-none, .mp-none, .mdet-empty, .list-empty, .sv-empty)::before { content: ""; display: block; width: 120px; height: 72px; margin: 0 auto 12px; background: var(--life-doodle) center / contain no-repeat; }
@@ -1146,7 +1148,7 @@
     body:not(.potato-mode) .newtag { animation: lifeSticker .5s var(--spring) backwards; }
   }
   @keyframes lifeWiggle { 0% { transform: none; } 30% { transform: rotate(-9deg) scale(1.08); } 60% { transform: rotate(6deg) scale(1.08); } 100% { transform: none; } }
-  @keyframes lifeSticker { from { transform: scale(.6); opacity: 0; } }
+  @keyframes lifeSticker { from { transform: rotate(-14deg) scale(.6); opacity: 0; } }
   @keyframes lifeToast { 0% { transform: translate(-50%, 16px) scale(.9); } 100% { transform: translate(-50%, 0) scale(1); } }
   /* ===== end Life layer ===== */
   /* ===== What-if grades: one popup for the whole app (Home, Grades, course hubs) ===== */
@@ -2569,9 +2571,28 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const RG_MIN = 260, RG_GAP = 16;
   const rgCols = id => { const w = $(id).clientWidth; return w ? Math.max(1, Math.floor((w + RG_GAP) / (RG_MIN + RG_GAP))) : 3; };
   const fillRows = (id, atLeast) => { const k = rgCols(id); return k * Math.ceil(atLeast / k); };
+  // A New sticker goes once you've seen the grade (Martin's new-stickers.html, 2026-10-30): point at it for 600ms,
+  // tab to it, or open it. It shrinks and fades (keeping its tilt), and the grade is saved as seen (shared with Windowed's bell).
+  {
+    const seeGrade = id => {
+      const g = GRADED.find(x => String(x.id) === String(id)); if (!g || !g.isNew) return;
+      g.isNew = false; FSX.seen.mark('g', id);
+      document.querySelectorAll(`.rg-row[data-open="graded:${CSS.escape(String(id))}"] .newtag`).forEach(t => {
+        if (calm() || !t.animate) { t.remove(); return; }
+        const tr = getComputedStyle(t).transform, base = tr === 'none' ? '' : tr + ' ';
+        t.animate([{ opacity: 1, transform: base || 'none' }, { opacity: 0, transform: base + 'scale(.7)' }], { duration: 240, easing: 'ease-in', fill: 'forwards' }).onfinish = () => t.remove();
+      });
+    };
+    const rowOf = t => t && t.closest && t.closest('.rg-row[data-open^="graded:"]');
+    const idOf = r => r.dataset.open.slice(7);
+    let seeT = 0, seeEl = null;
+    document.addEventListener('pointerover', e => { const r = rowOf(e.target); if (r === seeEl) return; clearTimeout(seeT); seeEl = r; if (r && r.querySelector('.newtag')) seeT = setTimeout(() => seeGrade(idOf(r)), 600); });
+    document.addEventListener('focusin', e => { const r = rowOf(e.target); if (r && r.querySelector('.newtag')) seeGrade(idOf(r)); });
+    document.addEventListener('click', e => { const r = rowOf(e.target); if (r) seeGrade(idOf(r)); }, true);
+  }
   function renderGraded() {
     $('gradedRows').innerHTML = GRADED.slice(0, fillRows('gradedRows', 4)).map(g => { const p = g.got / g.of * 100;
-      return `<a class="rg-row" href="#" data-open="graded:${g.id}">${badge(C[g.c])}<span class="tx"><b>${esc(g.t)}${g.isNew ? '<span class="unread" aria-label="New"></span>' : ''}</b><small>${esc(C[g.c].name)} · ${esc(g.when)}</small></span><span class="rg-s"><b class="${gcls(p)}">${letter(p)} <span>${Math.round(p)}%</span></b><small>${g.got} / ${g.of}</small></span></a>`; }).join('');
+      return `<a class="rg-row" href="#" data-open="graded:${g.id}">${badge(C[g.c])}<span class="tx"><b><span class="rg-n">${esc(g.t)}</span>${g.isNew ? '<span class="newtag">New</span>' : ''}</b><small>${esc(C[g.c].name)} · ${esc(g.when)}</small></span><span class="rg-s"><b class="${gcls(p)}">${letter(p)} <span>${Math.round(p)}%</span></b><small>${g.got} / ${g.of}</small></span></a>`; }).join('');
   }
   const EXT_COLOR = { pdf: '#c23a2f', docx: '#2f5fb3', xlsx: '#1b7f4f', pptx: '#c8562a', jpg: '#7a4fae', png: '#7a4fae' };
   // the repo's animated file icons (drawing slides up, label fades in on hover); the old letter tile if the script is missing
@@ -5533,10 +5554,9 @@ document.addEventListener('keydown', e => {
    The tilt, nudge and overlap come from the item's text, so a sticker lands the same way every time the list redraws.
    Each one lands differently: high or low on the end of the word before it, or somewhere along the top of the line under it, always covering 2 to 4px, or the top of the line under it, so the text stays readable. */
 (() => {
-  return; // design rules: New tags sit straight, in line with their text (no tilt, no landing spots)
   const TILTS = [-12, -9, -6, -3, 4, 7, 10, 13];
   const hash = s => { let h = 7; for (const ch of s) h = Math.imul(h ^ ch.charCodeAt(0), 0x5bd1e995); h ^= h >>> 15; h = Math.imul(h, 0x27d4eb2d); h ^= h >>> 13; return h >>> 1; };
-  const seedOf = el => { const host = el.closest('[data-mid], [data-mpid], [data-agopen], [data-gw], [data-rgw], [data-gdopen], [role="row"], .upd, button, a, li, tr') || el.parentNode; return hash((host ? host.textContent : '') + el.textContent); };
+  const seedOf = el => { const host = el.closest('[data-mid], [data-mpid], [data-agopen], [data-gw], [data-rgw], [data-gdopen], [data-flgo], [role="row"], .upd, button, a, li, tr') || el.parentNode; return hash((host ? host.textContent : '') + el.textContent); };
   const textRight = el => { try { const r = document.createRange(); r.selectNodeContents(el); return Math.min(r.getBoundingClientRect().right, el.getBoundingClientRect().right); } catch (_) { return el.getBoundingClientRect().right; } };
   // The sticker's own box, ignoring its tilt and entrance animation: measured from a neighbor that isn't transformed.
   const boxOf = (el, ref) => {
@@ -5578,7 +5598,7 @@ document.addEventListener('keydown', e => {
   // the item's top right corner, or riding on the start of the title. The item's text picks where it starts looking;
   // a spot is skipped if it would hide text or a button, or get cut off by a box that clips, so it falls through to the next one.
   const SPOTS = ['end', 'icon', 'corner', 'over', 'iconb'];
-  const HOST = '[data-mid], [data-mpid], [data-agopen], [data-gw], [data-rgw], [data-gdopen], [role="row"], .upd, button, a, li, tr';
+  const HOST = '[data-mid], [data-mpid], [data-agopen], [data-gw], [data-rgw], [data-gdopen], [data-flgo], [role="row"], .upd, button, a, li, tr';
   const ICON = ':is(.badge, .ktile, .nt-tile, .gd-ic, .emo, .ftile)';
   const hostOf = el => el.closest(HOST) || el.parentElement;
   const firstLine = n => { try { const r = document.createRange(); r.selectNodeContents(n); const q = [...r.getClientRects()].find(x => x.width); return q || n.getBoundingClientRect(); } catch (_) { return n.getBoundingClientRect(); } };

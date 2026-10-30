@@ -1129,8 +1129,8 @@
   /* the shortcut chips each get their own color */
   .chip svg.i { color: var(--chip-c, var(--ink-2)); }
   .chip:nth-child(5n + 1) { --chip-c: var(--warm-a); } .chip:nth-child(5n + 2) { --chip-c: var(--sky); } .chip:nth-child(5n + 3) { --chip-c: var(--mint); } .chip:nth-child(5n + 4) { --chip-c: var(--grape); } .chip:nth-child(5n + 5) { --chip-c: #c98a00; }
-  /* New tags: a filled yellow label */
-  .newtag { background: var(--sun) !important; color: var(--ink) !important; border-radius: 8px;  will-change: transform; backface-visibility: hidden; } /* always drawn on its own layer, so hovering a row never redraws the text thinner or bolder */
+  /* sticker tags: New pops off the page a little */
+  .newtag { background: var(--sun) !important; color: var(--ink) !important; border-radius: 8px; transform: translate(var(--tx, 0px), var(--ty, 0px)) rotate(var(--tilt, -4deg)); box-shadow: 0 0 0 2px var(--field), 0 3px 8px -2px rgba(20, 21, 31, .25); will-change: transform; backface-visibility: hidden; } /* always drawn on its own layer, so hovering a row never redraws the text thinner or bolder */
   .wrap { position: relative; isolation: isolate; }
   /* empty states get a doodle */
   :is(.nt-empty, .ag-none, .mp-none, .mdet-empty, .list-empty, .sv-empty)::before { content: ""; display: block; width: 120px; height: 72px; margin: 0 auto 12px; background: var(--life-doodle) center / contain no-repeat; }
@@ -1146,7 +1146,7 @@
     body:not(.potato-mode) .newtag { animation: lifeSticker .5s var(--spring) backwards; }
   }
   @keyframes lifeWiggle { 0% { transform: none; } 30% { transform: rotate(-9deg) scale(1.08); } 60% { transform: rotate(6deg) scale(1.08); } 100% { transform: none; } }
-  @keyframes lifeSticker { from { transform: scale(.6); opacity: 0; } }
+  @keyframes lifeSticker { from { transform: rotate(-14deg) scale(.6); opacity: 0; } }
   @keyframes lifeToast { 0% { transform: translate(-50%, 16px) scale(.9); } 100% { transform: translate(-50%, 0) scale(1); } }
   /* ===== end Life layer ===== */
   /* ===== What-if grades: one popup for the whole app (Home, Grades, course hubs) ===== */
@@ -2824,7 +2824,7 @@
   .upd { display: flex; flex-direction: column; gap: 4px; padding: 8px; border-radius: 12px; color: var(--ink); }
   .upd:hover { background: var(--inner); }
   .upd p { margin: 0; font-size: 14px; font-weight: 600; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-  .upd .newtag { align-self: flex-start; }
+  .upd .newtag { align-self: flex-start; margin-left: -8px; } /* the sticker drops onto the top corner of the text (the overlap is set by the life script) */
   .upd .newtag + p { padding-top: 2px; }
   .upd small { color: var(--muted); font-weight: 700; font-size: 13px; }
   .rail .panel .arow .tx small { white-space: normal; }
@@ -2913,6 +2913,14 @@
   .as-bar .mp-types button em { font-style: normal; margin-left: 8px; font-variant-numeric: tabular-nums; opacity: .7; }
   /* which class: one button that opens a short list, instead of a chip for every class */
   .as-dd { position: relative; flex: none; }
+  /* Contains attachment (2026-10-30): only work your teacher attached files to */
+  .as-att { flex: none; display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 12px; border-radius: 12px; background: var(--field); font-size: 14px; font-weight: 800; color: var(--ink); white-space: nowrap; transition: background-color .15s ease, box-shadow .15s ease; }
+  .as-att svg.i { width: 18px; height: 18px; color: var(--ink-2); }
+  .as-att em { display: inline-grid; place-items: center; box-sizing: border-box; height: 20px; min-width: 20px; padding: 0 8px; border-radius: 10px; background: var(--inner); color: var(--ink-2); font-style: normal; font-size: 12px; }
+  .as-att:hover { background: var(--inner); }
+  .as-att:hover em { background: var(--panel); }
+  .as-att[aria-pressed="true"] { box-shadow: inset 0 0 0 2px var(--ink); }
+  .as-att[aria-pressed="true"]:hover { background: var(--field); }
   .as-ddb { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 12px 0 8px; border-radius: 12px; background: var(--field); font-size: 14px; font-weight: 800; color: var(--ink); white-space: nowrap; transition: background-color .15s ease; }
   .as-ddb.all { padding-left: 12px; }
   .as-ddb:hover, .as-ddb[aria-expanded="true"] { background: var(--inner); }
@@ -3308,6 +3316,7 @@
           <div class="as-bar" id="asBar">
             <label class="find"><span class="as-fi"><svg class="i"><use href="#i-search"/></svg><input id="asFind" placeholder="Find an assignment" autocomplete="off" aria-label="Find an assignment" aria-keyshortcuts="T"><button class="as-x" id="asClear" type="button" aria-label="Clear search" hidden><svg class="i"><use href="#i-x"/></svg></button></span></label>
             <div class="as-dd" id="asCls"></div>
+            <button class="as-att" id="asAtt" type="button" aria-pressed="false" hidden><svg class="i" aria-hidden="true"><use href="#i-clip"/></svg><span>Contains attachment</span><em id="asAttN">0</em></button>
             <div class="mp-types" id="asTypes" role="group" aria-label="Show"></div>
           </div>
           <div class="as-list" id="asList"></div>
@@ -4142,11 +4151,15 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const dueWhen = a => a.date == null ? 'No due date' : a.date === TODAY ? 'Today' : a.date === TODAY + 1 ? 'Tomorrow' : `${a.day}, ${monthDay(a.date)}`;
   const canTurnIn = a => FSD.canTurnIn(a);
   const isTodo = a => a.st === 'missing' || a.st === 'due';
-  const AS = { type: store.get('fsasg_type') || 'todo', c: '', q: '', seen: new Set(store.get('fsasg_seen') || []) };
+  const AS = { type: store.get('fsasg_type') || 'todo', c: '', q: '', att: store.get('fsasg_att') === true, seen: new Set(store.get('fsasg_seen') || []) };
+  // which work has files from the teacher attached (the class files list, /data/files); null when that list didn't load
+  const ATT = FSD.raw.files && Array.isArray(FSD.raw.files.files) ? new Set(FSD.raw.files.files.filter(f => f && f.kind === 'assignment').map(f => f.course + ':' + f.parent)) : null;
+  const hasAtt = a => !!ATT && ATT.has(a.c + ':' + a.id);
+  if (!ATT) AS.att = false;
   const isNew = a => a.fresh && !AS.seen.has(a.id);
   const TYPES = [['todo', 'To do'], ['missing', 'Missing'], ['turned', 'Turned in'], ['graded', 'Graded'], ['all', 'All']];
   const ofType = (a, t) => t === 'all' ? true : t === 'todo' ? isTodo(a) : a.st === t;
-  const hit = a => (!AS.c || a.c === AS.c) && (!AS.q || (a.t + ' ' + C[a.c].name + ' ' + C[a.c].teacher).toLowerCase().includes(AS.q));
+  const hit = a => (!AS.c || a.c === AS.c) && (!AS.att || hasAtt(a)) && (!AS.q || (a.t + ' ' + C[a.c].name + ' ' + C[a.c].teacher).toLowerCase().includes(AS.q));
   if (AS.c && !C[AS.c]) AS.c = '';
   const shown = () => ASG.filter(a => ofType(a, AS.type) && hit(a));
 
@@ -4186,10 +4199,16 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       : `<span class="as-due${late ? ' bad' : ''}"><b>${late ? 'Was due ' + esc(monthDay(a.date)) : esc(dueWhen(a))}</b><small>${esc(a.time)}</small></span>`;
     return `<div class="as-row" role="link" tabindex="0" data-asgo="${a.id}" aria-label="${esc(a.t)}, ${esc(c.name)}">${badge(c)}<span class="as-tx"><b><span>${esc(a.t)}</span>${isNew(a) ? '<span class="newtag">New</span>' : ''}</b><small>${esc(sub)}</small></span>${due}${stChip(a)}<span class="as-act">${actHTML(a)}</span></div>`;
   }
+  function asAtt() {
+    const b = $('asAtt'); if (!b) return;
+    b.hidden = !ATT; b.setAttribute('aria-pressed', AS.att);
+    $('asAttN').textContent = ASG.filter(a => (!AS.c || a.c === AS.c) && ofType(a, AS.type) && hasAtt(a)).length;
+  }
   function asList(anim) {
+    asAtt();
     const list = shown();
     if (!list.length) {
-      const what = AS.q ? `Nothing matches "${esc(AS.q)}"` : AS.type === 'missing' ? 'Nothing missing' : AS.type === 'todo' ? "You're all caught up" : 'Nothing here yet';
+      const what = AS.q ? `Nothing matches "${esc(AS.q)}"` : AS.att ? 'Nothing with an attachment' : AS.type === 'missing' ? 'Nothing missing' : AS.type === 'todo' ? "You're all caught up" : 'Nothing here yet';
       $('asList').innerHTML = `<div class="as-none"><b>${what}</b>${AS.c ? `in ${esc(C[AS.c].name)}.` : AS.type === 'todo' || AS.type === 'missing' ? 'New assignments from your classes show up here.' : 'Try another filter.'}</div>`;
     } else {
       $('asList').innerHTML = GROUPS.map(([k, label]) => { const l = list.filter(a => bucket(a) === k).sort(k === 'graded' || k === 'turned' ? (x, y) => y.date - x.date : dueSort); if (!l.length) return '';
@@ -4199,7 +4218,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (anim && !calm()) $('asList').querySelectorAll('.as-gh, .as-row, .as-none').forEach((el, i) => el.animate && el.animate([{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: 320, delay: Math.min(i * 25, 300), easing: 'cubic-bezier(.2, .8, .2, 1)', fill: 'backwards' }));
   }
   function asTypes() {
-    const base = ASG.filter(a => !AS.c || a.c === AS.c);
+    const base = ASG.filter(a => (!AS.c || a.c === AS.c) && (!AS.att || hasAtt(a)));
     $('asTypes').innerHTML = `<span class="mp-pill" aria-hidden="true"></span>` + TYPES.map(([k, l]) => `<button data-astype="${k}" aria-pressed="${AS.type === k}">${l}<em>${base.filter(a => ofType(a, k)).length}</em></button>`).join('');
     requestAnimationFrame(() => mpPill($('asTypes'), false));
   }
@@ -4274,6 +4293,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   }
 
   // ---------- filters, rows ----------
+  $('asAtt').addEventListener('click', () => { AS.att = !AS.att; store.set('fsasg_att', AS.att); asTypes(); asList(true); });
   $('asTypes').addEventListener('click', e => { const b = e.target.closest('[data-astype]'); if (!b || b.dataset.astype === AS.type) return; AS.type = b.dataset.astype; store.set('fsasg_type', AS.type);
     $('asTypes').querySelectorAll('[data-astype]').forEach(x => x.setAttribute('aria-pressed', x === b)); mpPill($('asTypes'), true); asList(true); });
   // By class on the right picks a class too; picking it again goes back to all of them
@@ -4290,7 +4310,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (bar.classList.contains('searching') === on && !find._a) return;
     if (on && !bar.classList.contains('searching') && !find._a && find.offsetWidth >= bar.clientWidth - 2) return; // already the whole line
     const fi = find.querySelector('.as-fi'); // in the markup, so the box never loses focus
-    const filters = [$('asCls'), $('asTypes')], full = bar.clientWidth, PAD = 3; // PAD: room for the focus ring inside the window
+    const filters = [$('asCls'), $('asAtt'), $('asTypes')], full = bar.clientWidth, PAD = 3; // PAD: room for the focus ring inside the window
     const pin = v => { find.style.position = v ? 'absolute' : ''; find.style.zIndex = v ? 3 : ''; find.style.left = find.style.top = v ? '0' : ''; find.style.width = v ? '100%' : ''; };
     // how wide it shows right now (mid-way: read from its transform)
     let nowW;
@@ -5080,10 +5100,9 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
    The tilt, nudge and overlap come from the item's text, so a sticker lands the same way every time the list redraws.
    Each one lands differently: high or low on the end of the word before it, or somewhere along the top of the line under it, always covering 2 to 4px, or the top of the line under it, so the text stays readable. */
 (() => {
-  return; // design rules: New tags sit straight, in line with their text (no tilt, no landing spots)
   const TILTS = [-12, -9, -6, -3, 4, 7, 10, 13];
   const hash = s => { let h = 7; for (const ch of s) h = Math.imul(h ^ ch.charCodeAt(0), 0x5bd1e995); h ^= h >>> 15; h = Math.imul(h, 0x27d4eb2d); h ^= h >>> 13; return h >>> 1; };
-  const seedOf = el => { const host = el.closest('[data-mid], [data-mpid], [data-agopen], [data-gw], [data-rgw], [data-gdopen], [role="row"], .upd, button, a, li, tr') || el.parentNode; return hash((host ? host.textContent : '') + el.textContent); };
+  const seedOf = el => { const host = el.closest('[data-mid], [data-mpid], [data-agopen], [data-gw], [data-rgw], [data-gdopen], [data-flgo], [role="row"], .upd, button, a, li, tr') || el.parentNode; return hash((host ? host.textContent : '') + el.textContent); };
   const textRight = el => { try { const r = document.createRange(); r.selectNodeContents(el); return Math.min(r.getBoundingClientRect().right, el.getBoundingClientRect().right); } catch (_) { return el.getBoundingClientRect().right; } };
   // The sticker's own box, ignoring its tilt and entrance animation: measured from a neighbor that isn't transformed.
   const boxOf = (el, ref) => {
@@ -5125,7 +5144,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   // the item's top right corner, or riding on the start of the title. The item's text picks where it starts looking;
   // a spot is skipped if it would hide text or a button, or get cut off by a box that clips, so it falls through to the next one.
   const SPOTS = ['end', 'icon', 'corner', 'over', 'iconb'];
-  const HOST = '[data-mid], [data-mpid], [data-agopen], [data-gw], [data-rgw], [data-gdopen], [role="row"], .upd, button, a, li, tr';
+  const HOST = '[data-mid], [data-mpid], [data-agopen], [data-gw], [data-rgw], [data-gdopen], [data-flgo], [role="row"], .upd, button, a, li, tr';
   const ICON = ':is(.badge, .ktile, .nt-tile, .gd-ic, .emo, .ftile)';
   const hostOf = el => el.closest(HOST) || el.parentElement;
   const firstLine = n => { try { const r = document.createRange(); r.selectNodeContents(n); const q = [...r.getClientRects()].find(x => x.width); return q || n.getBoundingClientRect(); } catch (_) { return n.getBoundingClientRect(); } };

@@ -1129,8 +1129,8 @@
   /* the shortcut chips each get their own color */
   .chip svg.i { color: var(--chip-c, var(--ink-2)); }
   .chip:nth-child(5n + 1) { --chip-c: var(--warm-a); } .chip:nth-child(5n + 2) { --chip-c: var(--sky); } .chip:nth-child(5n + 3) { --chip-c: var(--mint); } .chip:nth-child(5n + 4) { --chip-c: var(--grape); } .chip:nth-child(5n + 5) { --chip-c: #c98a00; }
-  /* New tags: a filled yellow label */
-  .newtag { background: var(--sun) !important; color: var(--ink) !important; border-radius: 8px;  will-change: transform; backface-visibility: hidden; } /* always drawn on its own layer, so hovering a row never redraws the text thinner or bolder */
+  /* sticker tags: New pops off the page a little */
+  .newtag { background: var(--sun) !important; color: var(--ink) !important; border-radius: 8px; transform: translate(var(--tx, 0px), var(--ty, 0px)) rotate(var(--tilt, -4deg)); box-shadow: 0 0 0 2px var(--field), 0 3px 8px -2px rgba(20, 21, 31, .25); will-change: transform; backface-visibility: hidden; } /* always drawn on its own layer, so hovering a row never redraws the text thinner or bolder */
   .wrap { position: relative; isolation: isolate; }
   /* empty states get a doodle */
   :is(.nt-empty, .ag-none, .mp-none, .mdet-empty, .list-empty, .sv-empty)::before { content: ""; display: block; width: 120px; height: 72px; margin: 0 auto 12px; background: var(--life-doodle) center / contain no-repeat; }
@@ -1146,7 +1146,7 @@
     body:not(.potato-mode) .newtag { animation: lifeSticker .5s var(--spring) backwards; }
   }
   @keyframes lifeWiggle { 0% { transform: none; } 30% { transform: rotate(-9deg) scale(1.08); } 60% { transform: rotate(6deg) scale(1.08); } 100% { transform: none; } }
-  @keyframes lifeSticker { from { transform: scale(.6); opacity: 0; } }
+  @keyframes lifeSticker { from { transform: rotate(-14deg) scale(.6); opacity: 0; } }
   @keyframes lifeToast { 0% { transform: translate(-50%, 16px) scale(.9); } 100% { transform: translate(-50%, 0) scale(1); } }
   /* ===== end Life layer ===== */
   /* ===== What-if grades: one popup for the whole app (Home, Grades, course hubs) ===== */
@@ -2824,7 +2824,7 @@
   .upd { display: flex; flex-direction: column; gap: 4px; padding: 8px; border-radius: 12px; color: var(--ink); }
   .upd:hover { background: var(--inner); }
   .upd p { margin: 0; font-size: 14px; font-weight: 600; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-  .upd .newtag { align-self: flex-start; }
+  .upd .newtag { align-self: flex-start; margin-left: -8px; } /* the sticker drops onto the top corner of the text (the overlap is set by the life script) */
   .upd .newtag + p { padding-top: 2px; }
   .upd small { color: var(--muted); font-weight: 700; font-size: 13px; }
   .rail .panel .arow .tx small { white-space: normal; }
@@ -4138,7 +4138,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const IDX = [
     ['account', 'profile', 'Name and photo', 'profile picture edit name avatar'], ['account', 'email', 'Email', 'address school'], ['account', 'school', 'School', 'lincoln high district student id'], ['account', 'sgy', 'Schoology website', 'schoology url address domain site link'],
     ['account', 'signin', 'Signed in with Schoology', 'sign in password login account'], ['account', 'signout', 'Sign out', 'log out leave'],
-    ['plan', 'current', 'Your plan', 'averages plus subscription renew billing'], ['plan', 'other', 'Other plans', 'free switch cancel downgrade'], ['plan', 'payment', 'Payment and receipts', 'card billing cancel receipt'], ['plan', 'early', 'New features early', 'beta preview try'], ['plan', 'experiments', 'Experiments', 'beta labs try new features study planner grade goals focus timer weekly recap'],
+    ['plan', 'current', 'Your plan', 'averages plus subscription renew billing'], ['plan', 'other', 'Other plans', 'free classic switch cancel downgrade get plus upgrade'], ['plan', 'payment', 'Payment and receipts', 'card billing cancel receipt'], ['plan', 'early', 'New features early', 'beta preview try'], ['plan', 'experiments', 'Experiments', 'beta labs try new features study planner grade goals focus timer weekly recap'],
     ['appearance', 'layout', 'Window', 'layout fullscreen windowed full screen background'], ['appearance', 'fstheme', 'Theme', 'is industry standard look style fullscreen theme'], ['appearance', 'theme', 'Mode', 'dark mode light system auto colors night'], ['appearance', 'accent', 'Accent color', 'color highlight buttons'],
     ['appearance', 'potato', 'Potato mode', 'performance animations chromebook slow fast font'], ['appearance', 'motion', 'Reduce motion', 'animation accessibility'], ['appearance', 'previews', 'File previews', 'thumbnails images pdf'], ['appearance', 'cache', 'Saved on this device', 'cache storage clear space'],
     ['notifications', 'notif', 'Browser notifications', 'alerts push notices'], ['notifications', 'nGrades', 'Grade updates', 'scores new grade'], ['notifications', 'nAssign', 'New assignments', 'work posted homework'],
@@ -4223,7 +4223,8 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
           <p>${blurb}</p>
           <ul>${feats.map(([f, s2]) => `<li>${ico('ok')}${f}${s2 ? ` <small>${s2}</small>` : ''}</li>`).join('')}</ul>
           <div class="ft"><small>${cur === 'free' ? 'Free forever. Profile pictures are free for everyone.' : B.cancelAtPeriodEnd ? `Plus ends ${esc(ends)}. You won't be charged again.` : ends ? `Renews ${esc(ends)}` : ''}</small>${B.manageable ? btn('pay', 'Manage plan') : ''}</div></div></section>
-      ${cur === 'free' ? grp('Averages Plus', `<div class="sg-row wrapr" data-set="other">${tx(`${PLANS.plus.t}<span class="sg-pr">${esc(priceText(B.price) || PLANS.plus.pr)}</span>`, off ? 'Not in Incognito. Plus needs sync across devices.' : !B.configured ? 'Not on sale yet.' : 'Browser notifications, calendar sync, new features early and the iPhone app.')}${btn('plan', 'Get Plus', ` data-plan="plus"${canBuy ? '' : ' disabled'}`, canBuy ? ' primary' : '')}</div>`, off ? 'To get Plus, switch to Classic in Privacy first.' : 'Renews monthly until you cancel. Cancel anytime in Manage plan.') : ''}
+      ${cur === 'plus' ? grp('Other plans', `<div class="sg-row wrapr" data-set="other">${tx(`Classic<span class="sg-pr">Free</span>`, B.cancelAtPeriodEnd ? `You're on Classic after ${esc(ends)}, when Plus ends.` : 'Your grades, assignments, files and calendar, and messaging your teachers. No browser notifications, calendar sync or early features.')}${B.cancelAtPeriodEnd ? chip('From ' + esc(ends)) : B.manageable ? btn('pay', 'Downgrade') : ''}</div>`, B.cancelAtPeriodEnd ? '' : 'Downgrade opens Stripe, where you cancel Plus. You keep Plus until the end of what you paid for, then you\'re on Classic.') : ''}
+      ${cur === 'free' ? grp('Other plans', `<div class="sg-row wrapr" data-set="other">${tx(`${PLANS.plus.t}<span class="sg-pr">${esc(priceText(B.price) || PLANS.plus.pr)}</span>`, off ? 'Not in Incognito. Plus needs sync across devices.' : !B.configured ? 'Not on sale yet.' : 'Browser notifications, calendar sync, new features early and the iPhone app.')}${btn('plan', 'Get Plus', ` data-plan="plus"${canBuy ? '' : ' disabled'}`, canBuy ? ' primary' : '')}</div>`, off ? 'To get Plus, switch to Classic in Privacy first.' : 'Renews monthly until you cancel. Cancel anytime in Manage plan.') : ''}
       ${grp('Early access', row('early', 'New features early', LIVE.early.length ? `${LIVE.early.length} ${LIVE.early.length === 1 ? 'feature' : 'features'} in early access now${plus() ? ', on for you' : ''}.` : 'Nothing in early access right now. New features show up here about two weeks before everyone else.', plus() ? chip(ico('ok') + 'Included', ' on') : plusChip()))}`;
     },
 
@@ -4627,10 +4628,9 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
    The tilt, nudge and overlap come from the item's text, so a sticker lands the same way every time the list redraws.
    Each one lands differently: high or low on the end of the word before it, or somewhere along the top of the line under it, always covering 2 to 4px, or the top of the line under it, so the text stays readable. */
 (() => {
-  return; // design rules: New tags sit straight, in line with their text (no tilt, no landing spots)
   const TILTS = [-12, -9, -6, -3, 4, 7, 10, 13];
   const hash = s => { let h = 7; for (const ch of s) h = Math.imul(h ^ ch.charCodeAt(0), 0x5bd1e995); h ^= h >>> 15; h = Math.imul(h, 0x27d4eb2d); h ^= h >>> 13; return h >>> 1; };
-  const seedOf = el => { const host = el.closest('[data-mid], [data-mpid], [data-agopen], [data-gw], [data-rgw], [data-gdopen], [role="row"], .upd, button, a, li, tr') || el.parentNode; return hash((host ? host.textContent : '') + el.textContent); };
+  const seedOf = el => { const host = el.closest('[data-mid], [data-mpid], [data-agopen], [data-gw], [data-rgw], [data-gdopen], [data-flgo], [role="row"], .upd, button, a, li, tr') || el.parentNode; return hash((host ? host.textContent : '') + el.textContent); };
   const textRight = el => { try { const r = document.createRange(); r.selectNodeContents(el); return Math.min(r.getBoundingClientRect().right, el.getBoundingClientRect().right); } catch (_) { return el.getBoundingClientRect().right; } };
   // The sticker's own box, ignoring its tilt and entrance animation: measured from a neighbor that isn't transformed.
   const boxOf = (el, ref) => {
@@ -4672,7 +4672,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   // the item's top right corner, or riding on the start of the title. The item's text picks where it starts looking;
   // a spot is skipped if it would hide text or a button, or get cut off by a box that clips, so it falls through to the next one.
   const SPOTS = ['end', 'icon', 'corner', 'over', 'iconb'];
-  const HOST = '[data-mid], [data-mpid], [data-agopen], [data-gw], [data-rgw], [data-gdopen], [role="row"], .upd, button, a, li, tr';
+  const HOST = '[data-mid], [data-mpid], [data-agopen], [data-gw], [data-rgw], [data-gdopen], [data-flgo], [role="row"], .upd, button, a, li, tr';
   const ICON = ':is(.badge, .ktile, .nt-tile, .gd-ic, .emo, .ftile)';
   const hostOf = el => el.closest(HOST) || el.parentElement;
   const firstLine = n => { try { const r = document.createRange(); r.selectNodeContents(n); const q = [...r.getClientRects()].find(x => x.width); return q || n.getBoundingClientRect(); } catch (_) { return n.getBoundingClientRect(); } };

@@ -1129,8 +1129,8 @@
   /* the shortcut chips each get their own color */
   .chip svg.i { color: var(--chip-c, var(--ink-2)); }
   .chip:nth-child(5n + 1) { --chip-c: var(--warm-a); } .chip:nth-child(5n + 2) { --chip-c: var(--sky); } .chip:nth-child(5n + 3) { --chip-c: var(--mint); } .chip:nth-child(5n + 4) { --chip-c: var(--grape); } .chip:nth-child(5n + 5) { --chip-c: #c98a00; }
-  /* New tags: a filled yellow label */
-  .newtag { background: var(--sun) !important; color: var(--ink) !important; border-radius: 8px;  will-change: transform; backface-visibility: hidden; } /* always drawn on its own layer, so hovering a row never redraws the text thinner or bolder */
+  /* sticker tags: New pops off the page a little */
+  .newtag { background: var(--sun) !important; color: var(--ink) !important; border-radius: 8px; transform: translate(var(--tx, 0px), var(--ty, 0px)) rotate(var(--tilt, -4deg)); box-shadow: 0 0 0 2px var(--field), 0 3px 8px -2px rgba(20, 21, 31, .25); will-change: transform; backface-visibility: hidden; } /* always drawn on its own layer, so hovering a row never redraws the text thinner or bolder */
   .wrap { position: relative; isolation: isolate; }
   /* empty states get a doodle */
   :is(.nt-empty, .ag-none, .mp-none, .mdet-empty, .list-empty, .sv-empty)::before { content: ""; display: block; width: 120px; height: 72px; margin: 0 auto 12px; background: var(--life-doodle) center / contain no-repeat; }
@@ -1146,7 +1146,7 @@
     body:not(.potato-mode) .newtag { animation: lifeSticker .5s var(--spring) backwards; }
   }
   @keyframes lifeWiggle { 0% { transform: none; } 30% { transform: rotate(-9deg) scale(1.08); } 60% { transform: rotate(6deg) scale(1.08); } 100% { transform: none; } }
-  @keyframes lifeSticker { from { transform: scale(.6); opacity: 0; } }
+  @keyframes lifeSticker { from { transform: rotate(-14deg) scale(.6); opacity: 0; } }
   @keyframes lifeToast { 0% { transform: translate(-50%, 16px) scale(.9); } 100% { transform: translate(-50%, 0) scale(1); } }
   /* ===== end Life layer ===== */
   /* ===== What-if grades: one popup for the whole app (Home, Grades, course hubs) ===== */
@@ -2825,7 +2825,7 @@
   .upd { display: flex; flex-direction: column; gap: 4px; padding: 8px; border-radius: 12px; color: var(--ink); }
   .upd:hover { background: var(--inner); }
   .upd p { margin: 0; font-size: 14px; font-weight: 600; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-  .upd .newtag { align-self: flex-start; }
+  .upd .newtag { align-self: flex-start; margin-left: -8px; } /* the sticker drops onto the top corner of the text (the overlap is set by the life script) */
   .upd .newtag + p { padding-top: 2px; }
   .upd small { color: var(--muted); font-weight: 700; font-size: 13px; }
   .rail .panel .arow .tx small { white-space: normal; }
@@ -7176,10 +7176,9 @@ window.AveragesHelp = {
    The tilt, nudge and overlap come from the item's text, so a sticker lands the same way every time the list redraws.
    Each one lands differently: high or low on the end of the word before it, or somewhere along the top of the line under it, always covering 2 to 4px, or the top of the line under it, so the text stays readable. */
 (() => {
-  return; // design rules: New tags sit straight, in line with their text (no tilt, no landing spots)
   const TILTS = [-12, -9, -6, -3, 4, 7, 10, 13];
   const hash = s => { let h = 7; for (const ch of s) h = Math.imul(h ^ ch.charCodeAt(0), 0x5bd1e995); h ^= h >>> 15; h = Math.imul(h, 0x27d4eb2d); h ^= h >>> 13; return h >>> 1; };
-  const seedOf = el => { const host = el.closest('[data-mid], [data-mpid], [data-agopen], [data-gw], [data-rgw], [data-gdopen], [role="row"], .upd, button, a, li, tr') || el.parentNode; return hash((host ? host.textContent : '') + el.textContent); };
+  const seedOf = el => { const host = el.closest('[data-mid], [data-mpid], [data-agopen], [data-gw], [data-rgw], [data-gdopen], [data-flgo], [role="row"], .upd, button, a, li, tr') || el.parentNode; return hash((host ? host.textContent : '') + el.textContent); };
   const textRight = el => { try { const r = document.createRange(); r.selectNodeContents(el); return Math.min(r.getBoundingClientRect().right, el.getBoundingClientRect().right); } catch (_) { return el.getBoundingClientRect().right; } };
   // The sticker's own box, ignoring its tilt and entrance animation: measured from a neighbor that isn't transformed.
   const boxOf = (el, ref) => {
@@ -7221,7 +7220,7 @@ window.AveragesHelp = {
   // the item's top right corner, or riding on the start of the title. The item's text picks where it starts looking;
   // a spot is skipped if it would hide text or a button, or get cut off by a box that clips, so it falls through to the next one.
   const SPOTS = ['end', 'icon', 'corner', 'over', 'iconb'];
-  const HOST = '[data-mid], [data-mpid], [data-agopen], [data-gw], [data-rgw], [data-gdopen], [role="row"], .upd, button, a, li, tr';
+  const HOST = '[data-mid], [data-mpid], [data-agopen], [data-gw], [data-rgw], [data-gdopen], [data-flgo], [role="row"], .upd, button, a, li, tr';
   const ICON = ':is(.badge, .ktile, .nt-tile, .gd-ic, .emo, .ftile)';
   const hostOf = el => el.closest(HOST) || el.parentElement;
   const firstLine = n => { try { const r = document.createRange(); r.selectNodeContents(n); const q = [...r.getClientRects()].find(x => x.width); return q || n.getBoundingClientRect(); } catch (_) { return n.getBoundingClientRect(); } };
