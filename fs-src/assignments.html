@@ -3316,7 +3316,7 @@
           <div class="as-bar" id="asBar">
             <label class="find"><span class="as-fi"><svg class="i"><use href="#i-search"/></svg><input id="asFind" placeholder="Find an assignment" autocomplete="off" aria-label="Find an assignment" aria-keyshortcuts="T"><button class="as-x" id="asClear" type="button" aria-label="Clear search" hidden><svg class="i"><use href="#i-x"/></svg></button></span></label>
             <div class="as-dd" id="asCls"></div>
-            <button class="as-att" id="asAtt" type="button" aria-pressed="false" hidden><svg class="i" aria-hidden="true"><use href="#i-clip"/></svg><span>Contains attachment</span><em id="asAttN">0</em></button>
+            <button class="as-att" id="asAtt" type="button" aria-pressed="false" hidden><svg class="i" aria-hidden="true"><use href="#i-clip"/></svg><span>Contains attachment</span></button>
             <div class="mp-types" id="asTypes" role="group" aria-label="Show"></div>
           </div>
           <div class="as-list" id="asList"></div>
@@ -4202,7 +4202,6 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   function asAtt() {
     const b = $('asAtt'); if (!b) return;
     b.hidden = !ATT; b.setAttribute('aria-pressed', AS.att);
-    $('asAttN').textContent = ASG.filter(a => (!AS.c || a.c === AS.c) && ofType(a, AS.type) && hasAtt(a)).length;
   }
   function asList(anim) {
     asAtt();
@@ -4218,15 +4217,13 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (anim && !calm()) $('asList').querySelectorAll('.as-gh, .as-row, .as-none').forEach((el, i) => el.animate && el.animate([{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: 320, delay: Math.min(i * 25, 300), easing: 'cubic-bezier(.2, .8, .2, 1)', fill: 'backwards' }));
   }
   function asTypes() {
-    const base = ASG.filter(a => (!AS.c || a.c === AS.c) && (!AS.att || hasAtt(a)));
-    $('asTypes').innerHTML = `<span class="mp-pill" aria-hidden="true"></span>` + TYPES.map(([k, l]) => `<button data-astype="${k}" aria-pressed="${AS.type === k}">${l}<em>${base.filter(a => ofType(a, k)).length}</em></button>`).join('');
+    $('asTypes').innerHTML = `<span class="mp-pill" aria-hidden="true"></span>` + TYPES.map(([k, l]) => `<button data-astype="${k}" aria-pressed="${AS.type === k}">${l}</button>`).join('');
     requestAnimationFrame(() => mpPill($('asTypes'), false));
   }
   const todoIn = c => ASG.filter(a => (!c || a.c === c) && isTodo(a)).length;
   function asCls() {
     const c = AS.c && C[AS.c];
-    $('asCls').innerHTML = `<button class="as-ddb${c ? ' on' : ' all'}" id="asDdb" aria-haspopup="listbox" aria-expanded="false" aria-label="Class: ${c ? esc(c.name) : 'All classes'}"${c ? ` style="--c:${c.color}"` : ''}>${c ? badge(c) : ''}<span>${c ? esc(c.name) : 'All classes'}</span><em>${todoIn(AS.c)}</em>${ico('chev-r')}</button>`;
-    inkCenter($('asCls'), '.as-ddb em');
+    $('asCls').innerHTML = `<button class="as-ddb${c ? ' on' : ' all'}" id="asDdb" aria-haspopup="listbox" aria-expanded="false" aria-label="Class: ${c ? esc(c.name) : 'All classes'}"${c ? ` style="--c:${c.color}"` : ''}>${c ? badge(c) : ''}<span>${c ? esc(c.name) : 'All classes'}</span>${ico('chev-r')}</button>`; // no count on the filters (2026-10-30); the class list still says how many are to do
   }
   // the class list: opens under the button, arrow keys move, Escape closes
   let ddOpen = false;
