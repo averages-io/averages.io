@@ -172,6 +172,37 @@
     .catch(function () { /* API unreachable: stay */ });
   // Sign-in is checked by averages-fs-data.js, which loads the page's data.
 
+  // ---------- your picture without a photo: the same colors and initials as Windowed (2026-10-30) ----------
+  // The pages drew one letter on a plain dark circle, so the color changed when switching from Windowed. Every
+  // [data-av] without a photo gets AveragesAvatar's gradient and initials (/js/averages-avatar.js, the same file and the
+  // same name as Windowed's profile button). Pages redraw these often, so it's repainted whenever one changes.
+  function avName() { var p = json('fsmock_profile2') || {}; return (typeof p.name === 'string' && p.name.trim()) || (window.FSD && window.FSD.me && window.FSD.me.name) || ''; }
+  function paintAvs() {
+    var A = window.AveragesAvatar; if (!A) return;
+    var name = avName(), bg = A.background(name), ini = A.initials(name) || '?';
+    var els = document.querySelectorAll('[data-av]');
+    for (var i = 0; i < els.length; i++) {
+      var el = els[i];
+      if (el.classList.contains('photo')) continue;
+      // already painted for this name (the browser rewrites the gradient as rgb(), so it can't be compared as text)
+      if (el.dataset.avn === name && el.style.backgroundImage && el.textContent === ini) continue;
+      el.style.backgroundImage = bg; el.style.backgroundColor = A.color(name); el.textContent = ini; el.dataset.avn = name;
+    }
+  }
+  var avQueued = false;
+  function avSoon() { if (avQueued) return; avQueued = true; (window.requestAnimationFrame || setTimeout)(function () { avQueued = false; paintAvs(); }); }
+  window.addEventListener('fs:ready', function () {
+    paintAvs();
+    var touches = function (m) {
+      var el = m.target.nodeType === 1 ? m.target : m.target.parentElement;
+      if (el && el.closest && el.closest('[data-av]')) return true; // a picture was redrawn
+      for (var j = 0; j < m.addedNodes.length; j++) { var n = m.addedNodes[j]; if (n.nodeType === 1 && (n.matches('[data-av]') || n.querySelector('[data-av]'))) return true; } // a menu with a picture opened
+      return false;
+    };
+    if (window.MutationObserver) new MutationObserver(function (ms) { for (var i = 0; i < ms.length; i++) if (touches(ms[i])) { avSoon(); return; } }).observe(document.body, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['style', 'class'] });
+  });
+  window.addEventListener('storage', function (e) { if (e.key === 'fsmock_profile2' || e.key === 'schoolagy_profile') avSoon(); });
+
   // The address of a page that wasn't found, so the 404 page shows the real one.
   if (FROM && FROM.charAt(0) === '/') { try { window.history.replaceState(null, '', FROM); } catch (e) { /* keep /IS/404 */ } }
 })();

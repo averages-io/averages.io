@@ -35,6 +35,7 @@ const OLD = path.resolve(HERE, "../public/fs");
 const JS_FILE = path.resolve(HERE, "../public/js/averages-fs.js");
 const DATA_FILE = path.resolve(HERE, "../public/js/averages-fs-data.js");
 const TURNIN_FILE = path.resolve(HERE, "../public/js/averages-fs-turnin.js");
+const AVATAR_FILE = path.resolve(HERE, "../public/js/averages-avatar.js"); // the same profile colors as Windowed (2026-10-30)
 // pages with the Turn in popup: they also get the turning-in code (averages-fs-turnin.js)
 // The version line in Settings > About, the same as the Windowed pages' (scripts/port-pages.mjs):
 // Beta <package.json version> (Build <first 7 of the commit Cloudflare is building>), "local" elsewhere.
@@ -260,7 +261,7 @@ function build() {
   fs.rmSync(OLD, { recursive: true, force: true });
   fs.mkdirSync(OLD, { recursive: true });
   const ver = (f) => crypto.createHash("sha256").update(fs.readFileSync(f)).digest("hex").slice(0, 10);
-  const tag = `<script src="/js/averages-fs.js?v=${ver(JS_FILE)}"></script>\n<script src="/js/averages-fs-data.js?v=${ver(DATA_FILE)}"></script>`;
+  const tag = `<script src="/js/averages-avatar.js?v=${ver(AVATAR_FILE)}"></script>\n<script src="/js/averages-fs.js?v=${ver(JS_FILE)}"></script>\n<script src="/js/averages-fs-data.js?v=${ver(DATA_FILE)}"></script>`;
   let n = 0;
   for (const file of fs.readdirSync(SRC).filter((f) => f.endsWith(".html")).sort()) {
     let s = fs.readFileSync(path.join(SRC, file), "utf8");
