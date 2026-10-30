@@ -3949,7 +3949,7 @@
   });
 
   $('grSort').querySelectorAll('[data-grsort]').forEach(x => x.setAttribute('aria-pressed', x.dataset.grsort === GR.sort));
-  // ---------- right-click anywhere: hide or bring back "This term so far" (only here, not in the profile menu) ----------
+  // ---------- right-click "This term so far" to hide it; while it's hidden, right-click the Grades heading to bring it back (2026-10-30: was anywhere) ----------
   GR.sum = store.get('fsgrades_sum') !== false;
   let gxMenu = null;
   const gxClose = () => { if (gxMenu) { gxMenu.remove(); gxMenu = null; } };
@@ -3963,11 +3963,13 @@
     } else {
       const done = () => { p.hidden = true; };
       if (!calm() && p.animate) p.animate([{ height: p.offsetHeight + 'px', opacity: 1, overflow: 'hidden' }, { height: '0px', opacity: 0, overflow: 'hidden', marginBottom: '-24px' }], { duration: 300, easing: 'cubic-bezier(.45, 0, .2, 1)' }).onfinish = done; else done();
-      toast('Hid This term so far. Right-click anywhere to bring it back.');
+      toast('Hid This term so far. Right-click the Grades heading to bring it back.');
     }
   }
   document.addEventListener('contextmenu', e => {
     if (e.target.closest('input, textarea, [contenteditable="true"], .wi-scrim, .side')) return; // text boxes and the sidebar keep the browser's own menu
+    // only over the panel itself (or the heading while it's hidden); everywhere else gets the browser's own menu
+    if (GR.sum ? !e.target.closest('#grSumPanel') : !e.target.closest('.gr-h')) { gxClose(); return; }
     e.preventDefault(); gxClose(); meClose();
     document.body.insertAdjacentHTML('beforeend', `<div class="gx-menu" role="menu" aria-label="This page"><button role="menuitem" data-gx="sum">${GR.sum ? 'Hide' : 'Show'} This term so far</button></div>`);
     gxMenu = document.body.lastElementChild;
