@@ -4087,7 +4087,19 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
                 ['focus', 'Focus timer', 'A timer on each assignment for short study sessions, with breaks in between.'],
                 ['recap', 'Weekly recap', 'A Sunday summary on Home: what you turned in, new grades and what\'s due next week.']];
   const startOf = v => STARTS.find(x => x[0] === v) || STARTS[0];
-  const PLANS = { plus: { t: 'Averages Plus', pr: '$2.99 a month' }, free: { t: 'Free', pr: '' } };   // no Messaging Standard: teachers only for now (2026-10-28)
+  const PLANS = { plus: { t: 'Averages Plus', pr: '$2.99 a month' }, free: { t: 'Free', pr: '' } };
+  // What Plus costs, from GET /billing/status's price ({ amount in cents, currency, interval, intervalCount }),
+  // in the student's own currency: "$2.99 a month", "€34.99 a year". Empty when Stripe hasn't said yet.
+  function priceText(p) {
+    if (typeof p === 'string') return p;
+    if (!p || typeof p.amount !== 'number' || !p.currency) return '';
+    let money = '';
+    try { money = new Intl.NumberFormat(undefined, { style: 'currency', currency: String(p.currency).toUpperCase() }).format(p.amount / 100); } catch (e) { return ''; }
+    const n = p.intervalCount > 1 ? p.intervalCount : 1;
+    const unit = { day: 'day', week: 'week', month: 'month', year: 'year' }[p.interval] || '';
+    if (!unit) return money;
+    return n === 1 ? money + ' a ' + unit : money + ' every ' + n + ' ' + unit + 's';
+  }   // no Messaging Standard: teachers only for now (2026-10-28)
   const APPS = { drive: 'Google Drive', canva: 'Canva', onedrive: 'OneDrive' };
   // every setting, for the search box here and for Search anything
   const IDX = [
@@ -4166,7 +4178,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       if (!B) return grp('', row('current', 'Checking your plan…', ''));
       if (!B.enabled) return grp('Your plan', row('current', 'Everything is free right now', 'Browser notifications, calendar sync and early features are free for everyone while Averages Plus isn\'t on sale.', chip(ico('ok') + 'Free', ' on')));
       const cur = SG.plan, ends = B.renewsAt ? new Date(B.renewsAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
-      const P = { t: PLANS[cur].t, pr: cur === 'plus' ? (B.price || PLANS.plus.pr) : '' };
+      const P = { t: PLANS[cur].t, pr: cur === 'plus' ? (priceText(B.price) || PLANS.plus.pr) : '' };
       const feats = { plus: [['Browser notifications'], ['Calendar sync'], ['New features early'], ['The iPhone app', 'Coming soon']], free: [['Your grades, assignments and files'], ['Message your teachers'], ['Profile picture']] }[cur];
       const blurb = { plus: 'Everything in Averages, plus browser notifications, calendar sync and new features early.', free: 'Your grades, assignments, files and calendar from Schoology, free for every student.' }[cur];
       const off = incog(), canBuy = B.configured && B.eligible !== false && !off;
@@ -4176,7 +4188,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
           <p>${blurb}</p>
           <ul>${feats.map(([f, s2]) => `<li>${ico('ok')}${f}${s2 ? ` <small>${s2}</small>` : ''}</li>`).join('')}</ul>
           <div class="ft"><small>${cur === 'free' ? 'Free forever. Profile pictures are free for everyone.' : B.cancelAtPeriodEnd ? `Plus ends ${esc(ends)}. You won't be charged again.` : ends ? `Renews ${esc(ends)}` : ''}</small>${B.manageable ? btn('pay', 'Manage plan') : ''}</div></div></section>
-      ${cur === 'free' ? grp('Averages Plus', `<div class="sg-row wrapr" data-set="other">${tx(`${PLANS.plus.t}<span class="sg-pr">${esc(B.price || PLANS.plus.pr)}</span>`, off ? 'Not in Incognito. Plus needs sync across devices.' : !B.configured ? 'Not on sale yet.' : 'Browser notifications, calendar sync, new features early and the iPhone app.')}${btn('plan', 'Get Plus', ` data-plan="plus"${canBuy ? '' : ' disabled'}`, canBuy ? ' primary' : '')}</div>`, off ? 'To get Plus, switch to Classic in Privacy first.' : 'Renews monthly until you cancel. Cancel anytime in Manage plan.') : ''}
+      ${cur === 'free' ? grp('Averages Plus', `<div class="sg-row wrapr" data-set="other">${tx(`${PLANS.plus.t}<span class="sg-pr">${esc(priceText(B.price) || PLANS.plus.pr)}</span>`, off ? 'Not in Incognito. Plus needs sync across devices.' : !B.configured ? 'Not on sale yet.' : 'Browser notifications, calendar sync, new features early and the iPhone app.')}${btn('plan', 'Get Plus', ` data-plan="plus"${canBuy ? '' : ' disabled'}`, canBuy ? ' primary' : '')}</div>`, off ? 'To get Plus, switch to Classic in Privacy first.' : 'Renews monthly until you cancel. Cancel anytime in Manage plan.') : ''}
       ${grp('Early access', row('early', 'New features early', LIVE.early.length ? `${LIVE.early.length} ${LIVE.early.length === 1 ? 'feature' : 'features'} in early access now${plus() ? ', on for you' : ''}.` : 'Nothing in early access right now. New features show up here about two weeks before everyone else.', plus() ? chip(ico('ok') + 'Included', ' on') : plusChip()))}`;
     },
 
@@ -4288,10 +4300,22 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   function sgAll(fresh) { $('sg').classList.toggle('open', SGV.open); sgNav(); sgPane(fresh); sgMeta(); }
   const redraw = () => { sgSave(); sgNav(); sgPane(); sgMeta(); };
 
+  // Each section keeps its own spot (Martin, 2026-10-30: switching tabs reset where you were on the page).
+  // Back to a section: right where you left it. A new one: the page stays put, unless you'd scrolled
+  // past the top of the section, then it starts at its top. Phones (a list, then one section) start at the top.
+  const SG_SPOT = (() => { try { return JSON.parse(sessionStorage.getItem('fs_settings_spots') || '{}') || {}; } catch (e) { return {}; } })();
+  const spotSave = () => { try { sessionStorage.setItem('fs_settings_spots', JSON.stringify(SG_SPOT)); } catch (e) {} };
   function openSec(id, focusTop) {
-    const was = SG.sec; SG.sec = id; SGV.open = true; sgSave(); sgAll(was !== id || innerWidth <= 860);
-    if (innerWidth <= 860 || focusTop) $('scroller').scrollTo({ top: 0 });
-    if (focusTop) { const b = innerWidth <= 860 ? $('sgPane').querySelector('.sg-back') : null; if (b) b.focus({ preventScroll: true }); }
+    const sc = $('scroller'), was = SG.sec, wide = innerWidth > 860;
+    if (wide && was && SGV.open) { SG_SPOT[was] = sc.scrollTop; spotSave(); }
+    SG.sec = id; SGV.open = true; sgSave(); sgAll(was !== id || !wide);
+    if (!wide) sc.scrollTo({ top: 0 });
+    else if (focusTop && was !== id) {
+      const paneTop = sc.scrollTop + $('sgPane').getBoundingClientRect().top - sc.getBoundingClientRect().top - 16;
+      const to = id in SG_SPOT ? SG_SPOT[id] : Math.min(sc.scrollTop, Math.max(0, paneTop));
+      sc.scrollTo({ top: Math.min(to, sc.scrollHeight - sc.clientHeight) });
+    }
+    if (focusTop) { const b = !wide ? $('sgPane').querySelector('.sg-back') : null; if (b) b.focus({ preventScroll: true }); }
   }
   // jump to one setting: open its section, scroll to it and flash it
   function go(sec, id) {

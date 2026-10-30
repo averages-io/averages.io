@@ -2115,7 +2115,7 @@
   .mp-grp button:hover { background: var(--field); color: var(--ink); }
   .mp-grp svg.i { width: 18px; height: 18px; }
   /* viewer header: the item's own icon and name, with real buttons, instead of a toolbar strip */
-  .mp-vh { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; padding: 20px 20px 16px; }
+  .mp-vh { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; padding: 20px 24px 16px; } /* same 24px sides as the page under it, so the icon lines up with the chips and text */
   .mp-vlead { flex: none; display: grid; place-items: center; }
   .mp-vt { flex: 1 1 240px; min-width: 0; }
   .mp-vt h3 { margin: 0; font-size: 20px; font-weight: 900; line-height: 1.25; overflow-wrap: anywhere; }
@@ -2169,7 +2169,7 @@
   .mp-dl dd { margin: 0; font-weight: 700; color: var(--ink); line-height: 1.5; }
   .mp-work { padding: 24px; display: flex; flex-direction: column; gap: 16px; }
   /* the assignment page */
-  .aw { padding: 4px 24px 24px; gap: 20px; }
+  .aw { padding: 8px 24px 24px; gap: 20px; }
   .aw-facts { display: flex; flex-wrap: wrap; gap: 8px; }
   .aw-fact { display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 0 12px; border-radius: 16px; background: var(--inner); font-size: 13px; font-weight: 800; color: var(--ink); }
   .aw-fact small { font-size: 12px; font-weight: 700; color: var(--muted); }
@@ -2228,6 +2228,7 @@
   .aw-class { display: flex; gap: 12px; align-items: flex-start; padding: 16px; border-radius: 16px; background: var(--inner); color: var(--ink-2); font-weight: 600; line-height: 1.5; }
   .aw-class b { display: block; color: var(--ink); font-weight: 800; }
   .aw-class svg.i { flex: none; color: var(--muted); margin-top: 2px; }
+  .aw-class + .btn { margin-top: 12px; } /* the button sits under the box, not stuck to it */
   /* ---------- Updates tab ---------- */
   section.up { grid-column: 1 / -1; min-width: 0; display: flex; flex-direction: column; gap: 16px; }   /* section: the bare .up also matched the green "+2.4" chips (.gr-d.up) and broke their row */
   .up[hidden] { display: none; }
