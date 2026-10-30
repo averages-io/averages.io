@@ -3366,7 +3366,13 @@
         opt.setAttribute('aria-pressed', 'true');
         const full = opt.dataset.shape === 'fullscreen';
         saveSettingsOption('windowType', full ? 'fullscreen' : 'windowed');
-        if (full) { try { sessionStorage.removeItem('averages_fs_off'); } catch (e) {} window.location.href = '/IS/settings'; }
+        if (full) {
+          // the logo for a second on the way (2026-10-30, Martin): up here at once, and the Fullscreen page keeps it up
+          // until a second has passed and it has its data (averages_fs_logo, see scripts/build-fs.mjs)
+          try { sessionStorage.removeItem('averages_fs_off'); sessionStorage.setItem('averages_fs_logo', String(Date.now())); } catch (e) {}
+          if (window.__averagesSplash && window.__averagesSplash.show) window.__averagesSplash.show(4000);
+          window.location.href = '/IS/settings';
+        }
       });
     });
     windowOptions[0].classList.add('selected');

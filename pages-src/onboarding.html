@@ -3578,7 +3578,13 @@
         goToStep(TO_LIVE[step] || 'theme');
         winBtn.focus({ preventScroll: true });
       }
-      fsBtn.addEventListener('click', () => { if (!enter()) { winBtn.click(); } });
+      // the logo for a second while the page turns into Fullscreen (2026-10-30, Martin), the same logo as the first open
+      fsBtn.addEventListener('click', () => {
+        if (on) return;
+        const logo = window.__averagesSplash;
+        if (logo && logo.show && allowed()) logo.show(1000);
+        if (!enter()) { if (logo && logo.on) logo.hide(); winBtn.click(); }
+      });
 
       // Everything above can change on its own (Plus showing, an app connecting): follow it.
       const redraw = () => { if (!on) return; if (step === 'mode') { modesDraw(); navDraw(); } else if (step === 'apps') appsDraw(); else if (step === 'you') emailDraw(); };

@@ -27,6 +27,9 @@
  * inline script that LegacyPage renders for signed-in pages. It's drawn with
  * html::before (logo) and html::after (backdrop), so nothing goes into <body>,
  * which React owns. LegacyPage uses window.__averagesSplash: { on, at, hide() }.
+ * show(ms) puts it up on demand for ms (2026-10-30: switching from Windowed to
+ * Fullscreen in Settings or onboarding shows the logo for a second; the
+ * Fullscreen pages reuse SPLASH_CSS, see scripts/build-fs.mjs).
  */
 
 export const SPLASH_KEY = "averages_splash_shown";
@@ -45,17 +48,21 @@ export const SPLASH_CSS =
   "html[data-av-splash=out]::before{transform:scale(1.06)}";
 
 export const SPLASH_JS =
-  "(function(){var d=document.documentElement,api={on:false,at:0,hide:function(){}};window.__averagesSplash=api;" +
-  "try{var s=window.sessionStorage,ob=location.pathname.replace(/\\/$/,'')==='/onboard'&&localStorage.getItem('schoolagy_onboarded')!=='1';if(s.getItem('schoolagy_bundle_cache')||(s.getItem('" + SPLASH_KEY + "')&&!ob))return;s.setItem('" + SPLASH_KEY + "','1');}catch(e){return;}" +
+  "(function(){var d=document.documentElement,api={on:false,at:0,hide:function(){},show:function(){}};window.__averagesSplash=api;" +
   "var potato=false,calm=false;try{potato=(JSON.parse(localStorage.getItem('schoolagy_settings_options')||'{}')||{}).potatoMode===true;}catch(e){}" +
   "try{calm=potato||matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){}" +
-  "api.on=true;api.at=performance.now();d.setAttribute('data-av-splash','');var done=false;" +
-  "function clear(){d.removeAttribute('data-av-splash');d.style.removeProperty('--av-dx');d.style.removeProperty('--av-dy');}" +
-  "api.hide=function(){if(done)return;done=true;api.on=false;if(potato){clear();return;}d.setAttribute('data-av-splash','out');setTimeout(clear,400);};" +
-  "setTimeout(api.hide," + SPLASH_MAX_MS + ");" +
-  "if(calm||!window.requestAnimationFrame)return;" +
   "function dr(lo,hi,ms){var f=lo+Math.random()*(hi-lo),t=lo+Math.random()*(hi-lo),t0=performance.now(),l=ms;return function(n){if(n-t0>l){f=t;t=lo+Math.random()*(hi-lo);t0=n;l=ms*(0.6+Math.random()*0.8);}var k=Math.min(1,(n-t0)/l);return f+(t-f)*(1-Math.cos(Math.PI*k))/2;};}" +
+  "function clear(){d.removeAttribute('data-av-splash');d.style.removeProperty('--av-dx');d.style.removeProperty('--av-dy');}" +
+  // start(ms): up now; with ms, it goes away by itself after that long (the Windowed-to-Fullscreen switch, 2026-10-30)
+  "function start(ms){if(api.on)return;api.on=true;api.at=performance.now();d.setAttribute('data-av-splash','');var done=false;" +
+  "api.hide=function(){if(done)return;done=true;api.on=false;if(potato){clear();return;}d.setAttribute('data-av-splash','out');setTimeout(clear,400);};" +
+  "setTimeout(api.hide,ms||" + SPLASH_MAX_MS + ");" +
+  "if(calm||!window.requestAnimationFrame)return;" +
   "var r=dr(21,66,900),sp=dr(2.2,6.5,1100),sq=dr(0.55,1,1500),a=Math.random()*6.283,last=performance.now();" +
-  "function fr(n){if(!d.hasAttribute('data-av-splash'))return;var dt=Math.min(0.05,Math.max(0,(n-last)/1000));last=n;a+=sp(n)*dt;var rr=r(n);" +
+  "function fr(n){if(!d.hasAttribute('data-av-splash')||done)return;var dt=Math.min(0.05,Math.max(0,(n-last)/1000));last=n;a+=sp(n)*dt;var rr=r(n);" +
   "d.style.setProperty('--av-dx',(Math.cos(a)*rr).toFixed(1)+'px');d.style.setProperty('--av-dy',(Math.sin(a)*rr*sq(n)+6).toFixed(1)+'px');requestAnimationFrame(fr);}" +
-  "requestAnimationFrame(fr);})();";
+  "requestAnimationFrame(fr);}" +
+  "api.show=start;" +
+  // the first open of a tab with nothing saved yet (and onboarding until it's finished): up until the page has its data
+  "try{var s=window.sessionStorage,ob=location.pathname.replace(/\\/$/,'')==='/onboard'&&localStorage.getItem('schoolagy_onboarded')!=='1';if(s.getItem('schoolagy_bundle_cache')||(s.getItem('" + SPLASH_KEY + "')&&!ob))return;s.setItem('" + SPLASH_KEY + "','1');}catch(e){return;}" +
+  "start();})();";

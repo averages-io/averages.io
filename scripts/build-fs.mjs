@@ -36,6 +36,23 @@ const JS_FILE = path.resolve(HERE, "../public/js/averages-fs.js");
 const DATA_FILE = path.resolve(HERE, "../public/js/averages-fs-data.js");
 const TURNIN_FILE = path.resolve(HERE, "../public/js/averages-fs-turnin.js");
 const AVATAR_FILE = path.resolve(HERE, "../public/js/averages-avatar.js"); // the same profile colors as Windowed (2026-10-30)
+// The logo screen (app/lib/splash.ts), the same one the Windowed pages use (2026-10-30). Coming from Windowed (Settings'
+// Fullscreen button leaves averages_fs_logo in this tab), it stays up until a second has passed since the click and the
+// page has its data. splash.ts is plain string constants, so it's read as JavaScript; its automatic first-open start
+// is cut off (the Fullscreen pages have their own loading), leaving show(ms) and hide().
+const SPLASH_FILE = path.resolve(HERE, "../app/lib/splash.ts");
+function splashTag() {
+  const src = fs.readFileSync(SPLASH_FILE, "utf8").replace(/^export /gm, "");
+  const { SPLASH_CSS, SPLASH_JS } = new Function(src + "\nreturn { SPLASH_CSS, SPLASH_JS };")();
+  const js = SPLASH_JS.replace(/try\{var s=window\.sessionStorage[\s\S]*?start\(\);\}\)\(\);$/, "})();");
+  if (js === SPLASH_JS) throw new Error("splash.ts changed: couldn't take out its first-open start");
+  const handoff = "(function(){var t=0;try{t=+sessionStorage.getItem('averages_fs_logo')||0;sessionStorage.removeItem('averages_fs_logo');}catch(e){}" +
+    "if(!t||Date.now()-t>15000||!window.__averagesSplash)return;var S=window.__averagesSplash,ready=false,up=false;S.show(8000);" +
+    "function go(){if(ready&&up)S.hide();}setTimeout(function(){up=true;go();},Math.max(0,1000-(Date.now()-t)));" +
+    "window.addEventListener('fs:ready',function(){ready=true;go();});})();";
+  return `<style id="avSplash">${SPLASH_CSS}</style>\n<script>${js}${handoff}</script>`;
+}
+const SPLASH_TAG = splashTag();
 // pages with the Turn in popup: they also get the turning-in code (averages-fs-turnin.js)
 // The version line in Settings > About, the same as the Windowed pages' (scripts/port-pages.mjs):
 // Beta <package.json version> (Build <first 7 of the commit Cloudflare is building>), "local" elsewhere.
@@ -261,7 +278,7 @@ function build() {
   fs.rmSync(OLD, { recursive: true, force: true });
   fs.mkdirSync(OLD, { recursive: true });
   const ver = (f) => crypto.createHash("sha256").update(fs.readFileSync(f)).digest("hex").slice(0, 10);
-  const tag = `<script src="/js/averages-avatar.js?v=${ver(AVATAR_FILE)}"></script>\n<script src="/js/averages-fs.js?v=${ver(JS_FILE)}"></script>\n<script src="/js/averages-fs-data.js?v=${ver(DATA_FILE)}"></script>`;
+  const tag = `${SPLASH_TAG}\n<script src="/js/averages-avatar.js?v=${ver(AVATAR_FILE)}"></script>\n<script src="/js/averages-fs.js?v=${ver(JS_FILE)}"></script>\n<script src="/js/averages-fs-data.js?v=${ver(DATA_FILE)}"></script>`;
   let n = 0;
   for (const file of fs.readdirSync(SRC).filter((f) => f.endsWith(".html")).sort()) {
     let s = fs.readFileSync(path.join(SRC, file), "utf8");
