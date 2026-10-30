@@ -416,7 +416,7 @@ export async function signOut(): Promise<void> {
     method: "DELETE",
     credentials: "include",
   }).catch(() => {
-    /* the cookie expires on its own in 30 days either way */
+    /* the cookie expires on its own in 15 days either way */
   });
   await Promise.race([
     Promise.all([deleteRequest, pushForgotten]),
