@@ -21,9 +21,9 @@
     --punch-a: #ff7a50; --punch-b: #e5484d;
     --today: #2f5fb3;
     --focus: #2f5fb3;
-    --good: #2e7d4f;
-    --warn: #8f6200;
-    --bad: #b8352f;
+    --good: #22663f;
+    --warn: #7a5400;
+    --bad: #a12d28;
     --series: #3e64b0;
     --series-soft: rgba(62,100,176,.14);
     --mark: rgba(229,72,77,.18);
@@ -94,7 +94,9 @@
   .quick-l { order: -1; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); line-height: 1; padding-right: 8px; border-right: 2px solid #c6c6cc; height: 24px; display: flex; align-items: center; }
   .top .me { width: 40px; height: 40px; border-radius: 50%; flex: none; margin-left: 8px; }
   .top .me { position: relative; }
-  .top .me .gear { position: absolute; right: 0; bottom: 0; width: 18px; height: 18px; border-radius: 50%; background: var(--field); box-shadow: 0 0 0 2px var(--frame); display: grid; place-items: center; color: #66757f; }
+  /* two initials stay clear of the gear (2026-10-30) */
+  .top .me .av { font-size: 14px; letter-spacing: -.02em; }
+  .top .me .gear { position: absolute; right: -4px; bottom: -4px; width: 18px; height: 18px; border-radius: 50%; background: var(--field); box-shadow: 0 0 0 2px var(--frame); display: grid; place-items: center; color: #66757f; }
   .top .me .gear svg.i { width: 12px; height: 12px; display: block; }
   .top .me:hover .gear, .me[aria-expanded="true"] .gear { color: var(--ink); }
   .top .me[aria-expanded="true"] .av { box-shadow: 0 0 0 2px var(--frame), 0 0 0 4px var(--ink-2); }
@@ -136,7 +138,7 @@
     font-style: normal; font-size: 12px; font-weight: 800; line-height: 1; letter-spacing: 0; color: #ffffff; }
   /* the number is nudged so its ink sits dead center (see centerInk), whatever font is showing */
   .nav .count canvas.ink, .grp em canvas.ink { display: block; flex: none; margin: 0 -4px; }
-  .ink-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .ink-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; text-overflow: ellipsis; }
   .nav .count { margin-left: auto; background: var(--accent); }
   .nav .side-kbd { margin-left: auto; font-size: 11px; line-height: 20px; padding: 0 4px; background: var(--inner); color: var(--muted); }
   .nav a:hover .side-kbd { background: var(--field); }
@@ -151,7 +153,7 @@
   .nav a .pip { position: absolute; left: 30px; top: 9px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 2px var(--frame); transition: opacity .12s ease; }
   .side:hover .pip, .side.hold .pip, .side:has(:focus-visible) .pip, .app.pinned .side .pip { opacity: 0; }
   .divider { height: 2px; border-radius: 1px; background: var(--inner); margin: 12px 16px; }
-  .side-h { display: flex; align-items: center; justify-content: space-between; height: 32px; padding: 0 8px 0 20px; color: var(--muted); font-size: 13px; font-weight: 800; width: 100%; overflow: hidden; white-space: nowrap; }
+  .side-h { display: flex; align-items: center; justify-content: space-between; height: 32px; padding: 0 8px 0 20px; color: var(--muted); font-size: 13px; font-weight: 800; width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
   .side-h .ibtn { width: 32px; height: 32px; }
   /* "Your classes" only takes room while the sidebar is open. Closed, the class icons sit right under the divider;
      opening, they slide down and a little right (a diagonal) to make room for the label, in time with the rail widening */
@@ -164,7 +166,10 @@
   .side > .nav, .side > .divider, .side > .side-h, .side > .foot { flex: none; }
   .side > .cls > * { flex: none; }
   /* no scrollbar here: it would take width and push the class icons off center. The fade at the bottom shows there's more. */
-  .side > .cls { flex: 1 1 0; min-height: 88px; overflow: hidden auto; overscroll-behavior: contain; scrollbar-width: none; }
+  /* the whole sidebar scrolls (2026-10-30, Martin: "not just the tiny courses section"); the class list is as tall as it needs */
+  .side > .cls { flex: none; min-height: 0; overflow: visible; }
+  .side { overscroll-behavior: contain; scrollbar-width: none; }
+  .side::-webkit-scrollbar { display: none; }
   .side > .cls::-webkit-scrollbar { display: none; }
   .side > .cls.cls-more { -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 24px), transparent); mask-image: linear-gradient(to bottom, #000 calc(100% - 24px), transparent); }
   @media (max-height: 780px) {
@@ -173,11 +178,11 @@
     .divider { margin: 8px 16px; }
     .side .foot { padding: 8px 12px; }
   }
-  .cls a { display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px 0 8px; border-radius: 12px; color: var(--ink-2); font-weight: 700; overflow: hidden; white-space: nowrap; }
+  .cls a { display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px 0 8px; border-radius: 12px; color: var(--ink-2); font-weight: 700; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
   .cls a:hover, .cls a[aria-expanded="true"] { background: var(--inner); color: var(--ink); }
   .cls .g { margin-left: auto; font-size: 13px; font-weight: 800; white-space: nowrap; }
   .cls .g small { color: var(--muted); font-size: 12px; font-weight: 700; margin-left: 4px; font-variant-numeric: tabular-nums; }
-  .side .foot { margin-top: auto; padding: 12px; display: flex; align-items: center; gap: 8px; width: 100%; overflow: hidden; white-space: nowrap; }
+  .side .foot { margin-top: auto; padding: 12px; display: flex; align-items: center; gap: 8px; width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
   .side .foot .ibtn { width: 40px; flex: none; }
   .side .foot span { color: var(--muted); font-weight: 700; font-size: 13px; }
   .side .foot .pin-close, .app.pinned .side .foot .pin-open { display: none; }
@@ -228,7 +233,7 @@
   .chip.chip-c .emo { width: 24px; height: 24px; display: grid; place-items: center; flex: none; }
   .chip.chip-c .emo svg { width: 22px; height: 22px; }
   .chip.chip-c .lab { display: block; max-width: 0; opacity: 0; overflow: hidden; white-space: nowrap; margin-left: 0;
-    transition: max-width .36s cubic-bezier(.22, .61, .36, 1), margin-left .36s cubic-bezier(.22, .61, .36, 1), opacity .2s ease .06s; }
+    transition: max-width .36s cubic-bezier(.22, .61, .36, 1), margin-left .36s cubic-bezier(.22, .61, .36, 1), opacity .2s ease .06s; text-overflow: ellipsis; }
   .chip.chip-c:hover .lab, .chip.chip-c:focus-visible .lab { max-width: 200px; opacity: 1; margin-left: 8px; }
   /* potato mode: no reveal animation, so class shortcuts always show their name */
   .potato-mode .chip.chip-c .lab { transition: none; max-width: 200px; opacity: 1; margin-left: 8px; }
@@ -554,7 +559,7 @@
   .trend.down { background: color-mix(in srgb, var(--bad) 14%, var(--panel)); color: var(--bad); }
   .trend.flat { background: var(--inner); color: var(--ink); }
   .trend:hover, .trend[aria-expanded="true"] { filter: brightness(.94); }
-  .trend .tp { font-size: 13px; font-weight: 700; color: var(--muted); }
+  .trend .tp { font-size: 13px; font-weight: 700; color: var(--ink-2); }
   .trend .arrow { display: inline-flex; align-self: center; }
   .trend.flat .arrow { color: var(--muted); }
   /* every arrow draws at the same on-screen weight as an 18px icon at 1.75 (31.5 / size) */
@@ -676,7 +681,7 @@
   .chg.up { color: var(--good); background: color-mix(in srgb, var(--good) 13%, var(--field)); }
   .chg.down { color: var(--bad); background: color-mix(in srgb, var(--bad) 11%, var(--field)); }
   .dt .none { color: #a9a9b3; }
-  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; text-overflow: ellipsis; }
   @media (max-width: 680px) {
     .modal-wrap { padding: 0; place-items: end stretch; }
     .modal { max-height: 92vh; border-radius: 24px 24px 0 0; }
@@ -1130,6 +1135,8 @@
   .chip svg.i { color: var(--chip-c, var(--ink-2)); }
   .chip:nth-child(5n + 1) { --chip-c: var(--warm-a); } .chip:nth-child(5n + 2) { --chip-c: var(--sky); } .chip:nth-child(5n + 3) { --chip-c: var(--mint); } .chip:nth-child(5n + 4) { --chip-c: var(--grape); } .chip:nth-child(5n + 5) { --chip-c: #c98a00; }
   /* sticker tags: New pops off the page a little */
+  /* dark mode only (2026-10-30): dark letters on a deeper yellow (white on yellow was about 1.4:1), and the paper ring in the card's dark */
+  html[data-theme="dark"] body .newtag { background: #e0aa2e !important; color: #1f1604 !important; box-shadow: 0 0 0 2px var(--field), 0 3px 8px -2px rgba(0, 0, 0, .55); }
   .newtag { background: var(--sun) !important; color: var(--ink) !important; border-radius: 8px; transform: translate(var(--tx, 0px), var(--ty, 0px)) rotate(var(--tilt, -4deg)); box-shadow: 0 0 0 2px var(--field), 0 3px 8px -2px rgba(20, 21, 31, .25); will-change: transform; backface-visibility: hidden; } /* always drawn on its own layer, so hovering a row never redraws the text thinner or bolder */
   .wrap { position: relative; isolation: isolate; }
   /* empty states get a doodle */
@@ -1654,7 +1661,7 @@
   .ti-step.done .ti-track i { width: 100%; }
   .ti-step.ok .ti-track i { background: var(--good); transition: background .25s ease; }
   .ti-step.ok:nth-child(2) .ti-track i { transition-delay: .06s; } .ti-step.ok:nth-child(3) .ti-track i { transition-delay: .12s; } .ti-step.ok:nth-child(4) .ti-track i { transition-delay: .18s; } .ti-step.ok:nth-child(5) .ti-track i { transition-delay: .24s; }
-  .ti-slab { display: flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 800; color: var(--muted); white-space: nowrap; overflow: hidden; }
+  .ti-slab { display: flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 800; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .ti-step.now .ti-slab, .ti-step.done .ti-slab { color: var(--ink); }
   .ti-step.ok .ti-slab { color: var(--good); }
   .ti-si { width: 13px; height: 13px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; }
@@ -2175,7 +2182,7 @@
   .aw-fact small { font-size: 12px; font-weight: 700; color: var(--muted); }
   .aw-fact.bad { background: color-mix(in srgb, var(--bad) 10%, var(--panel)); color: var(--bad); }
   .aw-fact.ok { background: color-mix(in srgb, var(--good) 12%, var(--panel)); color: var(--good); }
-  .aw-fact.ga { color: var(--good); } .aw-fact.gb { color: #9a6a00; } .aw-fact.gc { color: var(--bad); }
+  .aw-fact.ga { color: var(--good); } .aw-fact.gb { color: #7a5400; } .aw-fact.gc { color: var(--bad); }
   .aw-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 24px; align-items: start; }
   .aw-h { display: flex; align-items: baseline; gap: 8px; margin: 0 0 12px; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
   .aw-h span { letter-spacing: 0; text-transform: none; font-size: 12px; font-weight: 700; }
@@ -2313,7 +2320,7 @@
   .up-card.grade { grid-template-columns: auto minmax(0, 1fr) auto; padding: 12px 16px 12px 12px; font: inherit; }
   .up-card.grade .up-cb { padding: 0 12px; }
   .up-gr { width: 52px; height: 52px; border-radius: 14px; display: grid; place-items: center; background: var(--panel); font-family: var(--display); font-style: italic; font-size: 26px; font-weight: 900; transform: rotate(-3deg); }
-  .up-gr.ga { color: var(--good); } .up-gr.gb { color: #9a6a00; } .up-gr.gc { color: var(--bad); }
+  .up-gr.ga { color: var(--good); } .up-gr.gb { color: #7a5400; } .up-gr.gc { color: var(--bad); }
   .up-gs { display: flex; flex-direction: column; align-items: flex-end; font-size: 15px; font-weight: 900; font-variant-numeric: tabular-nums; white-space: nowrap; }
   .up-gs small { font-size: 12px; font-weight: 700; color: var(--muted); }
   .up-poll { display: flex; flex-direction: column; gap: 8px; padding: 16px; border-radius: 16px; background: var(--field); }
@@ -4246,15 +4253,28 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
 
   // ---------- refresh: who's in your classes comes from Schoology ----------
   const bar = (w, h = 10, r) => `<span class="skel-bar" style="width:${w};height:${h}px${r ? ';border-radius:' + r : ''}"></span>`;
-  let loading = false;
+  // Sync (Martin's sync animation, 2026-10-30): each part lands when its own request comes back (FSX.sync), and
+  // syncRun(true) is the same animation when the page opens.
+  let loading = false, spin = null;
   $('syncLabel').textContent = FSX.synced(); $('refresh').setAttribute('aria-label', 'Refresh your contacts. ' + FSX.synced() + '.');
-  $('refresh').addEventListener('click', () => {
+  function syncRun(first) {
     if (loading) return; loading = true; menuClose();
+    const S = FSX.sync(first);
     const b = $('refresh'), icon = b.querySelector('svg');
-    b.classList.add('loading'); b.setAttribute('aria-busy', 'true'); $('syncLabel').textContent = 'Syncing…';
-    if (!calm() && icon.animate) icon.animate([{ transform: 'rotate(0deg)' }, { transform: 'rotate(360deg)' }], { duration: 800, iterations: Infinity });
-    FSX.reloadFresh('Your contacts are up to date.');
-  });
+    if (!first) { b.classList.add('loading'); b.setAttribute('aria-busy', 'true'); $('syncLabel').textContent = 'Syncing…'; }
+    if (!first && !calm() && icon.animate) spin = icon.animate([{ transform: 'rotate(0deg)' }, { transform: 'rotate(360deg)' }], { duration: 800, iterations: Infinity });
+    $('ctMeta').innerHTML = ['user', 'users', 'binder', 'star'].map((k, i) => `<span class="gm" data-skel>${ico(k)}<span class="skel-bar" style="width:${[80, 100, 70, 70][i]}px;height:12px"></span></span>`).join('');
+    $('ctRows').classList.add('sync-wait'); $('ctRows').innerHTML = Array.from({ length: 9 }, () => `<div class="ct-row" data-skel>${bar('40px', 40, '13px')}<span class="tx">${bar('50%', 14)}<span style="display:block;margin-top:8px">${bar('70%', 11)}</span></span></div>`).join('');
+    const done = () => {
+      loading = false; b.classList.remove('loading'); b.removeAttribute('aria-busy');
+      if (spin) { const a = ((spin.currentTime || 0) % 800) / 800 * 360; spin.cancel(); spin = null; if (!calm()) icon.animate([{ transform: `rotate(${a}deg)` }, { transform: 'rotate(360deg)' }], { duration: Math.max(160, (360 - a) / 360 * 800), easing: 'cubic-bezier(.25, .7, .35, 1)' }); }
+      if (!first) { $('syncLabel').textContent = 'Synced just now'; b.setAttribute('aria-label', 'Refresh your contacts. Synced just now.'); toast(S.say('Your contacts are up to date.')); }
+    };
+    S.wait('people').then(() => { ctMeta(); });
+    S.wait(['people', 'classmates']).then(() => { $('ctRows').classList.remove('sync-wait'); ctRows(); if (!calm()) $('ctRows').querySelectorAll('.ct-row').forEach((el, i) => { el.style.animation = `averagesRise 560ms cubic-bezier(.16, 1, .3, 1) ${40 + i * 30}ms both, averagesFadeIn 420ms cubic-bezier(.33, 1, .68, 1) ${40 + i * 30}ms both`; }); done(); });
+  }
+  $('refresh').addEventListener('click', () => syncRun(false));
+  window.addEventListener('fs:ready', () => syncRun(true), { once: true });
 
   // the glow behind the header matches the yellow address book in the logo
   if (!EMOJI_SVG['📒']) EMOJI_SVG['📒'] = "<svg aria-hidden=\"true\" focusable=\"false\" viewBox=\"0 0 36 36\"><path fill=\"#F4900C\" d=\"M36 26c0 2.209-1.791 4-4 4H8c-2.209 0-4-1.791-4-4V6.313C4 4.104 9.791 0 12 0h18.625C33.719 0 36 2.312 36 5.375V26z\"/><path fill=\"#CCD6DD\" d=\"M34 30c0 2.209-1.791 4-4 4H10c-2.209 0-4-1.791-4-4V6c0-4.119-.021-4 5-4h19c2.209 0 4 1.791 4 4v24z\"/><path fill=\"#E1E8ED\" d=\"M32 31c0 1.657-1.343 3-3 3H7c-1.657 0-3-1.343-3-3V7c0-1.657 1.343-3 3-3h22c1.657 0 3 1.343 3 3v24z\"/><path fill=\"#FFAC33\" d=\"M32 32c0 2.209-1.791 4-4 4H9c-2.209 0-4-1.791-4-4V10c0-2.209 1.791-4 4-4h19c2.209 0 4 1.791 4 4v22z\"/><path fill=\"#FFCC4D\" d=\"M30 32c0 2.209-1.791 4-4 4H9c-2.209 0-4-1.791-4-4V12c0-2.209 1.791-4 4-4h17.335C28.544 8 30 9.456 30 11.665V32z\"/><path fill=\"#F4900C\" d=\"M9 6C7.312 6 7.269 4.078 8 3.25 8.832 2.309 10.125 2 12.438 2H14V0h-2.719C7.312 0 4 2.5 4 5.375V32c0 2.209 1.791 4 4 4h2V6H9z\"/><path fill=\"#662113\" d=\"M8.542 32.979c0 .702-.667 1.271-1.49 1.271-.822 0-1.489-.569-1.489-1.271 0-.701.667-1.271 1.489-1.271.823 0 1.49.569 1.49 1.271z\"/><path fill=\"#66757F\" d=\"M6.894 32.271c-.48.055-.792.375-1.017.729-.307.485-1.007 1-1.877 1-1.104 0-2-.671-2-1.5S2.896 31 4 31v-1.996C1.833 29.025.083 30.579.083 32.5c0 1.934 1.772 3.5 3.958 3.5 1.854 0 3.347-1.045 3.901-2.569.277-.759-.469-1.224-1.048-1.16z\"/><path fill=\"#662113\" d=\"M8.542 24.979c0 .702-.667 1.271-1.49 1.271-.822 0-1.489-.569-1.489-1.271 0-.701.667-1.271 1.489-1.271.823 0 1.49.569 1.49 1.271z\"/><path fill=\"#66757F\" d=\"M6.894 24.271c-.48.055-.792.375-1.017.729-.307.485-1.007 1-1.877 1-1.104 0-2-.671-2-1.5S2.896 23 4 23v-1.996C1.833 21.025.083 22.579.083 24.5c0 1.934 1.772 3.5 3.958 3.5 1.854 0 3.347-1.045 3.901-2.569.277-.759-.469-1.224-1.048-1.16z\"/><path fill=\"#662113\" d=\"M8.542 16.979c0 .702-.667 1.271-1.49 1.271-.822 0-1.489-.569-1.489-1.271 0-.701.667-1.271 1.489-1.271.823 0 1.49.569 1.49 1.271z\"/><path fill=\"#66757F\" d=\"M6.894 16.271c-.48.055-.792.375-1.017.729-.307.485-1.007 1-1.877 1-1.104 0-2-.671-2-1.5S2.896 15 4 15v-1.996C1.833 13.025.083 14.579.083 16.5c0 1.934 1.772 3.5 3.958 3.5 1.854 0 3.347-1.045 3.901-2.569.277-.759-.469-1.224-1.048-1.16z\"/><path fill=\"#662113\" d=\"M8.542 8.979c0 .702-.667 1.271-1.49 1.271-.822 0-1.489-.569-1.489-1.271 0-.701.667-1.271 1.489-1.271.823 0 1.49.569 1.49 1.271z\"/><path fill=\"#66757F\" d=\"M6.894 8.271c-.48.055-.792.375-1.017.729C5.57 9.485 4.87 10 4 10c-1.104 0-2-.671-2-1.5S2.896 7 4 7V5.004C1.834 5.024.083 6.579.083 8.5c0 1.934 1.772 3.5 3.958 3.5 1.854 0 3.347-1.045 3.901-2.569.277-.759-.469-1.224-1.048-1.16z\"/></svg>";

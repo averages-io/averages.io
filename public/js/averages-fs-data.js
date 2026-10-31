@@ -41,13 +41,137 @@
   // ---------- loading screen ----------
   root.classList.add('fs-wait');
   var css = document.createElement('style');
-  css.textContent = 'html.fs-wait body{visibility:hidden}html.fs-wait::before{content:"";position:fixed;inset:0;z-index:99;background:var(--fs-load-bg,#f4f4f7)}'
-    + 'html[data-theme="dark"].fs-wait::before{background:#16171d}'
-    + 'html.fs-wait::after{content:"";position:fixed;z-index:100;left:50%;top:50%;width:28px;height:28px;margin:-14px 0 0 -14px;border-radius:50%;border:3px solid rgba(110,112,130,.25);border-top-color:var(--accent,#b8352f);animation:fsSpin .8s linear infinite}'
-    + '@keyframes fsSpin{to{transform:rotate(360deg)}}@media (prefers-reduced-motion:reduce){html.fs-wait::after{animation-duration:2.4s}}'
+  // While the data loads (2026-10-30, Martin: no whole-screen loading icon between pages): the top bar and the sidebar
+  // stay, and only the page's own content waits; it then opens with its placeholders and lands (FSX.sync(true)).
+  // Anything that would show this page's sample text until then is hidden too (the class name in the top bar).
+  // The sidebar and top bar come up already drawn (2026-10-30, Martin: "like it is built into the page"): each page
+  // keeps a copy of them as you leave (the classes list, counts, your picture), the next page paints that copy before
+  // its data arrives (the small script build-fs puts after the sidebar), and the browser holds both still while only
+  // the content changes (a view transition between the pages, where the browser has them).
+  // The page skeleton (2026-10-30, Martin: "re-add the page skeleton, tweaked for the new theme"): the page's own
+  // header shows right away, and where its data will go there are shimmer placeholders in the theme's panels
+  // (build-fs puts a call to __fsSkel at the top of each page's .wrap). The real content is laid out but not shown
+  // until it's ready, then the placeholders go and it lands with the page's own animation (syncRun(true)).
+  css.textContent = (page === 'course-hub' ? 'html.fs-wait .crumb strong,html.fs-wait .hub-t h1,' : '') + 'html.fs-wait #syncLabel,html.fs-wait [data-av]:not([data-avk]){visibility:hidden}'
+    + 'html.fs-wait #scroller .wrap>:not(.fs-skel):not(.hub-h){display:none!important}'
+    + 'html:not(.fs-wait) .fs-skel{display:none}'
+    + '.fs-skel{grid-column:1/-1;order:9;display:grid;gap:24px;align-items:start;min-width:0;pointer-events:none;user-select:none}'
+    + '.fs-skel.k-split{grid-template-columns:minmax(0,1fr) clamp(360px,26vw,480px)}'
+    + '.fs-skel.k-nav{grid-template-columns:var(--kw,300px) minmax(0,1fr)}'
+    + '.fs-skel .k-col{display:flex;flex-direction:column;gap:24px;min-width:0}'
+    + '.fs-skel .k-p{display:flex;flex-direction:column;gap:16px;padding:24px;border-radius:24px;background:var(--panel);min-width:0}'
+    + '.fs-skel .k-p.k-tall{min-height:560px}'
+    + '.fs-skel .k-row{display:flex;align-items:center;gap:12px;min-width:0}'
+    + '.fs-skel .k-row.k-line{padding:8px 0;border-top:1px solid color-mix(in srgb,var(--inner) 60%,transparent)}'
+    + '.fs-skel .k-row.k-line:first-of-type{border-top:0}'
+    + '.fs-skel .k-tx{display:flex;flex-direction:column;gap:8px;flex:1;min-width:0}'
+    + '.fs-skel .k-grid{display:grid;gap:12px}'
+    + '.fs-skel .skel-bar{display:block;max-width:100%}'
+    // one soft light that sweeps across every placeholder on the page together, in the theme's own ink (the old bar
+    // was a fixed gray band that split into two tones on wide bars, and looked heavy in dark mode)
+    + ':root:root .skel-bar,html.fs-wait .hub-meta:empty::before,html.fs-wait .hub-logo:empty{background-color:color-mix(in srgb,var(--ink) 8%,transparent)!important;background-image:linear-gradient(100deg,transparent 35%,color-mix(in srgb,var(--ink) 7%,transparent) 50%,transparent 65%)!important;background-size:200% 100%!important;background-repeat:no-repeat!important;background-attachment:fixed!important;animation:fsShimmer 1.6s cubic-bezier(.45,0,.55,1) infinite!important}'
+    + '@keyframes fsShimmer{from{background-position:150% 0}to{background-position:-50% 0}}'
+    + '@media (prefers-reduced-motion:reduce){:root:root .skel-bar{animation:none!important}}'
+    + '@media (max-width:1280px){.fs-skel.k-split{grid-template-columns:minmax(0,1fr)}}'
+    + '@media (max-width:900px){.fs-skel.k-nav{grid-template-columns:minmax(0,1fr)}}'
+    + 'html.fs-wait .hub-meta:empty::before{content:"";display:block}'
+    + 'html.fs-wait .hub-meta:empty::before{width:min(440px,100%);height:16px;margin-top:12px;border-radius:999px}'
+
+    + 'html.fs-boot .app,html.fs-boot .side,html.fs-boot .side *{transition:none!important}'
+    // the shared popups from the Windowed scripts (Add from OneDrive, the Google sign-in notes) read the Windowed
+    // names for colors; here they get this page's, so they follow dark mode and the accent (2026-10-30)
+    + 'html{--panel-bg:var(--field);--panel-inner:var(--panel);--text-dark:var(--ink);--text-muted:var(--ink-2);--text-faint:var(--muted);--border:var(--inner);--accent-dark:var(--accent-hover);--accent-ring:color-mix(in srgb,var(--accent) 35%,transparent)}'
+    + '@view-transition{navigation:auto}'
+    + '::view-transition-old(fs-top),::view-transition-old(fs-side){display:none}'
+    + '::view-transition-new(fs-top),::view-transition-new(fs-side){animation:none}'
+    + '::view-transition-group(fs-top),::view-transition-group(fs-side){animation:none}'
+    + '::view-transition-old(root),::view-transition-new(root){animation-duration:.16s}'
+    + '@media (prefers-reduced-motion:reduce){@view-transition{navigation:none}}'
     + '.fs-fail{position:fixed;inset:0;z-index:101;display:grid;place-items:center;padding:24px;font:600 15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;background:#f4f4f7;color:#17181c;text-align:center}'
     + 'html[data-theme="dark"] .fs-fail{background:#16171d;color:#ecedf5}.fs-fail b{display:block;font-size:20px;margin-bottom:8px}.fs-fail button{margin-top:16px;font:inherit;padding:8px 16px;border-radius:12px;border:0;background:var(--accent,#b8352f);color:#fff;cursor:pointer}';
   (document.head || root).appendChild(css);
+
+  // ---------- the page skeleton ----------
+  window.__fsSkel = function () {
+    var wrap = document.currentScript && document.currentScript.parentNode;
+    if (!wrap || !root.classList.contains('fs-wait') || wrap.querySelector('.fs-skel')) return;
+    var bar = function (w, h, r) { return '<span class="skel-bar" style="width:' + w + ';height:' + (h || 10) + 'px' + (r ? ';border-radius:' + r : '') + '"></span>'; };
+    var fill = function (h, r) { return '<span class="skel-bar" style="flex:1 1 0;min-width:0;height:' + h + 'px;border-radius:' + r + '"></span>'; };
+    var times = function (n, f) { var o = ''; for (var i = 0; i < n; i++) o += f(i); return o; };
+    var W = ['62%', '48%', '70%', '40%', '56%', '66%', '44%', '58%'];
+    var tile = function (n) { return bar(n + 'px', n, Math.round(n / 3.4) + 'px'); };
+    var lines = function (i, a, b) { return '<span class="k-tx">' + bar(a || W[i % 8], 14) + bar(b || W[(i + 3) % 8].replace(/\d+/, function (x) { return Math.round(x * .7); }), 10) + '</span>'; };
+    var row = function (i, right, t) { return '<div class="k-row k-line">' + tile(t || 36) + lines(i) + (right || '') + '</div>'; };
+    var title = function (w) { return bar(w || '180px', 24, '8px'); };
+    var panel = function (inner, cls) { return '<div class="k-p' + (cls ? ' ' + cls : '') + '">' + inner + '</div>'; };
+    var search = function (h) { return bar('100%', h || 40, '14px'); };
+    var col = function (inner) { return '<div class="k-col">' + inner + '</div>'; };
+    var K = {
+      home: ['split', col('<div class="k-tx" style="gap:12px">' + bar('min(420px,80%)', 48, '12px') + bar('160px', 16) + '</div>' + search(52)
+          + '<div class="k-row" style="justify-content:center;flex-wrap:wrap;gap:8px">' + times(5, function (i) { return bar(['110px', '150px', '180px', '140px', '76px'][i], 44, '14px'); }) + '</div>'
+          + panel(title('120px') + times(6, function (i) { return row(i, bar('72px', 16) + bar('76px', 28, '10px') + bar('52px', 12)); })))
+        + col(panel(title('160px') + bar('100%', 88, '16px') + times(8, function (i) { return row(i, bar('48px', 22, '11px')); })))],
+      grades: ['split', col(panel(title('200px') + '<div class="k-row" style="align-items:stretch;gap:24px">' + '<div class="k-tx" style="flex:0 0 240px;gap:16px">' + bar('140px', 64, '14px') + bar('120px', 22, '11px') + '<div class="k-row">' + bar('50%', 72, '16px') + bar('50%', 72, '16px') + '</div></div>' + '<div style="flex:1;min-width:0">' + bar('100%', 240, '16px') + '</div></div>')
+          + panel(title('170px') + search() + times(6, function (i) { return row(i, bar('72px', 16) + bar('52px', 24, '12px') + bar('110px', 28, '8px')); })))
+        + col(panel(title('190px') + times(6, function (i) { return row(i, bar('44px', 28, '8px')); })) + panel(title('190px') + times(3, function (i) { return row(i, bar('52px', 24, '12px')); })))],
+      assignments: ['split', col(panel(title('200px') + '<div class="k-row">' + fill(40, '14px') + bar('120px', 40, '12px') + bar('180px', 40, '12px') + '</div>' + bar('min(480px,100%)', 40, '12px')
+          + times(7, function (i) { return row(i, bar('96px', 32) + bar('84px', 28, '14px') + bar('92px', 36, '12px'), 40); })))
+        + col(panel(title('150px') + '<div class="k-grid" style="grid-template-columns:repeat(5,1fr)">' + times(5, function () { return bar('100%', 104, '16px'); }) + '</div>' + bar('80%', 12))
+          + panel(title('120px') + times(6, function (i) { return row(i, bar('24px', 24, '50%'), 28); })))],
+      calendar: ['split', col(panel('<div class="k-row">' + bar('40px', 40, '12px') + bar('40px', 40, '12px') + bar('180px', 28, '8px') + '<span style="flex:1"></span>' + bar('200px', 40, '12px') + '</div>'
+          + '<div class="k-row">' + fill(40, '14px') + bar('150px', 40, '12px') + bar('340px', 40, '12px') + '</div>'
+          + '<div class="k-grid" style="grid-template-columns:repeat(7,minmax(0,1fr))">' + times(35, function () { return bar('100%', 112, '16px'); }) + '</div>'))
+        + col(panel(title('150px') + times(9, function (i) { return row(i, bar('52px', 12)); })))],
+      courses: ['one', col('<div class="k-row">' + fill(40, '14px') + bar('120px', 40, '12px') + bar('160px', 40, '12px') + '</div>'
+          + panel(bar('100%', 12) + times(6, function (i) { return '<div class="k-row k-line">' + bar('20px', 20, '50%') + tile(28) + lines(i) + bar('72px', 16) + bar('160px', 28, '8px') + bar('120px', 22, '11px') + bar('64px', 22, '11px') + '</div>'; })))],
+      files: ['nav', col(panel(times(3, function (i) { return '<div class="k-row">' + tile(26) + bar(W[i], 12) + '</div>'; }) + bar('100%', 1) + times(7, function (i) { return '<div class="k-row">' + tile(26) + bar(W[i + 2], 12) + '</div>'; })))
+        + col(search(56) + title('140px') + '<div class="k-grid" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr))">' + times(5, function (i) { return '<div class="k-tx">' + bar('100%', 124, '14px') + bar(W[i], 12) + bar('60%', 10) + '</div>'; }) + '</div>'
+          + title('140px') + '<div class="k-grid" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr))">' + times(4, function (i) { return '<div class="k-tx">' + bar('100%', 172, '16px') + bar(W[i + 1], 12) + bar('60%', 10) + '</div>'; }) + '</div>'), '248px'],
+      messages: ['nav', col(panel(search() + bar('220px', 40, '12px') + times(5, function (i) { return row(i, bar('48px', 10), 44); }), 'k-tall')) + col(panel('<div class="k-row">' + tile(44) + lines(0, '140px', '100px') + '</div>' + bar('100%', 1) + times(3, function (i) { return '<div class="k-row" style="justify-content:' + (i === 1 ? 'flex-end' : 'flex-start') + '">' + bar(['56%', '48%', '60%'][i], 56, '18px') + '</div>'; }), 'k-tall')), '380px'],
+      contacts: ['nav', col(panel(search() + bar('320px', 40, '12px') + times(7, function (i) { return row(i, '', 40); }), 'k-tall')) + col(panel('<div class="k-tx" style="align-items:center;gap:12px">' + tile(96) + bar('160px', 24, '8px') + bar('200px', 12) + '<div class="k-row">' + bar('88px', 60, '12px') + bar('88px', 60, '12px') + '</div></div>' + bar('100%', 56, '12px') + bar('100%', 112, '12px'), 'k-tall')), '380px'],
+      settings: ['nav', col(panel(search() + times(7, function (i) { return '<div class="k-row" style="padding:8px 4px">' + tile(24) + lines(i, '96px', '64px') + '</div>'; })))
+        + col(panel(title('160px') + bar('220px', 12) + bar('100%', 104, '16px') + times(4, function (i) { return row(i, bar('120px', 12)); }), 'k-tall')), '300px'],
+      'course-hub': ['split', col(bar('min(560px,100%)', 44, '12px') + panel(title('170px') + times(6, function (i) { return row(i, bar('64px', 22, '11px')); }))) + col(panel(title('150px') + times(5, function (i) { return row(i, ''); })))],
+    };
+    var k = K[page]; if (!k) return;
+    var el = document.createElement('div');
+    el.className = 'fs-skel k-' + k[0]; el.setAttribute('aria-hidden', 'true');
+    if (k[2]) el.style.setProperty('--kw', k[2]);
+    el.innerHTML = k[0] === 'one' ? k[1].replace(/^<div class="k-col">/, '<div class="k-col" style="grid-column:1/-1">') : k[1];
+    wrap.insertBefore(el, wrap.firstChild);
+  };
+
+  // ---------- the sidebar and top bar between pages ----------
+  var potato = function () { try { return JSON.parse(localStorage.getItem('fsmock_potato')) === true; } catch (e) { return false; } };
+  // the two pieces that stay put get their names only while the pages swap (a name all the time would change how the
+  // top bar's popups stack over the sidebar)
+  function vtNames(vt) {
+    var top = document.querySelector('.app > .top'), side = document.getElementById('side');
+    if (!vt || !top || !side) return;
+    if (potato()) { vt.skipTransition(); return; }
+    top.style.viewTransitionName = 'fs-top'; side.style.viewTransitionName = 'fs-side';
+    var off = function () { top.style.viewTransitionName = ''; side.style.viewTransitionName = ''; };
+    vt.finished.then(off, off);
+  }
+  window.addEventListener('pageswap', function (e) { vtNames(e.viewTransition); });
+  window.addEventListener('pagereveal', function (e) { vtNames(e.viewTransition); });
+  // a copy of them as you leave, for the next page (15 seconds; build-fs's script after the sidebar reads it)
+  window.addEventListener('pagehide', function () {
+    try {
+      var app = document.getElementById('app'), side = document.getElementById('side'), cls = document.getElementById('sideClasses');
+      if (!app || !side || root.classList.contains('fs-wait')) return;
+      var av = document.querySelector('.top [data-av]'), ct = {};
+      ['cntAssign', 'cntMsg', 'ntCt'].forEach(function (id) {
+        var el = document.getElementById(id); if (!el) return;
+        ct[id] = { n: el.querySelector('canvas.ink') ? (el.dataset.n || '') : el.textContent.trim(), h: !!el.hidden };
+      });
+      sessionStorage.setItem('averages_fs_chrome', JSON.stringify({
+        at: Date.now(), cls: cls ? cls.innerHTML : '', ct: ct,
+        hold: !app.classList.contains('pinned') && (side.matches(':hover') || side.classList.contains('hold')),
+        av: av ? { c: av.className, s: av.getAttribute('style') || '', t: av.textContent } : null,
+      }));
+    } catch (e) { /* storage off: the next page draws them itself */ }
+  });
 
   // ---------- caches (the Windowed pages' own, so both looks share them) ----------
   var FIVE_MIN = 5 * 60 * 1000;
@@ -94,6 +218,11 @@
   }
   // What each page shows beyond the bundle. Same paths and cache keys as app/lib/extras.ts where they overlap.
   function extrasFor(who) {
+    var x = extrasPlan(), out = {};
+    Object.keys(x).forEach(function (k) { out[k] = extra(k, x[k][0], x[k][1], who); });
+    return out;
+  }
+  function extrasPlan() {
     var now = new Date(), tz = zone(), zq = tz ? '&tz=' + encodeURIComponent(tz) : '';
     var x = { people: ['/data/people', 'people'], updates: ['/data/updates', 'updates'] };
     if (page === 'calendar' || page === 'home') {
@@ -111,9 +240,7 @@
       var hs = ymd(addDays(now, -60)), he = ymd(addDays(now, 120));
       x.hubEvents = ['/data/events?start=' + hs + '&end=' + he + '&course=' + encodeURIComponent(courseQ) + zq, 'events_' + hs + '_' + he + '_' + courseQ];
     }
-    var out = {};
-    Object.keys(x).forEach(function (k) { out[k] = extra(k, x[k][0], x[k][1], who); });
-    return out;
+    return x;
   }
   function settle(p, ms) {
     return new Promise(function (resolve) {
@@ -125,6 +252,10 @@
   // ---------- running the page ----------
   var domReady = new Promise(function (r) { if (document.readyState !== 'loading') r(); else document.addEventListener('DOMContentLoaded', r, { once: true }); });
   function runPage() {
+    // the real page goes back into the layout first, so the page's scripts measure it as it will be shown
+    // (nothing paints in between: this all runs in one go)
+    root.classList.remove('fs-wait');
+    var sk = document.querySelectorAll('.fs-skel'); for (var j = 0; j < sk.length; j++) sk[j].remove();
     var held = document.querySelectorAll('script[type="text/fs-wait"]');
     for (var i = 0; i < held.length; i++) {
       var old = held[i], s = document.createElement('script');
@@ -132,7 +263,6 @@
       s.textContent = old.textContent;
       old.parentNode.replaceChild(s, old);
     }
-    root.classList.remove('fs-wait');
     window.dispatchEvent(new CustomEvent('fs:ready'));
     var said = sget('averages_fs_toast'); if (said) { sdel('averages_fs_toast'); setTimeout(function () { if (typeof window.toast === 'function') window.toast(said); }, 400); }
     setTimeout(touchPush, 1500);
@@ -256,6 +386,53 @@
       try { for (var i = SS.length - 1; i >= 0; i--) { var k = SS.key(i); if (k && k.indexOf('averages_extras_') === 0) SS.removeItem(k); } } catch (e) { /* off */ }
     },
     reload: function () { FSX.refresh(); window.location.reload(); },
+    /**
+     * Sync buttons and the page-open animation (2026-10-30, Martin's sync animations: "it is meant to play the
+     * loading line animation not reload the page"). FSX.sync() asks Schoology again for everything this page shows,
+     * one request each, without reloading. sync.wait(keys) resolves when those requests are back ('bundle', or an
+     * extra: 'files', 'messages', 'updates', 'events', 'people', 'classmates', 'submissions', ...); then that part of
+     * the page lands. The page's drawing code can't take new data in place, so if an answer comes back different from
+     * what's on screen, its part stays as placeholders and, once every request is back, the page reloads into the new
+     * data and opens with the same animation. FSX.sync(true) is the page opening: nothing is asked again, and the parts
+     * land one after another after a short beat, like the Windowed pages. sync.say(text) is the closing toast, or
+     * why it couldn't sync.
+     */
+    sync: function (first) {
+      var S = { first: !!first, changed: false, failed: false };
+      if (first) {
+        var n = 0;
+        S.wait = function () { var d = 260 + Math.min(n++, 8) * 90; return new Promise(function (r) { setTimeout(r, d); }); };
+        S.say = function (t) { return t; };
+        return S;
+      }
+      var me = window.FSD && window.FSD.me, old = (window.FSD && window.FSD.raw) || {}, plan = extrasPlan(), tz = zone(), P = {};
+      // what counts as different: anything but when it was asked, and times only to the hour (answers carry times
+      // worked out when they're asked, so two answers seconds apart never match to the second)
+      var norm = function (v) { try { return JSON.stringify(v, function (k, x) {
+        if (k === 'generatedAt') return undefined;
+        if (typeof x === 'number' && x > 1e12 && x < 1e13) return Math.round(x / 36e5);
+        if (typeof x === 'string' && /^\d{4}-\d\d-\d\dT\d\d:\d\d/.test(x)) return x.slice(0, 13);
+        return x;
+      }); } catch (e) { return ''; } };
+      var ask = function (key, path, store) {
+        P[key] = getJSON(path).then(function (d) { store(d); var same = norm(d) === norm(old[key]); if (!same) { S.changed = true; (S.which = S.which || []).push(key); try { sset('averages_fs_sync_changed', key); } catch (e) {} } return same; },
+          function (err) { if (err && err.signedOut) { window.location.replace('/'); return new Promise(function () {}); } S.failed = true; return true; });
+      };
+      ask('bundle', '/data/bundle' + (tz ? '?tz=' + encodeURIComponent(tz) : ''), function (b) { sset('schoolagy_bundle_cache', JSON.stringify({ at: Date.now(), bundle: b })); });
+      Object.keys(plan).forEach(function (k) { ask(k, plan[k][0], function (d) { sset('averages_extras_' + plan[k][1], JSON.stringify({ at: Date.now(), who: me && me.uid, data: d })); }); });
+      S.wait = function (keys) {
+        var ks = keys === 'all' || !keys ? Object.keys(P) : [].concat(keys).filter(function (k) { return P[k]; });
+        if (!ks.length) ks = ['bundle'];
+        return Promise.all(ks.map(function (k) { return P[k]; })).then(function (same) { return same.every(Boolean) ? undefined : new Promise(function () {}); });
+      };
+      S.say = function (t) { return S.failed ? 'Couldn\u2019t reach Schoology just now. This is what you had.' : t; };
+      S.done = Promise.all(Object.keys(P).map(function (k) { return P[k]; })).then(function () {
+        if (!S.changed) return;
+        sset('averages_fs_toast', 'Up to date. New things came in.');
+        window.location.reload();
+      });
+      return S;
+    },
     /** Refresh buttons: ask Schoology again, then say so on the reloaded page. */
     reloadFresh: function (msg) { sset('averages_fs_toast', msg || 'Up to date.'); FSX.refresh(); window.location.reload(); },
     /** "Synced 3 min ago", from when the API built the bundle. */

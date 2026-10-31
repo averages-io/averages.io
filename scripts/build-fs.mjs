@@ -44,7 +44,7 @@ const SPLASH_FILE = path.resolve(HERE, "../app/lib/splash.ts");
 function splashTag() {
   const src = fs.readFileSync(SPLASH_FILE, "utf8").replace(/^export /gm, "");
   const { SPLASH_CSS, SPLASH_JS } = new Function(src + "\nreturn { SPLASH_CSS, SPLASH_JS };")();
-  const js = SPLASH_JS.replace(/try\{var s=window\.sessionStorage[\s\S]*?start\(\);\}\)\(\);$/, "})();");
+  const js = SPLASH_JS.replace(/try\{var m=\+sessionStorage[\s\S]*?start\(\);\}\)\(\);$/, "})();");
   if (js === SPLASH_JS) throw new Error("splash.ts changed: couldn't take out its first-open start");
   const handoff = "(function(){var t=0;try{t=+sessionStorage.getItem('averages_fs_logo')||0;sessionStorage.removeItem('averages_fs_logo');}catch(e){}" +
     "if(!t||Date.now()-t>15000||!window.__averagesSplash)return;var S=window.__averagesSplash,ready=false,up=false;S.show(8000);" +
@@ -240,6 +240,7 @@ function emit(nodes) {
   for (const n of nodes) {
     if (n.at) { const inner = emit(n.children); if (inner) out += `${n.at} {\n${inner}}\n`; continue; }
     if (!n.sel || n.sel.startsWith("@")) continue;
+    if (/data-theme=["']?dark/.test(n.sel)) continue; // already written for dark mode by hand (2026-10-30): leave it as it is
     const decls = [];
     for (const d of splitTop(n.body, ";")) {
       const k = d.indexOf(":");
@@ -280,6 +281,14 @@ function build() {
   const ver = (f) => crypto.createHash("sha256").update(fs.readFileSync(f)).digest("hex").slice(0, 10);
   const tag = `${SPLASH_TAG}\n<script src="/js/averages-avatar.js?v=${ver(AVATAR_FILE)}"></script>\n<script src="/js/averages-fs.js?v=${ver(JS_FILE)}"></script>\n<script src="/js/averages-fs-data.js?v=${ver(DATA_FILE)}"></script>`;
   let n = 0;
+  const CHROME_JS = `(function(){var d=document,r=d.documentElement,a=d.getElementById('app'),s=d.getElementById('side');if(!a||!s)return;r.classList.add('fs-boot');
+try{var pin=false;try{pin=JSON.parse(localStorage.getItem('fsmock_pinned'))===true}catch(e){}if(pin)a.classList.add('pinned');
+var j=JSON.parse(sessionStorage.getItem('averages_fs_chrome')||'null');if(j&&Date.now()-j.at<15000&&Date.now()>=j.at){
+var c=d.getElementById('sideClasses');if(c&&!c.children.length&&j.cls){c.innerHTML=j.cls;[].forEach.call(c.querySelectorAll('.here,[aria-current]'),function(x){x.classList.remove('here');x.removeAttribute('aria-current')})}
+if(j.av)[].forEach.call(d.querySelectorAll('.top [data-av]'),function(v){v.className=j.av.c;if(j.av.s)v.setAttribute('style',j.av.s);v.textContent=j.av.t;v.setAttribute('data-avk','')});
+for(var k in j.ct){var e=d.getElementById(k);if(e){e.textContent=j.ct[k].n;e.hidden=j.ct[k].h}}
+if(j.hold&&!pin){s.classList.add('hold');var drop=function(ev){var q=s.getBoundingClientRect();if(ev.clientX>q.right||ev.clientX<q.left||ev.clientY<q.top||ev.clientY>q.bottom){s.classList.remove('hold');d.removeEventListener('pointermove',drop)}};d.addEventListener('pointermove',drop)}}}catch(e){}
+requestAnimationFrame(function(){requestAnimationFrame(function(){r.classList.remove('fs-boot')})})})();`;
   for (const file of fs.readdirSync(SRC).filter((f) => f.endsWith(".html")).sort()) {
     let s = fs.readFileSync(path.join(SRC, file), "utf8");
     const styles = [...s.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/g)].map((m) => m[1]).join("\n");
@@ -296,6 +305,15 @@ function build() {
     if (at < 0) throw new Error(`${file}: no <body>`);
     const held = s.slice(at).replace(/<script(\s+id="[^"]*")?>/g, (m, id) => `<script type="text/fs-wait"${id || ""}>`);
     s = s.slice(0, at) + held;
+    // 3b. the sidebar and top bar come up as the last page left them (pinned, open under the pointer, the classes,
+    // counts and picture), before the page's data arrives; averages-fs-data.js keeps the copy (2026-10-30)
+    {
+      const sideAt = s.indexOf('<aside class="side" id="side"'), end = sideAt < 0 ? -1 : s.indexOf("</aside>", sideAt);
+      if (end < 0) throw new Error(`${file}: no sidebar`);
+      s = s.slice(0, end + 8) + `\n<script>${CHROME_JS}</script>` + s.slice(end + 8);
+    }
+    // 3c. the page skeleton, drawn as soon as the page's frame is there (averages-fs-data.js's __fsSkel)
+    s = s.replace(/(<div class="wrap[^"]*">)/, '$1<script>window.__fsSkel&&window.__fsSkel()</script>');
     // 4. dark theme, after the page's own styles
     s = s.replace(/<\/head>/, `<style id="fsDark">\n${darkCss(styles)}</style>\n</head>`);
     s = s.replace(/<title>([^<]*?)\s*Mock<\/title>/, "<title>$1</title>");

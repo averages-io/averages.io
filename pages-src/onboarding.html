@@ -1332,17 +1332,17 @@
   .fs .ob-lay .ob-pv svg { display: block; width: 100%; height: 100%; }
   .fs .ob-thm .lb { display: flex; align-items: center; gap: 8px; padding: 0 4px; font-size: 15px; font-weight: 800; color: var(--ink); }
   .fs .ob-is i { position: absolute; display: block; }
-  .fs .ob-is .lg { left: 8px; top: 7px; width: 9px; height: 9px; border-radius: 3px; background: var(--accent); }
-  .fs .ob-is .nm { left: 22px; top: 10px; width: 24px; height: 3px; border-radius: 2px; background: var(--muted); }
-  .fs .ob-is .av { right: 8px; top: 6px; width: 11px; height: 11px; border-radius: 6px; background: var(--muted); opacity: .5; }
-  .fs .ob-is .rl { left: 7px; top: 28px; width: 8px; height: 50px; background: repeating-linear-gradient(var(--inner) 0 8px, transparent 8px 14px); }
-  .fs .ob-is .sh { left: 24px; top: 22px; right: 0; bottom: 0; border-radius: 10px 0 0 0; background: var(--fs-sheet); }
-  .fs .ob-is .h { left: 34px; top: 32px; width: 54px; height: 8px; border-radius: 2px; background: var(--ink); }
-  .fs .ob-is .c1 { left: 34px; top: 50px; width: calc(66% - 40px); bottom: 0; border-radius: 6px 6px 0 0; background: var(--panel); }
-  .fs .ob-is .c2 { right: 10px; top: 50px; width: calc(34% - 24px); bottom: 0; border-radius: 6px 6px 0 0; background: var(--panel); }
-  .fs .ob-is .l1 { left: 42px; top: 60px; width: 30%; height: 3px; border-radius: 2px; background: var(--muted); opacity: .6; }
-  .fs .ob-is .l2 { left: 42px; top: 70px; width: 30%; height: 3px; border-radius: 2px; background: var(--accent); }
-  .fs .ob-is .l3 { left: 42px; top: 80px; width: 22%; height: 3px; border-radius: 2px; background: var(--muted); opacity: .6; }
+  .fs .ob-is .isp-lg { left: 8px; top: 7px; width: 9px; height: 9px; border-radius: 3px; background: var(--accent); }
+  .fs .ob-is .isp-nm { left: 22px; top: 10px; width: 24px; height: 3px; border-radius: 2px; background: var(--muted); }
+  .fs .ob-is .isp-av { right: 8px; top: 6px; width: 11px; height: 11px; border-radius: 6px; background: var(--muted); opacity: .5; }
+  .fs .ob-is .isp-rl { left: 7px; top: 28px; width: 8px; height: 50px; background: repeating-linear-gradient(var(--inner) 0 8px, transparent 8px 14px); }
+  .fs .ob-is .isp-sh { left: 24px; top: 22px; right: 0; bottom: 0; border-radius: 10px 0 0 0; background: var(--fs-sheet); }
+  .fs .ob-is .isp-h { left: 34px; top: 32px; width: 54px; height: 8px; border-radius: 2px; background: var(--ink); }
+  .fs .ob-is .isp-c1 { left: 34px; top: 50px; width: calc(66% - 40px); bottom: 0; border-radius: 6px 6px 0 0; background: var(--panel); }
+  .fs .ob-is .isp-c2 { right: 10px; top: 50px; width: calc(34% - 24px); bottom: 0; border-radius: 6px 6px 0 0; background: var(--panel); }
+  .fs .ob-is .isp-l1 { left: 42px; top: 60px; width: 30%; height: 3px; border-radius: 2px; background: var(--muted); opacity: .6; }
+  .fs .ob-is .isp-l2 { left: 42px; top: 70px; width: 30%; height: 3px; border-radius: 2px; background: var(--accent); }
+  .fs .ob-is .isp-l3 { left: 42px; top: 80px; width: 22%; height: 3px; border-radius: 2px; background: var(--muted); opacity: .6; }
   .fs .ob-thm .lb svg.i { width: 18px; height: 18px; color: var(--ink-2); }
   .fs .ob-sws { display: flex; flex-wrap: wrap; gap: 12px; padding: 16px; border-radius: 18px; background: var(--field); }
   .fs .ob-swb { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: var(--c); color: #ffffff; transition: box-shadow 0.15s ease; }
@@ -3347,7 +3347,7 @@
           `<button class="ob-opt" type="button" data-fs-lay="${v}" aria-pressed="${v === 'fullscreen'}"><b>${t}</b><small>${sub}</small></button>`).join('');
         // The Fullscreen themes (2026-10-30): IS (Industry Standard) for now; more will join it here.
         $('fsSkins').innerHTML = FS_SKINS.map(([v, t, full]) =>
-          `<button class="ob-thm ob-skin" type="button" data-fs-skin="${v}" aria-pressed="${fsSkin === v}"><span class="ob-pv ob-is" aria-hidden="true"><i class="lg"></i><i class="nm"></i><i class="av"></i><i class="rl"></i><i class="sh"></i><i class="h"></i><i class="c1"></i><i class="c2"></i><i class="l1"></i><i class="l2"></i><i class="l3"></i></span><span class="lb">${t}<small>${full}</small></span></button>`).join('');
+          `<button class="ob-thm ob-skin" type="button" data-fs-skin="${v}" aria-pressed="${fsSkin === v}"><span class="ob-pv ob-is" aria-hidden="true"><i class="isp-lg"></i><i class="isp-nm"></i><i class="isp-av"></i><i class="isp-rl"></i><i class="isp-sh"></i><i class="isp-h"></i><i class="isp-c1"></i><i class="isp-c2"></i><i class="isp-l1"></i><i class="isp-l2"></i><i class="isp-l3"></i></span><span class="lb">${t}<small>${full}</small></span></button>`).join('');
         const th = currentTheme();
         $('fsThms').innerHTML = [['light', 'Light', 'sun'], ['dark', 'Dark', 'moon'], ['auto', 'System', 'window']].map(([v, t, ic]) =>
           `<button class="ob-mode" type="button" data-fs-thm="${v}" aria-pressed="${th === v}">${ico(ic)}${t}</button>`).join('');
@@ -3355,7 +3355,11 @@
         $('fsSws').innerHTML = ACCENTS.map(([k, n, c]) => `<button class="ob-swb" type="button" style="--c:${c}" data-fs-acc="${c}" aria-pressed="${a === c}" aria-label="${n}" title="${n}">${ico('ok')}</button>`).join('');
       }
       $('fsSkins').addEventListener('click', e => { const b = e.target.closest('[data-fs-skin]'); if (!b) return; fsSkin = b.dataset.fsSkin; lookDraw(); const again = $('fsSkins').querySelector(`[data-fs-skin="${fsSkin}"]`); if (again) again.focus({ preventScroll: true }); });
-      $('fsLays').addEventListener('click', e => { const b = e.target.closest('[data-fs-lay]'); if (b && b.dataset.fsLay === 'windowed') leave(); });
+      $('fsLays').addEventListener('click', e => {
+        const b = e.target.closest('[data-fs-lay]'); if (!b || b.dataset.fsLay !== 'windowed') return;
+        const logo = window.__averagesSplash; if (logo && logo.show) logo.show(1000); // both ways get the logo (2026-10-30)
+        leave();
+      });
       $('fsThms').addEventListener('click', e => { const b = e.target.closest('[data-fs-thm]'); if (!b) return; setTheme(b.dataset.fsThm); lookDraw(); const again = $('fsThms').querySelector(`[data-fs-thm="${b.dataset.fsThm}"]`); if (again) again.focus({ preventScroll: true }); });
       $('fsSws').addEventListener('click', e => {
         const b = e.target.closest('[data-fs-acc]'); if (!b) return;

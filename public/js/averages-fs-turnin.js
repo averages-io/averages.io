@@ -50,8 +50,9 @@
     });
   }
   // Tokens: asked for inside the click (a sign-in window may open), before anything is awaited.
-  function driveToken() {
+  function driveToken(quiet) {
     var c = C(); if (!c) return Promise.reject({ code: 'not_ready' });
+    if (quiet) return c.googleSession({ interactive: false }); // no window: only a sign-in this tab already has
     if (!c.googleReady()) { c.prepareGoogle().catch(function () {}); return Promise.reject({ code: 'not_ready' }); }
     return c.googleSession({ interactive: true });
   }
@@ -63,7 +64,7 @@
       return r.json().catch(function () { return {}; }).then(function (j) { if (!r.ok) throw { code: (j && j.error) || 'http_' + r.status }; return j; });
     });
   }
-  function oneDriveToken(write) { var c = C(); if (!c) return Promise.reject({ code: 'not_ready' }); return c.oneDriveToken(write ? { interactive: true, write: true } : { interactive: true, read: true }); }
+  function oneDriveToken(write, quiet) { var c = C(); if (!c) return Promise.reject({ code: 'not_ready' }); return c.oneDriveToken(write ? { interactive: true, write: true } : { interactive: !quiet, read: true }); }
 
   var FST = window.FST = {
     ready: function () { return Promise.all([S(), Cl()]); },
@@ -92,28 +93,31 @@
     /**
      * An app's files for the picker: [{ id, name, kind, sub, mime, designId }]. Call it inside the click (a
      * sign-in window may open). kind: gdoc / gsheet / gslides / gdraw / design, or the file's extension.
+     * thumb: the app's own preview picture (Google Drive, Canva), when it has one. opts.quiet: no sign-in window,
+     * for loading in the background when the page opens.
      */
-    list: function (src) {
+    list: function (src, opts) {
+      var quiet = !!(opts && opts.quiet);
       if (src === 'canva') {
         return get('/canva/designs').then(function (j) {
           if (j.connected === false) throw { code: 'canva_not_connected' };
           return (Array.isArray(j.items) ? j.items : []).filter(function (d) { return d && /^[A-Za-z0-9_-]{1,64}$/.test(String(d.id || '')); })
-            .map(function (d) { return { id: String(d.id), designId: String(d.id), name: String(d.title || 'Untitled design').slice(0, 200), kind: 'design', sub: ago(Number(d.updatedAt) || 0) || 'Canva design', at: Number(d.updatedAt) || 0, bytes: 0, url: '' }; });
+            .map(function (d) { return { id: String(d.id), designId: String(d.id), name: String(d.title || 'Untitled design').slice(0, 200), kind: 'design', sub: ago(Number(d.updatedAt) || 0) || 'Canva design', at: Number(d.updatedAt) || 0, bytes: 0, url: '', thumb: /^https:\/\//i.test(String(d.thumbnailUrl || '')) ? String(d.thumbnailUrl) : '' }; });
         }).catch(function (e) { if (e && (e.code === 'canva_not_connected' || e.code === 'canva_reconnect_needed')) throw { code: 'not_connected' }; throw e; });
       }
       if (!FST.connected(src)) return Promise.reject({ code: 'not_connected' });
       var c = C();
       if (src === 'drive') {
-        return driveToken().then(function (t) { return c.googleList(t); }).then(function (l) {
+        return driveToken(quiet).then(function (t) { return c.googleList(t); }).then(function (l) {
           return (l || []).filter(function (f) { return f && f.id && f.mimeType !== 'application/vnd.google-apps.folder'; }).map(function (f) {
-            var kind = GDOC[f.mimeType] || extOf(f.name) || 'file';
-            return { id: String(f.id), name: String(f.name || 'Google Drive file').slice(0, 200), kind: kind, mime: String(f.mimeType || ''), sub: ago(Date.parse(f.modifiedTime || '')), at: Date.parse(f.modifiedTime || '') || 0, bytes: Number(f.size) || 0, url: /^https:\/\/(docs|drive)\.google\.com\//.test(String(f.webViewLink || '')) ? String(f.webViewLink) : '' };
+            var kind = GDOC[f.mimeType] || extOf(f.name) || 'file', th = String(f.thumbnailLink || '');
+            return { thumb: /^https:\/\/[a-z0-9-]+\.googleusercontent\.com\//i.test(th) ? th : '', id: String(f.id), name: String(f.name || 'Google Drive file').slice(0, 200), kind: kind, mime: String(f.mimeType || ''), sub: ago(Date.parse(f.modifiedTime || '')), at: Date.parse(f.modifiedTime || '') || 0, bytes: Number(f.size) || 0, url: /^https:\/\/(docs|drive)\.google\.com\//.test(String(f.webViewLink || '')) ? String(f.webViewLink) : '' };
           });
         });
       }
-      return oneDriveToken(false).then(function (t) { return c.oneDriveList(t); }).then(function (l) {
+      return oneDriveToken(false, quiet).then(function (t) { return c.oneDriveList(t); }).then(function (l) {
         return (l || []).filter(function (f) { return f && f.id && !f.folder; }).map(function (f) {
-          return { id: String(f.id), name: String(f.name || 'OneDrive file').slice(0, 200), kind: extOf(f.name) || 'file', mime: String((f.file && f.file.mimeType) || f.mimeType || ''), sub: [size(f.size), ago(Date.parse(f.lastModifiedDateTime || ''))].filter(Boolean).join(' · '), at: Date.parse(f.lastModifiedDateTime || '') || 0, bytes: Number(f.size) || 0, url: /^https:\/\/[a-z0-9.-]+\.(live\.com|sharepoint\.com|1drv\.ms)\//i.test(String(f.webUrl || '')) ? String(f.webUrl) : '' };
+          return { id: String(f.id), name: String(f.name || 'OneDrive file').slice(0, 200), kind: extOf(f.name) || 'file', mime: String((f.file && f.file.mimeType) || f.mimeType || ''), sub: [size(f.size), ago(Date.parse(f.lastModifiedDateTime || ''))].filter(Boolean).join(' · '), at: Date.parse(f.lastModifiedDateTime || '') || 0, bytes: Number(f.size) || 0, url: /^https:\/\/([a-z0-9-]+\.)*(live\.com|sharepoint\.com|1drv\.ms|microsoftpersonalcontent\.com|onedrive\.com|office\.com|cloud\.microsoft)\//i.test(String(f.webUrl || '')) ? String(f.webUrl) : '' };
         });
       });
     },

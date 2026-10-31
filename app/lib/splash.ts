@@ -63,6 +63,9 @@ export const SPLASH_JS =
   "d.style.setProperty('--av-dx',(Math.cos(a)*rr).toFixed(1)+'px');d.style.setProperty('--av-dy',(Math.sin(a)*rr*sq(n)+6).toFixed(1)+'px');requestAnimationFrame(fr);}" +
   "requestAnimationFrame(fr);}" +
   "api.show=start;" +
+  // coming from Fullscreen (its Windowed button leaves averages_mode_logo in this tab): up from the first paint until the
+  // page is ready, like the first open (2026-10-30)
+  "try{var m=+sessionStorage.getItem('averages_mode_logo')||0;if(m){sessionStorage.removeItem('averages_mode_logo');if(Date.now()-m<15000){start();return;}}}catch(e){}" +
   // the first open of a tab with nothing saved yet (and onboarding until it's finished): up until the page has its data
   "try{var s=window.sessionStorage,ob=location.pathname.replace(/\\/$/,'')==='/onboard'&&localStorage.getItem('schoolagy_onboarded')!=='1';if(s.getItem('schoolagy_bundle_cache')||(s.getItem('" + SPLASH_KEY + "')&&!ob))return;s.setItem('" + SPLASH_KEY + "','1');}catch(e){return;}" +
   "start();})();";

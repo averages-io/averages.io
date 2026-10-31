@@ -21,9 +21,9 @@
     --punch-a: #ff7a50; --punch-b: #e5484d;
     --today: #2f5fb3;
     --focus: #2f5fb3;
-    --good: #2e7d4f;
-    --warn: #8f6200;
-    --bad: #b8352f;
+    --good: #22663f;
+    --warn: #7a5400;
+    --bad: #a12d28;
     --series: #3e64b0;
     --series-soft: rgba(62,100,176,.14);
     --mark: rgba(229,72,77,.18);
@@ -94,7 +94,9 @@
   .quick-l { order: -1; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); line-height: 1; padding-right: 8px; border-right: 2px solid #c6c6cc; height: 24px; display: flex; align-items: center; }
   .top .me { width: 40px; height: 40px; border-radius: 50%; flex: none; margin-left: 8px; }
   .top .me { position: relative; }
-  .top .me .gear { position: absolute; right: 0; bottom: 0; width: 18px; height: 18px; border-radius: 50%; background: var(--field); box-shadow: 0 0 0 2px var(--frame); display: grid; place-items: center; color: #66757f; }
+  /* two initials stay clear of the gear (2026-10-30) */
+  .top .me .av { font-size: 14px; letter-spacing: -.02em; }
+  .top .me .gear { position: absolute; right: -4px; bottom: -4px; width: 18px; height: 18px; border-radius: 50%; background: var(--field); box-shadow: 0 0 0 2px var(--frame); display: grid; place-items: center; color: #66757f; }
   .top .me .gear svg.i { width: 12px; height: 12px; display: block; }
   .top .me:hover .gear, .me[aria-expanded="true"] .gear { color: var(--ink); }
   .top .me[aria-expanded="true"] .av { box-shadow: 0 0 0 2px var(--frame), 0 0 0 4px var(--ink-2); }
@@ -136,7 +138,7 @@
     font-style: normal; font-size: 12px; font-weight: 800; line-height: 1; letter-spacing: 0; color: #ffffff; }
   /* the number is nudged so its ink sits dead center (see centerInk), whatever font is showing */
   .nav .count canvas.ink, .grp em canvas.ink { display: block; flex: none; margin: 0 -4px; }
-  .ink-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .ink-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; text-overflow: ellipsis; }
   .nav .count { margin-left: auto; background: var(--accent); }
   .nav .side-kbd { margin-left: auto; font-size: 11px; line-height: 20px; padding: 0 4px; background: var(--inner); color: var(--muted); }
   .nav a:hover .side-kbd { background: var(--field); }
@@ -151,7 +153,7 @@
   .nav a .pip { position: absolute; left: 30px; top: 9px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 2px var(--frame); transition: opacity .12s ease; }
   .side:hover .pip, .side.hold .pip, .side:has(:focus-visible) .pip, .app.pinned .side .pip { opacity: 0; }
   .divider { height: 2px; border-radius: 1px; background: var(--inner); margin: 12px 16px; }
-  .side-h { display: flex; align-items: center; justify-content: space-between; height: 32px; padding: 0 8px 0 20px; color: var(--muted); font-size: 13px; font-weight: 800; width: 100%; overflow: hidden; white-space: nowrap; }
+  .side-h { display: flex; align-items: center; justify-content: space-between; height: 32px; padding: 0 8px 0 20px; color: var(--muted); font-size: 13px; font-weight: 800; width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
   .side-h .ibtn { width: 32px; height: 32px; }
   /* "Your classes" only takes room while the sidebar is open. Closed, the class icons sit right under the divider;
      opening, they slide down and a little right (a diagonal) to make room for the label, in time with the rail widening */
@@ -164,7 +166,10 @@
   .side > .nav, .side > .divider, .side > .side-h, .side > .foot { flex: none; }
   .side > .cls > * { flex: none; }
   /* no scrollbar here: it would take width and push the class icons off center. The fade at the bottom shows there's more. */
-  .side > .cls { flex: 1 1 0; min-height: 88px; overflow: hidden auto; overscroll-behavior: contain; scrollbar-width: none; }
+  /* the whole sidebar scrolls (2026-10-30, Martin: "not just the tiny courses section"); the class list is as tall as it needs */
+  .side > .cls { flex: none; min-height: 0; overflow: visible; }
+  .side { overscroll-behavior: contain; scrollbar-width: none; }
+  .side::-webkit-scrollbar { display: none; }
   .side > .cls::-webkit-scrollbar { display: none; }
   .side > .cls.cls-more { -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 24px), transparent); mask-image: linear-gradient(to bottom, #000 calc(100% - 24px), transparent); }
   @media (max-height: 780px) {
@@ -173,11 +178,11 @@
     .divider { margin: 8px 16px; }
     .side .foot { padding: 8px 12px; }
   }
-  .cls a { display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px 0 8px; border-radius: 12px; color: var(--ink-2); font-weight: 700; overflow: hidden; white-space: nowrap; }
+  .cls a { display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px 0 8px; border-radius: 12px; color: var(--ink-2); font-weight: 700; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
   .cls a:hover, .cls a[aria-expanded="true"] { background: var(--inner); color: var(--ink); }
   .cls .g { margin-left: auto; font-size: 13px; font-weight: 800; white-space: nowrap; }
   .cls .g small { color: var(--muted); font-size: 12px; font-weight: 700; margin-left: 4px; font-variant-numeric: tabular-nums; }
-  .side .foot { margin-top: auto; padding: 12px; display: flex; align-items: center; gap: 8px; width: 100%; overflow: hidden; white-space: nowrap; }
+  .side .foot { margin-top: auto; padding: 12px; display: flex; align-items: center; gap: 8px; width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
   .side .foot .ibtn { width: 40px; flex: none; }
   .side .foot span { color: var(--muted); font-weight: 700; font-size: 13px; }
   .side .foot .pin-close, .app.pinned .side .foot .pin-open { display: none; }
@@ -228,7 +233,7 @@
   .chip.chip-c .emo { width: 24px; height: 24px; display: grid; place-items: center; flex: none; }
   .chip.chip-c .emo svg { width: 22px; height: 22px; }
   .chip.chip-c .lab { display: block; max-width: 0; opacity: 0; overflow: hidden; white-space: nowrap; margin-left: 0;
-    transition: max-width .36s cubic-bezier(.22, .61, .36, 1), margin-left .36s cubic-bezier(.22, .61, .36, 1), opacity .2s ease .06s; }
+    transition: max-width .36s cubic-bezier(.22, .61, .36, 1), margin-left .36s cubic-bezier(.22, .61, .36, 1), opacity .2s ease .06s; text-overflow: ellipsis; }
   .chip.chip-c:hover .lab, .chip.chip-c:focus-visible .lab { max-width: 200px; opacity: 1; margin-left: 8px; }
   /* potato mode: no reveal animation, so class shortcuts always show their name */
   .potato-mode .chip.chip-c .lab { transition: none; max-width: 200px; opacity: 1; margin-left: 8px; }
@@ -554,7 +559,7 @@
   .trend.down { background: color-mix(in srgb, var(--bad) 14%, var(--panel)); color: var(--bad); }
   .trend.flat { background: var(--inner); color: var(--ink); }
   .trend:hover, .trend[aria-expanded="true"] { filter: brightness(.94); }
-  .trend .tp { font-size: 13px; font-weight: 700; color: var(--muted); }
+  .trend .tp { font-size: 13px; font-weight: 700; color: var(--ink-2); }
   .trend .arrow { display: inline-flex; align-self: center; }
   .trend.flat .arrow { color: var(--muted); }
   /* every arrow draws at the same on-screen weight as an 18px icon at 1.75 (31.5 / size) */
@@ -676,7 +681,7 @@
   .chg.up { color: var(--good); background: color-mix(in srgb, var(--good) 13%, var(--field)); }
   .chg.down { color: var(--bad); background: color-mix(in srgb, var(--bad) 11%, var(--field)); }
   .dt .none { color: #a9a9b3; }
-  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; text-overflow: ellipsis; }
   @media (max-width: 680px) {
     .modal-wrap { padding: 0; place-items: end stretch; }
     .modal { max-height: 92vh; border-radius: 24px 24px 0 0; }
@@ -1130,6 +1135,8 @@
   .chip svg.i { color: var(--chip-c, var(--ink-2)); }
   .chip:nth-child(5n + 1) { --chip-c: var(--warm-a); } .chip:nth-child(5n + 2) { --chip-c: var(--sky); } .chip:nth-child(5n + 3) { --chip-c: var(--mint); } .chip:nth-child(5n + 4) { --chip-c: var(--grape); } .chip:nth-child(5n + 5) { --chip-c: #c98a00; }
   /* sticker tags: New pops off the page a little */
+  /* dark mode only (2026-10-30): dark letters on a deeper yellow (white on yellow was about 1.4:1), and the paper ring in the card's dark */
+  html[data-theme="dark"] body .newtag { background: #e0aa2e !important; color: #1f1604 !important; box-shadow: 0 0 0 2px var(--field), 0 3px 8px -2px rgba(0, 0, 0, .55); }
   .newtag { background: var(--sun) !important; color: var(--ink) !important; border-radius: 8px; transform: translate(var(--tx, 0px), var(--ty, 0px)) rotate(var(--tilt, -4deg)); box-shadow: 0 0 0 2px var(--field), 0 3px 8px -2px rgba(20, 21, 31, .25); will-change: transform; backface-visibility: hidden; } /* always drawn on its own layer, so hovering a row never redraws the text thinner or bolder */
   .wrap { position: relative; isolation: isolate; }
   /* empty states get a doodle */
@@ -1654,7 +1661,7 @@
   .ti-step.done .ti-track i { width: 100%; }
   .ti-step.ok .ti-track i { background: var(--good); transition: background .25s ease; }
   .ti-step.ok:nth-child(2) .ti-track i { transition-delay: .06s; } .ti-step.ok:nth-child(3) .ti-track i { transition-delay: .12s; } .ti-step.ok:nth-child(4) .ti-track i { transition-delay: .18s; } .ti-step.ok:nth-child(5) .ti-track i { transition-delay: .24s; }
-  .ti-slab { display: flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 800; color: var(--muted); white-space: nowrap; overflow: hidden; }
+  .ti-slab { display: flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 800; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .ti-step.now .ti-slab, .ti-step.done .ti-slab { color: var(--ink); }
   .ti-step.ok .ti-slab { color: var(--good); }
   .ti-si { width: 13px; height: 13px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; }
@@ -2175,7 +2182,7 @@
   .aw-fact small { font-size: 12px; font-weight: 700; color: var(--muted); }
   .aw-fact.bad { background: color-mix(in srgb, var(--bad) 10%, var(--panel)); color: var(--bad); }
   .aw-fact.ok { background: color-mix(in srgb, var(--good) 12%, var(--panel)); color: var(--good); }
-  .aw-fact.ga { color: var(--good); } .aw-fact.gb { color: #9a6a00; } .aw-fact.gc { color: var(--bad); }
+  .aw-fact.ga { color: var(--good); } .aw-fact.gb { color: #7a5400; } .aw-fact.gc { color: var(--bad); }
   .aw-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 24px; align-items: start; }
   .aw-h { display: flex; align-items: baseline; gap: 8px; margin: 0 0 12px; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
   .aw-h span { letter-spacing: 0; text-transform: none; font-size: 12px; font-weight: 700; }
@@ -2313,7 +2320,7 @@
   .up-card.grade { grid-template-columns: auto minmax(0, 1fr) auto; padding: 12px 16px 12px 12px; font: inherit; }
   .up-card.grade .up-cb { padding: 0 12px; }
   .up-gr { width: 52px; height: 52px; border-radius: 14px; display: grid; place-items: center; background: var(--panel); font-family: var(--display); font-style: italic; font-size: 26px; font-weight: 900; transform: rotate(-3deg); }
-  .up-gr.ga { color: var(--good); } .up-gr.gb { color: #9a6a00; } .up-gr.gc { color: var(--bad); }
+  .up-gr.ga { color: var(--good); } .up-gr.gb { color: #7a5400; } .up-gr.gc { color: var(--bad); }
   .up-gs { display: flex; flex-direction: column; align-items: flex-end; font-size: 15px; font-weight: 900; font-variant-numeric: tabular-nums; white-space: nowrap; }
   .up-gs small { font-size: 12px; font-weight: 700; color: var(--muted); }
   .up-poll { display: flex; flex-direction: column; gap: 8px; padding: 16px; border-radius: 16px; background: var(--field); }
@@ -3020,29 +3027,29 @@
   /* Appearance (2026-10-30, Martin's design): Window as two plain buttons, the Fullscreen Theme as cards with a preview,
      Mode as a compact row of three. Picked = an ink ring, the same as onboarding. */
   .sg-opts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-  .sg-opt { display: flex; flex-direction: column; justify-content: center; gap: 2px; min-height: 64px; padding: 10px 16px; border-radius: 16px; background: var(--field); text-align: left; color: var(--ink); transition: box-shadow .15s ease; }
+  .sg-opt { display: flex; flex-direction: column; justify-content: center; gap: 2px; min-height: 64px; padding: 8px 16px; border-radius: 16px; background: var(--field); text-align: left; color: var(--ink); transition: box-shadow .15s ease; }
   .sg-opt b { font-size: 15px; font-weight: 800; }
   .sg-opt small { font-size: 13px; font-weight: 600; color: var(--muted); }
   .sg-skins { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-  .sg-skin { display: flex; flex-direction: column; gap: 8px; padding: 6px 6px 10px; border-radius: 14px; background: var(--field); text-align: left; color: var(--ink); transition: box-shadow .15s ease; }
+  .sg-skin { display: flex; flex-direction: column; gap: 8px; padding: 8px 8px 12px; border-radius: 14px; background: var(--field); text-align: left; color: var(--ink); transition: box-shadow .15s ease; }
   .sg-skin .lb { display: flex; align-items: baseline; gap: 8px; padding: 0 4px; }
   .sg-skin .lb b { font-size: 15px; font-weight: 800; }
   .sg-skin .lb small { font-size: 12px; font-weight: 600; color: var(--muted); }
   .sg-is { position: relative; display: block; height: 88px; border-radius: 9px; overflow: hidden; background: var(--frame); }
   .sg-is i { position: absolute; display: block; }
-  .sg-is .lg { left: 7px; top: 6px; width: 8px; height: 8px; border-radius: 2px; background: var(--accent); }
-  .sg-is .nm { left: 19px; top: 9px; width: 22px; height: 3px; border-radius: 2px; background: var(--muted); }
-  .sg-is .av { right: 7px; top: 5px; width: 10px; height: 10px; border-radius: 5px; background: var(--muted); opacity: .5; }
-  .sg-is .rl { left: 6px; top: 24px; width: 7px; height: 40px; background: repeating-linear-gradient(var(--inner) 0 7px, transparent 7px 12px); }
-  .sg-is .sh { left: 20px; top: 19px; right: 0; bottom: 0; border-radius: 9px 0 0 0; background: var(--sheet); }
-  .sg-is .h { left: 28px; top: 27px; width: 46px; height: 7px; border-radius: 2px; background: var(--ink); }
-  .sg-is .c1 { left: 28px; top: 42px; width: calc(66% - 34px); bottom: 0; border-radius: 5px 5px 0 0; background: var(--panel); }
-  .sg-is .c2 { right: 8px; top: 42px; width: calc(34% - 20px); bottom: 0; border-radius: 5px 5px 0 0; background: var(--panel); }
-  .sg-is .l1 { left: 34px; top: 50px; width: 30%; height: 3px; border-radius: 2px; background: var(--muted); opacity: .6; }
-  .sg-is .l2 { left: 34px; top: 59px; width: 30%; height: 3px; border-radius: 2px; background: var(--accent); }
-  .sg-is .l3 { left: 34px; top: 68px; width: 22%; height: 3px; border-radius: 2px; background: var(--muted); opacity: .6; }
+  .sg-is .isp-lg { left: 7px; top: 6px; width: 8px; height: 8px; border-radius: 2px; background: var(--accent); }
+  .sg-is .isp-nm { left: 19px; top: 9px; width: 22px; height: 3px; border-radius: 2px; background: var(--muted); }
+  .sg-is .isp-av { right: 7px; top: 5px; width: 10px; height: 10px; border-radius: 5px; background: var(--muted); opacity: .5; }
+  .sg-is .isp-rl { left: 6px; top: 24px; width: 7px; height: 40px; background: repeating-linear-gradient(var(--inner) 0 7px, transparent 7px 12px); }
+  .sg-is .isp-sh { left: 20px; top: 19px; right: 0; bottom: 0; border-radius: 9px 0 0 0; background: var(--sheet); }
+  .sg-is .isp-h { left: 28px; top: 27px; width: 46px; height: 7px; border-radius: 2px; background: var(--ink); }
+  .sg-is .isp-c1 { left: 28px; top: 42px; width: calc(66% - 34px); bottom: 0; border-radius: 5px 5px 0 0; background: var(--panel); }
+  .sg-is .isp-c2 { right: 8px; top: 42px; width: calc(34% - 20px); bottom: 0; border-radius: 5px 5px 0 0; background: var(--panel); }
+  .sg-is .isp-l1 { left: 34px; top: 50px; width: 30%; height: 3px; border-radius: 2px; background: var(--muted); opacity: .6; }
+  .sg-is .isp-l2 { left: 34px; top: 59px; width: 30%; height: 3px; border-radius: 2px; background: var(--accent); }
+  .sg-is .isp-l3 { left: 34px; top: 68px; width: 22%; height: 3px; border-radius: 2px; background: var(--muted); opacity: .6; }
   .sg-modes { display: flex; flex-wrap: wrap; gap: 8px; }
-  .sg-mode { display: flex; align-items: center; gap: 6px; height: 40px; padding: 0 12px; border-radius: 12px; background: var(--panel); color: var(--ink); font-size: 14px; font-weight: 800; transition: box-shadow .15s ease, background-color .15s ease; }
+  .sg-mode { display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 12px; border-radius: 12px; background: var(--panel); color: var(--ink); font-size: 14px; font-weight: 800; transition: box-shadow .15s ease, background-color .15s ease; }
   .sg-mode svg.i { width: 16px; height: 16px; color: var(--ink-2); }
   .sg-opt:hover, .sg-skin:hover { box-shadow: inset 0 0 0 2px var(--inner); }
   .sg-mode:hover { background: var(--inner); }
@@ -4232,7 +4239,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       const potato = document.body.classList.contains('potato-mode'), rm = matchMedia('(prefers-reduced-motion: reduce)').matches;
       return `
       ${sec('Window', `<div class="sg-opts" role="group" aria-label="Window" data-set="layout">${[['windowed', 'Windowed', 'A window over your own background.'], ['full', 'Fullscreen', 'Uses the whole screen. Our new look.']].map(([v, t, d]) => `<button class="sg-opt" data-seg="layout" data-v="${v}" aria-pressed="${SG.layout === v}"><b>${t}</b><small>${d}</small></button>`).join('')}</div>`)}
-      ${sec('Theme', `<div class="sg-skins" role="group" aria-label="Theme" data-set="fstheme">${FS_SKINS.map(([v, t, full]) => `<button class="sg-skin" data-seg="skin" data-v="${v}" aria-pressed="${SG.skin === v}"><span class="sg-is" aria-hidden="true"><i class="lg"></i><i class="nm"></i><i class="av"></i><i class="rl"></i><i class="sh"></i><i class="h"></i><i class="c1"></i><i class="c2"></i><i class="l1"></i><i class="l2"></i><i class="l3"></i></span><span class="lb"><b>${t}</b><small>${full}</small></span></button>`).join('')}</div>`)}
+      ${sec('Theme', `<div class="sg-skins" role="group" aria-label="Theme" data-set="fstheme">${FS_SKINS.map(([v, t, full]) => `<button class="sg-skin" data-seg="skin" data-v="${v}" aria-pressed="${SG.skin === v}"><span class="sg-is" aria-hidden="true"><i class="isp-lg"></i><i class="isp-nm"></i><i class="isp-av"></i><i class="isp-rl"></i><i class="isp-sh"></i><i class="isp-h"></i><i class="isp-c1"></i><i class="isp-c2"></i><i class="isp-l1"></i><i class="isp-l2"></i><i class="isp-l3"></i></span><span class="lb"><b>${t}</b><small>${full}</small></span></button>`).join('')}</div>`)}
       ${grp('Colors',
         `<div class="sg-row wrapr" data-set="theme">${tx('Mode', SG.theme === 'auto' ? 'Follows your device: light or dark to match it.' : 'Light, dark, or follow your device.')}<div class="sg-modes" role="group" aria-label="Mode">${[['light', 'Light', 'sun'], ['dark', 'Dark', 'moon'], ['auto', 'System', 'window']].map(([v, t, ic]) => `<button class="sg-mode" data-seg="theme" data-v="${v}" aria-pressed="${SG.theme === v}">${ico(ic)}${t}</button>`).join('')}</div></div>` +
         `<div class="sg-row wrapr" data-set="accent">${tx('Accent color', 'Buttons, highlights and the page you\'re on.')}<div class="sg-sws" role="group" aria-label="Accent color">${ACCENTS.map(([k, n, c]) => `<button class="sg-swb" style="--c:${c}" data-accent="${k}" aria-pressed="${SG.accent === k}" aria-label="${n}" title="${n}">${ico('ok')}</button>`).join('')}</div></div>`)}
@@ -4410,12 +4417,16 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     d.el.querySelector('#sgName').addEventListener('input', pv); pv();
   }
   function notifConsent() {
+    // already turned on in another browser: skip the explainer and ask this browser right away
+    if (LIVE.push && LIVE.push.on && !LIVE.push.here) { notifOn(); return; }
     dlgOpen({ title: 'What turning this on means', ok: 'Turn on', body: `<ul>
       <li>${ico('bell')}<span>Your browser shows a notice when something changes in Schoology, even with Averages closed.</span></li>
       <li>${ico('refresh')}<span>Averages checks your classes every few minutes. A notice only says what changed, like a new grade.</span></li>
       <li>${ico('cloud')}<span>We keep your Schoology sign-in, encrypted, so we can check for you. Turning notifications off deletes it.</span></li>
       <li>${ico('sliders')}<span>Next, your browser asks if Averages can send notifications. You can turn them off here anytime.</span></li></ul>`,
-      onOk: () => {
+      onOk: () => notifOn() });
+  }
+  function notifOn() {
         // the browser's own question has to be asked inside this click
         const ask = 'Notification' in window ? Notification.requestPermission() : Promise.resolve('denied');
         LIVE.busy = 'notif';
@@ -4423,7 +4434,6 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
           if (perm !== 'granted') { LIVE.busy = ''; toast('Your browser said no. Allow notifications for Averages.io in its site settings, then try again.'); return; }
           return window.AveragesPush.enable(pushTypes()).then(r => { LIVE.busy = ''; if (r.ok) { SG.notif = true; SGV.flip = 'notif'; redraw(); toast('Browser notifications are on.'); } else toast(r.code === 'plus_required' ? 'Browser notifications come with Plus.' : 'Couldn\'t turn on notifications. Try again in a moment.'); });
         });
-      } });
   }
   const pushTypes = () => ({ grades: SG.nGrades, assignments: SG.nAssign, due: SG.nDue, messages: SG.nMsgs, announcements: SG.nAnn });
   // the test notification: slides in, stays 5 seconds (longer while you point at it), then slides back out to the right
@@ -4534,7 +4544,13 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       if (s.getAttribute('aria-disabled') === 'true') { toast(s.dataset.seg === 'openIn' ? `Connect ${APPS[s.dataset.v]} first.` : 'Turn on browser notifications first.'); return; }
       const k = s.dataset.seg, v = s.dataset.v; if (SG[k] === v) return; SG[k] = v;
       s.parentElement.querySelectorAll('[data-seg]').forEach(b => b.setAttribute('aria-pressed', b === s)); segSync(s.parentElement.parentElement, true); sgSave(); sgNav();
-      if (k === 'layout' && v === 'windowed') { saveOpt('windowType', 'windowed'); toast('Switching to Windowed…'); setTimeout(() => { location.href = '/settings'; }, 400); }
+      if (k === 'layout' && v === 'windowed') {
+        // the logo on the way (2026-10-30): up here at once, and the Windowed page keeps it up until it's ready (app/lib/splash.ts)
+        saveOpt('windowType', 'windowed');
+        try { sessionStorage.setItem('averages_mode_logo', String(Date.now())); } catch (_) {}
+        if (window.__averagesSplash && window.__averagesSplash.show) window.__averagesSplash.show(4000);
+        location.href = '/settings';
+      }
       if (k === 'theme') { sgPane(); FSX.syncPush(); toast(v === 'dark' ? 'Dark colors on.' : v === 'auto' ? 'Pages follow your device now.' : 'Light colors on.'); }
       if (k === 'openIn') { try { localStorage.setItem('schoolagy_default_editor', v === 'onedrive' ? 'onedrive' : 'gdrive'); } catch (_) {} toast(`Office files open in ${APPS[v]}.`); }
       return;
