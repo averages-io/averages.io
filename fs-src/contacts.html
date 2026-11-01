@@ -2288,7 +2288,7 @@
   .up-miss span { flex: 1; min-width: 0; }
   .up-miss button { font-weight: 800; color: var(--ink-2); text-decoration: underline; }
   /* the viewer */
-  .up-lb { position: fixed; inset: 0; z-index: 95; display: flex; flex-direction: column; background: rgba(14, 15, 20, .97); color: #ffffff; }
+  .up-lb { position: fixed; inset: 0; z-index: 95; display: flex; flex-direction: column; background: rgba(14, 15, 20, .97); color: #ffffff; --keep-dark: 1; }
   .up-lb.in { animation: upLbIn .2s ease backwards; } .up-lb.in .up-lb-fig { animation: upLbFig .3s cubic-bezier(.2, .8, .2, 1) backwards; }
   @keyframes upLbIn { from { opacity: 0; } } @keyframes upLbFig { from { opacity: 0; transform: scale(.96); } }
   .up-lb-top { display: flex; align-items: center; gap: 12px; padding: 16px 16px 16px 24px; }
@@ -4388,8 +4388,14 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     el.style.top = (c.top - r.top - op.clientTop + op.scrollTop).toFixed(1) + 'px';
     return true;
   }
+  // Something around the sticker still sliding or popping in (its row landing, the class icon it sits by): measuring
+  // now puts it in the wrong place, even under the card (2026-10-31, Martin's screenshots). Wait for it to stop.
+  const moving = el => { if (!document.getAnimations) return false;
+    return document.getAnimations().some(a => { const t = a.effect && a.effect.target, tm = a.effect && a.effect.getTiming ? a.effect.getTiming() : null;
+      return a.playState === 'running' && t && t !== el && t.nodeType === 1 && !t.classList.contains('newtag') && tm && tm.iterations !== Infinity && (t.contains(el) || (el.closest(HOST) || el.parentElement).contains(t)); }); };
   function fit(el) {
     if (el.dataset.fitted || !el.offsetWidth || !el.isConnected) return;
+    if (moving(el)) { clearTimeout(el._fitT); el._fitT = setTimeout(() => fit(el), 120); return; }
     const h = seedOf(el), tilt = parseFloat(el.style.getPropertyValue('--tilt')) || 0, w = el.offsetWidth, ht = el.offsetHeight;
     let start = (h >> 17) % SPOTS.length;
     // and not the same spot as the sticker just before it in the same list
@@ -4409,8 +4415,12 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (spot === 'end') { el.style.position = el.style.left = el.style.top = el.style.margin = ''; el.style.setProperty('--tx', el.dataset.tx || '0px'); el.style.setProperty('--ty', el.dataset.ty || '0px'); fitEnd(el); }
     el.dataset.spot = spot; el.dataset.fitted = '1';
   }
-  let rz = 0; // the layout changed width: land every sticker again
-  addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => document.querySelectorAll('.newtag[data-fitted]').forEach(el => { delete el.dataset.fitted; fit(el); }), 160); });
+  let rz = 0; // the layout changed: land every sticker again
+  const refitAll = ms => { clearTimeout(rz); rz = setTimeout(() => document.querySelectorAll('.newtag[data-fitted]').forEach(el => { delete el.dataset.fitted; fit(el); }), ms); };
+  addEventListener('resize', () => refitAll(160));
+  // and again once the page has landed (after it opens or syncs) and whenever its content changes size
+  addEventListener('fs:ready', () => refitAll(1200));
+  if (window.ResizeObserver) { const wr = document.querySelector('#scroller .wrap'); if (wr) new ResizeObserver(() => refitAll(200)).observe(wr); }
   const ro = window.ResizeObserver ? new ResizeObserver(es => es.forEach(e => fit(e.target))) : null;
   const place = el => {
     if (el.dataset.tilted) return;

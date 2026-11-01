@@ -240,6 +240,7 @@ function emit(nodes) {
   for (const n of nodes) {
     if (n.at) { const inner = emit(n.children); if (inner) out += `${n.at} {\n${inner}}\n`; continue; }
     if (!n.sel || n.sel.startsWith("@")) continue;
+    if (/--keep-dark\s*:/.test(n.body)) continue; // a rule whose colors are already right in dark (a dark backdrop): left alone
     if (/data-theme=["']?dark/.test(n.sel)) continue; // already written for dark mode by hand (2026-10-30): leave it as it is
     const decls = [];
     for (const d of splitTop(n.body, ";")) {
