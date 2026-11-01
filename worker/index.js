@@ -28,7 +28,9 @@
  * doesn't know Cloudflare's Worker types.
  */
 
-const SESSION_COOKIE = "schoolagy_session";
+const SESSION_COOKIE = "averages_session";
+// the old name (renamed 2026-10-31); the API moves it over on the next request
+const LEGACY_SESSION_COOKIE = "schoolagy_session";
 const BOUNCE_COOKIE = "averages_bounced";
 const BOUNCE_SECONDS = 15;
 
@@ -56,7 +58,7 @@ export function frontDoor(request) {
   if (url.pathname !== "/") return null;
   if (KEEP_PARAMS.some((p) => url.searchParams.has(p))) return null;
   const cookies = request.headers.get("Cookie");
-  if (!hasCookie(cookies, SESSION_COOKIE) || hasCookie(cookies, BOUNCE_COOKIE)) return null;
+  if (!(hasCookie(cookies, SESSION_COOKIE) || hasCookie(cookies, LEGACY_SESSION_COOKIE)) || hasCookie(cookies, BOUNCE_COOKIE)) return null;
   return "/home";
 }
 
