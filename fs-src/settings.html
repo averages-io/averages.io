@@ -4742,9 +4742,13 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   }
   // Something around the sticker still sliding or popping in (its row landing, the class icon it sits by): measuring
   // now puts it in the wrong place, even under the card (2026-10-31, Martin's screenshots). Wait for it to stop.
-  const moving = el => { if (!document.getAnimations) return false;
-    return document.getAnimations().some(a => { const t = a.effect && a.effect.target, tm = a.effect && a.effect.getTiming ? a.effect.getTiming() : null;
-      return a.playState === 'running' && t && t !== el && t.nodeType === 1 && !t.classList.contains('newtag') && tm && tm.iterations !== Infinity && (t.contains(el) || (el.closest(HOST) || el.parentElement).contains(t)); }); };
+  // only its own item and the few boxes around it are asked (asking the whole page was slow, 2026-11-01)
+  const moving = el => { const host = el.closest(HOST) || el.parentElement; if (!host || !host.getAnimations) return false;
+    const busy = list => list.some(a => { const t = a.effect && a.effect.target, tm = a.effect && a.effect.getTiming ? a.effect.getTiming() : null;
+      return a.playState === 'running' && t && t !== el && !(t.classList && t.classList.contains('newtag')) && tm && tm.iterations !== Infinity; });
+    if (busy(host.getAnimations({ subtree: true }))) return true;
+    for (let p = host.parentElement, i = 0; p && i < 3; p = p.parentElement, i++) if (busy(p.getAnimations())) return true;
+    return false; };
   function fit(el) {
     if (el.dataset.fitted || !el.offsetWidth || !el.isConnected) return;
     if (moving(el)) { clearTimeout(el._fitT); el._fitT = setTimeout(() => fit(el), 120); return; }

@@ -38,6 +38,30 @@
   var ID = /^[A-Za-z0-9_-]{1,64}$/;
   var courseQ = ID.test(Q.get('course') || '') ? Q.get('course') : '';
 
+  // ---------- lighter motion (2026-11-01, Martin: "very choppy and heavy on my computer") ----------
+  // The pages' own scripted animations (Element.animate) only move what the graphics card can move by itself, the way
+  // CSS transform and opacity animations do. A box that grew or shrank in height (re-laying out the page every frame)
+  // now fades in place; a bar that filled by width now fills with a scale from the left. Same timing, same callbacks.
+  (function () {
+    var E = window.Element && window.Element.prototype;
+    if (!E || typeof E.animate !== 'function' || E.animate.__light) return;
+    var orig = E.animate;
+    var HEAVY = /^(height|width|min(Height|Width)|max(Height|Width)|padding(Top|Right|Bottom|Left)?|margin(Top|Right|Bottom|Left)?|top|right|bottom|left|filter|gridTemplate(Rows|Columns)|flexBasis|overflow)$/;
+    var only = function (f, k) { var ks = Object.keys(f).filter(function (x) { return x !== 'offset' && x !== 'easing'; }); return ks.length === 1 && ks[0] === k; };
+    function lighten(el, frames) {
+      if (!Array.isArray(frames) || !frames.length) return frames;
+      if (frames.length === 2 && only(frames[0], 'width') && only(frames[1], 'width') && /^0(%|px)?$/.test(String(frames[0].width)) && String(frames[1].width) === '100%') {
+        el.style.width = '100%'; el.style.transformOrigin = 'left center';
+        return [{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }];
+      }
+      if (!frames.some(function (f) { return f && Object.keys(f).some(function (k) { return HEAVY.test(k); }); })) return frames;
+      return frames.map(function (f) { var g = {}; Object.keys(f || {}).forEach(function (k) { if (!HEAVY.test(k)) g[k] = f[k]; }); return g; });
+    }
+    var light = function (frames, opts) { return orig.call(this, lighten(this, frames), opts); };
+    light.__light = true;
+    E.animate = light;
+  })();
+
   // ---------- loading screen ----------
   root.classList.add('fs-wait');
   var css = document.createElement('style');
@@ -67,10 +91,12 @@
     + '.fs-skel .k-tx{display:flex;flex-direction:column;gap:8px;flex:1;min-width:0}'
     + '.fs-skel .k-grid{display:grid;gap:12px}'
     + '.fs-skel .skel-bar{display:block;max-width:100%}'
-    // one soft light that sweeps across every placeholder on the page together, in the theme's own ink (the old bar
-    // was a fixed gray band that split into two tones on wide bars, and looked heavy in dark mode)
-    + ':root:root .skel-bar,html.fs-wait .hub-meta:empty::before,html.fs-wait .hub-logo:empty{background-color:color-mix(in srgb,var(--ink) 8%,transparent)!important;background-image:linear-gradient(100deg,transparent 35%,color-mix(in srgb,var(--ink) 7%,transparent) 50%,transparent 65%)!important;background-size:200% 100%!important;background-repeat:no-repeat!important;background-attachment:fixed!important;animation:fsShimmer 1.6s cubic-bezier(.45,0,.55,1) infinite!important}'
-    + '@keyframes fsShimmer{from{background-position:150% 0}to{background-position:-50% 0}}'
+    // the placeholders in the theme's own ink (the old bar was a fixed gray band that split into two tones on wide
+    // bars, and looked heavy in dark mode)
+    // (2026-11-01) a soft pulse in opacity: the graphics card does it alone, where a moving light re-drew every
+    // placeholder on every frame, which was heavy on slower computers
+    + ':root:root .skel-bar,html.fs-wait .hub-meta:empty::before,html.fs-wait .hub-logo:empty{background-color:color-mix(in srgb,var(--ink) 10%,transparent)!important;background-image:none!important;animation:fsPulse 1.6s ease-in-out infinite!important}'
+    + '@keyframes fsPulse{0%,100%{opacity:1}50%{opacity:.5}}'
     + '@media (prefers-reduced-motion:reduce){:root:root .skel-bar{animation:none!important}}'
     + '@media (max-width:1280px){.fs-skel.k-split{grid-template-columns:minmax(0,1fr)}}'
     + '@media (max-width:900px){.fs-skel.k-nav{grid-template-columns:minmax(0,1fr)}}'

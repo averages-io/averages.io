@@ -282,6 +282,26 @@ function build() {
   const ver = (f) => crypto.createHash("sha256").update(fs.readFileSync(f)).digest("hex").slice(0, 10);
   const tag = `${SPLASH_TAG}\n<script src="/js/averages-avatar.js?v=${ver(AVATAR_FILE)}"></script>\n<script src="/js/averages-fs.js?v=${ver(JS_FILE)}"></script>\n<script src="/js/averages-fs-data.js?v=${ver(DATA_FILE)}"></script>`;
   let n = 0;
+  // Lighter motion (2026-11-01, Martin: the animations were "very choppy and heavy on my computer"). The same look,
+  // cheaper to draw: nothing re-draws in a loop while a page sits still, and the moves that stay use only
+  // transform and opacity, which the graphics card does on its own.
+  const LIGHT_CSS = [
+    // long titles slide only while you point at their row (they ran all the time, and the fade at their edge
+    // re-drew the row every frame)
+    ".mq{animation:none!important;--mq-l:0px}",
+    ".mq>.mq-in{animation:none!important;will-change:auto}",
+    "a:hover .mq>.mq-in,button:hover .mq>.mq-in,li:hover .mq>.mq-in,tr:hover .mq>.mq-in,[data-open]:hover .mq>.mq-in,[role=row]:hover .mq>.mq-in,.mq:hover>.mq-in,:focus-visible .mq>.mq-in{animation:mqSlide var(--mq-t,8s) cubic-bezier(.45,0,.55,1) .3s infinite!important;will-change:transform}",
+    "body.potato-mode .mq>.mq-in{animation:none!important}",
+    "@media (prefers-reduced-motion:reduce){.mq>.mq-in{animation:none!important}}",
+    // the Home summary card switches with a fade (a blur re-drew the whole card every frame)
+    ".sum-view{transition:opacity 150ms ease!important}.sum-view.switching{filter:none!important}",
+    // the sidebar: its width still slides; the shadow and the labels' spacing switch at once instead of
+    // re-drawing a big soft shadow over the page every frame
+    ".side{transition:width .2s cubic-bezier(.2,.8,.2,1),border-radius 0s linear .2s!important}",
+    ".side:hover,.side.hold,.side:has(:focus-visible){transition-delay:.08s,0s!important}",
+    ".app.pinned .side{transition-delay:0s!important}",
+    ".side>.side-h,.side>.cls a,.nav #sideSearch{transition:none!important}",
+  ].join("");
   const CHROME_JS = `(function(){var d=document,r=d.documentElement,a=d.getElementById('app'),s=d.getElementById('side');if(!a||!s)return;r.classList.add('fs-boot');
 try{var pin=false;try{pin=JSON.parse(localStorage.getItem('fsmock_pinned'))===true}catch(e){}if(pin)a.classList.add('pinned');
 var j=JSON.parse(sessionStorage.getItem('averages_fs_chrome')||'null');if(j&&Date.now()-j.at<15000&&Date.now()>=j.at){
@@ -317,6 +337,8 @@ requestAnimationFrame(function(){requestAnimationFrame(function(){r.classList.re
     s = s.replace(/(<div class="wrap[^"]*">)/, '$1<script>window.__fsSkel&&window.__fsSkel()</script>');
     // 4. dark theme, after the page's own styles
     s = s.replace(/<\/head>/, `<style id="fsDark">\n${darkCss(styles)}</style>\n</head>`);
+    // 4b. lighter motion, after everything else so it wins (2026-11-01)
+    s = s.replace(/<\/head>/, `<style id="fsLight">${LIGHT_CSS}</style>\n</head>`);
     s = s.replace(/<title>([^<]*?)\s*Mock<\/title>/, "<title>$1</title>");
     fs.writeFileSync(path.join(OUT, file), s);
     // the old address moves here
