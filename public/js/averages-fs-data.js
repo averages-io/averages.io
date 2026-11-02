@@ -172,7 +172,8 @@
   // opening to its own pages, tighter rows. Built from the sidebar each page already has (its ids and links stay, so
   // the pages' own scripts keep working); build-fs calls this right after the sidebar, before anything is drawn.
   var SIDE_OPEN_KEY = 'averages_fs_side_open', RECENT_KEY = 'averages_fs_recents';
-  var CLOCK = '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.25" fill="none" stroke="currentColor" stroke-width="1.75"/><path d="M12 7.5V12l3 2" fill="none" stroke="currentColor" stroke-width="1.75"/></svg>';
+  // a clock with an arrow going back, at the same weight as the other icons (svg.i's own stroke)
+  var CLOCK = '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.6 12.6A8.5 8.5 0 1 0 5.6 6.2"/><path d="M4.4 3.6v3.4h3.4"/><path d="M12 7.6V12l3 2"/></svg>';
   var CHEV = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.75"/></svg>';
   var HUB_TABS = [['', 'Overview', 'home'], ['assignments', 'Assignments', 'inbox'], ['grades', 'Grades', 'chart'], ['materials', 'Materials', 'folder'], ['updates', 'Updates', 'bell']];
   var PAGE_ICON = { courses: 'binder', grades: 'chart', assignments: 'inbox', calendar: 'cal', files: 'folder', messages: 'msg', contacts: 'users', settings: 'gear', course: 'binder', assignment: 'inbox', material: 'folder', overview: 'home', updates: 'bell', members: 'users' };
@@ -188,7 +189,7 @@
   function recentsHTML() {
     var l = lget(RECENT_KEY); l = Array.isArray(l) ? l.slice(0, 5) : [];
     if (!l.length) return '<p class="side-none">Classes and assignments you open show up here.</p>';
-    return l.map(function (r) { return '<a class="side-subl side-recl" href="' + esc0(r.u) + '" title="' + esc0(r.t) + '">' + sico(r.k) + '<span class="tx fade"><b>' + esc0(r.t) + '</b><small>' + esc0(r.s) + '</small></span></a>'; }).join('');
+    return l.map(function (r) { return '<a class="side-subl side-recl" href="' + esc0(r.u) + '" title="' + esc0(r.t) + '"><span class="tx fade"><b>' + esc0(r.t) + '</b><small>' + esc0(r.s) + '</small></span></a>'; }).join('');
   }
   function classId(a) {
     var o = a.getAttribute('data-open') || '', m = o.match(/^class:(.+)$/);
@@ -209,7 +210,7 @@
       var sub = document.createElement('div'); sub.className = 'side-sub';
       sub.innerHTML = HUB_TABS.map(function (t) {
         var on = id === here && (t[0] === tabNow || (!t[0] && (!tabNow || tabNow === 'overview')));
-        return '<a class="side-subl' + (on ? ' on' : '') + '" href="' + FSX.hubUrl(id, t[0]) + '" title="' + t[1] + '"' + (on ? ' aria-current="page"' : '') + '>' + sico(t[2]) + '<span class="fade">' + t[1] + '</span></a>';
+        return '<a class="side-subl' + (on ? ' on' : '') + '" href="' + FSX.hubUrl(id, t[0]) + '" title="' + t[1] + '"' + (on ? ' aria-current="page"' : '') + '><span class="fade">' + t[1] + '</span></a>';
       }).join('');
       w.appendChild(sub);
       if (id === here && !('c:' + id in sideOpen()) && !sideOpen()['closed:' + id]) { var v = sideOpen(); v['c:' + id] = true; lset(SIDE_OPEN_KEY, v); }
@@ -230,7 +231,7 @@
         var rl = document.createElement('div'); rl.className = 'side-sub side-recs'; rl.id = 'sideRecList'; rl.innerHTML = recentsHTML();
         home.after(rec); rec.after(rl); twin(rec, rl, 'rec');
       }
-      var head = function (before, t) { if (!before) return; var h = document.createElement('div'); h.className = 'side-sec fade'; h.textContent = t; h.setAttribute('aria-hidden', 'true'); before.before(h); };
+      var head = function (before, t) { if (!before) return; var h = document.createElement('div'); h.className = 'side-sec'; h.textContent = t; h.setAttribute('aria-hidden', 'true'); before.before(h); };
       head(by('Courses'), 'School'); head(by('Files'), 'Your stuff');
     }
     // Your classes: a folder

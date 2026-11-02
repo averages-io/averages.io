@@ -307,7 +307,7 @@ function build() {
     // tighter rows, and nothing changes height or moves sideways when the sidebar opens (2026-11-02, Martin: opening
     // was choppy and everything moved down): headings, folders and their insides keep their place open or closed,
     // and only the width slides
-    ".nav{gap:2px}.nav a{height:36px;font-size:14px;border-radius:10px}.cls{gap:2px}.cls a{height:34px;font-size:14px;border-radius:10px}",
+    ".nav{gap:2px}.nav a{height:34px;font-size:14px;border-radius:10px}.cls{gap:2px}.cls a{height:34px;font-size:14px;border-radius:10px}",
     ".side>.cls a:not(.side-subl)," + open(".side>.cls a:not(.side-subl)") + "{padding-left:8px!important}",
     ".side>.side-h," + open(".side>.side-h") + "{height:32px!important;padding-left:24px}",
     CLOSED + " .side-h .side-hb{visibility:hidden}",
@@ -315,6 +315,7 @@ function build() {
     // section headings: lined up with the icons; on the closed rail, a thin line in the same space
     ".side-sec{height:28px;overflow:hidden;padding:0 16px 4px;display:flex;align-items:flex-end;font-size:12px;font-weight:800;color:var(--muted);white-space:nowrap;flex:none}",
     CLOSED + " .side-sec{color:transparent;background:linear-gradient(var(--inner),var(--inner)) center 14px/32px 2px no-repeat}",
+    ".side-sec{transition:color .12s ease}" + open(".side-sec") + "{transition-delay:.18s}",
     ".side-chev{display:inline-flex;width:16px;height:16px;flex:none;color:var(--muted)}.side-chev svg,.side-tw svg{width:100%;height:100%}",
     ".side-rec .side-chev{margin-left:auto}",
     "#sideRec[aria-expanded=true] .side-chev,.side-hb[aria-expanded=true] .side-chev,.side-tw[aria-expanded=true] svg{transform:rotate(90deg)}",
@@ -333,23 +334,23 @@ function build() {
     ".side-cl>a{padding-right:36px}",
     // a folder's insides: small icons centred on the rail when it's closed, their names lined up under the
     // folder's name when it's open
-    ".side-sub{display:flex;flex-direction:column;gap:2px;padding:2px 0 6px;flex:none}",
+    // spacing like Cloudflare's (2026-11-02, Martin's screenshots): a folder's rows hang off a thin line under the
+    // folder's icon, their names lined up with the folder's name; no icons of their own
+    ".side-sub{display:flex;flex-direction:column;gap:2px;margin:2px 0 4px 24px;padding:0;border-left:1px solid color-mix(in srgb,var(--ink) 14%,transparent);flex:none}",
     // open folders only show their rows while the sidebar is open (2026-11-02, Martin: "all closed on a closed
     // sidebar"); they slide open with the sidebar instead of jumping (where the browser can animate to auto height)
     ".side{interpolate-size:allow-keywords}",
-    ".side-sub{height:auto;overflow:hidden;transition:height .2s cubic-bezier(.2,.8,.2,1) .06s,padding .2s cubic-bezier(.2,.8,.2,1) .06s}",
-    CLOSED + " .side-sub{height:0;padding-top:0;padding-bottom:0;transition-delay:0s}",
+    ".side-sub{height:auto;overflow:hidden;transition:height .2s cubic-bezier(.2,.8,.2,1) .06s,margin .2s cubic-bezier(.2,.8,.2,1) .06s}",
+    CLOSED + " .side-sub{height:0;margin-top:0;margin-bottom:0;transition-delay:0s}",
     "body.potato-mode .side-sub{transition:none}@media (prefers-reduced-motion:reduce){.side-sub{transition:none}}",
-    ".side-subl{display:flex;align-items:center;gap:18px;height:30px;padding:0 12px 0 16px;border-radius:8px;color:var(--ink-2);font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden}",
-    ".side-subl>svg{width:16px;height:16px;flex:none;color:var(--muted)}",
+    ".side-subl{display:flex;align-items:center;border-radius:8px;color:var(--ink-2);font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden}",
+    ".side .cls .side-subl{height:32px!important;padding:0 12px 0 25px!important;border-radius:8px}",
     ".side-subl>.fade{min-width:0;overflow:hidden;text-overflow:ellipsis}",
     ".side-subl:hover{background:color-mix(in srgb,var(--ink) 5%,transparent);color:var(--ink)}",
-    ".side-subl.on{background:color-mix(in srgb,var(--ink) 8%,transparent);color:var(--ink)}.side-subl.on>svg{color:var(--accent)}",
-    ".side .side-subl>svg.i{width:16px!important;height:16px!important;flex:none}",
-    ".side .cls .side-subl{height:30px!important;padding:0 12px 0 16px!important;gap:18px!important;border-radius:8px}",
-    ".side .side-recl{height:40px;gap:14px;padding:0 12px 0 16px}",
-    ".side-recl .tx{display:flex;flex-direction:column;min-width:0}.side-recl b{font-size:13px;font-weight:800;color:var(--ink);overflow:hidden;text-overflow:ellipsis}.side-recl small{font-size:11px;font-weight:700;color:var(--muted);overflow:hidden;text-overflow:ellipsis}",
-    ".side-none{margin:0;padding:4px 12px 8px 52px;font-size:12px;font-weight:700;color:var(--muted);white-space:normal}",
+    ".side-subl.on{background:color-mix(in srgb,var(--ink) 8%,transparent);color:var(--ink)}",
+    ".side .side-recl{height:44px;padding:0 12px 0 20px}",
+    ".side-recl .tx{display:flex;flex-direction:column;gap:2px;min-width:0}.side-recl b{font-size:13px;font-weight:800;color:var(--ink);overflow:hidden;text-overflow:ellipsis}.side-recl small{font-size:11px;font-weight:700;color:var(--muted);overflow:hidden;text-overflow:ellipsis}",
+    ".side-none{margin:0;padding:6px 12px 8px 20px;font-size:12px;font-weight:700;color:var(--muted);white-space:normal}",
     CLOSED + " .side-none{visibility:hidden}",
     // the pin stays on screen at the bottom while the rest scrolls under it (2026-11-02, Martin: "always on top")
     ".side .foot{position:sticky;bottom:0;z-index:3;background:var(--frame);box-shadow:0 -1px 0 color-mix(in srgb,var(--ink) 10%,transparent)}",
