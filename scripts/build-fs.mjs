@@ -286,13 +286,8 @@ function build() {
   // cheaper to draw: nothing re-draws in a loop while a page sits still, and the moves that stay use only
   // transform and opacity, which the graphics card does on its own.
   const LIGHT_CSS = [
-    // long titles slide only while you point at their row (they ran all the time, and the fade at their edge
-    // re-drew the row every frame)
-    ".mq{animation:none!important;--mq-l:0px}",
-    ".mq>.mq-in{animation:none!important;will-change:auto}",
-    "a:hover .mq>.mq-in,button:hover .mq>.mq-in,li:hover .mq>.mq-in,tr:hover .mq>.mq-in,[data-open]:hover .mq>.mq-in,[role=row]:hover .mq>.mq-in,.mq:hover>.mq-in,:focus-visible .mq>.mq-in{animation:mqSlide var(--mq-t,8s) cubic-bezier(.45,0,.55,1) .3s infinite!important;will-change:transform}",
-    "body.potato-mode .mq>.mq-in{animation:none!important}",
-    "@media (prefers-reduced-motion:reduce){.mq>.mq-in{animation:none!important}}",
+    // (long titles keep sliding on their own, like Spotify: Martin wants that, 2026-11-02. Potato mode and
+    // reduced motion still stop them.)
     // the Home summary card switches with a fade (a blur re-drew the whole card every frame)
     ".sum-view{transition:opacity 150ms ease!important}.sum-view.switching{filter:none!important}",
     // the sidebar: its width still slides; the shadow and the labels' spacing switch at once instead of
@@ -302,7 +297,42 @@ function build() {
     ".app.pinned .side{transition-delay:0s!important}",
     ".side>.side-h,.side>.cls a,.nav #sideSearch{transition:none!important}",
   ].join("");
-  const CHROME_JS = `(function(){var d=document,r=d.documentElement,a=d.getElementById('app'),s=d.getElementById('side');if(!a||!s)return;r.classList.add('fs-boot');
+  // The sidebar like Cloudflare's (2026-11-02; built by averages-fs-data.js's __fsSide): tighter rows, small section
+  // headings, folders with a turning arrow, each class's pages under it, Recents.
+  const OPEN = [".side:is(:hover,.hold,:has(:focus-visible))", ".app.pinned .side", ".app.menu .side"];
+  const open = (sel) => OPEN.map((o) => o + " " + sel).join(",");
+  const SIDE_CSS = [
+    ".side [hidden]{display:none!important}",
+    ".nav{gap:2px}.nav a{height:36px;font-size:14px;border-radius:10px}.cls{gap:2px}.cls a{height:34px;font-size:14px;border-radius:10px}",
+    ".nav a.on{background:color-mix(in srgb,var(--ink) 8%,transparent)}",
+    ".side-sec{height:0;overflow:hidden;padding:0 20px;display:flex;align-items:flex-end;font-size:12px;font-weight:800;color:var(--muted);white-space:nowrap;flex:none}",
+    open(".side-sec") + "{height:28px;padding-bottom:4px}",
+    ".side-chev{display:inline-flex;width:16px;height:16px;flex:none;color:var(--muted)}.side-chev svg,.side-tw svg{width:100%;height:100%}",
+    ".side-rec .side-chev{margin-left:auto}",
+    "#sideRec[aria-expanded=true] .side-chev,.side-hb[aria-expanded=true] .side-chev,.side-tw[aria-expanded=true] svg{transform:rotate(90deg)}",
+    ".side-chev,.side-tw svg{transition:transform .15s ease}",
+    ".side-h .side-hb{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;height:100%;padding:0 8px 0 0;border:0;background:none;color:inherit;font:inherit;cursor:pointer;text-align:left}",
+    ".side-h .side-hb:hover{color:var(--ink)}",
+    ".side-cl{position:relative}",
+    ".side-cl>a>span.fade:not(.g){flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}.side-cl>a>.g{flex:none}",
+    ".side-tw{position:absolute;right:4px;top:3px;width:28px;height:28px;padding:7px;border:0;border-radius:8px;background:none;color:var(--muted);cursor:pointer}",
+    ".side-tw:hover{background:color-mix(in srgb,var(--ink) 8%,transparent);color:var(--ink)}",
+    open(".side-cl>a") + "{padding-right:36px}",
+    ".side-sub{display:flex;flex-direction:column;gap:2px;padding:2px 0 6px 44px;flex:none}",
+    ".side-recs{padding-left:40px}",
+    ".side-subl{display:flex;align-items:center;min-height:30px;padding:4px 12px;border-radius:8px;color:var(--ink-2);font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}",
+    ".side-subl:hover{background:color-mix(in srgb,var(--ink) 5%,transparent);color:var(--ink)}",
+    ".side-subl.on{background:color-mix(in srgb,var(--ink) 8%,transparent);color:var(--ink)}",
+    ".side-recl .tx{display:flex;flex-direction:column;min-width:0}.side-recl b{font-size:13px;font-weight:800;color:var(--ink);overflow:hidden;text-overflow:ellipsis}.side-recl small{font-size:11px;font-weight:700;color:var(--muted);overflow:hidden;text-overflow:ellipsis}",
+    ".side-none{margin:0;padding:4px 12px 8px;font-size:12px;font-weight:700;color:var(--muted);white-space:normal}",
+    // the pin stays on screen at the bottom while the rest scrolls under it (2026-11-02, Martin: "always on top")
+    ".side .foot{position:sticky;bottom:0;z-index:3;background:var(--frame);box-shadow:0 -1px 0 color-mix(in srgb,var(--ink) 10%,transparent)}",
+    // on the closed rail a heading is a thin line between the groups, like Cloudflare's
+    ".app:not(.pinned):not(.menu) .side:not(:hover):not(.hold):not(:has(:focus-visible)) .side-sec{height:1px;margin:8px 16px;padding:0;background:color-mix(in srgb,var(--ink) 12%,transparent);color:transparent}",
+    // the closed rail shows only the icons
+    ".app:not(.pinned):not(.menu) .side:not(:hover):not(.hold):not(:has(:focus-visible)) .side-sub{display:none}",
+  ].join("");
+  const CHROME_JS = `(function(){var d=document,r=d.documentElement,a=d.getElementById('app'),s=d.getElementById('side');if(!a||!s)return;r.classList.add('fs-boot');try{window.__fsSide&&window.__fsSide()}catch(e){}
 try{var pin=false;try{pin=JSON.parse(localStorage.getItem('fsmock_pinned'))===true}catch(e){}if(pin)a.classList.add('pinned');
 var j=JSON.parse(sessionStorage.getItem('averages_fs_chrome')||'null');if(j&&Date.now()-j.at<15000&&Date.now()>=j.at){
 var c=d.getElementById('sideClasses');if(c&&!c.children.length&&j.cls){c.innerHTML=j.cls;[].forEach.call(c.querySelectorAll('.here,[aria-current]'),function(x){x.classList.remove('here');x.removeAttribute('aria-current')})}
@@ -339,6 +369,7 @@ requestAnimationFrame(function(){requestAnimationFrame(function(){r.classList.re
     s = s.replace(/<\/head>/, `<style id="fsDark">\n${darkCss(styles)}</style>\n</head>`);
     // 4b. lighter motion, after everything else so it wins (2026-11-01)
     s = s.replace(/<\/head>/, `<style id="fsLight">${LIGHT_CSS}</style>\n</head>`);
+    s = s.replace(/<\/head>/, `<style id="fsSide">${SIDE_CSS}</style>\n</head>`);
     s = s.replace(/<title>([^<]*?)\s*Mock<\/title>/, "<title>$1</title>");
     fs.writeFileSync(path.join(OUT, file), s);
     // the old address moves here

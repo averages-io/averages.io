@@ -4436,7 +4436,18 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       const cell = $('calBody').querySelector(`[data-day="${e.date}"]`); if (cell && !calm()) { cell.classList.remove('flash'); void cell.offsetWidth; cell.classList.add('flash'); } }
     // in the grid, the details open by the item itself (or its day, when the day only shows dots or "N more")
     const inGrid = jump && !CAL.q && innerWidth > 760 && ($('calBody').querySelector(`.ce[data-ev="${id}"], .cw-ev[data-ev="${id}"]`) || $('calBody').querySelector(`[data-day="${e.date}"]`));
-    const anchor = inGrid || btn; detOpen(id, anchor.getBoundingClientRect(), btn);
+    const anchor = inGrid || btn; centerThen(anchor, () => detOpen(id, anchor.getBoundingClientRect(), btn));
+  }
+  // the picked thing comes to the middle of the page first, then its details open by it (2026-11-02, Martin)
+  function centerThen(el, fn) {
+    const sc = $('scroller'); if (!sc || !el || !el.isConnected) { fn(); return; }
+    const r = el.getBoundingClientRect(), v = sc.getBoundingClientRect();
+    const to = Math.max(0, Math.min(sc.scrollHeight - sc.clientHeight, Math.round(sc.scrollTop + (r.top + r.height / 2) - (v.top + v.height / 2))));
+    if (Math.abs(to - sc.scrollTop) < 24) { fn(); return; }
+    if (calm()) { sc.scrollTop = to; fn(); return; }
+    let done = false; const go = () => { if (done) return; done = true; sc.removeEventListener('scrollend', go); fn(); };
+    sc.addEventListener('scrollend', go); setTimeout(go, 700);
+    sc.scrollTo({ top: to, behavior: 'smooth' });
   }
 
   // ---------- wiring ----------

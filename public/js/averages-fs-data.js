@@ -167,6 +167,106 @@
     wrap.insertBefore(el, wrap.firstChild);
   };
 
+  // ---------- the sidebar, like Cloudflare's (2026-11-02, Martin's recording) ----------
+  // A search box at the top, a Recents folder, small section headings, Your classes as a folder and each class
+  // opening to its own pages, tighter rows. Built from the sidebar each page already has (its ids and links stay, so
+  // the pages' own scripts keep working); build-fs calls this right after the sidebar, before anything is drawn.
+  var SIDE_OPEN_KEY = 'averages_fs_side_open', RECENT_KEY = 'averages_fs_recents';
+  var CLOCK = '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.25" fill="none" stroke="currentColor" stroke-width="1.75"/><path d="M12 7.5V12l3 2" fill="none" stroke="currentColor" stroke-width="1.75"/></svg>';
+  var CHEV = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.75"/></svg>';
+  var HUB_TABS = [['', 'Overview'], ['assignments', 'Assignments'], ['grades', 'Grades'], ['materials', 'Materials'], ['updates', 'Updates']];
+  function sideOpen() { var v = lget(SIDE_OPEN_KEY); return v && typeof v === 'object' && !Array.isArray(v) ? v : { cls: true }; }
+  function sideSet(k, on) { var v = sideOpen(); if (on) v[k] = true; else delete v[k]; lset(SIDE_OPEN_KEY, v); }
+  function esc0(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function twin(btn, sub, key) {
+    var on = !!sideOpen()[key];
+    btn.setAttribute('aria-expanded', on ? 'true' : 'false'); sub.hidden = !on;
+  }
+  function recentsHTML() {
+    var l = lget(RECENT_KEY); l = Array.isArray(l) ? l.slice(0, 5) : [];
+    if (!l.length) return '<p class="side-none">Classes and assignments you open show up here.</p>';
+    return l.map(function (r) { return '<a class="side-subl side-recl" href="' + esc0(r.u) + '"><span class="tx"><b>' + esc0(r.t) + '</b><small>' + esc0(r.s) + '</small></span></a>'; }).join('');
+  }
+  function classId(a) {
+    var o = a.getAttribute('data-open') || '', m = o.match(/^class:(.+)$/);
+    if (m) return m[1];
+    var h = a.getAttribute('data-go') || a.getAttribute('href') || '', q = h.match(/[?&]course=([^&#]+)/);
+    return q ? decodeURIComponent(q[1]) : '';
+  }
+  // each class: a ▸ that opens its pages under it
+  function decorateClasses(box) {
+    if (!box) return;
+    var here = page === 'course-hub' ? courseQ : '', tabNow = (location.hash.match(/^#([a-z]+)/) || [, ''])[1];
+    [].slice.call(box.children).forEach(function (a) {
+      if (a.tagName !== 'A') return;
+      var id = classId(a); if (!id) return;
+      var w = document.createElement('div'); w.className = 'side-cl'; box.insertBefore(w, a); w.appendChild(a);
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'side-tw fade'; b.setAttribute('data-sidetw', 'c:' + id);
+      b.setAttribute('aria-label', 'Pages in ' + (a.getAttribute('title') || 'this class').split(' · ')[0]); b.innerHTML = CHEV; w.appendChild(b);
+      var sub = document.createElement('div'); sub.className = 'side-sub';
+      sub.innerHTML = HUB_TABS.map(function (t) {
+        var on = id === here && (t[0] === tabNow || (!t[0] && (!tabNow || tabNow === 'overview')));
+        return '<a class="side-subl' + (on ? ' on' : '') + '" href="' + FSX.hubUrl(id, t[0]) + '"' + (on ? ' aria-current="page"' : '') + '>' + t[1] + '</a>';
+      }).join('');
+      w.appendChild(sub);
+      if (id === here && !('c:' + id in sideOpen()) && !sideOpen()['closed:' + id]) { var v = sideOpen(); v['c:' + id] = true; lset(SIDE_OPEN_KEY, v); }
+      twin(b, sub, 'c:' + id);
+    });
+  }
+  window.__fsSide = function () {
+    var side = document.getElementById('side'); if (!side || side.dataset.cf) return; side.dataset.cf = '1';
+    var nav = side.querySelector('.nav');
+    if (nav) {
+      var srch = document.getElementById('sideSearch'), lab = srch && srch.querySelector('.fade');
+      if (lab) lab.textContent = 'Quick search…';
+      var links = [].slice.call(nav.querySelectorAll('a')), by = function (t) { return links.filter(function (x) { return x.getAttribute('title') === t; })[0]; };
+      var home = by('Home');
+      if (home) {
+        var rec = document.createElement('a'); rec.href = '#'; rec.id = 'sideRec'; rec.className = 'side-rec'; rec.title = 'Recents'; rec.setAttribute('role', 'button');
+        rec.innerHTML = CLOCK + '<span class="fade">Recents</span><span class="side-chev fade">' + CHEV + '</span>';
+        var rl = document.createElement('div'); rl.className = 'side-sub side-recs'; rl.id = 'sideRecList'; rl.innerHTML = recentsHTML();
+        home.after(rec); rec.after(rl); twin(rec, rl, 'rec');
+      }
+      var head = function (before, t) { if (!before) return; var h = document.createElement('div'); h.className = 'side-sec fade'; h.textContent = t; h.setAttribute('aria-hidden', 'true'); before.before(h); };
+      head(by('Courses'), 'School'); head(by('Files'), 'Your stuff');
+    }
+    // Your classes: a folder
+    var sh = side.querySelector('.side-h'), cls = document.getElementById('sideClasses');
+    if (sh && cls) {
+      var hb = document.createElement('button'); hb.type = 'button'; hb.className = 'side-hb'; hb.setAttribute('data-sidetw', 'cls');
+      hb.innerHTML = '<span>' + esc0(sh.textContent.trim() || 'Your classes') + '</span><span class="side-chev">' + CHEV + '</span>';
+      sh.textContent = ''; sh.appendChild(hb); twin(hb, cls, 'cls');
+      decorateClasses(cls);
+      new MutationObserver(function () { if ([].some.call(cls.children, function (x) { return x.tagName === 'A'; })) decorateClasses(cls); }).observe(cls, { childList: true });
+    }
+    side.addEventListener('click', function (e) {
+      var t = e.target.closest && e.target.closest('[data-sidetw], #sideRec'); if (!t) return;
+      e.preventDefault(); e.stopPropagation();
+      var key = t.id === 'sideRec' ? 'rec' : t.getAttribute('data-sidetw'), sub = t.id === 'sideRec' ? document.getElementById('sideRecList') : key === 'cls' ? cls : t.parentNode.querySelector('.side-sub');
+      var on = t.getAttribute('aria-expanded') !== 'true';
+      sideSet(key, on); if (!on && key.indexOf('c:') === 0) sideSet('closed:' + key.slice(2), true); else if (key.indexOf('c:') === 0) sideSet('closed:' + key.slice(2), false);
+      if (key === 'rec' && on) sub.innerHTML = recentsHTML();
+      t.setAttribute('aria-expanded', on ? 'true' : 'false'); sub.hidden = !on;
+    }, true);
+  };
+  // Recents: the classes, their pages and the assignments you open (newest first, 5 kept on this device)
+  function noteRecent() {
+    if (page !== 'course-hub' || !window.FSD || !courseQ || !window.FSD.C[courseQ]) return;
+    var c = window.FSD.C[courseQ], h = location.hash.replace(/^#/, ''), tab = (h.match(/^[a-z]+/) || [''])[0], item = (h.match(/^materials\/([^/?#]+)/) || [, ''])[1];
+    var t = c.name, s = 'Course';
+    if (item) {
+      var a = (window.FSD.ASG || []).filter(function (x) { return String(x.id) === item; })[0];
+      if (a) { t = a.n || a.t || a.title || t; s = c.name + ' · Assignment'; } else s = c.name + ' · Material';
+      if (!a) { var f = ((window.FSD.raw.files && window.FSD.raw.files.files) || []).filter(function (x) { return 'x' + x.id === item || String(x.id) === item; })[0]; if (f) t = f.name; else return; }
+    } else if (tab && tab !== 'overview') { s = c.name; t = { assignments: 'Assignments', grades: 'Grades', materials: 'Materials', updates: 'Updates', members: 'Members' }[tab] || t; if (t === c.name) return; }
+    var u = location.pathname + location.search + location.hash, l = lget(RECENT_KEY); l = Array.isArray(l) ? l : [];
+    l = [{ t: String(t).slice(0, 120), s: s, u: u }].concat(l.filter(function (r) { return r && r.u !== u; })).slice(0, 8);
+    lset(RECENT_KEY, l);
+    var rl = document.getElementById('sideRecList'); if (rl && !rl.hidden) rl.innerHTML = recentsHTML();
+  }
+  window.addEventListener('fs:ready', function () { setTimeout(noteRecent, 50); });
+  window.addEventListener('hashchange', function () { setTimeout(noteRecent, 50); });
+
   // ---------- the sidebar and top bar between pages ----------
   var potato = function () { try { return JSON.parse(localStorage.getItem('fsmock_potato')) === true; } catch (e) { return false; } };
   // the two pieces that stay put get their names only while the pages swap (a name all the time would change how the
