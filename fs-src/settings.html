@@ -3149,6 +3149,12 @@
   .sg-dh h2 { margin: 0; font-size: 20px; font-weight: 900; }
   .sg-db { padding: 4px 20px 16px; overflow-y: auto; font-size: 14px; font-weight: 600; color: var(--ink-2); line-height: 1.5; }
   .sg-db p { margin: 0 0 8px; }
+  /* End early: type the word to confirm; the word sits in a dashed box you can click to copy (2026-11-02) */
+  .sg-typeto { margin-top: 16px; }
+  .sg-copyw { display: inline-block; margin: 0 4px; padding: 0 8px; border: 1px dashed color-mix(in srgb, var(--ink) 40%, transparent); border-radius: 6px; font: inherit; font-weight: 800; color: var(--ink); background: none; cursor: copy; }
+  .sg-copyw:hover { background: color-mix(in srgb, var(--ink) 8%, transparent); }
+  .sg-copyw:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  .sg-df .btn:disabled { opacity: .45; cursor: default; }
   .sg-db ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 12px; }
   .sg-db li { display: flex; gap: 12px; }
   .sg-db li svg.i { width: 18px; height: 18px; flex: none; margin-top: 1px; color: var(--accent); }
@@ -4485,13 +4491,25 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   // and the days left aren't paid back.
   function endEarly() {
     const B = LIVE.billing || {}, ends = B.renewsAt ? new Date(B.renewsAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '';
-    dlgOpen({ title: 'End Plus now?', ok: 'End Plus now', danger: true, body: `<p>Plus stops right away and you're on Classic. You lose browser notifications, calendar sync and early features today${ends ? ` instead of ${esc(ends)}` : ''}.</p><p>The days left aren't paid back.</p>`,
-      onOk: () => {
+    // like deleting something on Cloudflare (2026-11-02, Martin): type the word (or copy it from the dashed box) first
+    const WORD = 'unsubscribe';
+    const d = dlgOpen({ title: 'End Plus now?', ok: 'End Plus now', danger: true, body: `<p>Plus stops right away and you're on Classic. You lose browser notifications, calendar sync and early features today${ends ? ` instead of ${esc(ends)}` : ''}.</p><p>The days left aren't paid back.</p>
+      <label class="sg-fl sg-typeto"><b>Type <button type="button" class="sg-copyw" data-dact="copy" title="Copy" aria-label="Copy the word ${WORD}">${WORD}</button> to end early.</b><input id="sgEndTxt" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="${WORD}"></label>`,
+      onOk: el => {
+        if (el.querySelector('#sgEndTxt').value.trim().toLowerCase() !== WORD) { el.querySelector('#sgEndTxt').focus(); return false; }
         toast('Ending Plus…');
         FSX.api('/billing/end-now', { method: 'POST', json: {} }).then(b => {
           LIVE.billing = Object.assign({}, LIVE.billing, b); SG.plan = b && b.plus ? 'plus' : 'free'; redraw(); toast('Plus has ended. You\'re on Classic.');
         }, e => toast(e && e.message === 'billing_no_subscription' ? 'There\'s no plan to end.' : e && e.message === 'billing_not_ending' ? 'Your plan renews. Use Manage plan to cancel it first.' : 'Couldn\'t end Plus. Try again in a moment.'));
       } });
+    const inp = d.el.querySelector('#sgEndTxt'), okb = d.el.querySelector('[data-dlg="ok"]');
+    const check = () => { okb.disabled = inp.value.trim().toLowerCase() !== WORD; };
+    inp.addEventListener('input', check); check();
+    d.onAct = k => {
+      if (k !== 'copy') return;
+      const done = () => { toast('Copied.'); inp.focus(); };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(WORD).then(done, () => inp.focus()); else inp.focus();
+    };
   }
   function setPlan(k) { if (k === 'plus') stripe('checkout'); }
   function setMode(m) {
