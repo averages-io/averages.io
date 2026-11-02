@@ -334,6 +334,12 @@ function build() {
     // a folder's insides: small icons centred on the rail when it's closed, their names lined up under the
     // folder's name when it's open
     ".side-sub{display:flex;flex-direction:column;gap:2px;padding:2px 0 6px;flex:none}",
+    // open folders only show their rows while the sidebar is open (2026-11-02, Martin: "all closed on a closed
+    // sidebar"); they slide open with the sidebar instead of jumping (where the browser can animate to auto height)
+    ".side{interpolate-size:allow-keywords}",
+    ".side-sub{height:auto;overflow:hidden;transition:height .2s cubic-bezier(.2,.8,.2,1) .06s,padding .2s cubic-bezier(.2,.8,.2,1) .06s}",
+    CLOSED + " .side-sub{height:0;padding-top:0;padding-bottom:0;transition-delay:0s}",
+    "body.potato-mode .side-sub{transition:none}@media (prefers-reduced-motion:reduce){.side-sub{transition:none}}",
     ".side-subl{display:flex;align-items:center;gap:18px;height:30px;padding:0 12px 0 16px;border-radius:8px;color:var(--ink-2);font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden}",
     ".side-subl>svg{width:16px;height:16px;flex:none;color:var(--muted)}",
     ".side-subl>.fade{min-width:0;overflow:hidden;text-overflow:ellipsis}",
