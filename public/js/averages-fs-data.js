@@ -174,7 +174,10 @@
   var SIDE_OPEN_KEY = 'averages_fs_side_open', RECENT_KEY = 'averages_fs_recents';
   var CLOCK = '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.25" fill="none" stroke="currentColor" stroke-width="1.75"/><path d="M12 7.5V12l3 2" fill="none" stroke="currentColor" stroke-width="1.75"/></svg>';
   var CHEV = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.75"/></svg>';
-  var HUB_TABS = [['', 'Overview'], ['assignments', 'Assignments'], ['grades', 'Grades'], ['materials', 'Materials'], ['updates', 'Updates']];
+  var HUB_TABS = [['', 'Overview', 'home'], ['assignments', 'Assignments', 'inbox'], ['grades', 'Grades', 'chart'], ['materials', 'Materials', 'folder'], ['updates', 'Updates', 'bell']];
+  var PAGE_ICON = { courses: 'binder', grades: 'chart', assignments: 'inbox', calendar: 'cal', files: 'folder', messages: 'msg', contacts: 'users', settings: 'gear', course: 'binder', assignment: 'inbox', material: 'folder', overview: 'home', updates: 'bell', members: 'users' };
+  var PAGE_NAME = { courses: 'Courses', grades: 'Grades', assignments: 'Assignments', calendar: 'Calendar', files: 'Files', messages: 'Messages', contacts: 'Contacts', settings: 'Settings' };
+  function sico(k) { return '<svg class="i" aria-hidden="true"><use href="#i-' + (PAGE_ICON[k] || k || 'doc') + '"/></svg>'; }
   function sideOpen() { var v = lget(SIDE_OPEN_KEY); return v && typeof v === 'object' && !Array.isArray(v) ? v : { cls: true }; }
   function sideSet(k, on) { var v = sideOpen(); if (on) v[k] = true; else delete v[k]; lset(SIDE_OPEN_KEY, v); }
   function esc0(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
@@ -185,7 +188,7 @@
   function recentsHTML() {
     var l = lget(RECENT_KEY); l = Array.isArray(l) ? l.slice(0, 5) : [];
     if (!l.length) return '<p class="side-none">Classes and assignments you open show up here.</p>';
-    return l.map(function (r) { return '<a class="side-subl side-recl" href="' + esc0(r.u) + '"><span class="tx"><b>' + esc0(r.t) + '</b><small>' + esc0(r.s) + '</small></span></a>'; }).join('');
+    return l.map(function (r) { return '<a class="side-subl side-recl" href="' + esc0(r.u) + '" title="' + esc0(r.t) + '">' + sico(r.k) + '<span class="tx fade"><b>' + esc0(r.t) + '</b><small>' + esc0(r.s) + '</small></span></a>'; }).join('');
   }
   function classId(a) {
     var o = a.getAttribute('data-open') || '', m = o.match(/^class:(.+)$/);
@@ -206,7 +209,7 @@
       var sub = document.createElement('div'); sub.className = 'side-sub';
       sub.innerHTML = HUB_TABS.map(function (t) {
         var on = id === here && (t[0] === tabNow || (!t[0] && (!tabNow || tabNow === 'overview')));
-        return '<a class="side-subl' + (on ? ' on' : '') + '" href="' + FSX.hubUrl(id, t[0]) + '"' + (on ? ' aria-current="page"' : '') + '>' + t[1] + '</a>';
+        return '<a class="side-subl' + (on ? ' on' : '') + '" href="' + FSX.hubUrl(id, t[0]) + '" title="' + t[1] + '"' + (on ? ' aria-current="page"' : '') + '>' + sico(t[2]) + '<span class="fade">' + t[1] + '</span></a>';
       }).join('');
       w.appendChild(sub);
       if (id === here && !('c:' + id in sideOpen()) && !sideOpen()['closed:' + id]) { var v = sideOpen(); v['c:' + id] = true; lset(SIDE_OPEN_KEY, v); }
@@ -247,20 +250,30 @@
       sideSet(key, on); if (!on && key.indexOf('c:') === 0) sideSet('closed:' + key.slice(2), true); else if (key.indexOf('c:') === 0) sideSet('closed:' + key.slice(2), false);
       if (key === 'rec' && on) sub.innerHTML = recentsHTML();
       t.setAttribute('aria-expanded', on ? 'true' : 'false'); sub.hidden = !on;
+      if (on && sub.classList && sub !== cls) { sub.classList.remove('opening'); void sub.offsetWidth; sub.classList.add('opening'); setTimeout(function () { sub.classList.remove('opening'); }, 500); }
     }, true);
   };
   // Recents: the classes, their pages and the assignments you open (newest first, 5 kept on this device)
   function noteRecent() {
-    if (page !== 'course-hub' || !window.FSD || !courseQ || !window.FSD.C[courseQ]) return;
-    var c = window.FSD.C[courseQ], h = location.hash.replace(/^#/, ''), tab = (h.match(/^[a-z]+/) || [''])[0], item = (h.match(/^materials\/([^/?#]+)/) || [, ''])[1];
-    var t = c.name, s = 'Course';
-    if (item) {
-      var a = (window.FSD.ASG || []).filter(function (x) { return String(x.id) === item; })[0];
-      if (a) { t = a.n || a.t || a.title || t; s = c.name + ' · Assignment'; } else s = c.name + ' · Material';
-      if (!a) { var f = ((window.FSD.raw.files && window.FSD.raw.files.files) || []).filter(function (x) { return 'x' + x.id === item || String(x.id) === item; })[0]; if (f) t = f.name; else return; }
-    } else if (tab && tab !== 'overview') { s = c.name; t = { assignments: 'Assignments', grades: 'Grades', materials: 'Materials', updates: 'Updates', members: 'Members' }[tab] || t; if (t === c.name) return; }
-    var u = location.pathname + location.search + location.hash, l = lget(RECENT_KEY); l = Array.isArray(l) ? l : [];
-    l = [{ t: String(t).slice(0, 120), s: s, u: u }].concat(l.filter(function (r) { return r && r.u !== u; })).slice(0, 8);
+    if (!window.FSD || page === 'home' || page === '404') return;
+    var t, s, k, u = location.pathname + location.search + location.hash;
+    if (page === 'course-hub') {
+      if (!courseQ || !window.FSD.C[courseQ]) return;
+      var c = window.FSD.C[courseQ], h = location.hash.replace(/^#/, ''), tab = (h.match(/^[a-z]+/) || [''])[0], item = (h.match(/^materials\/([^/?#]+)/) || [, ''])[1];
+      t = c.name; s = 'Course'; k = 'course';
+      if (item) {
+        var a = (window.FSD.ASG || []).filter(function (x) { return String(x.id) === item; })[0];
+        if (a) { t = a.n || a.t || a.title || t; s = c.name + ' · Assignment'; k = 'assignment'; }
+        else { var f = ((window.FSD.raw.files && window.FSD.raw.files.files) || []).filter(function (x) { return 'x' + x.id === item || String(x.id) === item; })[0]; if (!f) return; t = f.name; s = c.name + ' · Material'; k = 'material'; }
+      } else if (tab && tab !== 'overview') {
+        t = { assignments: 'Assignments', grades: 'Grades', materials: 'Materials', updates: 'Updates', members: 'Members' }[tab]; if (!t) return; s = c.name; k = tab;
+      }
+    } else {
+      // the other pages (2026-11-02, Martin: everything but Home); one entry per page, wherever you were on it
+      if (!PAGE_NAME[page]) return; t = PAGE_NAME[page]; s = 'Page'; k = page; u = location.pathname;
+    }
+    var l = lget(RECENT_KEY); l = Array.isArray(l) ? l : [];
+    l = [{ t: String(t).slice(0, 120), s: s, u: u, k: k }].concat(l.filter(function (r) { return r && r.u !== u; })).slice(0, 8);
     lset(RECENT_KEY, l);
     var rl = document.getElementById('sideRecList'); if (rl && !rl.hidden) rl.innerHTML = recentsHTML();
   }
@@ -292,7 +305,7 @@
         ct[id] = { n: el.querySelector('canvas.ink') ? (el.dataset.n || '') : el.textContent.trim(), h: !!el.hidden };
       });
       sessionStorage.setItem('averages_fs_chrome', JSON.stringify({
-        at: Date.now(), cls: cls ? cls.innerHTML : '', ct: ct,
+        at: Date.now(), cls: cls ? cls.innerHTML : '', ct: ct, st: side.scrollTop || 0,
         hold: !app.classList.contains('pinned') && (side.matches(':hover') || side.classList.contains('hold')),
         av: av ? { c: av.className, s: av.getAttribute('style') || '', t: av.textContent } : null,
       }));

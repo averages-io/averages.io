@@ -301,36 +301,52 @@ function build() {
   // headings, folders with a turning arrow, each class's pages under it, Recents.
   const OPEN = [".side:is(:hover,.hold,:has(:focus-visible))", ".app.pinned .side", ".app.menu .side"];
   const open = (sel) => OPEN.map((o) => o + " " + sel).join(",");
+  const CLOSED = ".app:not(.pinned):not(.menu) .side:not(:hover):not(.hold):not(:has(:focus-visible))";
   const SIDE_CSS = [
     ".side [hidden]{display:none!important}",
+    // tighter rows, and nothing changes height or moves sideways when the sidebar opens (2026-11-02, Martin: opening
+    // was choppy and everything moved down): headings, folders and their insides keep their place open or closed,
+    // and only the width slides
     ".nav{gap:2px}.nav a{height:36px;font-size:14px;border-radius:10px}.cls{gap:2px}.cls a{height:34px;font-size:14px;border-radius:10px}",
+    ".side>.cls a:not(.side-subl)," + open(".side>.cls a:not(.side-subl)") + "{padding-left:8px!important}",
+    ".side>.side-h," + open(".side>.side-h") + "{height:32px!important;padding-left:24px}",
+    CLOSED + " .side-h .side-hb{visibility:hidden}",
     ".nav a.on{background:color-mix(in srgb,var(--ink) 8%,transparent)}",
-    ".side-sec{height:0;overflow:hidden;padding:0 20px;display:flex;align-items:flex-end;font-size:12px;font-weight:800;color:var(--muted);white-space:nowrap;flex:none}",
-    open(".side-sec") + "{height:28px;padding-bottom:4px}",
+    // section headings: lined up with the icons; on the closed rail, a thin line in the same space
+    ".side-sec{height:28px;overflow:hidden;padding:0 16px 4px;display:flex;align-items:flex-end;font-size:12px;font-weight:800;color:var(--muted);white-space:nowrap;flex:none}",
+    CLOSED + " .side-sec{color:transparent;background:linear-gradient(var(--inner),var(--inner)) center 14px/32px 2px no-repeat}",
     ".side-chev{display:inline-flex;width:16px;height:16px;flex:none;color:var(--muted)}.side-chev svg,.side-tw svg{width:100%;height:100%}",
     ".side-rec .side-chev{margin-left:auto}",
     "#sideRec[aria-expanded=true] .side-chev,.side-hb[aria-expanded=true] .side-chev,.side-tw[aria-expanded=true] svg{transform:rotate(90deg)}",
-    ".side-chev,.side-tw svg{transition:transform .15s ease}",
+    ".side-chev,.side-tw svg{transition:transform .2s cubic-bezier(.2,.8,.2,1)}",
+    // a folder opening: its rows drop in from a little above, one after another (2026-11-02, Martin)
+    ".side-sub.opening>*{animation:sideDrop .24s cubic-bezier(.2,.8,.2,1) both}",
+    ".side-sub.opening>:nth-child(2){animation-delay:.03s}.side-sub.opening>:nth-child(3){animation-delay:.06s}.side-sub.opening>:nth-child(4){animation-delay:.09s}.side-sub.opening>:nth-child(5){animation-delay:.12s}.side-sub.opening>:nth-child(n+6){animation-delay:.15s}",
+    "@keyframes sideDrop{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}",
+    "body.potato-mode .side-sub.opening>*{animation:none}@media (prefers-reduced-motion:reduce){.side-sub.opening>*{animation:none}}",
     ".side-h .side-hb{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;height:100%;padding:0 8px 0 0;border:0;background:none;color:inherit;font:inherit;cursor:pointer;text-align:left}",
     ".side-h .side-hb:hover{color:var(--ink)}",
     ".side-cl{position:relative}",
     ".side-cl>a>span.fade:not(.g){flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}.side-cl>a>.g{flex:none}",
     ".side-tw{position:absolute;right:4px;top:3px;width:28px;height:28px;padding:7px;border:0;border-radius:8px;background:none;color:var(--muted);cursor:pointer}",
     ".side-tw:hover{background:color-mix(in srgb,var(--ink) 8%,transparent);color:var(--ink)}",
-    open(".side-cl>a") + "{padding-right:36px}",
-    ".side-sub{display:flex;flex-direction:column;gap:2px;padding:2px 0 6px 44px;flex:none}",
-    ".side-recs{padding-left:40px}",
-    ".side-subl{display:flex;align-items:center;min-height:30px;padding:4px 12px;border-radius:8px;color:var(--ink-2);font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}",
+    ".side-cl>a{padding-right:36px}",
+    // a folder's insides: small icons centred on the rail when it's closed, their names lined up under the
+    // folder's name when it's open
+    ".side-sub{display:flex;flex-direction:column;gap:2px;padding:2px 0 6px;flex:none}",
+    ".side-subl{display:flex;align-items:center;gap:18px;height:30px;padding:0 12px 0 16px;border-radius:8px;color:var(--ink-2);font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden}",
+    ".side-subl>svg{width:16px;height:16px;flex:none;color:var(--muted)}",
+    ".side-subl>.fade{min-width:0;overflow:hidden;text-overflow:ellipsis}",
     ".side-subl:hover{background:color-mix(in srgb,var(--ink) 5%,transparent);color:var(--ink)}",
-    ".side-subl.on{background:color-mix(in srgb,var(--ink) 8%,transparent);color:var(--ink)}",
+    ".side-subl.on{background:color-mix(in srgb,var(--ink) 8%,transparent);color:var(--ink)}.side-subl.on>svg{color:var(--accent)}",
+    ".side .side-subl>svg.i{width:16px!important;height:16px!important;flex:none}",
+    ".side .cls .side-subl{height:30px!important;padding:0 12px 0 16px!important;gap:18px!important;border-radius:8px}",
+    ".side .side-recl{height:40px;gap:14px;padding:0 12px 0 16px}",
     ".side-recl .tx{display:flex;flex-direction:column;min-width:0}.side-recl b{font-size:13px;font-weight:800;color:var(--ink);overflow:hidden;text-overflow:ellipsis}.side-recl small{font-size:11px;font-weight:700;color:var(--muted);overflow:hidden;text-overflow:ellipsis}",
-    ".side-none{margin:0;padding:4px 12px 8px;font-size:12px;font-weight:700;color:var(--muted);white-space:normal}",
+    ".side-none{margin:0;padding:4px 12px 8px 52px;font-size:12px;font-weight:700;color:var(--muted);white-space:normal}",
+    CLOSED + " .side-none{visibility:hidden}",
     // the pin stays on screen at the bottom while the rest scrolls under it (2026-11-02, Martin: "always on top")
     ".side .foot{position:sticky;bottom:0;z-index:3;background:var(--frame);box-shadow:0 -1px 0 color-mix(in srgb,var(--ink) 10%,transparent)}",
-    // on the closed rail a heading is a thin line between the groups, like Cloudflare's
-    ".app:not(.pinned):not(.menu) .side:not(:hover):not(.hold):not(:has(:focus-visible)) .side-sec{height:1px;margin:8px 16px;padding:0;background:color-mix(in srgb,var(--ink) 12%,transparent);color:transparent}",
-    // the closed rail shows only the icons
-    ".app:not(.pinned):not(.menu) .side:not(:hover):not(.hold):not(:has(:focus-visible)) .side-sub{display:none}",
   ].join("");
   const CHROME_JS = `(function(){var d=document,r=d.documentElement,a=d.getElementById('app'),s=d.getElementById('side');if(!a||!s)return;r.classList.add('fs-boot');try{window.__fsSide&&window.__fsSide()}catch(e){}
 try{var pin=false;try{pin=JSON.parse(localStorage.getItem('fsmock_pinned'))===true}catch(e){}if(pin)a.classList.add('pinned');
@@ -338,7 +354,7 @@ var j=JSON.parse(sessionStorage.getItem('averages_fs_chrome')||'null');if(j&&Dat
 var c=d.getElementById('sideClasses');if(c&&!c.children.length&&j.cls){c.innerHTML=j.cls;[].forEach.call(c.querySelectorAll('.here,[aria-current]'),function(x){x.classList.remove('here');x.removeAttribute('aria-current')})}
 if(j.av)[].forEach.call(d.querySelectorAll('.top [data-av]'),function(v){v.className=j.av.c;if(j.av.s)v.setAttribute('style',j.av.s);v.textContent=j.av.t;v.setAttribute('data-avk','')});
 for(var k in j.ct){var e=d.getElementById(k);if(e){e.textContent=j.ct[k].n;e.hidden=j.ct[k].h}}
-if(j.hold&&!pin){s.classList.add('hold');var drop=function(ev){var q=s.getBoundingClientRect();if(ev.clientX>q.right||ev.clientX<q.left||ev.clientY<q.top||ev.clientY>q.bottom){s.classList.remove('hold');d.removeEventListener('pointermove',drop)}};d.addEventListener('pointermove',drop)}}}catch(e){}
+if(j.st>0){var st=j.st;s.scrollTop=st;requestAnimationFrame(function(){s.scrollTop=st})}if(j.hold&&!pin){s.classList.add('hold');var drop=function(ev){var q=s.getBoundingClientRect();if(ev.clientX>q.right||ev.clientX<q.left||ev.clientY<q.top||ev.clientY>q.bottom){s.classList.remove('hold');d.removeEventListener('pointermove',drop)}};d.addEventListener('pointermove',drop)}}}catch(e){}
 requestAnimationFrame(function(){requestAnimationFrame(function(){r.classList.remove('fs-boot')})})})();`;
   for (const file of fs.readdirSync(SRC).filter((f) => f.endsWith(".html")).sort()) {
     let s = fs.readFileSync(path.join(SRC, file), "utf8");
