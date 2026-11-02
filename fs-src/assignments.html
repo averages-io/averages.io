@@ -4162,6 +4162,10 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const TYPES = [['todo', 'To do'], ['missing', 'Missing'], ['turned', 'Turned in'], ['graded', 'Graded'], ['all', 'All']];
   const ofType = (a, t) => t === 'all' ? true : t === 'todo' ? isTodo(a) : a.st === t;
   const hit = a => (!AS.c || a.c === AS.c) && (!AS.att || hasAtt(a)) && (!AS.q || (a.t + ' ' + C[a.c].name + ' ' + C[a.c].teacher).toLowerCase().includes(AS.q));
+  // from another page (2026-11-01: the Courses tags): ?course=<class>&show=missing|todo|turned|graded|all
+  { const qc = FSX.q.get('course'), qs = FSX.q.get('show');
+    if (qc && C[qc]) AS.c = qc;
+    if (qs && TYPES.some(t => t[0] === qs)) { AS.type = qs; AS.att = false; } }
   if (AS.c && !C[AS.c]) AS.c = '';
   const shown = () => ASG.filter(a => ofType(a, AS.type) && hit(a));
 

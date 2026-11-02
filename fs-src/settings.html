@@ -3049,6 +3049,13 @@
   .sg-is .isp-l2 { left: 34px; top: 59px; width: 30%; height: 3px; border-radius: 2px; background: var(--accent); }
   .sg-is .isp-l3 { left: 34px; top: 68px; width: 22%; height: 3px; border-radius: 2px; background: var(--muted); opacity: .6; }
   .sg-modes { display: flex; flex-wrap: wrap; gap: 8px; }
+  /* Course order: small up and down buttons on each course (2026-11-01) */
+  .sg-mv { display: flex; gap: 8px; flex: none; }
+  .sg-mvb { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; background: color-mix(in srgb, var(--ink) 8%, transparent) !important; color: var(--ink-2); transition: background-color .12s ease; }
+  .sg-mvb:hover:not(:disabled) { background: color-mix(in srgb, var(--ink) 14%, transparent) !important; color: var(--ink); }
+  .sg-mvb:disabled { color: var(--muted); opacity: .45; cursor: default; }
+  .sg-mvb svg.i { width: 16px; height: 16px; }
+  .sg-mvb:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
   .sg-mode { display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 12px; border-radius: 12px; background: var(--panel); color: var(--ink); font-size: 14px; font-weight: 800; transition: box-shadow .15s ease, background-color .15s ease; }
   .sg-mode svg.i { width: 16px; height: 16px; color: var(--ink-2); }
   .sg-opt:hover, .sg-skin:hover { box-shadow: inset 0 0 0 2px var(--inner); }
@@ -3825,7 +3832,8 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   /* ===== end Notifications ===== */
 
   // ---------- frame: sidebar classes, avatar, pin, menu, toast (same as Home) ----------
-  $('sideClasses').innerHTML = CLASSES.map(c => `<a href="${FSX.hubUrl(c.id)}" title="${esc(c.name)} · ${letter(c.pct)} ${c.pct.toFixed(1)}%" data-go="${FSX.hubUrl(c.id)}">${badge(c)}<span class="fade">${esc(c.name)}</span></a>`).join('');
+  const renderSide = () => { $('sideClasses').innerHTML = CLASSES.map(c => `<a href="${FSX.hubUrl(c.id)}" title="${esc(c.name)} · ${letter(c.pct)} ${c.pct.toFixed(1)}%" data-go="${FSX.hubUrl(c.id)}">${badge(c)}<span class="fade">${esc(c.name)}</span></a>`).join(''); };
+  renderSide();
   const inkCv = document.createElement('canvas'), inkC2 = inkCv.getContext('2d', { willReadFrequently: true }), inkMemo = new Map();
   function inkOf(text, cs) {
     const key = `${cs.fontStyle}|${cs.fontWeight}|${cs.fontFamily}|${text}`;
@@ -4108,7 +4116,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const SECS = [
     { id: 'account', t: 'Account', ic: 'user', c: '#3e64b0', d: 'You, your school and how you sign in' },
     { id: 'plan', t: 'Plan', ic: 'star', c: '#b77d00', d: 'Averages Plus and the other plans' },
-    { id: 'appearance', t: 'Appearance', ic: 'brush', c: '#7a3fa0', d: 'Window, theme, colors and speed' },
+    { id: 'appearance', t: 'Appearance', ic: 'brush', c: '#7a3fa0', d: 'Window, theme, colors, course order and speed' },
     { id: 'notifications', t: 'Notifications', ic: 'bell', c: '#d0393e', d: 'What your browser tells you about' },
     { id: 'apps', t: 'Connected apps', ic: 'link', c: '#2e7d4f', d: 'Google Drive, Canva, OneDrive and calendars' },
     { id: 'privacy', t: 'Privacy', ic: 'eyeoff', c: '#44465a', d: 'What we keep and where it syncs' },
@@ -4147,7 +4155,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     ['account', 'signin', 'Signed in with Schoology', 'sign in password login account'], ['account', 'signout', 'Sign out', 'log out leave'],
     ['plan', 'current', 'Your plan', 'averages plus subscription renew billing'], ['plan', 'other', 'Other plans', 'free classic switch cancel downgrade get plus upgrade'], ['plan', 'payment', 'Payment and receipts', 'card billing cancel receipt'], ['plan', 'early', 'New features early', 'beta preview try'], ['plan', 'experiments', 'Experiments', 'beta labs try new features study planner grade goals focus timer weekly recap'],
     ['appearance', 'layout', 'Window', 'layout fullscreen windowed full screen background'], ['appearance', 'fstheme', 'Theme', 'is industry standard look style fullscreen theme'], ['appearance', 'theme', 'Mode', 'dark mode light system auto colors night'], ['appearance', 'accent', 'Accent color', 'color highlight buttons'],
-    ['appearance', 'potato', 'Potato mode', 'performance animations chromebook slow fast font'], ['appearance', 'motion', 'Reduce motion', 'animation accessibility'], ['appearance', 'previews', 'File previews', 'thumbnails images pdf'], ['appearance', 'cache', 'Saved on this device', 'cache storage clear space'],
+    ['appearance', 'corder', 'Course order', 'courses order move up down reorder sort classes'], ['appearance', 'potato', 'Potato mode', 'performance animations chromebook slow fast font'], ['appearance', 'motion', 'Reduce motion', 'animation accessibility'], ['appearance', 'previews', 'File previews', 'thumbnails images pdf'], ['appearance', 'cache', 'Saved on this device', 'cache storage clear space'],
     ['notifications', 'notif', 'Browser notifications', 'alerts push notices'], ['notifications', 'nGrades', 'Grade updates', 'scores new grade'], ['notifications', 'nAssign', 'New assignments', 'work posted homework'],
     ['notifications', 'nDue', 'Due date reminders', 'due soon remind tomorrow'], ['notifications', 'nMsgs', 'Messages', 'inbox chat'], ['notifications', 'nAnn', 'Announcements', 'updates posts course'], ['notifications', 'quiet', 'Quiet during class', 'school hours do not disturb silence'], ['notifications', 'test', 'Send a test notification', 'try check'],
     ['apps', 'schoology', 'Schoology', 'classes grades connected'], ['apps', 'drive', 'Google Drive', 'docs files connect disconnect'], ['apps', 'canva', 'Canva', 'designs connect disconnect'], ['apps', 'onedrive', 'OneDrive', 'microsoft files connect'],
@@ -4230,7 +4238,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
           <p>${blurb}</p>
           <ul>${feats.map(([f, s2]) => `<li>${ico('ok')}${f}${s2 ? ` <small>${s2}</small>` : ''}</li>`).join('')}</ul>
           <div class="ft"><small>${cur === 'free' ? 'Free forever. Profile pictures are free for everyone.' : B.cancelAtPeriodEnd ? `Plus ends ${esc(ends)}. You won't be charged again.` : ends ? `Renews ${esc(ends)}` : ''}</small>${B.manageable ? btn('pay', 'Manage plan') : ''}</div></div></section>
-      ${cur === 'plus' ? grp('Other plans', `<div class="sg-row wrapr" data-set="other">${tx(`Classic<span class="sg-pr">Free</span>`, B.cancelAtPeriodEnd ? `You're on Classic after ${esc(ends)}, when Plus ends.` : 'Your grades, assignments, files and calendar, and messaging your teachers. No browser notifications, calendar sync or early features.')}${B.cancelAtPeriodEnd ? chip('From ' + esc(ends)) : B.manageable ? btn('pay', 'Downgrade') : ''}</div>`, B.cancelAtPeriodEnd ? '' : 'Downgrade opens Stripe, where you cancel Plus. You keep Plus until the end of what you paid for, then you\'re on Classic.') : ''}
+      ${cur === 'plus' ? grp('Other plans', `<div class="sg-row wrapr" data-set="other">${tx(`Classic<span class="sg-pr">Free</span>`, B.cancelAtPeriodEnd ? `You're on Classic after ${esc(ends)}, when Plus ends.` : 'Your grades, assignments, files and calendar, and messaging your teachers. No browser notifications, calendar sync or early features.')}${B.cancelAtPeriodEnd ? btn('endnow', 'End early') : B.manageable ? btn('pay', 'Downgrade') : ''}</div>`, B.cancelAtPeriodEnd ? '' : 'Downgrade opens Stripe, where you cancel Plus. You keep Plus until the end of what you paid for, then you\'re on Classic.') : ''}
       ${cur === 'free' ? grp('Other plans', `<div class="sg-row wrapr" data-set="other">${tx(`${PLANS.plus.t}<span class="sg-pr">${esc(priceText(B.price) || PLANS.plus.pr)}</span>`, off ? 'Not in Incognito. Plus needs sync across devices.' : !B.configured ? 'Not on sale yet.' : 'Browser notifications, calendar sync, new features early and the iPhone app.')}${btn('plan', 'Get Plus', ` data-plan="plus"${canBuy ? '' : ' disabled'}`, canBuy ? ' primary' : '')}</div>`, off ? 'To get Plus, switch to Classic in Privacy first.' : 'Renews monthly until you cancel. Cancel anytime in Manage plan.') : ''}
       ${grp('Early access', row('early', 'New features early', LIVE.early.length ? `${LIVE.early.length} ${LIVE.early.length === 1 ? 'feature' : 'features'} in early access now${plus() ? ', on for you' : ''}.` : 'Nothing in early access right now. New features show up here about two weeks before everyone else.', plus() ? chip(ico('ok') + 'Included', ' on') : plusChip()))}`;
     },
@@ -4243,6 +4251,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       ${grp('Colors',
         `<div class="sg-row wrapr" data-set="theme">${tx('Mode', SG.theme === 'auto' ? 'Follows your device: light or dark to match it.' : 'Light, dark, or follow your device.')}<div class="sg-modes" role="group" aria-label="Mode">${[['light', 'Light', 'sun'], ['dark', 'Dark', 'moon'], ['auto', 'System', 'window']].map(([v, t, ic]) => `<button class="sg-mode" data-seg="theme" data-v="${v}" aria-pressed="${SG.theme === v}">${ico(ic)}${t}</button>`).join('')}</div></div>` +
         `<div class="sg-row wrapr" data-set="accent">${tx('Accent color', 'Buttons, highlights and the page you\'re on.')}<div class="sg-sws" role="group" aria-label="Accent color">${ACCENTS.map(([k, n, c]) => `<button class="sg-swb" style="--c:${c}" data-accent="${k}" aria-pressed="${SG.accent === k}" aria-label="${n}" title="${n}">${ico('ok')}</button>`).join('')}</div></div>`)}
+      ${grp('Course order', courseRows(), FSX.courseOrder.get().length ? 'Your order. Windowed and the sidebar use it too.' : 'In period order. Move a course to set your own; Windowed and the sidebar use it too.')}
       ${grp('Speed',
         tog('potato', 'Potato mode', 'Turns off animation and effects and uses the system font. Good for Chromebooks and older computers.', potato) +
         row('motion', 'Reduce motion', 'Follows your device\'s setting. Potato mode turns off motion too.', `<span class="val">${rm ? 'On' : 'Off'}</span>`) +
@@ -4290,8 +4299,8 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
 
     privacy: () => `
       ${grp('What we keep',
-        `<button class="sg-row" role="radio" aria-checked="${!incog()}" data-mode="classic" data-set="mode"${FSD.me.incognito ? ' aria-disabled="true"' : ''}><span class="sg-rd" aria-hidden="true"></span>${tx('Classic', FSD.me.incognito ? 'Not for accounts under 13. Incognito keeps everything on this device.' : 'Your settings, starred things and drafts are saved, so they follow you to every device.')}</button>` +
-        `<button class="sg-row" role="radio" aria-checked="${incog()}" data-mode="incognito"${SG.plan !== 'free' || FSD.me.incognito ? ' aria-disabled="true"' : ''}><span class="sg-rd" aria-hidden="true"></span>${tx('Incognito', SG.plan !== 'free' ? `Not with ${PLANS[SG.plan].t}. Paid plans need sync across devices, so switch to Free in Plan first.` : 'Nothing about you is stored on our servers. Everything stays in this browser.')}</button>`)}
+        `<button class="sg-row" role="radio" aria-checked="${!incog()}" data-mode="classic" data-set="mode"${FSD.me.incognito ? ' aria-disabled="true"' : ''}><span class="sg-rd" aria-hidden="true"></span>${tx('Classic', FSD.me.incognito ? 'Not for accounts under 13. Incognito keeps everything on this device.' : SG.plan !== 'free' ? 'Subscribed to Plus' : 'Your settings, starred things and drafts are saved, so they follow you to every device.')}</button>` +
+        `<button class="sg-row" role="radio" aria-checked="${incog()}" data-mode="incognito"${SG.plan !== 'free' || FSD.me.incognito ? ' aria-disabled="true"' : ''}><span class="sg-rd" aria-hidden="true"></span>${tx('Incognito', SG.plan !== 'free' ? 'Unavailable in Plus' : 'Nothing about you is stored on our servers. Everything stays in this browser.')}</button>`)}
       ${grp('', row('sync', 'Sync across devices', incog() ? 'Off in Incognito. Settings stay in this browser.' : 'Always on in Classic.', chip(incog() ? 'Off' : ico('ok') + 'On', incog() ? '' : ' on')))}
       ${grp('Your data',
         row('data', 'Download your data', 'A copy of everything Averages stored about you. Your grades and files stay in Schoology.', btn('download', 'Download')) +
@@ -4435,6 +4444,23 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
           return window.AveragesPush.enable(pushTypes()).then(r => { LIVE.busy = ''; if (r.ok) { SG.notif = true; SGV.flip = 'notif'; redraw(); toast('Browser notifications are on.'); } else toast(r.code === 'plus_required' ? 'Browser notifications come with Plus.' : 'Couldn\'t turn on notifications. Try again in a moment.'); });
         });
   }
+  // Course order (2026-11-01, Martin: move courses up and down): the same saved order as the Courses page's
+  // Move up / Move down (FSX.courseOrder, shared with Windowed). With none saved it's period order.
+  const courseIds = () => { const saved = FSX.courseOrder.get().filter(id => CLASSES.some(c => c.id === id)); return saved.concat(CLASSES.slice().sort((a, b) => a.period - b.period).map(c => c.id).filter(id => !saved.includes(id))); };
+  function courseRows() {
+    const ids = courseIds(), byId = Object.fromEntries(CLASSES.map(c => [c.id, c]));
+    return ids.map((id, i) => { const c = byId[id];
+      return `<div class="sg-row" data-set="corder">${tx(esc(c.name), esc([c.teacher, c.hasPeriod ? 'Period ' + c.period : ''].filter(Boolean).join(' · ')))}<span class="sg-mv">`
+        + `<button class="sg-mvb" data-act="cmove" data-cid="${esc(id)}" data-d="-1" aria-label="Move ${esc(c.name)} up"${i ? '' : ' disabled'}>${ico('kup')}</button>`
+        + `<button class="sg-mvb" data-act="cmove" data-cid="${esc(id)}" data-d="1" aria-label="Move ${esc(c.name)} down"${i < ids.length - 1 ? '' : ' disabled'}>${ico('kdown')}</button></span></div>`; }).join('')
+      + (FSX.courseOrder.get().length ? row('corder-reset', 'Period order', 'Put your courses back in your school\'s order.', btn('creset', 'Reset')) : '');
+  }
+  function courseMove(id, d) {
+    const ids = courseIds(), i = ids.indexOf(id), j = i + d; if (i < 0 || j < 0 || j >= ids.length) return;
+    [ids[i], ids[j]] = [ids[j], ids[i]]; FSX.courseOrder.set(ids); CLASSES.sort((a, b) => ids.indexOf(a.id) - ids.indexOf(b.id)); renderSide(); redraw();
+    const b = document.querySelector(`[data-act="cmove"][data-cid="${CSS.escape(id)}"][data-d="${d}"]:not(:disabled)`) || document.querySelector(`[data-act="cmove"][data-cid="${CSS.escape(id)}"]:not(:disabled)`);
+    if (b) b.focus({ preventScroll: true });
+  }
   const pushTypes = () => ({ grades: SG.nGrades, assignments: SG.nAssign, due: SG.nDue, messages: SG.nMsgs, announcements: SG.nAnn });
   // the test notification: slides in, stays 5 seconds (longer while you point at it), then slides back out to the right
   function noteGo(n) {
@@ -4454,6 +4480,18 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       const url = j && typeof j.url === 'string' ? j.url : '';
       if (/^https:\/\/(checkout|billing)\.stripe\.com\//.test(url)) location.assign(url); else toast('Couldn\'t open that page. Try again.');
     }, e => toast(e && e.message === 'billing_already_subscribed' ? 'You already have Plus.' : e && e.message === 'incognito_mode' ? 'Plus needs Classic mode.' : e && e.message === 'billing_no_account' ? 'There\'s no plan to manage yet.' : 'Couldn\'t open that page. Try again.'));
+  }
+  // End early (2026-11-01): a plan that's already set to end can end today. Asked first, since it can't be undone
+  // and the days left aren't paid back.
+  function endEarly() {
+    const B = LIVE.billing || {}, ends = B.renewsAt ? new Date(B.renewsAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '';
+    dlgOpen({ title: 'End Plus now?', ok: 'End Plus now', danger: true, body: `<p>Plus stops right away and you're on Classic. You lose browser notifications, calendar sync and early features today${ends ? ` instead of ${esc(ends)}` : ''}.</p><p>The days left aren't paid back.</p>`,
+      onOk: () => {
+        toast('Ending Plus…');
+        FSX.api('/billing/end-now', { method: 'POST', json: {} }).then(b => {
+          LIVE.billing = Object.assign({}, LIVE.billing, b); SG.plan = b && b.plus ? 'plus' : 'free'; redraw(); toast('Plus has ended. You\'re on Classic.');
+        }, e => toast(e && e.message === 'billing_no_subscription' ? 'There\'s no plan to end.' : e && e.message === 'billing_not_ending' ? 'Your plan renews. Use Manage plan to cancel it first.' : 'Couldn\'t end Plus. Try again in a moment.'));
+      } });
   }
   function setPlan(k) { if (k === 'plus') stripe('checkout'); }
   function setMode(m) {
@@ -4567,6 +4605,9 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     else if (k === 'plan') setPlan(a.dataset.plan);
     else if (k === 'goplan') go('plan', 'other');
     else if (k === 'pay' || k === 'receipts') stripe('portal');
+    else if (k === 'endnow') endEarly();
+    else if (k === 'cmove') courseMove(a.dataset.cid, +a.dataset.d);
+    else if (k === 'creset') { FSX.courseOrder.clear(); CLASSES.sort((a, b) => a.period - b.period); renderSide(); redraw(); toast('Back to period order.'); }
     else if (k === 'cache') { try { CACHE_KEYS.forEach(x => sessionStorage.removeItem(x)); Object.keys(sessionStorage).filter(x => x.startsWith('averages_extras_')).forEach(x => sessionStorage.removeItem(x)); } catch (_) {} redraw(); toast('Cleared. Pages load fresh from Schoology next time.'); }
     else if (k === 'test') testNote();
     else if (k === 'connect') { const app = a.dataset.app; FST.connect(app).then(() => { if (app !== 'canva') { SG[app] = FST.connected(app); if (SG[app] && !SG[SG.openIn]) SG.openIn = app; redraw(); toast(`Connected ${APPS[app]}.`); } }, e => toast(FST.message(e))); }

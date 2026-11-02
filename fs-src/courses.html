@@ -2934,6 +2934,10 @@
   .cr-row:hover .cr-chip { background: var(--field); }
   .cr-chip.bad { background: color-mix(in srgb, var(--bad) 14%, var(--panel)); color: var(--bad); }
   .cr-chip.new { background: color-mix(in srgb, var(--sky) 16%, var(--panel)); color: #1a50a6; }
+  /* the tags are buttons: they open what they count (2026-11-01) */
+  button.cr-chip { border: 0; font-family: inherit; cursor: pointer; transition: background-color .12s ease; }
+  button.cr-chip:hover, .cr-row:hover button.cr-chip:hover { background: color-mix(in srgb, currentColor 16%, var(--field)); }
+  button.cr-chip:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
   .cr-none { color: var(--muted); font-size: 13px; font-weight: 800; }
   /* stars: soft and chunky; a starred one is sunny yellow, and starring it springs up */
   .cr-starb { position: relative; width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; color: var(--muted); }
@@ -3000,6 +3004,7 @@
   .cr-menu { position: fixed; z-index: 90; min-width: 220px; padding: 8px; border-radius: 14px; background: var(--field); box-shadow: 0 0 0 1px rgba(20, 21, 31, .06), 0 16px 32px -12px rgba(20, 21, 31, .3); display: flex; flex-direction: column; }
   .cr-menu button { text-align: left; padding: 8px 12px; border-radius: 8px; font-size: 14px; font-weight: 700; color: var(--ink); }
   .cr-menu button:hover, .cr-menu button:focus-visible { background: var(--inner); outline: none; }
+  .cr-menu button:disabled { color: var(--muted); background: none; cursor: default; }
   .cr-menu hr { border: 0; height: 2px; background: var(--inner); margin: 4px 8px; }
   .cr-menu .lbl { padding: 8px 12px 4px; font-size: 12px; font-weight: 800; color: var(--muted); }
   /* ===== Life layer for the course page ===== */
@@ -3396,7 +3401,8 @@
   /* ===== end Notifications ===== */
 
   // ---------- frame: sidebar classes, avatar, pin, menu, toast (same as Home) ----------
-  $('sideClasses').innerHTML = CLASSES.map(c => `<a href="${FSX.hubUrl(c.id)}" title="${esc(c.name)} · ${letter(c.pct)} ${c.pct.toFixed(1)}%" data-go="${FSX.hubUrl(c.id)}">${badge(c)}<span class="fade">${esc(c.name)}</span></a>`).join('');
+  const renderSide = () => { $('sideClasses').innerHTML = CLASSES.map(c => `<a href="${FSX.hubUrl(c.id)}" title="${esc(c.name)} · ${letter(c.pct)} ${c.pct.toFixed(1)}%" data-go="${FSX.hubUrl(c.id)}">${badge(c)}<span class="fade">${esc(c.name)}</span></a>`).join(''); };
+  renderSide();
   const inkCv = document.createElement('canvas'), inkC2 = inkCv.getContext('2d', { willReadFrequently: true }), inkMemo = new Map();
   function inkOf(text, cs) {
     const key = `${cs.fontStyle}|${cs.fontWeight}|${cs.fontFamily}|${text}`;
@@ -3694,13 +3700,25 @@
   }
   const delta = c => { const d = c.trend[c.trend.length - 1] - c.trend[c.trend.length - 3]; const k = Math.abs(d) < .15 ? 'flat' : d > 0 ? 'up' : 'down'; return `<span class="cr-d ${k}" title="Change in the last two weeks">${k === 'flat' ? 'Steady' : (d > 0 ? '+' : '-') + Math.abs(d).toFixed(1)}</span>`; };
   const grade = c => `<span class="cr-g"><b class="${gcls(c.pct)}">${letter(c.pct)}</b><span>${c.pct.toFixed(1)}%</span></span>`;
-  const dueChips = c => c.due || c.missing ? `<span class="cr-chips">${c.missing ? `<span class="cr-chip bad">${c.missing} missing</span>` : ''}${c.due ? `<span class="cr-chip">${c.due} due</span>` : ''}</span>` : '<span class="cr-none" aria-label="Nothing due">None due</span>';
-  const upChip = c => c.updates ? `<span class="cr-chip new">${c.updates} new</span>` : '<span class="cr-none" aria-label="No new updates">None</span>';
+  // the tags open what they count (2026-11-01, Martin): missing and due work on Assignments, new updates in the course
+  const tag = (c, go, cls, label) => `<button class="cr-chip${cls}" data-crgo="${go}" data-crc="${c.id}" title="${esc(label)} in ${esc(c.name)}">${label}</button>`;
+  const dueChips = c => c.due || c.missing ? `<span class="cr-chips">${c.missing ? tag(c, 'missing', ' bad', `${c.missing} missing`) : ''}${c.due ? tag(c, 'todo', '', `${c.due} due`) : ''}</span>` : '<span class="cr-none" aria-label="Nothing due">None due</span>';
+  const upChip = c => c.updates ? tag(c, 'updates', ' new', `${c.updates} new`) : '<span class="cr-none" aria-label="No new updates">None</span>';
   const starBtn = c => `<button class="cr-starb" data-crstar="${c.id}" aria-pressed="${CR.star.has(c.id)}" aria-label="${CR.star.has(c.id) ? 'Unstar' : 'Star'} ${esc(c.name)}" title="${CR.star.has(c.id) ? 'Starred' : 'Star'}">${ico('star')}</button>`;
+  // Your order (2026-11-01, Martin: move courses up and down): Move up / Move down in a course's menu, and in
+  // Settings › Appearance. Saved for both looks (FSX.courseOrder); with none saved it's period order.
+  const orderNow = () => { const saved = FSX.courseOrder.get().filter(id => C[id]); return saved.concat(CLASSES.slice().sort((a, b) => a.period - b.period).map(c => c.id).filter(id => !saved.includes(id))); };
+  function moveCourse(id, d) {
+    const ids = orderNow(), i = ids.indexOf(id), j = i + d; if (i < 0 || j < 0 || j >= ids.length) return;
+    [ids[i], ids[j]] = [ids[j], ids[i]]; FSX.courseOrder.set(ids);
+    CLASSES.sort((a, b) => ids.indexOf(a.id) - ids.indexOf(b.id)); CR.sort = 'period'; CR.dir = 1;
+    renderSide(); crRender(false); toast(`Moved ${C[id].name} ${d < 0 ? 'up' : 'down'}.`);
+    const el = $('crBody').querySelector(`[data-cropen="${CSS.escape(id)}"]`); if (el) el.focus({ preventScroll: false });
+  }
   function crList() {
-    const q = CR.q.toLowerCase();
+    const q = CR.q.toLowerCase(), ord = orderNow();
     let list = CLASSES.filter(c => (!CR.starOnly || CR.star.has(c.id)) && (!q || (c.name + ' ' + c.teacher + ' ' + c.code + ' ' + c.section + (c.hasPeriod ? ' period ' + c.period : '')).toLowerCase().includes(q)));
-    const key = { period: c => c.period, name: c => c.name, grade: c => c.pct, due: c => c.missing * 100 + c.due }[CR.sort];
+    const key = { period: c => ord.indexOf(c.id), name: c => c.name, grade: c => c.pct, due: c => c.missing * 100 + c.due }[CR.sort];
     list.sort((a, b) => { const A = key(a), B = key(b); return CR.dir * (typeof A === 'string' ? A.localeCompare(B) : A - B) || a.period - b.period; });
     return list;
   }
@@ -3716,14 +3734,14 @@
       <div class="cc-top">${badge(c)}<div class="cc-t"><b>${esc(c.name)}</b><small>${esc(c.teacher || c.code || 'Schoology class')}</small></div>${c.hasPeriod ? `<span class="cc-per">Period ${c.period}</span>` : ''}</div>
       <div class="cc-next">${c.next ? `Next: <b>${esc(c.next[0])}</b> · ${esc(c.next[1])}` : 'Nothing coming up'}</div>
       <div class="cc-mid">${grade(c)}${spark(c, 200, 36)}${delta(c)}</div>
-      <div class="cc-foot"><span class="cr-chips">${c.missing ? `<span class="cr-chip bad">${c.missing} missing</span>` : ''}${c.due ? `<span class="cr-chip">${c.due} due</span>` : ''}${c.updates ? `<span class="cr-chip new">${c.updates} new</span>` : ''}${!c.due && !c.missing && !c.updates ? '<span class="cr-none">All caught up</span>' : ''}</span>${starBtn(c)}<button class="cr-more" data-crmore="${c.id}" aria-haspopup="menu" aria-label="More for ${esc(c.name)}">${ico('dots')}</button></div></article>`;
+      <div class="cc-foot"><span class="cr-chips">${c.missing ? tag(c, 'missing', ' bad', `${c.missing} missing`) : ''}${c.due ? tag(c, 'todo', '', `${c.due} due`) : ''}${c.updates ? tag(c, 'updates', ' new', `${c.updates} new`) : ''}${!c.due && !c.missing && !c.updates ? '<span class="cr-none">All caught up</span>' : ''}</span>${starBtn(c)}<button class="cr-more" data-crmore="${c.id}" aria-haspopup="menu" aria-label="More for ${esc(c.name)}">${ico('dots')}</button></div></article>`;
   function crHTML() {
     const list = crList();
     if (!list.length) return `<div class="cr-box"><div class="cr-empty"><b>${CR.starOnly && !CR.q ? 'No starred courses' : `No courses match "${esc(CR.q)}"`}</b>${CR.starOnly && !CR.q ? 'Star a course to keep it here.' : 'Try a course name, a teacher or a period.'}</div></div>`;
     if (CR.view === 'cards') return `<div class="cr-cards">${list.map(card).join('')}</div>`;
     return `<div class="cr-box"><div class="cr-grid" role="table" aria-label="Courses"><div class="cr-head" role="row"><span></span>${sortBtn('name', 'Course')}${sortBtn('grade', 'Grade')}<span class="cr-c-tr">Trend</span><span class="cr-c-due">${sortBtn('due', 'Due soon')}</span><span class="cr-c-up">Updates</span><span></span></div>${list.map(row).join('')}</div></div>`;
   }
-  function crFoot() { const n = crList().length; $('crFoot').textContent = `Showing ${n} of ${CLASSES.length} courses${CR.sort !== 'period' ? '' : ', in period order'}`; $('crStarCt').textContent = CR.star.size; }
+  function crFoot() { const n = crList().length; $('crFoot').textContent = `Showing ${n} of ${CLASSES.length} courses${CR.sort !== 'period' ? '' : FSX.courseOrder.get().length ? ', in your order' : ', in period order'}`; $('crStarCt').textContent = CR.star.size; }
   function crRender(anim) {
     $('crBody').innerHTML = crHTML(); crFoot();
     if (anim && !calm()) [...$('crBody').querySelectorAll('.cr-row, .cc, .cr-empty')].forEach((el, i) => el.animate && el.animate([{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: 320, delay: Math.min(i, 10) * 35, easing: 'cubic-bezier(.16, 1, .3, 1)', fill: 'backwards' }));
@@ -3771,14 +3789,16 @@
     crMenuClose(); meClose(); const c = C[id]; crMenuFrom = from || null;
     document.body.insertAdjacentHTML('beforeend', `<div class="cr-menu" role="menu" aria-label="${esc(c.name)}"><div class="lbl">${esc(c.name)}</div>
       <button role="menuitem" data-crm="open">Open course</button><button role="menuitem" data-crm="grades">Open grades</button><button role="menuitem" data-crm="msg">Message ${esc(c.teacher || 'your teacher')}</button><hr>
+      <button role="menuitem" data-crm="up"${orderNow()[0] === id ? ' disabled' : ''}>Move up</button><button role="menuitem" data-crm="down"${orderNow().slice(-1)[0] === id ? ' disabled' : ''}>Move down</button><hr>
       <button role="menuitem" data-crm="star">${CR.star.has(id) ? 'Unstar' : 'Star'}</button><button role="menuitem" data-crm="sch">Open in Schoology</button></div>`);
     crMenu = document.body.lastElementChild; crMenu.dataset.for = id;
     const w = crMenu.offsetWidth, h = crMenu.offsetHeight;
     crMenu.style.left = Math.max(8, Math.min(innerWidth - w - 8, x)) + 'px'; crMenu.style.top = Math.max(8, Math.min(innerHeight - h - 8, y)) + 'px';
     if (from) from.setAttribute('aria-expanded', 'true');
-    if (byKey) crMenu.querySelector('button').focus();
+    if (byKey) crMenu.querySelector('button:not(:disabled)').focus();
     crMenu.addEventListener('click', e => {
       const b = e.target.closest('[data-crm]'); if (!b) return; const k = b.dataset.crm; crMenuClose(true);
+      if (k === 'up' || k === 'down') { moveCourse(id, k === 'up' ? -1 : 1); return; }
       if (k === 'open') openCourse(id); else if (k === 'star') setStar(id, !CR.star.has(id));
       else if (k === 'grades') FSX.hub(id, 'grades'); else if (k === 'msg') FSX.go('messages', { compose: id }); else if (k === 'sch') FSX.newTab(FSX.schoology('/course/' + encodeURIComponent(id) + '/materials'));
     });
@@ -3787,7 +3807,7 @@
   addEventListener('resize', () => { crMenuClose(); crPill(false); });
   $('scroller').addEventListener('scroll', () => crMenuClose(), { passive: true });
   document.addEventListener('keydown', e => {
-    if (!crMenu) return; const items = [...crMenu.querySelectorAll('button')], i = items.indexOf(document.activeElement);
+    if (!crMenu) return; const items = [...crMenu.querySelectorAll('button:not(:disabled)')], i = items.indexOf(document.activeElement);
     if (e.key === 'Escape') { e.preventDefault(); crMenuClose(true); }
     else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); items[(i + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length].focus(); }
     else if (e.key === 'Tab') crMenuClose();
@@ -3795,6 +3815,7 @@
 
   $('crBody').addEventListener('click', e => {
     const st = e.target.closest('[data-crstar]'); if (st) { setStar(st.dataset.crstar, !CR.star.has(st.dataset.crstar)); return; }
+    const tg = e.target.closest('[data-crgo]'); if (tg) { const id = tg.dataset.crc, g = tg.dataset.crgo; if (g === 'updates') FSX.hub(id, 'updates'); else FSX.go('assignments', { course: id, show: g }); return; }
     const mo = e.target.closest('[data-crmore]'); if (mo) { if (crMenu && crMenuFrom === mo) { crMenuClose(); return; } const r = mo.getBoundingClientRect(); crMenuOpen(mo.dataset.crmore, r.right - 220, r.bottom + 6, mo, e.detail === 0); return; }
     const so = e.target.closest('[data-crsort]'); if (so) { const k = so.dataset.crsort, def = k === 'grade' || k === 'due' ? -1 : 1; CR.dir = CR.sort === k ? -CR.dir : def; CR.sort = k; crRender(false); return; }
     const op = e.target.closest('[data-cropen]'); if (op) openCourse(op.dataset.cropen);

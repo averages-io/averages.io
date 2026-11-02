@@ -75,11 +75,24 @@ export const THEME_BOOT_JS = `(function () {
     for (var k in tokens) root.setProperty(k, tokens[k]);
     if (body) body.classList.toggle("dark-mode", isDark);
 
+    // A wallpaper always fills the window once (2026-11-01, Martin: "sometimes the background glitches out and shows
+    // 20 of the same background in a grid"). Each page's own CSS sizes it, but while one page's styles are swapped
+    // for the next, the picture showed at its own size, repeated. This rule is always there, so that never shows.
+    if (!document.getElementById("avBgFit")) {
+      var fit = document.createElement("style");
+      fit.id = "avBgFit";
+      fit.textContent = "body{background-size:cover;background-position:center;background-repeat:no-repeat}";
+      (document.head || html).appendChild(fit);
+    }
+
     function background(image, color, scheme) {
       html.style.colorScheme = scheme;
       if (color !== null) html.style.backgroundColor = color;
       if (!body) return;
-      if (image !== null) body.style.backgroundImage = image;
+      if (image !== null) {
+        body.style.backgroundImage = image;
+        if (image !== "none") { body.style.backgroundSize = "cover"; body.style.backgroundPosition = "center"; body.style.backgroundRepeat = "no-repeat"; }
+      }
       if (color !== null) body.style.backgroundColor = color;
     }
 

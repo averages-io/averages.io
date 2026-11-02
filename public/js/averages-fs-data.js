@@ -469,6 +469,12 @@
     },
     signOut: function () { window.location.href = '/signout'; },
     /** Notifications already opened (the Windowed bell's list, averages_seen). kind: 'u' update, 'g' grade, 'm' message. */
+    /** The student's course order (shared with Windowed): ids, or [] for the school's. set() saves it for both looks. */
+    courseOrder: {
+      get: function () { var v = lget('schoolagy_course_order'); return Array.isArray(v) ? v.map(String) : []; },
+      set: function (ids) { lset('schoolagy_course_order', ids.map(String)); },
+      clear: function () { try { LS.removeItem('schoolagy_course_order'); } catch (e) {} },
+    },
     seen: {
       read: function () { var v = lget('averages_seen'); return v && typeof v === 'object' && !Array.isArray(v) ? v : {}; },
       has: function (kind, id) { var l = FSX.seen.read()[kind]; return Array.isArray(l) && l.indexOf(String(id)) >= 0; },
@@ -683,6 +689,10 @@
         points: points, dates: arr(hist.dates), titles: arr(hist.titles), emoji: s[1], color: s[2], lmsColor: c.color || '', order: i,
       };
     });
+    // the student's own course order (2026-11-01): the same saved order Windowed's Courses page writes
+    // (schoolagy_course_order, course ids), so both looks list classes the same way; new classes go at the end
+    var saved = arr(window.FSX.lget('schoolagy_course_order')).map(String);
+    if (saved.length) CLASSES.sort(function (x, y) { var a = saved.indexOf(String(x.id)), b = saved.indexOf(String(y.id)); return (a < 0 ? 1e6 : a) - (b < 0 ? 1e6 : b); });
     var C = {}; CLASSES.forEach(function (c) { C[c.id] = c; });
 
     // ---------- notifications (the bell): grades, course updates, messages ----------

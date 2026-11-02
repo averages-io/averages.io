@@ -3375,6 +3375,18 @@
         }
       });
     });
+    // Fetched ahead the moment the pointer (or keyboard) reaches Fullscreen, so switching doesn't wait for the page
+    // itself to download (2026-11-01, Martin: turning Fullscreen on "takes some time")
+    windowOptions.forEach(opt => {
+      if (opt.dataset.shape !== 'fullscreen') return;
+      const ahead = () => {
+        if (document.getElementById('fsAhead')) return;
+        const l = document.createElement('link'); l.id = 'fsAhead'; l.rel = 'prefetch'; l.href = '/IS/settings'; l.as = 'document';
+        document.head.appendChild(l);
+      };
+      opt.addEventListener('pointerenter', ahead, { once: true });
+      opt.addEventListener('focus', ahead, { once: true });
+    });
     windowOptions[0].classList.add('selected');
     windowOptions[0].setAttribute('aria-pressed', 'true');
 
