@@ -3151,7 +3151,9 @@
   .sg-db p { margin: 0 0 8px; }
   /* End early: type the word to confirm; the word sits in a dashed box you can click to copy (2026-11-02) */
   .sg-typeto { margin-top: 16px; }
-  .sg-copyw { display: inline-block; margin: 0 4px; padding: 0 8px; border: 1px dashed color-mix(in srgb, var(--ink) 40%, transparent); border-radius: 6px; font: inherit; font-weight: 800; color: var(--ink); background: none; cursor: copy; }
+  .sg-copyw { display: inline-flex; align-items: center; gap: 4px; vertical-align: middle; margin: 0 4px; padding: 0 8px; border: 1px dashed color-mix(in srgb, var(--ink) 40%, transparent); border-radius: 6px; font: inherit; font-weight: 800; color: var(--ink); background: none; cursor: copy; }
+  .sg-cpe { display: inline-flex; width: 14px; height: 14px; }
+  .sg-cpe svg { width: 100%; height: 100%; }
   .sg-copyw:hover { background: color-mix(in srgb, var(--ink) 8%, transparent); }
   .sg-copyw:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
   .sg-df .btn:disabled { opacity: .45; cursor: default; }
@@ -4493,8 +4495,9 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     const B = LIVE.billing || {}, ends = B.renewsAt ? new Date(B.renewsAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '';
     // like deleting something on Cloudflare (2026-11-02, Martin): type the word (or copy it from the dashed box) first
     const WORD = 'unsubscribe';
+    if (!EMOJI_SVG['📋']) EMOJI_SVG['📋'] = "<svg aria-hidden=\"true\" focusable=\"false\" viewBox=\"0 0 36 36\"><path fill=\"#C1694F\" d=\"M32 34a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h24a2 2 0 0 1 2 2v27z\"/><path fill=\"#FFF\" d=\"M29 32a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1h20a1 1 0 0 1 1 1v23z\"/><path fill=\"#CCD6DD\" d=\"M25 3h-4a3 3 0 1 0-6 0h-4a2 2 0 0 0-2 2v5h18V5a2 2 0 0 0-2-2z\"/><circle cx=\"18\" cy=\"3\" r=\"2\" fill=\"#292F33\"/><path fill=\"#99AAB5\" d=\"M20 14a1 1 0 0 1-1 1h-9a1 1 0 0 1 0-2h9a1 1 0 0 1 1 1zm7 4a1 1 0 0 1-1 1H10a1 1 0 0 1 0-2h16a1 1 0 0 1 1 1zm0 4a1 1 0 0 1-1 1H10a1 1 0 1 1 0-2h16a1 1 0 0 1 1 1zm0 4a1 1 0 0 1-1 1H10a1 1 0 1 1 0-2h16a1 1 0 0 1 1 1zm0 4a1 1 0 0 1-1 1h-9a1 1 0 1 1 0-2h9a1 1 0 0 1 1 1z\"/></svg>";
     const d = dlgOpen({ title: 'End Plus now?', ok: 'End Plus now', danger: true, body: `<p>Plus stops right away and you're on Classic. You lose browser notifications, calendar sync and early features today${ends ? ` instead of ${esc(ends)}` : ''}.</p><p>The days left aren't paid back.</p>
-      <label class="sg-fl sg-typeto"><b>Type <button type="button" class="sg-copyw" data-dact="copy" title="Copy" aria-label="Copy the word ${WORD}">${WORD}</button> to end early.</b><input id="sgEndTxt" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="${WORD}"></label>`,
+      <label class="sg-fl sg-typeto"><b>Type <button type="button" class="sg-copyw" data-dact="copy" title="Copy" aria-label="Copy the word ${WORD}">${WORD}<span class="sg-cpe" aria-hidden="true">${EMOJI_SVG['📋'] || ''}</span></button> to end early.</b><input id="sgEndTxt" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="${WORD}"></label>`,
       onOk: el => {
         if (el.querySelector('#sgEndTxt').value.trim().toLowerCase() !== WORD) { el.querySelector('#sgEndTxt').focus(); return false; }
         toast('Ending Plus…');
