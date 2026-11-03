@@ -2964,7 +2964,7 @@
   .ce.cpill:hover { background: color-mix(in srgb, var(--c) 30%, var(--field)); }
   .ce.cpill > small { color: color-mix(in srgb, var(--c) 60%, var(--muted)); }
   .ce-ic { flex: none; width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; background: var(--c); color: #ffffff; }
-  .ce .ce-ic svg.i { width: 11px; height: 11px; stroke-width: 2.25; }
+  .ce .ce-ic svg.i { width: 12px; height: 12px; stroke-width: 2.25; } /* 12 in 18: 3 px each side, so it lands on whole pixels */
   .ce .ce-ic svg.i.fill { fill: currentColor; stroke: none; }
   .ce.cdue[aria-pressed="true"] { background: color-mix(in srgb, var(--c) 16%, var(--field)); box-shadow: inset 0 0 0 2px var(--c); }
   .ce.cpill[aria-pressed="true"] { background: color-mix(in srgb, var(--c) 32%, var(--field)); box-shadow: inset 0 0 0 2px var(--c); }
@@ -4183,11 +4183,11 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const onDay = (k, list) => list.filter(e => e.date === k).sort((a, b) => (isDue(a) ? 1 : 0) - (isDue(b) ? 1 : 0) || sortE(a, b));
 
   // what's due shows its time; an event shows its time only in a day's full list (from "N more" or a tap)
-  const STAR = '<svg class="i fill" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2l2.6 5.5 6 .8-4.4 4.1 1.1 5.9L12 16.6l-5.3 2.9 1.1-5.9-4.4-4.1 6-.8z"/></svg>';
+  const STAR = '<svg class="i fill" viewBox="0 0 24 24" aria-hidden="true"><path transform="translate(0 .65)" d="M12 3.2l2.6 5.5 6 .8-4.4 4.1 1.1 5.9L12 16.6l-5.3 2.9 1.1-5.9-4.4-4.1 6-.8z"/></svg>'; // moved down .65 so the star sits in the middle (2026-11-03)
   // No school: a bell (the school bell) with a line through it
   // no school: a filled airplane, flying up and to the right (a day off, like a trip). Solid, not outlined, so it reads at
   // small sizes; it fits the same 24 grid as the other icons and stays inside a 20px circle so it sits centered.
-  const PLANE = '<path fill="currentColor" stroke="none" transform="translate(1.05 -1) rotate(45 12 12)" d="M12 2.2c1 0 1.55.95 1.55 2.05V9.3l7.95 4.15v2.15l-7.95-2.45v5.15l2.6 1.95v1.65L12 20.85l-4.15 1.05v-1.65l2.6-1.95v-5.15L2.5 15.6v-2.15l7.95-4.15V4.25c0-1.1.55-2.05 1.55-2.05Z"/>';
+  const PLANE = '<path fill="currentColor" stroke="none" transform="translate(1.35 -1.25) rotate(45 12 12)" d="M12 2.2c1 0 1.55.95 1.55 2.05V9.3l7.95 4.15v2.15l-7.95-2.45v5.15l2.6 1.95v1.65L12 20.85l-4.15 1.05v-1.65l2.6-1.95v-5.15L2.5 15.6v-2.15l7.95-4.15V4.25c0-1.1.55-2.05 1.55-2.05Z"/>';
   const SUN = `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${PLANE}</svg>`;
   const SUN_FILL = SUN;
   // due soon: an alarm clock, outlined like the rest (1.75 stroke, butt ends, sharp corners)
@@ -4405,10 +4405,9 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   });
   function calUp() {
     const list = EV.filter(e => ofCls(e) && e.kind !== 'off' && !isDone(e)).sort(sortE);
-    const miss = list.filter(e => e.st === 'missing');
+    // just what's coming: missing work isn't listed here (2026-11-03, Martin); it's on Assignments and Home
     const days = [0, 1, 2, 3, 4, 5, 6].map(i => key(addD(TODAY_D, i)));
-    $('calUp').innerHTML = (miss.length ? `<div class="cu-day"><small style="color:var(--bad)">Missing</small>${miss.map(e => rowHTML(e, 'cu-row')).join('')}</div>` : '')
-      + days.map((k, i) => { const l = list.filter(e => e.date === k && e.st !== 'missing'), off = EV.find(e => e.kind === 'off' && e.date === k), d = dOf(k); if (!l.length && !off) return '';
+    $('calUp').innerHTML = days.map((k, i) => { const l = list.filter(e => e.date === k && e.st !== 'missing'), off = EV.find(e => e.kind === 'off' && e.date === k), d = dOf(k); if (!l.length && !off) return '';
         return `<div class="cu-day"><small${i === 0 ? ' class="today"' : ''}>${i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : `${WD[d.getDay()]}, ${MON3[d.getMonth()]} ${d.getDate()}`}</small>${off ? `<p class="cu-none">${esc(off.t)}: no school</p>` : ''}${l.map(e => rowHTML(e, 'cu-row')).join('')}</div>`; }).join('')
       || '<p class="cu-none">Nothing in the next week.</p>';
     if (typeof marquee === 'function') marquee(false);
