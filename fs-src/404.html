@@ -3583,7 +3583,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); ntClose(); return; }
     if (e.key === 'Tab') { const f = [...ntEl.querySelectorAll('button, [tabindex="0"]')].filter(x => !x.closest('[inert]')); if (!f.length) return; if (e.shiftKey && document.activeElement === f[0]) { e.preventDefault(); f[f.length - 1].focus(); } else if (!e.shiftKey && document.activeElement === f[f.length - 1]) { e.preventDefault(); f[0].focus(); } }
   }, true);
-  function ntInit() { const b = $('ntBtn'); if (b) b.addEventListener('click', () => ntEl ? ntClose() : ntOpen()); ntBadge(); }
+  function ntInit() { const b = $('ntBtn'); if (b) b.addEventListener('click', () => ntEl ? ntClose() : ntOpen()); ntBadge(); window.addEventListener('fs:notis', () => { ntBadge(); NT.onChange(); }); } // new ones from the background check (averages-fs-data.js)
   /* ===== end Notifications ===== */
 
   // ---------- frame: sidebar classes, avatar, pin, menu, toast (same as Home) ----------

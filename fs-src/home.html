@@ -1856,7 +1856,7 @@
       <main class="center">
         <div class="hello">
           <div class="tx"><h1 id="greet">Hello!</h1><p class="date" id="todayDate"></p></div>
-          <button class="pill sync" id="refresh" aria-label="Refresh everything on Home. Synced 2 minutes ago." title="Refresh everything on Home"><svg class="i"><use href="#i-refresh"/></svg><span id="syncLabel">Synced 2 min ago</span></button>
+          <button class="pill sync" id="refresh" aria-label="Refresh everything on Home." title="Refresh everything on Home"><svg class="i"><use href="#i-refresh"/></svg><span id="syncLabel">Synced</span></button>
         </div>
 
         <div class="bigsearch">
@@ -1890,24 +1890,24 @@
           <div class="stats" id="stats">
             <div class="stat" id="statAvg" role="button" tabindex="0" data-details="avg" aria-label="Overall average. Open details.">
               <div class="stat-h"><span>Overall average</span><button class="more" data-pop="menu-stat" data-arg="avg" aria-haspopup="dialog" aria-expanded="false" aria-label="Overall average options"><svg class="i"><use href="#i-dots"/></svg></button></div>
-              <div class="stat-v"><b>89.2%</b><span class="delta up" id="avgDelta"></span><span class="delta-note" id="avgNote"></span></div>
+              <div class="stat-v"><b id="avgNow"></b><span class="delta up" id="avgDelta"></span><span class="delta-note" id="avgNote"></span></div>
               <div class="chart" id="chartAvg"></div>
               <div id="tableAvg" hidden></div>
             </div>
             <div class="stat" id="statTurn" role="button" tabindex="0" data-details="turn" aria-label="Assignments turned in. Open details.">
               <div class="stat-h"><span>Assignments turned in</span><button class="more" data-pop="menu-stat" data-arg="turn" aria-haspopup="dialog" aria-expanded="false" aria-label="Assignments turned in options"><svg class="i"><use href="#i-dots"/></svg></button></div>
-              <div class="stat-v"><b id="turnTotal">42</b><span class="delta-note" id="turnNote"></span></div>
+              <div class="stat-v"><b id="turnTotal"></b><span class="delta-note" id="turnNote"></span></div>
               <div class="chart" id="chartTurn"></div>
               <div id="tableTurn" hidden></div>
             </div>
             <div class="stat" id="statGpa" role="button" tabindex="0" data-details="gpa" aria-label="GPA. Open details.">
               <div class="stat-h"><span>GPA</span><button class="more" data-pop="menu-stat" data-arg="gpa" aria-haspopup="dialog" aria-expanded="false" aria-label="GPA options"><svg class="i"><use href="#i-dots"/></svg></button></div>
-              <div class="stat-v"><b id="gpaNow">3.38</b><span class="delta up" id="gpaDelta"></span><span class="delta-note" id="gpaNote"></span></div>
+              <div class="stat-v"><b id="gpaNow"></b><span class="delta up" id="gpaDelta"></span><span class="delta-note" id="gpaNote"></span></div>
               <div class="chart" id="chartGpa"></div>
             </div>
             <div class="stat" id="statRate" role="button" tabindex="0" data-details="rate" aria-label="On-time turn-in rate. Open details.">
               <div class="stat-h"><span>On-time turn-in rate</span><button class="more" data-pop="menu-stat" data-arg="rate" aria-haspopup="dialog" aria-expanded="false" aria-label="On-time turn-in rate options"><svg class="i"><use href="#i-dots"/></svg></button></div>
-              <div class="stat-v"><b id="rateNow">91%</b><span class="delta-note" id="rateNote"></span></div>
+              <div class="stat-v"><b id="rateNow"></b><span class="delta-note" id="rateNote"></span></div>
               <div class="chart" id="chartRate"></div>
             </div>
           </div>
@@ -1933,7 +1933,7 @@
 
         <section class="qcard" id="promo">
           <div class="qh"><b>This term</b><span class="qleft"></span><button class="ibtn" id="promoX" aria-label="Hide the This term card"><svg class="i"><use href="#i-x"/></svg></button></div>
-          <p id="promoText">2 classes could still go up a letter.</p>
+          <p id="promoText"></p>
           <button class="btn primary qbtn" data-details="takes" aria-haspopup="dialog">See what it takes</button>
         </section>
 
@@ -2457,10 +2457,15 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   // (averages-fs-data.js). Turned in: work turned in each week (Schoology's turn-ins), else graded work by its due week.
   const WEEKS = FSD.WEEKS, WEEK_AT = FSD.weekStarts;
   const wkOf = ms => { if (!ms) return -1; for (let i = WEEK_AT.length - 1; i >= 0; i--) if (ms >= WEEK_AT[i]) return ms < WEEK_AT[i] + 7 * 864e5 || i === WEEK_AT.length - 1 ? i : -1; return -1; };
-  const AVG = WEEKS.map((_, i) => FSD.CLASSES.length ? Math.round(FSD.CLASSES.reduce((t, c) => t + c.trend[i], 0) / FSD.CLASSES.length * 10) / 10 : 0);
+  // Only weeks that really had grades (2026-11-03, the same rule as the Grades page): a class counts from its first
+  // grade; a week before any grade is null (no point, the line starts later); POSTED marks weeks grades came in.
+  const hasAt = (c, i) => !c.trendHas || !!c.trendHas[i], postedAt = (c, i) => !c.trendPosted || !!c.trendPosted[i];
+  const withGrades = i => FSD.CLASSES.filter(c => hasAt(c, i));
+  const AVG = WEEKS.map((_, i) => { const cs = withGrades(i); return cs.length ? Math.round(cs.reduce((t, c) => t + c.trend[i], 0) / cs.length * 10) / 10 : null; });
+  const POSTED = WEEKS.map((_, i) => AVG[i] != null && (i === WEEKS.length - 1 || FSD.CLASSES.some(c => hasAt(c, i) && postedAt(c, i))));
   // Unweighted 4.0 scale, the same points as GPA_SCALE in averages.api adapt.ts and grades.html
   const GP = { 'A+': 4, A: 4, 'A-': 3.7, 'B+': 3.3, B: 3, 'B-': 2.7, 'C+': 2.3, C: 2, 'C-': 1.7, 'D+': 1.3, D: 1, 'D-': 0.7, F: 0 };
-  const GPA = WEEKS.map((_, i) => FSD.CLASSES.length ? Math.round(FSD.CLASSES.reduce((t, c) => t + GP[letter(c.trend[i])], 0) / FSD.CLASSES.length * 100) / 100 : 0);
+  const GPA = WEEKS.map((_, i) => { const cs = withGrades(i); return cs.length ? Math.round(cs.reduce((t, c) => t + GP[letter(c.trend[i])], 0) / cs.length * 100) / 100 : null; });
   const TURNED_BY = Object.fromEntries(CLASSES.map(c => [c.id, WEEKS.map(() => 0)]));
   const LATE_BY = Object.fromEntries(CLASSES.map(c => [c.id, WEEKS.map(() => 0)]));
   const MISS_BY = Object.fromEntries(CLASSES.map(c => [c.id, WEEKS.map(() => 0)]));
@@ -2616,7 +2621,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   // Grades: the live Home's table (course, grade, predicted, updated)
   function renderClasses() {
     $('gradesRows').innerHTML = sortedClasses().map(c => `<a class="gt-row" href="#" role="listitem" data-open="class:${c.id}">
-        <span class="gt-c">${badge(c)}<span class="tx"><b>${esc(c.name)}</b><small>${esc(c.teacher)}</small></span></span>
+        <span class="gt-c">${badge(c)}<span class="tx"><b>${esc(c.name)}</b><small>${esc([/^Period /.test(c.room || '') ? c.room : '', c.teacher].filter(Boolean).join(' · '))}</small></span></span>
         <span class="gt-g"><b class="${gcls(c.pct)}">${letter(c.pct)}</b><small>${c.pct.toFixed(1)}%</small></span>
         <span class="gt-p"><span class="trend ${c.trend}" data-trend="${c.id}" aria-label="Predicted ${letter(c.predictedPct)}, ${Math.round(c.predictedPct)} percent"><span class="arrow" aria-hidden="true">${TREND_ARROW[c.trend]}</span>${letter(c.predictedPct)}<span class="tp">${Math.round(c.predictedPct)}%</span></span></span>
         <span class="gt-u">${esc(c.updated)}</span></a>`).join('');
@@ -2982,23 +2987,27 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     return { svg, w, h: hgt };
   }
   const add = (svg, tag, attrs) => { const n = document.createElementNS(NS, tag); for (const k in attrs) n.setAttribute(k, attrs[k]); svg.appendChild(n); return n; };
+  // the first and last weeks that have a value (weeks before any grade are null)
+  const firstV = a => { const v = a.find(x => x != null); return v == null ? 0 : v; }, lastV = a => { for (let i = a.length - 1; i >= 0; i--) if (a[i] != null) return a[i]; return 0; };
   const series = () => {
     const n = state.range;
     const k = n === 8 ? 8 : n + 1;
-    return { lw: WEEKS.slice(-k), lv: AVG.slice(-k), bw: WEEKS.slice(-n), bv: TURNED.slice(-n), gv: GPA.slice(-k), rv: RATE.slice(-k) };
+    return { lw: WEEKS.slice(-k), lv: AVG.slice(-k), bw: WEEKS.slice(-n), bv: TURNED.slice(-n), gv: GPA.slice(-k), rv: RATE.slice(-k), pd: POSTED.slice(-k) };
   };
 
   // Points: hollow ring at every week, the latest one filled. Hover snaps to the nearest week with a soft halo and a dashed guide.
-  function pointLayer(svg, w, pts, top, bottom, L, R, tip) {
+  function pointLayer(svg, w, pts, top, bottom, L, R, tip, dots) {
     const last = pts.length - 1;
-    pts.forEach(([px, py], i) => add(svg, 'circle', { class: 'pt' + (i === last ? ' end' : ''), cx: px, cy: py, r: i === last ? 4.5 : 3.25, style: `--d:${Math.max(0, Math.round(Math.acos(1 - 2 * (last ? i / last : 1)) / Math.PI * 900) - 60)}ms` }));
+    pts.forEach(([px, py], i) => (py == null || (dots && !dots[i] && i !== last)) ? null : add(svg, 'circle', { class: 'pt' + (i === last ? ' end' : ''), cx: px, cy: py, r: i === last ? 4.5 : 3.25, style: `--d:${Math.max(0, Math.round(Math.acos(1 - 2 * (last ? i / last : 1)) / Math.PI * 900) - 60)}ms` }));
     const cross = add(svg, 'line', { class: 'xh', y1: top, y2: bottom, visibility: 'hidden' });
     const halo = add(svg, 'circle', { class: 'halo', r: 11, visibility: 'hidden' });
     const dot = add(svg, 'circle', { class: 'hdot', r: 5.5, visibility: 'hidden' });
     const hit = add(svg, 'rect', { x: L, y: 0, width: w - L - R, height: bottom, fill: 'transparent' });
     hit.addEventListener('mousemove', e => {
       const r = svg.getBoundingClientRect(), mx = (e.clientX - r.left) * (w / r.width);
-      const i = Math.max(0, Math.min(last, Math.round(((mx - L) / (w - L - R)) * last))), [px, py] = pts[i];
+      let i = Math.max(0, Math.min(last, Math.round(((mx - L) / (w - L - R)) * last)));
+      if (pts[i][1] == null) { const ok = pts.map((p, j) => p[1] == null ? Infinity : Math.abs(j - i)); i = ok.indexOf(Math.min(...ok)); if (!isFinite(ok[i])) return; }
+      const [px, py] = pts[i];
       cross.setAttribute('x1', px); cross.setAttribute('x2', px);
       [halo, dot].forEach(c => { c.setAttribute('cx', px); c.setAttribute('cy', py); });
       [cross, halo, dot].forEach(c => c.setAttribute('visibility', 'visible'));
@@ -3006,32 +3015,33 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     });
     hit.addEventListener('mouseleave', () => { [cross, halo, dot].forEach(c => c.setAttribute('visibility', 'hidden')); tipHide(); });
   }
-  function lineChart(el, W, V, o = {}) {
+  function lineChart(el, W, V0, o = {}) {
     const { svg, w, h } = frame(el);
+    const V = V0.filter(v => v != null).length ? V0.filter(v => v != null) : [0], first = Math.max(0, V0.findIndex(v => v != null));
     svg.setAttribute('aria-label', o.label || `Overall average by week, from ${V[0]}% to ${V[V.length - 1]}%`);
     const L = 34, R = 6, T = 8, B = 22;
     const [lo, hi] = o.bounds ? o.bounds(V) : [Math.floor((Math.min(...V) - .5) / 2) * 2, Math.ceil((Math.max(...V) + .5) / 2) * 2];
-    const x = i => L + (i * (w - L - R)) / (V.length - 1);
+    const x = i => L + (i * (w - L - R)) / Math.max(1, V0.length - 1);
     const y = v => T + (1 - (v - lo) / (hi - lo)) * (h - T - B);
     [lo, (lo + hi) / 2, hi].forEach(v => {
       add(svg, 'line', { class: 'gl', x1: L, x2: w - R, y1: y(v), y2: y(v) });
       add(svg, 'text', { class: 'ax', x: L - 8, y: y(v) + 4, 'text-anchor': 'end' }).textContent = o.axis ? o.axis(v) : v + '%';
     });
-    const last = V.length - 1, mid = Math.round(last / 2);
+    const last = V0.length - 1, mid = Math.round(last / 2);
     [0, mid, last].forEach(i => add(svg, 'text', { class: 'ax', x: x(i), y: h - 4, 'text-anchor': i === 0 ? 'start' : i === last ? 'end' : 'middle' }).textContent = W[i]);
-    const pts = V.map((v, i) => [x(i), y(v)]);
-    const d = pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
-    add(svg, 'path', { class: 'area', d: `${d} L ${x(last)} ${h - B} L ${L} ${h - B} Z`, fill: 'var(--series-soft)', stroke: 'none' });
+    const pts = V0.map((v, i) => [x(i), v == null ? null : y(v)]);
+    const d = pts.filter(p => p[1] != null).map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
+    add(svg, 'path', { class: 'area', d: `${d} L ${x(last)} ${h - B} L ${x(first)} ${h - B} Z`, fill: 'var(--series-soft)', stroke: 'none' });
     add(svg, 'path', { class: 'ln-main', d, pathLength: 100, fill: 'none', stroke: 'var(--series)', 'stroke-width': 2, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' });
-    pointLayer(svg, w, pts, T, h - B, L, R, o.tip || (i => `Week of ${W[i]} · <b>${o.fmt ? o.fmt(V[i]) : V[i].toFixed(1) + '%'}</b>`));
+    pointLayer(svg, w, pts, T, h - B, L, R, o.tip || (i => `Week of ${W[i]} · <b>${o.fmt ? o.fmt(V0[i]) : V0[i].toFixed(1) + '%'}</b>${o.dots && !o.dots[i] ? '<br>No new grades' : ''}`), o.dots);
   }
 
   function barChart(el, W, V) {
     const { svg, w, h } = frame(el);
     svg.setAttribute('aria-label', `Assignments turned in per week, ${V.reduce((a, b) => a + b, 0)} in total`);
-    const L = 34, R = 6, T = 8, B = 22, max = 8;
+    const L = 34, R = 6, T = 8, B = 22, max = Math.max(8, Math.ceil(Math.max(...V) / 4) * 4); // room for a busy week
     const y = v => T + (1 - v / max) * (h - T - B);
-    [0, 4, 8].forEach(v => {
+    [0, max / 2, max].forEach(v => {
       add(svg, 'line', { class: 'gl', x1: L, x2: w - R, y1: y(v), y2: y(v) });
       add(svg, 'text', { class: 'ax', x: L - 8, y: y(v) + 4, 'text-anchor': 'end' }).textContent = v;
     });
@@ -3054,16 +3064,18 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   function drawCharts() {
     const s = series();
     const ago = state.range === 8 ? '8 weeks' : '4 weeks';
-    const dAvg = (s.lv[s.lv.length - 1] - s.lv[0]);
+    const dAvg = lastV(s.lv) - firstV(s.lv);
     $('avgDelta').className = 'delta ' + (dAvg >= 0 ? 'up' : 'down');
     $('avgDelta').innerHTML = `${ico(dAvg >= 0 ? 'up' : 'downr')}${Math.abs(dAvg).toFixed(1)}%`; $('avgNote').textContent = `vs. ${ago} ago`;
+    // the overall average now (it was the sample's 89.2% until 2026-11-03): the classes' grades averaged, as on the Grades page
+    $('avgNow').textContent = (CLASSES.length ? CLASSES.reduce((a, c) => a + c.pct, 0) / CLASSES.length : 0).toFixed(1) + '%';
     $('turnTotal').textContent = s.bv.reduce((a, b) => a + b, 0);
     $('turnNote').textContent = state.range === 8 ? 'last 8 weeks' : 'last 4 weeks';
     $('statAvg').hidden = !state.charts.avg;
     $('statTurn').hidden = !state.charts.turn;
     $('statGpa').hidden = !state.charts.gpa;
     $('statRate').hidden = !state.charts.rate;
-    const gNow = CLASSES.reduce((a, c) => a + GP[letter(c.pct)], 0) / CLASSES.length, dG = s.gv[s.gv.length - 1] - s.gv[0];
+    const gNow = CLASSES.reduce((a, c) => a + GP[letter(c.pct)], 0) / CLASSES.length, dG = lastV(s.gv) - firstV(s.gv);
     $('gpaNow').textContent = gNow.toFixed(2);
     $('gpaDelta').className = 'delta ' + (dG >= 0 ? 'up' : 'down');
     $('gpaDelta').innerHTML = `${ico(dG >= 0 ? 'up' : 'downr')}${Math.abs(dG).toFixed(2)}`; $('gpaNote').textContent = `vs. ${ago} ago`;
@@ -3075,11 +3087,11 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     $('tableAvg').hidden = !state.tables.avg; $('tableAvg').innerHTML = table(s.lw, s.lv, 'Average');
     $('tableTurn').hidden = !state.tables.turn; $('tableTurn').innerHTML = table(s.bw, s.bv, 'Turned in');
     const ready = id => $(id).offsetParent && !chartsLoading.has(id) && (!drawOnly || drawOnly.has(id));
-    if (ready('chartAvg')) lineChart($('chartAvg'), s.lw, s.lv);
+    if (ready('chartAvg')) lineChart($('chartAvg'), s.lw, s.lv, { dots: s.pd });
     if (ready('chartTurn')) barChart($('chartTurn'), s.bw, s.bv);
-    if (ready('chartGpa')) lineChart($('chartGpa'), s.lw, s.gv, { label: `GPA by week, from ${s.gv[0]} to ${s.gv[s.gv.length - 1]}`, fmt: v => v.toFixed(2) + ' GPA', axis: v => v.toFixed(1), bounds: V => [Math.floor((Math.min(...V) - .05) * 10) / 10, Math.ceil((Math.max(...V) + .05) * 10) / 10] });
+    if (ready('chartGpa')) lineChart($('chartGpa'), s.lw, s.gv, { label: `GPA by week, from ${firstV(s.gv)} to ${lastV(s.gv)}`, fmt: v => v.toFixed(2) + ' GPA', axis: v => v.toFixed(1), bounds: V => [Math.floor((Math.min(...V) - .05) * 10) / 10, Math.ceil((Math.max(...V) + .05) * 10) / 10], dots: s.pd });
     const off = WEEKS.length - s.lw.length;
-    if (ready('chartRate')) lineChart($('chartRate'), s.lw, s.rv, { label: `Share of assignments turned in on time, by week, from ${s.rv[0]}% to ${s.rv[s.rv.length - 1]}%`, axis: v => v + '%', bounds: () => [60, 100],
+    if (ready('chartRate')) lineChart($('chartRate'), s.lw, s.rv, { label: `Share of assignments turned in on time, by week, from ${s.rv[0]}% to ${s.rv[s.rv.length - 1]}%`, axis: v => v + '%', bounds: V => [Math.min(60, Math.floor(Math.min(...V) / 10) * 10), 100],
       tip: i => { const g = off + i; return `Week of ${s.lw[i]} · <b>${Math.round(RATE[g])}% on time</b><br>${ONTIME_W(g)} of ${DUE_W(g)} due${LATE_W[g] ? ` · ${LATE_W[g]} late` : ''}${MISS_W[g] ? ` · ${MISS_W[g]} missing` : ''}`; } });
   }
 
@@ -3726,7 +3738,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     hideTrend(); closePop();
     modalReturn = document.activeElement;
     const n = state.range, wk = WEEKS.slice(-n), idx = WEEKS.length - n;
-    const range = n === 8 ? 'Last 8 weeks (Aug 24 to Oct 12)' : 'Last 4 weeks (Sep 21 to Oct 12)';
+    const range = `Last ${n} weeks (${WEEKS[WEEKS.length - n]} to ${WEEKS[WEEKS.length - 1]})`; // from the real weeks, not the sample's dates
     let body = '';
     if (k === 'gpa') {
       const s = series(), gNow = CLASSES.reduce((a, c) => a + GP[letter(c.pct)], 0) / CLASSES.length;
@@ -3738,7 +3750,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
           ${cls.map(c => `<div class="toprow">${badge(c)}<span class="nm">${esc(c.name)}</span><span class="track"><i style="width:${GP[letter(c.pct)] / 4 * 100}%;background:${c.color}"></i></span><b>${GP[letter(c.pct)].toFixed(1)} <span class="${gcls(c.pct)}">${letter(c.pct)}</span></b></div>`).join('')}
           <p class="dnote">Each class counts the same. A+ and A are both 4.0.</p></section>
         <section class="dpanel"><div class="dt-h"><h3>Data table</h3><button class="hbtn" data-csv>${ico('doc')}Download CSV</button></div><div class="tablewrap"><table class="dt big"><thead><tr><th>Week of</th><th>GPA</th><th>Change</th></tr></thead>
-          <tbody>${s.lw.map((w, i) => { const d = i ? s.gv[i] - s.gv[i - 1] : null; return `<tr><td>${w}</td><td><b>${s.gv[i].toFixed(2)}</b></td><td>${chg(d, 2)}</td></tr>`; }).join('')}</tbody></table></div></section>`;
+          <tbody>${s.lw.map((w, i) => { if (s.gv[i] == null) return ''; const d = i && s.gv[i - 1] != null ? s.gv[i] - s.gv[i - 1] : null; return `<tr><td>${w}</td><td><b>${s.gv[i].toFixed(2)}</b></td><td>${chg(d, 2)}</td></tr>`; }).join('')}</tbody></table></div></section>`;
     } else if (k === 'rate') {
       const add0 = (m, id) => (m[id] || []).slice(idx).reduce((x, y) => x + y, 0);
       const by = CLASSES.map(c => { const t = TURNED_BY[c.id].slice(idx).reduce((x, y) => x + y, 0), l = add0(LATE_BY, c.id), m = add0(MISS_BY, c.id); return { c, due: t + m, on: t - l, l, m }; })
@@ -3834,12 +3846,12 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     } else {
       const s = series(), cls = CLASSES.slice().sort((a, b) => b.pct - a.pct);
       body = `<section class="dpanel"><h3>Overall average by week</h3>
-          <div class="legend"><span><i style="background:var(--series)"></i>Overall average <b>89.2%</b></span><span><i style="background:var(--good)"></i>Change <b>${(s.lv[s.lv.length - 1] - s.lv[0] >= 0 ? '+' : '')}${(s.lv[s.lv.length - 1] - s.lv[0]).toFixed(1)}%</b></span></div>
+          <div class="legend"><span><i style="background:var(--series)"></i>Overall average <b>${lastV(s.lv).toFixed(1)}%</b></span><span><i style="background:var(--good)"></i>Change <b>${(lastV(s.lv) - firstV(s.lv) >= 0 ? '+' : '')}${(lastV(s.lv) - firstV(s.lv)).toFixed(1)}%</b></span></div>
           <div class="bigchart" id="bigChart"></div><p class="dnote">Rebuilt from your graded assignments by their due dates, so if a teacher changes an old score, the earlier weeks change too.</p></section>
         <section class="dpanel"><h3>Class averages</h3>
           ${cls.map(c => `<div class="toprow">${badge(c)}<span class="nm">${esc(c.name)}</span><span class="track"><i style="width:${c.pct}%;background:${c.color}"></i></span><b>${c.pct.toFixed(1)}% <span class="${gcls(c.pct)}">${letter(c.pct)}</span></b></div>`).join('')}</section>
         <section class="dpanel"><div class="dt-h"><h3>Data table</h3><button class="hbtn" data-csv>${ico('doc')}Download CSV</button></div><div class="tablewrap"><table class="dt big"><thead><tr><th>Week of</th><th>Overall average</th><th>Change</th></tr></thead>
-          <tbody>${s.lw.map((w, i) => { const d = i ? s.lv[i] - s.lv[i - 1] : null; return `<tr><td>${w}</td><td><b>${s.lv[i].toFixed(1)}%</b></td><td>${chg(d, 1)}</td></tr>`; }).join('')}</tbody></table></div></section>`;
+          <tbody>${s.lw.map((w, i) => { if (s.lv[i] == null) return ''; const d = i && s.lv[i - 1] != null ? s.lv[i] - s.lv[i - 1] : null; return `<tr><td>${w}</td><td><b>${s.lv[i].toFixed(1)}%</b></td><td>${chg(d, 1)}</td></tr>`; }).join('')}</tbody></table></div></section>`;
     }
     modal = document.createElement('div');
     modal.className = 'modal-wrap';
@@ -3903,8 +3915,9 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     const n = state.range, idx = WEEKS.length - n, wk = WEEKS.slice(idx);
     const { svg, w, h } = axisFrame(el, 280);
     svg.setAttribute('aria-label', 'Assignments turned in per week, stacked by class');
-    const L = 40, R = 8, T = 12, B = 28, max = 8, y = v => T + (1 - v / max) * (h - T - B);
-    [0, 2, 4, 6, 8].forEach(v => { add(svg, 'line', { class: 'gl', x1: L, x2: w - R, y1: y(v), y2: y(v), 'stroke-dasharray': v ? '4 4' : '' }); add(svg, 'text', { class: 'ax', x: L - 10, y: y(v) + 4, 'text-anchor': 'end' }).textContent = v; });
+    const most = Math.max(0, ...wk.map((_, i) => Object.keys(TURNED_BY).reduce((t, c) => t + (TURNED_BY[c][idx + i] || 0), 0)));
+    const max = Math.max(8, Math.ceil(most / 4) * 4), L = 40, R = 8, T = 12, B = 28, y = v => T + (1 - v / max) * (h - T - B); // room for a busy week
+    [0, max / 4, max / 2, max * 3 / 4, max].forEach(v => { add(svg, 'line', { class: 'gl', x1: L, x2: w - R, y1: y(v), y2: y(v), 'stroke-dasharray': v ? '4 4' : '' }); add(svg, 'text', { class: 'ax', x: L - 10, y: y(v) + 4, 'text-anchor': 'end' }).textContent = v; });
     const slot = (w - L - R) / n, slot8 = (w - L - R) / 8, bw = slot - (slot8 - Math.min(96, slot8 * .84));
     const total = cid => TURNED_BY[cid].slice(idx).reduce((x, y) => x + y, 0);
     const segs = [];
@@ -3930,22 +3943,34 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     });
   }
   function bigLine(el) {
-    const kind = modalKind, isG = kind === 'gpa', isR = kind === 'rate', s = series(), W = s.lw, V = isG ? s.gv : isR ? s.rv : s.lv;
+    const kind = modalKind, isG = kind === 'gpa', isR = kind === 'rate', s = series(), W = s.lw, V0 = isG ? s.gv : isR ? s.rv : s.lv;
+    const V = V0.filter(v => v != null).length ? V0.filter(v => v != null) : [0], first = Math.max(0, V0.findIndex(v => v != null)), dots = isR ? null : s.pd;
     const fmt = v => isG ? v.toFixed(2) : isR ? Math.round(v) + '%' : v.toFixed(1) + '%';
     const { svg, w, h } = axisFrame(el, 280);
     svg.setAttribute('aria-label', `${isG ? 'GPA' : isR ? 'Share turned in on time' : 'Overall average'} by week, from ${fmt(V[0])} to ${fmt(V[V.length - 1])}`);
-    const ticks = isG ? [3.1, 3.2, 3.3, 3.4, 3.5] : isR ? [60, 70, 80, 90, 100] : [84, 86, 88, 90, 92];
+    // Ticks from the student's own numbers (2026-11-03, Martin: "the graphs are broken"). They were the sample
+    // data's (GPA 3.1 to 3.5), so a real 2.28 drew far outside the chart and the shading covered the popup.
+    const ticks = (() => {
+      const step = isG ? 0.1 : isR ? 10 : 2, minSpan = step * 4, cap = isG ? 4.0 : 100;
+      const mn = Math.min(...V), mx = Math.max(...V);
+      let lo = Math.floor(mn / step) * step, hi = Math.ceil(mx / step) * step;
+      while (hi - lo < minSpan) { if (lo - step >= 0 && (hi + step > cap || (mn - lo) <= (hi - mx))) lo -= step; else hi += step; }
+      const n = Math.round((hi - lo) / step), every = Math.ceil(n / 4);
+      const out = []; for (let i = 0; i <= n; i += every) out.push(Math.round((lo + i * step) * 100) / 100);
+      if (out[out.length - 1] < hi) out.push(Math.round((out[out.length - 1] + every * step) * 100) / 100);
+      return out;
+    })();
     const L = 44, R = 12, T = 12, B = 28, lo = ticks[0], hi = ticks[ticks.length - 1];
-    const x = i => L + (i * (w - L - R)) / (V.length - 1), y = v => T + (1 - (v - lo) / (hi - lo)) * (h - T - B);
+    const x = i => L + (i * (w - L - R)) / Math.max(1, V0.length - 1), y = v => T + (1 - (v - lo) / (hi - lo)) * (h - T - B);
     ticks.forEach(v => { add(svg, 'line', { class: 'gl', x1: L, x2: w - R, y1: y(v), y2: y(v), 'stroke-dasharray': v === lo ? '' : '4 4' }); add(svg, 'text', { class: 'ax', x: L - 10, y: y(v) + 4, 'text-anchor': 'end' }).textContent = isG ? v.toFixed(1) : v + '%'; });
     W.forEach((l, i) => add(svg, 'text', { class: 'ax', x: x(i), y: h - 8, 'text-anchor': i === 0 ? 'start' : i === W.length - 1 ? 'end' : 'middle' }).textContent = l);
-    const pts = V.map((v, i) => [x(i), y(v)]), d = pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
-    add(svg, 'path', { class: 'area', d: `${d} L ${x(V.length - 1)} ${h - B} L ${L} ${h - B} Z`, fill: 'var(--series-soft)', stroke: 'none' });
+    const pts = V0.map((v, i) => [x(i), v == null ? null : y(v)]), d = pts.filter(p => p[1] != null).map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
+    add(svg, 'path', { class: 'area', d: `${d} L ${x(V0.length - 1)} ${h - B} L ${x(first)} ${h - B} Z`, fill: 'var(--series-soft)', stroke: 'none' });
     add(svg, 'path', { class: 'ln-main', d, pathLength: 100, fill: 'none', stroke: 'var(--series)', 'stroke-width': 2.5, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' });
     const off = WEEKS.length - W.length;
     pointLayer(svg, w, pts, T, h - B, L, R, i => isR
-      ? `Week of ${W[i]} · <b>${fmt(V[i])} on time</b><br>${ONTIME_W(off + i)} of ${DUE_W(off + i)} due${LATE_W[off + i] ? ` · ${LATE_W[off + i]} late` : ''}${MISS_W[off + i] ? ` · ${MISS_W[off + i]} missing` : ''}`
-      : `Week of ${W[i]} · <b>${isG ? fmt(V[i]) + ' GPA' : fmt(V[i])}</b>`);
+      ? `Week of ${W[i]} · <b>${fmt(V0[i])} on time</b><br>${ONTIME_W(off + i)} of ${DUE_W(off + i)} due${LATE_W[off + i] ? ` · ${LATE_W[off + i]} late` : ''}${MISS_W[off + i] ? ` · ${MISS_W[off + i]} missing` : ''}`
+      : `Week of ${W[i]} · <b>${isG ? fmt(V0[i]) + ' GPA' : fmt(V0[i])}</b>${dots && !dots[i] ? '<br>No new grades' : ''}`, dots);
   }
   // the whole card opens details; its "..." menu keeps working on its own
   document.addEventListener('click', e => {
@@ -5426,7 +5451,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); ntClose(); return; }
     if (e.key === 'Tab') { const f = [...ntEl.querySelectorAll('button, [tabindex="0"]')].filter(x => !x.closest('[inert]')); if (!f.length) return; if (e.shiftKey && document.activeElement === f[0]) { e.preventDefault(); f[f.length - 1].focus(); } else if (!e.shiftKey && document.activeElement === f[f.length - 1]) { e.preventDefault(); f[0].focus(); } }
   }, true);
-  function ntInit() { const b = $('ntBtn'); if (b) b.addEventListener('click', () => ntEl ? ntClose() : ntOpen()); ntBadge(); }
+  function ntInit() { const b = $('ntBtn'); if (b) b.addEventListener('click', () => ntEl ? ntClose() : ntOpen()); ntBadge(); window.addEventListener('fs:notis', () => { ntBadge(); NT.onChange(); }); } // new ones from the background check (averages-fs-data.js)
   /* ===== end Notifications ===== */
 
   renderAll(); loadDrafts();

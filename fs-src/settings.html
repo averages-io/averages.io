@@ -3250,6 +3250,14 @@
   }
   @media (max-width: 680px) { .hub-t h1 { font-size: 34px; } }
   /* ===== end Life layer for the course page ===== */
+  /* the round photo crop (2026-11-03) */
+  .sg-crop { position: fixed; inset: 0; z-index: 400; display: grid; place-items: center; background: rgba(12,12,20,.45); padding: 16px; }
+  .sg-crop-box { background: var(--panel); border-radius: 20px; padding: 24px; width: min(340px, 100%); display: flex; flex-direction: column; align-items: center; gap: 12px; box-shadow: 0 12px 40px rgba(0,0,0,.25); }
+  .sg-crop-box h3 { margin: 0; font-size: 18px; font-weight: 900; } .sg-crop-box p { margin: 0; color: var(--muted); font-weight: 600; font-size: 13px; }
+  .sg-crop-stage { position: relative; border-radius: 50%; overflow: hidden; background: var(--inner); cursor: grab; touch-action: none; }
+  .sg-crop-stage img { position: absolute; left: 50%; top: 50%; max-width: none; user-select: none; pointer-events: none; }
+  .sg-crop-box input[type=range] { width: 100%; accent-color: var(--accent); }
+  .sg-crop-btns { display: flex; gap: 8px; justify-content: flex-end; width: 100%; }
 </style>
 </head>
 <body>
@@ -3851,7 +3859,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); ntClose(); return; }
     if (e.key === 'Tab') { const f = [...ntEl.querySelectorAll('button, [tabindex="0"]')].filter(x => !x.closest('[inert]')); if (!f.length) return; if (e.shiftKey && document.activeElement === f[0]) { e.preventDefault(); f[f.length - 1].focus(); } else if (!e.shiftKey && document.activeElement === f[f.length - 1]) { e.preventDefault(); f[0].focus(); } }
   }, true);
-  function ntInit() { const b = $('ntBtn'); if (b) b.addEventListener('click', () => ntEl ? ntClose() : ntOpen()); ntBadge(); }
+  function ntInit() { const b = $('ntBtn'); if (b) b.addEventListener('click', () => ntEl ? ntClose() : ntOpen()); ntBadge(); window.addEventListener('fs:notis', () => { ntBadge(); NT.onChange(); }); } // new ones from the background check (averages-fs-data.js)
   /* ===== end Notifications ===== */
 
   // ---------- frame: sidebar classes, avatar, pin, menu, toast (same as Home) ----------
@@ -4432,21 +4440,106 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   }
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && dlg) { e.preventDefault(); e.stopImmediatePropagation(); dlgClose(true); } }, true);
 
+  // ---------- a new profile photo, in Fullscreen (2026-11-03) ----------
+  // 1. pick a PNG, JPG or WebP; 2. the picture check (app/scan/page.tsx in a hidden frame, the same check Windowed and
+  // onboarding run; the picture never leaves the device); 3. a round crop; 4. on Save, it goes up as the account's
+  // copy (PUT /media/photo, as Windowed does) and then into the profile, which syncs.
+  let scanFrame = null, scanReady = null;
+  function scanPicture(file) {
+    if (!scanReady) scanReady = new Promise((ok, no) => {
+      const t = setTimeout(() => no(new Error('scan_timeout')), 30000);
+      const onMsg = e => { if (e.origin === location.origin && e.data && e.data.type === 'averages-scan-ready') { clearTimeout(t); removeEventListener('message', onMsg); ok(); } };
+      addEventListener('message', onMsg);
+      scanFrame = document.createElement('iframe'); scanFrame.src = '/scan'; scanFrame.title = 'Picture check'; scanFrame.setAttribute('aria-hidden', 'true'); scanFrame.tabIndex = -1;
+      scanFrame.style.cssText = 'position:fixed;width:1px;height:1px;left:-9999px;top:0;border:0;opacity:0;pointer-events:none';
+      document.body.appendChild(scanFrame);
+    }).catch(e => { scanReady = null; if (scanFrame) scanFrame.remove(); scanFrame = null; throw e; });
+    return scanReady.then(() => new Promise((ok, no) => {
+      const id = Math.random().toString(36).slice(2), t = setTimeout(() => { removeEventListener('message', onMsg); no(new Error('scan_timeout')); }, 90000);
+      function onMsg(e) { if (e.origin !== location.origin || !e.data || e.data.type !== 'averages-scan-result' || e.data.id !== id) return; clearTimeout(t); removeEventListener('message', onMsg); ok(e.data); }
+      addEventListener('message', onMsg);
+      scanFrame.contentWindow.postMessage({ type: 'averages-scan', id, blob: file, name: file.name }, location.origin);
+    }));
+  }
+  function photoPick(done) {
+    const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/png,image/jpeg,image/webp'; inp.hidden = true; document.body.appendChild(inp);
+    inp.addEventListener('change', () => {
+      const f = inp.files && inp.files[0]; inp.remove(); if (!f) return;
+      if (!/^image\/(png|jpeg|webp)$/.test(f.type)) { toast('Pick a PNG, JPG or WebP picture.'); return; }
+      if (f.size > 15 * 1048576) { toast('That picture is too big. Pick one under 15 MB.'); return; }
+      toast('Checking your picture…');
+      scanPicture(f).then(v => {
+        if (!v.allowed) { toast(v.reason || 'That picture can\'t be used. Try a different one.'); return; }
+        const r = new FileReader(); r.onload = () => photoCrop(String(r.result), done); r.onerror = () => toast('That picture couldn\'t be read.'); r.readAsDataURL(f);
+      }, () => toast('Couldn\'t check that picture right now. Try again in a moment.'));
+    }, { once: true });
+    inp.click();
+  }
+  function photoCrop(src, done) {
+    const img = new Image();
+    img.onload = () => {
+      const S = 240, el = document.createElement('div');
+      el.className = 'sg-crop'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'Position your photo');
+      el.innerHTML = `<div class="sg-crop-box"><h3>Position your photo</h3><p>Drag to move it. Use the slider to zoom.</p><div class="sg-crop-stage" style="width:${S}px;height:${S}px"><img alt="" draggable="false"></div><input type="range" min="100" max="300" value="100" aria-label="Zoom"><div class="sg-crop-btns"><button class="btn" data-crop="no">Cancel</button><button class="btn primary" data-crop="ok">Use photo</button></div></div>`;
+      document.body.appendChild(el);
+      const stage = el.querySelector('.sg-crop-stage'), im = el.querySelector('img'), zoom = el.querySelector('input');
+      const min = S / Math.min(img.naturalWidth, img.naturalHeight); let sc = min, x = 0, y = 0, drag = null;
+      const clamp = () => { const hx = Math.max(0, img.naturalWidth * sc / 2 - S / 2), hy = Math.max(0, img.naturalHeight * sc / 2 - S / 2); x = Math.min(hx, Math.max(-hx, x)); y = Math.min(hy, Math.max(-hy, y)); };
+      const draw = () => { im.style.width = img.naturalWidth * sc + 'px'; im.style.height = img.naturalHeight * sc + 'px'; im.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`; };
+      im.src = src; draw();
+      stage.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY, ox: x, oy: y }; stage.setPointerCapture(e.pointerId); });
+      stage.addEventListener('pointermove', e => { if (!drag) return; x = drag.ox + e.clientX - drag.x; y = drag.oy + e.clientY - drag.y; clamp(); draw(); });
+      stage.addEventListener('pointerup', () => { drag = null; }); stage.addEventListener('pointercancel', () => { drag = null; });
+      zoom.addEventListener('input', () => { sc = min * (+zoom.value / 100); clamp(); draw(); });
+      const close = () => { el.remove(); removeEventListener('keydown', onKey, true); };
+      const onKey = e => { if (e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); close(); } };
+      addEventListener('keydown', onKey, true);
+      el.addEventListener('click', e => {
+        const b = e.target.closest('[data-crop]'); if (!b && e.target !== el) return;
+        if (!b || b.dataset.crop === 'no') { close(); return; }
+        const OUT = 512, k = OUT / S, c = document.createElement('canvas'); c.width = c.height = OUT;
+        const w = img.naturalWidth * sc * k, h = img.naturalHeight * sc * k;
+        c.getContext('2d').drawImage(img, OUT / 2 + x * k - w / 2, OUT / 2 + y * k - h / 2, w, h);
+        close(); done(c.toDataURL('image/png'));
+      });
+      el.querySelector('[data-crop="ok"]').focus({ preventScroll: true });
+    };
+    img.onerror = () => toast('That picture couldn\'t be read.');
+    img.src = src;
+  }
+  // The account's copy of the photo (Windowed's mediaRefFor): a 256px WebP (PNG where WebP can't be made) to PUT
+  // /media/photo; its version is remembered so the synced profile can point at it instead of carrying the picture.
+  async function photoUpload(url) {
+    const blob = await new Promise(ok => { const im = new Image(); im.onload = () => { const c = document.createElement('canvas'); c.width = c.height = 256; c.getContext('2d').drawImage(im, 0, 0, 256, 256); c.toBlob(b => b && b.type === 'image/webp' ? ok(b) : c.toBlob(ok, 'image/png'), 'image/webp', .86); }; im.onerror = () => ok(null); im.src = url; });
+    if (!blob) return;
+    const res = await fetch(FSX.API + '/media/photo', { method: 'PUT', credentials: 'include', headers: { 'Content-Type': blob.type }, body: blob });
+    if (!res.ok) return;
+    const j = await res.json().catch(() => ({})), v = j && typeof j.v === 'string' ? j.v.replace(/"/g, '') : '';
+    if (!/^[A-Za-z0-9._-]{1,128}$/.test(v)) return;
+    const dg = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(url));
+    const h = Array.from(new Uint8Array(dg).slice(0, 12), b => b.toString(16).padStart(2, '0')).join('');
+    const media = store.get('averages_sync_media') || {}; media.photo = { v, h }; store.set('averages_sync_media', media);
+  }
+
   function editProfile() {
     let photo = PROFILE.photo;
     const d = dlgOpen({ title: 'Edit profile', ok: 'Save', body: `
       <label class="sg-fl"><b>Name</b><input id="sgName" maxlength="40" autocomplete="name" value="${esc(PROFILE.name)}"><small>This is how you show up in Messages and Contacts.</small></label>
-      <div class="sg-fl"><b>Photo</b><div class="sg-ph2"><span class="av-wrap"><span class="av" id="sgPhAv"></span></span><button class="btn" data-dact="pick">Change photo</button><button class="btn" data-dact="rm"${photo ? '' : ' hidden'}>Remove</button></div><small>Change photo opens the classic Settings, which checks every picture before it's used.</small></div>`,
+      <div class="sg-fl"><b>Photo</b><div class="sg-ph2"><span class="av-wrap"><span class="av" id="sgPhAv"></span></span><button class="btn" data-dact="pick">Change photo</button><button class="btn" data-dact="rm"${photo ? '' : ' hidden'}>Remove</button></div><small>Every picture is checked on this device before it's used.</small></div>`,
       onOk: el => {
         const n = el.querySelector('#sgName').value.trim().replace(/\s+/g, ' ');
         if (!n) { el.querySelector('#sgName').focus(); toast('Add your name first.'); return false; }
+        const fresh = photo && photo !== PROFILE.photo;
         PROFILE.name = n; PROFILE.photo = photo;
-        store.set('fsmock_profile2', photo ? { name: n } : { name: n, photo: '' });
-        redraw(); avSync(); FSX.syncPush(); toast('Saved your profile.');
+        // A new photo goes to the account's copy first (like Windowed), so the synced profile points at it.
+        const save = () => { store.set('fsmock_profile2', photo ? { name: n, photo } : { name: n, photo: '' }); redraw(); avSync(); FSX.syncPush(); toast('Saved your profile.'); };
+        if (fresh) { toast('Saving your photo…'); photoUpload(photo).then(save, save); } else save();
       } });
-    const pv = () => { const a = d.el.querySelector('#sgPhAv'); a.textContent = (d.el.querySelector('#sgName').value.trim() || PROFILE.name).charAt(0); a.classList.toggle('photo', !!photo); a.style.backgroundImage = photo ? `url("${photo}")` : ''; d.el.querySelector('[data-dact="rm"]').hidden = !photo; };
-    // a new photo goes through the Windowed Settings, which checks it first (and crops it)
-    d.onAct = k => { if (k === 'pick') { try { sessionStorage.setItem('averages_fs_off', '1'); } catch (_) {} location.href = '/settings?section=account&photo=1'; } else { photo = ''; pv(); d.el.querySelector('[data-dact="pick"]').focus(); } };
+    const pv = () => { const a = d.el.querySelector('#sgPhAv'), nm = d.el.querySelector('#sgName').value.trim() || PROFILE.name, A = window.AveragesAvatar; a.classList.toggle('photo', !!photo); // the same colored initials as everywhere else (2026-11-03)
+      if (photo) { a.textContent = ''; a.style.backgroundImage = `url("${photo}")`; } else if (A) { a.textContent = A.initials(nm) || '?'; a.style.backgroundImage = A.background(nm); a.style.backgroundColor = A.color(nm); } else { a.textContent = nm.charAt(0); a.style.backgroundImage = ''; } d.el.querySelector('[data-dact="rm"]').hidden = !photo; };
+    // A new photo, right here (2026-11-03, Martin: it used to send you to Windowed Settings): checked on this
+    // device by the same picture check as Windowed (the hidden /scan page), cropped round, then shown here.
+    d.onAct = k => { if (k === 'pick') { photoPick(url => { photo = url; pv(); d.el.querySelector('[data-dact="pick"]').focus({ preventScroll: true }); }); } else { photo = ''; pv(); d.el.querySelector('[data-dact="pick"]').focus(); } };
     d.el.querySelector('#sgName').addEventListener('input', pv); pv();
   }
   function notifConsent() {

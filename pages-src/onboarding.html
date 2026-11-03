@@ -1528,7 +1528,7 @@
         <section class="step-section" data-section="profile">
           <div id="profileForm">
             <label class="field-label" for="nameInput">Name:<span class="req">*</span></label>
-            <input type="text" id="nameInput" class="name-input" placeholder="First name only, no spaces">
+            <input type="text" id="nameInput" class="name-input" placeholder="Your first name">
             <div class="error-text" id="nameError">Name is required.</div>
 
             <div id="emailBlock">
@@ -3032,14 +3032,15 @@
     const profileForm = document.getElementById('profileForm');
     const completeState = document.getElementById('completeState');
 
-    // This field is first-name-only, so spaces are stripped as they're
-    // typed or pasted in rather than just trimmed on submit — the box
-    // never ends up holding more than one word.
+    // Spaces are allowed (2026-11-03, Martin: names like "Mary Ann" or "De La Cruz"). Only a run of
+    // spaces becomes one, and the ends are trimmed when it's saved.
     nameInput.addEventListener('input', () => {
-      if (/\s/.test(nameInput.value)) {
-        const caret = nameInput.selectionStart - 1;
-        nameInput.value = nameInput.value.replace(/\s+/g, '');
-        nameInput.setSelectionRange(caret, caret);
+      if (/\s\s|^\s/.test(nameInput.value)) {
+        const caret = nameInput.selectionStart;
+        const before = nameInput.value.length;
+        nameInput.value = nameInput.value.replace(/^\s+/, '').replace(/\s{2,}/g, ' ');
+        const pos = Math.max(0, caret - (before - nameInput.value.length));
+        nameInput.setSelectionRange(pos, pos);
       }
     });
 

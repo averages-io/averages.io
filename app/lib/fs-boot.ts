@@ -10,7 +10,7 @@
  *   - the student hasn't picked Fullscreen;
  *   - this tab already knows the switch is off (the features cache, or a
  *     Fullscreen page that found it off and sent the student back here);
- *   - it's the sign-in page, onboarding or /signout.
+ *   - it's the sign-in page, onboarding, /signout or /scan (Fullscreen Settings' picture check).
  * Any other address that isn't a page here is a 404: that goes to the
  * Fullscreen "page not found", carrying the address.
  */
@@ -22,7 +22,7 @@ export const FS_BOOT_JS = `(function () {
     var c = JSON.parse(sessionStorage.getItem("averages_features") || "null");
     if (c && c.features && c.features.fullscreen === false) return;
     var p = location.pathname.replace(/\\/+$/, "") || "/";
-    if (p === "/" || p === "/onboard" || p === "/signout") return;
+    if (p === "/" || p === "/onboard" || p === "/signout" || p === "/scan") return;
     var M = {
       "/home": "home", "/courses": "courses", "/grades": "grades", "/assignments": "assignments",
       "/files": "files", "/calendar": "calendar", "/messages": "messages", "/contacts": "contacts",

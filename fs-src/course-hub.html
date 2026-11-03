@@ -3144,6 +3144,7 @@
   .mplb-txt { width: min(960px, 100%); max-height: none; padding: 32px; border-radius: 6px; background: #ffffff; --keep-dark: 1; }
   .mplb-more { margin: 0; font-size: 13px; font-weight: 700; color: rgba(255, 255, 255, .64); --keep-dark: 1; }
   @media (max-width: 640px) { .mplb-body { padding: 0 8px 16px; } .mplb .lbl { display: none; } }
+  .mp-slow { display: block; width: fit-content; margin: 12px auto 0; padding: 8px 14px; border-radius: 10px; background: var(--panel); color: var(--muted); font-weight: 700; font-size: 13px; box-shadow: 0 1px 3px rgba(20,20,40,.12); text-align: center; }
 </style>
 </head>
 <body>
@@ -3152,16 +3153,16 @@
   <header class="top">
     <button class="ibtn menu-btn" id="menuBtn" aria-label="Open menu"><svg class="i"><use href="#i-menu"/></svg></button>
     <div class="brand"><img alt="" src="data:image/png;base64,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"><b>Averages<span>.io</span></b></div>
-    <div class="crumb"><a href="#" data-toast="the Courses page">Courses</a><span class="crumb-sep" aria-hidden="true">/</span><strong>AP Chemistry</strong></div>
+    <div class="crumb"><a href="#" data-toast="the Courses page">Courses</a><span class="crumb-sep" aria-hidden="true">/</span><strong></strong></div>
     <div class="grow"></div>
     <button class="nt-btn" id="ntBtn" aria-haspopup="dialog" aria-expanded="false"><svg class="i"><use href="#i-bell"/></svg><span class="nt-l">Notifications</span><em class="sv-ct" id="ntCt"></em></button>
     <div class="qbox">
-    <div class="quick" role="group" aria-label="AP Chemistry shortcuts">
+    <div class="quick" role="group" aria-label="This class shortcuts">
       <div class="quick-btns">
-        <button class="ibtn hide-sm" data-hubtab="grades" aria-label="AP Chemistry grades" data-tip="Grades"><svg class="i"><use href="#i-chart"/></svg></button>
-        <button class="ibtn hide-sm" data-whatif="chem" aria-label="What-if grades for AP Chemistry" data-tip="What-if grades"><svg class="i"><use href="#i-calc"/></svg></button>
-        <button class="ibtn hide-sm" data-toast="the Calendar, showing AP Chemistry only" aria-label="AP Chemistry calendar" data-tip="Class calendar"><svg class="i"><use href="#i-cal"/></svg></button>
-        <button class="ibtn" data-toast="this course in Schoology, in a new tab" aria-label="Open AP Chemistry in Schoology" data-tip="Open in Schoology"><svg class="i"><use href="#i-up"/></svg></button>
+        <button class="ibtn hide-sm" data-hubtab="grades" aria-label="This class grades" data-tip="Grades"><svg class="i"><use href="#i-chart"/></svg></button>
+        <button class="ibtn hide-sm" data-whatif="chem" aria-label="What-if grades for this class" data-tip="What-if grades"><svg class="i"><use href="#i-calc"/></svg></button>
+        <button class="ibtn hide-sm" data-toast="the Calendar, showing this class only" aria-label="This class calendar" data-tip="Class calendar"><svg class="i"><use href="#i-cal"/></svg></button>
+        <button class="ibtn" data-toast="this course in Schoology, in a new tab" aria-label="Open this class in Schoology" data-tip="Open in Schoology"><svg class="i"><use href="#i-up"/></svg></button>
       </div>
     </div>
     <button class="me" id="meBtn" data-pop="me" aria-haspopup="dialog" aria-expanded="false" aria-label="Profile and settings"><span class="av" data-av></span><span class="gear" aria-hidden="true"><svg class="i"><use href="#i-gear-fill"/></svg></span></button>
@@ -3191,28 +3192,28 @@
       <div class="hub-h">
         <span class="hub-logo-w"><button class="hub-logo" id="hubLogo" aria-haspopup="dialog" aria-label="Course info"></button><span class="hub-tip" aria-hidden="true">Course info</span></span>
         <div class="hub-t">
-          <h1 id="hubName">AP Chemistry</h1>
+          <h1 id="hubName"></h1>
           <div class="hub-meta">
-            <span><svg class="i"><use href="#i-user"/></svg>Dr. Park</span>
-            <span><svg class="i"><use href="#i-cal"/></svg>Period 2 · Quarter 1</span>
-            <span><svg class="i"><use href="#i-home"/></svg>Room 118</span>
-            <span><svg class="i"><use href="#i-users"/></svg>28 students</span>
+            <span><svg class="i"><use href="#i-user"/></svg></span>
+            <span><svg class="i"><use href="#i-cal"/></svg></span>
+            <span><svg class="i"><use href="#i-home"/></svg></span>
+            <span><svg class="i"><use href="#i-users"/></svg></span>
           </div>
         </div>
         <div class="hub-acts">
-          <button class="pill sync" id="refresh" aria-label="Refresh AP Chemistry. Synced 2 minutes ago." title="Refresh AP Chemistry"><svg class="i"><use href="#i-refresh"/></svg><span id="syncLabel">Synced 2 min ago</span></button>
-          <button class="btn" data-toast="a new message to Dr. Park"><svg class="i"><use href="#i-msg"/></svg>Message Dr. Park</button>
+          <button class="pill sync" id="refresh" aria-label="Refresh this class." title="Refresh this class"><svg class="i"><use href="#i-refresh"/></svg><span id="syncLabel">Synced</span></button>
+          <button class="btn" data-toast="a new message to your teacher"><svg class="i"><use href="#i-msg"/></svg>Message your teacher</button>
           <button class="btn primary" data-turnin=""><svg class="i"><use href="#i-upload"/></svg>Turn in</button>
         </div>
       </div>
 
       <nav class="hub-tabs" aria-label="Course sections">
         <button class="hub-tab on" aria-current="page" data-hubtab="overview"><svg class="i"><use href="#i-home"/></svg>Overview</button>
-        <button class="hub-tab" data-hubtab="materials"><svg class="i"><use href="#i-folder"/></svg>Materials<span class="ct" id="mpTabCt">12</span></button>
-        <button class="hub-tab" data-hubtab="assignments"><svg class="i"><use href="#i-inbox"/></svg>Assignments<span class="ct" id="agTabCt">6</span></button>
+        <button class="hub-tab" data-hubtab="materials"><svg class="i"><use href="#i-folder"/></svg>Materials<span class="ct" id="mpTabCt"></span></button>
+        <button class="hub-tab" data-hubtab="assignments"><svg class="i"><use href="#i-inbox"/></svg>Assignments<span class="ct" id="agTabCt"></span></button>
         <button class="hub-tab" data-hubtab="grades"><svg class="i"><use href="#i-chart"/></svg>Grades</button>
-        <button class="hub-tab" data-hubtab="updates"><svg class="i"><use href="#i-bell"/></svg>Updates<span class="ct" id="upTabCt">3</span></button>
-        <button class="hub-tab" data-hubtab="members"><svg class="i"><use href="#i-users"/></svg>Members<span class="ct">29</span></button>
+        <button class="hub-tab" data-hubtab="updates"><svg class="i"><use href="#i-bell"/></svg>Updates<span class="ct" id="upTabCt"></span></button>
+        <button class="hub-tab" data-hubtab="members"><svg class="i"><use href="#i-users"/></svg>Members<span class="ct"></span></button>
       </nav>
 
       <main class="hub-main">
@@ -3244,8 +3245,8 @@
         <section class="panel">
           <div class="ph2"><h2 id="gTitle">Your grade</h2><span class="ph2-tools"><span class="gsw" role="group" aria-label="Show"><span class="gsw-pill" aria-hidden="true"></span><button data-gview="now" aria-pressed="true">Now</button><button data-gview="proj" aria-pressed="false">Projected</button></span></span></div>
           <div id="gNow">
-            <div class="gr-now"><b class="gb">B+</b><span>87.4%</span></div>
-            <div class="gr-sub">Your grade right now, from 14 graded assignments.</div>
+            <div class="gr-now"><b class="gb"></b><span></span></div>
+            <div class="gr-sub"></div>
             <div class="wbar" id="wbar" role="img" aria-label="Grade weights: Tests 50 percent, Labs 30 percent, Homework 20 percent"></div>
             <div class="wleg" id="wleg"></div>
           </div>
@@ -3260,7 +3261,7 @@
 
         <section class="panel">
           <div class="ph2"><h2>Teacher</h2></div>
-          <div class="teacher"><span class="tav" aria-hidden="true">P</span><span class="tx"><b>Dr. Park</b><small>Room 118 · 2 conversations</small></span><button class="btn sm" data-toast="a new message to Dr. Park">Message</button></div>
+          <div class="teacher"><span class="tav" aria-hidden="true">P</span><span class="tx"><b></b><small></small></span><button class="btn sm" data-toast="a new message to your teacher">Message</button></div>
         </section>
 
         <section class="panel">
@@ -5696,7 +5697,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); ntClose(); return; }
     if (e.key === 'Tab') { const f = [...ntEl.querySelectorAll('button, [tabindex="0"]')].filter(x => !x.closest('[inert]')); if (!f.length) return; if (e.shiftKey && document.activeElement === f[0]) { e.preventDefault(); f[f.length - 1].focus(); } else if (!e.shiftKey && document.activeElement === f[f.length - 1]) { e.preventDefault(); f[0].focus(); } }
   }, true);
-  function ntInit() { const b = $('ntBtn'); if (b) b.addEventListener('click', () => ntEl ? ntClose() : ntOpen()); ntBadge(); }
+  function ntInit() { const b = $('ntBtn'); if (b) b.addEventListener('click', () => ntEl ? ntClose() : ntOpen()); ntBadge(); window.addEventListener('fs:notis', () => { ntBadge(); NT.onChange(); }); } // new ones from the background check (averages-fs-data.js)
   /* ===== end Notifications ===== */
 
   document.addEventListener('keydown', e => {
@@ -5938,7 +5939,11 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (box && !box.dataset.done) {
       box.dataset.done = '1';
       const c = box.querySelector('canvas'), want = MP.page;
+      // A slow file (2026-11-03, Martin: a new upload took about 3 minutes): Schoology can take a while to hand over a
+      // file it just got, so say so instead of showing a blank page.
+      const slow = setTimeout(() => { if (box.isConnected && !box.classList.contains('ready')) box.insertAdjacentHTML('beforeend', `<p class="mp-slow">Still getting this file from Schoology. New uploads can take a few minutes.</p>`); }, 8000);
       FSX.prev.page(box.dataset.mpdf, want, c, Math.min(1120, box.clientWidth || 560)).then(r => {
+        clearTimeout(slow); const sl = box.querySelector('.mp-slow'); if (sl) sl.remove();
         const m = mpGet(MP.file); if (m) m.pages = r.pages;
         box.classList.add('ready'); box.classList.toggle('land', r.ratio > 1);
         mpPagerSync(r.pages);
@@ -5976,14 +5981,17 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     });
     if (k === 'pdf') {
       const box = mpLb.el.querySelector('.mplb-pages'), mine = mpLb, w = Math.min(960, window.innerWidth - 48);
+      box.innerHTML = `<p class="mplb-more" data-mplbwait>Loading…</p>`;
+      const slow = setTimeout(() => { const n = box.querySelector('[data-mplbwait]'); if (n) n.textContent = 'Still getting this file from Schoology. New uploads can take a few minutes.'; }, 8000);
       FSX.prev.pdf(url).then(doc => {
+        clearTimeout(slow); const wn = box.querySelector('[data-mplbwait]'); if (wn) wn.remove();
         const n = Math.min(doc.numPages, 60); let chain = Promise.resolve();
         for (let i = 0; i < n; i++) {
           const c = document.createElement('canvas'); c.className = 'mplb-page'; c.setAttribute('role', 'img'); c.setAttribute('aria-label', `Page ${i + 1} of ${doc.numPages}`); box.appendChild(c);
           chain = chain.then(() => mpLb === mine ? FSX.prev.page(url, i, c, w) : null);
         }
         if (doc.numPages > n) box.insertAdjacentHTML('beforeend', `<p class="mplb-more">The first ${n} pages are shown. Open it in a new tab to see all ${doc.numPages}.</p>`);
-      }, () => { box.innerHTML = `<p class="mplb-more">Couldn't show this PDF here. Open it in a new tab instead.</p>`; });
+      }, () => { clearTimeout(slow); box.innerHTML = `<p class="mplb-more">Couldn't show this PDF here. Open it in a new tab instead.</p>`; });
     }
   }
   function mpLbClose(quiet) {
@@ -6398,6 +6406,7 @@ window.AveragesHelp = {
     // Google Drive: the sign-in window (if any) opens inside this click, then the file goes from Schoology into their Drive
     const job = FST.driveEdit(m.c, m.id, f.f.id, f.name);
     main.setAttribute('aria-busy', 'true'); main.innerHTML = `<span class="aw-spin" aria-hidden="true"></span><span>Copying to Drive…</span>`;
+    setTimeout(() => { if (main.getAttribute('aria-busy') === 'true') { const t = main.querySelector('span:last-child'); if (t) t.textContent = 'Still getting it from Schoology…'; } }, 10000);
     job.then(d => { main.removeAttribute('aria-busy'); const dr = awMakeDraft(m, f, k, { id: 'g-' + d.fileId, fileId: String(d.fileId), name: String(d.name || baseName(f.name)), link: d.webViewLink }); toast(`"${dr.name}" is in your Google Drive and in Drafts.`); if (d.webViewLink) FSX.newTab(d.webViewLink); },
       e => { main.removeAttribute('aria-busy'); awAttDraw(m); if (!(e && e.code === 'popup_closed')) toast(FST.cloudMessage(e)); });
   }
@@ -7282,7 +7291,7 @@ window.AveragesHelp = {
     const meta = document.querySelector('.hub-meta');
     meta.innerHTML = [ME.teacher ? `<span>${ico('user')}${esc(ME.teacher)}</span>` : '', `<span>${ico('cal')}${ME.hasPeriod ? 'Period ' + ME.period + ' · ' : ''}This term</span>`, ME.code ? `<span>${ico('home')}${esc(ME.code)}</span>` : '', MB_MATES.length ? `<span>${ico('users')}${MB_MATES.length + 1} students</span>` : ''].filter(Boolean).join('');
     document.querySelectorAll('[data-whatif="chem"]').forEach(b => { b.dataset.whatif = ME.id; });
-    document.querySelectorAll('.quick [aria-label^="AP Chemistry"], .quick [aria-label*="AP Chemistry"]').forEach(b => b.setAttribute('aria-label', b.getAttribute('aria-label').replace('AP Chemistry', ME.name)));
+    document.querySelectorAll('.quick [aria-label]').forEach(b => b.setAttribute('aria-label', b.getAttribute('aria-label').replace(/^This class\b/, ME.name).replace(/\bthis class\b/, ME.name)));
     document.querySelector('.quick').setAttribute('aria-label', `${ME.name} shortcuts`);
     const cal = document.querySelector('.quick [data-toast^="the Calendar"]'); if (cal) cal.dataset.toast = `the Calendar, showing ${ME.name} only`;
     document.querySelectorAll('.hub-acts [data-toast^="a new message"], .teacher [data-toast^="a new message"]').forEach(b => { b.removeAttribute('data-toast'); b.dataset.hubmsg = ''; });

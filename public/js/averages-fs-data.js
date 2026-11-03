@@ -290,6 +290,38 @@
     lset(RECENT_KEY, l);
     var rl = document.getElementById('sideRecList'); if (rl && recOpen()) rl.innerHTML = recentsHTML();
   }
+  /*
+   * Notifications keep coming in (2026-11-03, Martin: "the notification counter won't change"): once the page's
+   * own sync is done, and then every 5 minutes while the tab is showing (and when it comes back into view after
+   * that long), the bundle and course updates are read again in the background. New grades, updates and messages
+   * join the bell (the pages listen for 'fs:notis') without reloading the page. The fresh answers also go in this
+   * tab's cache, so the next page opens with them.
+   */
+  var NOTIS_EVERY = 5 * 60 * 1000, notisAt = Date.now(), notisBusy = false;
+  function notisCheck() {
+    if (notisBusy || !window.FSD || !window.FSA || document.visibilityState !== 'visible') return;
+    var me = window.FSD.me || {}; if (!me.uid) return;
+    notisBusy = true; notisAt = Date.now();
+    var tz = zone();
+    Promise.all([getJSON('/data/bundle' + (tz ? '?tz=' + encodeURIComponent(tz) : '')), getJSON('/data/updates').catch(function () { return null; })]).then(function (got) {
+      var b = got[0], u = got[1];
+      sset('schoolagy_bundle_cache', JSON.stringify({ at: Date.now(), bundle: b }));
+      if (u) sset('averages_extras_updates', JSON.stringify({ at: Date.now(), who: me.uid, data: u }));
+      var raw = Object.assign({}, window.FSD.raw, { bundle: b }); if (u) raw.updates = u;
+      var fresh = window.FSA.adapt(raw), have = {};
+      window.FSD.NT.forEach(function (it) { have[it.id] = true; });
+      var added = fresh.NT.filter(function (it) { return !have[it.id]; });
+      if (!added.length) return;
+      added.forEach(function (it) { window.FSD.NT.push(it); });
+      window.dispatchEvent(new CustomEvent('fs:notis', { detail: { added: added } }));
+    }).catch(function () { /* try again next time */ }).then(function () { notisBusy = false; });
+  }
+  window.addEventListener('fs:ready', function () {
+    if (window.FSX) window.FSX.notisCheck = notisCheck;   // also: check now
+    // after the page's first sync has had its turn (it asks Schoology for everything once)
+    setTimeout(function () { notisAt = Date.now(); setInterval(function () { if (Date.now() - notisAt >= NOTIS_EVERY) notisCheck(); }, 30000); }, 1000);
+    document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible' && Date.now() - notisAt >= NOTIS_EVERY) notisCheck(); });
+  });
   window.addEventListener('fs:ready', function () { setTimeout(noteRecent, 50); setTimeout(function () { if (window.FSX && FSX.syncWindowType) FSX.syncWindowType(); }, 1200); });
   window.addEventListener('hashchange', function () { setTimeout(noteRecent, 50); });
 
@@ -1025,9 +1057,10 @@
     }); }); });
     var canTurnIn = function (a) { return a.kind === 'assignment' && !a.disc && !a.outside; };
 
-    // The sidebar's counts: work that's late or due in the next 7 days, and messages not opened yet.
+    // The sidebar's counts: work still to do (missing or due, with a due date: the same list Home shows, so
+    // the number is the same on every page; 2026-11-03, Martin: Home said 14, Settings 34), and messages not opened yet.
     var counts = {
-      assign: overdue.filter(function (a) { return !a.outside; }).length + upcoming.filter(function (a) { return Date.parse(a.dueAt) - now < 7 * DAY; }).length,
+      assign: WORK_ALL.filter(function (a) { return (a.st === 'missing' || a.st === 'due') && a.dueAt; }).length,
       msg: arr(b.MESSAGES).filter(function (m) { return m.unread && !seen.has('m', m.id); }).length,
     };
 

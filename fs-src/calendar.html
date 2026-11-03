@@ -3263,7 +3263,7 @@
           <div class="hub-meta" id="calMeta"></div>
         </div>
         <div class="hub-acts">
-          <button class="pill sync" id="refresh" aria-label="Refresh your calendar. Synced 3 minutes ago." title="Refresh your calendar"><svg class="i"><use href="#i-refresh"/></svg><span id="syncLabel">Synced 3 min ago</span></button>
+          <button class="pill sync" id="refresh" aria-label="Refresh your calendar." title="Refresh your calendar"><svg class="i"><use href="#i-refresh"/></svg><span id="syncLabel">Synced</span></button>
           <button class="btn primary" id="cimOpen" aria-haspopup="dialog"><svg class="i"><use href="#i-upload"/></svg>Import a calendar</button>
         </div>
       </div>
@@ -3838,7 +3838,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); ntClose(); return; }
     if (e.key === 'Tab') { const f = [...ntEl.querySelectorAll('button, [tabindex="0"]')].filter(x => !x.closest('[inert]')); if (!f.length) return; if (e.shiftKey && document.activeElement === f[0]) { e.preventDefault(); f[f.length - 1].focus(); } else if (!e.shiftKey && document.activeElement === f[f.length - 1]) { e.preventDefault(); f[0].focus(); } }
   }, true);
-  function ntInit() { const b = $('ntBtn'); if (b) b.addEventListener('click', () => ntEl ? ntClose() : ntOpen()); ntBadge(); }
+  function ntInit() { const b = $('ntBtn'); if (b) b.addEventListener('click', () => ntEl ? ntClose() : ntOpen()); ntBadge(); window.addEventListener('fs:notis', () => { ntBadge(); NT.onChange(); }); } // new ones from the background check (averages-fs-data.js)
   /* ===== end Notifications ===== */
 
   // ---------- frame: sidebar classes, avatar, pin, menu, toast (same as Home) ----------

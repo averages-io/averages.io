@@ -3006,6 +3006,7 @@
   .ms-fc .pf-stage { transform: scale(1.15); }
   .ms-fc .pf-page { display: block; }
   .ms-fc .pf-band, .ms-fc .pf-ln { display: block; }
+  .ms-fc .pf-img.real img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
   .ms-fc .pf-img { position: absolute; inset: 5px; border-radius: 2px; background: radial-gradient(circle at 72% 30%, #ffffff 0 7%, transparent 8%), linear-gradient(160deg, color-mix(in srgb, var(--c) 28%, #ffffff), color-mix(in srgb, var(--c) 72%, #ffffff)); }
   .ms-fc .ft { display: flex; align-items: center; gap: 12px; padding: 12px 16px 12px; border-top: 2px solid color-mix(in srgb, var(--c) 10%, var(--field)); }
   .ms-fc .tx { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
@@ -3339,7 +3340,7 @@
           <div class="hub-meta" id="msMeta"></div>
         </div>
         <div class="hub-acts">
-          <button class="pill sync" id="refresh" aria-label="Refresh your messages. Synced 1 minute ago." title="Refresh your messages"><svg class="i"><use href="#i-refresh"/></svg><span id="syncLabel">Synced 1 min ago</span></button>
+          <button class="pill sync" id="refresh" aria-label="Refresh your messages. Synced 1 minute ago." title="Refresh your messages"><svg class="i"><use href="#i-refresh"/></svg><span id="syncLabel">Synced</span></button>
           <button class="btn primary" id="msNew"><svg class="i"><use href="#i-plus"/></svg>New message</button>
         </div>
       </div>
@@ -3898,7 +3899,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); ntClose(); return; }
     if (e.key === 'Tab') { const f = [...ntEl.querySelectorAll('button, [tabindex="0"]')].filter(x => !x.closest('[inert]')); if (!f.length) return; if (e.shiftKey && document.activeElement === f[0]) { e.preventDefault(); f[f.length - 1].focus(); } else if (!e.shiftKey && document.activeElement === f[f.length - 1]) { e.preventDefault(); f[0].focus(); } }
   }, true);
-  function ntInit() { const b = $('ntBtn'); if (b) b.addEventListener('click', () => ntEl ? ntClose() : ntOpen()); ntBadge(); }
+  function ntInit() { const b = $('ntBtn'); if (b) b.addEventListener('click', () => ntEl ? ntClose() : ntOpen()); ntBadge(); window.addEventListener('fs:notis', () => { ntBadge(); NT.onChange(); }); } // new ones from the background check (averages-fs-data.js)
   /* ===== end Notifications ===== */
 
   // ---------- frame: sidebar classes, avatar, pin, menu, toast (same as Home) ----------
@@ -4203,7 +4204,18 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (!t || t.loaded || t.loading) return; t.loading = true;
     FSX.thread(t.id).then(r => {
       t.loaded = true; t.loading = false;
-      t.msgs = (r.messages || []).map(m => M(m.from === 'me' ? 'me' : person(m.authorId || t.with[0]), m.text || '', new Date(m.at || Date.now())));
+      // Files and links sent with a message (2026-11-03, Martin: teachers' attachments and links didn't show).
+      // Links go under the words as link cards; the first file rides on the message, any others follow it.
+      const fileOf = (f) => ({ name: f.name, size: f.size ? fmtSize(f.size) : 'File', url: `${FSX.API}/messages/file?thread=${encodeURIComponent(t.id)}&file=${encodeURIComponent(f.id)}&view=1`, dl: `${FSX.API}/messages/file?thread=${encodeURIComponent(t.id)}&file=${encodeURIComponent(f.id)}`, real: true });
+      t.msgs = [];
+      (r.messages || []).forEach(m => {
+        const from = m.from === 'me' ? 'me' : person(m.authorId || t.with[0]), when = new Date(m.at || Date.now());
+        const text = [m.text || ''].concat((m.links || []).map(l => l.url)).filter(Boolean).join('\n');
+        const files = m.files || [];
+        if (text || !files.length) t.msgs.push(M(from, text, when, files[0] ? { att: fileOf(files[0]) } : {}));
+        else t.msgs.push(M(from, '', when, { att: fileOf(files[0]) }));
+        files.slice(1).forEach(f => t.msgs.push(M(from, '', when, { att: fileOf(f) })));
+      });
       if (!t.msgs.length) t.msgs = [M(t.with[0], '', new Date())];
       t.msgs.forEach((m, i) => { m.id = t.id + '.' + i; });
       if (MS.open === t.id || (MS.open || '').startsWith('p:')) msThread(true); msRows();
@@ -4285,7 +4297,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     let pages = '';
     for (let n = 1; n <= shown; n++) {
       let body;
-      if (img) body = `<span class="pf-img"></span>`;
+      if (img) body = a.real && a.url ? `<span class="pf-img real"><img src="${esc(a.url)}" alt="" loading="lazy" decoding="async" onerror="this.remove()"></span>` : `<span class="pf-img"></span>`; // a real picture shows itself
       else if (shape === 'landscape') { const col = () => Array.from({ length: 3 }, (_, i) => `<span class="pf-ln${i === 2 ? ' s' : ''}"></span>`).join(''); body = `<span class="pf-band"></span><span class="pf-cols"><span>${col()}</span><span>${col()}</span></span>`; }
       else { const lines = 3 + ((n * 2) % 4); body = `<span class="pf-band"></span>` + Array.from({ length: lines }, (_, i) => `<span class="pf-ln${i === lines - 1 ? ' s' : ''}"></span>`).join(''); }
       pages += `<span class="pf-page">${body}${img ? '' : `<span class="pf-num">${n}/${total}</span>`}</span>`;
@@ -4703,7 +4715,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (e.target.closest('[data-msdiscard]')) { MS.compose = null; MS.open = null; msRows(); msThread(); toast('Threw away the new message.'); return; }
     const to = e.target.closest('[data-msto]'); if (to) { addTo(to.dataset.msto); return; }
     const un = e.target.closest('[data-msunto]'); if (un) { const c = MS.compose; c.to = c.to.filter(x => x !== un.dataset.msunto); const ta = $('msText'); if (ta) c.text = ta.value; composeHTML(); msRows(); $('msToIn').focus(); return; }
-    const fc = e.target.closest('[data-msfile]'); if (fc && fc.dataset.msfile) { lbOpen(fc.dataset.msfile); return; }
+    const fc = e.target.closest('[data-msfile]'); if (fc && fc.dataset.msfile) { const [, fm] = msgById(fc.dataset.msfile); if (fm && fm.att && fm.att.url) { FSX.newTab(fm.att.url); return; } lbOpen(fc.dataset.msfile); return; } // a real file opens in a new tab
     if (e.target.closest('#msClip')) { $('msFile').click(); return; }
     const ua = e.target.closest('[data-msunatt]'); if (ua) { pendOf().splice(+ua.dataset.msunatt, 1); $('msAtts').innerHTML = attsHTML(); $('msText').dispatchEvent(new Event('input')); $('msText').focus({ preventScroll: true }); return; }
     if (e.target.closest('#msSend')) {
