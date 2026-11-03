@@ -709,7 +709,7 @@
     /** Friendly words for a messages error. */
     msgError: function (e) {
       var c = e && e.message;
-      return c === 'recipient_not_allowed' ? 'Schoology doesn\u2019t let you message this person.' : c === 'too_long' || c === 'message_too_long' ? 'That message is too long.' : c === 'empty_subject' ? 'Add a subject first.' : c === 'empty_message' ? 'Write a message first.' : c === 'rate_limited' ? 'Too many messages at once. Wait a minute and try again.' : 'Couldn\u2019t send it. Try again in a moment.';
+      return c === 'school_blocks_new_messages' ? 'Your school\u2019s Schoology settings don\u2019t let students start a new message to them. You can still reply when they message you.' : c === 'recipient_not_allowed' ? 'Schoology doesn\u2019t let you message this person.' : c === 'too_long' || c === 'message_too_long' ? 'That message is too long.' : c === 'empty_subject' ? 'Add a subject first.' : c === 'empty_message' ? 'Write a message first.' : c === 'rate_limited' ? 'Too many messages at once. Wait a minute and try again.' : 'Couldn\u2019t send it. Try again in a moment.';
     },
     /** "Thursday at 8:12 PM": when the student was last here before this visit (a visit ends after 30 minutes away). */
     lastVisit: function () {
