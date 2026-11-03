@@ -2681,6 +2681,7 @@
           if (canva.state === 'unconfigured') return row(a, null, SOON);
           if (canva.state === 'error') return row(a, { text: 'Couldn’t check right now' }, btn('canva-retry', a.id, 'Try again', { name: a.name, secondary: true }));
           if (canva.connected) return row(a, { text: `Connected${canva.name ? ' as ' + canva.name : ''}`, on: true }, '');
+          if (canva.going) return row(a, { text: 'Opening Canva…' }, btn('none', a.id, 'Connect', { name: a.name, disabled: true }));
           if (canva.waiting) return row(a, { text: 'Finish in the Canva tab, then come back here.' }, btn('canva-check', a.id, 'I’m done', { name: a.name, secondary: true }));
           return row(a, { text: 'Not connected' }, btn('canva-connect', a.id, 'Connect', { name: a.name }));
         }
@@ -2699,6 +2700,17 @@
       function render() { list.innerHTML = APPS.map(rowFor).join(''); }
       function focusRow(app) { const b = list.querySelector(`[data-app="${app}"] .integ-btn`); if (b) b.focus(); }
 
+      // Back from Canva (2026-11-03): ?canva=connected|cancelled|failed, read once and taken out of the address.
+      const canvaBack = (function () {
+        try {
+          const q = new URLSearchParams(location.search);
+          const v = q.get('canva');
+          if (!v) return null;
+          q.delete('canva');
+          history.replaceState(history.state, '', location.pathname + (q.toString() ? '?' + q : '') + location.hash);
+          return String(v).slice(0, 40);
+        } catch (e) { return null; }
+      })();
       async function loadCanva() {
         canva.state = 'loading';
         render();
@@ -2716,6 +2728,12 @@
           }
         } catch {
           canva.state = 'error';
+        }
+        if (canvaBack && !loadCanva.told) {
+          loadCanva.told = true;
+          if (canva.connected) { connectedHere.add('canva'); showFlash('Canva is connected.'); }
+          else if (canvaBack === 'cancelled') showFlash('Canva wasn’t connected.', true);
+          else if (canvaBack !== 'connected') showFlash('Couldn’t connect Canva. Try again, or connect later in Settings.', true);
         }
         render();
       }
@@ -2768,15 +2786,14 @@
         }
         if (act === 'canva-retry' || act === 'canva-check') { loadCanva().then(() => focusRow('canva')); return; }
         if (act === 'canva-connect') {
-          // A new tab, so this one keeps everything picked so far. It comes
-          // back to Settings when Canva is done; this tab re-checks on return.
-          const w = window.open(apiBase() + '/canva/connect?return_to=' + encodeURIComponent('/settings'), '_blank');
-          if (!w) { showFlash('Canva tab blocked. Allow pop-ups, or connect later in Settings.', true); return; }
-          canva.waiting = true;
-          connectedHere.add('canva-pending');
+          // This tab, back to this page (2026-11-03, Martin: connecting "sends you to settings and
+          // disregards all the options you chose"). It used to open a new tab that finished on
+          // Settings, where nothing picked here exists yet. Now it goes the way Google Drive and
+          // OneDrive do: off to Canva and back here, with the steps kept by the drafts below.
           flash.hidden = true;
+          canva.going = true;
           render();
-          focusRow('canva');
+          window.location.assign(apiBase() + '/canva/connect?return_to=' + encodeURIComponent(location.pathname));
           return;
         }
         if (act === 'cloud-retry') { loadCloud(); return; }
@@ -2798,6 +2815,9 @@
           .catch(err => showFlash(K.messageFor(err), !err || err.code !== 'popup_closed'))
           .finally(() => { cloud.busy[app] = false; render(); focusRow(app); });
       });
+
+      // Back from Canva with the browser's Back button (the page comes out of the cache): not opening any more.
+      window.addEventListener('pageshow', e => { if (e.persisted && canva.going) { canva.going = false; render(); } });
 
       let started = false;
       function start() {
@@ -3603,7 +3623,9 @@
       window.addEventListener('pagehide', () => {
         if (finishing) return;
         try {
-          const d = { on, step, seen, theme, photo: photo && photo.length < 400000 ? photo : null };
+          // The accent too (2026-11-03, Martin: coming back from connecting reset the choices).
+          // The Windowed draft can't put a Fullscreen accent back, so it came back as Punch.
+          const d = { on, step, seen, theme, accent: on ? accentNow() : null, accentBefore, photo: photo && photo.length < 400000 ? photo : null };
           sessionStorage.setItem(FS_DRAFT, JSON.stringify(d));
         } catch (e) {}
       });
@@ -3614,7 +3636,12 @@
         if (!d || typeof d !== 'object') return;
         if (d.theme === 'auto') setTheme('auto'); else if (d.theme === 'light' || d.theme === 'dark') theme = d.theme;
         if (typeof d.photo === 'string' && /^data:image\/(png|jpe?g|webp);base64,/.test(d.photo)) { photo = d.photo; fsChosenPhoto = d.photo; }
-        if (d.on && STEPS.some(x => x[0] === d.step)) enter({ step: d.step, seen: Array.isArray(d.seen) ? d.seen.filter(k => STEPS.some(x => x[0] === k)) : undefined, focus: false });
+        if (d.on && STEPS.some(x => x[0] === d.step)) {
+          enter({ step: d.step, seen: Array.isArray(d.seen) ? d.seen.filter(k => STEPS.some(x => x[0] === k)) : undefined, focus: false });
+          const hex = /^#[0-9a-f]{6}$/i;
+          if (typeof d.accentBefore === 'string' && hex.test(d.accentBefore)) accentBefore = d.accentBefore;
+          if (on && typeof d.accent === 'string' && ACCENTS.some(x => x[2] === d.accent.toLowerCase())) { applyAccent(d.accent.toLowerCase()); draw(step); }
+        }
       }
       if (pending && allowed()) restore();
       window.__averagesFullscreen = { enter, leave, isOn: () => on };
