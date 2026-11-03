@@ -13,6 +13,6 @@ export const JS = {
   "averages-help.js": "/js/averages-help.js?v=19e87f9c0f",
   "averages-live.js": "/js/averages-live.js?v=382960428c",
   "averages-push.js": "/js/averages-push.js?v=76e8e6b827",
-  "averages-submit.js": "/js/averages-submit.js?v=ec094ed157",
+  "averages-submit.js": "/js/averages-submit.js?v=746bae73f9",
   "averages-tz.js": "/js/averages-tz.js?v=b318d4e42d"
 } as const;

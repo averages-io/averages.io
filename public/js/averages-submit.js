@@ -445,18 +445,19 @@
    * Resolves { blob, name }.
    */
   /** What the type pill can offer, a turn-in type, and its file's MIME type (2026-10-15). */
-  const CANVA_TYPES = ['pdf', 'docx', 'pptx', 'png'];
+  // (2026-11-03: Word is gone with the converter container; JPG added; a PNG is one image of the whole design)
+  const CANVA_TYPES = ['pdf', 'pptx', 'png', 'jpg'];
   const TYPE_MIME = {
     pdf: 'application/pdf',
-    docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
     png: 'image/png',
+    jpg: 'image/jpeg',
   };
 
   /**
-   * What a Canva design can be turned in as: ['pdf', 'pptx', 'png'], or with
-   * 'docx' for a Canva Doc (GET /canva/designs/:id/formats). Anything that
-   * goes wrong reads as just PDF, which every design can be.
+   * What a Canva design can be turned in as: some of ['pdf', 'pptx', 'png', 'jpg']
+   * (GET /canva/designs/:id/formats). Anything that goes wrong reads as just
+   * PDF, which every design can be.
    */
   async function canvaFormats(designId, signal) {
     if (!DESIGN_OK(designId)) return ['pdf'];
@@ -471,10 +472,9 @@
   }
 
   /**
-   * A Canva design as the type picked (`opts.format`: pdf, docx, pptx or png;
-   * PDF when left out): Canva makes it, the API passes it on (Word goes
-   * through the converter on the way). PNG is one file per page. Returns
-   * [{ blob, name }].
+   * A Canva design as the type picked (`opts.format`: pdf, pptx, png or jpg;
+   * PDF when left out): Canva makes it, the API passes it on. JPG is one file
+   * per page. Returns [{ blob, name }].
    */
   async function exportCanvaFiles(designId, opts) {
     opts = opts || {};
@@ -484,8 +484,7 @@
     const status = (s) => { if (opts.onStatus) try { opts.onStatus(s); } catch {} };
     status('starting');
     const started = Date.now();
-    // Word takes longer: Canva's PDF, then the converter (which may have to wake up).
-    const limit = format === 'docx' ? 240000 : 120000;
+    const limit = 120000;
     const start = await call('POST', `/canva/designs/${enc(designId)}/export`, format === 'pdf' ? {} : { format }, signal);
     const job = String(start.job || '');
     // The API's job token is sealed: "<iv>.<data>", a few hundred characters. (Until 2026-10-15 this
@@ -501,7 +500,7 @@
       // { status: 'failed', error }: license_required / approval_required are the student's to sort out in Canva.
       if (s.status === 'failed') throw fail(/^canva_export_[a-z_]{1,40}$/.test(String(s.error || '')) ? s.error : 'canva_export_failed');
     }
-    status(format === 'docx' ? 'converting' : 'downloading');
+    status('downloading');
     const out = [];
     for (let page = 1; page <= files; page++) {
       const url = `${API}/canva/exports/${enc(job)}/file?design=${enc(designId)}${files > 1 ? `&page=${page}` : ''}`;

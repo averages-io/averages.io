@@ -1902,8 +1902,8 @@
     const fileIcon = (ext, fallback, size) => (window.AveragesFileIcons ? window.AveragesFileIcons.html(ext || 'file', { size: size || 34 }) : fallback);
 
     // ---- The type pill (2026-10-15): what the teacher gets when it's sent as a copy ----
-    // Canva: PDF, PowerPoint or PNG from Canva itself, Word for a Canva Doc
-    // (made from its PDF by our converter). Google Docs, Sheets, Slides and
+    // Canva: PDF, PowerPoint, one PNG or JPGs (a page each), all from Canva itself (2026-11-03: no more Word for a
+    // Canva Doc; the converter is gone). Google Docs, Sheets, Slides and
     // Drawings: whatever Google exports them as. Anything else goes as it is.
     const TURN_TYPE = {
       pdf: { name: 'PDF', a: 'a PDF' },
@@ -1911,7 +1911,8 @@
       pptx: { name: 'PowerPoint', a: 'a PowerPoint' },
       xlsx: { name: 'Excel', a: 'an Excel spreadsheet' },
       csv: { name: 'CSV', a: 'a CSV of the first sheet' },
-      png: { name: 'PNG', a: 'PNG images' },
+      png: { name: 'PNG', a: 'a PNG image' },
+      jpg: { name: 'JPG', a: 'JPG images' },
     };
     const turnType = t => TURN_TYPE[t] || TURN_TYPE.pdf;
     /** Google Drive drafts are Google files made from the Office file they started as. */
@@ -1933,7 +1934,7 @@
       }[String(mimeType || '')] || []).slice();
     }
     /** The preview's pretend Canva formats: a design called "...Doc..." acts like a Canva Doc. */
-    const previewCanvaTypes = title => (/\bdoc\b/i.test(String(title || '')) ? ['pdf', 'docx', 'png'] : ['pdf', 'pptx', 'png']);
+    const previewCanvaTypes = title => (/\bdoc\b/i.test(String(title || '')) ? ['pdf', 'png', 'jpg'] : ['pdf', 'pptx', 'png', 'jpg']);
     /** The type menu: just the file icons in a grid (their letters say the type); the name is for screen readers and on hover. */
     function typeTilesHTML(choices, cur, attr) {
       return `<div class="type-tiles" style="--n:${choices.length}">${choices.map(t => `<button class="type-tile" type="button" role="menuitemradio" aria-checked="${t === cur}" aria-label="${escapeHtml(turnType(t).name)}" title="${escapeHtml(turnType(t).name)}" ${attr}="${t}">${fileIcon(t, `<span class="type-tag">${escapeHtml(t.toUpperCase())}</span>`, 44)}</button>`).join('')}</div>`;

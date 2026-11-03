@@ -320,9 +320,12 @@ function forgetPushOnThisDevice(): Promise<void> {
 
 /**
  * Everything Averages.io keeps in this browser: every key the app writes
- * starts with one of these (localStorage and sessionStorage alike).
+ * starts with one of these (localStorage and sessionStorage alike). The
+ * Fullscreen pages' own keys too (2026-11-03, found while updating Your data:
+ * fs* such as fsmock_profile2, fsct_notes, fscal_imported_<uid> and the
+ * recent searches, wi_class, av_help_skip_*), which signing out used to leave.
  */
-const OUR_STORAGE_KEY = /^(schoolagy_|averages_)/;
+const OUR_STORAGE_KEY = /^(schoolagy_|averages_|fs|wi_|av_help_)/;
 
 /** Whether this device was syncing settings to the account when signing out. */
 /**
