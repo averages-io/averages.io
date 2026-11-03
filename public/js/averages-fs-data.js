@@ -378,10 +378,25 @@
     });
   }
   // What each page shows beyond the bundle. Same paths and cache keys as app/lib/extras.ts where they overlap.
-  function extrasFor(who) {
+  function extrasFor(who, bundleP) {
     var x = extrasPlan(), out = {};
-    Object.keys(x).forEach(function (k) { out[k] = extra(k, x[k][0], x[k][1], who); });
+    Object.keys(x).forEach(function (k) {
+      // '@after' (2026-11-03): asked once the bundle is in, so the first calls to Schoology aren't all at once
+      if (x[k][0] === '@for') out[k] = bundleP.then(function (b) { var q = turnedInFor(b); return q ? extra(k, '/data/submissions?for=' + q, 'fs_subs_' + q.length + '_' + q.slice(-24), who) : { files: [] }; });
+      else if (x[k][2] === '@after') out[k] = bundleP.then(function () { return extra(k, x[k][0], x[k][1], who); });
+      else out[k] = extra(k, x[k][0], x[k][1], who);
+    });
     return out;
+  }
+  /** The work whose turn-ins the page shows (overdue, today, due soon), as "section:assignment,..." (at most 10). */
+  function turnedInFor(b) {
+    var out = [];
+    var L = function (v) { return Array.isArray(v) ? v : []; };
+    L(b && b.OVERDUE).concat(L(b && b.TODAY), L(b && b.UPCOMING)).forEach(function (a) {
+      var k = String(a.courseId) + ':' + String(a.id);
+      if (/^\d+:\d+$/.test(k) && out.indexOf(k) < 0 && !a.outside && a.type !== 'discussion' && a.type !== 'assessment') out.push(k);
+    });
+    return out.slice(0, 10).join(',');   // overdue and today first; 10 keeps a page open under Schoology's limit
   }
   function extrasPlan() {
     var now = new Date(), tz = zone(), zq = tz ? '&tz=' + encodeURIComponent(tz) : '';
@@ -390,10 +405,10 @@
       var s = ymd(addDays(now, -120)), e = ymd(addDays(now, 240));
       x.events = ['/data/events?start=' + s + '&end=' + e + zq, 'events_' + s + '_' + e];
     }
-    if (page === 'messages' || page === 'home' || page === 'contacts') x.messages = ['/messages', 'messages'];
-    if (page === 'files' || page === 'home' || page === 'course-hub' || page === 'assignments') x.files = ['/data/files', 'fs_files']; // assignments: Contains attachment
+    if (page === 'messages' || page === 'home' || page === 'contacts') x.messages = ['/messages', 'messages', page === 'home' ? '@after' : '']; // Home: after the bundle, which has just read the inbox
+    if (page === 'files' || page === 'home' || page === 'course-hub' || page === 'assignments') x.files = ['/data/files', 'fs_files', page === 'files' ? '' : '@after']; // assignments: Contains attachment
     // what's been turned in (files), so finished work isn't called missing
-    if (page === 'assignments' || page === 'home' || page === 'course-hub' || page === 'files' || page === 'calendar') x.submissions = ['/data/submissions', 'fs_submissions'];
+    if (page === 'assignments' || page === 'home' || page === 'course-hub' || page === 'files' || page === 'calendar') x.submissions = page === 'files' ? ['/data/submissions', 'fs_submissions'] : ['@for']; // 2026-11-03: only the work the page shows, except on Files
     if (page === 'contacts' || page === 'course-hub' || page === 'messages') x.classmates = ['/data/classmates', 'fs_classmates'];
     if (page === 'course-hub' && courseQ) {
       x.folders = ['/data/folders?course=' + encodeURIComponent(courseQ), 'folders_' + courseQ];
@@ -450,8 +465,8 @@
 
   var started = session().then(function (me) {
     if (!me || me.mode !== 'live' || !me.uid) { window.location.replace('/'); return null; }
-    var who = me.uid, xs = extrasFor(who), names = Object.keys(xs);
-    return Promise.all([bundle()].concat(names.map(function (n) { return settle(xs[n], 8000); }))).then(function (all) {
+    var who = me.uid, bP = bundle(), xs = extrasFor(who, bP), names = Object.keys(xs);
+    return Promise.all([bP].concat(names.map(function (n) { return settle(xs[n], 8000); }))).then(function (all) {
       var raw = { me: me, bundle: all[0] };
       names.forEach(function (n, i) { raw[n] = all[i + 1] && all[i + 1].__signedOut ? undefined : all[i + 1]; });
       return raw;
@@ -604,7 +619,11 @@
           function (err) { if (err && err.signedOut) { window.location.replace('/'); return new Promise(function () {}); } S.failed = true; return true; });
       };
       ask('bundle', '/data/bundle' + (tz ? '?tz=' + encodeURIComponent(tz) : ''), function (b) { sset('schoolagy_bundle_cache', JSON.stringify({ at: Date.now(), bundle: b })); });
-      Object.keys(plan).forEach(function (k) { ask(k, plan[k][0], function (d) { sset('averages_extras_' + plan[k][1], JSON.stringify({ at: Date.now(), who: me && me.uid, data: d })); }); });
+      Object.keys(plan).forEach(function (k) {
+        var path = plan[k][0], key = plan[k][1];
+        if (path === '@for') { var q = turnedInFor(old.bundle); if (!q) return; path = '/data/submissions?for=' + q; key = 'fs_subs_' + q.length + '_' + q.slice(-24); }
+        ask(k, path, function (d) { sset('averages_extras_' + key, JSON.stringify({ at: Date.now(), who: me && me.uid, data: d })); });
+      });
       S.wait = function (keys) {
         var ks = keys === 'all' || !keys ? Object.keys(P) : [].concat(keys).filter(function (k) { return P[k]; });
         if (!ks.length) ks = ['bundle'];
@@ -844,6 +863,20 @@
   }
 
   /** The student's grade in each class, one value per day it was seen (this device), for the trend charts. */
+  /**
+   * Which of those weeks the class really had grades for (2026-11-03, Martin: the chart showed points for
+   * weeks with no grades). has[i]: something was graded by the end of week i (before that, weeklyTrend
+   * only repeats the first real value). posted[i]: a grade was entered during week i. Work with no graded
+   * time counts from the start.
+   */
+  function weeklyHas(cats, weeks, now) {
+    var times = [];
+    cats.forEach(function (c) { arr(c.assignments).forEach(function (a) { if (a.graded && typeof a.score === 'number' && a.points > 0) times.push(a.gradedAt || 0); }); });
+    var has = weeks.map(function (w, i) { var end = i === weeks.length - 1 ? now : w[0] + 7 * DAY - 1; return times.some(function (t) { return t <= end; }); });
+    var posted = weeks.map(function (w, i) { var end = i === weeks.length - 1 ? now : w[0] + 7 * DAY - 1; return times.some(function (t) { return t && t >= w[0] && t <= end; }) || (i === 0 && times.some(function (t) { return t && t < w[0]; })); });
+    return { has: has, posted: posted };
+  }
+
   function gradeHistory(courses) {
     var key = 'averages_fs_grade_days', h = window.FSX.lget(key) || {}, today = new Date(), dk = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate();
     courses.forEach(function (c) {
@@ -885,6 +918,7 @@
       var id = String(c.id), s = subject(c.name), hist = obj(history[id]), points = arr(hist.points).filter(function (v) { return typeof v === 'number'; });
       var cats = arr(obj(gradebook[id]).categories);
       var trend = weeklyTrend(cats, typeof c.pct === 'number' ? c.pct : 0, WEEKS, now);
+      var wk = weeklyHas(cats, WEEKS, now);
       var due = upcoming.filter(function (a) { return a.courseId === id && Date.parse(a.dueAt) - now < 7 * DAY; });
       var nextUp = upcoming.filter(function (a) { return a.courseId === id; });
       var miss = overdue.filter(function (a) { return a.courseId === id && !a.outside; });
@@ -895,7 +929,7 @@
       return {
         id: id, name: c.name || 'Class', short: initials(c.name), teacher: teacherOf(id), teacherIds: tids, period: typeof c.period === 'number' ? c.period : i + 1,
         hasPeriod: typeof c.period === 'number', room: '', students: m.length ? m.length + 1 : 0, pct: typeof c.pct === 'number' ? c.pct : 0, grade: c.grade || '',
-        trend: trend, due: due.length, missing: miss.length, updates: ups.length, next: next, code: c.code || '', section: c.section || '',
+        trend: trend, trendHas: wk.has, trendPosted: wk.posted, due: due.length, missing: miss.length, updates: ups.length, next: next, code: c.code || '', section: c.section || '',
         predicted: c.predicted || '', predictedPct: typeof c.predictedPct === 'number' ? c.predictedPct : c.pct, dir: c.trend || 'flat', updated: c.updated || '',
         points: points, dates: arr(hist.dates), titles: arr(hist.titles), emoji: s[1], color: s[2], lmsColor: c.color || '', order: i,
       };
@@ -919,6 +953,9 @@
     });
     arr(b.MESSAGES).forEach(function (m) {
       if (!m.id) return;
+      // The sender by id among the student's teachers (2026-11-03): the API may only know "Teacher".
+      var who = m.authorId ? arr(people.CONTACTS).filter(function (p) { return String(p.id) === String(m.authorId); })[0] : null;
+      if (who && who.name && (!m.from || m.from === 'Teacher')) m = Object.assign({}, m, { from: who.name, courseId: m.courseId || (arr(who.courses).filter(function (c) { return C[c]; })[0] || '') });
       var cid = m.courseId && C[m.courseId] ? m.courseId : (CLASSES.filter(function (c) { return c.teacher && c.teacher === m.from; })[0] || {}).id;
       NT.push({ id: 'm:' + m.id, kind: 'm', raw: m.id, ago: agoMin(m.time), c: cid || '', k: 'msg', t: (m.from || 'Someone') + ': ' + (m.subject || 'Message'), d: (m.preview || '') + (m.time ? ' · ' + m.time : ''), unread: !!m.unread, thread: m.id });
     });

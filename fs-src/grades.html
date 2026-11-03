@@ -3710,7 +3710,13 @@
   const CATS = FSD.CATS;   // [name, weight %, your % (null: nothing graded yet), points so far], from the gradebook
   const WORK = FSD.WORK;   // every graded (or missing) piece of work, newest first: { c, n, got, of, on, ago, fresh, note, missing, id }
   const WEEKS = FSD.WEEKS;   // the last 8 weeks (each class's trend has a grade for each, worked out from its gradebook)
-  const OVERALL = WEEKS.map((_, i) => CLASSES.length ? CLASSES.reduce((t, c) => t + c.trend[i], 0) / CLASSES.length : 0);
+  // Only weeks that really had grades (2026-11-03, Martin: points showed for weeks with none). A class counts from
+  // the week it first had a grade; a point is drawn where grades were posted that week (and on this week). null: no grades yet.
+  const hasAt = (c, i) => !c.trendHas || !!c.trendHas[i], postedAt = (c, i) => !c.trendPosted || !!c.trendPosted[i];
+  const OVERALL = WEEKS.map((_, i) => { const cs = CLASSES.filter(c => hasAt(c, i)); return cs.length ? cs.reduce((t, c) => t + c.trend[i], 0) / cs.length : null; });
+  const FIRST = OVERALL.findIndex(v => v != null);
+  const POSTED = WEEKS.map((_, i) => OVERALL[i] != null && (i === WEEKS.length - 1 || CLASSES.some(c => hasAt(c, i) && postedAt(c, i))));
+  const clTrend = c => c.trend.map((v, i) => hasAt(c, i) ? v : null);
   const avg = CLASSES.length ? CLASSES.reduce((t, c) => t + c.pct, 0) / CLASSES.length : 0;
   const GPTS = { 'A+': 4, A: 4, 'A-': 3.7, 'B+': 3.3, B: 3, 'B-': 2.7, 'C+': 2.3, C: 2, 'C-': 1.7, 'D+': 1.3, D: 1, 'D-': .7, F: 0 };
   const gpa = w => CLASSES.length ? CLASSES.reduce((t, c) => t + GPTS[letter(c.pct)] + (w && /^(AP|IB)\b|\bhonors\b/i.test(c.name) ? (/^(AP|IB)\b/.test(c.name) ? 1 : .5) : 0), 0) / CLASSES.length : 0;
@@ -3734,25 +3740,27 @@
   // the same chart entrance as Home: the line draws across, the area fades in under it, the points pop in along the way
   const popDelay = (i, n) => Math.max(0, Math.round(Math.acos(1 - 2 * i / (n - 1)) / Math.PI * 900) - 60);
   function chartSVG(enter) {
-    const all = GR.each ? CLASSES.flatMap(c => c.trend).concat(OVERALL) : OVERALL;
+    if (FIRST < 0) return `<svg class="gs-svg" viewBox="0 0 ${CH.w} ${CH.h}" role="img" aria-label="No grades yet this term"><text class="band-t" x="${CH.w / 2}" y="${CH.h / 2}" text-anchor="middle">No grades yet this term</text></svg>`;
+    const all = (GR.each ? CLASSES.flatMap(clTrend).concat(OVERALL) : OVERALL).filter(v => v != null);
     const mn = Math.min(...all), mx = Math.max(...all), mid = (mn + mx) / 2, span = Math.max(10, mx - mn + 3), lo = Math.floor(mid - span / 2), hi = Math.ceil(mid + span / 2); // at least 10 points tall, so a steady grade reads as a flat line
     const X = i => CH.l + (i / (WEEKS.length - 1)) * (CH.w - CH.l - CH.r), Y = v => CH.t + (1 - (v - lo) / (hi - lo)) * (CH.h - CH.t - CH.b);
-    const path = arr => 'M' + arr.map((v, i) => `${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join('L');
+    const path = arr => { const pts = arr.map((v, i) => v == null ? null : `${X(i).toFixed(1)},${Y(v).toFixed(1)}`).filter(Boolean); return pts.length ? 'M' + pts.join('L') : ''; };
     // letter-grade lines, with labels only where they won't crowd each other
     let lastY = -99; const bands = [97, 93, 90, 87, 83, 80, 77, 73, 70].filter(v => v > lo && v < hi).map(v => { const y = Y(v), lab = Math.abs(y - lastY) >= 16; if (lab) lastY = y;
       return `<line class="band" x1="${CH.l}" x2="${CH.w - CH.r}" y1="${y}" y2="${y}"/>${lab ? `<text class="band-t" x="0" y="${y + 4}">${letter(v)}</text>` : ''}`; }).join('');
     const step = CH.w < 480 ? 3 : 2, last = WEEKS.length - 1; // fewer date labels on a narrow chart, and never one crowding the last
     const xs = WEEKS.map((d, i) => (i % step === 0 && last - i >= step) || i === last ? `<text class="x-t" x="${X(i)}" y="${CH.h - 6}" text-anchor="${i === 0 ? 'start' : i === last ? 'end' : 'middle'}">${d}</text>` : '').join('');
-    const each = GR.each ? CLASSES.map((c, k) => `<path class="cl" data-cl="${c.id}" pathLength="100" style="--i:${k}" d="${path(c.trend)}" stroke="${c.color}"/>`).join('') : '';
-    const area = `${path(OVERALL)}L${X(last)},${CH.h - CH.b}L${X(0)},${CH.h - CH.b}Z`;
-    const dots = OVERALL.map((v, i) => `<circle class="dot pt${i === last ? ' end' : ''}" style="--d:${popDelay(i, OVERALL.length)}ms" cx="${X(i)}" cy="${Y(v)}" r="${i === last ? 5 : 3.5}"/>`).join('');
+    const each = GR.each ? CLASSES.map((c, k) => `<path class="cl" data-cl="${c.id}" pathLength="100" style="--i:${k}" d="${path(clTrend(c))}" stroke="${c.color}"/>`).join('') : '';
+    const area = `${path(OVERALL)}L${X(last)},${CH.h - CH.b}L${X(FIRST)},${CH.h - CH.b}Z`;
+    // weeks with no new grades keep the line going but get no point (an empty anchor, so hovering still works)
+    const dots = OVERALL.map((v, i) => v == null ? '' : POSTED[i] ? `<circle class="dot pt${i === last ? ' end' : ''}" data-i="${i}" style="--d:${popDelay(i, OVERALL.length)}ms" cx="${X(i)}" cy="${Y(v)}" r="${i === last ? 5 : 3.5}"/>` : `<circle class="dot-a" data-i="${i}" cx="${X(i)}" cy="${Y(v)}" r="0"/>`).join('');
     const colW = (CH.w - CH.l - CH.r) / last;
-    const hits = OVERALL.map((v, i) => `<rect class="hit" data-wk="${i}" x="${X(i) - colW / 2}" y="0" width="${colW}" height="${CH.h - CH.b}"/>`).join('');
-    return `<svg class="gs-svg${enter && !calm() ? ' enter' : ''}${GR.each ? ' each' : ''}" viewBox="0 0 ${CH.w} ${CH.h}" style="--series:var(--ink)" role="img" aria-label="Your overall grade each week, from ${OVERALL[0].toFixed(1)}% on ${WEEKS[0]} to ${OVERALL[last].toFixed(1)}% on ${WEEKS[last]}">
+    const hits = OVERALL.map((v, i) => v == null ? '' : `<rect class="hit" data-wk="${i}" x="${X(i) - colW / 2}" y="0" width="${colW}" height="${CH.h - CH.b}"/>`).join('');
+    return `<svg class="gs-svg${enter && !calm() ? ' enter' : ''}${GR.each ? ' each' : ''}" viewBox="0 0 ${CH.w} ${CH.h}" style="--series:var(--ink)" role="img" aria-label="Your overall grade each week, from ${OVERALL[FIRST].toFixed(1)}% on ${WEEKS[FIRST]} to ${OVERALL[last].toFixed(1)}% on ${WEEKS[last]}">
       ${bands}${xs}<line class="xh" id="gsXh" x1="0" x2="0" y1="${CH.t}" y2="${CH.h - CH.b}" visibility="hidden"/>${each}<path class="ov-a" d="${area}"/><path class="ov ln-main" pathLength="100" d="${path(OVERALL)}"/>${dots}${hits}</svg>`;
   }
   function grSum(enter) {
-    const d = OVERALL[OVERALL.length - 1] - OVERALL[OVERALL.length - 3];
+    const L = OVERALL.length - 1, d = OVERALL[L] == null ? 0 : OVERALL[L] - (OVERALL[L - 2] ?? OVERALL[L]);
     $('grSum').innerHTML = `<div class="gs-big"><div class="gs-gr"><span class="l ${gcls(avg)}">${letter(avg)}</span><span class="p">${avg.toFixed(1)}%<small>overall</small></span></div>${deltaChip(d, true)}
         <div class="gs-tiles"><div class="gs-tile"><small>GPA</small><b>${gpa(false).toFixed(2)}</b></div><div class="gs-tile" title="AP classes count one point higher"><small>Weighted</small><b>${gpa(true).toFixed(2)}</b></div></div></div>
       <div class="gs-chart"><div class="gs-ch"><b>${GR.each ? 'Each class, week by week' : 'Your overall grade, week by week'}</b><button class="gs-each" id="gsEach" aria-pressed="${GR.each}">${ico('chart')}Each class</button></div>
@@ -3775,16 +3783,16 @@
     const hit = e.target.closest && e.target.closest('[data-wk]'), tip = $('gsTip'); if (!tip) return;
     const svg = $('grSum').querySelector('.gs-svg'), xh = svg && svg.querySelector('#gsXh');
     if (!hit) { tip.classList.remove('show'); if (xh) xh.setAttribute('visibility', 'hidden'); return; }
-    const i = +hit.dataset.wk, dot = svg.querySelectorAll('.dot')[i], box = $('gsBox').getBoundingClientRect(), dr = dot.getBoundingClientRect(), cx = +dot.getAttribute('cx');
+    const i = +hit.dataset.wk, dot = svg.querySelector(`[data-i="${i}"]`), box = $('gsBox').getBoundingClientRect(), dr = dot.getBoundingClientRect(), cx = +dot.getAttribute('cx');
     xh.setAttribute('x1', cx); xh.setAttribute('x2', cx); xh.setAttribute('visibility', 'visible');
-    const rows = GR.each ? CLASSES.slice().sort((a, b) => b.trend[i] - a.trend[i]).map(c => `<span class="r"><i style="background:${c.color}"></i>${esc(c.name)}<b>${c.trend[i].toFixed(1)}%</b></span>`).join('') : '';
-    tip.innerHTML = `<small>Week of ${WEEKS[i]}</small><span class="r ov"><i></i>Overall<b>${OVERALL[i].toFixed(1)}% · ${letter(OVERALL[i])}</b></span>${rows}`;
+    const rows = GR.each ? CLASSES.filter(c => hasAt(c, i)).sort((a, b) => b.trend[i] - a.trend[i]).map(c => `<span class="r"><i style="background:${c.color}"></i>${esc(c.name)}<b>${c.trend[i].toFixed(1)}%</b></span>`).join('') : '';
+    tip.innerHTML = `<small>Week of ${WEEKS[i]}${POSTED[i] ? '' : ' · no new grades'}</small><span class="r ov"><i></i>Overall<b>${OVERALL[i].toFixed(1)}% · ${letter(OVERALL[i])}</b></span>${rows}`;
     const right = dr.left + dr.width / 2 - box.left < box.width / 2;
     tip.classList.toggle('left', !right);
     tip.style.left = (dr.left + dr.width / 2 - box.left + (right ? 14 : -14)) + 'px';
     tip.style.top = Math.max(0, Math.min(box.height - tip.offsetHeight, dr.top - box.top - tip.offsetHeight / 2)) + 'px';
     tip.classList.add('show');
-    svg.querySelectorAll('.dot').forEach((x, k) => x.classList.toggle('on', k === i));
+    svg.querySelectorAll('.dot').forEach(x => x.classList.toggle('on', +x.dataset.i === i));
   });
   $('grSum').addEventListener('pointerleave', () => { const tip = $('gsTip'); if (tip) tip.classList.remove('show'); const xh = $('gsXh'); if (xh) xh.setAttribute('visibility', 'hidden'); const dots = $('grSum').querySelectorAll('.dot'); dots.forEach((x, k) => x.classList.toggle('on', k === dots.length - 1)); });
   // while syncing, the chart shows Home's placeholder: a gray line that keeps drawing a new week of grades
