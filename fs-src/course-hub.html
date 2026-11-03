@@ -3145,6 +3145,7 @@
   .mplb-more { margin: 0; font-size: 13px; font-weight: 700; color: rgba(255, 255, 255, .64); --keep-dark: 1; }
   @media (max-width: 640px) { .mplb-body { padding: 0 8px 16px; } .mplb .lbl { display: none; } }
   .mp-slow { display: block; width: fit-content; margin: 12px auto 0; padding: 8px 14px; border-radius: 10px; background: var(--panel); color: var(--muted); font-weight: 700; font-size: 13px; box-shadow: 0 1px 3px rgba(20,20,40,.12); text-align: center; }
+  .ti-sacts { margin-left: auto; display: flex; gap: 6px; flex: none; } .ti-sacts .btn { text-decoration: none; } .ti-sacts svg.i { width: 16px; height: 16px; }
 </style>
 </head>
 <body>
@@ -4953,6 +4954,9 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     return `<button class="ti-row avfi-host${m.id === tiSel ? ' on' : ''}" data-ti="${m.id}" role="option" aria-selected="${m.id === tiSel}">${tile(m)}<span class="tx"><b>${esc(m.name)}</b><small>${sub}</small></span>${status(m)}</button>`;
   }
   // a new version is being put together on the assignment page (the popup always shows what's turned in)
+  // A file you turned in (2026-11-03, Martin: "let people download/view their submissions"): GET /data/submission-file
+  // looks it up again in your own Schoology history; view=1 opens it in the browser where it can.
+  const subUrl = (m, rev, file) => /^\d+$/.test(String(rev)) && /^\d+$/.test(String(file)) ? `${FSX.API}/data/submission-file?section=${encodeURIComponent(m.c)}&assignment=${encodeURIComponent(m.id)}&revision=${encodeURIComponent(rev)}&file=${encodeURIComponent(file)}` : '';
   const tiDone = m => !!m.turned && !(tiInline && m.again);
   const tiVers = m => (m.prev || []).concat(m.turned ? [{ turned: m.turned, sent: m.sent, answerSent: m.answerSent, note: m.note, sentLog: m.sentLog }] : []);
   let awOpen = {}; // which versions are open, per assignment
@@ -4968,7 +4972,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       const head = `<span class="aw-vt" aria-hidden="true">V${k}</span><span class="tx"><b>${title}</b><small>${sub}</small></span>`;
       return `<section class="aw-sub${on ? ' open' : ''}${latest ? ' latest' : ''}">${one ? `<div class="aw-sub-h">${head}</div>` : `<button class="aw-sub-h" data-awsub="${k}" aria-expanded="${on}" aria-controls="awSub${m.id}_${k}">${head}${ico('chev-r')}</button>`}
         <div class="aw-sub-b" id="awSub${m.id}_${k}"><div>
-          ${(v.sent || []).length && !(v.sent.length === 1 && v.sent[0].write) ? `<div class="ti-files">${v.sent.map((f, i) => `<div class="ti-file avfi-host sent" style="--i:${i}"><div class="ti-file-top">${f.write ? `<span class="ti-wicon">${ico('text')}</span>` : fileIco(f.link ? 'link' : f.name)}<span class="tx"><b>${esc(f.name)}</b><small>${esc(f.size)}</small></span></div></div>`).join('')}</div>` : ''}
+          ${(v.sent || []).length && !(v.sent.length === 1 && v.sent[0].write) ? `<div class="ti-files">${v.sent.map((f, i) => `<div class="ti-file avfi-host sent" style="--i:${i}"><div class="ti-file-top">${f.write ? `<span class="ti-wicon">${ico('text')}</span>` : fileIco(f.link ? 'link' : f.name)}<span class="tx"><b>${esc(f.name)}</b><small>${esc(f.size)}</small></span>${f.url ? `<span class="ti-sacts"><a class="btn sm" href="${esc(f.url)}&view=1" target="_blank" rel="noopener" aria-label="Open ${esc(f.name)}">Open</a><a class="btn sm" href="${esc(f.url)}" download aria-label="Download ${esc(f.name)}">${ico('dl')}</a></span>` : ''}</div></div>`).join('')}</div>` : ''}
           ${v.answerSent ? `<div class="ti-lbl">Your answer</div><div class="ti-note ti-ans">${v.answerSent}</div>` : ''}
           ${v.note ? `<div class="ti-lbl">Your note</div><p class="ti-note">${esc(v.note)}</p>` : ''}
           ${v.sentLog ? `<details class="aw-sentlog"><summary>${ico('list')}Details</summary><pre class="aw-log">${v.sentLog}</pre></details>` : ''}
@@ -5273,7 +5277,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     FST.load(m.c, m.id).then(r => {
       m._loaded = 'yes'; const d = r.detail;
       if (d) { if (d.description) m.desc = d.description; if (typeof d.maxPoints === 'number' && d.maxPoints > 0) m.pts = d.maxPoints; if (d.score && d.score.possible > 0) m.got = d.score.earned; }
-      const revs = (r.revisions || []).filter(v => !v.draft), sentOf = v => (v.files || []).map(f => ({ name: f.name, size: FST.size(f.size) || 'File' })).concat(v.text ? [{ name: 'Written answer', size: 'Text', write: true }] : []);
+      const revs = (r.revisions || []).filter(v => !v.draft), sentOf = v => (v.files || []).map(f => ({ name: f.name, size: FST.size(f.size) || 'File', url: subUrl(m, v.id, f.id) })).concat(v.text ? [{ name: 'Written answer', size: 'Text', write: true }] : []);
       const text = v => v.text ? esc(v.text).replace(/\n/g, '<br>') : undefined;
       if (revs.length && !m.justTurned) {
         const [last, ...older] = revs;
@@ -5386,7 +5390,18 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
           tiSending = false; if (ti) { ti.classList.remove('busy'); ti.querySelector('.ti-main').classList.remove('sending'); }
           m.again = false; m.turnedClock = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }); awOpen[id] = new Set([(m.prev || []).length + 1]); delete awOpen[id + ':again']; m.noteDraft = '';
           if (m.writing) { const w = wordCount(m.answer); Object.assign(m, { turned: 'just now', justTurned: true, writing: false, answerSent: m.answer, note, sent: [{ name: 'Written answer', size: `${w} ${w === 1 ? 'word' : 'words'}`, write: true }] }); }
-          else { Object.assign(m, { turned: 'just now', justTurned: true, sent: DRAFT[id].map(f => ({ name: shownName(f), size: shownSub(f), link: f.src !== 'local' && f.mode === 'link' })), note }); delete DRAFT[id]; }
+          else {
+            Object.assign(m, { turned: 'just now', justTurned: true, sent: DRAFT[id].map(f => ({ name: shownName(f), size: shownSub(f), link: f.src !== 'local' && f.mode === 'link' })), note });
+            // A draft that went in leaves Drafts (2026-11-03, Martin); it stays in Canva or Google Drive.
+            const used = DRAFT[id].filter(f => f.src !== 'local'), ds = EDITS[id] || [];
+            const gone = ds.filter(d => used.some(f => f.src === d.src && ((d.designId && f.designId === d.designId) || (d.fileId && f.id === d.fileId) || f.name === d.name)));
+            if (gone.length) {
+              EDITS[id] = ds.filter(d => !gone.includes(d));
+              gone.forEach(d => { if (d.src === 'canva' && d.designId) FST.canvaForget(d.designId).catch(() => {}); else if (d.fileId) FST.driveForget(d.fileId); });
+              setTimeout(() => { awDraftsDraw(); awAttDraw(m); }, 0);
+            }
+            delete DRAFT[id];
+          }
           if (!ti) { renderList(); renderComing(); ntBadge(); if (HUB_TAB === 'assignments') agRender(false); agCounts(); return; }
           if (tiInline) { const st = document.querySelector('#mpBox .mp-vstatus'); if (st) st.innerHTML = status(m); const fx = document.querySelector('#mpBox .aw-facts'); if (fx) fx.outerHTML = awFacts(m); }
           tiSel = id; tiShown = id; if (tiInline) awResize(() => tiRender()); else tiRender(); renderList(); renderComing(); ntBadge(); if (HUB_TAB === 'assignments') agRender(false); agCounts(); toast(`Turned in ${m.name}.`);

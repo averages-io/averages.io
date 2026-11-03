@@ -1229,6 +1229,7 @@
   @media (prefers-reduced-motion: reduce) { .mq > .mq-in { animation: none; } }
   .mq, .mq > .mq-in { animation-delay: var(--mq-delay, 0s); } /* a pair runs half a cycle apart, so they move opposite ways */
   /* ===== end Spotify names ===== */
+  .ti-sacts { margin-left: auto; display: flex; gap: 6px; flex: none; } .ti-sacts .btn { text-decoration: none; } .ti-sacts svg.i { width: 16px; height: 16px; }
 </style>
 <style id="tiHomeCss">/* ===== Turn in popup (from the course hub) ===== */
   /* ---------- Turn in popup ---------- */
@@ -1963,6 +1964,7 @@
   <symbol id="i-msg" viewBox="0 0 24 24"><path d="M21 12A8 8 0 0 1 9.73 19.3L4 20l2.1-3.95A8 8 0 1 1 21 12Z"/></symbol>
   <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14a6.5 6.5 0 0 1 3.5 6"/></symbol>
   <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 21a7.5 7.5 0 0 1 15 0"/></symbol>
+  <symbol id="i-dl" viewBox="0 0 24 24" data-adj><g transform="translate(12 11.25) scale(1) translate(-12 -12)" style="stroke-width:calc(var(--isw, 2.2) / 1)"><path d="M12 4v11"/><path d="M7 10.5 12 15.5l5-5"/><path d="M5 20h14"/></g></symbol>
   <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 10a6 6 0 0 1 12 0v4.5l2 3H4l2-3Z"/><path d="M9.5 20.5h5"/></symbol>
   <symbol id="i-upload" viewBox="0 0 24 24" data-adj><g transform="translate(12 11.5) scale(1) translate(-12 -12)" style="stroke-width:2.2"><path d="M12 15V3M7 8l5-5 5 5"/><path d="M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></g></symbol>
   <symbol id="i-moon" viewBox="0 0 24 24" data-adj><g transform="translate(12.6 11.5) scale(1) translate(-12 -12)" style="stroke-width:2.2"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z"/></g></symbol>
@@ -4482,6 +4484,9 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     return `<button class="ti-row avfi-host${m.id === tiSel ? ' on' : ''}" data-ti="${m.id}" role="option" aria-selected="${m.id === tiSel}">${tile(m)}<span class="tx"><b>${esc(m.name)}</b><small>${sub}</small></span>${status(m)}</button>`;
   }
   // a new version is being put together on the assignment page (the popup always shows what's turned in)
+  // A file you turned in (2026-11-03, Martin: "let people download/view their submissions"): GET /data/submission-file
+  // looks it up again in your own Schoology history; view=1 opens it in the browser where it can.
+  const subUrl = (m, rev, file) => /^\d+$/.test(String(rev)) && /^\d+$/.test(String(file)) ? `${FSX.API}/data/submission-file?section=${encodeURIComponent(m.c)}&assignment=${encodeURIComponent(m.id)}&revision=${encodeURIComponent(rev)}&file=${encodeURIComponent(file)}` : '';
   const tiDone = m => !!m.turned && !(tiInline && m.again);
   const tiVers = m => (m.prev || []).concat(m.turned ? [{ turned: m.turned, sent: m.sent, answerSent: m.answerSent, note: m.note, sentLog: m.sentLog }] : []);
   let awOpen = {}; // which versions are open, per assignment
@@ -4497,7 +4502,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       const head = `<span class="aw-vt" aria-hidden="true">V${k}</span><span class="tx"><b>${title}</b><small>${sub}</small></span>`;
       return `<section class="aw-sub${on ? ' open' : ''}${latest ? ' latest' : ''}">${one ? `<div class="aw-sub-h">${head}</div>` : `<button class="aw-sub-h" data-awsub="${k}" aria-expanded="${on}" aria-controls="awSub${m.id}_${k}">${head}${ico('chev-r')}</button>`}
         <div class="aw-sub-b" id="awSub${m.id}_${k}"><div>
-          ${(v.sent || []).length && !(v.sent.length === 1 && v.sent[0].write) ? `<div class="ti-files">${v.sent.map((f, i) => `<div class="ti-file avfi-host sent" style="--i:${i}"><div class="ti-file-top">${f.write ? `<span class="ti-wicon">${ico('text')}</span>` : fileIco(f.link ? 'link' : f.name)}<span class="tx"><b>${esc(f.name)}</b><small>${esc(f.size)}</small></span></div></div>`).join('')}</div>` : ''}
+          ${(v.sent || []).length && !(v.sent.length === 1 && v.sent[0].write) ? `<div class="ti-files">${v.sent.map((f, i) => `<div class="ti-file avfi-host sent" style="--i:${i}"><div class="ti-file-top">${f.write ? `<span class="ti-wicon">${ico('text')}</span>` : fileIco(f.link ? 'link' : f.name)}<span class="tx"><b>${esc(f.name)}</b><small>${esc(f.size)}</small></span>${f.url ? `<span class="ti-sacts"><a class="btn sm" href="${esc(f.url)}&view=1" target="_blank" rel="noopener" aria-label="Open ${esc(f.name)}">Open</a><a class="btn sm" href="${esc(f.url)}" download aria-label="Download ${esc(f.name)}">${ico('dl')}</a></span>` : ''}</div></div>`).join('')}</div>` : ''}
           ${v.answerSent ? `<div class="ti-lbl">Your answer</div><div class="ti-note ti-ans">${v.answerSent}</div>` : ''}
           ${v.note ? `<div class="ti-lbl">Your note</div><p class="ti-note">${esc(v.note)}</p>` : ''}
           ${v.sentLog ? `<details class="aw-sentlog"><summary>${ico('list')}Details</summary><pre class="aw-log">${v.sentLog}</pre></details>` : ''}
@@ -4802,7 +4807,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     FST.load(m.c, m.id).then(r => {
       m._loaded = 'yes'; const d = r.detail;
       if (d) { if (d.description) m.desc = d.description; if (typeof d.maxPoints === 'number' && d.maxPoints > 0) m.pts = d.maxPoints; if (d.score && d.score.possible > 0) m.got = d.score.earned; }
-      const revs = (r.revisions || []).filter(v => !v.draft), sentOf = v => (v.files || []).map(f => ({ name: f.name, size: FST.size(f.size) || 'File' })).concat(v.text ? [{ name: 'Written answer', size: 'Text', write: true }] : []);
+      const revs = (r.revisions || []).filter(v => !v.draft), sentOf = v => (v.files || []).map(f => ({ name: f.name, size: FST.size(f.size) || 'File', url: subUrl(m, v.id, f.id) })).concat(v.text ? [{ name: 'Written answer', size: 'Text', write: true }] : []);
       const text = v => v.text ? esc(v.text).replace(/\n/g, '<br>') : undefined;
       if (revs.length && !m.justTurned) {
         const [last, ...older] = revs;

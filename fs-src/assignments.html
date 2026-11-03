@@ -3047,6 +3047,7 @@
   }
   @media (max-width: 680px) { .hub-t h1 { font-size: 34px; } }
   /* ===== end Life layer for the course page ===== */
+  .ti-sacts { margin-left: auto; display: flex; gap: 6px; flex: none; } .ti-sacts .btn { text-decoration: none; } .ti-sacts svg.i { width: 16px; height: 16px; }
 </style>
 <style id="avh-css">
 /* Averages.io first-time help popups: "Before you open Canva" and "Add files from Google Drive".
@@ -4537,6 +4538,9 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     return `<button class="ti-row avfi-host${m.id === tiSel ? ' on' : ''}" data-ti="${m.id}" role="option" aria-selected="${m.id === tiSel}">${tile(m)}<span class="tx"><b>${esc(m.name)}</b><small>${sub}</small></span>${status(m)}</button>`;
   }
   // a new version is being put together on the assignment page (the popup always shows what's turned in)
+  // A file you turned in (2026-11-03, Martin: "let people download/view their submissions"): GET /data/submission-file
+  // looks it up again in your own Schoology history; view=1 opens it in the browser where it can.
+  const subUrl = (m, rev, file) => /^\d+$/.test(String(rev)) && /^\d+$/.test(String(file)) ? `${FSX.API}/data/submission-file?section=${encodeURIComponent(m.c)}&assignment=${encodeURIComponent(m.id)}&revision=${encodeURIComponent(rev)}&file=${encodeURIComponent(file)}` : '';
   const tiDone = m => !!m.turned && !(tiInline && m.again);
   const tiVers = m => (m.prev || []).concat(m.turned ? [{ turned: m.turned, sent: m.sent, answerSent: m.answerSent, note: m.note, sentLog: m.sentLog }] : []);
   let awOpen = {}; // which versions are open, per assignment
@@ -4552,7 +4556,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       const head = `<span class="aw-vt" aria-hidden="true">V${k}</span><span class="tx"><b>${title}</b><small>${sub}</small></span>`;
       return `<section class="aw-sub${on ? ' open' : ''}${latest ? ' latest' : ''}">${one ? `<div class="aw-sub-h">${head}</div>` : `<button class="aw-sub-h" data-awsub="${k}" aria-expanded="${on}" aria-controls="awSub${m.id}_${k}">${head}${ico('chev-r')}</button>`}
         <div class="aw-sub-b" id="awSub${m.id}_${k}"><div>
-          ${(v.sent || []).length && !(v.sent.length === 1 && v.sent[0].write) ? `<div class="ti-files">${v.sent.map((f, i) => `<div class="ti-file avfi-host sent" style="--i:${i}"><div class="ti-file-top">${f.write ? `<span class="ti-wicon">${ico('text')}</span>` : fileIco(f.link ? 'link' : f.name)}<span class="tx"><b>${esc(f.name)}</b><small>${esc(f.size)}</small></span></div></div>`).join('')}</div>` : ''}
+          ${(v.sent || []).length && !(v.sent.length === 1 && v.sent[0].write) ? `<div class="ti-files">${v.sent.map((f, i) => `<div class="ti-file avfi-host sent" style="--i:${i}"><div class="ti-file-top">${f.write ? `<span class="ti-wicon">${ico('text')}</span>` : fileIco(f.link ? 'link' : f.name)}<span class="tx"><b>${esc(f.name)}</b><small>${esc(f.size)}</small></span>${f.url ? `<span class="ti-sacts"><a class="btn sm" href="${esc(f.url)}&view=1" target="_blank" rel="noopener" aria-label="Open ${esc(f.name)}">Open</a><a class="btn sm" href="${esc(f.url)}" download aria-label="Download ${esc(f.name)}">${ico('dl')}</a></span>` : ''}</div></div>`).join('')}</div>` : ''}
           ${v.answerSent ? `<div class="ti-lbl">Your answer</div><div class="ti-note ti-ans">${v.answerSent}</div>` : ''}
           ${v.note ? `<div class="ti-lbl">Your note</div><p class="ti-note">${esc(v.note)}</p>` : ''}
           ${v.sentLog ? `<details class="aw-sentlog"><summary>${ico('list')}Details</summary><pre class="aw-log">${v.sentLog}</pre></details>` : ''}
@@ -4857,7 +4861,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     FST.load(m.c, m.id).then(r => {
       m._loaded = 'yes'; const d = r.detail;
       if (d) { if (d.description) m.desc = d.description; if (typeof d.maxPoints === 'number' && d.maxPoints > 0) m.pts = d.maxPoints; if (d.score && d.score.possible > 0) m.got = d.score.earned; }
-      const revs = (r.revisions || []).filter(v => !v.draft), sentOf = v => (v.files || []).map(f => ({ name: f.name, size: FST.size(f.size) || 'File' })).concat(v.text ? [{ name: 'Written answer', size: 'Text', write: true }] : []);
+      const revs = (r.revisions || []).filter(v => !v.draft), sentOf = v => (v.files || []).map(f => ({ name: f.name, size: FST.size(f.size) || 'File', url: subUrl(m, v.id, f.id) })).concat(v.text ? [{ name: 'Written answer', size: 'Text', write: true }] : []);
       const text = v => v.text ? esc(v.text).replace(/\n/g, '<br>') : undefined;
       if (revs.length && !m.justTurned) {
         const [last, ...older] = revs;

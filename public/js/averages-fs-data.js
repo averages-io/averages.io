@@ -495,9 +495,12 @@
     });
   }
 
+  // The bundle is asked for at once, alongside the sign-in check (2026-11-03: one round trip sooner); if
+  // the check says signed out, the page leaves before it's used.
+  var earlyBundle = bundle(); earlyBundle.catch(function () {});
   var started = session().then(function (me) {
     if (!me || me.mode !== 'live' || !me.uid) { window.location.replace('/'); return null; }
-    var who = me.uid, bP = bundle(), xs = extrasFor(who, bP), names = Object.keys(xs);
+    var who = me.uid, bP = earlyBundle, xs = extrasFor(who, bP), names = Object.keys(xs);
     return Promise.all([bP].concat(names.map(function (n) { return settle(xs[n], 8000); }))).then(function (all) {
       var raw = { me: me, bundle: all[0] };
       names.forEach(function (n, i) { raw[n] = all[i + 1] && all[i + 1].__signedOut ? undefined : all[i + 1]; });
