@@ -330,7 +330,7 @@ function build() {
     "#side #sideSearch .side-kbd{margin-left:auto;padding:0 6px;border-radius:6px;background:var(--panel);font-size:11px;font-weight:800;line-height:20px;color:var(--muted)}",
     CLOSED + " #sideSearch{margin-bottom:0;background:none;box-shadow:none}",
     // group labels: a grey label open, a thin line closed
-    "#side .side-sec{display:block;flex:none;box-sizing:border-box;height:40px;margin:0;padding:16px 12px 8px;overflow:hidden;font-size:12px;line-height:16px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);white-space:nowrap;background:none;border-bottom:1px solid transparent;" +
+    "#side .side-sec{display:block;flex:none;box-sizing:border-box;height:40px;margin:0;padding:16px 12px 8px 8px;overflow:hidden;font-size:12px;line-height:16px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);white-space:nowrap;background:none;border-bottom:1px solid transparent;" +
       "transition:height " + EASE + ",margin " + EASE + ",padding " + EASE + ",border-color " + EASE + "}",
     CLOSED + " .side-sec{height:0;padding:0;margin:12px 0;border-bottom-color:var(--inner);color:transparent}",
     // what only makes sense open: counts, grades, the arrow, the shortcut; on the rail a dot on the icon says there's a count
