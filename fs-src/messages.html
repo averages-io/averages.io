@@ -3096,6 +3096,9 @@
   .ms-aw > .ms-av { position: absolute; left: -40px; top: 50%; margin-top: -16px; }
   .ms-col { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
   .ms-msg.me .ms-col { align-items: flex-end; }
+  /* a short message's bubble hugs its words (2026-11-03, Martin: "extra space in the message bubbles"): it was
+     stretched to the width of the time under it */
+  .ms-msg:not(.me) .ms-col, .ms-aw { align-items: flex-start; }
   .ms-who { margin: 0 0 1px 12px; font-size: 12px; font-weight: 800; color: var(--muted); }
   .ms-bub { max-width: 54ch; padding: 8px 12px; border-radius: 18px; background: var(--field); color: var(--ink); font-size: 15px; font-weight: 600; line-height: 1.45; white-space: pre-wrap; overflow-wrap: break-word; box-shadow: 0 1px 1px rgba(20, 20, 40, .04); }
   .ms-msg:not(.me).first .ms-bub { border-top-left-radius: 6px; }
@@ -3120,6 +3123,53 @@
   /* writing */
   .ms-comp { display: flex; flex-direction: column; align-items: stretch; gap: 8px; padding: 12px 12px 12px; flex: none; }
   /* attach (only to teachers): a paperclip beside send, and the picked files as chips above the box */
+  /* the paperclip's neighbors: Add a link and an emoji slide out when you point at it (or tab to them) */
+  .ms-ctools { flex: none; align-self: flex-end; display: flex; align-items: center; margin: 8px 0; }
+  .ms-ctools .ms-clip { margin: 0; }
+  .ms-tool { flex: none; width: 36px; height: 36px; border-radius: 18px; display: grid; place-items: center; color: var(--ink-2); overflow: hidden; transition: width .2s cubic-bezier(.2, .8, .2, 1), opacity .15s ease, background-color .15s ease; }
+  .ms-tool:hover { background: var(--inner); color: var(--ink); }
+  .ms-tool svg.i { width: 20px; height: 20px; }
+  .ms-emo { font-size: 19px; line-height: 1; filter: grayscale(1); opacity: .8; transition: filter .15s ease, opacity .15s ease; }
+  .ms-tool:hover .ms-emo, .ms-ctools.open .ms-emo { filter: none; opacity: 1; }
+  .ms-ctools > :not(:last-child) { width: 0; opacity: 0; }
+  .ms-ctools:hover > :not(:last-child), .ms-ctools:focus-within > :not(:last-child), .ms-ctools.open > :not(:last-child) { width: 36px; opacity: 1; }
+  .ms-comp { position: relative; }
+  .ms-tpop { position: absolute; right: 12px; bottom: calc(100% - 4px); z-index: 6; border-radius: 16px; background: var(--field); box-shadow: var(--pop-shadow); padding: 8px; }
+  .ms-emogrid { display: grid; grid-template-columns: repeat(8, 36px); gap: 2px; }
+  .ms-emogrid button { width: 36px; height: 36px; border-radius: 10px; font-size: 21px; line-height: 1; display: grid; place-items: center; }
+  .ms-emogrid button:hover, .ms-emogrid button:focus-visible { background: var(--inner); outline: none; }
+  .ms-linkpop { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 8px; width: min(380px, calc(100vw - 48px)); padding: 12px; }
+  .ms-linkpop label { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .ms-linkpop small { font-size: 12px; font-weight: 800; color: var(--muted); }
+  .ms-linkpop input { height: 34px; border: 0; border-radius: 10px; padding: 0 12px; background: var(--panel); color: var(--ink); font: inherit; font-size: 14px; font-weight: 600; outline: none; box-shadow: inset 0 0 0 2px transparent; }
+  .ms-linkpop input:focus { box-shadow: inset 0 0 0 2px var(--focus); }
+  .ms-linkerr { grid-column: 1 / -1; margin: 0; font-size: 12px; font-weight: 700; color: var(--bad); }
+  @media (prefers-reduced-motion: reduce) { .ms-tool { transition: none; } }
+  .potato-mode .ms-tool { transition: none; }
+  /* reactions, like iMessage: a badge on the message's corner, and a heart button beside it while you point at it */
+  .ms-rxw { position: relative; display: flex; flex-direction: column; max-width: 100%; }
+  .ms-msg.me .ms-rxw { align-items: flex-end; }
+  .ms-rxw:has(.ms-rx) { margin-top: 12px; }
+  .ms-rx { position: absolute; top: -14px; right: -8px; z-index: 2; display: inline-flex; align-items: center; gap: 1px; height: 26px; padding: 0 7px; border-radius: 13px; background: var(--field); box-shadow: 0 0 0 2px var(--panel), 0 2px 6px rgba(20, 20, 40, .14); font-size: 14px; line-height: 1; white-space: nowrap; }
+  .ms-msg.me .ms-rx { right: auto; left: -8px; }
+  .ms-rx.mine { background: color-mix(in srgb, var(--accent) 16%, var(--field)); }
+  .ms-rx i { font-style: normal; }
+  .ms-rx b { margin-left: 3px; font-size: 12px; font-weight: 800; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .ms-rx.mine b { color: var(--ink-2); }
+  .ms-tb { position: absolute; top: 50%; right: -38px; margin-top: -15px; width: 30px; height: 30px; border-radius: 15px; display: grid; place-items: center; color: var(--muted); background: var(--panel); opacity: 0; transition: opacity .15s ease, background-color .15s ease; }
+  .ms-msg.me .ms-tb { right: auto; left: -38px; }
+  .ms-rxw:hover .ms-tb, .ms-tb:focus-visible, .ms-tb[aria-expanded="true"] { opacity: 1; }
+  .ms-tb:hover { background: var(--inner); color: var(--ink); }
+  .ms-tb svg.i { width: 16px; height: 16px; }
+  @media (hover: none) { .ms-tb { opacity: .7; } }
+  .ms-tbar { position: fixed; z-index: 85; display: flex; gap: 2px; padding: 6px; border-radius: 24px; background: var(--field); box-shadow: var(--pop-shadow); }
+  .ms-tbar.in { animation: msTbIn .18s cubic-bezier(.2, .8, .2, 1) backwards; }
+  @keyframes msTbIn { from { opacity: 0; transform: translateY(6px) scale(.94); } }
+  .ms-tbar button { width: 38px; height: 38px; border-radius: 19px; font-size: 21px; line-height: 1; display: grid; place-items: center; transition: transform .15s ease, background-color .15s ease; }
+  .ms-tbar button:hover, .ms-tbar button:focus-visible { background: var(--inner); outline: none; transform: scale(1.12); }
+  .ms-tbar button[aria-pressed="true"] { background: color-mix(in srgb, var(--accent) 18%, var(--field)); box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--accent) 45%, transparent); }
+  .potato-mode .ms-tbar.in, .potato-mode .ms-tbar button { animation: none; transition: none; }
+  @media (prefers-reduced-motion: reduce) { .ms-tbar.in { animation: none; } .ms-tbar button { transition: none; } }
   .ms-clip { flex: none; align-self: flex-end; width: 36px; height: 36px; margin: 8px 0; border-radius: 18px; display: grid; place-items: center; color: var(--ink-2); transition: background-color .15s ease; }
   .ms-clip:hover { background: var(--inner); color: var(--ink); }
   .ms-clip svg.i { width: 20px; height: 20px; }
@@ -4246,6 +4296,10 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       });
       if (!t.msgs.length) t.msgs = [M(t.with[0], '', new Date())];
       t.msgs.forEach((m, i) => { m.id = t.id + '.' + i; });
+      // reactions sent in the last 10 minutes that Schoology isn't showing yet (it can take a little while)
+      const pend = (store.get('fsmsg_rx_sent') || []).filter(x => x.th === t.id && Date.now() - x.at < 10 * 60e3 && !t.msgs.some(o => o.from === 'me' && o.t === x.text && +o.when >= x.at - 120e3));
+      pend.forEach((x, k) => { const o = M('me', x.text, new Date(x.at), { state: 'sent' }); o.id = t.id + '.p' + k; t.msgs.push(o); });
+      rxFold(t.msgs);
       if (MS.open === t.id || (MS.open || '').startsWith('p:')) msThread(true); msRows();
     }).catch(() => { t.loading = false; t.failed = true; if (MS.open === t.id) msThread(true); });
   };
@@ -4490,6 +4544,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   // ---------- one conversation ----------
   function feedHTML(msgs, showSubj, isGroup) {
     let html = '', prev = null, prevSubj = null;
+    msgs = msgs.filter(m => !m.react);   // a reaction shows on the message it's about
     msgs.forEach((m, i) => {
       if (showSubj && m.subj !== prevSubj) { html += `<div class="ms-stag">${ico('msg')}${esc(m.subj)}</div>`; prevSubj = m.subj; prev = null; }
       if (!prev || !sameDay(prev.when, m.when)) { html += `<div class="ms-day">${dayName(m.when)}</div>`; prev = null; }
@@ -4504,7 +4559,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       const links = urls.map(linkCard).join('');
       const att = m.att ? fileCard(m.att, m.id) : '';
       const meta = lastOf ? `<span class="ms-meta${m.state === 'sending' ? ' sending' : ''}">${m.state === 'sending' ? 'Sending…' : (mine && m.state === 'sent' ? 'Sent · ' : '') + fmtTime(m.when)}</span>` : '';
-      html += `<div class="ms-msg${mine ? ' me' : ''}${first ? ' first' : ''}${m.fresh && !calm() ? ' fresh' : ''}" data-mi="${i}" data-mid="${m.id}">${left}<div class="ms-col">${who}${(() => { const parts = [bub, ...urls.map(linkCard), att].filter(Boolean); if (mine || !lastOf || !parts.length) return parts.join(''); const lp = parts.pop(); return parts.join('') + `<div class="ms-aw">${av(p)}${lp}</div>`; })()}${meta}</div></div>`;
+      html += `<div class="ms-msg${mine ? ' me' : ''}${first ? ' first' : ''}${m.fresh && !calm() ? ' fresh' : ''}" data-mi="${i}" data-mid="${m.id}">${left}<div class="ms-col">${who}${(() => { const parts = [bub, ...urls.map(linkCard), att].filter(Boolean); if (parts.length && canReact(m)) parts[0] = `<div class="ms-rxw">${parts[0]}${rxBadge(m)}<button class="ms-tb" data-mstb="${m.id}" aria-label="React to this message" title="React">${ico('heart')}</button></div>`; if (mine || !lastOf || !parts.length) return parts.join(''); const lp = parts.pop(); return parts.join('') + `<div class="ms-aw">${av(p)}${lp}</div>`; })()}${meta}</div></div>`;
       m.fresh = false; prev = m;
     });
     return html;
@@ -4514,7 +4569,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   MS.pend = {}; // files picked for the message you're writing, per conversation
   const pendOf = () => MS.pend[MS.open] || (MS.pend[MS.open] = []);
   const attsHTML = () => pendOf().map((a, i) => `<span class="ms-achip avfi-host">${window.AveragesFileIcons ? AveragesFileIcons.html(a.name, { size: 24 }) : ico('doc')}<span class="tx"><b>${esc(a.name)}</b><small>${esc(a.state === 'failed' ? (a.err || 'Couldn\'t upload') : a.state === 'up' ? 'Uploading… ' + Math.round((a.frac || 0) * 100) + '%' : a.size)}</small></span><button data-msunatt="${i}" aria-label="Remove ${esc(a.name)}">${ico('x')}</button></span>`).join('');
-  const composerHTML = (ph, note, clip) => `${note || ''}<div class="ms-comp"><div class="ms-atts" id="msAtts">${clip ? attsHTML() : ''}</div><div class="box"><textarea id="msText" rows="1" placeholder="${esc(ph)}" aria-label="${esc(ph)}"></textarea>${clip ? `<button class="ms-clip" id="msClip" aria-label="Attach a file" title="Attach a file">${ico('clip')}</button><input type="file" id="msFile" multiple hidden>` : ''}<button class="ms-send" id="msSend" aria-label="Send" disabled><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19.5V5.5M5.5 12 12 5.5 18.5 12"/></svg></button></div></div>`;
+  const composerHTML = (ph, note, clip) => `${note || ''}<div class="ms-comp"><div class="ms-atts" id="msAtts">${clip ? attsHTML() : ''}</div><div class="box"><textarea id="msText" rows="1" placeholder="${esc(ph)}" aria-label="${esc(ph)}"></textarea><span class="ms-ctools"><button class="ms-tool" data-mstool="link" aria-label="Add a link" title="Add a link">${ico('link')}</button><button class="ms-tool" data-mstool="emoji" aria-label="Add an emoji" title="Add an emoji"><span class="ms-emo" aria-hidden="true">😊</span></button>${clip ? `<button class="ms-clip" id="msClip" aria-label="Attach a file" title="Attach a file">${ico('clip')}</button>` : ''}</span>${clip ? `<input type="file" id="msFile" multiple hidden>` : ''}<button class="ms-send" id="msSend" aria-label="Send" disabled><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19.5V5.5M5.5 12 12 5.5 18.5 12"/></svg></button></div></div>`;
   function topHTML(t, sub, extraBtns = '') {
     return `<div class="ms-top"><button class="ibtn ms-back" data-msback aria-label="Back to your messages">${ico('chev-l')}</button>${tav(t)}<span class="tx"><b>${esc(title(t))}</b><small>${esc(sub)}</small></span>${extraBtns}<button class="ibtn" data-mswho aria-label="Who's in this conversation" aria-haspopup="dialog">${ico('info')}</button><button class="ibtn" data-msmore="${MS.open}" aria-label="More" aria-haspopup="menu" aria-expanded="false">${ico('dots')}</button></div>`;
   }
@@ -4610,6 +4665,114 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); fileLbClose(); return; }
     if (e.key === 'Tab') { const f = [...fLb.el.querySelectorAll('button, video, audio')]; if (!f.length) return; if (e.shiftKey && document.activeElement === f[0]) { e.preventDefault(); f[f.length - 1].focus(); } else if (!e.shiftKey && document.activeElement === f[f.length - 1]) { e.preventDefault(); f[0].focus(); } }
   }, true);
+  // ---------- the paperclip's neighbors (2026-11-03, Martin): pointing at it shows Add a link and an emoji ----------
+  const EMOJIS = '😀 😂 😊 😍 🥲 😅 😎 🤔 😮 😢 😭 😤 🙏 👍 👎 👏 🙌 💪 ✌️ 🤞 👋 ❤️ 🔥 ⭐ ✨ 🎉 ✅ ❌ ❓ ‼️ 💯 📚 📝 📎 📅 ⏰ 🧪 🧮 🌎 🎨'.split(' ');
+  let tpop = null;
+  function toolClose() { if (!tpop) return; tpop.el.remove(); tpop = null; document.querySelectorAll('.ms-ctools.open').forEach(x => x.classList.remove('open')); }
+  function toolInsert(txt) {
+    const ta = $('msText'); if (!ta) return;
+    const a = ta.selectionStart ?? ta.value.length, b = ta.selectionEnd ?? a;
+    ta.value = ta.value.slice(0, a) + txt + ta.value.slice(b); const at = a + txt.length;
+    ta.focus({ preventScroll: true }); ta.setSelectionRange(at, at); ta.dispatchEvent(new Event('input'));
+  }
+  function toolOpen(kind) {
+    const was = tpop && tpop.kind; toolClose(); if (was === kind) return;
+    const comp = document.querySelector('#msThread .ms-comp'); if (!comp) return;
+    comp.querySelector('.ms-ctools').classList.add('open');
+    const html = kind === 'emoji'
+      ? `<div class="ms-tpop ms-emopop" role="dialog" aria-label="Emoji"><div class="ms-emogrid">${EMOJIS.map(e => `<button data-msemo="${e}" aria-label="${e}">${e}</button>`).join('')}</div></div>`
+      : `<form class="ms-tpop ms-linkpop" role="dialog" aria-label="Add a link"><label><small>Add a link</small><input id="msLinkIn" type="url" inputmode="url" placeholder="Paste a web address" autocomplete="off" spellcheck="false"></label><button class="btn primary sm" type="submit">Add</button><p class="ms-linkerr" hidden>That doesn't look like a web address.</p></form>`;
+    comp.insertAdjacentHTML('beforeend', html);
+    tpop = { kind, el: comp.lastElementChild };
+    tpop.el.addEventListener('click', e => { const b = e.target.closest('[data-msemo]'); if (b) toolInsert(b.dataset.msemo); });
+    if (kind === 'link') {
+      const inp = $('msLinkIn'); inp.focus({ preventScroll: true });
+      const add = e => {
+        if (e) e.preventDefault(); let v = inp.value.trim(); if (v && !/^https?:\/\//i.test(v)) v = 'https://' + v;
+        let ok = false; try { const u = new URL(v); ok = /^https?:$/.test(u.protocol) && /\./.test(u.hostname); } catch (err) { ok = false; }
+        if (!ok) { tpop.el.querySelector('.ms-linkerr').hidden = false; inp.focus(); return; }
+        const ta = $('msText'), pre = ta && ta.value && !/\s$/.test(ta.value.slice(0, ta.selectionStart ?? ta.value.length)) ? ' ' : '';
+        toolClose(); toolInsert(pre + v + ' ');   // it goes as a link card under your words, like Messages
+      };
+      tpop.el.addEventListener('submit', add);
+      // Enter adds it here (the page's own Enter handling would otherwise stop the form)
+      inp.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) { e.stopPropagation(); add(e); } });
+    }
+  }
+  document.addEventListener('pointerdown', e => { if (tpop && !e.target.closest('.ms-tpop, .ms-ctools')) toolClose(); }, true);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && tpop) { e.preventDefault(); e.stopImmediatePropagation(); const t = document.querySelector('[data-mstool="' + tpop.kind + '"]'); toolClose(); if (t) t.focus({ preventScroll: true }); } }, true);
+
+  // ---------- reactions, like iMessage (2026-11-03, Martin) ----------
+  // Schoology has no reactions, so one goes as a reply, the way an iPhone sends one to an Android phone:
+  // "Martin liked “yes”". Any reply like that in a conversation, from you or a teacher (also iMessage's own
+  // "Loved “…”", "Removed a heart from “…”" and Android's "Reacted 👍 to “…”"), shows as a little badge on the
+  // message it quotes instead of as a message. One reaction per person per message; picking the same one again
+  // takes it back. If the quoted message isn't found, it stays a normal message.
+  const RX = [['love', '❤️', 'loved', 'a heart'], ['like', '👍', 'liked', 'a like'], ['dislike', '👎', 'disliked', 'a dislike'], ['laugh', '😂', 'laughed at', 'a laugh'], ['emph', '‼️', 'emphasized', 'an exclamation mark'], ['ques', '❓', 'questioned', 'a question mark']];
+  const RX_NOUN = { heart: 'love', like: 'like', dislike: 'dislike', laugh: 'laugh', exclamation: 'emph', emphasis: 'emph', question: 'ques' };
+  const RX_WHAT = '(?:[“"](.+)[”"]|(an image|a file|an attachment|a photo))';
+  const RX_ADD = new RegExp(`^(?:(.{1,60}?) )?(loved|liked|disliked|laughed at|emphasized|questioned) ${RX_WHAT}\\s*$`, 'i');
+  const RX_DEL = new RegExp(`^(?:(.{1,60}?) )?removed (?:a |an )?(heart|like|dislike|laugh|exclamation|emphasis|question)(?: mark)? from ${RX_WHAT}\\s*$`, 'i');
+  const RX_EMO = new RegExp(`^(?:(.{1,60}?) )?reacted (\\S{1,8}) to ${RX_WHAT}\\s*$`, 'i');
+  const wordsOf = t => { const urls = (String(t || '').match(URL_RE) || []).map(cleanUrl); return urls.reduce((x, u) => x.split(u).join(' '), String(t || '')).replace(/\s+/g, ' ').trim(); };
+  const rxNorm = s => String(s || '').replace(/[“”"]/g, '').replace(/\s+/g, ' ').trim().toLowerCase();
+  const rxSnip = s => { const w = String(s || '').replace(/\s+/g, ' ').trim(); return w.length > 60 ? w.slice(0, 57).trimEnd() + '…' : w; };
+  function rxFold(msgs) {
+    msgs.forEach(m => { m.rx = []; m.react = false; });
+    msgs.forEach((m, i) => {
+      if (!m.t || m.att) return;
+      const t = m.t.trim(); let kind = null, del = false, x;
+      if ((x = t.match(RX_ADD))) kind = RX.find(r => r[2] === x[2].toLowerCase());
+      else if ((x = t.match(RX_DEL))) { kind = RX.find(r => r[0] === RX_NOUN[x[2].toLowerCase()]); del = true; }
+      else if ((x = t.match(RX_EMO))) kind = RX.find(r => r[1] === x[2]) || ['emoji:' + x[2], x[2], 'reacted to', ''];
+      if (!kind) return;
+      const q = x[3] != null ? rxNorm(x[3]) : null, cut = q && q.endsWith('…') ? q.slice(0, -1).trim() : null;
+      for (let j = i - 1; j >= 0; j--) {
+        const o = msgs[j]; if (o.react) continue;
+        const ok = q != null ? !!o.t && [rxNorm(o.t), rxNorm(wordsOf(o.t))].some(v => cut ? v.startsWith(cut) : v === q) : !!o.att;
+        if (!ok) continue;
+        m.react = true;
+        o.rx = o.rx.filter(r => r.by !== m.from || (del && r.k !== kind[0]));
+        if (!del) o.rx.push({ k: kind[0], e: kind[1], v: kind[2], by: m.from });
+        return;
+      }
+    });
+  }
+  const canReact = m => !!m && /^\d+\.\d+$/.test(String(m.id || '')) && !m.react;
+  function rxBadge(m) {
+    if (!m.rx || !m.rx.length) return '';
+    const seen = [...new Set(m.rx.map(r => r.e))].slice(0, 3);
+    const who = m.rx.map(r => `${r.by === 'me' ? 'You' : P(r.by).name} ${r.v || 'reacted to'} this`).join(' · ');
+    return `<span class="ms-rx${m.rx.some(r => r.by === 'me') ? ' mine' : ''}" title="${esc(who)}" aria-label="${esc(who)}">${seen.map(e => `<i>${e}</i>`).join('')}${m.rx.length > 1 ? `<b>${m.rx.length}</b>` : ''}</span>`;
+  }
+  let tbar = null;
+  function tbClose() { if (!tbar) return; tbar.el.remove(); tbar = null; }
+  function tbOpen(mid, from) {
+    const was = tbar && tbar.mid; tbClose(); if (was === mid) return;
+    const [t, m] = msgById(mid); if (!t || !canReact(m)) return;
+    const mine = (m.rx || []).find(r => r.by === 'me');
+    document.body.insertAdjacentHTML('beforeend', `<div class="ms-tbar${calm() ? '' : ' in'}" role="dialog" aria-label="React">${RX.map(r => `<button data-msrx="${r[0]}" aria-pressed="${!!mine && mine.k === r[0]}" aria-label="${r[2][0].toUpperCase() + r[2].slice(1)}" title="${r[2][0].toUpperCase() + r[2].slice(1)}">${r[1]}</button>`).join('')}</div>`);
+    const el = document.body.lastElementChild, anchor = (from && from.closest('.ms-rxw')) || from, rc = anchor.getBoundingClientRect(), w = el.offsetWidth;
+    const me = m.from === 'me', left = Math.max(8, Math.min(innerWidth - w - 8, me ? rc.right - w : rc.left));
+    el.style.left = left + 'px'; el.style.top = Math.max(8, rc.top - el.offsetHeight - 8) + 'px';
+    tbar = { el, mid };
+    el.addEventListener('click', e => { const b = e.target.closest('[data-msrx]'); if (b) { tbClose(); react(mid, b.dataset.msrx); } });
+    const f = el.querySelector('[aria-pressed="true"]') || el.querySelector('button'); f.focus({ preventScroll: true });
+  }
+  document.addEventListener('pointerdown', e => { if (tbar && !e.target.closest('.ms-tbar, [data-mstb]')) tbClose(); }, true);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && tbar) { e.preventDefault(); e.stopImmediatePropagation(); tbClose(); } }, true);
+  document.addEventListener('scroll', () => tbClose(), true);
+  function react(mid, k) {
+    const [t, m] = msgById(mid); if (!t || !canReact(m)) return;
+    const kind = RX.find(r => r[0] === k), now = (m.rx || []).find(r => r.by === 'me'), undo = !!now && now.k === k;
+    const first = String(FSD.me.firstName || String(FSD.me.name || '').split(' ')[0] || '').trim();
+    const w = wordsOf(m.t), what = w ? `“${rxSnip(w)}”` : m.att && IMG_RE.test(m.att.name) ? 'an image' : 'a file';
+    const verb = undo ? `removed ${kind[3]} from` : kind[2];
+    const text = first ? `${first} ${verb} ${what}` : `${verb[0].toUpperCase() + verb.slice(1)} ${what}`;
+    const rm = M('me', text, new Date(), { state: 'sending' }); rm.id = t.id + '.r' + Date.now().toString(36);
+    t.msgs.push(rm); rxFold(t.msgs); msThread(true); msRows();
+    FSX.reply(t.id, text, []).then(() => { rm.state = 'sent'; store.set('fsmsg_rx_sent', (store.get('fsmsg_rx_sent') || []).filter(x => Date.now() - x.at < 10 * 60e3).concat({ th: t.id, text, at: Date.now() }).slice(-40)); }, e => { t.msgs.splice(t.msgs.indexOf(rm), 1); rxFold(t.msgs); msThread(true); msRows(); toast(FSX.msgError(e)); });
+  }
   function wireComposer() {
     const ta = $('msText'), send = $('msSend'); if (!ta) return;
     const fit = () => { ta.style.height = 'auto'; ta.style.height = Math.min(160, ta.scrollHeight) + 'px'; send.disabled = !ta.value.trim() && !($('msClip') && pendOf().length); };
@@ -4868,6 +5031,8 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     const un = e.target.closest('[data-msunto]'); if (un) { const c = MS.compose; c.to = c.to.filter(x => x !== un.dataset.msunto); const ta = $('msText'); if (ta) c.text = ta.value; composeHTML(); msRows(); $('msToIn').focus(); return; }
     const fc = e.target.closest('[data-msfile]'); if (fc && fc.dataset.msfile) { const [, fm] = msgById(fc.dataset.msfile); if (fm && fm.att && fm.att.url) { fileLbOpen(fm.att); return; } lbOpen(fc.dataset.msfile); return; } // a real file: the preview popup
     if (e.target.closest('#msClip')) { $('msFile').click(); return; }
+    const tl = e.target.closest('[data-mstool]'); if (tl) { toolOpen(tl.dataset.mstool); return; }
+    const tb = e.target.closest('[data-mstb]'); if (tb) { tbOpen(tb.dataset.mstb, tb); return; }
     const ua = e.target.closest('[data-msunatt]'); if (ua) { pendOf().splice(+ua.dataset.msunatt, 1); $('msAtts').innerHTML = attsHTML(); $('msText').dispatchEvent(new Event('input')); $('msText').focus({ preventScroll: true }); return; }
     if (e.target.closest('#msSend')) {
       if (MS.open === 'new') { composeSend(); return; }
