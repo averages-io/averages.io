@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="referrer" content="no-referrer">
+<title>Signing in…</title>
+<!--
+  Where Schoology sends a student back after "Approve" (2026-11-03): https://app.averages.io/auth/schoology/callback
+  Schoology only returns to an address on the app's own site (the App URL in its app settings); anywhere else it
+  stops with "Unable to authenticate, there was no valid return URL found". This page hands Schoology's answer
+  (?oauth_token=...) straight to the API's /auth/schoology/callback, which finishes signing in and sends the student
+  on. Only oauth_token goes along; nothing is kept here or sent anywhere else.
+-->
+<style>
+  :root { color-scheme: light dark; --bg: #f6f7f9; --fg: #1d2330; --muted: #5d6677; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #14171d; --fg: #eef1f6; --muted: #a3acbb; } }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg); }
+  body { display: grid; place-items: center; font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; padding: 0 16px; }
+  p { margin: 0; text-align: center; max-width: 340px; }
+  .muted { color: var(--muted); margin-top: 6px; }
+  a { color: inherit; }
+</style>
+</head>
+<body>
+<div>
+  <p id="msg">Signing you in…</p>
+  <p class="muted" id="sub"></p>
+</div>
+<script>
+(function () {
+  var api = /(^|\.)averages\.io$/.test(location.hostname) ? 'https://api.averages.io' : 'http://localhost:8787';
+  var token = new URLSearchParams(location.search).get('oauth_token') || '';
+  if (!/^[A-Za-z0-9._~-]{1,512}$/.test(token)) {
+    document.getElementById('msg').textContent = 'Schoology didn’t finish signing you in.';
+    document.getElementById('sub').innerHTML = '<a href="/">Try again</a>';
+    return;
+  }
+  location.replace(api + '/auth/schoology/callback?oauth_token=' + encodeURIComponent(token));
+})();
+</script>
+</body>
+</html>
