@@ -4498,7 +4498,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const baseName = n => n.replace(/\.[a-z0-9]+$/i, '');
   // what the teacher will get: the copy's file name, or the app's own name for a link
   const shownName = f => f.src === 'local' ? f.name : f.mode === 'link' ? baseName(f.name) : baseName(f.name) + '.' + f.fmt;
-  const shownSub = f => f.src === 'local' ? (f.state === 'failed' ? f.err || 'Couldn\'t upload' : f.size) : f.mode === 'link' ? `Link to ${SOURCES[f.src].name} · ${TEACH()} can view` : `${SOURCES[f.src].name} · sent as ${(FST.formats(f).find(x => x[0] === f.fmt) || [, String(f.fmt).toUpperCase()])[1]}`;
+  const shownSub = f => f.src === 'local' ? (f.state === 'failed' ? f.err || 'Couldn\'t upload' : f.size) : f.mode === 'link' ? `Link to ${SOURCES[f.src].name} · Anyone with the link can view` : `${SOURCES[f.src].name} · sent as ${(FST.formats(f).find(x => x[0] === f.fmt) || [, String(f.fmt).toUpperCase()])[1]}`;
   const busy = f => f.state === 'uploading';
   // A file from this device goes up to Schoology as soon as it's added (averages-fs-turnin.js); Turn in then sends the ids.
   function tiStart(f) {
