@@ -1013,8 +1013,9 @@
       if (!C[u.courseId] || !u.id) return;
       NT.push({ id: 'u:' + u.id, kind: 'u', raw: u.id, ago: agoMin(u.when), c: u.courseId, k: 'ann', t: String(u.body || '').slice(0, 220), d: (u.from || 'Your teacher') + ' · ' + (u.when || ''), unread: !!u.unread });
     });
+    var muted = []; try { muted = JSON.parse(localStorage.getItem('fsmsg_muted') || '[]'); muted = Array.isArray(muted) ? muted.map(String) : []; } catch (e) { muted = []; }   // Hide alerts (messages' details sheet)
     arr(b.MESSAGES).forEach(function (m) {
-      if (!m.id) return;
+      if (!m.id || muted.indexOf(String(m.id)) >= 0) return;
       // The sender by id among the student's teachers (2026-11-03): the API may only know "Teacher".
       var who = m.authorId ? arr(people.CONTACTS).filter(function (p) { return String(p.id) === String(m.authorId); })[0] : null;
       if (who && who.name && (!m.from || m.from === 'Teacher')) m = Object.assign({}, m, { from: who.name, courseId: m.courseId || (arr(who.courses).filter(function (c) { return C[c]; })[0] || '') });

@@ -3297,6 +3297,51 @@
   .btn.danger-fill:hover { background: color-mix(in srgb, var(--bad) 86%, #000000); }
   .btn.danger-fill:disabled { opacity: .7; }
   @media (max-width: 640px) { .ms-sgy { padding: 0 10px; font-size: 0; gap: 0; } .ms-sgy svg.i { width: 16px; height: 16px; } }
+  /* the conversation's details sheet (Messages' contact sheet) */
+  .ms-info { position: relative; width: min(440px, 100%); max-height: min(820px, calc(100vh - 32px)); background: var(--panel); }
+  .ms-ix { position: absolute; top: 14px; left: 14px; z-index: 2; width: 36px; height: 36px; border-radius: 18px; display: grid; place-items: center; background: var(--field); color: var(--ink-2); }
+  .ms-ix:hover { color: var(--ink); background: var(--inner); }
+  .ms-ihd { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 24px 24px 8px; text-align: center; flex: none; }
+  .ms-ihd .ms-av.ms-iav { width: 84px; height: 84px; border-radius: 26px; font-size: 28px; }
+  .ms-ihd .ms-iav .badge { width: 32px; height: 32px; right: -6px; bottom: -6px; border-radius: 10px; }
+  .ms-ihd .ms-iav .badge svg { width: 20px; height: 20px; }
+  .ms-iavw { display: block; margin: 18px 0 14px; transform: scale(1.8); }
+  .ms-ihd h2 { margin: 8px 0 0; font-size: 24px; font-weight: 900; line-height: 1.15; }
+  .ms-ihd small { font-size: 13px; font-weight: 700; color: var(--muted); }
+  .ms-iacts { display: flex; justify-content: center; gap: 12px; padding: 8px 16px 12px; flex: none; }
+  .ms-iact { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 64px; color: var(--ink-2); text-decoration: none; }
+  .ms-iact > span { width: 48px; height: 48px; border-radius: 24px; display: grid; place-items: center; background: var(--field); color: var(--accent); transition: background-color .15s ease; }
+  .ms-iact:hover > span { background: var(--inner); }
+  .ms-iact small { font-size: 11px; font-weight: 800; }
+  .ms-itabs { display: flex; gap: 4px; padding: 4px 16px 12px; overflow-x: auto; scrollbar-width: none; flex: none; }
+  .ms-itabs button { flex: none; height: 32px; padding: 0 14px; border-radius: 16px; font-size: 14px; font-weight: 800; color: var(--muted); }
+  .ms-itabs button:hover { color: var(--ink); }
+  .ms-itabs button[aria-selected="true"] { background: var(--field); color: var(--ink); box-shadow: 0 1px 2px rgba(20, 20, 40, .08); }
+  .ms-itabs em { font-style: normal; margin-left: 4px; opacity: .7; font-variant-numeric: tabular-nums; }
+  .ms-ibody { flex: 1; min-height: 0; overflow-y: auto; padding: 0 16px 16px; display: flex; flex-direction: column; gap: 12px; scrollbar-width: thin; }
+  .ms-icard { display: flex; flex-direction: column; border-radius: 16px; background: var(--field); padding: 0 16px; }
+  .ms-icard > * + * { border-top: 2px solid var(--panel); }
+  .ms-ilinks button { height: 46px; text-align: left; font-size: 15px; font-weight: 700; color: var(--today, var(--focus)); }
+  .ms-ilinks button.bad { color: var(--bad); }
+  .ms-ilinks button:hover { text-decoration: underline; text-underline-offset: 3px; }
+  .ms-irow { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 8px 0; text-align: left; color: inherit; text-decoration: none; width: 100%; }
+  .ms-irow .tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+  .ms-irow .tx small { font-size: 12px; font-weight: 700; color: var(--muted); }
+  .ms-irow .tx b { font-size: 15px; font-weight: 700; overflow-wrap: anywhere; }
+  .ms-ilink .tx b, .ms-ifile .tx b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ms-ilink:hover b, .ms-ifile:hover b { text-decoration: underline; text-underline-offset: 3px; }
+  .ms-ibtn { flex: none; width: 34px; height: 34px; border-radius: 17px; display: grid; place-items: center; background: var(--panel); color: var(--ink-2); }
+  .ms-ibtn:hover { background: var(--inner); color: var(--ink); }
+  .ms-ibtn svg.i { width: 16px; height: 16px; }
+  .ms-isw .sw { flex: none; position: relative; width: 50px; height: 30px; border-radius: 15px; background: var(--inner); transition: background-color .2s ease; }
+  .ms-isw .sw i { position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 12px; background: #ffffff; box-shadow: 0 1px 3px rgba(0, 0, 0, .25); transition: transform .2s cubic-bezier(.2, .8, .2, 1); }
+  .ms-isw .sw.on { background: var(--good); }
+  .ms-isw .sw.on i { transform: translateX(20px); }
+  .ms-igrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+  .ms-iph { aspect-ratio: 1; border-radius: 10px; overflow: hidden; background: var(--field); }
+  .ms-iph img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .ms-inone { margin: 24px 0; text-align: center; font-size: 14px; font-weight: 700; color: var(--muted); }
+  .potato-mode .ms-isw .sw, .potato-mode .ms-isw .sw i { transition: none; }
   .ms-sscrim { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 16px; background: rgba(20, 21, 31, .32); }
   .ms-sscrim.in { animation: msSFade .16s ease backwards; }
   .ms-sscrim.in .ms-sbox { animation: msSIn .22s cubic-bezier(.2, .8, .2, 1) backwards; }
@@ -4336,6 +4381,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       pend.forEach((x, k) => { const o = M('me', x.text, new Date(x.at), { state: 'sent' }); o.id = t.id + '.p' + k; t.msgs.push(o); });
       rxFold(t.msgs);
       if (MS.open === t.id || (MS.open || '').startsWith('p:')) msThread(true); msRows();
+      if (info && tsOf(info.id).includes(t)) infoDraw(true);
     }).catch(() => { t.loading = false; t.failed = true; if (MS.open === t.id) msThread(true); });
   };
 
@@ -4884,8 +4930,8 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   document.addEventListener('pointerdown', e => { if (tbar && !e.target.closest('.ms-tbar, [data-mstb]')) tbClose(); }, true);
   // right-click a message for the reactions too (2026-11-03, Martin)
   document.addEventListener('contextmenu', e => {
-    const w = e.target.closest('#msThread .ms-rxw'); if (!w || e.target.closest('a, input, textarea')) return;
-    const b = w.querySelector('[data-mstb]'); if (!b) return;
+    const row = e.target.closest('#msThread .ms-msg'); if (!row || e.target.closest('a, input, textarea')) return;
+    const b = row.querySelector('[data-mstb]'); if (!b) return;
     e.preventDefault(); if (tbar && tbar.mid === b.dataset.mstb) tbClose(); tbOpen(b.dataset.mstb, b);
   });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && tbar) { e.preventDefault(); e.stopImmediatePropagation(); tbClose(); } }, true);
@@ -5139,9 +5185,92 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     });
   }
 
+  // ---------- the conversation's details, like Messages' contact sheet (2026-11-03, Martin's screenshot) ----------
+  // The "i" button. Who it's with and quick actions at the top, then what's in the conversation, indexed: Info,
+  // Photos, Links, Files (each with its count). Info has the conversation's actions and switches: Pin to the top and
+  // Hide alerts (no bell or popups for it, on this device; shared with the bell through fsmsg_muted).
+  let info = null;
+  const MUTED = new Set(store.get('fsmsg_muted') || []);
+  function infoItems(ts) {
+    const msgs = ts.flatMap(t => t.msgs.map(m => ({ t, m }))).filter(x => !x.m.react).sort((a, b) => b.m.when - a.m.when);
+    const photos = msgs.filter(x => x.m.att && x.m.att.real && IMG_RE.test(x.m.att.name));
+    const files = msgs.filter(x => x.m.att && x.m.att.real && !IMG_RE.test(x.m.att.name));
+    const links = []; const seenU = new Set();
+    msgs.forEach(x => (String(x.m.t || '').match(URL_RE) || []).map(cleanUrl).forEach(u => { if (!seenU.has(u)) { seenU.add(u); links.push({ ...x, u }); } }));
+    return { photos, files, links };
+  }
+  function infoHTML() {
+    const I = info, ts = tsOf(I.id); if (!ts.length) return '';
+    const t = ts[0], one = t.with.length === 1, p = one ? P(t.with[0]) : null, c = p && p.role === 'Teacher' ? C[p.c] : null;
+    const it = infoItems(ts), n = { info: 0, photos: it.photos.length, links: it.links.length, files: it.files.length };
+    const loading = ts.some(x => !x.loaded);
+    const when = d => `${dayName(d)}, ${fmtTime(d)}`;
+    const big = one ? av(p, ' ms-iav') : `<span class="ms-iavw">${tav(t)}</span>`;
+    const act = (k, icon, label, extra = '') => `<button class="ms-iact" data-msi="${k}" ${extra}><span>${ico(icon)}</span><small>${label}</small></button>`;
+    const tabs = [['info', 'Info'], ['photos', 'Photos'], ['links', 'Links'], ['files', 'Files']];
+    let body = '';
+    if (I.tab === 'info') {
+      const pinned = ts.some(x => x.pinned), muted = ts.some(x => MUTED.has(x.id));
+      body = `<div class="ms-icard ms-ilinks"><button data-msi="unread">Mark as unread</button><button data-msi="hide">Hide here</button><button class="bad" data-msi="erase">Delete conversation…</button></div>`
+        + (one ? `<div class="ms-icard"><div class="ms-irow"><span class="tx"><small>${p.role === 'Teacher' ? 'teacher' : 'in your messages'}</small><b>${esc(p.name)}</b></span></div>${c ? `<div class="ms-irow"><span class="tx"><small>class</small><b>${esc(c.name)}${c.hasPeriod ? ` · period ${c.period}` : ''}</b></span><button class="ms-ibtn" data-go="${FSX.hubUrl(c.id)}" aria-label="Open ${esc(c.name)}">${ico('binder')}</button></div>` : ''}${p.email ? `<div class="ms-irow"><span class="tx"><small>email</small><b>${esc(p.email)}</b></span><a class="ms-ibtn" href="mailto:${esc(p.email)}" aria-label="Email ${esc(p.name)}">${ico('mail')}</a></div>` : ''}</div>`
+          : `<div class="ms-icard">${['me', ...t.with].map(id => { const q = P(id); return `<div class="ms-irow">${av(q)}<span class="tx"><b>${id === 'me' ? 'You' : esc(q.name)}</b><small>${id === 'me' ? '' : esc(q.role || '')}</small></span></div>`; }).join('')}</div>`)
+        + `<div class="ms-icard"><div class="ms-irow ms-isw"><span class="tx"><b>Hide alerts</b><small>No bell or popups for it on this device</small></span><button class="sw${muted ? ' on' : ''}" role="switch" aria-checked="${muted}" data-msi="mute" aria-label="Hide alerts"><i></i></button></div><div class="ms-irow ms-isw"><span class="tx"><b>Pin to the top</b></span><button class="sw${pinned ? ' on' : ''}" role="switch" aria-checked="${pinned}" data-msi="pin" aria-label="Pin to the top"><i></i></button></div></div>`
+        + `<div class="ms-icard"><div class="ms-irow"><span class="tx"><small>${ts.length > 1 ? 'subjects' : 'subject'}</small><b>${ts.map(x => esc(x.subject)).join(' · ')}</b></span></div></div>`;
+    } else if (I.tab === 'photos') {
+      body = n.photos ? `<div class="ms-igrid">${it.photos.map(x => `<button class="ms-iph" data-msifile="${x.m.id}" aria-label="${esc(x.m.att.name)}"><img src="${esc(x.m.att.url)}" alt="" loading="lazy"></button>`).join('')}</div>` : `<p class="ms-inone">${loading ? 'Loading…' : 'No photos in this conversation yet.'}</p>`;
+    } else if (I.tab === 'links') {
+      body = n.links ? `<div class="ms-icard">${it.links.map(x => { const L = LP[x.u]; return `<a class="ms-irow ms-ilink" href="${esc(x.u)}" target="_blank" rel="noopener noreferrer" data-lpi="${esc(x.u)}">${L && L.icon ? `<img class="ms-lfav" src="${esc(lpImg(L.icon))}" alt="" onerror="this.remove()">` : `<span class="ms-lfav ms-lfav0">${ico('link')}</span>`}<span class="tx"><b>${esc(L && L.title || hostOf(x.u))}</b><small>${esc(prettyUrl(x.u))} · ${when(x.m.when)}</small></span></a>`; }).join('')}</div>` : `<p class="ms-inone">${loading ? 'Loading…' : 'No links in this conversation yet.'}</p>`;
+    } else {
+      body = n.files ? `<div class="ms-icard">${it.files.map(x => `<button class="ms-irow ms-ifile" data-msifile="${x.m.id}">${window.AveragesFileIcons ? AveragesFileIcons.html(x.m.att.name, { size: 32 }) : ico('doc')}<span class="tx"><b>${esc(x.m.att.name)}</b><small>${esc(x.m.att.size)} · ${x.m.from === 'me' ? 'You' : esc(P(x.m.from).name)} · ${when(x.m.when)}</small></span></button>`).join('')}</div>` : `<p class="ms-inone">${loading ? 'Loading…' : 'No files in this conversation yet.'}</p>`;
+    }
+    return `<button class="ms-ix" data-msi="x" aria-label="Close">${ico('x')}</button>
+      <div class="ms-ihd">${big}<h2 id="msInfoT">${esc(one ? p.name : title(t))}</h2><small>${one ? (c ? `Your ${esc(c.name)} teacher` : 'In your Schoology messages') : `${t.with.length + 1} people`}</small></div>
+      <div class="ms-iacts">${act('msg', 'msg', 'Message')}${one && p.email ? `<a class="ms-iact" href="mailto:${esc(p.email)}"><span>${ico('mail')}</span><small>Email</small></a>` : ''}${c ? act('class', 'binder', 'Class', `data-go="${FSX.hubUrl(c.id)}"`) : ''}${act('sgy', 'up', 'Schoology')}</div>
+      <div class="ms-itabs" role="tablist">${tabs.map(([k, l]) => `<button role="tab" data-msitab="${k}" aria-selected="${I.tab === k}">${l}${k !== 'info' && n[k] ? ` <em>${n[k]}</em>` : ''}</button>`).join('')}</div>
+      <div class="ms-ibody" role="tabpanel">${body}</div>`;
+  }
+  function infoDraw(keepScroll) {
+    if (!info) return; const sc = info.el.querySelector('.ms-ibody'), top = keepScroll && sc ? sc.scrollTop : 0;
+    const f = document.activeElement && document.activeElement.dataset ? (document.activeElement.dataset.msitab || document.activeElement.dataset.msi) : '';
+    info.box.innerHTML = infoHTML();
+    const sc2 = info.el.querySelector('.ms-ibody'); if (sc2) sc2.scrollTop = top;
+    const ff = f && (info.el.querySelector(`[data-msitab="${f}"]`) || info.el.querySelector(`[data-msi="${f}"]`)); if (ff) ff.focus({ preventScroll: true });
+    if (info.tab === 'links') tsOf(info.id).length && infoItems(tsOf(info.id)).links.forEach(x => { if (!LP[x.u]) lpGet(x.u).then(() => { if (info && info.tab === 'links') infoDraw(true); }, () => {}); });
+  }
+  function infoOpen() {
+    if (info) { infoClose(); return; }
+    const id = MS.open; if (!id || id === 'new' || !tsOf(id).length) return;
+    menuClose(); cardClose();
+    document.body.insertAdjacentHTML('beforeend', `<div class="ms-sscrim${calm() ? '' : ' in'}" id="msInfo"><div class="ms-sbox ms-info" role="dialog" aria-modal="true" aria-labelledby="msInfoT"></div></div>`);
+    info = { el: $('msInfo'), box: null, id, tab: 'info', from: document.activeElement }; info.box = info.el.querySelector('.ms-info');
+    tsOf(id).forEach(thLoad); infoDraw(); info.el.querySelector('.ms-ix').focus({ preventScroll: true });
+    info.el.addEventListener('click', e => {
+      if (e.target === info.el) { infoClose(); return; }
+      const tb = e.target.closest('[data-msitab]'); if (tb) { info.tab = tb.dataset.msitab; infoDraw(); return; }
+      const fl = e.target.closest('[data-msifile]'); if (fl) { fileLbOpen(fl.dataset.msifile); return; }
+      const g = e.target.closest('[data-go]'); if (g) return; // the page's own handler opens it
+      const b = e.target.closest('[data-msi]'); if (!b) return;
+      const k = b.dataset.msi, ts = tsOf(info.id);
+      if (k === 'x') { infoClose(); return; }
+      if (k === 'msg') { infoClose(); const ta = $('msText'); if (ta) ta.focus(); return; }
+      if (k === 'sgy') { FSX.newTab(FSX.schoology('/messages/inbox')); return; }
+      if (k === 'mute') { const on = !ts.some(x => MUTED.has(x.id)); ts.forEach(x => on ? MUTED.add(x.id) : MUTED.delete(x.id)); store.set('fsmsg_muted', [...MUTED]); infoDraw(true); toast(on ? 'Alerts hidden for this conversation.' : 'Alerts are back on for this conversation.'); return; }
+      if (k === 'pin') { const on = !ts.some(x => x.pinned); ts.forEach(x => { x.pinned = on; on ? PINS.add(x.id) : PINS.delete(x.id); }); store.set('fsmsg_pins', [...PINS]); msRows(); infoDraw(true); return; }
+      if (k === 'unread') { ts.forEach(x => { x.unread = true; }); infoClose(true); MS.open = null; msRows(); msThread(); msView(); msMeta(); toast('Marked as unread.'); return; }
+      if (k === 'hide') { ts.forEach(x => { HIDDEN.add(x.id); const i = TH.indexOf(x); if (i >= 0) TH.splice(i, 1); }); store.set('fsmsg_hidden', [...HIDDEN]); infoClose(true); MS.open = null; msRows(); msThread(); msView(); msMeta(); toast('Hidden here. It\'s still in Schoology.'); return; }
+      if (k === 'erase') { infoClose(true); delOpen(ts); }
+    });
+  }
+  function infoClose(quiet) { if (!info) return; const { el, from } = info; info = null; el.remove(); if (!quiet && from && from.isConnected) from.focus({ preventScroll: true }); }
+  document.addEventListener('keydown', e => {
+    if (!info || fLb || del) return;
+    if (e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); infoClose(); return; }
+    if (e.key === 'Tab') { const f = [...info.el.querySelectorAll('button, a[href]')]; if (!f.length) return; if (e.shiftKey && document.activeElement === f[0]) { e.preventDefault(); f[f.length - 1].focus(); } else if (!e.shiftKey && document.activeElement === f[f.length - 1]) { e.preventDefault(); f[0].focus(); } }
+  }, true);
+
   // ---------- your school's message settings: from the speech balloon logo ----------
   // Teachers only for now (2026-10-28): no plan, messaging standard or blocking here.
-  const BLOCKED = store.get('fsmsg_blocked') || [{ id: 'x-tr', name: 'Tyler Ross', when: 'Oct 2' }];
+  const BLOCKED = (store.get('fsmsg_blocked') || []).filter(b => b && b.id !== 'x-tr');
   const saveBlocked = () => store.set('fsmsg_blocked', BLOCKED);
   function blockP(id) {
     const p = P(id); if (!p || BLOCKED.some(b => b.id === id)) return;
@@ -5193,7 +5322,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   $('msThread').addEventListener('click', e => {
     if (e.target.closest('[data-msback]')) { const id = MS.open; MS.open = null; $('ms').classList.remove('open'); msRows(); msThread(); const r = $('msRows').querySelector(`[data-msopen="${id}"]`); if (r) r.focus({ preventScroll: true }); return; }
     if (e.target.closest('[data-msnew]')) { composeOpen(); return; }
-    if (e.target.closest('[data-mswho]')) { card ? cardClose(true) : cardOpen(); return; }
+    if (e.target.closest('[data-mswho]')) { infoOpen(); return; }
     const mo = e.target.closest('[data-msmore]'); if (mo) { if (menu && menu.from === mo) { menuClose(true); return; } const r = mo.getBoundingClientRect(); menuOpen(MS.open, r.right - 190, r.bottom + 4, mo); return; }
     const sb = e.target.closest('[data-mssubj]'); if (sb) { MS.subjFor[MS.open] = sb.dataset.mssubj; $('msThread').dataset.reply = sb.dataset.mssubj; $('msSubj').querySelectorAll('[data-mssubj]').forEach(b => b.setAttribute('aria-pressed', b === sb)); mpPill($('msSubj'), true); const ta = $('msText'); if (ta) ta.focus({ preventScroll: true }); return; }
     if (e.target.closest('[data-mssgy]')) { sgyOpen(false); return; }
