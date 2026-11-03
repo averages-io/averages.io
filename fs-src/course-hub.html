@@ -3767,7 +3767,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     const dueAt = a ? a.dueAt : g.due || null, graded = g.graded && typeof g.score === 'number';
     const handouts = filesOf('assignment', String(id));
     const kind = a ? (a.kind === 'test' ? 'test' : 'assignment') : /quiz|test|exam/i.test(title || g.title || '') ? 'test' : 'assignment';
-    return { id: String(id), c: ME.id, kind, disc: !!(a && a.disc), outside: !!(a && a.outside), name: (a && a.t) || g.title || title || 'Assignment', unit, desc: '', cat: catOf(id),
+    return { id: String(id), c: ME.id, kind, disc: !!(a && a.disc), outside: !!(a && a.outside), noDrop: !!(a && a.noDrop), name: (a && a.t) || g.title || title || 'Assignment', unit, desc: '', cat: catOf(id),
       pts: (a && a.pts) || (g.points > 0 ? g.points : null), dueAt, due: offOf(dueAt), dueTxt: dueTxtOf(dueAt),
       got: graded ? g.score : a && a.got != null ? a.got : undefined, gradedAt: g.gradedAt || 0, note: g.comment || (wk && wk.note) || '',
       turned: a && a.turned ? a.turned : undefined, sent: a && a.sent ? a.sent : undefined, missing: !!(g.missing || (a && a.st === 'missing')),
@@ -4945,7 +4945,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const fmtSize = b => b < 1024 * 1024 ? Math.max(1, Math.round(b / 1024)) + ' KB' : (b / 1024 / 1024).toFixed(1) + ' MB';
   const fileIco = (n, size = 38) => window.AveragesFileIcons ? AveragesFileIcons.html(n, { size }) : ico('doc');
   const tiList = () => {
-    const a = MATERIALS.filter(m => m.kind === 'assignment' && !m.disc && !m.outside); // discussions and outside-tool work aren't turned in here
+    const a = MATERIALS.filter(m => m.kind === 'assignment' && !m.disc && !m.outside && !m.noDrop); // discussions and outside-tool work aren't turned in here
     return [a.filter(m => !m.turned).sort((x, y) => (x.due ?? 99) - (y.due ?? 99)), a.filter(m => m.turned && m.got == null).sort((x, y) => x.ago - y.ago)]; // turned in and still waiting for a grade; graded work leaves the list
   };
   function tiRow(m) {
@@ -6026,7 +6026,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     const scored = m.got != null ? (m.pts ? `You got ${m.got} / ${m.pts}, ${letter(m.got / m.pts * 100)}.` : `You got ${m.got} points.`) : '';
     const work = FSD.canTurnIn(m)
       ? `<section class="aw-turn" aria-labelledby="awTurnH"><h4 class="aw-h" id="awTurnH">Your work</h4><div id="awDrafts" data-aw="${m.id}">${awDraftsHTML(m)}</div><div id="awTurn"></div></section>`
-      : `<section class="aw-turn"><h4 class="aw-h">Your work</h4><div class="aw-class">${ico('cal')}<span><b>${m.disc ? 'A discussion on Schoology' : m.outside ? 'Turned in with an outside tool' : m.kind === 'test' ? 'Taken on Schoology or in class' : 'Nothing to upload here'}</b>${scored || (m.disc ? 'Reply to it on Schoology.' : 'Open it on Schoology. Your score shows up here once it\'s graded.')}</span></div><button class="btn primary" data-mpact="sgy">${ico('up')}${m.disc ? 'Reply on Schoology' : 'Open in Schoology'}</button></section>`;
+      : `<section class="aw-turn"><h4 class="aw-h">Your work</h4><div class="aw-class">${ico('cal')}<span><b>${m.disc ? 'A discussion on Schoology' : m.noDrop ? 'Turned in on paper or in class' : m.outside ? 'Turned in with an outside tool' : m.kind === 'test' ? 'Taken on Schoology or in class' : 'Nothing to upload here'}</b>${scored || (m.disc ? 'Reply to it on Schoology.' : 'Open it on Schoology. Your score shows up here once it\'s graded.')}</span></div><button class="btn primary" data-mpact="sgy">${ico('up')}${m.disc ? 'Reply on Schoology' : 'Open in Schoology'}</button></section>`;
     if (!m._loaded) tiEnsure(m);
     return mpVHead(m, [m.disc ? 'Discussion' : KIND[m.kind][0], GD_CAT(m), m.pts ? m.pts + ' points' : ''].filter(Boolean).map(esc).join(' · '), `<span class="mp-vstatus">${status(m)}</span>`) + `<div class="mp-work aw" style="--c:${ME.color}">
       ${awFacts(m)}

@@ -4484,7 +4484,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const fmtSize = n => n >= 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB';
   MS.pend = {}; // files picked for the message you're writing, per conversation
   const pendOf = () => MS.pend[MS.open] || (MS.pend[MS.open] = []);
-  const attsHTML = () => pendOf().map((a, i) => `<span class="ms-achip avfi-host">${window.AveragesFileIcons ? AveragesFileIcons.html(a.name, { size: 24 }) : ico('doc')}<span class="tx"><b>${esc(a.name)}</b><small>${esc(a.size)}</small></span><button data-msunatt="${i}" aria-label="Remove ${esc(a.name)}">${ico('x')}</button></span>`).join('');
+  const attsHTML = () => pendOf().map((a, i) => `<span class="ms-achip avfi-host">${window.AveragesFileIcons ? AveragesFileIcons.html(a.name, { size: 24 }) : ico('doc')}<span class="tx"><b>${esc(a.name)}</b><small>${esc(a.state === 'failed' ? (a.err || 'Couldn\'t upload') : a.state === 'up' ? 'Uploading… ' + Math.round((a.frac || 0) * 100) + '%' : a.size)}</small></span><button data-msunatt="${i}" aria-label="Remove ${esc(a.name)}">${ico('x')}</button></span>`).join('');
   const composerHTML = (ph, note, clip) => `${note || ''}<div class="ms-comp"><div class="ms-atts" id="msAtts">${clip ? attsHTML() : ''}</div><div class="box"><textarea id="msText" rows="1" placeholder="${esc(ph)}" aria-label="${esc(ph)}"></textarea>${clip ? `<button class="ms-clip" id="msClip" aria-label="Attach a file" title="Attach a file">${ico('clip')}</button><input type="file" id="msFile" multiple hidden>` : ''}<button class="ms-send" id="msSend" aria-label="Send" disabled><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19.5V5.5M5.5 12 12 5.5 18.5 12"/></svg></button></div></div>`;
   function topHTML(t, sub, extraBtns = '') {
     return `<div class="ms-top"><button class="ibtn ms-back" data-msback aria-label="Back to your messages">${ico('chev-l')}</button>${tav(t)}<span class="tx"><b>${esc(title(t))}</b><small>${esc(sub)}</small></span>${extraBtns}<button class="ibtn" data-mswho aria-label="Who's in this conversation" aria-haspopup="dialog">${ico('info')}</button><button class="ibtn" data-msmore="${MS.open}" aria-label="More" aria-haspopup="menu" aria-expanded="false">${ico('dots')}</button></div>`;
@@ -4506,7 +4506,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     const reply = ts && ts.length > 1 ? (MS.subjFor[MS.open] || t.id) : t.id;
     const pick = ts && ts.length > 1 ? `<div class="ms-pick"><span>Reply in</span><div class="mp-types" id="msSubj" role="group" aria-label="Reply in"><span class="mp-pill" aria-hidden="true"></span>${ts.map(x => `<button data-mssubj="${x.id}" aria-pressed="${x.id === reply}">${esc(x.subject)}</button>`).join('')}</div></div>` : '';
     box.innerHTML = topHTML(t, subOf(t)) + (showSubj ? `<div class="ms-subj">${ico('msg')}<span>All subjects <small>· ${ts.length}</small></span></div>` : `<div class="ms-subj">${ico('msg')}<span>${esc(t.subject)}</span></div>`)
-      + `<div class="ms-feed" id="msFeed" role="log" aria-label="Messages" aria-live="polite">${feedHTML(msgs, showSubj, isGroup)}</div>` + composerHTML(isGroup ? 'Reply to everyone' : `Message ${title(t).replace(/^(Dr|Mr|Ms|Mrs)\.\s+/, '$1. ')}`, note + pick + (t.loaded ? '' : `<p class="ms-note">${ico('clock')}<span>${t.failed ? 'Couldn\'t load the whole conversation. Refresh to try again.' : 'Loading the whole conversation…'}</span></p>`), false);
+      + `<div class="ms-feed" id="msFeed" role="log" aria-label="Messages" aria-live="polite">${feedHTML(msgs, showSubj, isGroup)}</div>` + composerHTML(isGroup ? 'Reply to everyone' : `Message ${title(t).replace(/^(Dr|Mr|Ms|Mrs)\.\s+/, '$1. ')}`, note + pick + (t.loaded ? '' : `<p class="ms-note">${ico('clock')}<span>${t.failed ? 'Couldn\'t load the whole conversation. Refresh to try again.' : 'Loading the whole conversation…'}</span></p>`), allTeachers(t.with));
     box.dataset.reply = reply;
     if (pick) requestAnimationFrame(() => mpPill($('msSubj'), false));
     const feed = $('msFeed'); feed.scrollTop = feedTop != null ? feedTop : feed.scrollHeight;
@@ -4516,7 +4516,18 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     const ta = $('msText'), send = $('msSend'); if (!ta) return;
     const fit = () => { ta.style.height = 'auto'; ta.style.height = Math.min(160, ta.scrollHeight) + 'px'; send.disabled = !ta.value.trim() && !($('msClip') && pendOf().length); };
     const fi = $('msFile');
-    if (fi) fi.addEventListener('change', () => { [...fi.files].forEach(f => pendOf().push({ name: f.name, size: fmtSize(f.size), pages: IMG_RE.test(f.name) ? 1 : Math.max(1, Math.min(9, Math.round(f.size / 40000))) })); fi.value = ''; $('msAtts').innerHTML = attsHTML(); fit(); ta.focus({ preventScroll: true }); });
+    // Files (2026-11-03): each goes up to Schoology as soon as it's picked, then rides along with the message.
+    if (fi) fi.addEventListener('change', () => {
+      const list = pendOf();
+      [...fi.files].slice(0, Math.max(0, 10 - list.length)).forEach(f => {
+        const a = { name: f.name, size: fmtSize(f.size), pages: IMG_RE.test(f.name) ? 1 : Math.max(1, Math.min(9, Math.round(f.size / 40000))), state: 'up', frac: 0 };
+        const redraw = () => { const box = $('msAtts'); if (box && pendOf() === list) box.innerHTML = attsHTML(); };
+        a.job = FSX.msgUpload(f, x => { a.frac = x; redraw(); }).then(id => { a.fileId = id; a.state = 'done'; redraw(); return id; }, e => { a.state = 'failed'; a.err = FSX.msgError(e); redraw(); throw e; });
+        a.job.catch(() => {});
+        list.push(a);
+      });
+      fi.value = ''; $('msAtts').innerHTML = attsHTML(); fit(); ta.focus({ preventScroll: true });
+    });
     ta.addEventListener('input', fit);
     ta.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); if (!send.disabled) send.click(); } });
     const draft = MS.open && (MS.drafts || {})[MS.open]; if (draft) { ta.value = draft; fit(); }
@@ -4536,10 +4547,17 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
 
   // ---------- sending ----------
   function sendIn(t, text, extra = {}) {
-    const m = M('me', text, new Date(), Object.assign({ state: 'sending', fresh: true }, extra)); m.id = t.id + '.s' + (++sent);
-    t.msgs.push(m); t.unread = false; msRows(); msThread(); msMeta();
-    FSX.reply(t.id, text).then(() => { m.state = 'sent'; if (MS.open === t.id || (MS.open || '').startsWith('p:')) msThread(true); },
-      e => { t.msgs.splice(t.msgs.indexOf(m), 1); if (MS.open === t.id || (MS.open || '').startsWith('p:')) { msThread(true); const ta = $('msText'); if (ta && !ta.value) { ta.value = text; ta.dispatchEvent(new Event('input')); } } msRows(); toast(FSX.msgError(e)); });
+    // Files go with the words in one Schoology message (2026-11-03); each shows as its own card here.
+    const files = extra.files || []; delete extra.files;
+    const card = a => ({ name: a.name, size: a.size, pages: a.pages });
+    const mine = [];
+    if (text || !files.length) mine.push(M('me', text, new Date(), Object.assign({ state: 'sending', fresh: true }, files[0] && text ? { att: card(files[0]) } : {}, extra)));
+    files.slice(text ? 1 : 0).forEach(a => mine.push(M('me', '', new Date(), { state: 'sending', fresh: true, att: card(a) })));
+    mine.forEach(m => { m.id = t.id + '.s' + (++sent); t.msgs.push(m); });
+    const m = mine[mine.length - 1];
+    t.unread = false; msRows(); msThread(); msMeta();
+    Promise.all(files.map(a => a.job)).then(ids => FSX.reply(t.id, text, ids)).then(() => { mine.forEach(x => { x.state = 'sent'; }); if (MS.open === t.id || (MS.open || '').startsWith('p:')) msThread(true); },
+      e => { mine.slice(0, -1).forEach(x => t.msgs.splice(t.msgs.indexOf(x), 1)); t.msgs.splice(t.msgs.indexOf(m), 1); if (MS.open === t.id || (MS.open || '').startsWith('p:')) { msThread(true); const ta = $('msText'); if (ta && !ta.value) { ta.value = text; ta.dispatchEvent(new Event('input')); } } msRows(); toast(FSX.msgError(e)); });
   }
   let sent = 0;
 
@@ -4551,7 +4569,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       <div class="ms-to${c.bad === 'to' ? ' bad' : ''}" id="msTo"><small>To</small>${chips}<input id="msToIn" placeholder="${c.to.length ? 'Add someone' : 'Type a name'}" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="msFindList" aria-label="Who it's to" value="${esc(c.q || '')}"></div>
       <label class="ms-subin${c.bad === 'subj' ? ' bad' : ''}"><small>Subject</small><input id="msSubIn" placeholder="What it's about" autocomplete="off" value="${esc(c.subject)}"></label>
       <div class="ms-feed"><div class="ms-empty"><span class="emo">${EMOJI_SVG['💬'] || ''}</span><b>${c.to.length ? `Write to ${esc(c.to.map(id => P(id).name.split(' ')[0] === P(id).name ? P(id).name : P(id).name).join(', '))}` : 'Who is it to?'}</b><span>${c.bad === 'subj' ? 'Add a subject. Schoology needs one for a new message.' : c.bad === 'to' ? 'Pick at least one person first.' : 'Schoology needs a subject for a new message.'}</span></div></div>`
-      + composerHTML('Write your message', '', false);
+      + composerHTML('Write your message', '', allTeachers(c.to));
     wireComposer(); const ta = $('msText'); if (ta && c.text) { ta.value = c.text; ta.dispatchEvent(new Event('input')); }
     const ti = $('msToIn');
     ti.addEventListener('input', e => { c.q = e.target.value; findShow(); });
@@ -4587,10 +4605,13 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (!c.subject.trim()) { c.bad = 'subj'; composeHTML(); $('msSubIn').focus(); return; }
     // the same person and subject: it goes in that conversation instead of a new one
     const same = TH.find(t => keyOf(t) === c.to.slice().sort().join('+') && t.subject.toLowerCase() === c.subject.trim().toLowerCase());
-    if (!text) { const ta = $('msText'); if (ta) ta.focus(); return; }
-    if (same) { MS.compose = null; MS.open = same.id; sendIn(same, text); openThread(same.id); toast(`Added to your conversation about ${same.subject}.`); return; }
+    const files = $('msClip') ? pendOf().slice() : [];
+    if (!text && !files.length) { const ta = $('msText'); if (ta) ta.focus(); return; }
+    if (files.some(a => a.state === 'failed')) { toast('A file didn\'t upload. Remove it or pick it again.'); return; }
+    if (same) { MS.compose = null; pendOf().splice(0); MS.open = same.id; sendIn(same, text, { files }); openThread(same.id); toast(`Added to your conversation about ${same.subject}.`); return; }
     const btn = $('msSend'); if (btn) btn.disabled = true;
-    FSX.send(c.to.slice(), c.subject.trim(), text).then(r => {
+    Promise.all(files.map(a => a.job)).then(ids => FSX.send(c.to.slice(), c.subject.trim(), text, ids)).then(r => {
+      pendOf().splice(0);
       const t = { id: String(r.id || 'h' + Date.now().toString(36)), with: c.to.slice(), subject: c.subject.trim(), loaded: !r.id, msgs: [M('me', text, new Date(), { state: 'sent', fresh: true })] };
       t.msgs[0].id = t.id + '.0'; TH.unshift(t); MS.compose = null; MS.open = t.id; openThread(t.id); toast('Sent. It\'s in Schoology too.');
     }, e => { if (btn) btn.disabled = false; toast(FSX.msgError(e)); });
@@ -4722,8 +4743,9 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       if (MS.open === 'new') { composeSend(); return; }
       const ta = $('msText'), text = ta.value.trim(), files = $('msClip') ? pendOf().splice(0) : []; if (!text && !files.length) return;
       const t = TH.find(x => x.id === $('msThread').dataset.reply); if (!t) return;
-      MS.drafts[MS.open] = ''; if (text) sendIn(t, text); files.forEach(a => sendIn(t, '', { att: a }));
-      if (files.length) toast(`Sent with ${files.length === 1 ? 'your file' : files.length + ' files'}. Files go to Schoology, not Averages.`);
+      if (files.some(a => a.state === 'failed')) { pendOf().push(...files); $('msAtts').innerHTML = attsHTML(); toast('A file didn\'t upload. Remove it or pick it again.'); return; }
+      MS.drafts[MS.open] = ''; sendIn(t, text, { files });
+      $('msAtts').innerHTML = '';
       const f = $('msFeed'); if (f) f.scrollTop = f.scrollHeight; const nt = $('msText'); if (nt) nt.focus({ preventScroll: true });
     }
   });

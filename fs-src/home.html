@@ -4474,7 +4474,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const fmtSize = b => b < 1024 * 1024 ? Math.max(1, Math.round(b / 1024)) + ' KB' : (b / 1024 / 1024).toFixed(1) + ' MB';
   const fileIco = (n, size = 38) => window.AveragesFileIcons ? AveragesFileIcons.html(n, { size }) : ico('doc');
   const tiList = () => {
-    const a = MATERIALS.filter(m => m.kind === 'assignment' && !m.disc && !m.outside); // discussions and outside-tool work aren't turned in here
+    const a = MATERIALS.filter(m => m.kind === 'assignment' && !m.disc && !m.outside && !m.noDrop); // discussions and outside-tool work aren't turned in here
     return [a.filter(m => !m.turned).sort((x, y) => (x.due ?? 99) - (y.due ?? 99)), a.filter(m => m.turned && m.got == null).sort((x, y) => x.ago - y.ago)]; // turned in and still waiting for a grade; graded work leaves the list
   };
   function tiRow(m) {

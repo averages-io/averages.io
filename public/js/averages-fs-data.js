@@ -755,8 +755,15 @@
     },
     /** Schoology messages: a conversation, a reply, a new message (teachers only, in the app). */
     thread: function (id) { var z = zone(); return FSX.api('/messages/thread?id=' + encodeURIComponent(id) + (z ? '&tz=' + encodeURIComponent(z) : '')); },
-    reply: function (id, message) { return FSX.api('/messages/reply', { method: 'POST', json: { id: String(id), message: message } }).then(function (r) { sdel('averages_extras_messages'); return r; }); },
-    send: function (recipientIds, subject, message) { return FSX.api('/messages', { method: 'POST', json: { recipientIds: recipientIds, subject: subject, message: message } }).then(function (r) { sdel('averages_extras_messages'); return r; }); },
+    reply: function (id, message, fileIds) { return FSX.api('/messages/reply', { method: 'POST', json: { id: String(id), message: message, fileIds: fileIds || [] } }).then(function (r) { sdel('averages_extras_messages'); return r; }); },
+    send: function (recipientIds, subject, message, fileIds) { return FSX.api('/messages', { method: 'POST', json: { recipientIds: recipientIds, subject: subject, message: message, fileIds: fileIds || [] } }).then(function (r) { sdel('averages_extras_messages'); return r; }); },
+    /** A file for a message, up to Schoology now (2026-11-03): resolves its file id to send with the message. */
+    msgUpload: function (file, onProgress) {
+      var load = window.AveragesSubmit ? Promise.resolve(window.AveragesSubmit) : new Promise(function (ok, no) {
+        var sc = document.createElement('script'); sc.src = '/js/averages-submit.js'; sc.onload = function () { window.AveragesSubmit ? ok(window.AveragesSubmit) : no({ code: 'not_configured' }); }; sc.onerror = function () { no({ code: 'network' }); }; document.head.appendChild(sc);
+      });
+      return load.then(function (S) { return S.uploadFile({ purpose: 'message', blob: file, name: file.name, onProgress: function (x) { if (onProgress) onProgress(x.phase === 'hashing' ? x.fraction * 0.15 : 0.15 + x.fraction * 0.85); } }); }).then(function (r) { return r.fileId; });
+    },
     /** Friendly words for a messages error. */
     msgError: function (e) {
       var c = e && e.message;
@@ -1042,7 +1049,7 @@
       var st = graded ? 'graded' : sub ? 'turned' : dueMs != null && dueMs < now ? (outside ? 'due' : 'missing') : 'due';
       if (g.missing && !graded && !sub) st = 'missing';
       WORK_ALL.push({
-        id: String(a.id), c: c, t: a.title || g.title || 'Assignment', type: type, kind: type === 'assessment' ? 'test' : 'assignment', disc: type === 'discussion', outside: outside,
+        id: String(a.id), c: c, t: a.title || g.title || 'Assignment', type: type, kind: type === 'assessment' ? 'test' : 'assignment', disc: type === 'discussion', outside: outside, noDrop: !!base.noDropbox,
         dueAt: dueMs, off: offOf(dueMs), day: dueMs != null ? WD[new Date(dueMs).getDay()] : '', time: dueMs != null ? (base.time || timeOf(dueMs)) : '',
         pts: typeof g.points === 'number' && g.points > 0 ? g.points : null, st: st,
         turnedAt: sub ? sub.at : 0, turned: sub ? (sub.at ? dayLabel(sub.at, now) : 'earlier') : null, sent: sub ? sub.files : undefined,
@@ -1055,7 +1062,8 @@
       if (a.graded && a.gradedAt && now - a.gradedAt < 21 * DAY) addWork(c.id, a, a.due || null, {});
       else if (!a.graded && a.due && a.due > now - 14 * DAY) addWork(c.id, a, a.due, {});
     }); }); });
-    var canTurnIn = function (a) { return a.kind === 'assignment' && !a.disc && !a.outside; };
+    // Not on Schoology's turn-in (2026-11-03): discussions, tests, outside tools, and work that takes no turn-ins (paper, in class)
+    var canTurnIn = function (a) { return a.kind === 'assignment' && !a.disc && !a.outside && !a.noDrop; };
 
     // The sidebar's counts: work still to do (missing or due, with a due date: the same list Home shows, so
     // the number is the same on every page; 2026-11-03, Martin: Home said 14, Settings 34), and messages not opened yet.

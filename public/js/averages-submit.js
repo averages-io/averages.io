@@ -307,13 +307,14 @@
    */
   async function uploadFile(o) {
     o = o || {};
-    const section = String(o.section || ''), assignment = String(o.assignment || ''), signal = o.signal;
-    if (!ID_OK(section) || !ID_OK(assignment)) throw fail('bad_request');
+    const section = String(o.section || ''), assignment = String(o.assignment || ''), signal = o.signal, forMessage = o.purpose === 'message';
+    // A file for a message (2026-11-03): the same upload, not tied to an assignment.
+    if (!forMessage && (!ID_OK(section) || !ID_OK(assignment))) throw fail('bad_request');
     const f = checkedFile({ blob: o.blob, name: o.name });
     const report = (phase, fraction) => { if (o.onProgress) try { o.onProgress({ phase, fraction }); } catch {} };
     report('hashing', 0);
     const sum = await md5Blob(f.blob, { signal, onProgress: (x) => report('hashing', x) });
-    const slot = await call('POST', '/submit/upload', { section, assignment, filename: f.name, filesize: f.blob.size, md5: sum }, signal);
+    const slot = await call('POST', '/submit/upload', forMessage ? { purpose: 'message', filename: f.name, filesize: f.blob.size, md5: sum } : { section, assignment, filename: f.name, filesize: f.blob.size, md5: sum }, signal);
     if (typeof slot.upload !== 'string' || !slot.upload) throw fail('failed');
     report('uploading', 0);
     const put = await putBytes(slot.upload, f.blob, typeOf(f.blob, f.name), (x) => report('uploading', x), signal);
@@ -569,6 +570,7 @@
 
   const MESSAGES = {
     feature_off: 'That’s turned off right now. Try again later.',
+    turn_in_not_allowed: 'Schoology isn’t taking turn-ins for this one. It may be on paper or in class, or your teacher closed it.',
     file_too_large: 'Too big to turn in. Files can be up to 95 MB.',
     empty_file: 'This file is empty. Pick another one.',
     read_failed: 'Couldn’t read this file. Pick it again.',
