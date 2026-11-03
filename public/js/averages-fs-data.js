@@ -238,6 +238,11 @@
       decorateClasses(cls);
       new MutationObserver(function () { if ([].some.call(cls.children, function (x) { return x.tagName === 'A'; })) decorateClasses(cls); }).observe(cls, { childList: true });
     }
+    // whether the pointer is over the sidebar, kept by hand: :hover can already be gone by the time the page is left
+    // (a click that starts the next page), and the next page should open with the sidebar still out
+    side.addEventListener('pointerenter', function () { side.dataset.in = '1'; });
+    side.addEventListener('pointerleave', function () { delete side.dataset.in; });
+    side.addEventListener('pointerdown', function () { side.dataset.hit = String(Date.now()); }, true);
     // the list fades out at an edge while there's more to scroll that way
     var edges = function () { sc.classList.toggle('side-up', sc.scrollTop > 1); sc.classList.toggle('side-more', sc.scrollTop + sc.clientHeight < sc.scrollHeight - 2); };
     sc.addEventListener('scroll', edges, { passive: true });
@@ -307,7 +312,7 @@
       });
       sessionStorage.setItem('averages_fs_chrome', JSON.stringify({
         at: Date.now(), cls: cls ? cls.innerHTML : '', ct: ct, st: (document.getElementById('sideScroll') || side).scrollTop || 0,
-        hold: !app.classList.contains('pinned') && (side.matches(':hover') || side.classList.contains('hold')),
+        hold: !app.classList.contains('pinned') && (side.matches(':hover') || side.dataset.in === '1' || Date.now() - (+side.dataset.hit || 0) < 4000 || side.classList.contains('hold')),
         av: av ? { c: av.className, s: av.getAttribute('style') || '', t: av.textContent } : null,
       }));
     } catch (e) { /* storage off: the next page draws them itself */ }

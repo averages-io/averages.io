@@ -299,11 +299,12 @@ function build() {
   // around the list, 34 px rows 1 px apart, 12 px from icon to name, 8 px corners, a 32 px search box 12 px above the
   // rows, group labels 14 px grey with 16 px above and 8 below (on the closed rail: a line with 12 px either side),
   // folder rows 28 px in with a line under the folder's icon, a 48 px footer under a line, everything moving over
-  // 250 ms on cubic-bezier(.77,0,.175,1). Here: 56/260 (our 18 px icons sit dead centre on 56), weights one step up
-  // to match the app's type, the top bar kept as it is (Cloudflare's logo row is our top bar).
+  // 250 ms on cubic-bezier(.77,0,.175,1). Here: 56/260 (our 18 px icons sit dead centre on 56), the top bar kept as it
+  // is (Cloudflare's logo row is our top bar). Type, colours and states are the site's own (2026-11-03, Martin: "change
+  // the font and integrate it into the site more"): 700/800 weights, the page-you're-on pill in --sheet with an accent
+  // icon, hovers in --inner, labels like the menus' small caps, the kbd chip, the pin's label, names fading in.
   const EASE = ".25s cubic-bezier(.77,0,.175,1)";
   const CLOSED = ".app:not(.pinned):not(.menu) #side:not(:hover):not(.hold):not(:has(:focus-visible))";
-  const ROWBG = "color-mix(in srgb,var(--ink) 7%,transparent)";
   const SIDE_CSS = [
     ".app{--rail:56px;--side-open:260px}",
     "#side [hidden]{display:none!important}",
@@ -317,20 +318,19 @@ function build() {
     "#side .side-scroll::-webkit-scrollbar{display:none}#side .side-scroll.side-up{--ft:24px}#side .side-scroll.side-more{--fb:24px}",
     // rows
     "#side .nav,#side .cls{display:flex;flex-direction:column;gap:1px;padding:0;margin:0;width:auto;flex:none}",
-    "#side .nav a,#side .cls a{display:flex;align-items:center;gap:12px;height:auto;min-height:34px;padding:0 9px;border-radius:8px;font-size:14px;font-weight:600;color:var(--ink-2);background:none;overflow:hidden;white-space:nowrap;position:relative;transition:background-color .12s ease!important}",
-    "#side .nav a:hover,#side .cls a:hover,#side .nav a.on,#side .cls a.here,#side .cls a[aria-current]{background:" + ROWBG + ";color:var(--ink)}",
-    "#side .nav a.on{font-weight:600}#side .nav a.on svg.i{color:inherit}",
-    "#side .fade{opacity:1;transition:none}",
+    "#side .nav a,#side .cls a{display:flex;align-items:center;gap:12px;height:auto;min-height:34px;padding:0 9px;border-radius:10px;font-size:14px;font-weight:700;color:var(--ink-2);background:none;overflow:hidden;white-space:nowrap;position:relative;transition:background-color .12s ease!important}",
+    "#side .nav a:hover,#side .cls a:hover{background:var(--inner);color:var(--ink)}",
+    "#side .nav a.on,#side .cls a.here,#side .cls a[aria-current]{background:var(--sheet);color:var(--ink);font-weight:800}#side .nav a.on svg.i{color:var(--accent)}",
     // classes: their tile in place of an icon, the name, the grade at the end
     "#side .cls a{gap:9px;padding:0 6px}#side .cls a>.badge{width:24px;height:24px;border-radius:7px;margin:0}",
     "#side .side-cl>a>span.fade:not(.g){flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}#side .side-cl>a>.g{flex:none;margin-left:auto;font-size:13px}",
     // the search box
-    "#side #sideSearch{min-height:32px;height:32px;margin:0 0 12px;gap:12px;font-weight:500;color:var(--muted);background:var(--field);box-shadow:0 0 0 1px var(--inner),0 1px 2px rgba(20,21,31,.05);transition:margin " + EASE + ",box-shadow .12s ease,background-color .12s ease!important}",
+    "#side #sideSearch{min-height:34px;height:34px;margin:0 0 12px;gap:12px;font-weight:700;color:var(--muted);background:var(--field);box-shadow:inset 0 0 0 2px var(--inner);transition:margin " + EASE + ",box-shadow .12s ease,background-color .12s ease!important}",
     "#side #sideSearch:hover{background:color-mix(in srgb,var(--inner) 35%,var(--field));color:var(--ink-2)}",
-    "#side #sideSearch .side-kbd{margin-left:auto;padding:0;background:none;font-size:12px;font-weight:500;line-height:1;color:var(--muted)}",
+    "#side #sideSearch .side-kbd{margin-left:auto;padding:0 6px;border-radius:6px;background:var(--panel);font-size:11px;font-weight:800;line-height:20px;color:var(--muted)}",
     CLOSED + " #sideSearch{margin-bottom:0;background:none;box-shadow:none}",
     // group labels: a grey label open, a thin line closed
-    "#side .side-sec{display:block;flex:none;box-sizing:border-box;height:44px;margin:0;padding:16px 12px 8px;overflow:hidden;font-size:14px;line-height:20px;font-weight:600;color:var(--muted);white-space:nowrap;background:none;border-bottom:1px solid transparent;" +
+    "#side .side-sec{display:block;flex:none;box-sizing:border-box;height:40px;margin:0;padding:16px 12px 8px;overflow:hidden;font-size:12px;line-height:16px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);white-space:nowrap;background:none;border-bottom:1px solid transparent;" +
       "transition:height " + EASE + ",margin " + EASE + ",padding " + EASE + ",border-color " + EASE + "}",
     CLOSED + " .side-sec{height:0;padding:0;margin:12px 0;border-bottom-color:var(--inner);color:transparent}",
     // what only makes sense open: counts, grades, the arrow, the shortcut; on the rail a dot on the icon says there's a count
@@ -345,12 +345,12 @@ function build() {
     "#side .side-sub{position:relative;display:flex;flex-direction:column;gap:1px;margin:0;padding:0 0 0 28px;border:0;height:auto}",
     "#side .side-sub::before{content:'';position:absolute;left:18px;top:1px;bottom:1px;width:1px;background:var(--inner)}",
     "#side .nav a.side-recl{display:flex;flex-direction:column;align-items:stretch;justify-content:center;gap:1px;min-height:34px;padding:8px 12px 8px 11px;text-align:left;border-radius:8px;color:var(--ink);white-space:nowrap;overflow:hidden}",
-    "#side .nav a.side-recl:hover{background:" + ROWBG + "}",
-    "#side .side-recl b{font-size:14px;line-height:18px;font-weight:600;overflow:hidden;text-overflow:ellipsis}#side .side-recl small{font-size:11px;line-height:14px;font-weight:600;color:var(--muted);overflow:hidden;text-overflow:ellipsis}",
-    "#side .side-none{margin:0;padding:8px 12px 8px 11px;font-size:12px;font-weight:600;color:var(--muted);white-space:normal}",
+    "#side .nav a.side-recl:hover{background:var(--inner)}",
+    "#side .side-recl b{font-size:14px;line-height:18px;font-weight:800;overflow:hidden;text-overflow:ellipsis}#side .side-recl small{font-size:12px;line-height:16px;font-weight:700;color:var(--muted);overflow:hidden;text-overflow:ellipsis}",
+    "#side .side-none{margin:0;padding:8px 12px 8px 11px;font-size:13px;font-weight:700;color:var(--muted);white-space:normal}",
     // the footer: just the open/close button, under a line
     "#side .foot{flex:none;position:static;margin:0;width:100%;height:48px;padding:0 11px;display:flex;align-items:center;gap:12px;border-top:1px solid var(--inner);background:var(--frame);box-shadow:none}",
-    "#side .foot .ibtn{width:34px;height:34px;border-radius:8px;flex:none;background:none;color:var(--muted)}#side .foot .ibtn:hover{background:" + ROWBG + ";color:var(--ink)}#side .foot #pinLabel{display:none}",
+    "#side .foot .ibtn{width:34px;height:34px;border-radius:10px;flex:none;background:none;color:var(--muted)}#side .foot .ibtn:hover{background:var(--inner);color:var(--ink)}#side .foot #pinLabel{font-size:13px;font-weight:700;color:var(--muted);white-space:nowrap}",
     "@media (max-width:1020px){#side .foot{display:none}}",
     "body.potato-mode #side,body.potato-mode #side *{transition:none!important}@media (prefers-reduced-motion:reduce){#side,#side *{transition:none!important}}",
   ].join("");
