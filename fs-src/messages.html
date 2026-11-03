@@ -4428,7 +4428,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       const pin = list.filter(t => t.pinned), rest = list.filter(t => !t.pinned);
       if (pin.length && !MS.q) html += `<div class="ms-pins" role="list" aria-label="Pinned">${pin.map(t => pinHTML(t)).join('')}</div>`;
       html += (MS.q ? list : rest).map(t => rowHTML(t)).join('');
-      if (!list.length && !MS.compose) html += MS.q ? `<div class="ms-none"><b>Nothing matches "${esc(MS.q)}"</b>Try a name, a subject or a word from the message.</div>` : `<div class="ms-none"><b>You're all caught up</b>No unread messages.</div>`;
+      if (!list.length && !MS.compose) html += MS.q ? `<div class="ms-none"><b>Nothing matches "${esc(MS.q)}"</b>Try a name, a subject or a word from the message.</div>` : (TH.length ? `<div class="ms-none"><b>You're all caught up</b>No unread messages.</div>` : `<div class="ms-none"><b>No messages yet</b>Messages with your teachers show up here.</div>`);
     }
     $('msRows').innerHTML = html; MS.fresh = null;
     if (typeof marquee === 'function') marquee(false);
@@ -4441,7 +4441,9 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   function msMeta() {
     const unread = TH.filter(t => t.unread).length, teachers = new Set(TH.flatMap(t => t.with).filter(id => P(id).role === 'Teacher')).size;
     const m = (icon, n, txt, cl = '') => `<span class="gm${cl}">${ico(icon)}<span class="t"><b data-n="${n}" data-dp="0">${n}</b> ${txt}</span></span>`;
-    $('msMeta').innerHTML = m('mail', unread, 'unread') + m('msg', TH.length, TH.length === 1 ? 'conversation' : 'conversations') + m('user', teachers, teachers === 1 ? 'teacher' : 'teachers') + (() => { const w = last(TH.slice().sort((a, b) => last(b).when - last(a).when)[0]).when, a = ago(w); return `<span class="gm">${ico('clock')}<span class="t">${sameDay(w, NOW) ? 'Last one at' : /^\d/.test(a) || /^[A-Z][a-z]{2} \d/.test(a) ? 'Last one on' : 'Last one'} <b>${sameDay(w, NOW) ? esc(a) : /^\d/.test(a) || /^[A-Z][a-z]{2} \d/.test(a) ? esc(a) : esc(a.toLowerCase())}</b></span></span>`; })();
+    // No messages yet (2026-11-03, Martin: the facts stayed loading): there's no "last one" to read, so say so.
+    const lastOne = TH.length ? null : `<span class="gm">${ico('clock')}<span class="t">No messages yet</span></span>`;
+    $('msMeta').innerHTML = m('mail', unread, 'unread') + m('msg', TH.length, TH.length === 1 ? 'conversation' : 'conversations') + m('user', teachers, teachers === 1 ? 'teacher' : 'teachers') + (lastOne || (() => { const w = last(TH.slice().sort((a, b) => last(b).when - last(a).when)[0]).when, a = ago(w); return `<span class="gm">${ico('clock')}<span class="t">${sameDay(w, NOW) ? 'Last one at' : /^\d/.test(a) || /^[A-Z][a-z]{2} \d/.test(a) ? 'Last one on' : 'Last one'} <b>${sameDay(w, NOW) ? esc(a) : /^\d/.test(a) || /^[A-Z][a-z]{2} \d/.test(a) ? esc(a) : esc(a.toLowerCase())}</b></span></span>`; })());
   }
 
   // ---------- one conversation ----------
