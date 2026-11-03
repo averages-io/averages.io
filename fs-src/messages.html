@@ -2685,7 +2685,7 @@
   .avfi.lettersonly .avfi-label { opacity: 1 !important; transform: none !important; }
   .avfi.lettersonly .avfi-gap { opacity: 1 !important; }
   .avfi.lettersonly .avfi-sym, .avfi.lettersonly .avfi-label, .avfi.lettersonly .avfi-gap { transition: none !important; }
-  .pf-count { position: absolute; right: -4px; top: 6px; z-index: 9; background: var(--ink); color: var(--panel); font-size: 9px; font-weight: 800; border-radius: 999px; padding: 2px 8px; box-shadow: 0 2px 5px -1px rgba(0,0,0,.35); }
+  .pf-count { position: absolute; right: -40px; top: -8px; z-index: 9; background: var(--ink); color: var(--panel); font-size: 9px; font-weight: 800; border-radius: 999px; padding: 2px 8px; box-shadow: 0 2px 5px -1px rgba(0,0,0,.35); }
   @media (prefers-reduced-motion: reduce) { .pf-page { transition: none !important; } }
 
   .mdet h3 { margin: 0; text-align: center; font-size: 16px; font-weight: 900; line-height: 1.3; overflow-wrap: anywhere; }
@@ -2998,7 +2998,7 @@
   .avfi.lettersonly .avfi-label { opacity: 1 !important; transform: none !important; }
   .avfi.lettersonly .avfi-gap { opacity: 1 !important; }
   .avfi.lettersonly .avfi-sym, .avfi.lettersonly .avfi-label, .avfi.lettersonly .avfi-gap { transition: none !important; }
-  .pf-count { position: absolute; right: -4px; top: 6px; z-index: 9; background: var(--ink); color: var(--panel); font-size: 9px; font-weight: 800; border-radius: 999px; padding: 2px 8px; box-shadow: 0 2px 5px -1px rgba(0,0,0,.35); }
+  .pf-count { position: absolute; right: -40px; top: -8px; z-index: 9; background: var(--ink); color: var(--panel); font-size: 9px; font-weight: 800; border-radius: 999px; padding: 2px 8px; box-shadow: 0 2px 5px -1px rgba(0,0,0,.35); }
   @media (prefers-reduced-motion: reduce) { .pf-page { transition: none !important; } }
   .ms-fc { display: flex; flex-direction: column; width: 280px; max-width: 100%; border-radius: 18px; overflow: hidden; background: var(--field); text-align: left; color: var(--ink); box-shadow: 0 1px 1px rgba(20, 20, 40, .04); transition: background-color .15s ease; }
   .ms-fc:hover { background: color-mix(in srgb, var(--inner) 60%, var(--field)); }
@@ -3021,6 +3021,18 @@
   /* a link's preview: a picture area tinted by where it goes, then the page's title and site */
   .ms-lp { display: flex; flex-direction: column; width: 280px; max-width: 100%; border-radius: 18px; overflow: hidden; background: var(--field); text-align: left; color: var(--ink); box-shadow: 0 1px 1px rgba(20, 20, 40, .04); transition: background-color .15s ease; }
   a.ms-lp { text-decoration: none; }
+  /* Martin's file previewer (file-previewer.html): one page at a time, as big as fits */
+  .up-lb-fig.fl-big { position: relative; display: flex; align-items: center; justify-content: center; min-height: 0; }
+  .fl-big .fl-pg { display: block; flex: none; max-width: 100%; max-height: 100%; border-radius: 8px; box-shadow: 0 12px 40px rgba(0, 0, 0, .45); background: #ffffff; --keep-dark: 1; }
+  .fl-big img.fl-pg, .fl-big video.fl-pg { width: auto; height: auto; object-fit: contain; background: transparent; }
+  .fl-big.loading .fl-pg { visibility: hidden; }
+  .fl-wait { position: absolute; inset: 0; margin: auto; height: fit-content; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 14px; font-weight: 700; color: rgba(255, 255, 255, .72); text-align: center; padding: 0 24px; --keep-dark: 1; }
+  .fl-big .fl-txt { margin: 0; width: min(960px, 100%); max-height: 100%; overflow: auto; padding: 32px; border-radius: 8px; background: #ffffff; white-space: pre-wrap; overflow-wrap: anywhere; font: 500 13px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #1f2029; --keep-dark: 1; }
+  .fl-none { display: flex; flex-direction: column; align-items: center; gap: 10px; max-width: 360px; text-align: center; }
+  .fl-none b { font-size: 16px; font-weight: 900; } .fl-none p { margin: 0; font-size: 14px; font-weight: 600; color: rgba(255, 255, 255, .72); }
+  .up-lb .btn.fl-lb-b { background: rgba(255, 255, 255, .12); color: #ffffff; }
+  .up-lb .btn.fl-lb-b:hover { background: rgba(255, 255, 255, .22); }
+  @media (max-width: 640px) { .fl-lb .lbl { display: none; } .fl-lb .btn.fl-lb-b, .fl-lb .btn.up-lb-dl { padding: 0 12px; } }
   /* the file popup, the same as a class's materials (course-hub.html) */
   .mplb-body { flex: 1; min-height: 0; overflow: auto; padding: 0 24px 32px; display: flex; flex-direction: column; align-items: center; gap: 16px; }
   .mplb-body.loading .mplb-img { position: absolute; opacity: 0; }
@@ -3043,6 +3055,10 @@
   .ms-lp .art { height: 112px; display: grid; place-items: center; background: color-mix(in srgb, var(--c) 16%, var(--field)); color: var(--c); }
   .ms-lp .art svg.i { width: 40px; height: 40px; stroke-width: 1.75; }
   .ms-lp .art .emo, .ms-lp .art .emo svg { width: 48px; height: 48px; }
+  .ms-lp .art { overflow: hidden; }
+  .ms-lp.has-img .art { height: 148px; display: block; background: var(--panel); }
+  .ms-lpimg { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .ms-lpico { width: 48px; height: 48px; border-radius: 12px; object-fit: contain; background: #ffffff; padding: 6px; box-shadow: 0 1px 3px rgba(20, 20, 40, .12); --keep-dark: 1; }
   .ms-lp .tx { display: flex; flex-direction: column; gap: 2px; padding: 12px 16px 12px; border-top: 2px solid color-mix(in srgb, var(--c) 12%, var(--field)); }
   .ms-lp b { font-size: 14px; font-weight: 800; line-height: 1.3; }
   .ms-lp small { font-size: 12px; font-weight: 700; color: var(--muted); }
@@ -3183,6 +3199,18 @@
   .ms-achip button { width: 28px; height: 28px; flex: none; border-radius: 8px; display: grid; place-items: center; color: var(--muted); transition: background-color .15s ease; }
   .ms-achip button:hover { background: var(--inner); color: var(--ink); }
   .ms-achip button svg.i { width: 14px; height: 14px; }
+  /* the X shows when you point at a waiting file or link (2026-11-03, Martin); always on touch screens */
+  .ms-achip { position: relative; height: auto; min-height: 44px; padding-top: 6px; padding-bottom: 6px; }
+  .ms-achip small { white-space: normal; line-height: 1.3; }
+  .ms-achip.failed { cursor: pointer; box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--bad) 40%, transparent); }
+  .ms-achip.failed small { color: var(--bad); }
+  .ms-achip button { opacity: 0; transition: opacity .15s ease, background-color .15s ease; }
+  .ms-achip:hover button, .ms-achip:focus-within button, .ms-achip button:focus-visible { opacity: 1; }
+  @media (hover: none) { .ms-achip button { opacity: 1; } }
+  .ms-lfav { width: 24px; height: 24px; flex: none; border-radius: 6px; object-fit: contain; background: #ffffff; --keep-dark: 1; }
+  .ms-lfav0 { display: grid; place-items: center; background: var(--panel); color: var(--ink-2); }
+  .ms-lfav0 svg.i { width: 14px; height: 14px; }
+  .ms-lchip small { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .ms-comp .box { flex: 1; min-width: 0; display: flex; align-items: flex-end; border-radius: 20px; background: var(--field); box-shadow: inset 0 0 0 2px transparent; transition: box-shadow .15s ease; }
   .ms-comp .box:focus-within { box-shadow: inset 0 0 0 2px var(--focus); }
   .ms-comp .box { border-radius: 24px; padding: 0; } /* not the page's padded .box */
@@ -3265,6 +3293,9 @@
   .ms-sgyl { margin: 0 4px 4px; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 600; color: var(--ink-2); line-height: 1.4; }
   .ms-sgyl b { color: var(--ink); font-weight: 800; }
   .ms-sgyf { display: flex; justify-content: flex-end; gap: 8px; }
+  .btn.danger-fill { background: var(--bad); color: #ffffff; }
+  .btn.danger-fill:hover { background: color-mix(in srgb, var(--bad) 86%, #000000); }
+  .btn.danger-fill:disabled { opacity: .7; }
   @media (max-width: 640px) { .ms-sgy { padding: 0 10px; font-size: 0; gap: 0; } .ms-sgy svg.i { width: 16px; height: 16px; } }
   .ms-sscrim { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 16px; background: rgba(20, 21, 31, .32); }
   .ms-sscrim.in { animation: msSFade .16s ease backwards; }
@@ -3472,7 +3503,7 @@
   <symbol id="i-fwd" viewBox="0 0 24 24"><path d="M7 17 17 7M8 7h9v9" transform="rotate(45 12 12)"/></symbol>
   <symbol id="i-grip" viewBox="0 0 24 24"><g fill="currentColor" stroke="none"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></g></symbol>
   <symbol id="i-left" viewBox="0 0 24 24"><path d="M14 7v10l-6-5Z" fill="currentColor" stroke="none"/></symbol>
-  <symbol id="i-dots" viewBox="0 0 24 24"><circle cx="6" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="18" cy="12" r="1.6" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-smile" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.6"/><path d="M8.4 14.1a4.4 4.4 0 0 0 7.2 0"/><path d="M9.2 9.7h.01M14.8 9.7h.01" stroke-width="3.1"/></symbol><symbol id="i-dots" viewBox="0 0 24 24"><circle cx="6" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="18" cy="12" r="1.6" fill="currentColor" stroke="none"/></symbol>
   <symbol id="i-history" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 2.6-6.4L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></symbol>
   <symbol id="i-plus" viewBox="0 0 24 24" data-adj><g transform="translate(12 12) scale(1.1) translate(-12 -12)" style="stroke-width:2.0"><path d="M12 5v14M5 12h14"/></g></symbol>
   <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 0 0-14.3-4.9L4 8"/><path d="M4 3v5h5"/><path d="M4 13a8 8 0 0 0 14.3 4.9L20 16"/><path d="M20 21v-5h-5"/></symbol>
@@ -4007,7 +4038,9 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   // snaps to whole pixels on its own, which could leave the digit up to half a pixel off from its circle.
   // Spotify-style names: with animations on, a name that doesn't fit stays on one line and slides to show the end.
   // With potato mode or reduced motion, names go back to wrapping normally.
-  const MQ_SEL = '.ms-th .tx > b, .ms-th .tx > small'; // names, and the line under them
+  // names, and the line under them; file and link names too (2026-11-03, Martin: "the spotify scrolling animation if
+  // the name of the file is too long"): file cards, files and links waiting above the box, link cards, the previewer
+  const MQ_SEL = '.ms-th .tx > b, .ms-th .tx > small, .ms-fc .ft .tx > b, .ms-achip .tx > b, .ms-lp .tx > b, .fl-lb .up-lb-top .tx > b';
   function mqOff(el) { const inn = el.querySelector(':scope > .mq-in'); if (inn) el.innerHTML = inn.innerHTML; el.classList.remove('mq'); delete el.dataset.mq; }
   function mqFit(el) {
     if (!el.dataset.mq) { el.innerHTML = `<span class="mq-in">${el.innerHTML}</span>`; el.dataset.mq = '1'; }
@@ -4053,6 +4086,8 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   new MutationObserver(recs => { if (recs.some(r => [...r.addedNodes].some(n => n.nodeType === 1 && !n.classList.contains('mq-in')))) mqSoon(false); }).observe(document.body, { childList: true, subtree: true });
   let mqW = innerWidth; addEventListener('resize', () => { if (innerWidth !== mqW) { mqW = innerWidth; clearTimeout(mqSoon.t); mqSoon.t = setTimeout(() => marquee(true), 150); } });
   setTimeout(() => marquee(true), 300);
+  // new file cards, waiting files and the previewer come and go as you use the page: check them as they appear
+  new MutationObserver(ms => { if (ms.some(m => m.addedNodes.length && !(m.target.classList && (m.target.classList.contains('mq') || m.target.classList.contains('mq-in'))))) mqSoon(false); }).observe(document.body, { childList: true, subtree: true });
   function centerInk() {
     const dpr = window.devicePixelRatio || 1;
     document.querySelectorAll('.nav .count, .grp em, .sv-ct').forEach(el => {
@@ -4441,12 +4476,42 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); e.stopImmediatePropagation(); lbGo(e.key === 'ArrowLeft' ? -1 : 1); return; }
     if (e.key === 'Tab') { const fs = [...lb.el.querySelectorAll('button:not([disabled])')]; if (e.shiftKey && document.activeElement === fs[0]) { e.preventDefault(); fs[fs.length - 1].focus(); } else if (!e.shiftKey && document.activeElement === fs[fs.length - 1]) { e.preventDefault(); fs[0].focus(); } }
   }, true);
+  // Real link previews (2026-11-03, Martin): the page's title, site and picture from the API (GET /links/preview),
+  // the picture through the API too (/links/image), so the student's browser never contacts the site. Kept for
+  // this tab; the drawn card shows until they're here, and stays if the page can't be read.
+  const LP = (() => { try { return JSON.parse(sessionStorage.getItem('fsmsg_lp') || '{}') || {}; } catch (e) { return {}; } })(), LPQ = {};
+  const lpImg = u => `${FSX.API}/links/image?url=${encodeURIComponent(u)}`;
+  function lpGet(u) {
+    if (LP[u]) return Promise.resolve(LP[u]);
+    if (!LPQ[u]) LPQ[u] = FSX.api('/links/preview?url=' + encodeURIComponent(u)).then(r => {
+      LP[u] = { title: String(r.title || ''), site: String(r.site || ''), image: String(r.image || ''), icon: String(r.icon || '') };
+      try { const keys = Object.keys(LP); if (keys.length > 80) delete LP[keys[0]]; sessionStorage.setItem('fsmsg_lp', JSON.stringify(LP)); } catch (e) { /* full or off */ }
+      return LP[u];
+    });
+    return LPQ[u];
+  }
+  function lpFill(el, L) {
+    if (!el || !L) return;
+    const tb = el.querySelector('.tx b'); if (L.title && tb) { delete tb.dataset.mq; tb.classList.remove('mq'); tb.title = ''; tb.textContent = L.title; }
+    if (L.site) el.querySelector('.tx small').textContent = L.site;
+    const art = el.querySelector('.art');
+    if (L.image) { const img = new Image(); img.alt = ''; img.className = 'ms-lpimg'; img.onload = () => { art.textContent = ''; art.appendChild(img); el.classList.add('has-img'); }; img.src = lpImg(L.image); }
+    else if (L.icon) { const img = new Image(); img.alt = ''; img.className = 'ms-lpico'; img.onload = () => { if (img.naturalWidth < 8) return; art.textContent = ''; art.appendChild(img); }; img.src = lpImg(L.icon); }
+    el.setAttribute('aria-label', `${L.title || hostOf(el.href)}, ${L.site || hostOf(el.href)}, opens in a new tab`);
+  }
+  function lpReal() {
+    document.querySelectorAll('#msThread a.ms-lp[data-lp]:not([data-lpd])').forEach(el => {
+      el.setAttribute('data-lpd', ''); const u = el.dataset.lp;
+      if (LP[u]) { lpFill(el, LP[u]); return; }
+      lpGet(u).then(L => document.querySelectorAll(`#msThread a.ms-lp[data-lp="${CSS.escape(u)}"]`).forEach(x => lpFill(x, L)), () => {});
+    });
+  }
   function linkCard(u) {
     const k = prettyUrl(u), L = LINKS[k] || { title: k.split('/').pop().replace(/[-_]+/g, ' ').replace(/^./, ch => ch.toUpperCase()) || hostOf(u), site: hostOf(u), icon: 'link' };
     const c = L.cls ? C[L.cls].color : L.c || 'var(--muted)';
     const art = L.cls ? `<span class="emo">${EMOJI_SVG[C[L.cls].emoji] || ''}</span>` : L.file && window.AveragesFileIcons ? AveragesFileIcons.html(L.file, { size: 44 }) : ico(L.icon || 'link');
     // a real link (2026-11-03, Martin: "links and link previews don't work"): it opens the page in a new tab
-    return `<a class="ms-lp avfi-host" style="--c:${c}" href="${esc(u)}" target="_blank" rel="noopener noreferrer" aria-label="${esc(L.title)}, ${esc(L.site)}, opens in a new tab"><span class="art" aria-hidden="true">${art}</span><span class="tx"><b>${markQ(L.title)}</b><small>${markQ(L.site)}</small></span></a>`;
+    return `<a class="ms-lp avfi-host" style="--c:${c}" data-lp="${esc(u)}" href="${esc(u)}" target="_blank" rel="noopener noreferrer" aria-label="${esc(L.title)}, ${esc(L.site)}, opens in a new tab"><span class="art" aria-hidden="true">${art}</span><span class="tx"><b>${markQ(L.title)}</b><small>${markQ(L.site)}</small></span></a>`;
   }
   const CATS = [['all', 'All'], ['msgs', 'Messages'], ['people', 'People'], ['files', 'Files'], ['links', 'Links']];
   function sResults() {
@@ -4559,7 +4624,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       const links = urls.map(linkCard).join('');
       const att = m.att ? fileCard(m.att, m.id) : '';
       const meta = lastOf ? `<span class="ms-meta${m.state === 'sending' ? ' sending' : ''}">${m.state === 'sending' ? 'Sending…' : (mine && m.state === 'sent' ? 'Sent · ' : '') + fmtTime(m.when)}</span>` : '';
-      html += `<div class="ms-msg${mine ? ' me' : ''}${first ? ' first' : ''}${m.fresh && !calm() ? ' fresh' : ''}" data-mi="${i}" data-mid="${m.id}">${left}<div class="ms-col">${who}${(() => { const parts = [bub, ...urls.map(linkCard), att].filter(Boolean); if (parts.length && canReact(m)) parts[0] = `<div class="ms-rxw">${parts[0]}${rxBadge(m)}<button class="ms-tb" data-mstb="${m.id}" aria-label="React to this message" title="React">${ico('heart')}</button></div>`; if (mine || !lastOf || !parts.length) return parts.join(''); const lp = parts.pop(); return parts.join('') + `<div class="ms-aw">${av(p)}${lp}</div>`; })()}${meta}</div></div>`;
+      html += `<div class="ms-msg${mine ? ' me' : ''}${first ? ' first' : ''}${m.fresh && !calm() ? ' fresh' : ''}" data-mi="${i}" data-mid="${m.id}">${left}<div class="ms-col">${who}${(() => { const parts = [bub, ...urls.map(linkCard), att].filter(Boolean); if (parts.length && canReact(m)) parts[0] = `<div class="ms-rxw">${parts[0]}${rxBadge(m)}<button class="ms-tb" data-mstb="${m.id}" aria-label="React to this message" title="React">${ico('dots')}</button></div>`; if (mine || !lastOf || !parts.length) return parts.join(''); const lp = parts.pop(); return parts.join('') + `<div class="ms-aw">${av(p)}${lp}</div>`; })()}${meta}</div></div>`;
       m.fresh = false; prev = m;
     });
     return html;
@@ -4568,8 +4633,11 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const fmtSize = n => n >= 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB';
   MS.pend = {}; // files picked for the message you're writing, per conversation
   const pendOf = () => MS.pend[MS.open] || (MS.pend[MS.open] = []);
-  const attsHTML = () => pendOf().map((a, i) => `<span class="ms-achip avfi-host">${window.AveragesFileIcons ? AveragesFileIcons.html(a.name, { size: 24 }) : ico('doc')}<span class="tx"><b>${esc(a.name)}</b><small>${esc(a.state === 'failed' ? (a.err || 'Couldn\'t upload') : a.state === 'up' ? 'Uploading… ' + Math.round((a.frac || 0) * 100) + '%' : a.size)}</small></span><button data-msunatt="${i}" aria-label="Remove ${esc(a.name)}">${ico('x')}</button></span>`).join('');
-  const composerHTML = (ph, note, clip) => `${note || ''}<div class="ms-comp"><div class="ms-atts" id="msAtts">${clip ? attsHTML() : ''}</div><div class="box"><textarea id="msText" rows="1" placeholder="${esc(ph)}" aria-label="${esc(ph)}"></textarea><span class="ms-ctools"><button class="ms-tool" data-mstool="link" aria-label="Add a link" title="Add a link">${ico('link')}</button><button class="ms-tool" data-mstool="emoji" aria-label="Add an emoji" title="Add an emoji"><span class="ms-emo" aria-hidden="true">😊</span></button>${clip ? `<button class="ms-clip" id="msClip" aria-label="Attach a file" title="Attach a file">${ico('clip')}</button>` : ''}</span>${clip ? `<input type="file" id="msFile" multiple hidden>` : ''}<button class="ms-send" id="msSend" aria-label="Send" disabled><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19.5V5.5M5.5 12 12 5.5 18.5 12"/></svg></button></div></div>`;
+  // links added with the link button wait above the box like a file (2026-11-03, Martin), and go under your words
+  const linksOf = () => MS.links[MS.open] || (MS.links[MS.open] = []);
+  const linkChips = () => linksOf().map((u, i) => { const L = LP[u]; return `<span class="ms-achip ms-lchip">${L && L.icon ? `<img class="ms-lfav" src="${esc(lpImg(L.icon))}" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'ms-lfav ms-lfav0'}))">` : `<span class="ms-lfav ms-lfav0">${ico('link')}</span>`}<span class="tx"><b>${esc(L && L.title || hostOf(u))}</b><small>${esc(prettyUrl(u))}</small></span><button data-msunlink="${i}" aria-label="Remove the link to ${esc(hostOf(u))}">${ico('x')}</button></span>`; }).join('');
+  const attsHTML = () => linkChips() + pendOf().map((a, i) => `<span class="ms-achip avfi-host${a.state === 'failed' ? ' failed' : ''}"${a.state === 'failed' ? ` data-msretry="${i}" role="button" tabindex="0" title="Try again"` : ''}>${window.AveragesFileIcons ? AveragesFileIcons.html(a.name, { size: 24 }) : ico('doc')}<span class="tx"><b>${esc(a.name)}</b><small>${esc(a.state === 'failed' ? (a.err || 'Couldn\'t upload') + ' Click to try again.' : a.state === 'up' ? 'Uploading… ' + Math.round((a.frac || 0) * 100) + '%' : a.size)}</small></span><button data-msunatt="${i}" aria-label="Remove ${esc(a.name)}">${ico('x')}</button></span>`).join('');
+  const composerHTML = (ph, note, clip) => `${note || ''}<div class="ms-comp"><div class="ms-atts" id="msAtts">${clip ? attsHTML() : linkChips()}</div><div class="box"><textarea id="msText" rows="1" placeholder="${esc(ph)}" aria-label="${esc(ph)}"></textarea><span class="ms-ctools"><button class="ms-tool" data-mstool="link" aria-label="Add a link" title="Add a link">${ico('link')}</button><button class="ms-tool" data-mstool="emoji" aria-label="Add an emoji" title="Add an emoji">${ico('smile')}</button>${clip ? `<button class="ms-clip" id="msClip" aria-label="Attach a file" title="Attach a file">${ico('clip')}</button>` : ''}</span>${clip ? `<input type="file" id="msFile" multiple hidden>` : ''}<button class="ms-send" id="msSend" aria-label="Send" disabled><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19.5V5.5M5.5 12 12 5.5 18.5 12"/></svg></button></div></div>`;
   function topHTML(t, sub, extraBtns = '') {
     return `<div class="ms-top"><button class="ibtn ms-back" data-msback aria-label="Back to your messages">${ico('chev-l')}</button>${tav(t)}<span class="tx"><b>${esc(title(t))}</b><small>${esc(sub)}</small></span>${extraBtns}<button class="ibtn" data-mswho aria-label="Who's in this conversation" aria-haspopup="dialog">${ico('info')}</button><button class="ibtn" data-msmore="${MS.open}" aria-label="More" aria-haspopup="menu" aria-expanded="false">${ico('dots')}</button></div>`;
   }
@@ -4595,7 +4663,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (pick) requestAnimationFrame(() => mpPill($('msSubj'), false));
     const feed = $('msFeed'); feed.scrollTop = feedTop != null ? feedTop : feed.scrollHeight;
     wireComposer();
-    fcReal();
+    fcReal(); lpReal();
   }
   // The real pages on a PDF's card (2026-11-03, Martin: "add a page preview on these previews when they become
   // available"): the drawn placeholder until they're here (and if the file can't be read), then the first pages
@@ -4616,54 +4684,105 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     });
   }
 
-  // A file sent in a message, big, over everything (2026-11-03, Martin: "can this popup also show in messages"): the
-  // same popup as a class's materials. A PDF's pages to scroll through, a picture, text, sound or video, with
-  // Download and Open in a new tab. Clicking the file opens it in a new tab; the dark backdrop closes it.
+  // ---------- a file sent in a message, big: Martin's file previewer (file-previewer.html, 2026-11-03) ----------
+  // Across the top: the file's name, what it is, its size, who sent it and when; "2 of 5" when the conversation has
+  // more than one file; Open in a new tab, Download and X. One page at a time, as big as fits, keeping its shape.
+  // The arrows (or Left and Right) go through a PDF's pages, then on to the next file in the conversation (and back);
+  // the page slides in from the side you're going. Esc, X, or a click on the dark area closes it, and focus goes back
+  // to the file you opened. Tab stays inside while it's open. Potato mode and reduced motion: no fade, scale or slide.
   let fLb = null;
-  function fileLbOpen(a) {
+  const fKind = a => { const k = FSX.prev.kind(a.name); return k === 'pdf' ? 'PDF' : k === 'image' ? 'Image' : (a.name.split('.').pop() || 'File').toUpperCase(); };
+  function fileLbOpen(mid) {
+    const [t, m0] = msgById(mid); if (!t || !m0 || !m0.att) return;
+    const ts = MS.open && MS.open.startsWith('p:') ? tsOf(MS.open) : [t];
+    const list = ts.flatMap(x => x.msgs).filter(m => m.att && m.att.real && m.att.url && !m.react).sort((x, y) => x.when - y.when);
+    const at = Math.max(0, list.indexOf(m0));
     fileLbClose(true);
-    const k = FSX.prev.kind(a.name), url = a.url;
-    const body = k === 'image' ? `<img class="mplb-img" src="${esc(url)}" alt="${esc(a.name)}">` : k === 'video' ? `<video class="mplb-img" controls autoplay src="${esc(url)}"></video>` : k === 'audio' ? `<audio controls autoplay src="${esc(url)}"></audio>`
-      : k === 'text' ? '<pre class="mplb-txt">Loading…</pre>' : k === 'pdf' ? '<div class="mplb-pages" aria-live="polite"></div>'
-      : `<div class="mplb-none">${window.AveragesFileIcons ? AveragesFileIcons.html(a.name, { size: 56 }) : ''}<b>${esc(a.name)}</b><p>There's no preview for this kind of file. Download it to open it in its own app.</p></div>`;
-    document.body.insertAdjacentHTML('beforeend', `<div class="up-lb mplb" role="dialog" aria-modal="true" aria-labelledby="fLbT"><div class="up-lb-top"><div class="tx"><b id="fLbT">${esc(a.name)}</b><small>${esc([kindOf(a), a.size].filter(Boolean).join(' · '))}</small></div>
-      <button class="btn up-lb-dl" data-flb="dl">${ico('dl')}<span class="lbl">Download</span></button><button class="up-lb-x" data-flb="tab" aria-label="Open in a new tab">${ico('up')}</button><button class="up-lb-x" data-flb="x" aria-label="Close">${ico('x')}</button></div><div class="mplb-body">${body}</div></div>`);
-    fLb = { el: document.body.lastElementChild, from: document.activeElement };
+    document.body.insertAdjacentHTML('beforeend', '<div class="up-lb fl-lb" role="dialog" aria-modal="true" aria-labelledby="flLbT"></div>');
+    fLb = { el: document.body.lastElementChild, from: document.activeElement, list, at, page: 0, pages: {}, n: 0 };
     if (!calm()) fLb.el.classList.add('in');
-    fLb.el.querySelector('[data-flb="x"]').focus({ preventScroll: true });
-    fLb.el.addEventListener('click', e => {
-      const b = e.target.closest('[data-flb]');
-      if (b && b.dataset.flb === 'x') { fileLbClose(); return; }
-      if (b && b.dataset.flb === 'tab') { FSX.newTab(url); return; }
-      if (b && b.dataset.flb === 'dl') { const l = document.createElement('a'); l.href = a.dl || url; l.download = a.name; l.rel = 'noopener'; document.body.appendChild(l); l.click(); l.remove(); toast(`Downloading ${a.name}.`); return; }
-      if (b || e.target.closest('video, audio, .mplb-none')) return;
-      if (e.target.closest('.mplb-page, .mplb-img, .mplb-txt')) { if (String(getSelection() || '')) return; FSX.newTab(url); return; }
-      fileLbClose();
-    });
-    const wait = (box, msg) => { box.innerHTML = `<p class="mplb-more" data-wait><span class="mplb-spin" aria-hidden="true"></span>${msg}</p>`; return setTimeout(() => { const n = box.querySelector('[data-wait]'); if (n) n.lastChild.textContent = 'Still getting this file from Schoology. New uploads can take a few minutes.'; }, 8000); };
-    if (k === 'text') { const pre = fLb.el.querySelector('.mplb-txt'); FSX.prev.text(url).then(t => { pre.textContent = t; }, () => { pre.textContent = 'Couldn\'t load this file. Try downloading it.'; }); }
+    fLb.el.addEventListener('click', fileLbClick);
+    fileLbDraw(0);
+    fLb.el.querySelector('.up-lb-x').focus({ preventScroll: true });
+  }
+  function fileLbTop() {
+    const L = fLb, m = L.list[L.at], a = m.att, who = m.from === 'me' ? 'You sent this' : 'From ' + P(m.from).name;
+    const pn = L.pages[L.at], pg = pn > 1 ? `Page ${L.page + 1} of ${pn}` : '';
+    const ct = [pg, L.list.length > 1 ? `${L.at + 1} of ${L.list.length}` : ''].filter(Boolean).join(' · ');
+    return `<div class="tx"><b id="flLbT">${esc(a.name)}</b><small>${esc([fKind(a), a.size, `${who}, ${dayName(m.when)} at ${fmtTime(m.when)}`].filter(Boolean).join(' · '))}</small></div>${ct ? `<span class="up-lb-ct" aria-live="polite">${ct}</span>` : ''}
+      <button class="btn fl-lb-b" data-flb="tab">${ico('up')}<span class="lbl">Open in a new tab</span></button><button class="btn up-lb-dl" data-flb="dl">${ico('dl')}<span class="lbl">Download</span></button><button class="up-lb-x" data-flb="x" aria-label="Close">${ico('x')}</button>`;
+  }
+  function fileLbNav() {
+    const L = fLb, pn = L.pages[L.at] || 1;
+    const prev = L.at > 0 || L.page > 0, next = L.at < L.list.length - 1 || L.page < pn - 1;
+    const p = L.el.querySelector('[data-flgo="-1"]'), n = L.el.querySelector('[data-flgo="1"]');
+    if (p) { p.disabled = !prev; p.setAttribute('aria-label', L.page > 0 ? 'Previous page' : 'Previous file'); }
+    if (n) { n.disabled = !next; n.setAttribute('aria-label', L.page < pn - 1 ? 'Next page' : 'Next file'); }
+  }
+  // draws the file (and page) the previewer is on; d is the way you went (for the slide)
+  function fileLbDraw(d) {
+    const L = fLb, m = L.list[L.at], a = m.att, k = FSX.prev.kind(a.name), my = ++L.n;
+    const had = document.activeElement && document.activeElement.dataset && document.activeElement.dataset.flgo;
+    const fig = k === 'image' ? `<img class="fl-pg" src="${esc(a.url)}" alt="${esc(a.name)}">` : k === 'video' ? `<video class="fl-pg" controls src="${esc(a.url)}"></video>` : k === 'audio' ? `<div class="fl-none">${window.AveragesFileIcons ? AveragesFileIcons.html(a.name, { size: 56 }) : ''}<b>${esc(a.name)}</b><audio controls src="${esc(a.url)}"></audio></div>`
+      : k === 'text' ? '<pre class="fl-txt">Loading…</pre>' : k === 'pdf' ? '<canvas class="fl-pg fl-canvas" role="img"></canvas>'
+      : `<div class="fl-none">${window.AveragesFileIcons ? AveragesFileIcons.html(a.name, { size: 56 }) : ''}<b>${esc(a.name)}</b><p>There's no preview for this kind of file. Download it to open it in its own app.</p></div>`;
+    L.el.innerHTML = `<div class="up-lb-top">${fileLbTop()}</div><div class="up-lb-stage"><button class="up-lb-nav" data-flgo="-1" aria-label="Previous">${ico('chev-l')}</button><figure class="up-lb-fig fl-big" aria-label="Preview of ${esc(a.name)}">${fig}<p class="fl-wait" hidden><span class="mplb-spin" aria-hidden="true"></span><span>Loading…</span></p></figure><button class="up-lb-nav" data-flgo="1" aria-label="Next">${ico('chev-r')}</button></div>`;
+    fileLbNav();
+    const box = L.el.querySelector('.fl-big'), wait = box.querySelector('.fl-wait');
+    const loading = on => { wait.hidden = !on; box.classList.toggle('loading', on); };
+    let slow = 0;
+    const startWait = () => { loading(true); slow = setTimeout(() => { if (fLb === L && L.n === my) wait.lastChild.textContent = 'Still getting this file from Schoology. New uploads can take a few minutes.'; }, 8000); };
     if (k === 'pdf') {
-      const box = fLb.el.querySelector('.mplb-pages'), mine = fLb, w = Math.min(960, window.innerWidth - 48), slow = wait(box, 'Loading…');
-      FSX.prev.pdf(url).then(doc => {
-        clearTimeout(slow); const wn = box.querySelector('[data-wait]'); if (wn) wn.remove();
-        const n = Math.min(doc.numPages, 60); let chain = Promise.resolve();
-        for (let i = 0; i < n; i++) {
-          const c = document.createElement('canvas'); c.className = 'mplb-page'; c.setAttribute('role', 'img'); c.setAttribute('aria-label', `Page ${i + 1} of ${doc.numPages}`); box.appendChild(c);
-          chain = chain.then(() => fLb === mine ? FSX.prev.page(url, i, c, w) : null);
-        }
-        if (doc.numPages > n) box.insertAdjacentHTML('beforeend', `<p class="mplb-more">The first ${n} pages are shown. Open it in a new tab to see all ${doc.numPages}.</p>`);
-      }, () => { clearTimeout(slow); box.innerHTML = `<p class="mplb-more">Couldn't show this PDF here. Open it in a new tab instead.</p>`; });
-    }
-    if (k === 'image') { const img = fLb.el.querySelector('.mplb-img'), bx = fLb.el.querySelector('.mplb-body'); if (!img.complete) { bx.classList.add('loading'); bx.insertAdjacentHTML('beforeend', `<p class="mplb-more mplb-imgwait"><span class="mplb-spin" aria-hidden="true"></span>Loading…</p>`); const done = () => { bx.classList.remove('loading'); const w = bx.querySelector('.mplb-imgwait'); if (w) w.remove(); }; img.addEventListener('load', done); img.addEventListener('error', done); } }
+      startWait();
+      const c = box.querySelector('canvas');
+      FSX.prev.pdf(a.url).then(doc => {
+        if (fLb !== L || L.n !== my) return;
+        L.pages[L.at] = doc.numPages;
+        if (L.page < 0 || L.page >= doc.numPages) L.page = L.page < 0 ? doc.numPages - 1 : doc.numPages - 1; // stepping back into a file lands on its last page
+        L.el.querySelector('.up-lb-top').innerHTML = fileLbTop(); fileLbNav();
+        c.setAttribute('aria-label', `${a.name}, page ${L.page + 1} of ${doc.numPages}`);
+        return doc.getPage(L.page + 1).then(pg => {
+          const v = pg.getViewport({ scale: 1 }), r = v.width / v.height, W = box.clientWidth, H = box.clientHeight, w = Math.max(120, Math.min(W, H * r));
+          return FSX.prev.page(a.url, L.page, c, w).then(() => { if (fLb !== L || L.n !== my) return; c.style.width = w + 'px'; c.style.height = w / r + 'px'; clearTimeout(slow); loading(false); });
+        });
+      }).catch(() => { if (fLb !== L || L.n !== my) return; clearTimeout(slow); loading(false); c.outerHTML = `<div class="fl-none"><b>Couldn't show this PDF here</b><p>Open it in a new tab, or download it.</p></div>`; L.pages[L.at] = 1; L.page = 0; fileLbNav(); });
+    } else if (k === 'image') {
+      const img = box.querySelector('img'); L.page = 0; L.pages[L.at] = 1;
+      if (!img.complete) { startWait(); const done = () => { clearTimeout(slow); if (fLb === L && L.n === my) loading(false); }; img.addEventListener('load', done); img.addEventListener('error', done); }
+    } else if (k === 'text') {
+      L.page = 0; L.pages[L.at] = 1; const pre = box.querySelector('pre');
+      FSX.prev.text(a.url).then(t2 => { pre.textContent = t2; }, () => { pre.textContent = 'Couldn\'t load this file. Try downloading it.'; });
+    } else { L.page = 0; L.pages[L.at] = 1; }
+    if (d && !calm() && box.animate) box.animate([{ opacity: 0, transform: `translateX(${d * 16}px)` }, { opacity: 1, transform: 'none' }], { duration: 240, easing: 'cubic-bezier(.2, .8, .2, 1)' });
+    if (had) { const b = L.el.querySelector(`[data-flgo="${had}"]:not([disabled])`) || L.el.querySelector('.up-lb-x'); b.focus({ preventScroll: true }); }
+  }
+  function fileLbGo(d) {
+    const L = fLb; if (!L) return;
+    const pn = L.pages[L.at] || 1;
+    if (d > 0 && L.page < pn - 1) L.page++;
+    else if (d < 0 && L.page > 0) L.page--;
+    else { const j = L.at + d; if (j < 0 || j >= L.list.length) return; L.at = j; L.page = d > 0 ? 0 : (L.pages[j] ? L.pages[j] - 1 : -1); }
+    fileLbDraw(d);
+  }
+  function fileLbClick(e) {
+    const L = fLb; if (!L) return;
+    const a = L.list[L.at].att, b = e.target.closest('[data-flb]');
+    if ((b && b.dataset.flb === 'x') || e.target === L.el || e.target.classList.contains('up-lb-stage') || e.target.classList.contains('fl-big')) { fileLbClose(); return; }
+    const g = e.target.closest('[data-flgo]'); if (g) { if (!g.disabled) fileLbGo(+g.dataset.flgo); return; }
+    if (b && b.dataset.flb === 'tab') { FSX.newTab(a.url); return; }
+    if (b && b.dataset.flb === 'dl') { const l = document.createElement('a'); l.href = a.dl || a.url; l.download = a.name; l.rel = 'noopener'; document.body.appendChild(l); l.click(); l.remove(); toast(`Downloading ${a.name}.`); }
   }
   function fileLbClose(quiet) {
-    if (!fLb) return; const { el, from } = fLb; fLb = null; el.remove();
+    if (!fLb) return; const { el, from } = fLb; fLb = null;
+    if (quiet || calm() || !el.animate) el.remove(); else { el.style.pointerEvents = 'none'; el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 160, fill: 'forwards' }).onfinish = () => el.remove(); }
     if (!quiet && from && from.isConnected) from.focus({ preventScroll: true });
   }
+  addEventListener('resize', () => { if (fLb && FSX.prev.kind(fLb.list[fLb.at].att.name) === 'pdf') fileLbDraw(0); });
   document.addEventListener('keydown', e => {
     if (!fLb) return;
     if (e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); fileLbClose(); return; }
-    if (e.key === 'Tab') { const f = [...fLb.el.querySelectorAll('button, video, audio')]; if (!f.length) return; if (e.shiftKey && document.activeElement === f[0]) { e.preventDefault(); f[f.length - 1].focus(); } else if (!e.shiftKey && document.activeElement === f[f.length - 1]) { e.preventDefault(); f[0].focus(); } }
+    if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && !e.target.closest('video, audio')) { e.preventDefault(); e.stopImmediatePropagation(); fileLbGo(e.key === 'ArrowLeft' ? -1 : 1); return; }
+    if (e.key === 'Tab') { const f = [...fLb.el.querySelectorAll('button:not([disabled]), video, audio')]; if (!f.length) return; if (e.shiftKey && document.activeElement === f[0]) { e.preventDefault(); f[f.length - 1].focus(); } else if (!e.shiftKey && document.activeElement === f[f.length - 1]) { e.preventDefault(); f[0].focus(); } }
   }, true);
   // ---------- the paperclip's neighbors (2026-11-03, Martin): pointing at it shows Add a link and an emoji ----------
   const EMOJIS = '😀 😂 😊 😍 🥲 😅 😎 🤔 😮 😢 😭 😤 🙏 👍 👎 👏 🙌 💪 ✌️ 🤞 👋 ❤️ 🔥 ⭐ ✨ 🎉 ✅ ❌ ❓ ‼️ 💯 📚 📝 📎 📅 ⏰ 🧪 🧮 🌎 🎨'.split(' ');
@@ -4691,8 +4810,11 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
         if (e) e.preventDefault(); let v = inp.value.trim(); if (v && !/^https?:\/\//i.test(v)) v = 'https://' + v;
         let ok = false; try { const u = new URL(v); ok = /^https?:$/.test(u.protocol) && /\./.test(u.hostname); } catch (err) { ok = false; }
         if (!ok) { tpop.el.querySelector('.ms-linkerr').hidden = false; inp.focus(); return; }
-        const ta = $('msText'), pre = ta && ta.value && !/\s$/.test(ta.value.slice(0, ta.selectionStart ?? ta.value.length)) ? ' ' : '';
-        toolClose(); toolInsert(pre + v + ' ');   // it goes as a link card under your words, like Messages
+        const url = new URL(v).toString(), list = linksOf();
+        toolClose(); if (!list.includes(url) && list.length < 5) list.push(url);
+        const redraw = () => { const box = $('msAtts'); if (box && linksOf() === list) box.innerHTML = $('msClip') ? attsHTML() : linkChips(); };
+        redraw(); const ta = $('msText'); if (ta) { ta.dispatchEvent(new Event('input')); ta.focus({ preventScroll: true }); }
+        lpGet(url).then(redraw, () => {});   // its title and icon, when the page answers
       };
       tpop.el.addEventListener('submit', add);
       // Enter adds it here (the page's own Enter handling would otherwise stop the form)
@@ -4760,6 +4882,12 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     const f = el.querySelector('[aria-pressed="true"]') || el.querySelector('button'); f.focus({ preventScroll: true });
   }
   document.addEventListener('pointerdown', e => { if (tbar && !e.target.closest('.ms-tbar, [data-mstb]')) tbClose(); }, true);
+  // right-click a message for the reactions too (2026-11-03, Martin)
+  document.addEventListener('contextmenu', e => {
+    const w = e.target.closest('#msThread .ms-rxw'); if (!w || e.target.closest('a, input, textarea')) return;
+    const b = w.querySelector('[data-mstb]'); if (!b) return;
+    e.preventDefault(); if (tbar && tbar.mid === b.dataset.mstb) tbClose(); tbOpen(b.dataset.mstb, b);
+  });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && tbar) { e.preventDefault(); e.stopImmediatePropagation(); tbClose(); } }, true);
   document.addEventListener('scroll', () => tbClose(), true);
   function react(mid, k) {
@@ -4773,9 +4901,21 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     t.msgs.push(rm); rxFold(t.msgs); msThread(true); msRows();
     FSX.reply(t.id, text, []).then(() => { rm.state = 'sent'; store.set('fsmsg_rx_sent', (store.get('fsmsg_rx_sent') || []).filter(x => Date.now() - x.at < 10 * 60e3).concat({ th: t.id, text, at: Date.now() }).slice(-40)); }, e => { t.msgs.splice(t.msgs.indexOf(rm), 1); rxFold(t.msgs); msThread(true); msRows(); toast(FSX.msgError(e)); });
   }
+  // One file up to Schoology for a message. A failure says why (2026-11-03, Martin: "nothing is uploading" showed only
+  // "Couldn't send it"): the upload's own reason, the same words turning in uses; click the file to try again.
+  function upStart(a) {
+    a.state = 'up'; a.frac = 0; a.err = ''; a.redraw();
+    a.job = FSX.msgUpload(a.file, x => { a.frac = x; a.redraw(); }).then(id => { a.fileId = id; a.state = 'done'; a.redraw(); return id; }, e => {
+      a.state = 'failed'; a.code = (e && (e.code || e.message)) || 'failed';
+      a.err = window.AveragesSubmit && e && e.code ? AveragesSubmit.messageFor(e).replace('Too big to turn in.', 'Too big to send.') : FSX.msgError(e);
+      if (window.console) console.warn('[messages] upload failed:', a.code, e && e.status || '');
+      a.redraw(); throw e;
+    });
+    a.job.catch(() => {});
+  }
   function wireComposer() {
     const ta = $('msText'), send = $('msSend'); if (!ta) return;
-    const fit = () => { ta.style.height = 'auto'; ta.style.height = Math.min(160, ta.scrollHeight) + 'px'; send.disabled = !ta.value.trim() && !($('msClip') && pendOf().length); };
+    const fit = () => { ta.style.height = 'auto'; ta.style.height = Math.min(160, ta.scrollHeight) + 'px'; send.disabled = !ta.value.trim() && !($('msClip') && pendOf().length) && !linksOf().length; };
     const fi = $('msFile');
     // Files (2026-11-03): each goes up to Schoology as soon as it's picked, then rides along with the message.
     if (fi) fi.addEventListener('change', () => {
@@ -4783,8 +4923,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       [...fi.files].slice(0, Math.max(0, 10 - list.length)).forEach(f => {
         const a = { name: f.name, size: fmtSize(f.size), pages: IMG_RE.test(f.name) ? 1 : Math.max(1, Math.min(9, Math.round(f.size / 40000))), state: 'up', frac: 0 };
         const redraw = () => { const box = $('msAtts'); if (box && pendOf() === list) box.innerHTML = attsHTML(); };
-        a.job = FSX.msgUpload(f, x => { a.frac = x; redraw(); }).then(id => { a.fileId = id; a.state = 'done'; redraw(); return id; }, e => { a.state = 'failed'; a.err = FSX.msgError(e); redraw(); throw e; });
-        a.job.catch(() => {});
+        a.file = f; a.redraw = redraw; upStart(a);
         list.push(a);
       });
       fi.value = ''; $('msAtts').innerHTML = attsHTML(); fit(); ta.focus({ preventScroll: true });
@@ -4793,7 +4932,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     ta.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); if (!send.disabled) send.click(); } });
     const draft = MS.open && (MS.drafts || {})[MS.open]; if (draft) { ta.value = draft; fit(); }
   }
-  MS.drafts = {};
+  MS.drafts = {}; MS.links = MS.links || {};
   function openThread(id, focus) {
     // already open: keep it as it is (your draft, where you'd scrolled to); on a phone just show it
     if (id && id === MS.open && id !== 'new' && $('msFeed')) { $('ms').classList.add('open'); if (focus !== false) { const f = $('msText'); if (f && innerWidth > 860) f.focus({ preventScroll: true }); } return; }
@@ -4861,7 +5000,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     openThread('new', false); const f = MS.compose.to.length ? $('msSubIn') : $('msToIn'); if (f) f.focus({ preventScroll: true });
   }
   function composeSend() {
-    const c = MS.compose, text = $('msText').value.trim(); c.text = $('msText').value;
+    const c = MS.compose, text = [$('msText').value.trim(), ...linksOf()].filter(Boolean).join('\n'); c.text = $('msText').value;
     if (!c.to.length) { c.bad = 'to'; composeHTML(); $('msToIn').focus(); return; }
     if (!c.subject.trim()) { c.bad = 'subj'; composeHTML(); $('msSubIn').focus(); return; }
     // the same person and subject: it goes in that conversation instead of a new one
@@ -4872,7 +5011,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (same) { MS.compose = null; pendOf().splice(0); MS.open = same.id; sendIn(same, text, { files }); openThread(same.id); toast(`Added to your conversation about ${same.subject}.`); return; }
     const btn = $('msSend'); if (btn) btn.disabled = true;
     Promise.all(files.map(a => a.job)).then(ids => FSX.send(c.to.slice(), c.subject.trim(), text, ids)).then(r => {
-      pendOf().splice(0);
+      pendOf().splice(0); linksOf().splice(0);
       const t = { id: String(r.id || 'h' + Date.now().toString(36)), with: c.to.slice(), subject: c.subject.trim(), loaded: !r.id, msgs: [M('me', text, new Date(), { state: 'sent', fresh: true })] };
       t.msgs[0].id = t.id + '.0'; TH.unshift(t); MS.compose = null; MS.open = t.id; openThread(t.id); toast('Sent. It\'s in Schoology too.');
     }, e => { if (btn) btn.disabled = false; if (e && e.message === 'school_blocks_new_messages') { FSX.lset('averages_msg_new_blocked', Date.now()); sgyOpen(true); return; } toast(FSX.msgError(e)); });
@@ -4916,7 +5055,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   function menuOpen(id, x, y, from) {
     menuClose(); const ts = tsOf(id); if (!ts.length) return;
     const pinned = ts.some(t => t.pinned), unread = ts.some(t => t.unread);
-    document.body.insertAdjacentHTML('beforeend', `<div class="ms-menu" role="menu" aria-label="${esc(title(ts[0]))}"><button role="menuitem" data-msact="pin">${pinned ? 'Unpin' : 'Pin to the top'}</button><button role="menuitem" data-msact="read">${unread ? 'Mark as read' : 'Mark as unread'}</button><hr><button role="menuitem" class="bad" data-msact="del">Hide${ts.length > 1 ? ` all ${ts.length}` : ''}</button></div>`);
+    document.body.insertAdjacentHTML('beforeend', `<div class="ms-menu" role="menu" aria-label="${esc(title(ts[0]))}"><button role="menuitem" data-msact="pin">${pinned ? 'Unpin' : 'Pin to the top'}</button><button role="menuitem" data-msact="read">${unread ? 'Mark as read' : 'Mark as unread'}</button><hr><button role="menuitem" data-msact="del">Hide here${ts.length > 1 ? ` (all ${ts.length})` : ''}</button><button role="menuitem" class="bad" data-msact="erase">Delete${ts.length > 1 ? ` all ${ts.length}` : ''}…</button></div>`);
     const el = document.body.lastElementChild, w = el.offsetWidth, h = el.offsetHeight;
     el.style.left = Math.max(8, Math.min(x, innerWidth - w - 8)) + 'px'; el.style.top = Math.max(8, Math.min(y, innerHeight - h - 8)) + 'px';
     menu = { el, from, id }; if (from) from.setAttribute('aria-expanded', 'true'); el.querySelector('button').focus({ preventScroll: true });
@@ -4925,10 +5064,42 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       if (k === 'pin') { const on = !pinned; ts.forEach(t => { t.pinned = on; on ? PINS.add(t.id) : PINS.delete(t.id); }); store.set('fsmsg_pins', [...PINS]); MS.fresh = on ? mid : null; msRows(); toast(on ? `Pinned ${title(ts[0])} to the top.` : `Unpinned ${title(ts[0])}.`); }
       else if (k === 'read') { ts.forEach(t => { t.unread = !unread; if (unread) FSX.seen.mark('m', t.id); }); if (!unread && MS.open === mid) { MS.open = null; msThread(); } msRows(); msView(); msMeta(); toast(unread ? 'Marked as read.' : 'Marked as unread.'); }
       else if (k === 'who') { if (MS.open !== mid) openThread(mid, false); cardOpen(); }
+      else if (k === 'erase') delOpen(ts);
       else if (k === 'del') { ts.forEach(t => { HIDDEN.add(t.id); TH.splice(TH.indexOf(t), 1); }); store.set('fsmsg_hidden', [...HIDDEN]); if (MS.open === mid || (MS.open && tsOf(MS.open).length === 0)) { MS.open = null; } msRows(); msThread(); msView(); msMeta(); toast('Hidden here. It\'s still in Schoology.'); }
     });
   }
   $('msRows').addEventListener('contextmenu', e => { const r = e.target.closest('[data-msopen]'); if (!r || r.dataset.msopen === 'new') return; e.preventDefault(); menuOpen(r.dataset.msopen, e.clientX, e.clientY, r.querySelector('.ms-more')); });
+  // ---------- delete a conversation (2026-11-03, Martin: "are we able to delete convos in app") ----------
+  // From the student's own Schoology messages (Inbox and Sent). It can't be undone, and the teacher keeps their copy
+  // (Schoology doesn't un-send), so it asks first. "Hide here" stays for just this device.
+  let del = null;
+  function delOpen(ts) {
+    if (del || !ts.length) return; const name = title(ts[0]), many = ts.length > 1;
+    document.body.insertAdjacentHTML('beforeend', `<div class="ms-sscrim${calm() ? '' : ' in'}" id="msDel"><div class="ms-sbox ms-sgybox" role="alertdialog" aria-modal="true" aria-labelledby="msDelT" aria-describedby="msDelP">
+      <div class="ms-shd"><span class="emo" aria-hidden="true">${EMOJI_SVG['🗑️'] || EMOJI_SVG['💬'] || ''}</span><span class="tx"><h2 id="msDelT">Delete ${many ? `${ts.length} conversations` : 'this conversation'}?</h2><small>${esc(many ? `With ${name}` : `${name} · ${ts[0].subject}`)}</small></span></div>
+      <div class="ms-sbody"><p class="ms-sgyp" id="msDelP">${many ? 'They\'re' : 'It\'s'} removed from your Schoology messages too, on every device. ${esc(name)} keeps their copy. This can't be undone.</p></div>
+      <div class="ms-sfoot ms-sgyf"><button class="btn" data-delx>Cancel</button><button class="btn danger-fill" data-delgo>Delete</button></div></div></div>`);
+    del = { el: $('msDel'), from: document.activeElement, ts };
+    del.el.querySelector('[data-delx]').focus({ preventScroll: true });
+    del.el.addEventListener('click', e => {
+      if (e.target === del.el || e.target.closest('[data-delx]')) { delClose(); return; }
+      const go = e.target.closest('[data-delgo]'); if (!go || go.disabled) return;
+      go.disabled = true; go.textContent = 'Deleting…';
+      const list = del.ts;
+      Promise.allSettled(list.map(t => FSX.api('/messages/delete', { method: 'POST', json: { id: t.id } }))).then(rs => {
+        const gone = list.filter((t, i) => rs[i].status === 'fulfilled' || /not_found/.test(String(rs[i].reason && rs[i].reason.message)));
+        gone.forEach(t => { const i = TH.indexOf(t); if (i >= 0) TH.splice(i, 1); PINS.delete(t.id); });
+        store.set('fsmsg_pins', [...PINS]);
+        // kept off the list here too, in case Schoology still lists it for a little while
+        gone.forEach(t => HIDDEN.add(t.id)); store.set('fsmsg_hidden', [...HIDDEN]); try { sessionStorage.removeItem('averages_extras_messages'); } catch (err) { /* off */ }
+        if (MS.open && (gone.some(t => t.id === MS.open) || (MS.open.startsWith('p:') && tsOf(MS.open).length === 0))) MS.open = null;
+        delClose(true); msRows(); msThread(); msView(); msMeta();
+        toast(gone.length === list.length ? (many ? `Deleted ${gone.length} conversations.` : 'Deleted.') : gone.length ? `Deleted ${gone.length} of ${list.length}. Try the rest again.` : 'Couldn\'t delete that. Try again in a moment.');
+      });
+    });
+  }
+  function delClose(quiet) { if (!del) return; const { el, from } = del; del = null; el.remove(); if (!quiet && from && from.isConnected) from.focus({ preventScroll: true }); }
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && del) { e.preventDefault(); e.stopImmediatePropagation(); delClose(); } }, true);
   document.addEventListener('pointerdown', e => { if (menu && !e.target.closest('.ms-menu') && !e.target.closest('[data-msmore]')) menuClose(); if (card && !e.target.closest('.ms-card') && !e.target.closest('[data-mswho]')) cardClose(); });
   document.addEventListener('keydown', e => { if (e.key !== 'Escape') return; if (menu) { e.preventDefault(); e.stopImmediatePropagation(); menuClose(true); } else if (card) { e.preventDefault(); e.stopImmediatePropagation(); cardClose(true); } }, true);
   document.addEventListener('keydown', e => { if (!menu) return; const bs = [...menu.el.querySelectorAll('button')], i = bs.indexOf(document.activeElement); if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); bs[(i + (e.key === 'ArrowDown' ? 1 : -1) + bs.length) % bs.length].focus(); } else if (e.key === 'Tab') menuClose(); });
@@ -5029,14 +5200,16 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (e.target.closest('[data-msdiscard]')) { MS.compose = null; MS.open = null; msRows(); msThread(); toast('Threw away the new message.'); return; }
     const to = e.target.closest('[data-msto]'); if (to) { addTo(to.dataset.msto); return; }
     const un = e.target.closest('[data-msunto]'); if (un) { const c = MS.compose; c.to = c.to.filter(x => x !== un.dataset.msunto); const ta = $('msText'); if (ta) c.text = ta.value; composeHTML(); msRows(); $('msToIn').focus(); return; }
-    const fc = e.target.closest('[data-msfile]'); if (fc && fc.dataset.msfile) { const [, fm] = msgById(fc.dataset.msfile); if (fm && fm.att && fm.att.url) { fileLbOpen(fm.att); return; } lbOpen(fc.dataset.msfile); return; } // a real file: the preview popup
+    const fc = e.target.closest('[data-msfile]'); if (fc && fc.dataset.msfile) { const [, fm] = msgById(fc.dataset.msfile); if (fm && fm.att && fm.att.url) { fileLbOpen(fc.dataset.msfile); return; } lbOpen(fc.dataset.msfile); return; } // a real file: the preview popup
     if (e.target.closest('#msClip')) { $('msFile').click(); return; }
     const tl = e.target.closest('[data-mstool]'); if (tl) { toolOpen(tl.dataset.mstool); return; }
     const tb = e.target.closest('[data-mstb]'); if (tb) { tbOpen(tb.dataset.mstb, tb); return; }
+    const rt = !e.target.closest('[data-msunatt]') && e.target.closest('[data-msretry]'); if (rt) { const a = pendOf()[+rt.dataset.msretry]; if (a && a.file && a.state === 'failed') upStart(a); return; }
+    const ul = e.target.closest('[data-msunlink]'); if (ul) { linksOf().splice(+ul.dataset.msunlink, 1); $('msAtts').innerHTML = $('msClip') ? attsHTML() : linkChips(); $('msText').dispatchEvent(new Event('input')); $('msText').focus({ preventScroll: true }); return; }
     const ua = e.target.closest('[data-msunatt]'); if (ua) { pendOf().splice(+ua.dataset.msunatt, 1); $('msAtts').innerHTML = attsHTML(); $('msText').dispatchEvent(new Event('input')); $('msText').focus({ preventScroll: true }); return; }
     if (e.target.closest('#msSend')) {
       if (MS.open === 'new') { composeSend(); return; }
-      const ta = $('msText'), text = ta.value.trim(), files = $('msClip') ? pendOf().splice(0) : []; if (!text && !files.length) return;
+      const ta = $('msText'), links = linksOf().splice(0), text = [ta.value.trim(), ...links].filter(Boolean).join('\n'), files = $('msClip') ? pendOf().splice(0) : []; if (!text && !files.length) return;
       const t = TH.find(x => x.id === $('msThread').dataset.reply); if (!t) return;
       if (files.some(a => a.state === 'failed')) { pendOf().push(...files); $('msAtts').innerHTML = attsHTML(); toast('A file didn\'t upload. Remove it or pick it again.'); return; }
       MS.drafts[MS.open] = ''; sendIn(t, text, { files });
