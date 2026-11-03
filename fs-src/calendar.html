@@ -4169,7 +4169,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const isTodo = e => isDue(e) && (e.st === 'due' || e.st === 'missing');
   const isDone = e => isDue(e) && (e.st === 'turned' || e.st === 'graded' || e.st === 'done');
   const offOn = k => EV.some(e => e.kind === 'off' && e.date === k);
-  const byWho = e => e.by === 'school' ? SCHOOL.name : e.by === 'upload' ? `You, from ${e.file || 'your school calendar'}` : e.by === 'teacher' ? (C[e.c] && C[e.c].teacher) || 'Your teacher' : 'Schoology';
+  const byWho = e => e.by === 'school' ? SCHOOL.name : e.by === 'upload' ? 'Calendar Import' /* (2026-11-03, Martin: was "You, from <file name>") */ : e.by === 'teacher' ? (C[e.c] && C[e.c].teacher) || 'Your teacher' : 'Schoology';
   const KINDN = { assignment: 'Assignment', test: 'Test', event: 'Event', off: 'No school' };
 
   // ---------- what's shown ----------
