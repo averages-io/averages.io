@@ -4492,8 +4492,8 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   // and they go on your calendar. It's read right here, in this browser: the file never leaves your device and isn't kept.
   const WEEKDAYS = (a, b) => { const out = []; for (let d = dOf(a); key(d) <= b; d = addD(d, 1)) if (d.getDay() % 6) out.push(key(d)); return out; };
   let FOUND = [];
-  const BIG_RE = /last day|first day|end of (the )?(quarter|semester|term|trimester|grading period)|minimum day|early (release|dismissal)|half day|graduation|finals|final exams|conferences?|report cards?|open house|back to school/i;
-  const ELEM_RE = /elementary|\bk-?\s?[1-6]\b|\bgrades? k\b|\btk\b|kindergarten|primary only/i;
+  const BIG_RE = /last day|first day|end of (the )?((first|second|third|fourth|1st|2nd|3rd|4th) )?(quarter|semester|term|trimester|grading period)|minimum day|early (release|dismissal)|half day|graduation|finals|final exams|conferences?|report cards?|open house|back to school/i;
+  const ELEM_RE = /elementary|\bk-?\s?[1-6]\b(?!\s*[-–]?\s*\d)|\bgrades? k\b|\btk\b(?!\s*[-–]\s*(?:1[0-2]|[7-9]))|kindergarten|primary only/i; // "TK-6" is elementary, "TK-12" is everyone
   // the school year a month belongs to: Aug to Dec in the first year, Jan to Jul in the second
   function yearsFrom(text) {
     const m = text.match(/\b(20\d{2})\s*[-–/]\s*(20)?(\d{2})\b/);
@@ -4511,6 +4511,10 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   // a month grid's numbers and weekday letters: nothing to read there
   const GRID_RE = /^(?:\s*(?:[1-9]|[12]\d|3[01]|s|m|t|w|r|f|th|tu|su|sa|mo|we|fr|fri|sun|mon|tue|wed|thu|sat|\*)\s*)+$/i;
   const BULLET_RE = /^[●•★☆◆◇▪■□►▸✓✔○◦]/;
+  // a date for the older grades too ("TK-6 Early Release/ 7-12+ Non-Student Day") isn't just for elementary schools
+  const SECONDARY_RE = /\b(?:6|7|8|9)\s*[-–]\s*12\b|secondary|middle school|high school|\bms\b|\bhs\b/i;
+  // a day (or days) and a colon starting a note: "3: Labor Day", "25-27: Thanksgiving Recess"
+  const DAY_KEY_RE = /^(?:[1-9]|[12]\d|3[01])(?:\s*[-–]\s*(?:[1-9]|[12]\d|3[01]))?\s*:\s*\S/;
   const MONTH_HEAD_RE = new RegExp(`^${MN_RE}(?:\\s*(?:20\\d{2}))?$`, 'i');
   // the text of each page as entries: one per key line or bullet, wrapped lines joined, grids left out
   function pdfEntries(pages) {
@@ -4524,11 +4528,13 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       rows.forEach(r => {
         r.its.sort((a, b) => a.x - b.x); let cur = null;
         r.its.forEach(it => {
+          // a space is only a space: it doesn't stretch a piece across the gap to the next column (Google Sheets PDFs
+          // pad each cell with wide spaces, which joined three months' notes into one line; 2026-11-03, NMUSD's calendar)
+          if (!it.s.trim()) { if (cur && cur.t && !cur.t.endsWith(' ')) cur.t += ' '; return; }
           const f = it.f || r.f, gap = cur ? it.x - cur.x1 : 0;
           // a wide gap, or a bullet after some words (two keys side by side, close together), starts a new piece
           if (!cur || gap > Math.max(2 * f, 14) || (BULLET_RE.test(it.s.trimStart()) && cur.t.trim())) { if (cur) segs.push(cur); cur = { t: '', x0: it.x, x1: it.x, y: r.y, f }; }
-          if (!it.s.trim()) { if (cur.t && !cur.t.endsWith(' ')) cur.t += ' '; }
-          else cur.t += (cur.t && !cur.t.endsWith(' ') && gap > f * .12 ? ' ' : '') + it.s;
+          cur.t += (cur.t && !cur.t.endsWith(' ') && gap > f * .12 ? ' ' : '') + it.s;
           cur.x1 = Math.max(cur.x1, it.x + (it.w || it.s.length * f * .5));
         });
         if (cur) segs.push(cur);
@@ -4563,19 +4569,30 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
         cols.forEach(c => { const l = c[c.length - 1], dy = l.y - s.y; if (dy <= 0 || dy > s.f * 2.8) return; if (s.x0 < l.x0 - s.f * 1.2 || s.x0 > l.x0 + s.f * 2.5 || s.x0 > l.x1) return; if (!best || dy < best.dy) best = { c, dy }; });
         if (best) best.c.push(s); else cols.push([s]);
       });
-      // 4. entries: a bullet, a line starting with a date, a month heading or a gap starts a new one
+      // 4. entries: a bullet, a line starting with a date (or a day and a colon, "10-14: ..."), a month heading or a gap
+      // starts a new one
+      const heads = keep.filter(x => MONTH_HEAD_RE.test(x.t)), mine = [];
       cols.forEach(c => {
         let cur = null, month = null;
-        const push = () => { if (cur) all.push(cur); cur = null; };
+        const push = () => { if (cur) mine.push(cur); cur = null; };
         c.forEach((s, i) => {
           const t = s.t, prev = c[i - 1];
           if (MONTH_HEAD_RE.test(t)) { push(); month = t; return; }
           const lead = datesIn(t, [2000, 2001])[0];
-          const fresh = !cur || /^[●•★☆◆◇▪■□►▸✓✔*○◦]/.test(t) || (lead && lead[2] === 0) || (prev && prev.y - s.y > s.f * 1.9) || (lead && datesIn(cur.t, [2000, 2001]).length) || (month && /^\d{1,2}\b/.test(t));
-          if (fresh) { push(); cur = { t, month }; } else cur.t += ' ' + t;
+          const fresh = !cur || /^[●•★☆◆◇▪■□►▸✓✔*○◦]/.test(t) || (lead && lead[2] === 0) || (prev && prev.y - s.y > s.f * 1.9) || (lead && datesIn(cur.t, [2000, 2001]).length) || (month && /^\d{1,2}\b/.test(t)) || DAY_KEY_RE.test(t);
+          if (fresh) { push(); cur = { t, month, x0: s.x0, y: s.y }; } else cur.t += ' ' + t;
         });
         push();
       });
+      // "3: Independence Day" under a month's grid: the month is the heading above it, over the same block
+      // (2026-11-03, NMUSD's Google Sheets calendar: each month's notes sit under its grid, the heading centred over it)
+      mine.forEach(en => {
+        if (en.month || !DAY_KEY_RE.test(en.t) || !heads.length) return;
+        let best = null;
+        heads.forEach(h => { const dy = h.y - en.y; if (dy <= 0) return; const dx = Math.abs((h.x0 + h.x1) / 2 - (en.x0 + 60)); if (dx > 160) return; const sc = dy + dx * 3; if (!best || sc < best.sc) best = { h, sc }; });
+        if (best) en.month = best.h.t;
+      });
+      all.push(...mine);
     });
     return all;
   }
@@ -4619,10 +4636,10 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   function findDates(entries, ys) {
     const out = [];
     entries.forEach(en => {
-      const line = en.t.replace(/\s+/g, ' ').trim(); if (!line) return;
+      const line = en.t.replace(/\s+/g, ' ').trim().replace(/(\w)-\s+(?=[a-z])/gi, '$1-') /* "Non- Student" broken over two lines */; if (!line) return;
       let ds = datesIn(line, ys);
       // "September" above "7   Schools Closed (Labor Day)": a day under a month heading
-      if (!ds.length && en.month) { const m = line.match(/^(\d{1,2})(?:\s*[-–]\s*(\d{1,2}))?\s+(?=[A-Za-z])/); if (m) { const mh = en.month.match(new RegExp(MN_RE + '\\s*(20\\d{2})?', 'i')), mo = moOf(mh[1]), y = mh[2] ? +mh[2] : yOf(mo, ys), a = dk(y, mo, +m[1]), b = m[2] ? dk(y, mo, +m[2]) : a; if (a) ds = [[a, b && b >= a ? b : a, 0, m[0].length]]; } }
+      if (!ds.length && en.month) { const m = line.match(/^(\d{1,2})(?:\s*[-–]\s*(\d{1,2}))?\s*[:.)]?\s+(?=[A-Za-z*])/); if (m) { const mh = en.month.match(new RegExp(MN_RE + '\\s*(20\\d{2})?', 'i')), mo = moOf(mh[1]), y = mh[2] ? +mh[2] : yOf(mo, ys), a = dk(y, mo, +m[1]), b = m[2] ? dk(y, mo, +m[2]) : a; if (a) ds = [[a, b && b >= a ? b : a, 0, m[0].length]]; } }
       if (!ds.length) return;
       let t = tidy(cut(line, ds));
       if (t.length < 3 || t.length > 110) return;
@@ -4634,7 +4651,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
         let days = a === b ? [a] : WEEKDAYS(a, b); if (!days.length || days.length > 25) return;
         // a single day off on a weekend is a grid's leftover, not a day off
         if (off && days.length === 1 && !(dOf(a).getDay() % 6)) return;
-        out.push({ t: t.replace(/^./, c => c.toUpperCase()).slice(0, 70), kind: off ? 'off' : 'event', days, g: ELEM_RE.test(t) ? 'elem' : 'all', note: '' }); });
+        out.push({ t: t.replace(/^./, c => c.toUpperCase()).slice(0, 70), kind: off ? 'off' : 'event', days, g: ELEM_RE.test(t) && !SECONDARY_RE.test(t) ? 'elem' : 'all', note: '' }); });
     });
     // the same date said twice (a list and a key on the same calendar): once
     // (the same words, or most of them, on a day already found: "Half-Day" in the list, "½ Day" in the key)
@@ -4643,7 +4660,13 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     const kept = [];
     out.sort((a, b) => a.days[0].localeCompare(b.days[0]) || b.days.length - a.days.length).forEach(f => {
       if (kept.some(k => k.kind === f.kind && f.days.every(d => k.days.includes(d)) && like(k.t, f.t))) return; kept.push(f); });
-    return kept;
+    // one break written as two notes ("21-31: Winter Recess" under December, "1: Winter Recess" under January) is one
+    const joined = [];
+    kept.forEach(f => { const l = joined[joined.length - 1];
+      let nx = l && addD(dOf(l.days[l.days.length - 1]), 1); while (nx && !(nx.getDay() % 6)) nx = addD(nx, 1); // the next school day
+      if (l && l.kind === f.kind && l.t.toLowerCase() === f.t.toLowerCase() && key(nx) === f.days[0]) { l.days = l.days.concat(f.days.filter(d => !l.days.includes(d))); return; }
+      joined.push(f); });
+    return joined;
   }
   // .ics: every VEVENT, its title and its days (DTEND is the day after, for whole days)
   function fromIcs(text) {
