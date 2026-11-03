@@ -192,7 +192,7 @@
     margin: 0 -6px;
     padding: 0 6px;
   }
-  .key-form.open { max-height: 340px; }
+  .key-form.open { max-height: 420px; }
 
   .key-form-inner {
     padding-top: 8px;
@@ -632,6 +632,14 @@
   .age-why:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--ring); }
   .age-note { margin: -4px 0 0; font-size: 0.92rem; font-weight: 600; color: var(--ink-muted); line-height: 1.5; }
   .age-note[hidden] { display: none; }
+  /* The same 13+ check, sized to the smaller API-key form (2026-11-03). */
+  .key-form .age-row { gap: 10px; margin-bottom: 14px; }
+  .key-form .age-check { gap: 10px; font-size: 0.9rem; }
+  .key-form .age-check input { width: 22px; height: 22px; }
+  .key-form .age-check input:checked { box-shadow: inset 0 0 0 3px #ffffff; }
+  .key-form .age-check input:checked:focus-visible { box-shadow: inset 0 0 0 3px #ffffff, 0 0 0 4px var(--ring); }
+  .key-form .age-why { font-size: 0.75rem; padding: 3px 10px; }
+  .key-form .age-note { margin: -6px 0 14px; font-size: 0.78rem; }
   .lms-sso {
     width: 100%;
     min-height: 60px;
@@ -780,6 +788,8 @@
             </span>
             <span class="tooltip-bubble" role="tooltip">You can find your API keys at yourdistrict.schoology.com/api</span>
           </span>
+          <div class="age-row"><label class="age-check"><input type="checkbox" data-age id="keyAge"> I am 13+</label><button class="age-why" type="button" aria-expanded="false" data-age-why>Why?</button></div>
+          <p class="age-note" data-age-note hidden>Under U.S. privacy law, students under 13 use Incognito mode only.</p>
           <button class="btn connect-btn" id="connectBtn" type="button">
             <span class="btn-label">Connect</span>
             <span class="btn-dots" aria-hidden="true"><span></span><span></span><span></span></span>
@@ -1085,7 +1095,7 @@
     });
     ssoBtn.addEventListener('click', () => {
       if (!picked || ssoBtn.classList.contains('busy')) return;
-      saveAge(ageBoxes[0].checked);
+      saveAge(document.querySelector('#screenSchool [data-age]').checked);
       if (window.__averagesLmsSignIn) {
         // Off to that school's own Schoology sign-in page.
         ssoBtn.classList.add('busy');
@@ -1125,7 +1135,7 @@
     // Hidden API-key sign-in: login.html?keys (or ?demo). Not linked anywhere.
     const devKeys = document.getElementById('devKeys');
     if (q.has('keys') || q.has('demo')) devKeys.hidden = false;
-    document.getElementById('connectBtn').addEventListener('click', () => saveAge(ageBoxes[0].checked), true);
+    document.getElementById('connectBtn').addEventListener('click', () => saveAge(document.getElementById('keyAge').checked), true);
 
     const apiKeyToggle = document.getElementById('apiKeyToggle');
     const apiKeyForm = document.getElementById('apiKeyForm');
@@ -1158,6 +1168,7 @@
       connectBtn.disabled = busy;
       apiKeyInput.disabled = busy;
       apiSecretInput.disabled = busy;
+      document.getElementById('keyAge').disabled = busy;
     }
 
     connectBtn.addEventListener('click', () => {
