@@ -22,6 +22,9 @@ const SCHOOLOGY_SIGNIN_ERRORS: Record<string, string> = {
   denied: "Schoology didn't let Averages.io in. Try again, and choose Approve or Allow on Schoology's page.",
   expired: "That sign-in took too long or was opened in a different browser. Try again.",
   schoology_refused: "Schoology turned down the sign-in. Try again in a moment.",
+  schoology_refused_token: "Schoology didn't finish the sign-in after you approved it. Make sure Averages.io is installed for your school, then try again.",
+  schoology_refused_profile: "Schoology signed you in but wouldn't share your account. Make sure Averages.io is installed for your school, then try again.",
+  not_kept: "Schoology signed you in, but this browser didn't keep it. Allow cookies for averages.io, then try again.",
   schoology_error: "Schoology isn't responding right now. Try again in a moment.",
   schoology_unreachable: "Couldn't reach Schoology. Check your connection and try again.",
   schoology_bad_answer: "Schoology sent back something unexpected. Try again in a moment.",
@@ -94,6 +97,7 @@ export default function Page() {
     // screen, and drop it from the address so a reload doesn't repeat it.
     const params = new URLSearchParams(window.location.search);
     const signinError = params.get("signin_error");
+    const backFromSchoology = params.get("signin") === "schoology";
     if (signinError) {
       params.delete("signin_error");
       const rest = params.toString();
@@ -103,7 +107,8 @@ export default function Page() {
       // The login script resets the note while it draws the Schoology screen
       // (and when it puts back the school picked last time), so it's said
       // again over the first 2 s, until the student does anything.
-      const text = SCHOOLOGY_SIGNIN_ERRORS[signinError] ?? "Something went wrong signing in with Schoology. Please try again.";
+      // the code goes along in small print, so a report can say which step it was (2026-11-03)
+      const text = (SCHOOLOGY_SIGNIN_ERRORS[signinError] ?? "Something went wrong signing in with Schoology. Please try again.") + ` (${signinError.replace(/[^a-z_]/g, "").slice(0, 40)})`;
       let touched = false;
       const stop = () => { touched = true; };
       window.addEventListener("pointerdown", stop, { once: true, capture: true });
@@ -124,7 +129,16 @@ export default function Page() {
     const reveal = () => document.documentElement.removeAttribute("data-av-checking");
     getSession().then((session) => {
       if (cancelled) return;
-      if (session.mode === "out") { reveal(); return; }
+      if (session.mode === "out") {
+        reveal();
+        // Back from Schoology signed in, yet no session here: the browser didn't keep the cookie. Say so.
+        if (backFromSchoology) {
+          try { history.replaceState(history.state, "", window.location.pathname + window.location.hash); } catch {}
+          const say = () => { const note = document.getElementById("schoolNote"); if (!cancelled && note) { note.textContent = SCHOOLOGY_SIGNIN_ERRORS.not_kept + " (not_kept)"; note.hidden = false; } };
+          [0, 150, 500, 1000, 2000].forEach((ms) => setTimeout(say, ms));
+        }
+        return;
+      }
       let onboarded = false;
       try {
         onboarded = window.localStorage.getItem("schoolagy_onboarded") === "1";
