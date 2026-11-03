@@ -3386,7 +3386,7 @@
   .fl-pth canvas { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top; background: #ffffff; --keep-dark: 1; }
   .fl-bigpdf { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; min-height: 0; }
   .fl-bigpdf canvas { display: block; max-width: 100%; max-height: 100%; width: auto; height: auto; border-radius: 8px; background: #ffffff; box-shadow: 0 12px 40px rgba(0, 0, 0, .45); --keep-dark: 1; }
-  .fl-big { cursor: pointer; }
+  .fl-big { cursor: zoom-out; } .fl-big :is(svg, img, canvas) { cursor: pointer; }
   .fl-bigimg { max-width: 100%; max-height: 100%; object-fit: contain; display: block; margin: auto; border-radius: 8px; background: #ffffff; box-shadow: 0 16px 40px -12px rgba(0, 0, 0, .45); }
   .fl-lb-fold { height: 36px; border-radius: 10px; border: 0; background: var(--field); color: var(--ink); font: inherit; font-weight: 700; padding: 0 12px; }
   .fl-nameit input { width: 100%; border: 0; background: transparent; font: inherit; color: var(--ink); outline: none; }
@@ -5086,7 +5086,9 @@ window.AveragesHelp = {
       if (f.src === 'turned') { FSX.go('course-hub', { course: f.c }, 'materials/' + f.raw.assignment); return; }
       openReal(f); return;
     }
-    if (e.target.closest('.up-lb-fig')) { openReal(f); return; }
+    // the file itself opens it; anywhere else on the dark backdrop closes (2026-11-03, Martin's sketch)
+    if (e.target.closest('.up-lb-fig svg, .up-lb-fig img, .up-lb-fig canvas')) { openReal(f); return; }
+    if (!e.target.closest('button, a, select, input, label, [role="button"]')) lbClose();
   }
   const fileHref = f => f.src === 'turned' ? `${FSX.apiBase}/data/submission-file?section=${encodeURIComponent(f.raw.course)}&assignment=${encodeURIComponent(f.raw.assignment)}&revision=${encodeURIComponent(f.raw.revision)}&file=${encodeURIComponent(f.raw.id)}` : FSX.fileUrl(f.raw);
   document.addEventListener('change', e => {

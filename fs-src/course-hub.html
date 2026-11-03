@@ -3136,6 +3136,8 @@
   .mp-ti canvas.pthumb { display: block; width: 100%; height: auto; }
   .mplb-body { flex: 1; min-height: 0; overflow: auto; padding: 0 24px 32px; display: flex; flex-direction: column; align-items: center; gap: 16px; }
   .mplb-pages { display: flex; flex-direction: column; align-items: center; gap: 16px; width: 100%; }
+  .mplb-page, .mplb-img, .mplb-txt { cursor: pointer; }
+  .mplb { cursor: zoom-out; } .mplb .up-lb-top button { cursor: pointer; }
   .mplb-page { display: block; width: min(960px, 100%); height: auto; background: #ffffff; border-radius: 4px; box-shadow: 0 8px 32px rgba(0, 0, 0, .4); --keep-dark: 1; }
   .mplb-page:not([width]) { aspect-ratio: 8.5 / 11; }
   .mplb-img { display: block; max-width: 100%; max-height: calc(100vh - 120px); margin: auto; border-radius: 6px; }
@@ -5967,7 +5969,10 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       if (b && b.dataset.mplb === 'x') { mpLbClose(); return; }
       if (b && b.dataset.mplb === 'tab') { FSX.newTab(url); return; }
       if (b && b.dataset.mplb === 'dl') { mpDownload([m]); toast(`Downloading ${m.name}.`); return; }
-      if (e.target === mpLb.el || e.target.classList.contains('mplb-body')) mpLbClose();
+      if (b || e.target.closest('video, audio')) return;
+      // the file itself opens in a new tab; anywhere else on the dark backdrop closes (2026-11-03, Martin's sketch)
+      if (e.target.closest('.mplb-page, .mplb-img, .mplb-txt')) { if (String(getSelection() || '')) return; FSX.newTab(url); return; }
+      mpLbClose();
     });
     if (k === 'pdf') {
       const box = mpLb.el.querySelector('.mplb-pages'), mine = mpLb, w = Math.min(960, window.innerWidth - 48);
