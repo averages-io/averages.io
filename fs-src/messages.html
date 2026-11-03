@@ -3004,6 +3004,16 @@
   .ms-fc:hover { background: color-mix(in srgb, var(--inner) 60%, var(--field)); }
   .ms-fc .art { height: 140px; display: grid; place-items: center; background: color-mix(in srgb, var(--c) 12%, var(--field)); }
   .ms-fc .pf-stage { transform: scale(1.15); }
+  /* bigger pages on a file card (2026-11-03, Martin: "make the pages a bit bigger"); the "2 pages" label stays its size */
+  .ms-fc .art { height: 178px; }
+  .ms-fc .pf-stage { width: 150px; height: 128px; }
+  .ms-fc .pf-doc.portrait  { --pw: 80px; --ph: 102px; --peel: 40px; --spread: 15px; }
+  .ms-fc .pf-doc.landscape { --pw: 116px; --ph: 83px; --peel: 56px; --spread: 20px; }
+  .ms-fc .pf-doc.square    { --pw: 94px; --ph: 94px; --peel: 46px; --spread: 16px; }
+  .ms-fc .pf-num { font-size: 9px; }
+  .ms-fc .pf-count { right: -30px; top: 2px; }
+  .ms-fc .pf-band { height: 18px; margin: 10px 10px 0; }
+  .ms-fc .pf-ln { height: 3px; margin: 6px 10px 0; }
   .ms-fc .pf-page { display: block; }
   .ms-fc .pf-band, .ms-fc .pf-ln { display: block; }
   .ms-fc .pf-img.real img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
