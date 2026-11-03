@@ -727,7 +727,23 @@
   .msgs-to-result-name { font-weight: 700; font-size: 0.84rem; color: var(--text-dark); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .msgs-to-result-course { font-size: 0.72rem; font-weight: 600; color: var(--text-faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .msgs-to-no-results { padding: 8px 10px; font-size: 0.82rem; font-weight: 600; color: var(--text-faint); }
-  .msgs-subject-bar { padding: 10px 18px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  .msgs-subject-bar { padding: 10px 18px; border-bottom: 1px solid var(--border); flex-shrink: 0; display: flex; align-items: center; gap: 8px; }
+  /* Start in Schoology (2026-11-03, Martin): some schools only let students start a conversation on Schoology itself. */
+  .msgs-sgy-btn { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border: 0; border-radius: 10px; background: var(--panel-inner); color: var(--text-dark); font: inherit; font-size: 0.78rem; font-weight: 800; white-space: nowrap; cursor: pointer; }
+  .msgs-sgy-btn:hover { background: var(--border); }
+  .msgs-sgy-btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
+  .msgs-sgy-btn svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+  .msgs-bubble-failed .msgs-sgy-btn { height: 26px; padding: 0 10px; font-size: 0.7rem; border-radius: 999px; }
+  .msgs-sgy-scrim { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 16px; background: rgba(0, 0, 0, 0.45); }
+  .msgs-sgy-box { width: min(420px, 100%); background: var(--panel-bg); color: var(--text-dark); border-radius: var(--window-radius-md, 14px); box-shadow: 0 20px 45px -16px rgba(0,0,0,0.5); padding: 20px; text-align: left; }
+  .msgs-sgy-box h2 { margin: 0 0 4px; font-size: 1.1rem; font-weight: 800; }
+  .msgs-sgy-box p { margin: 0 0 10px; font-size: 0.86rem; font-weight: 600; color: var(--text-muted); line-height: 1.45; }
+  .msgs-sgy-box ol { margin: 0 0 16px; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; font-size: 0.86rem; font-weight: 600; color: var(--text-muted); line-height: 1.4; }
+  .msgs-sgy-box ol b { color: var(--text-dark); }
+  .msgs-sgy-acts { display: flex; justify-content: flex-end; gap: 8px; }
+  .msgs-sgy-acts button { height: 36px; padding: 0 14px; border: 0; border-radius: 10px; font: inherit; font-size: 0.84rem; font-weight: 800; cursor: pointer; background: var(--panel-inner); color: var(--text-dark); }
+  .msgs-sgy-acts button.go { background: var(--accent); color: #fff; }
+  .msgs-sgy-acts button:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
   .msgs-subject-bar[hidden] { display: none; }
   .msgs-subject-input {
     width: 100%;
@@ -772,6 +788,7 @@
      attachment distinctly from the text around it. */
   .msgs-bubble-attachment { display: flex; align-items: center; gap: 9px; max-width: 74%; padding: 6px 12px 6px 6px; border-radius: 14px; background: var(--panel-inner); cursor: pointer; }
   .msgs-bubble-attachment:hover { background: var(--border); }
+  .msgs-bubble-link { color: inherit; font-weight: 700; text-decoration: underline; text-underline-offset: 2px; overflow-wrap: anywhere; }
   .msgs-bubble-attachment .msgs-file-chip, .msgs-bubble-attachment .msgs-media-chip { width: 28px; height: 28px; font-size: 0.52rem; }
   .msgs-bubble-attachment .msgs-media-chip svg { width: 13px; height: 13px; }
   .msgs-bubble-attachment-text { min-width: 0; }
@@ -1347,6 +1364,7 @@
           </div>
           <div class="msgs-subject-bar" id="subjectBar" hidden>
             <input type="text" id="subjectInput" class="msgs-subject-input" placeholder="Subject" aria-label="Subject">
+            <button type="button" class="msgs-sgy-btn" data-action="start-in-schoology" title="Start this conversation on Schoology's own site">Start in Schoology <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></button>
           </div>
           <div class="msgs-bubbles" id="threadBubbles"></div>
           <!-- Plain div, not a <form> (changed 2026-09-04, per Martin's
@@ -1874,6 +1892,15 @@
             text: liveText(m.text, 10000),
             time: liveText(m.time, 60),
             at: Number(m.at) || 0,
+            // Files and links sent with it (2026-11-03, Martin: links and files in messages didn't work): a file opens
+            // in a new tab (Schoology's copy, through the API), a link opens its page.
+            attachments: [].concat(
+              (Array.isArray(m.files) ? m.files : []).filter(f => f && /^\d{1,24}$/.test(String(f.id))).slice(0, 10).map(f => {
+                const q = '/messages/file?thread=' + encodeURIComponent(c.id) + '&file=' + encodeURIComponent(String(f.id));
+                return { kind: 'doc', name: liveText(f.name, 200) || 'File', url: MSG_API + q + '&view=1', dl: MSG_API + q, real: true };
+              }),
+              (Array.isArray(m.links) ? m.links : []).filter(l => l && /^https?:\/\//i.test(String(l.url))).slice(0, 10).map(l => ({ kind: 'link', title: liveText(l.title, 200) || String(l.url).replace(/^https?:\/\//i, '').replace(/\/$/, ''), url: String(l.url) }))
+            ),
           };
         });
         c.messages = loaded.concat(c.messages.filter(m => m.local));
@@ -2055,10 +2082,49 @@
         msg.time = 'Not sent';
         msg.error = why.text;
         msg.canRetry = why.retry;
+        if (err && err.code === 'school_blocks_new_messages') {
+          msg.sgy = true; msg.error = 'Your school only lets students start new conversations on Schoology.';
+          try { localStorage.setItem('averages_msg_new_blocked', String(Date.now())); } catch {}
+          sgyOpen(true, ((c.subject ? c.subject + '\n\n' : '') + (msg.body || '')).trim());
+        }
       }).then(() => {
         liveRefreshThreadView(c);
         renderThreadList();
       });
+    }
+    // Start it in Schoology (2026-11-03, Martin): the button by the subject, and this popup when Schoology turns a new
+    // conversation down (some schools only let students start one on Schoology's own site). It copies what the
+    // student wrote and opens their Schoology messages; the answer shows up here, and replies work from here.
+    function schoologyHome() {
+      let host = '';
+      try { const s = JSON.parse(localStorage.getItem('averages_login_school') || 'null'); host = String((s && s.schoology && s.schoology.domain) || '').toLowerCase(); } catch {}
+      return 'https://' + (/^(?=.{4,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/.test(host) ? host : 'app.schoology.com');
+    }
+    function sgyOpen(turnedDown, draft) {
+      if (document.getElementById('msgsSgy')) return;
+      const from = document.activeElement;
+      const wrap = document.createElement('div');
+      wrap.className = 'msgs-sgy-scrim'; wrap.id = 'msgsSgy';
+      wrap.innerHTML = `<div class="msgs-sgy-box" role="dialog" aria-modal="true" aria-labelledby="msgsSgyT">
+          <h2 id="msgsSgyT">Start it in Schoology</h2>
+          <p>${turnedDown ? 'Your school only lets students start new conversations on Schoology itself.' : 'Start a conversation on Schoology’s site when your school doesn’t let Averages.io start it.'}</p>
+          <ol><li>Open Schoology${draft ? '. We copy your message for you' : ''}.</li><li>Click <b>New Message</b>, pick your teacher${draft ? ' and paste' : ''}.</li><li>When they answer, it shows up here and you can reply from Averages.io.</li></ol>
+          <div class="msgs-sgy-acts"><button type="button" data-sgy="x">Not now</button><button type="button" class="go" data-sgy="go">Open Schoology</button></div>
+        </div>`;
+      document.body.appendChild(wrap);
+      const close = () => { wrap.remove(); document.removeEventListener('keydown', onKey, true); if (from && from.isConnected) from.focus(); };
+      const onKey = e => { if (e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); close(); } };
+      document.addEventListener('keydown', onKey, true);
+      wrap.addEventListener('click', e => {
+        const b = e.target.closest('[data-sgy]');
+        if (e.target === wrap || (b && b.dataset.sgy === 'x')) { close(); return; }
+        if (b && b.dataset.sgy === 'go') {
+          if (draft) { try { navigator.clipboard.writeText(draft).then(() => showComposerNote('Copied your message. Paste it in Schoology.'), () => {}); } catch {} }
+          window.open(schoologyHome() + '/messages/inbox', '_blank', 'noopener');
+          close();
+        }
+      });
+      wrap.querySelector('[data-sgy="go"]').focus();
     }
     function liveRetryMessage(localId) {
       for (const c of CONVERSATIONS) {
@@ -2546,6 +2612,12 @@
     const toInput = document.getElementById('toInput');
     const toResults = document.getElementById('toResults');
     const subjectBar = document.getElementById('subjectBar');
+    subjectBar.addEventListener('click', e => {
+      if (!e.target.closest('[data-action="start-in-schoology"]')) return;
+      const subj = (document.getElementById('subjectInput').value || '').trim(), text = (document.getElementById('composerInput').value || '').trim();
+      let blocked = false; try { blocked = !!localStorage.getItem('averages_msg_new_blocked'); } catch {}
+      sgyOpen(blocked, ((subj ? subj + '\n\n' : '') + text).trim());
+    });
     const subjectInput = document.getElementById('subjectInput');
     const threadBubbles = document.getElementById('threadBubbles');
     const composerForm = document.getElementById('composerForm');
@@ -2644,13 +2716,23 @@
     // button, keyed by the same data-kind/data-name/data-url/data-title it
     // carries here, opened by the delegated handler on #threadBubbles
     // below (attachmentClickHandler).
+    // A message's words with its web addresses as real links (2026-11-03), opening in a new tab.
+    function linkedText(text) {
+      let out = '', i = 0;
+      String(text).replace(/https?:\/\/[^\s<>"]+/g, (u, at) => {
+        const url = u.replace(/[).,!?:;]+$/, '');
+        out += escapeHtml(text.slice(i, at)) + `<a class="msgs-bubble-link" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(url.replace(/^https?:\/\//i, '').replace(/\/$/, ''))}</a>`;
+        i = at + url.length; return u;
+      });
+      return out + escapeHtml(String(text).slice(i));
+    }
     function renderBubbleAttachment(a, standaloneLabel, standaloneSentAt) {
       if (!a) return '';
       let chip, dataAttrs;
       if (a.kind === 'doc') {
         const ext = fileExt(a.name);
         chip = `<span class="msgs-file-chip" style="background:${fileExtColor(ext)}" aria-hidden="true">${escapeHtml(ext)}</span><span class="msgs-bubble-attachment-text"><span class="msgs-bubble-attachment-name">${escapeHtml(a.name)}</span></span>`;
-        dataAttrs = `data-kind="doc" data-name="${escapeHtml(a.name)}"`;
+        dataAttrs = `data-kind="doc" data-name="${escapeHtml(a.name)}"${a.real && a.url ? ` data-url="${escapeHtml(a.url)}"` : ''}`;
       } else if (a.kind === 'link') {
         chip = `<span class="msgs-media-chip" aria-hidden="true">${ICON_LINK}</span><span class="msgs-bubble-attachment-text"><span class="msgs-bubble-attachment-name msgs-bubble-attachment-name-link">${escapeHtml(a.title)}</span></span>`;
         dataAttrs = `data-kind="link" data-url="${escapeHtml(a.url)}"`;
@@ -2687,6 +2769,8 @@
         let url = el.dataset.url || '';
         if (url && !/^https?:\/\//i.test(url)) url = `https://${url}`;
         window.open(url, '_blank', 'noopener,noreferrer');
+      } else if (kind === 'doc' && el.dataset.url && /^https?:\/\//i.test(el.dataset.url)) {
+        window.open(el.dataset.url, '_blank', 'noopener');   // a real file someone sent
       } else if (kind === 'doc' || kind === 'video' || kind === 'audio') {
         downloadPlaceholderAttachment(el.dataset.name);
       }
@@ -2699,6 +2783,8 @@
       // Signed in (2026-10-06): resend a message, or reload a thread.
       const retry = e.target.closest('.msgs-retry-btn');
       if (retry) { liveRetryMessage(retry.dataset.localId); return; }
+      const sg = e.target.closest('[data-action="start-in-schoology"]');
+      if (sg) { const c = CONVERSATIONS.find(x => x.messages.some(m => m.localId === sg.dataset.localId)); const m = c && c.messages.find(x => x.localId === sg.dataset.localId); sgyOpen(true, c && m ? ((c.subject ? c.subject + '\n\n' : '') + (m.body || '')).trim() : ''); return; }
       const again = e.target.closest('[data-action="retry-thread"]');
       if (again) { liveRetryThread(again.dataset.id); return; }
       const el = e.target.closest('.msgs-bubble-attachment');
@@ -2718,7 +2804,7 @@
     function renderBubbleRowHtml(m, i, showAuthor) {
       const atts = attachmentsOf(m);
       const timeLabel = m.sentAt ? relativeTime(m.sentAt) : m.time;
-      const bubbleHtml = m.text ? `<div class="msgs-bubble">${escapeHtml(m.text)}${timeSpanHtml(timeLabel, m.sentAt, 'msgs-bubble-time')}</div>` : '';
+      const bubbleHtml = m.text ? `<div class="msgs-bubble">${linkedText(m.text)}${timeSpanHtml(timeLabel, m.sentAt, 'msgs-bubble-time')}</div>` : '';
       const attsHtml = atts.map((a, ai) => {
         const isLast = ai === atts.length - 1;
         return renderBubbleAttachment(a, (!m.text && isLast) ? timeLabel : '', (!m.text && isLast) ? m.sentAt : undefined);
@@ -2726,7 +2812,7 @@
       // Signed in (2026-10-06): who wrote it in a group thread, and a
       // message that didn't go through gets a Retry.
       const authorHtml = showAuthor && m.from === 'them' && m.authorId ? `<span class="msgs-bubble-author">${escapeHtml(personName(m.authorId))}</span>` : '';
-      const failedHtml = m.status === 'failed' ? `<div class="msgs-bubble-failed" role="alert"><span>${escapeHtml(m.error || "Couldn't send.")}</span>${m.canRetry === false ? '' : `<button type="button" class="msgs-retry-btn" data-local-id="${escapeHtml(m.localId)}">Retry</button>`}</div>` : '';
+      const failedHtml = m.status === 'failed' ? `<div class="msgs-bubble-failed" role="alert"><span>${escapeHtml(m.error || "Couldn't send.")}</span>${m.sgy ? `<button type="button" class="msgs-sgy-btn" data-action="start-in-schoology" data-local-id="${escapeHtml(m.localId)}">Start in Schoology</button>` : m.canRetry === false ? '' : `<button type="button" class="msgs-retry-btn" data-local-id="${escapeHtml(m.localId)}">Retry</button>`}</div>` : '';
       return `
         <div class="msgs-bubble-row ${escapeHtml(m.from)}" data-msg-index="${i}">
           ${authorHtml}

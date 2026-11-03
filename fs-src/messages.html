@@ -3020,6 +3020,25 @@
   .ms-lbimg > span { display: block; width: min(100%, calc((100vh - 140px) * 4 / 3)); aspect-ratio: 4 / 3; border-radius: 8px; box-shadow: 0 8px 32px rgba(0, 0, 0, .4); background: radial-gradient(circle at 74% 28%, #ffffff 0 5%, transparent 5.5%), linear-gradient(160deg, color-mix(in srgb, var(--c) 28%, #ffffff), color-mix(in srgb, var(--c) 72%, #ffffff)); }
   /* a link's preview: a picture area tinted by where it goes, then the page's title and site */
   .ms-lp { display: flex; flex-direction: column; width: 280px; max-width: 100%; border-radius: 18px; overflow: hidden; background: var(--field); text-align: left; color: var(--ink); box-shadow: 0 1px 1px rgba(20, 20, 40, .04); transition: background-color .15s ease; }
+  a.ms-lp { text-decoration: none; }
+  /* the file popup, the same as a class's materials (course-hub.html) */
+  .mplb-body { flex: 1; min-height: 0; overflow: auto; padding: 0 24px 32px; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+  .mplb-body.loading .mplb-img { position: absolute; opacity: 0; }
+  .mplb-pages { display: flex; flex-direction: column; align-items: center; gap: 16px; width: 100%; }
+  .mplb-page, .mplb-img, .mplb-txt { cursor: pointer; }
+  .mplb { cursor: zoom-out; } .mplb .up-lb-top button { cursor: pointer; }
+  .mplb-page { display: block; width: min(960px, 100%); height: auto; background: #ffffff; border-radius: 4px; box-shadow: 0 8px 32px rgba(0, 0, 0, .4); --keep-dark: 1; }
+  .mplb-page:not([width]) { aspect-ratio: 8.5 / 11; }
+  .mplb-img { display: block; max-width: 100%; max-height: calc(100vh - 120px); margin: auto; border-radius: 6px; }
+  .mplb-txt { margin: 0; width: min(960px, 100%); padding: 32px; border-radius: 6px; background: #ffffff; white-space: pre-wrap; overflow-wrap: anywhere; font: 500 13px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #1f2029; cursor: text; --keep-dark: 1; }
+  .mplb-more { margin: auto 0; display: inline-flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 700; color: rgba(255, 255, 255, .72); --keep-dark: 1; }
+  .mplb-spin { width: 18px; height: 18px; border-radius: 50%; border: 2.5px solid rgba(255, 255, 255, .22); border-top-color: #ffffff; animation: spin .8s linear infinite; flex: none; }
+  .potato-mode .mplb-spin { animation: none; } @media (prefers-reduced-motion: reduce) { .mplb-spin { animation: none; } }
+  .mplb-none { margin: auto; display: flex; flex-direction: column; align-items: center; gap: 10px; max-width: 360px; text-align: center; cursor: default; }
+  .mplb-none b { font-size: 16px; font-weight: 900; } .mplb-none p { margin: 0; font-size: 14px; font-weight: 600; color: rgba(255, 255, 255, .72); }
+  @media (max-width: 640px) { .mplb-body { padding: 0 8px 16px; } .mplb .lbl { display: none; } }
+  .ms-fc .pf-page.real { background: #ffffff; }
+  .ms-fc .pf-page .pf-real { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 0; }
   .ms-lp:hover { background: color-mix(in srgb, var(--inner) 60%, var(--field)); }
   .ms-lp .art { height: 112px; display: grid; place-items: center; background: color-mix(in srgb, var(--c) 16%, var(--field)); color: var(--c); }
   .ms-lp .art svg.i { width: 40px; height: 40px; stroke-width: 1.75; }
@@ -3188,6 +3207,15 @@
   /* the hint is wider than the emoji, so center it on the emoji (not from its left edge) */
   .ms-h .hub-tip { left: 50%; right: auto; margin: 0; transform: translateX(-50%); }
   #msLogo:focus-visible { outline: 3px solid var(--focus); outline-offset: 4px; }
+  .ms-sgy { flex: none; gap: 6px; }
+  .ms-sgy svg.i, .ms-sgy2 svg.i, .ms-sgyf svg.i { width: 15px; height: 15px; }
+  .ms-sgy2 { margin-top: 8px; gap: 6px; }
+  .ms-sgybox { width: min(440px, 100%); }
+  .ms-sgyp { margin: 0 4px; font-size: 14px; font-weight: 600; color: var(--ink-2); line-height: 1.45; }
+  .ms-sgyl { margin: 0 4px 4px; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 600; color: var(--ink-2); line-height: 1.4; }
+  .ms-sgyl b { color: var(--ink); font-weight: 800; }
+  .ms-sgyf { display: flex; justify-content: flex-end; gap: 8px; }
+  @media (max-width: 640px) { .ms-sgy { padding: 0 10px; font-size: 0; gap: 0; } .ms-sgy svg.i { width: 16px; height: 16px; } }
   .ms-sscrim { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 16px; background: rgba(20, 21, 31, .32); }
   .ms-sscrim.in { animation: msSFade .16s ease backwards; }
   .ms-sscrim.in .ms-sbox { animation: msSIn .22s cubic-bezier(.2, .8, .2, 1) backwards; }
@@ -4282,7 +4310,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const hostOf = u => prettyUrl(u).split('/')[0];
   // a message's text, with its links made into links (they open in a new tab in the app)
   function rich(s) {
-    let out = '', i = 0; s.replace(URL_RE, (u, at) => { const c = cleanUrl(u); out += markQ(s.slice(i, at)) + `<a class="ms-link" href="#" data-toast="${esc(hostOf(c))} in a new tab">${markQ(prettyUrl(c))}</a>`; i = at + c.length; return u; });
+    let out = '', i = 0; s.replace(URL_RE, (u, at) => { const c = cleanUrl(u); out += markQ(s.slice(i, at)) + `<a class="ms-link" href="${esc(c)}" target="_blank" rel="noopener noreferrer" title="${esc(hostOf(c))}, in a new tab">${markQ(prettyUrl(c))}</a>`; i = at + c.length; return u; });
     return out + markQ(s.slice(i));
   }
   const whoOf = m => m.from === 'me' ? 'You' : P(m.from).name;
@@ -4363,7 +4391,8 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     const k = prettyUrl(u), L = LINKS[k] || { title: k.split('/').pop().replace(/[-_]+/g, ' ').replace(/^./, ch => ch.toUpperCase()) || hostOf(u), site: hostOf(u), icon: 'link' };
     const c = L.cls ? C[L.cls].color : L.c || 'var(--muted)';
     const art = L.cls ? `<span class="emo">${EMOJI_SVG[C[L.cls].emoji] || ''}</span>` : L.file && window.AveragesFileIcons ? AveragesFileIcons.html(L.file, { size: 44 }) : ico(L.icon || 'link');
-    return `<button class="ms-lp avfi-host" style="--c:${c}" data-toast="${esc(hostOf(u))} in a new tab" aria-label="${esc(L.title)}, ${esc(L.site)}"><span class="art" aria-hidden="true">${art}</span><span class="tx"><b>${markQ(L.title)}</b><small>${markQ(L.site)}</small></span></button>`;
+    // a real link (2026-11-03, Martin: "links and link previews don't work"): it opens the page in a new tab
+    return `<a class="ms-lp avfi-host" style="--c:${c}" href="${esc(u)}" target="_blank" rel="noopener noreferrer" aria-label="${esc(L.title)}, ${esc(L.site)}, opens in a new tab"><span class="art" aria-hidden="true">${art}</span><span class="tx"><b>${markQ(L.title)}</b><small>${markQ(L.site)}</small></span></a>`;
   }
   const CATS = [['all', 'All'], ['msgs', 'Messages'], ['people', 'People'], ['files', 'Files'], ['links', 'Links']];
   function sResults() {
@@ -4511,7 +4540,76 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (pick) requestAnimationFrame(() => mpPill($('msSubj'), false));
     const feed = $('msFeed'); feed.scrollTop = feedTop != null ? feedTop : feed.scrollHeight;
     wireComposer();
+    fcReal();
   }
+  // The real pages on a PDF's card (2026-11-03, Martin: "add a page preview on these previews when they become
+  // available"): the drawn placeholder until they're here (and if the file can't be read), then the first pages
+  // (up to the five the card fans out) and the real page count. Pictures already show themselves.
+  function fcReal() {
+    document.querySelectorAll('#msThread .ms-fc[data-msfile]:not([data-real])').forEach(card => {
+      card.setAttribute('data-real', '');
+      const [, m] = msgById(card.dataset.msfile), a = m && m.att;
+      if (!a || !a.real || !a.url || FSX.prev.kind(a.name) !== 'pdf') return;
+      FSX.prev.pdf(a.url).then(doc => {
+        let el = card.isConnected ? card : document.querySelector(`#msThread .ms-fc[data-msfile="${card.dataset.msfile}"]`); if (!el) return;
+        if (a.pages !== doc.numPages) { a.pages = doc.numPages; el.outerHTML = fileCard(a, card.dataset.msfile); el = document.querySelector(`#msThread .ms-fc[data-msfile="${card.dataset.msfile}"]`); if (!el) return; el.setAttribute('data-real', ''); }
+        el.querySelectorAll('.pf-page').forEach((pg, i) => {
+          const c = document.createElement('canvas');
+          FSX.prev.page(a.url, i, c, 140).then(() => { if (!pg.isConnected) return; c.className = 'pf-real'; pg.textContent = ''; pg.appendChild(c); pg.classList.add('real'); }, () => {});
+        });
+      }, () => {});
+    });
+  }
+
+  // A file sent in a message, big, over everything (2026-11-03, Martin: "can this popup also show in messages"): the
+  // same popup as a class's materials. A PDF's pages to scroll through, a picture, text, sound or video, with
+  // Download and Open in a new tab. Clicking the file opens it in a new tab; the dark backdrop closes it.
+  let fLb = null;
+  function fileLbOpen(a) {
+    fileLbClose(true);
+    const k = FSX.prev.kind(a.name), url = a.url;
+    const body = k === 'image' ? `<img class="mplb-img" src="${esc(url)}" alt="${esc(a.name)}">` : k === 'video' ? `<video class="mplb-img" controls autoplay src="${esc(url)}"></video>` : k === 'audio' ? `<audio controls autoplay src="${esc(url)}"></audio>`
+      : k === 'text' ? '<pre class="mplb-txt">Loading…</pre>' : k === 'pdf' ? '<div class="mplb-pages" aria-live="polite"></div>'
+      : `<div class="mplb-none">${window.AveragesFileIcons ? AveragesFileIcons.html(a.name, { size: 56 }) : ''}<b>${esc(a.name)}</b><p>There's no preview for this kind of file. Download it to open it in its own app.</p></div>`;
+    document.body.insertAdjacentHTML('beforeend', `<div class="up-lb mplb" role="dialog" aria-modal="true" aria-labelledby="fLbT"><div class="up-lb-top"><div class="tx"><b id="fLbT">${esc(a.name)}</b><small>${esc([kindOf(a), a.size].filter(Boolean).join(' · '))}</small></div>
+      <button class="btn up-lb-dl" data-flb="dl">${ico('dl')}<span class="lbl">Download</span></button><button class="up-lb-x" data-flb="tab" aria-label="Open in a new tab">${ico('up')}</button><button class="up-lb-x" data-flb="x" aria-label="Close">${ico('x')}</button></div><div class="mplb-body">${body}</div></div>`);
+    fLb = { el: document.body.lastElementChild, from: document.activeElement };
+    if (!calm()) fLb.el.classList.add('in');
+    fLb.el.querySelector('[data-flb="x"]').focus({ preventScroll: true });
+    fLb.el.addEventListener('click', e => {
+      const b = e.target.closest('[data-flb]');
+      if (b && b.dataset.flb === 'x') { fileLbClose(); return; }
+      if (b && b.dataset.flb === 'tab') { FSX.newTab(url); return; }
+      if (b && b.dataset.flb === 'dl') { const l = document.createElement('a'); l.href = a.dl || url; l.download = a.name; l.rel = 'noopener'; document.body.appendChild(l); l.click(); l.remove(); toast(`Downloading ${a.name}.`); return; }
+      if (b || e.target.closest('video, audio, .mplb-none')) return;
+      if (e.target.closest('.mplb-page, .mplb-img, .mplb-txt')) { if (String(getSelection() || '')) return; FSX.newTab(url); return; }
+      fileLbClose();
+    });
+    const wait = (box, msg) => { box.innerHTML = `<p class="mplb-more" data-wait><span class="mplb-spin" aria-hidden="true"></span>${msg}</p>`; return setTimeout(() => { const n = box.querySelector('[data-wait]'); if (n) n.lastChild.textContent = 'Still getting this file from Schoology. New uploads can take a few minutes.'; }, 8000); };
+    if (k === 'text') { const pre = fLb.el.querySelector('.mplb-txt'); FSX.prev.text(url).then(t => { pre.textContent = t; }, () => { pre.textContent = 'Couldn\'t load this file. Try downloading it.'; }); }
+    if (k === 'pdf') {
+      const box = fLb.el.querySelector('.mplb-pages'), mine = fLb, w = Math.min(960, window.innerWidth - 48), slow = wait(box, 'Loading…');
+      FSX.prev.pdf(url).then(doc => {
+        clearTimeout(slow); const wn = box.querySelector('[data-wait]'); if (wn) wn.remove();
+        const n = Math.min(doc.numPages, 60); let chain = Promise.resolve();
+        for (let i = 0; i < n; i++) {
+          const c = document.createElement('canvas'); c.className = 'mplb-page'; c.setAttribute('role', 'img'); c.setAttribute('aria-label', `Page ${i + 1} of ${doc.numPages}`); box.appendChild(c);
+          chain = chain.then(() => fLb === mine ? FSX.prev.page(url, i, c, w) : null);
+        }
+        if (doc.numPages > n) box.insertAdjacentHTML('beforeend', `<p class="mplb-more">The first ${n} pages are shown. Open it in a new tab to see all ${doc.numPages}.</p>`);
+      }, () => { clearTimeout(slow); box.innerHTML = `<p class="mplb-more">Couldn't show this PDF here. Open it in a new tab instead.</p>`; });
+    }
+    if (k === 'image') { const img = fLb.el.querySelector('.mplb-img'), bx = fLb.el.querySelector('.mplb-body'); if (!img.complete) { bx.classList.add('loading'); bx.insertAdjacentHTML('beforeend', `<p class="mplb-more mplb-imgwait"><span class="mplb-spin" aria-hidden="true"></span>Loading…</p>`); const done = () => { bx.classList.remove('loading'); const w = bx.querySelector('.mplb-imgwait'); if (w) w.remove(); }; img.addEventListener('load', done); img.addEventListener('error', done); } }
+  }
+  function fileLbClose(quiet) {
+    if (!fLb) return; const { el, from } = fLb; fLb = null; el.remove();
+    if (!quiet && from && from.isConnected) from.focus({ preventScroll: true });
+  }
+  document.addEventListener('keydown', e => {
+    if (!fLb) return;
+    if (e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); fileLbClose(); return; }
+    if (e.key === 'Tab') { const f = [...fLb.el.querySelectorAll('button, video, audio')]; if (!f.length) return; if (e.shiftKey && document.activeElement === f[0]) { e.preventDefault(); f[f.length - 1].focus(); } else if (!e.shiftKey && document.activeElement === f[f.length - 1]) { e.preventDefault(); f[0].focus(); } }
+  }, true);
   function wireComposer() {
     const ta = $('msText'), send = $('msSend'); if (!ta) return;
     const fit = () => { ta.style.height = 'auto'; ta.style.height = Math.min(160, ta.scrollHeight) + 'px'; send.disabled = !ta.value.trim() && !($('msClip') && pendOf().length); };
@@ -4565,10 +4663,10 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   function composeHTML() {
     const c = MS.compose, box = $('msThread');
     const chips = c.to.map(id => `<span class="ms-chip">${av(P(id))}${esc(P(id).name)}<button data-msunto="${id}" aria-label="Remove ${esc(P(id).name)}">${ico('x')}</button></span>`).join('');
-    box.innerHTML = `<div class="ms-top"><button class="ibtn ms-back" data-msback aria-label="Back to your messages">${ico('chev-l')}</button><span class="ms-av" style="--h:210" aria-hidden="true">${ico('plus')}</span><span class="tx"><b>New message</b><small>To your teachers</small></span><button class="ibtn" data-msdiscard aria-label="Throw away this message">${ico('x')}</button></div>
+    box.innerHTML = `<div class="ms-top"><button class="ibtn ms-back" data-msback aria-label="Back to your messages">${ico('chev-l')}</button><span class="ms-av" style="--h:210" aria-hidden="true">${ico('plus')}</span><span class="tx"><b>New message</b><small>To your teachers</small></span><button class="btn sm ms-sgy" data-mssgy title="Start this conversation on Schoology's own site">${ico('up')}Start in Schoology</button><button class="ibtn" data-msdiscard aria-label="Throw away this message">${ico('x')}</button></div>
       <div class="ms-to${c.bad === 'to' ? ' bad' : ''}" id="msTo"><small>To</small>${chips}<input id="msToIn" placeholder="${c.to.length ? 'Add someone' : 'Type a name'}" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="msFindList" aria-label="Who it's to" value="${esc(c.q || '')}"></div>
       <label class="ms-subin${c.bad === 'subj' ? ' bad' : ''}"><small>Subject</small><input id="msSubIn" placeholder="What it's about" autocomplete="off" value="${esc(c.subject)}"></label>
-      <div class="ms-feed"><div class="ms-empty"><span class="emo">${EMOJI_SVG['💬'] || ''}</span><b>${c.to.length ? `Write to ${esc(c.to.map(id => P(id).name.split(' ')[0] === P(id).name ? P(id).name : P(id).name).join(', '))}` : 'Who is it to?'}</b><span>${c.bad === 'subj' ? 'Add a subject. Schoology needs one for a new message.' : c.bad === 'to' ? 'Pick at least one person first.' : 'Schoology needs a subject for a new message.'}</span></div></div>`
+      <div class="ms-feed"><div class="ms-empty"><span class="emo">${EMOJI_SVG['💬'] || ''}</span><b>${c.to.length ? `Write to ${esc(c.to.map(id => P(id).name.split(' ')[0] === P(id).name ? P(id).name : P(id).name).join(', '))}` : 'Who is it to?'}</b><span>${c.bad === 'subj' ? 'Add a subject. Schoology needs one for a new message.' : c.bad === 'to' ? 'Pick at least one person first.' : sgyBlocked() ? 'Your school only lets students start new conversations on Schoology.' : 'Schoology needs a subject for a new message.'}</span>${sgyBlocked() ? `<button class="btn sm primary ms-sgy2" data-mssgy>${ico('up')}Start it in Schoology</button>` : ''}</div></div>`
       + composerHTML('Write your message', '', allTeachers(c.to));
     wireComposer(); const ta = $('msText'); if (ta && c.text) { ta.value = c.text; ta.dispatchEvent(new Event('input')); }
     const ti = $('msToIn');
@@ -4614,8 +4712,39 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       pendOf().splice(0);
       const t = { id: String(r.id || 'h' + Date.now().toString(36)), with: c.to.slice(), subject: c.subject.trim(), loaded: !r.id, msgs: [M('me', text, new Date(), { state: 'sent', fresh: true })] };
       t.msgs[0].id = t.id + '.0'; TH.unshift(t); MS.compose = null; MS.open = t.id; openThread(t.id); toast('Sent. It\'s in Schoology too.');
-    }, e => { if (btn) btn.disabled = false; toast(FSX.msgError(e)); });
+    }, e => { if (btn) btn.disabled = false; if (e && e.message === 'school_blocks_new_messages') { FSX.lset('averages_msg_new_blocked', Date.now()); sgyOpen(true); return; } toast(FSX.msgError(e)); });
   }
+
+  // ---------- start it in Schoology (2026-11-03, Martin) ----------
+  // Some schools only let students start a new conversation on Schoology itself (the API says no: "Some or all of the
+  // recipients you entered are invalid"). The button in New message, and this popup when Schoology turns one down:
+  // it copies what the student wrote and opens their Schoology messages, where New Message starts it. The answer
+  // comes back here like any conversation, and replies work from Averages.io.
+  const sgyBlocked = () => !!FSX.lget('averages_msg_new_blocked');
+  let sgy = null;
+  function sgyDraft() {
+    const c = MS.compose || {}, ta = $('msText'), text = ((ta && ta.value) || c.text || '').trim(), subj = (c.subject || '').trim();
+    return (subj ? subj + '\n\n' : '') + text;
+  }
+  function sgyOpen(turnedDown) {
+    if (sgy) return; const draft = sgyDraft(), school = FSD.me.school ? esc(FSD.me.school) : 'Your school';
+    document.body.insertAdjacentHTML('beforeend', `<div class="ms-sscrim${calm() ? '' : ' in'}" id="msSgy"><div class="ms-sbox ms-sgybox" role="dialog" aria-modal="true" aria-labelledby="msSgyT">
+      <div class="ms-shd"><span class="emo" aria-hidden="true">${EMOJI_SVG['💬'] || ''}</span><span class="tx"><h2 id="msSgyT">Start it in Schoology</h2><small>${turnedDown ? 'Schoology didn\'t take this one from here' : 'New conversations, on Schoology\'s own site'}</small></span></div>
+      <div class="ms-sbody"><p class="ms-sgyp">${turnedDown ? `${school} only lets students start new conversations on Schoology itself.` : 'Start a conversation on Schoology\'s site when your school doesn\'t let Averages.io start it.'}</p>
+        <ol class="ms-sgyl"><li>Open Schoology${draft ? '. We copy your message for you' : ''}.</li><li>Click <b>New Message</b>, pick your teacher${draft ? ' and paste' : ''}.</li><li>When they answer, it shows up here and you can reply from Averages.io.</li></ol></div>
+      <div class="ms-sfoot ms-sgyf"><button class="btn" data-sgyx>Not now</button><button class="btn primary" data-sgygo>${ico('up')}Open Schoology</button></div></div></div>`);
+    sgy = { el: $('msSgy'), from: document.activeElement, draft };
+    sgy.el.querySelector('[data-sgygo]').focus({ preventScroll: true });
+    sgy.el.addEventListener('click', e => {
+      if (e.target === sgy.el || e.target.closest('[data-sgyx]')) { sgyClose(); return; }
+      if (e.target.closest('[data-sgygo]')) {
+        const d = sgy.draft; if (d) { try { navigator.clipboard.writeText(d).then(() => toast('Copied your message. Paste it in Schoology.'), () => {}); } catch (err) { /* no clipboard: they can copy it themselves */ } }
+        FSX.newTab(FSX.schoology('/messages/inbox')); sgyClose();
+      }
+    });
+  }
+  function sgyClose() { if (!sgy) return; const { el, from } = sgy; sgy = null; el.remove(); if (from && from.isConnected) from.focus({ preventScroll: true }); }
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && sgy) { e.preventDefault(); e.stopImmediatePropagation(); sgyClose(); } }, true);
 
   // ---------- right-click a conversation (and its ... button) ----------
   let menu = null;
@@ -4733,10 +4862,11 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (e.target.closest('[data-mswho]')) { card ? cardClose(true) : cardOpen(); return; }
     const mo = e.target.closest('[data-msmore]'); if (mo) { if (menu && menu.from === mo) { menuClose(true); return; } const r = mo.getBoundingClientRect(); menuOpen(MS.open, r.right - 190, r.bottom + 4, mo); return; }
     const sb = e.target.closest('[data-mssubj]'); if (sb) { MS.subjFor[MS.open] = sb.dataset.mssubj; $('msThread').dataset.reply = sb.dataset.mssubj; $('msSubj').querySelectorAll('[data-mssubj]').forEach(b => b.setAttribute('aria-pressed', b === sb)); mpPill($('msSubj'), true); const ta = $('msText'); if (ta) ta.focus({ preventScroll: true }); return; }
+    if (e.target.closest('[data-mssgy]')) { sgyOpen(false); return; }
     if (e.target.closest('[data-msdiscard]')) { MS.compose = null; MS.open = null; msRows(); msThread(); toast('Threw away the new message.'); return; }
     const to = e.target.closest('[data-msto]'); if (to) { addTo(to.dataset.msto); return; }
     const un = e.target.closest('[data-msunto]'); if (un) { const c = MS.compose; c.to = c.to.filter(x => x !== un.dataset.msunto); const ta = $('msText'); if (ta) c.text = ta.value; composeHTML(); msRows(); $('msToIn').focus(); return; }
-    const fc = e.target.closest('[data-msfile]'); if (fc && fc.dataset.msfile) { const [, fm] = msgById(fc.dataset.msfile); if (fm && fm.att && fm.att.url) { FSX.newTab(fm.att.url); return; } lbOpen(fc.dataset.msfile); return; } // a real file opens in a new tab
+    const fc = e.target.closest('[data-msfile]'); if (fc && fc.dataset.msfile) { const [, fm] = msgById(fc.dataset.msfile); if (fm && fm.att && fm.att.url) { fileLbOpen(fm.att); return; } lbOpen(fc.dataset.msfile); return; } // a real file: the preview popup
     if (e.target.closest('#msClip')) { $('msFile').click(); return; }
     const ua = e.target.closest('[data-msunatt]'); if (ua) { pendOf().splice(+ua.dataset.msunatt, 1); $('msAtts').innerHTML = attsHTML(); $('msText').dispatchEvent(new Event('input')); $('msText').focus({ preventScroll: true }); return; }
     if (e.target.closest('#msSend')) {

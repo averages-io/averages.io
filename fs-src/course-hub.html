@@ -2662,6 +2662,8 @@
   .pf-doc.square    { --pw: 68px; --ph: 68px; --peel: 34px; --spread: 12px; }
   .pf-page { position: absolute; left: 50%; bottom: 0; width: var(--pw); height: var(--ph); margin-left: calc(var(--pw) / -2); background: #ffffff; border: 1px solid #e4e4ea; border-radius: 4px 5px 5px 4px;
     box-shadow: 0 2px 5px -1px rgba(0,0,0,.28); overflow: hidden; transform-origin: 50% 96%; transition: transform .42s cubic-bezier(.2, .75, .25, 1), box-shadow .42s ease; will-change: transform; backface-visibility: hidden; }
+  .pf-page.real { background: #ffffff; }
+  .pf-page .pf-real { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 0; }
   .pf-band { height: 14px; margin: 8px 8px 0; border-radius: 2px; background: var(--c, #3b6fd1); opacity: .92; }
   .pf-ln { height: 2.5px; margin: 4px 8px 0; border-radius: 2px; background: #c7c7cf; }
   .pf-ln.s { width: 58%; }
@@ -3124,7 +3126,18 @@
   .mp-paper.mp-canvas:not(.ready) canvas { position: absolute; opacity: 0; }
   .mp-ld { position: absolute; inset: 0; padding: 10%; display: flex; flex-direction: column; gap: 14px; }
   .mp-paper.ready .mp-ld { display: none; }
-  .mp-ld i { display: block; height: 10px; border-radius: 5px; background: #ececf1; animation: mpPulse 1.4s ease-in-out infinite; --keep-dark: 1; }
+  /* a loading animation until the page is drawn (2026-11-03, Martin: "instead of a blank page"): the lines shimmer
+     like the app's other placeholders, with "Loading preview…" and a spinner in the middle */
+  .mp-ld i { display: block; height: 10px; border-radius: 5px; background-color: #ececf1; background-image: linear-gradient(90deg, #ececf1 0px, #ececf1 150px, #dcdce4 210px, #ececf1 270px, #ececf1 420px); background-size: 680px 100%; background-position: -280px 0; background-repeat: no-repeat; animation: averagesSkeletonShimmer 1.4s cubic-bezier(.45, 0, .55, 1) infinite; --keep-dark: 1; }
+  .mp-ldw { align-self: center; margin-top: 28px; display: inline-flex; align-items: center; gap: 10px; padding: 10px 16px; border-radius: 999px; background: #f4f4f7; color: #4b4d5e; font-size: 14px; font-weight: 800; white-space: nowrap; box-shadow: 0 1px 2px rgba(20, 20, 40, .06); --keep-dark: 1; }
+  .mp-ldw s { width: 18px; height: 18px; border-radius: 50%; border: 2.5px solid #d5d5de; border-top-color: var(--accent, #4b4d5e); animation: spin .8s linear infinite; flex: none; }
+  .mp-ldw.long { white-space: normal; width: max-content; max-width: 78%; border-radius: 16px; text-align: left; line-height: 1.35; }
+  .mp-picw { position: relative; display: grid; place-items: center; min-height: 220px; width: 100%; }
+  .mp-picw.ready { min-height: 0; }
+  .mp-picw .mp-ldpic { position: absolute; inset: 0; padding: 0; border-radius: 12px; background: rgba(255, 255, 255, .5); justify-content: center; }
+  .mp-picw .mp-ldpic .mp-ldw { margin-top: 0; }
+  .mp-picw.ready .mp-ldpic { display: none; }
+  .potato-mode .mp-ldw s { animation: none; } @media (prefers-reduced-motion: reduce) { .mp-ldw s { animation: none; } }
   @keyframes mpPulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
   .potato-mode .mp-ld i { animation: none; } @media (prefers-reduced-motion: reduce) { .mp-ld i { animation: none; } }
   .mp-ld i:first-child { width: 55%; height: 16px; margin-bottom: 8px; } .mp-ld i:nth-child(2) { width: 92%; } .mp-ld i:nth-child(3) { width: 84%; } .mp-ld i:nth-child(4) { width: 88%; } .mp-ld i:nth-child(5) { width: 60%; }
@@ -3978,6 +3991,27 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       ${m.desc ? `<p>${esc(m.desc)}</p>` : ''}${m.files ? `<div class="att"><div class="att-h">${ico('clip')}Attachments<span>${m.files.length}</span></div>${m.files.map((f, i) => `<button class="att-f avfi-host" data-matgo="${m.id}a${i}"><span class="att-i">${window.AveragesFileIcons ? AveragesFileIcons.html(f.name, { size: 38 }) : ''}</span><span class="att-t"><b>${esc(f.name)}</b><small>${esc(f.size)}</small></span>${ico('up')}</button>`).join('')}</div>` : ''}<dl>${rows.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join('')}</dl>
       <div class="acts"><button class="btn ${turnIn ? '' : 'primary'}" data-open-mid="${m.id}">${m.kind === 'folder' ? 'Open folder' : m.kind === 'link' ? 'Open in Schoology' : 'Open'}</button>${turnIn ? `<button class="btn primary" data-turnin="${m.id}">Turn in</button>` : ''}</div>
       <div class="hint">Tip: double-click an item to open it.</div>`;
+    pfReal(m);
+  }
+  // The real pages on the fan once they're here (2026-11-03, Martin: "add a page preview on these previews when they
+  // become available"): a PDF's first pages (up to the five the fan shows, and the right page count) or the picture.
+  // The drawn placeholder stays until then, and if the file can't be read.
+  function pfReal(m) {
+    if (!m || m.kind !== 'file' || !m.f) return;
+    const k = FSX.prev.kind(m.name), url = FSX.fileUrl(m.f, true), id = m.id;
+    const fan = () => (DET && SEL === id ? $('mDet').querySelector('.pf-doc') : null);
+    const put = (p, el) => { if (!p.isConnected) return; el.className = 'pf-real'; p.textContent = ''; p.appendChild(el); p.classList.add('real'); };
+    if (k === 'image') {
+      const img = new Image(); img.alt = '';
+      img.onload = () => { const d = fan(), p = d && d.querySelector('.pf-page'); if (p) put(p, img); };
+      img.src = url; return;
+    }
+    if (k !== 'pdf') return;
+    FSX.prev.pdf(url).then(doc => {
+      if (m.pages !== doc.numPages) { m.pages = doc.numPages; if (fan()) renderDet(); return; } // redrawn with the real count; that draws them
+      const d = fan(); if (!d) return;
+      [...d.querySelectorAll('.pf-page')].forEach((p, i) => { const c = document.createElement('canvas'); FSX.prev.page(url, i, c, 120).then(() => put(p, c), () => {}); });
+    }, () => {});
   }
   function openMat(m) {
     const u = unitOf(m);
@@ -5939,8 +5973,8 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     const x = mpX(m), k = FSX.prev.kind(m.name);
     if (!m.f) return `<div class="mp-linkcard avfi-host">${fileIco(m.name, 56)}<div><b>${esc(m.name)}</b><p>This one opens on Schoology.</p></div><button class="btn primary" data-mpact="sgy">Open in Schoology</button></div>`;
     const url = esc(FSX.fileUrl(m.f, true));
-    if (k === 'image') return `<img class="mp-pic" src="${url}" alt="${esc(m.name)}">`;
-    if (k === 'pdf') return `<div class="mp-paper mp-canvas" data-mpdf="${url}"><canvas role="img" aria-label="${esc(m.name)}, page ${MP.page + 1}"></canvas><span class="mp-ld" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span></div>
+    if (k === 'image') return `<div class="mp-picw"><img class="mp-pic" src="${url}" alt="${esc(m.name)}" onload="this.parentNode.classList.add('ready')" onerror="this.parentNode.classList.add('ready')"><span class="mp-ld mp-ldpic" role="status"><b class="mp-ldw"><s aria-hidden="true"></s>Loading preview…</b></span></div>`;
+    if (k === 'pdf') return `<div class="mp-paper mp-canvas" data-mpdf="${url}"><canvas role="img" aria-label="${esc(m.name)}, page ${MP.page + 1}"></canvas><span class="mp-ld" role="status"><i></i><i></i><i></i><i></i><i></i><b class="mp-ldw"><s aria-hidden="true"></s>Loading preview…</b></span></div>
       <div class="mp-pager" hidden><button class="ibtn" data-mppg="-1" aria-label="Previous page">${ico('chev-l')}</button><span aria-live="polite"></span><button class="ibtn" data-mppg="1" aria-label="Next page">${ico('chev-r')}</button></div>`;
     if (k === 'text') return `<div class="mp-paper mp-textp"><pre data-mptxt="${url}">Loading…</pre></div>`;
     if (k === 'audio') return `<div class="mp-linkcard avfi-host mp-media">${fileIco(m.name, 56)}<div><b>${esc(m.name)}</b><audio controls preload="metadata" src="${url}"></audio></div></div>`;
@@ -5956,7 +5990,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       const c = box.querySelector('canvas'), want = MP.page;
       // A slow file (2026-11-03, Martin: a new upload took about 3 minutes): Schoology can take a while to hand over a
       // file it just got, so say so instead of showing a blank page.
-      const slow = setTimeout(() => { if (box.isConnected && !box.classList.contains('ready')) box.insertAdjacentHTML('beforeend', `<p class="mp-slow">Still getting this file from Schoology. New uploads can take a few minutes.</p>`); }, 8000);
+      const slow = setTimeout(() => { const w = box.isConnected && !box.classList.contains('ready') && box.querySelector('.mp-ldw'); if (w) { w.classList.add('long'); w.lastChild.textContent = 'Still getting this file from Schoology. New uploads can take a few minutes.'; } }, 8000);
       FSX.prev.page(box.dataset.mpdf, want, c, Math.min(1120, box.clientWidth || 560)).then(r => {
         clearTimeout(slow); const sl = box.querySelector('.mp-slow'); if (sl) sl.remove();
         const m = mpGet(MP.file); if (m) m.pages = r.pages;

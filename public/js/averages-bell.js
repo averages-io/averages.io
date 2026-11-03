@@ -273,6 +273,54 @@
     btn.classList.add('ringing');
   }
 
+  // A popup at the top right for each new one (2026-11-03, Martin's notification-popup design, averages-note.js):
+  // once per item on this device, shared with Fullscreen.
+  function popNew(unreadItems) {
+    const N = window.AveragesNote;
+    if (!N || mode !== 'live') return;
+    N.notify(unreadItems.filter((i) => i.id).map((i) => ({
+      key: i.kind + ':' + i.id,
+      title: i.kind === 'g' ? (i.sub ? 'New grade in ' + i.sub : 'New grade') : i.kind === 'u' ? (i.title || 'Your teacher') + (i.sub ? ' posted in ' + i.sub : ' posted an update') : (i.title && i.title !== 'Teacher' ? 'Message from ' + i.title : 'New message from your teacher'),
+      body: i.kind === 'g' ? (i.title || 'Assignment') + (i.score ? ': ' + i.score : '') : i.body || '',
+      onClick: () => { Seen.mark(i.kind, i.id); window.location.href = i.href; },
+    })), { openAll: () => { if (panel && panel.hidden) open(); } });
+  }
+
+  // New ones while the page stays open (2026-11-03): every 5 minutes while it's showing (and when it comes back after
+  // that long), the grades bundle (new grades, messages) and course updates again, like Fullscreen does. The fresh
+  // bundle also goes in this tab's cache, so the next page opens with it.
+  const API = window.location.hostname.endsWith('averages.io') ? 'https://api.averages.io' : 'http://localhost:8787';
+  const CHECK_EVERY = 5 * 60 * 1000;
+  let checkedAt = Date.now(), checking = false, checkTimer = 0;
+  function getJSON(path) {
+    return fetch(API + path, { credentials: 'include', cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+  }
+  function backgroundCheck() {
+    const av = window.__AVERAGES__;
+    if (checking || mode !== 'live' || document.hidden || !av || !av.data) return;
+    checking = true; checkedAt = Date.now();
+    let tz = '';
+    try { tz = (window.averagesTimeZone ? window.averagesTimeZone() : Intl.DateTimeFormat().resolvedOptions().timeZone) || ''; } catch { /* the API guesses */ }
+    Promise.all([getJSON('/data/bundle' + (tz ? '?tz=' + encodeURIComponent(tz) : '')), getJSON('/data/updates')]).then(([b, u]) => {
+      const d = av.data;
+      if (b && Array.isArray(b.COURSES)) {
+        ['RECENT_GRADES', 'MESSAGES'].forEach((k) => {
+          if (!Array.isArray(b[k])) return;
+          if (Array.isArray(d[k])) d[k].splice(0, d[k].length, ...b[k]); else d[k] = b[k];
+        });
+        try { sessionStorage.setItem('schoolagy_bundle_cache', JSON.stringify({ at: Date.now(), bundle: b })); } catch { /* full or off */ }
+      }
+      if (u && Array.isArray(u.COURSE_UPDATES)) extra = Object.assign({}, extra || {}, { COURSE_UPDATES: u.COURSE_UPDATES });
+      render();
+    }).finally(() => { checking = false; });
+  }
+  function startChecks() {
+    if (checkTimer || mode !== 'live') return;
+    checkedAt = Date.now();
+    checkTimer = setInterval(() => { if (Date.now() - checkedAt >= CHECK_EVERY) backgroundCheck(); }, 30000);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden && Date.now() - checkedAt >= CHECK_EVERY) backgroundCheck(); });
+  }
+
   function bar(w, h, r) {
     const L = window.AveragesLoading;
     return L && L.skelBar ? L.skelBar(w, h, r) : `<span class="skel-bar" style="width:${w};height:${h}px${r ? ';border-radius:' + r : ''}"></span>`;
@@ -325,6 +373,7 @@
     lastUnread = unread;
     btn.setAttribute('aria-label', unread ? `Notifications, ${unread} new` : 'Notifications');
     ringIfNew(unreadItems.filter((i) => i.id).map((i) => i.kind + ':' + i.id));
+    popNew(unreadItems);
     if (panel.hidden) return;   // the list is drawn when it's opened
     if (tab !== 'all' && !secs.some((x) => x.key === tab)) tab = 'all';
     const count = (list) => list.filter((i) => i.unread).length;
@@ -402,11 +451,14 @@
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !panel.hidden) close(true); });
     window.addEventListener('averages:seen', render);
     render();
+    startChecks();
     return true;
   }
 
   window.AveragesBell = {
     mount,
+    /** Check for new ones now (tests; the page also does it every 5 minutes). */
+    checkNow() { checkedAt = 0; backgroundCheck(); },
     /** Course updates are on their way (pages that don't load them themselves). */
     expectUpdates() { updatesPending = true; render(); },
     /** The background fetch landed. Pass null when it failed: the section goes away. */

@@ -35,6 +35,7 @@ const OLD = path.resolve(HERE, "../public/fs");
 const JS_FILE = path.resolve(HERE, "../public/js/averages-fs.js");
 const DATA_FILE = path.resolve(HERE, "../public/js/averages-fs-data.js");
 const TURNIN_FILE = path.resolve(HERE, "../public/js/averages-fs-turnin.js");
+const NOTE_FILE = path.resolve(HERE, "../public/js/averages-note.js"); // the new-notification popup, shared with Windowed (2026-11-03)
 const AVATAR_FILE = path.resolve(HERE, "../public/js/averages-avatar.js"); // the same profile colors as Windowed (2026-10-30)
 // The logo screen (app/lib/splash.ts), the same one the Windowed pages use (2026-10-30). Coming from Windowed (Settings'
 // Fullscreen button leaves averages_fs_logo in this tab), it stays up until a second has passed since the click and the
@@ -280,7 +281,7 @@ function build() {
   fs.rmSync(OLD, { recursive: true, force: true });
   fs.mkdirSync(OLD, { recursive: true });
   const ver = (f) => crypto.createHash("sha256").update(fs.readFileSync(f)).digest("hex").slice(0, 10);
-  const tag = `${SPLASH_TAG}\n<script src="/js/averages-avatar.js?v=${ver(AVATAR_FILE)}"></script>\n<script src="/js/averages-fs.js?v=${ver(JS_FILE)}"></script>\n<script src="/js/averages-fs-data.js?v=${ver(DATA_FILE)}"></script>`;
+  const tag = `${SPLASH_TAG}\n<script src="/js/averages-avatar.js?v=${ver(AVATAR_FILE)}"></script>\n<script src="/js/averages-note.js?v=${ver(NOTE_FILE)}"></script>\n<script src="/js/averages-fs.js?v=${ver(JS_FILE)}"></script>\n<script src="/js/averages-fs-data.js?v=${ver(DATA_FILE)}"></script>`;
   let n = 0;
   // Lighter motion (2026-11-01, Martin: the animations were "very choppy and heavy on my computer"). The same look,
   // cheaper to draw: nothing re-draws in a loop while a page sits still, and the moves that stay use only

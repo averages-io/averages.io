@@ -316,6 +316,26 @@
       window.dispatchEvent(new CustomEvent('fs:notis', { detail: { added: added } }));
     }).catch(function () { /* try again next time */ }).then(function () { notisBusy = false; });
   }
+  // A popup at the top right for each new one (2026-11-03, Martin's notification-popup design, averages-note.js): once
+  // per item on this device, shared with Windowed. Whatever's new when a page opens, and what the check above brings.
+  function notePop(items) {
+    var N = window.AveragesNote, D = window.FSD; if (!N || !D || !window.FSX) return;
+    var cname = function (id) { var c = D.C && D.C[id]; return c ? c.name : ''; };
+    N.notify(items.filter(function (it) { return it.unread && !FSX.seen.has(it.kind, it.raw); }).map(function (it) {
+      var cls = cname(it.c), from = String(it.d || '').split(' · ')[0], msg = String(it.t || '').split(': ');
+      return {
+        key: it.kind + ':' + it.raw,
+        title: it.k === 'graded' ? (cls ? 'New grade in ' + cls : 'New grade') : it.k === 'msg' ? 'Message from ' + (msg.length > 1 ? msg[0] : 'your teacher') : (from || 'Your teacher') + (cls ? ' posted in ' + cls : ' posted an update'),
+        body: it.k === 'graded' ? (it.t || 'Assignment') + (it.got != null && it.of ? ': ' + it.got + ' / ' + it.of : '') : it.k === 'msg' ? (msg.length > 1 ? msg.slice(1).join(': ') : it.t) : it.t,
+        onClick: function () {
+          FSX.seen.mark(it.kind, it.raw);
+          if (it.k === 'msg') FSX.go('messages', { thread: it.thread }); else if (it.k === 'graded') FSX.hub(it.c, 'grades', { a: it.aid }); else FSX.hub(it.c, 'updates', { update: it.raw });
+        },
+      };
+    }), { openAll: function () { var b = document.getElementById('ntBtn'); if (b) b.click(); } });
+  }
+  window.addEventListener('fs:notis', function (e) { notePop((e.detail && e.detail.added) || []); });
+  window.addEventListener('fs:ready', function () { setTimeout(function () { if (window.FSD) notePop(window.FSD.NT || []); }, 600); });
   window.addEventListener('fs:ready', function () {
     if (window.FSX) window.FSX.notisCheck = notisCheck;   // also: check now
     // after the page's first sync has had its turn (it asks Schoology for everything once)

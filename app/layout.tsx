@@ -131,6 +131,8 @@ export default function RootLayout({
         {/* Default profile pictures (2026-10-23): each person's initials on their own color, everywhere. */}
         <script src={JS["averages-avatar.js"]} />
         {/* Notifications (2026-10-19): the bell next to the profile picture, and AveragesSeen, which every notification dot uses. */}
+        {/* New-notification popup (2026-11-03, Martin's design): top right, once per new grade, update or message. */}
+        <script src={JS["averages-note.js"]} />
         <script src={JS["averages-bell.js"]} />
         {/* Help popups (2026-10-21, Martin's design): "Before you open Canva" and "Add files from Google Drive". Styles: app/lib/averages-help.css. */}
         <script src={JS["averages-help.js"]} />
