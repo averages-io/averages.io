@@ -4422,7 +4422,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   function calMeta() {
     const ws = weekStart(TODAY_D), we = addD(ws, 6), inWeek = e => e.date >= key(ws) && e.date <= key(we);
     const due = EV.filter(e => isTodo(e) && e.kind === 'assignment' && inWeek(e) && e.st !== 'missing').length, tests = EV.filter(e => e.kind === 'test' && isTodo(e) && e.date >= TODAY_K && e.date <= key(addD(TODAY_D, 14))).length;
-    const ev = EV.filter(e => e.kind === 'event' && inWeek(e) && e.date >= TODAY_K).length, off = EV.filter(e => e.kind === 'off' && e.date >= TODAY_K && e.date <= key(new Date(2026, 9, 31))).length;
+    const ev = EV.filter(e => e.kind === 'event' && inWeek(e) && e.date >= TODAY_K).length, off = EV.filter(e => e.kind === 'off' && e.date >= TODAY_K && e.date <= key(new Date(TODAY_D.getFullYear(), TODAY_D.getMonth() + 1, 0))).length; /* to the end of this month (was a fixed Oct 31, 2026) */
     const m = (icon, n, txt, cl = '') => `<span class="gm${cl}">${icon.startsWith('<') ? icon : ico(icon)}<span class="t"><b data-n="${n}" data-dp="0">${n}</b> ${txt}</span></span>`;
     $('calMeta').innerHTML = m(ALARM, due, 'due this week') + m('alert', tests, tests === 1 ? 'test in the next 2 weeks' : 'tests in the next 2 weeks') + m('cal', ev, ev === 1 ? 'event this week' : 'events this week') + m(SUN, off, off === 1 ? 'day off this month' : 'days off this month');
   }
@@ -4503,42 +4503,147 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const MONTHS = { jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5, jul: 6, aug: 7, sep: 8, sept: 8, oct: 9, nov: 10, dec: 11 };
   const yOf = (mo, ys) => mo >= 6 ? ys[0] : ys[1];
   const dk = (y, mo, d) => { const x = new Date(y, mo, d); return x.getMonth() === mo && x.getDate() === d ? key(x) : null; };
-  // every date (or range) on one line of text: "Nov 11", "November 25-27", "Dec. 21 - Jan 1", "12/21-1/1", "2/16/2027"
+  // ---- school-calendar PDF reading (2026-11-02 rewrite: real district calendars are month grids with a key beside
+  // them, so the text is put back together by where it sits on the page: rows, then columns, then entries) ----
+  const MN_RE = '(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|june?|july?|aug(?:ust)?|sept?(?:ember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\\.?';
+  const WD_RE = '(?:mon|tues?|wed(?:nes)?|thu(?:rs?)?|fri|sat(?:ur)?|sun)(?:day)?\\.?';
+  const moOf = s => { s = s.toLowerCase().replace('.', ''); return MONTHS[s.startsWith('sept') ? 'sept' : s.slice(0, 3)]; };
+  // a month grid's numbers and weekday letters: nothing to read there
+  const GRID_RE = /^(?:\s*(?:[1-9]|[12]\d|3[01]|s|m|t|w|r|f|th|tu|su|sa|mo|we|fr|fri|sun|mon|tue|wed|thu|sat|\*)\s*)+$/i;
+  const BULLET_RE = /^[●•★☆◆◇▪■□►▸✓✔○◦]/;
+  const MONTH_HEAD_RE = new RegExp(`^${MN_RE}(?:\\s*(?:20\\d{2}))?$`, 'i');
+  // the text of each page as entries: one per key line or bullet, wrapped lines joined, grids left out
+  function pdfEntries(pages) {
+    const all = [];
+    pages.forEach(items => {
+      // 1. rows: items on the same line, left to right; a wide gap starts a new piece
+      const rows = [];
+      items.forEach(it => { if (!it.s) return; const f = it.f || 10, y = it.y; let r = rows.find(r => Math.abs(r.y - y) < f * .45); if (!r) rows.push(r = { y, f, its: [] }); r.its.push(it); });
+      rows.sort((a, b) => b.y - a.y);
+      const segs = [];
+      rows.forEach(r => {
+        r.its.sort((a, b) => a.x - b.x); let cur = null;
+        r.its.forEach(it => {
+          const f = it.f || r.f, gap = cur ? it.x - cur.x1 : 0;
+          // a wide gap, or a bullet after some words (two keys side by side, close together), starts a new piece
+          if (!cur || gap > Math.max(2 * f, 14) || (BULLET_RE.test(it.s.trimStart()) && cur.t.trim())) { if (cur) segs.push(cur); cur = { t: '', x0: it.x, x1: it.x, y: r.y, f }; }
+          if (!it.s.trim()) { if (cur.t && !cur.t.endsWith(' ')) cur.t += ' '; }
+          else cur.t += (cur.t && !cur.t.endsWith(' ') && gap > f * .12 ? ' ' : '') + it.s;
+          cur.x1 = Math.max(cur.x1, it.x + (it.w || it.s.length * f * .5));
+        });
+        if (cur) segs.push(cur);
+      });
+      // 2. grids out; a piece that's only a date joins the words beside it on the same row ("Nov. 25 - 27   NO SCHOOL ...")
+      // a grid's last few numbers run into the key beside it: "9 10 11 12 13 14 15 19-20 Teacher In-service Day"
+      segs.forEach(s => { s.t = s.t.replace(/\s+/g, ' ').trim().replace(/^(?:(?:[1-9]|[12]\d|3[01])\s+){3,}(?=\S)/, '').replace(/(?:\s+(?:[1-9]|[12]\d|3[01])){3,}$/, ''); });
+      let keep = segs.filter(s => s.t);
+      // a day number on its own just left of words (a key under a month heading: "21   Preparation Day") goes with them
+      keep.forEach(s => { if (!/^(?:[1-9]|[12]\d|3[01])(?:\s*[-–]\s*(?:[1-9]|[12]\d|3[01]))?$/.test(s.t)) return;
+        const r = keep.filter(o => o !== s && Math.abs(o.y - s.y) < s.f * .45 && o.x0 > s.x1 && o.x0 - s.x1 < 90).sort((a, b) => a.x0 - b.x0)[0];
+        if (r && /^[A-Za-z(]/.test(r.t) && !GRID_RE.test(r.t) && !datesIn(r.t, [2000, 2001]).length) { r.t = s.t + ' ' + r.t; r.x0 = s.x0; s.t = ''; } });
+      keep = keep.filter(s => s.t && !GRID_RE.test(s.t));
+      // (only a date, or a date first and a few words after it: "Tuesday, November 3, 2026 (Election Day)")
+      const onlyDate = s => { const ds = datesIn(s.t, [2000, 2001]); if (!ds.length) return false; const rest = tidy(cut(s.t, ds)).length;
+        return rest < 2 || (rest < 16 && !s.t.slice(0, ds[0][2]).replace(new RegExp(WD_RE, 'gi'), '').replace(/[\s,]/g, '')); };
+      keep.forEach((s, i) => {
+        if (s.gone || !onlyDate(s)) return;
+        const row = keep.filter(o => o !== s && !o.gone && Math.abs(o.y - s.y) < s.f * .45), right = row.filter(o => o.x0 > s.x1).sort((a, b) => a.x0 - b.x0)[0], left = row.filter(o => o.x1 < s.x0).sort((a, b) => b.x1 - a.x1)[0];
+        // (not a date in brackets, which finishes the line above it, and not into the next key's bullet)
+        if (/^\(.*\)$/.test(s.t)) return;
+        const ok = o => o && !onlyDate(o) && !datesIn(o.t, [2000, 2001]).length && !(o === right && BULLET_RE.test(o.t)) && Math.abs(o === right ? o.x0 - s.x1 : s.x0 - o.x1) < 260;
+        const o = ok(right) ? right : ok(left) ? left : null; if (!o) return;
+        if (o === right) { o.t = s.t + ' ' + o.t; o.x0 = s.x0; } else { o.t = o.t + ' ' + s.t; o.x1 = s.x1; }
+        s.gone = true;
+      });
+      keep = keep.filter(s => !s.gone);
+      // 3. columns: each piece goes under the one just above it that starts at (about) the same place
+      const cols = [];
+      keep.forEach(s => {
+        let best = null;
+        cols.forEach(c => { const l = c[c.length - 1], dy = l.y - s.y; if (dy <= 0 || dy > s.f * 2.8) return; if (s.x0 < l.x0 - s.f * 1.2 || s.x0 > l.x0 + s.f * 2.5 || s.x0 > l.x1) return; if (!best || dy < best.dy) best = { c, dy }; });
+        if (best) best.c.push(s); else cols.push([s]);
+      });
+      // 4. entries: a bullet, a line starting with a date, a month heading or a gap starts a new one
+      cols.forEach(c => {
+        let cur = null, month = null;
+        const push = () => { if (cur) all.push(cur); cur = null; };
+        c.forEach((s, i) => {
+          const t = s.t, prev = c[i - 1];
+          if (MONTH_HEAD_RE.test(t)) { push(); month = t; return; }
+          const lead = datesIn(t, [2000, 2001])[0];
+          const fresh = !cur || /^[●•★☆◆◇▪■□►▸✓✔*○◦]/.test(t) || (lead && lead[2] === 0) || (prev && prev.y - s.y > s.f * 1.9) || (lead && datesIn(cur.t, [2000, 2001]).length) || (month && /^\d{1,2}\b/.test(t));
+          if (fresh) { push(); cur = { t, month }; } else cur.t += ' ' + t;
+        });
+        push();
+      });
+    });
+    return all;
+  }
+  const cut = (t, ds) => { ds.slice().sort((a, b) => b[2] - a[2]).forEach(([, , at, len]) => { t = t.slice(0, at) + ' ' + t.slice(at + len); }); return t; };
+  // every date (or range) in some text: "Nov 11", "November 25-27", "Dec. 21 - Jan 1", "Wednesday, November 25, 2026 – Monday, November 30, 2026",
+  // "12/21-1/1", "8/13-8/14/2026", "2/16/2027"
   function datesIn(line, ys) {
-    const out = [], MN = '(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|june?|july?|aug(?:ust)?|sept?(?:ember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\\.?';
-    const re1 = new RegExp(`\\b${MN}\\s+(\\d{1,2})(?:st|nd|rd|th)?(?:,?\\s*(20\\d{2}))?(?:\\s*(?:-|–|—|to|through|thru)\\s*(?:${MN}\\s+)?(\\d{1,2})(?:st|nd|rd|th)?)?`, 'gi');
+    const raw = [];
+    const re1 = new RegExp(`\\b${MN_RE}\\s*(\\d{1,2})(?:st|nd|rd|th)?\\b(?:,?\\s*(20\\d{2})\\b)?(?:\\s*(?:-|–|—|to|through|thru)\\s*(?:${WD_RE},?\\s*)?(?:${MN_RE}\\s*)?(\\d{1,2})(?:st|nd|rd|th)?\\b(?:,?\\s*(20\\d{2})\\b)?)?`, 'gi');
     let m;
     while ((m = re1.exec(line))) {
-      const mo = MONTHS[m[1].toLowerCase().replace('.', '').slice(0, m[1].toLowerCase().startsWith('sept') ? 4 : 3)], d = +m[2], y = m[3] ? +m[3] : yOf(mo, ys);
+      const mo = moOf(m[1]), d = +m[2]; let y = m[3] ? +m[3] : null;
+      let b = null;
+      if (m[5]) { const mo2 = m[4] ? moOf(m[4]) : mo, y2 = m[6] ? +m[6] : null; if (y == null && y2 != null) y = mo2 < mo ? y2 - 1 : y2; if (y == null) y = yOf(mo, ys); b = dk(y2 != null ? y2 : mo2 < mo ? y + 1 : y, mo2, +m[5]); }
+      if (y == null) y = yOf(mo, ys);
       const a = dk(y, mo, d); if (!a) continue;
-      let b = a;
-      if (m[5]) { const mo2 = m[4] ? MONTHS[m[4].toLowerCase().replace('.', '').slice(0, m[4].toLowerCase().startsWith('sept') ? 4 : 3)] : mo; b = dk(mo2 < mo ? y + 1 : y, mo2, +m[5]) || a; }
-      out.push([a, b < a ? a : b, m.index, m[0].length]);
+      raw.push([a, b && b >= a ? b : a, m.index, m[0].length, !!m[3]]);
     }
-    const re2 = /\b(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?(?:\s*(?:-|–|—|to)\s*(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?)?\b/g;
+    const re2 = /(?<![\d/])(\d{1,2})\/(\d{1,2})(?:\/(\d{4}|\d{2}(?!\d)))?(?:\s*(?:-|–|—|to)\s*(?:(\d{1,2})\/)?(\d{1,2})(?:\/(\d{4}|\d{2}(?!\d)))?)?(?![\d/])/g;
     while ((m = re2.exec(line))) {
-      const mo = +m[1] - 1, y = m[3] ? (+m[3] < 100 ? 2000 + +m[3] : +m[3]) : yOf(mo, ys), a = dk(y, mo, +m[2]); if (!a || mo > 11) continue;
-      let b = a; if (m[4]) { const mo2 = +m[4] - 1, y2 = m[6] ? (+m[6] < 100 ? 2000 + +m[6] : +m[6]) : mo2 < mo ? y + 1 : y; b = dk(y2, mo2, +m[5]) || a; }
-      out.push([a, b < a ? a : b, m.index, m[0].length]);
+      const Y = v => v ? (+v < 100 ? 2000 + +v : +v) : null, mo = +m[1] - 1; if (mo > 11) continue;
+      let y = Y(m[3]), y2 = Y(m[6]); const mo2 = m[4] ? +m[4] - 1 : mo;
+      if (y == null && y2 != null) y = mo2 < mo ? y2 - 1 : y2; if (y == null) y = yOf(mo, ys);
+      const a = dk(y, mo, +m[2]); if (!a) continue;
+      const b = m[5] ? dk(y2 != null ? y2 : mo2 < mo ? y + 1 : y, mo2, +m[5]) : null;
+      raw.push([a, b && b >= a ? b : a, m.index, m[0].length, !!m[3]]);
     }
+    raw.sort((p, q) => p[2] - q[2]);
+    // two dates with only a dash (and weekday names) between them are one range
+    const out = [];
+    raw.forEach(r => { const l = out[out.length - 1];
+      if (l && l[0] === l[1] && r[0] > l[0]) { const mid = line.slice(l[2] + l[3], r[2]).replace(new RegExp(WD_RE, 'gi'), '').replace(/[\s,]/g, ''); if (/^(-|–|—|to|through|thru)$/i.test(mid)) { l[1] = r[1]; l[3] = r[2] + r[3] - l[2]; return; } }
+      out.push(r); });
     return out;
   }
-  const tidy = t => t.replace(/\b(mon|tues?|wed(nes)?|thu(rs)?|fri|sat(ur)?|sun)(day)?\b\.?,?/gi, '').replace(/\b(19|20)\d\d\b/g, '') /* a year left over from the dates (2026-10-30) */.replace(/[•·|:–—,;()-]+/g, ' ').replace(/\s+/g, ' ').trim().replace(/^(and|&)\s+/i, '');
-  function findDates(lines, ys) {
+  const tidy = t => t.replace(/\bgood fri(day)?\b/gi, 'Good Fri\u200Bday').replace(new RegExp(`\\b${WD_RE}(?![a-z\u200B])`, 'gi'), ' ').replace(/\u200B/g, '')
+    .replace(/\b(january|february|march|april|june|july|august|september|october|november|december)\b(?=\s*20\d\d)/gi, ' ') /* a grid's month heading beside the key */
+    .replace(/(?:(?:^|\s)(?:[SMTWRF]|Su|Mo|Tu|We|Th|Fr|Sa)(?=\s|$)){3,}/g, ' ') /* "M T W R F" */.replace(/\b(19|20)\d\d\b/g, '') /* a year left over from the dates (2026-10-30) */
+    .replace(/\[[^\]]*\d[^\]]*\]/g, ' ') /* "[35 days]" */.replace(/(^|\s)\d{1,3}(?=\s|$)/g, ' ') /* stray numbers from a grid */
+    .replace(/^[\s●•★☆◆◇▪■□►▸✓✔*○◦]+/, '').replace(/[•·|:–—,;()\[\]*●★]+/g, ' ').replace(/\s-\s|^-|-$/g, ' ').replace(/\s+/g, ' ').trim().replace(/^(and|&|observed)\s+/i, '').replace(/\s+(and|&|observed)$/i, '');
+  function findDates(entries, ys) {
     const out = [];
-    lines.forEach((raw, i) => {
-      const line = raw.replace(/\s+/g, ' ').trim(); if (!line) return;
-      const ds = datesIn(line, ys); if (!ds.length) return;
-      // the words on the line with the dates taken out; a line that's only a date takes the words from the line after it
-      let t = line; ds.slice().sort((a, b) => b[2] - a[2]).forEach(([, , at, len]) => { t = t.slice(0, at) + ' ' + t.slice(at + len); });
-      t = tidy(t); if (t.length < 3 && lines[i + 1] && !datesIn(lines[i + 1], ys).length) t = tidy(lines[i + 1]);
-      if (t.length < 3 || t.length > 90) return;
-      const off = OFF_RE.test(t), big = BIG_RE.test(t); if (!off && !big) return;
-      ds.forEach(([a, b]) => { const days = a === b ? [a] : WEEKDAYS(a, b); if (!days.length || days.length > 25) return;
+    entries.forEach(en => {
+      const line = en.t.replace(/\s+/g, ' ').trim(); if (!line) return;
+      let ds = datesIn(line, ys);
+      // "September" above "7   Schools Closed (Labor Day)": a day under a month heading
+      if (!ds.length && en.month) { const m = line.match(/^(\d{1,2})(?:\s*[-–]\s*(\d{1,2}))?\s+(?=[A-Za-z])/); if (m) { const mh = en.month.match(new RegExp(MN_RE + '\\s*(20\\d{2})?', 'i')), mo = moOf(mh[1]), y = mh[2] ? +mh[2] : yOf(mo, ys), a = dk(y, mo, +m[1]), b = m[2] ? dk(y, mo, +m[2]) : a; if (a) ds = [[a, b && b >= a ? b : a, 0, m[0].length]]; } }
+      if (!ds.length) return;
+      let t = tidy(cut(line, ds));
+      if (t.length < 3 || t.length > 110) return;
+      const off = OFF_RE.test(t) && !/\bresumes?\b|\breopens?\b|minimum day|early (release|dismissal)|half[- ]day/i.test(t), big = BIG_RE.test(t); if (!off && !big) return;
+      // "NO SCHOOL - Labor Day" says the same as its "No school" tag: just "Labor Day" (when there's more to it)
+      const bare = t.replace(/^(no school|schools? closed)\b\s*/i, '').replace(/\s*\b(no school|schools? closed)$/i, '').trim();
+      if (off && bare.length >= 3) t = bare;
+      ds.forEach(([a, b]) => {
+        let days = a === b ? [a] : WEEKDAYS(a, b); if (!days.length || days.length > 25) return;
+        // a single day off on a weekend is a grid's leftover, not a day off
+        if (off && days.length === 1 && !(dOf(a).getDay() % 6)) return;
         out.push({ t: t.replace(/^./, c => c.toUpperCase()).slice(0, 70), kind: off ? 'off' : 'event', days, g: ELEM_RE.test(t) ? 'elem' : 'all', note: '' }); });
     });
-    const seen = new Set();
-    return out.filter(f => { const k = f.t.toLowerCase() + f.days[0]; if (seen.has(k)) return false; seen.add(k); return true; }).sort((a, b) => a.days[0].localeCompare(b.days[0]));
+    // the same date said twice (a list and a key on the same calendar): once
+    // (the same words, or most of them, on a day already found: "Half-Day" in the list, "½ Day" in the key)
+    const words = t => new Set(t.toLowerCase().split(/[^a-z]+/).filter(w => w.length > 2 && !/^(day|days|the|and|for|only|school|schools)$/.test(w)));
+    const like = (a, b) => { const x = words(a), y = words(b); if (!x.size || !y.size) return a.toLowerCase() === b.toLowerCase(); let n = 0; x.forEach(w => { if (y.has(w)) n++; }); return n / Math.min(x.size, y.size) >= .6; };
+    const kept = [];
+    out.sort((a, b) => a.days[0].localeCompare(b.days[0]) || b.days.length - a.days.length).forEach(f => {
+      if (kept.some(k => k.kind === f.kind && f.days.every(d => k.days.includes(d)) && like(k.t, f.t))) return; kept.push(f); });
+    return kept;
   }
   // .ics: every VEVENT, its title and its days (DTEND is the day after, for whole days)
   function fromIcs(text) {
@@ -4563,16 +4668,14 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   function pdfjs() {
     return pdfjsP || (pdfjsP = import(PDFJS + 'pdf.min.mjs').then(lib => { lib.GlobalWorkerOptions.workerSrc = PDFJS + 'pdf.worker.min.mjs'; return lib; }, () => { pdfjsP = null; throw new Error('pdfjs'); }));
   }
-  async function pdfLines(buf) {
-    const lib = await pdfjs(), doc = await lib.getDocument({ data: buf, isEvalSupported: false }).promise, lines = [];
+  // every page's words with where they sit (pdfEntries puts them back together)
+  async function pdfItems(buf) {
+    const lib = await pdfjs(), doc = await lib.getDocument({ data: buf, isEvalSupported: false }).promise, pages = [];
     for (let n = 1; n <= Math.min(doc.numPages, 12); n++) {
-      const page = await doc.getPage(n), tc = await page.getTextContent(), rows = new Map();
-      tc.items.forEach(it => { if (!it.str || !it.str.trim()) return; const y = Math.round(it.transform[5] / 3) * 3, x = it.transform[4]; if (!rows.has(y)) rows.set(y, []); rows.get(y).push([x, it.str]); });
-      [...rows.entries()].sort((a, b) => b[0] - a[0]).forEach(([, items]) => { items.sort((a, b) => a[0] - b[0]);
-        // a wide gap on one row is two columns: each is its own line
-        let cur = '', lastX = null; items.forEach(([x, str]) => { if (lastX != null && x - lastX > 120 && cur) { lines.push(cur); cur = ''; } cur += (cur && !cur.endsWith(' ') ? ' ' : '') + str; lastX = x + str.length * 4; }); if (cur) lines.push(cur); });
+      const tc = await (await doc.getPage(n)).getTextContent();
+      pages.push(tc.items.filter(it => it.str).map(it => ({ s: it.str, x: it.transform[4], y: it.transform[5], w: it.width, f: Math.hypot(it.transform[2], it.transform[3]) || it.height || 10 })));
     }
-    return lines;
+    return pages;
   }
   const had = f => f.days.every(k => EV.some(e => e.date === k && e.kind === f.kind && (e.t === f.t || e.kind === 'off')));
   let cim = null;
@@ -4630,7 +4733,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     try {
       let found;
       if (ics) { const text = await f.text(); step(1); found = fromIcs(text); }
-      else { const lines = await pdfLines(await f.arrayBuffer()); step(1); if (!lines.length) throw new Error('scan'); found = findDates(lines, yearsFrom(lines.join(' '))); }
+      else { const en = pdfEntries(await pdfItems(await f.arrayBuffer())); step(1); if (!en.length) throw new Error('scan'); found = findDates(en, yearsFrom(en.map(e => e.t).join(' '))); }
       if (cim !== mine) return; step(2);
       FOUND = found;
       cim.step = 'review'; cim.sel = new Set(FOUND.map((x, i) => i).filter(i => FOUND[i].g !== 'elem' && !had(FOUND[i]))); cimDraw();

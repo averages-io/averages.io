@@ -57,7 +57,9 @@
       if (!frames.some(function (f) { return f && Object.keys(f).some(function (k) { return HEAVY.test(k); }); })) return frames;
       return frames.map(function (f) { var g = {}; Object.keys(f || {}).forEach(function (k) { if (!HEAVY.test(k)) g[k] = f[k]; }); return g; });
     }
-    var light = function (frames, opts) { return orig.call(this, lighten(this, frames), opts); };
+    // a box marked data-anim-size keeps its own size animation (2026-11-03, Martin: a Grades card should close as a box,
+    // not just fade its insides)
+    var light = function (frames, opts) { return orig.call(this, this.hasAttribute && this.hasAttribute('data-anim-size') ? frames : lighten(this, frames), opts); };
     light.__light = true;
     E.animate = light;
   })();
@@ -167,91 +169,89 @@
     wrap.insertBefore(el, wrap.firstChild);
   };
 
-  // ---------- the sidebar, like Cloudflare's (2026-11-02, Martin's recording) ----------
-  // A search box at the top, a Recents folder, small section headings, Your classes as a folder and each class
-  // opening to its own pages, tighter rows. Built from the sidebar each page already has (its ids and links stay, so
-  // the pages' own scripts keep working); build-fs calls this right after the sidebar, before anything is drawn.
+  // ---------- the sidebar, set up like Cloudflare's (2026-11-03, from Martin's saved dash.cloudflare.com page) ----------
+  // Cloudflare's own build: a 57/260 px rail; a 32 px "Quick search" box; 34 px rows 1 px apart with 12 px between
+  // icon and name; groups headed by a small grey label that becomes a thin line when the rail is closed; folders
+  // (Recents) that slide open, their rows hanging off a line under the folder's icon; the list fading out at its top
+  // and bottom edges while there's more to scroll; a 48 px footer with just the open/close button. Built from the
+  // sidebar each page already has (its ids and links stay, so the pages' own scripts keep working); build-fs calls
+  // this right after the sidebar, before anything is drawn. The styles are build-fs's fsSide block.
   var SIDE_OPEN_KEY = 'averages_fs_side_open', RECENT_KEY = 'averages_fs_recents';
   // a clock with an arrow going back, at the same weight as the other icons (svg.i's own stroke)
   var CLOCK = '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.6 12.6A8.5 8.5 0 1 0 5.6 6.2"/><path d="M4.4 3.6v3.4h3.4"/><path d="M12 7.6V12l3 2"/></svg>';
   var CHEV = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.75"/></svg>';
-  var HUB_TABS = [['', 'Overview', 'home'], ['assignments', 'Assignments', 'inbox'], ['grades', 'Grades', 'chart'], ['materials', 'Materials', 'folder'], ['updates', 'Updates', 'bell']];
-  var PAGE_ICON = { courses: 'binder', grades: 'chart', assignments: 'inbox', calendar: 'cal', files: 'folder', messages: 'msg', contacts: 'users', settings: 'gear', course: 'binder', assignment: 'inbox', material: 'folder', overview: 'home', updates: 'bell', members: 'users' };
   var PAGE_NAME = { courses: 'Courses', grades: 'Grades', assignments: 'Assignments', calendar: 'Calendar', files: 'Files', messages: 'Messages', contacts: 'Contacts', settings: 'Settings' };
-  function sico(k) { return '<svg class="i" aria-hidden="true"><use href="#i-' + (PAGE_ICON[k] || k || 'doc') + '"/></svg>'; }
-  function sideOpen() { var v = lget(SIDE_OPEN_KEY); return v && typeof v === 'object' && !Array.isArray(v) ? v : { cls: true }; }
+  function sideOpen() { var v = lget(SIDE_OPEN_KEY); return v && typeof v === 'object' && !Array.isArray(v) ? v : {}; }
   function sideSet(k, on) { var v = sideOpen(); if (on) v[k] = true; else delete v[k]; lset(SIDE_OPEN_KEY, v); }
   function esc0(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
-  function twin(btn, sub, key) {
-    var on = !!sideOpen()[key];
-    btn.setAttribute('aria-expanded', on ? 'true' : 'false'); sub.hidden = !on;
-  }
   function recentsHTML() {
     var l = lget(RECENT_KEY); l = Array.isArray(l) ? l.slice(0, 5) : [];
-    if (!l.length) return '<p class="side-none">Classes and assignments you open show up here.</p>';
-    return l.map(function (r) { return '<a class="side-subl side-recl" href="' + esc0(r.u) + '" title="' + esc0(r.t) + '"><span class="tx fade"><b>' + esc0(r.t) + '</b><small>' + esc0(r.s) + '</small></span></a>'; }).join('');
+    if (!l.length) return '<p class="side-none">Classes and pages you open show up here.</p>';
+    return l.map(function (r) { return '<a class="side-recl" href="' + esc0(r.u) + '"><b>' + esc0(r.t) + '</b><small>' + esc0(r.s) + '</small></a>'; }).join('');
   }
+  function recOpen() { var w = document.getElementById('sideRecW'); return !!(w && w.classList.contains('on')); }
   function classId(a) {
     var o = a.getAttribute('data-open') || '', m = o.match(/^class:(.+)$/);
     if (m) return m[1];
     var h = a.getAttribute('data-go') || a.getAttribute('href') || '', q = h.match(/[?&]course=([^&#]+)/);
     return q ? decodeURIComponent(q[1]) : '';
   }
-  // each class: a ▸ that opens its pages under it
+  // no browser tooltips in the sidebar: it opens when you point at it, so its words are already showing,
+  // and a tooltip only covered the row under it (2026-11-02). The name stays as data-title.
+  function untitle(root) { [].forEach.call(root.querySelectorAll('[title]'), function (x) { x.setAttribute('data-title', x.getAttribute('title')); x.removeAttribute('title'); }); }
+  // classes are plain links (2026-11-03, Martin: no drop-downs or folding for classes; the class page has its tabs)
   function decorateClasses(box) {
-    if (!box) return;
-    var here = page === 'course-hub' ? courseQ : '', tabNow = (location.hash.match(/^#([a-z]+)/) || [, ''])[1];
+    if (!box) return; untitle(box);
     [].slice.call(box.children).forEach(function (a) {
-      if (a.tagName !== 'A') return;
-      var id = classId(a); if (!id) return;
+      if (a.tagName !== 'A' || !classId(a)) return;
       var w = document.createElement('div'); w.className = 'side-cl'; box.insertBefore(w, a); w.appendChild(a);
-      var b = document.createElement('button'); b.type = 'button'; b.className = 'side-tw fade'; b.setAttribute('data-sidetw', 'c:' + id);
-      b.setAttribute('aria-label', 'Pages in ' + (a.getAttribute('title') || 'this class').split(' · ')[0]); b.innerHTML = CHEV; w.appendChild(b);
-      var sub = document.createElement('div'); sub.className = 'side-sub';
-      sub.innerHTML = HUB_TABS.map(function (t) {
-        var on = id === here && (t[0] === tabNow || (!t[0] && (!tabNow || tabNow === 'overview')));
-        return '<a class="side-subl' + (on ? ' on' : '') + '" href="' + FSX.hubUrl(id, t[0]) + '" title="' + t[1] + '"' + (on ? ' aria-current="page"' : '') + '><span class="fade">' + t[1] + '</span></a>';
-      }).join('');
-      w.appendChild(sub);
-      if (id === here && !('c:' + id in sideOpen()) && !sideOpen()['closed:' + id]) { var v = sideOpen(); v['c:' + id] = true; lset(SIDE_OPEN_KEY, v); }
-      twin(b, sub, 'c:' + id);
     });
   }
   window.__fsSide = function () {
     var side = document.getElementById('side'); if (!side || side.dataset.cf) return; side.dataset.cf = '1';
-    var nav = side.querySelector('.nav');
+    untitle(side);
+    var nav = side.querySelector('.nav'), foot = side.querySelector('.foot');
+    // everything but the footer scrolls together (Cloudflare's viewport), so the footer never covers a row
+    var sc = document.createElement('div'); sc.className = 'side-scroll'; sc.id = 'sideScroll';
+    [].slice.call(side.children).forEach(function (x) { if (x !== foot) sc.appendChild(x); });
+    side.insertBefore(sc, foot || null);
+    var label = function (t, cls) { var h = document.createElement('div'); h.className = 'side-sec' + (cls ? ' ' + cls : ''); h.innerHTML = '<span>' + esc0(t) + '</span>'; h.setAttribute('aria-hidden', 'true'); return h; };
     if (nav) {
       var srch = document.getElementById('sideSearch'), lab = srch && srch.querySelector('.fade');
       if (lab) lab.textContent = 'Quick search…';
-      var links = [].slice.call(nav.querySelectorAll('a')), by = function (t) { return links.filter(function (x) { return x.getAttribute('title') === t; })[0]; };
+      var links = [].slice.call(nav.querySelectorAll('a')), by = function (t) { return links.filter(function (x) { return (x.getAttribute('data-title') || x.getAttribute('title')) === t; })[0]; };
       var home = by('Home');
       if (home) {
-        var rec = document.createElement('a'); rec.href = '#'; rec.id = 'sideRec'; rec.className = 'side-rec'; rec.title = 'Recents'; rec.setAttribute('role', 'button');
-        rec.innerHTML = CLOCK + '<span class="fade">Recents</span><span class="side-chev fade">' + CHEV + '</span>';
-        var rl = document.createElement('div'); rl.className = 'side-sub side-recs'; rl.id = 'sideRecList'; rl.innerHTML = recentsHTML();
-        home.after(rec); rec.after(rl); twin(rec, rl, 'rec');
+        var rec = document.createElement('a'); rec.href = '#'; rec.id = 'sideRec'; rec.className = 'side-rec'; rec.setAttribute('role', 'button');
+        rec.innerHTML = CLOCK + '<span class="fade">Recents</span><span class="side-chev">' + CHEV + '</span>';
+        // the folder's rows: a grid row that grows from 0 to their height (Cloudflare's 0fr to 1fr)
+        var rw = document.createElement('div'); rw.className = 'side-subw'; rw.id = 'sideRecW';
+        rw.innerHTML = '<div class="side-sub" id="sideRecList">' + recentsHTML() + '</div>';
+        var on = !!sideOpen().rec; rec.setAttribute('aria-expanded', on ? 'true' : 'false'); rw.classList.toggle('on', on); if (!on) rw.inert = true;
+        home.after(rec); rec.after(rw);
       }
-      var head = function (before, t) { if (!before) return; var h = document.createElement('div'); h.className = 'side-sec'; h.textContent = t; h.setAttribute('aria-hidden', 'true'); before.before(h); };
-      head(by('Courses'), 'School'); head(by('Files'), 'Your stuff');
+      [['Courses', 'School'], ['Files', 'Your stuff']].forEach(function (g) { var a = by(g[0]); if (a) a.before(label(g[1])); });
     }
-    // Your classes: a folder
     var sh = side.querySelector('.side-h'), cls = document.getElementById('sideClasses');
     if (sh && cls) {
-      var hb = document.createElement('button'); hb.type = 'button'; hb.className = 'side-hb'; hb.setAttribute('data-sidetw', 'cls');
-      hb.innerHTML = '<span>' + esc0(sh.textContent.trim() || 'Your classes') + '</span><span class="side-chev">' + CHEV + '</span>';
-      sh.textContent = ''; sh.appendChild(hb); twin(hb, cls, 'cls');
+      sh.hidden = true; cls.hidden = false; cls.before(label(sh.textContent.trim() || 'Your classes', 'side-clsh'));
       decorateClasses(cls);
       new MutationObserver(function () { if ([].some.call(cls.children, function (x) { return x.tagName === 'A'; })) decorateClasses(cls); }).observe(cls, { childList: true });
     }
+    // the list fades out at an edge while there's more to scroll that way
+    var edges = function () { sc.classList.toggle('side-up', sc.scrollTop > 1); sc.classList.toggle('side-more', sc.scrollTop + sc.clientHeight < sc.scrollHeight - 2); };
+    sc.addEventListener('scroll', edges, { passive: true });
+    side.addEventListener('transitionend', edges);
+    window.addEventListener('resize', edges);
+    if (window.ResizeObserver) { var ro = new ResizeObserver(edges); ro.observe(sc); [].forEach.call(sc.children, function (x) { ro.observe(x); }); }
+    setTimeout(edges, 0);
     side.addEventListener('click', function (e) {
-      var t = e.target.closest && e.target.closest('[data-sidetw], #sideRec'); if (!t) return;
+      var t = e.target.closest && e.target.closest('#sideRec'); if (!t) return;
       e.preventDefault(); e.stopPropagation();
-      var key = t.id === 'sideRec' ? 'rec' : t.getAttribute('data-sidetw'), sub = t.id === 'sideRec' ? document.getElementById('sideRecList') : key === 'cls' ? cls : t.parentNode.querySelector('.side-sub');
-      var on = t.getAttribute('aria-expanded') !== 'true';
-      sideSet(key, on); if (!on && key.indexOf('c:') === 0) sideSet('closed:' + key.slice(2), true); else if (key.indexOf('c:') === 0) sideSet('closed:' + key.slice(2), false);
-      if (key === 'rec' && on) sub.innerHTML = recentsHTML();
-      t.setAttribute('aria-expanded', on ? 'true' : 'false'); sub.hidden = !on;
-      if (on && sub.classList && sub !== cls) { sub.classList.remove('opening'); void sub.offsetWidth; sub.classList.add('opening'); setTimeout(function () { sub.classList.remove('opening'); }, 500); }
+      var w = document.getElementById('sideRecW'), on = !w.classList.contains('on');
+      sideSet('rec', on);
+      if (on) document.getElementById('sideRecList').innerHTML = recentsHTML();
+      t.setAttribute('aria-expanded', on ? 'true' : 'false'); w.classList.toggle('on', on); w.inert = !on;
     }, true);
   };
   // Recents: the classes, their pages and the assignments you open (newest first, 5 kept on this device)
@@ -276,9 +276,9 @@
     var l = lget(RECENT_KEY); l = Array.isArray(l) ? l : [];
     l = [{ t: String(t).slice(0, 120), s: s, u: u, k: k }].concat(l.filter(function (r) { return r && r.u !== u; })).slice(0, 8);
     lset(RECENT_KEY, l);
-    var rl = document.getElementById('sideRecList'); if (rl && !rl.hidden) rl.innerHTML = recentsHTML();
+    var rl = document.getElementById('sideRecList'); if (rl && recOpen()) rl.innerHTML = recentsHTML();
   }
-  window.addEventListener('fs:ready', function () { setTimeout(noteRecent, 50); });
+  window.addEventListener('fs:ready', function () { setTimeout(noteRecent, 50); setTimeout(function () { if (window.FSX && FSX.syncWindowType) FSX.syncWindowType(); }, 1200); });
   window.addEventListener('hashchange', function () { setTimeout(noteRecent, 50); });
 
   // ---------- the sidebar and top bar between pages ----------
@@ -306,12 +306,21 @@
         ct[id] = { n: el.querySelector('canvas.ink') ? (el.dataset.n || '') : el.textContent.trim(), h: !!el.hidden };
       });
       sessionStorage.setItem('averages_fs_chrome', JSON.stringify({
-        at: Date.now(), cls: cls ? cls.innerHTML : '', ct: ct, st: side.scrollTop || 0,
+        at: Date.now(), cls: cls ? cls.innerHTML : '', ct: ct, st: (document.getElementById('sideScroll') || side).scrollTop || 0,
         hold: !app.classList.contains('pinned') && (side.matches(':hover') || side.classList.contains('hold')),
         av: av ? { c: av.className, s: av.getAttribute('style') || '', t: av.textContent } : null,
       }));
     } catch (e) { /* storage off: the next page draws them itself */ }
   });
+
+  // the file previews' pdf.js (FSX.prev): the same self-hosted copy the calendar import uses
+  var PREV_DOCS = {}, PREV_ORDER = [], PREV_Q = Promise.resolve(), PREV_IO = null, PREV_LIB = null, PDFJS_DIR = '/vendor/pdfjs-4.10.38/';
+  function prevPdfjs() {
+    return PREV_LIB || (PREV_LIB = import(PDFJS_DIR + 'pdf.min.mjs').then(function (lib) { lib.GlobalWorkerOptions.workerSrc = PDFJS_DIR + 'pdf.worker.min.mjs'; return lib; }, function (e) { PREV_LIB = null; throw e; }));
+  }
+  // thumbnails anywhere on the page, whenever a page draws some
+  if (window.MutationObserver) new MutationObserver(function (ms) { for (var i = 0; i < ms.length; i++) if (ms[i].addedNodes.length) { clearTimeout(PREV_IO_T); PREV_IO_T = setTimeout(function () { if (window.FSX) FSX.prev.thumbs(document); }, 60); return; } }).observe(document.documentElement, { childList: true, subtree: true });
+  var PREV_IO_T = 0;
 
   // ---------- caches (the Windowed pages' own, so both looks share them) ----------
   var FIVE_MIN = 5 * 60 * 1000;
@@ -483,6 +492,30 @@
      * settingsOptions, appearance, darkMode, profile). Pictures go as their stored references; a picture
      * changed on this device and not uploaded yet is left to the Windowed Settings, so nothing is lost.
      */
+    /**
+     * Fullscreen in the account's synced copy (2026-11-02, Martin: "when I sign out then back in it defaults to
+     * windowed even when I am on fs"). Signing in on a cleared device takes the account's copy; Fullscreen picked
+     * in onboarding, or in Settings just before the page changed, never reached it. Once a tab: if the account's
+     * copy says Windowed, only its window type is changed (everything else in it stays as it is).
+     */
+    syncWindowType: function () {
+      var me = window.FSD && window.FSD.me, LSs = window.sessionStorage;
+      try { if (LSs.getItem('averages_fs_wt') === '1') return; LSs.setItem('averages_fs_wt', '1'); } catch (e) { return; }
+      var opts = FSX.lget('schoolagy_settings_options') || {};
+      if (!me || me.incognito || opts.syncAcrossDevices === false || opts.windowType !== 'fullscreen') return;
+      try { if (LS.getItem('schoolagy_account_mode') === 'incognito') return; } catch (e) { return; }
+      FSX.api('/sync/settings').then(function (rec) {
+        var st = rec && rec.settings; if (!st || typeof st !== 'object' || typeof rec.settingsUpdatedAt !== 'string') return;
+        var so = st.settingsOptions && typeof st.settingsOptions === 'object' ? st.settingsOptions : {};
+        if (so.windowType === 'fullscreen') return;
+        var mine = (FSX.lget('schoolagy_sync_meta') || {}).settingsUpdatedAt === rec.settingsUpdatedAt;
+        var next = Object.assign({}, st, { settingsOptions: Object.assign({}, so, { windowType: 'fullscreen', fsTheme: opts.fsTheme || 'is' }) });
+        return FSX.api('/sync/settings', { method: 'PUT', json: { settings: next } }).then(function (r) {
+          // this device agreed with the account's copy before: it still does
+          if (mine && r && typeof r.settingsUpdatedAt === 'string') FSX.lset('schoolagy_sync_meta', { settingsUpdatedAt: r.settingsUpdatedAt });
+        });
+      }).catch(function () {});
+    },
     syncPush: function () {
       clearTimeout(FSX._syncT);
       FSX._syncT = setTimeout(function () {
@@ -604,6 +637,58 @@
     /** A class file's address on our API (a Materials document's or an assignment's); view: open it in the browser. */
     fileUrl: function (f, view) {
       return API + '/data/attachment?section=' + encodeURIComponent(f.course) + '&' + (f.kind === 'document' ? 'document' : 'assignment') + '=' + encodeURIComponent(f.parent) + '&file=' + encodeURIComponent(f.id) + (view ? '&view=1' : '');
+    },
+    /**
+     * File previews (2026-11-03, Martin: "add back file previews/popups"). The class's own files are drawn right in
+     * the page: PDFs page by page with pdf.js (the app's own copy, loaded only when a PDF shows up), text as text,
+     * pictures, sound and video in the browser's own players. Files are fetched with the session cookie from
+     * /data/attachment?view=1 and kept in memory only (the last 8 PDFs), never stored.
+     */
+    prev: {
+      kind: function (name) {
+        var x = (String(name || '').match(/\.([a-z0-9]+)$/i) || [, ''])[1].toLowerCase();
+        return x === 'pdf' ? 'pdf' : /^(png|jpe?g|gif|webp)$/.test(x) ? 'image' : /^(txt|csv|md|json)$/.test(x) ? 'text' : /^(mp3|m4a|wav|ogg)$/.test(x) ? 'audio' : /^(mp4|webm|mov)$/.test(x) ? 'video' : '';
+      },
+      pdf: function (url) {
+        if (PREV_DOCS[url]) return PREV_DOCS[url];
+        var p = Promise.all([prevPdfjs(), fetch(url, { credentials: 'include' }).then(function (r) { if (!r.ok) throw new Error('http_' + r.status); return r.arrayBuffer(); })])
+          .then(function (v) { return v[0].getDocument({ data: new Uint8Array(v[1]), isEvalSupported: false }).promise; });
+        PREV_DOCS[url] = p; PREV_ORDER.push(url);
+        p.catch(function () { delete PREV_DOCS[url]; });
+        while (PREV_ORDER.length > 8) { var old = PREV_ORDER.shift(), d = PREV_DOCS[old]; delete PREV_DOCS[old]; if (d) d.then(function (doc) { doc.destroy(); }, function () {}); }
+        return p;
+      },
+      /** Page n (0 first) of a PDF into a canvas, sized for a box cssWidth wide. Resolves { pages, ratio }. */
+      page: function (url, n, canvas, cssWidth) {
+        return FSX.prev.pdf(url).then(function (doc) {
+          var k = Math.max(0, Math.min(doc.numPages - 1, n));
+          return doc.getPage(k + 1).then(function (pg) {
+            var v1 = pg.getViewport({ scale: 1 }), dpr = Math.min(2, window.devicePixelRatio || 1), vp = pg.getViewport({ scale: Math.max(.2, cssWidth / v1.width) * dpr });
+            var c2 = document.createElement('canvas'); c2.width = Math.round(vp.width); c2.height = Math.round(vp.height);
+            return pg.render({ canvasContext: c2.getContext('2d'), viewport: vp }).promise.then(function () {
+              canvas.width = c2.width; canvas.height = c2.height; canvas.getContext('2d').drawImage(c2, 0, 0); canvas.style.aspectRatio = v1.width + ' / ' + v1.height;
+              return { pages: doc.numPages, ratio: v1.width / v1.height };
+            });
+          });
+        });
+      },
+      text: function (url) {
+        return fetch(url, { credentials: 'include' }).then(function (r) { if (!r.ok) throw new Error('http_' + r.status); return r.text(); }).then(function (t) { return t.length > 200000 ? t.slice(0, 200000) + '\n…' : t; });
+      },
+      /** Small first-page pictures for [data-pthumb="<url>"] boxes as they come into view, two at a time. */
+      thumbs: function (root) {
+        var els = (root || document).querySelectorAll('[data-pthumb]:not([data-pthumbed])'); if (!els.length) return;
+        var draw = function (el) {
+          el.setAttribute('data-pthumbed', '1');
+          PREV_Q = PREV_Q.then(function () {
+            var c = document.createElement('canvas'), w = +el.getAttribute('data-pthumb-w') || Math.max(80, Math.min(480, el.clientWidth || 160));
+            return FSX.prev.page(el.getAttribute('data-pthumb'), 0, c, w).then(function () { c.className = 'pthumb'; el.textContent = ''; el.appendChild(c); el.classList.add('has-pthumb'); }, function () {});
+          });
+        };
+        if (!window.IntersectionObserver) { [].forEach.call(els, draw); return; }
+        if (!PREV_IO) PREV_IO = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { PREV_IO.unobserve(e.target); draw(e.target); } }); }, { rootMargin: '200px' });
+        [].forEach.call(els, function (el) { el.setAttribute('data-pthumbed', ''); PREV_IO.observe(el); });
+      },
     },
     /** Schoology messages: a conversation, a reply, a new message (teachers only, in the app). */
     thread: function (id) { var z = zone(); return FSX.api('/messages/thread?id=' + encodeURIComponent(id) + (z ? '&tz=' + encodeURIComponent(z) : '')); },

@@ -1686,7 +1686,7 @@
 
   /* the animated file icons (34px and up animate; smaller ones are drawn still) */
   .ti-chip { height: 44px; padding: 0 16px 0 8px; }
-  .ti-fmt button { width: 48px; height: 48px; padding: 0; justify-content: center; border-radius: 12px; }
+  .ti-fmt button { width: auto; height: 36px; padding: 0 12px 0 8px; gap: 6px; justify-content: flex-start; border-radius: 10px; } /* icon and name: JPG and PNG share a picture icon (2026-11-03) */
   .ti-file-top > .avfi, .ti-pk > .avfi { flex: none; }
   .ti-head > div { flex: 1; min-width: 0; }
   .ti-grade { flex: none; align-self: flex-start; display: flex; flex-direction: column; align-items: flex-end; line-height: 1; padding: 2px 0 0; animation: tiPop .4s cubic-bezier(.34, 1.4, .64, 1) backwards; }
@@ -3115,6 +3115,33 @@
   .mp-ti { display: grid; place-items: center; width: 100%; height: 100%; overflow: hidden; }
   .mp-ti img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .mp-pic { display: block; max-width: 100%; max-height: 70vh; margin: 0 auto; border-radius: 8px; background: var(--field); }
+  /* real previews (2026-11-03): a PDF page on a sheet, text on a sheet, video; the popup's pages */
+  .mp-pic { cursor: zoom-in; }
+  .mp-paper.mp-canvas { position: relative; padding: 0; aspect-ratio: 8.5 / 11; overflow: hidden; cursor: zoom-in; }
+  .mp-paper.mp-canvas.ready { aspect-ratio: auto; }
+  .mp-paper.mp-canvas.land { width: min(880px, 100%); }
+  .mp-paper.mp-canvas canvas { display: block; width: 100%; height: auto; }
+  .mp-paper.mp-canvas:not(.ready) canvas { position: absolute; opacity: 0; }
+  .mp-ld { position: absolute; inset: 0; padding: 10%; display: flex; flex-direction: column; gap: 14px; }
+  .mp-paper.ready .mp-ld { display: none; }
+  .mp-ld i { display: block; height: 10px; border-radius: 5px; background: #ececf1; animation: mpPulse 1.4s ease-in-out infinite; --keep-dark: 1; }
+  @keyframes mpPulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+  .potato-mode .mp-ld i { animation: none; } @media (prefers-reduced-motion: reduce) { .mp-ld i { animation: none; } }
+  .mp-ld i:first-child { width: 55%; height: 16px; margin-bottom: 8px; } .mp-ld i:nth-child(2) { width: 92%; } .mp-ld i:nth-child(3) { width: 84%; } .mp-ld i:nth-child(4) { width: 88%; } .mp-ld i:nth-child(5) { width: 60%; }
+  .mp-paper.mp-textp { aspect-ratio: auto; padding: 24px; cursor: zoom-in; }
+  .mp-textp pre, .mplb-txt { margin: 0; max-height: 60vh; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; font: 500 13px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #1f2029; cursor: text; --keep-dark: 1; }
+  .mp-media audio { display: block; width: min(420px, 100%); margin-top: 8px; }
+  .mp-vid { display: block; width: min(960px, 100%); max-height: 70vh; margin: 0 auto; border-radius: 8px; background: #000000; }
+  .mp-ti.has-pthumb { place-items: start center; background: #ffffff; --keep-dark: 1; }
+  .mp-ti canvas.pthumb { display: block; width: 100%; height: auto; }
+  .mplb-body { flex: 1; min-height: 0; overflow: auto; padding: 0 24px 32px; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+  .mplb-pages { display: flex; flex-direction: column; align-items: center; gap: 16px; width: 100%; }
+  .mplb-page { display: block; width: min(960px, 100%); height: auto; background: #ffffff; border-radius: 4px; box-shadow: 0 8px 32px rgba(0, 0, 0, .4); --keep-dark: 1; }
+  .mplb-page:not([width]) { aspect-ratio: 8.5 / 11; }
+  .mplb-img { display: block; max-width: 100%; max-height: calc(100vh - 120px); margin: auto; border-radius: 6px; }
+  .mplb-txt { width: min(960px, 100%); max-height: none; padding: 32px; border-radius: 6px; background: #ffffff; --keep-dark: 1; }
+  .mplb-more { margin: 0; font-size: 13px; font-weight: 700; color: rgba(255, 255, 255, .64); --keep-dark: 1; }
+  @media (max-width: 640px) { .mplb-body { padding: 0 8px 16px; } .mplb .lbl { display: none; } }
 </style>
 </head>
 <body>
@@ -4915,7 +4942,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const fmtSize = b => b < 1024 * 1024 ? Math.max(1, Math.round(b / 1024)) + ' KB' : (b / 1024 / 1024).toFixed(1) + ' MB';
   const fileIco = (n, size = 38) => window.AveragesFileIcons ? AveragesFileIcons.html(n, { size }) : ico('doc');
   const tiList = () => {
-    const a = MATERIALS.filter(m => m.kind === 'assignment');
+    const a = MATERIALS.filter(m => m.kind === 'assignment' && !m.disc && !m.outside); // discussions and outside-tool work aren't turned in here
     return [a.filter(m => !m.turned).sort((x, y) => (x.due ?? 99) - (y.due ?? 99)), a.filter(m => m.turned && m.got == null).sort((x, y) => x.ago - y.ago)]; // turned in and still waiting for a grade; graded work leaves the list
   };
   function tiRow(m) {
@@ -5081,9 +5108,9 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       : f.state === 'failed' ? `<button class="btn sm" data-reup="${i}">${ico('refresh')}Try again</button>`
       : `<span class="ti-st ok${f.justDone ? ' just' : ''}">${ico('ok')}Uploaded</span>`;
     const opts = f.src === 'local' ? '' : `<div class="ti-opts">
-        <div class="ti-seg" role="radiogroup" aria-label="How to send ${esc(f.name)}" data-mode="${f.mode}"><span class="ti-seg-pill" aria-hidden="true"></span>
-          <button role="radio" aria-checked="${f.mode === 'copy'}" data-mode-set="${i}:copy">${ico('copy')}Send as a copy</button>${f.src === 'canva' ? '' : `<button role="radio" aria-checked="${f.mode === 'link'}" data-mode-set="${i}:link">${ico('link')}Send as a link</button>`}</div>
-        <div class="ti-fmt" role="radiogroup" aria-label="File type"${f.mode === 'copy' ? '' : ' hidden'}><span>File type</span>${FST.formats(f).map(([x, n]) => `<button role="radio" aria-checked="${f.fmt === x}" class="avfi-host${f.fmt === x ? ' on' : ''}" data-fmt-set="${i}:${x}" title="${n}" aria-label="${n}">${window.AveragesFileIcons ? AveragesFileIcons.html('x.' + x, { size: 38, className: 'both' }) : fileIco('x.' + x, 34)}</button>`).join('')}</div></div>`;
+        ${f.src === 'canva' ? '' /* a Canva design can only go as a copy: no switch with one side (2026-11-03, Martin's screenshot) */ : `<div class="ti-seg" role="radiogroup" aria-label="How to send ${esc(f.name)}" data-mode="${f.mode}"><span class="ti-seg-pill" aria-hidden="true"></span>
+          <button role="radio" aria-checked="${f.mode === 'copy'}" data-mode-set="${i}:copy">${ico('copy')}Send as a copy</button><button role="radio" aria-checked="${f.mode === 'link'}" data-mode-set="${i}:link">${ico('link')}Send as a link</button></div>`}
+        <div class="ti-fmt" role="radiogroup" aria-label="File type"${f.mode === 'copy' ? '' : ' hidden'}><span>File type</span>${FST.formats(f).map(([x, n]) => `<button role="radio" aria-checked="${f.fmt === x}" class="avfi-host${f.fmt === x ? ' on' : ''}" data-fmt-set="${i}:${x}" aria-label="${n}">${fileIco('x.' + x, 22)}<span>${n}</span></button>`).join('')}</div></div>`;
     const html = `<div class="ti-file avfi-host${f.fresh && !calm() ? ' fresh' : ''}${up ? ' uploading' : ''}" data-fi="${i}"><div class="ti-file-top">${icon}<span class="tx"><b>${esc(shownName(f))}</b><small>${esc(shownSub(f))}</small></span>${state}<button class="ti-x" data-unpick="${i}" aria-label="Remove ${esc(shownName(f))}">${ico('x')}</button></div>
       ${up ? `<div class="ti-up"><div class="ti-prog" aria-hidden="true"><i style="animation:none;width:${Math.round((f.frac || 0) * 100)}%"></i></div><div class="ti-up-t"><span data-upsz>${esc(f.verb)}</span></div></div>` : ''}${opts}</div>`;
     f.fresh = false; f.justDone = false;
@@ -5883,14 +5910,86 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const MP_IMG = /^(png|jpe?g|gif|webp)$/i, MP_VIEW = /^(pdf|png|jpe?g|gif|webp|txt|mp3|m4a|wav|mp4|webm|mov)$/i;
   const mpX = m => (mpExt(m) || '').toLowerCase();
   function mpPaper(m) {
-    return MP_IMG.test(mpX(m)) && m.f ? `<span class="mp-ti"><img src="${esc(FSX.fileUrl(m.f, true))}" alt="" loading="lazy"></span>` : `<span class="mp-ti">${fileIco(m.name, 40)}</span>`;
+    if (MP_IMG.test(mpX(m)) && m.f) return `<span class="mp-ti"><img src="${esc(FSX.fileUrl(m.f, true))}" alt="" loading="lazy"></span>`;
+    // a PDF's first page, drawn when it comes into view (FSX.prev.thumbs); its icon until then
+    if (mpX(m) === 'pdf' && m.f) return `<span class="mp-ti" data-pthumb="${esc(FSX.fileUrl(m.f, true))}">${fileIco(m.name, 40)}</span>`;
+    return `<span class="mp-ti">${fileIco(m.name, 40)}</span>`;
   }
+  // The file itself, right here (2026-11-03, Martin: "add back file previews/popups"): a PDF page by page, text,
+  // a picture, sound or video. Clicking it opens it big in a popup (mpLbOpen). Anything else downloads.
   function mpReal(m) {
-    const x = mpX(m);
+    const x = mpX(m), k = FSX.prev.kind(m.name);
     if (!m.f) return `<div class="mp-linkcard avfi-host">${fileIco(m.name, 56)}<div><b>${esc(m.name)}</b><p>This one opens on Schoology.</p></div><button class="btn primary" data-mpact="sgy">Open in Schoology</button></div>`;
-    if (MP_IMG.test(x)) return `<img class="mp-pic" src="${esc(FSX.fileUrl(m.f, true))}" alt="${esc(m.name)}">`;
-    return `<div class="mp-linkcard avfi-host">${fileIco(m.name, 56)}<div><b>${esc(m.name)}</b><p>${MP_VIEW.test(x) ? 'Opens in a new tab, in your browser.' : 'Download it to open it in its own app.'}</p></div>${MP_VIEW.test(x) ? `<button class="btn primary" data-mpact="view">Open</button>` : `<button class="btn primary" data-mpact="dl1">Download</button>`}</div>`;
+    const url = esc(FSX.fileUrl(m.f, true));
+    if (k === 'image') return `<img class="mp-pic" src="${url}" alt="${esc(m.name)}">`;
+    if (k === 'pdf') return `<div class="mp-paper mp-canvas" data-mpdf="${url}"><canvas role="img" aria-label="${esc(m.name)}, page ${MP.page + 1}"></canvas><span class="mp-ld" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span></div>
+      <div class="mp-pager" hidden><button class="ibtn" data-mppg="-1" aria-label="Previous page">${ico('chev-l')}</button><span aria-live="polite"></span><button class="ibtn" data-mppg="1" aria-label="Next page">${ico('chev-r')}</button></div>`;
+    if (k === 'text') return `<div class="mp-paper mp-textp"><pre data-mptxt="${url}">Loading…</pre></div>`;
+    if (k === 'audio') return `<div class="mp-linkcard avfi-host mp-media">${fileIco(m.name, 56)}<div><b>${esc(m.name)}</b><audio controls preload="metadata" src="${url}"></audio></div></div>`;
+    if (k === 'video') return `<video class="mp-vid" controls preload="metadata" src="${url}"></video>`;
+    return `<div class="mp-linkcard avfi-host">${fileIco(m.name, 56)}<div><b>${esc(m.name)}</b><p>There's no preview for this kind of file. Download it to open it in its own app.</p></div><button class="btn primary" data-mpact="dl1">Download</button></div>`;
   }
+  // draws what mpReal left to fill in (the PDF page, the text) once it's on the page
+  function mpHydrate() {
+    const st = $('mpStage'); if (!st) return;
+    const box = st.querySelector('[data-mpdf]');
+    if (box && !box.dataset.done) {
+      box.dataset.done = '1';
+      const c = box.querySelector('canvas'), want = MP.page;
+      FSX.prev.page(box.dataset.mpdf, want, c, Math.min(1120, box.clientWidth || 560)).then(r => {
+        const m = mpGet(MP.file); if (m) m.pages = r.pages;
+        box.classList.add('ready'); box.classList.toggle('land', r.ratio > 1);
+        mpPagerSync(r.pages);
+      }, () => { box.outerHTML = `<div class="mp-linkcard avfi-host">${fileIco('x.pdf', 56)}<div><b>Couldn't show this PDF</b><p>Open it in a new tab, or download it.</p></div><button class="btn primary" data-mpact="view">Open</button></div>`; const pg = st.querySelector('.mp-pager'); if (pg) pg.remove(); });
+    }
+    const pre = st.querySelector('[data-mptxt]');
+    if (pre && !pre.dataset.done) { pre.dataset.done = '1'; FSX.prev.text(pre.dataset.mptxt).then(t => { pre.textContent = t; }, () => { pre.textContent = "Couldn't load this file. Try downloading it."; }); }
+  }
+  function mpPagerSync(n) {
+    const st = $('mpStage'), pg = st && st.querySelector('.mp-pager'); if (!pg) return;
+    pg.hidden = n < 2; pg.children[0].disabled = MP.page <= 0; pg.children[2].disabled = MP.page >= n - 1; pg.children[1].textContent = `Page ${MP.page + 1} of ${n}`;
+    st.classList.toggle('multi', n > 1);
+  }
+  // the popup: the file big, over everything (all of a PDF's pages to scroll through), with Download and Open in a new tab
+  let mpLb = null;
+  function mpLbOpen(m) {
+    if (!m || !m.f) return; mpLbClose(true);
+    const k = FSX.prev.kind(m.name), url = FSX.fileUrl(m.f, true);
+    const body = k === 'image' ? `<img class="mplb-img" src="${esc(url)}" alt="${esc(m.name)}">` : k === 'video' ? `<video class="mplb-img" controls autoplay src="${esc(url)}"></video>`
+      : k === 'text' ? `<pre class="mplb-txt">${esc((($('mpStage') || document).querySelector('[data-mptxt]') || {}).textContent || 'Loading…')}</pre>` : k === 'pdf' ? '<div class="mplb-pages" aria-live="polite"></div>' : '';
+    document.body.insertAdjacentHTML('beforeend', `<div class="up-lb mplb" role="dialog" aria-modal="true" aria-labelledby="mpLbT"><div class="up-lb-top"><div class="tx"><b id="mpLbT">${esc(m.name)}</b><small>${esc([mpKind(m), m.size].filter(Boolean).join(' · '))}</small></div>
+      <button class="btn up-lb-dl" data-mplb="dl">${ico('dl')}<span class="lbl">Download</span></button><button class="up-lb-x" data-mplb="tab" aria-label="Open in a new tab">${ico('up')}</button><button class="up-lb-x" data-mplb="x" aria-label="Close">${ico('x')}</button></div><div class="mplb-body">${body}</div></div>`);
+    mpLb = { el: document.body.lastElementChild, from: document.activeElement, m };
+    if (!calm()) mpLb.el.classList.add('in');
+    mpLb.el.querySelector('[data-mplb="x"]').focus({ preventScroll: true });
+    mpLb.el.addEventListener('click', e => {
+      const b = e.target.closest('[data-mplb]');
+      if (b && b.dataset.mplb === 'x') { mpLbClose(); return; }
+      if (b && b.dataset.mplb === 'tab') { FSX.newTab(url); return; }
+      if (b && b.dataset.mplb === 'dl') { mpDownload([m]); toast(`Downloading ${m.name}.`); return; }
+      if (e.target === mpLb.el || e.target.classList.contains('mplb-body')) mpLbClose();
+    });
+    if (k === 'pdf') {
+      const box = mpLb.el.querySelector('.mplb-pages'), mine = mpLb, w = Math.min(960, window.innerWidth - 48);
+      FSX.prev.pdf(url).then(doc => {
+        const n = Math.min(doc.numPages, 60); let chain = Promise.resolve();
+        for (let i = 0; i < n; i++) {
+          const c = document.createElement('canvas'); c.className = 'mplb-page'; c.setAttribute('role', 'img'); c.setAttribute('aria-label', `Page ${i + 1} of ${doc.numPages}`); box.appendChild(c);
+          chain = chain.then(() => mpLb === mine ? FSX.prev.page(url, i, c, w) : null);
+        }
+        if (doc.numPages > n) box.insertAdjacentHTML('beforeend', `<p class="mplb-more">The first ${n} pages are shown. Open it in a new tab to see all ${doc.numPages}.</p>`);
+      }, () => { box.innerHTML = `<p class="mplb-more">Couldn't show this PDF here. Open it in a new tab instead.</p>`; });
+    }
+  }
+  function mpLbClose(quiet) {
+    if (!mpLb) return; const { el, from } = mpLb; mpLb = null; el.remove();
+    if (!quiet && from && from.focus) from.focus({ preventScroll: true });
+  }
+  document.addEventListener('keydown', e => {
+    if (!mpLb) return;
+    if (e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); mpLbClose(); return; }
+    if (e.key === 'Tab') { const f = [...mpLb.el.querySelectorAll('button, video, audio')]; if (!f.length) return; if (e.shiftKey && document.activeElement === f[0]) { e.preventDefault(); f[f.length - 1].focus(); } else if (!e.shiftKey && document.activeElement === f[f.length - 1]) { e.preventDefault(); f[0].focus(); } }
+  }, true);
   const mpDownload = list => list.filter(x => x.f).forEach((x, i) => setTimeout(() => { const a = document.createElement('a'); a.href = FSX.fileUrl(x.f); a.download = x.name; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove(); }, i * 400));
   // The viewer: a header with the item's icon, name and actions, then the item itself on a stage tinted with the class color
   function mpVHead(m, meta, extra) {
@@ -6391,7 +6490,7 @@ window.AveragesHelp = {
     document.querySelector('.mp-bar').classList.toggle('viewing', !!file);
     if (!MP.showWork && MP.type === 'work') MP.type = 'all';
     $('mpTypes').querySelectorAll('[data-mptype]').forEach(b => { b.setAttribute('aria-pressed', b.dataset.mptype === MP.type); b.hidden = b.dataset.mptype === 'work' && !MP.showWork; });
-    $('mpBox').innerHTML = file ? mpViewHTML(file) : mpListHTML();
+    $('mpBox').innerHTML = file ? mpViewHTML(file) : mpListHTML(); if (file) mpHydrate();
     if (file && file.kind === 'assignment' && $('awTurn')) tiMount(file.id, $('awTurn'));
     mpPill($('mpTypes'), false); mpPill($('mpViews'), false); mpDetSync();
     if (anim && !calm()) {
@@ -7053,13 +7152,14 @@ window.AveragesHelp = {
       if (MP.tab === view.dataset.mpview) return; MP.tab = view.dataset.mpview;
       $('mpViews').querySelectorAll('[data-mpview]').forEach(b => b.setAttribute('aria-pressed', b === view)); mpPill($('mpViews'), true);
       const tmp = document.createElement('div'); tmp.innerHTML = mpViewHTML(mpGet(MP.file));
-      const body = $('mpVBody'); body.innerHTML = tmp.querySelector('#mpVBody').innerHTML;
+      const body = $('mpVBody'); body.innerHTML = tmp.querySelector('#mpVBody').innerHTML; mpHydrate();
       if (!calm()) body.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, easing: 'ease' });
       return;
     }
     const dot = e.target.closest('[data-mppage]'); if (dot) { mpPage(+dot.dataset.mppage - MP.page); return; }
-    // clicking the preview itself (not its buttons) opens the whole file in a new browser tab as a preview
-    if (e.target.closest('#mpStage') && !e.target.closest('button, a, .mp-pager, .mp-dots')) { const f = MP.file && mpGet(MP.file); if (f && f.kind === 'file' && f.f && MP_VIEW.test(mpX(f))) { FSX.newTab(FSX.fileUrl(f.f, true)); return; } }
+    const pgb = e.target.closest('[data-mppg]'); if (pgb) { mpPage(+pgb.dataset.mppg); return; }
+    // clicking the preview itself (not its buttons or players) opens it big, in a popup
+    if (e.target.closest('#mpStage') && !e.target.closest('button, a, audio, video, .mp-pager, .mp-dots, pre')) { const f = MP.file && mpGet(MP.file); if (f && f.kind === 'file' && f.f && /^(pdf|image|text)$/.test(FSX.prev.kind(f.name))) { mpLbOpen(f); return; } }
     const act = e.target.closest('[data-mpact]');
     if (act) {
       const a = act.dataset.mpact, file = MP.file && mpGet(MP.file);
@@ -7092,6 +7192,13 @@ window.AveragesHelp = {
   });
   function mpPage(d) {
     const m = mpGet(MP.file); if (!m || MP.tab !== 'preview') return;
+    const box = $('mpStage') && $('mpStage').querySelector('[data-mpdf]');
+    if (box) { // a real PDF: the next page drawn into the same canvas
+      const n = m.pages || 1, to = Math.max(0, Math.min(n - 1, MP.page + d)); if (to === MP.page) return;
+      MP.page = to; mpPagerSync(n); const c = box.querySelector('canvas'); c.setAttribute('aria-label', `${m.name}, page ${to + 1}`);
+      FSX.prev.page(box.dataset.mpdf, to, c, Math.min(1120, box.clientWidth || 560)).then(() => { if (!calm() && c.animate) c.animate([{ opacity: 0, transform: `translateX(${d * 24}px)` }, { opacity: 1, transform: 'none' }], { duration: 240, easing: 'cubic-bezier(.2, .8, .2, 1)' }); }, () => {});
+      return;
+    }
     const n = m.pages || 1, to = Math.max(0, Math.min(n - 1, MP.page + d)); if (to === MP.page) return;
     MP.page = to; const st = $('mpStage'); if (!st) return;
     st.querySelector('.mp-paper').outerHTML = mpPaper(m, to);

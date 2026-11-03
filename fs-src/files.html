@@ -3382,6 +3382,10 @@
   /* real pictures (2026-10-29) */
   .fl-img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .fl-cimg { position: absolute; inset: 0; background: var(--panel); }
+  .fl-pth { position: absolute; inset: 0; display: block; pointer-events: none; }
+  .fl-pth canvas { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top; background: #ffffff; --keep-dark: 1; }
+  .fl-bigpdf { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; min-height: 0; }
+  .fl-bigpdf canvas { display: block; max-width: 100%; max-height: 100%; width: auto; height: auto; border-radius: 8px; background: #ffffff; box-shadow: 0 12px 40px rgba(0, 0, 0, .45); --keep-dark: 1; }
   .fl-big { cursor: pointer; }
   .fl-bigimg { max-width: 100%; max-height: 100%; object-fit: contain; display: block; margin: auto; border-radius: 8px; background: #ffffff; box-shadow: 0 16px 40px -12px rgba(0, 0, 0, .45); }
   .fl-lb-fold { height: 36px; border-radius: 10px; border: 0; background: var(--field); color: var(--ink); font: inherit; font-weight: 700; padding: 0 12px; }
@@ -4357,7 +4361,10 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const hashOf = s => [...s].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 7);
 
   // ---------- a picture of each file, drawn from what kind it is ----------
+  // a class PDF's real first page over the drawn one, once it's in view (2026-11-03, FSX.prev.thumbs)
+  const classPdf = f => f.src === 'class' && f.raw && /\.pdf$/i.test(f.name);
   function thumb(f) {
+    if (classPdf(f) && !thumb.plain) { thumb.plain = true; const d = thumb(f); thumb.plain = false; return `${d}<span class="fl-pth" data-pthumb="${esc(FSX.fileUrl(f.raw, true))}"></span>`; }
     if (f.kind === 'image' && f.raw && f.src === 'class') return `<img class="fl-img" src="${esc(FSX.fileUrl(f.raw, true))}" alt="" loading="lazy">`;
     // Google Drive and Canva send their own preview picture; the drawn one stays under it in case the link has run out
     if (f.item && f.item.thumb && !thumb.plain) { thumb.plain = true; const d = thumb(f); thumb.plain = false; return `${d}<img class="fl-img fl-cimg" src="${esc(thumbAt(f.item.thumb, 480))}" alt="" loading="lazy" referrerpolicy="no-referrer" data-thumb-fallback>`; }
@@ -4390,7 +4397,8 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const drawn = f => { thumb.plain = true; try { return thumb(f); } finally { thumb.plain = false; } };
   // Google's preview links end in a size (=s220, small): ask for one that fits where it's shown (2026-10-31)
   function thumbAt(u, px) { return /googleusercontent\.com\//i.test(u) ? u.replace(/=[sw]\d+[^/=]*$/i, '') + '=s' + px : u; }
-  const bigPage = f => f.item && f.item.thumb ? `<img class="fl-bigimg" src="${esc(thumbAt(f.item.thumb, 1600))}" alt="${esc(f.name)}" referrerpolicy="no-referrer" data-thumb-fallback>` : f.kind === 'image' && f.raw && f.src === 'class' ? `<img class="fl-bigimg" src="${esc(FSX.fileUrl(f.raw, true))}" alt="${esc(f.name)}">` : drawn(f).replace('viewBox="0 0 160 120" preserveAspectRatio="xMidYMid slice"', `viewBox="${PAGE_BOX[f.kind]}" preserveAspectRatio="xMidYMid meet"`).replace('height="120" rx="4" fill="#ffffff"', 'height="106" rx="0" fill="#ffffff"').replace(/filter="drop-shadow[^"]*"/, '');
+  const bigPage = f => classPdf(f) ? `<span class="fl-bigpdf" data-pthumb="${esc(FSX.fileUrl(f.raw, true))}" data-pthumb-w="1100">${bigPage0(f)}</span>` : bigPage0(f);
+  const bigPage0 = f => f.item && f.item.thumb ? `<img class="fl-bigimg" src="${esc(thumbAt(f.item.thumb, 1600))}" alt="${esc(f.name)}" referrerpolicy="no-referrer" data-thumb-fallback>` : f.kind === 'image' && f.raw && f.src === 'class' ? `<img class="fl-bigimg" src="${esc(FSX.fileUrl(f.raw, true))}" alt="${esc(f.name)}">` : drawn(f).replace('viewBox="0 0 160 120" preserveAspectRatio="xMidYMid slice"', `viewBox="${PAGE_BOX[f.kind]}" preserveAspectRatio="xMidYMid meet"`).replace('height="120" rx="4" fill="#ffffff"', 'height="106" rx="0" fill="#ffffff"').replace(/filter="drop-shadow[^"]*"/, '');
   const srcTag = f => f.src === 'turned' ? `<span class="fl-src turned">${ico('ok')}Turned in</span>` : SOURCES[f.src] ? `<span class="fl-src">${srcMark(f.src)}${esc(SOURCES[f.src].name)}</span>` : '';
   const whoLine = f => `${f.c === APP_CLASS ? '' : badge(C[f.c])}<span>${[f.src === 'class' ? f.who : '', f.when].filter(Boolean).map(esc).join(' · ')}</span>`;
   const nameHTML = f => `<b><span>${esc(f.name)}</span>${isNew(f) ? '<span class="newtag">New</span>' : ''}</b>`;

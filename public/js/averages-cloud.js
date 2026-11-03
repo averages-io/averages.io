@@ -450,12 +450,15 @@
    * isn't cached, so the next call tries again.
    */
   function config() {
+    // the public app ids, kept for the tab (they're the same for everyone), so each page doesn't ask again (2026-11-03)
+    if (!configCache) { try { const k = JSON.parse(sessionStorage.getItem('averages_cloud_config') || 'null'); if (k && typeof k === 'object' && 'google' in k) configCache = { google: k.google || null, microsoft: k.microsoft || null }; } catch {} }
     if (configCache) return serverStatus().then(() => configCache);
     return Promise.all([fetch(API + '/config/cloud'), serverStatus()]).then(([r]) => r)
       .then((r) => (r.ok ? r.json() : null))
       .then((c) => {
         if (!c || typeof c !== 'object') return { google: null, microsoft: null, failed: true };
         configCache = { google: c.google || null, microsoft: c.microsoft || null };
+        try { sessionStorage.setItem('averages_cloud_config', JSON.stringify(configCache)); } catch {}
         return configCache;
       })
       .catch(() => ({ google: null, microsoft: null, failed: true }));

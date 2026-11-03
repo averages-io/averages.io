@@ -3051,6 +3051,21 @@
   .sg-modes { display: flex; flex-wrap: wrap; gap: 8px; }
   /* Course order: small up and down buttons on each course (2026-11-01) */
   .sg-mv { display: flex; gap: 8px; flex: none; }
+  /* drag to reorder (2026-11-03) */
+  .sg-sclead { display: grid; place-items: center; width: 32px; height: 32px; flex: none; border-radius: 10px; background: color-mix(in srgb, var(--ink) 7%, transparent); color: var(--ink-2); }
+  .sg-sclead .badge { width: 32px; height: 32px; }
+  .sg-drow > .tx { flex: 1; min-width: 0; }
+  .sg-scadd { display: flex; flex-wrap: wrap; gap: 8px; }
+  .sg-scchip { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px 0 8px; border-radius: 10px; background: color-mix(in srgb, var(--ink) 7%, transparent); font-size: 13px; font-weight: 800; color: var(--ink-2); }
+  .sg-scchip:hover { background: color-mix(in srgb, var(--ink) 12%, transparent); color: var(--ink); }
+  .sg-scchip svg.i { width: 16px; height: 16px; } .sg-scchip .badge { width: 22px; height: 22px; border-radius: 6px; }
+  .sg-drow { cursor: grab; transition: transform .18s cubic-bezier(.2, .8, .2, 1); background: var(--field); }
+  .sg-grip { display: grid; place-items: center; width: 20px; height: 32px; margin: 0 -4px 0 -8px; flex: none; color: var(--muted); touch-action: none; }
+  .sg-grip svg { width: 16px; height: 16px; fill: currentColor; }
+  .sg-drow:hover .sg-grip { color: var(--ink-2); }
+  .sg-drow.sg-dragging { z-index: 3; cursor: grabbing; transition: none; border-radius: 12px; box-shadow: 0 12px 28px -10px rgba(20, 21, 31, .35), 0 0 0 1px var(--inner); }
+  body.sg-dragon, body.sg-dragon * { cursor: grabbing !important; user-select: none; }
+  .potato-mode .sg-drow { transition: none; } @media (prefers-reduced-motion: reduce) { .sg-drow { transition: none; } }
   .sg-mvb { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; background: color-mix(in srgb, var(--ink) 8%, transparent) !important; color: var(--ink-2); transition: background-color .12s ease; }
   .sg-mvb:hover:not(:disabled) { background: color-mix(in srgb, var(--ink) 14%, transparent) !important; color: var(--ink); }
   .sg-mvb:disabled { color: var(--muted); opacity: .45; cursor: default; }
@@ -4163,7 +4178,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     ['account', 'signin', 'Signed in with Schoology', 'sign in password login account'], ['account', 'signout', 'Sign out', 'log out leave'],
     ['plan', 'current', 'Your plan', 'averages plus subscription renew billing'], ['plan', 'other', 'Other plans', 'free classic switch cancel downgrade get plus upgrade'], ['plan', 'payment', 'Payment and receipts', 'card billing cancel receipt'], ['plan', 'early', 'New features early', 'beta preview try'], ['plan', 'experiments', 'Experiments', 'beta labs try new features study planner grade goals focus timer weekly recap'],
     ['appearance', 'layout', 'Window', 'layout fullscreen windowed full screen background'], ['appearance', 'fstheme', 'Theme', 'is industry standard look style fullscreen theme'], ['appearance', 'theme', 'Mode', 'dark mode light system auto colors night'], ['appearance', 'accent', 'Accent color', 'color highlight buttons'],
-    ['appearance', 'corder', 'Course order', 'courses order move up down reorder sort classes'], ['appearance', 'potato', 'Potato mode', 'performance animations chromebook slow fast font'], ['appearance', 'motion', 'Reduce motion', 'animation accessibility'], ['appearance', 'previews', 'File previews', 'thumbnails images pdf'], ['appearance', 'cache', 'Saved on this device', 'cache storage clear space'],
+    ['appearance', 'corder', 'Course order', 'courses order move up down reorder sort classes'], ['appearance', 'shortcuts', 'Home shortcuts', 'shortcuts home buttons chips quick actions customize add remove'], ['appearance', 'potato', 'Potato mode', 'performance animations chromebook slow fast font'], ['appearance', 'motion', 'Reduce motion', 'animation accessibility'], ['appearance', 'previews', 'File previews', 'thumbnails images pdf'], ['appearance', 'cache', 'Saved on this device', 'cache storage clear space'],
     ['notifications', 'notif', 'Browser notifications', 'alerts push notices'], ['notifications', 'nGrades', 'Grade updates', 'scores new grade'], ['notifications', 'nAssign', 'New assignments', 'work posted homework'],
     ['notifications', 'nDue', 'Due date reminders', 'due soon remind tomorrow'], ['notifications', 'nMsgs', 'Messages', 'inbox chat'], ['notifications', 'nAnn', 'Announcements', 'updates posts course'], ['notifications', 'quiet', 'Quiet during class', 'school hours do not disturb silence'], ['notifications', 'test', 'Send a test notification', 'try check'],
     ['apps', 'schoology', 'Schoology', 'classes grades connected'], ['apps', 'drive', 'Google Drive', 'docs files connect disconnect'], ['apps', 'canva', 'Canva', 'designs connect disconnect'], ['apps', 'onedrive', 'OneDrive', 'microsoft files connect'],
@@ -4260,6 +4275,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
         `<div class="sg-row wrapr" data-set="theme">${tx('Mode', SG.theme === 'auto' ? 'Follows your device: light or dark to match it.' : 'Light, dark, or follow your device.')}<div class="sg-modes" role="group" aria-label="Mode">${[['light', 'Light', 'sun'], ['dark', 'Dark', 'moon'], ['auto', 'System', 'window']].map(([v, t, ic]) => `<button class="sg-mode" data-seg="theme" data-v="${v}" aria-pressed="${SG.theme === v}">${ico(ic)}${t}</button>`).join('')}</div></div>` +
         `<div class="sg-row wrapr" data-set="accent">${tx('Accent color', 'Buttons, highlights and the page you\'re on.')}<div class="sg-sws" role="group" aria-label="Accent color">${ACCENTS.map(([k, n, c]) => `<button class="sg-swb" style="--c:${c}" data-accent="${k}" aria-pressed="${SG.accent === k}" aria-label="${n}" title="${n}">${ico('ok')}</button>`).join('')}</div></div>`)}
       ${grp('Course order', courseRows(), FSX.courseOrder.get().length ? 'Your order. Windowed and the sidebar use it too.' : 'In period order. Move a course to set your own; Windowed and the sidebar use it too.')}
+      ${grp('Home shortcuts', scRowsHTML(), `The buttons under the search bar on Home. Drag to reorder; up to ${SC_MAX}.`)}
       ${grp('Speed',
         tog('potato', 'Potato mode', 'Turns off animation and effects and uses the system font. Good for Chromebooks and older computers.', potato) +
         row('motion', 'Reduce motion', 'Follows your device\'s setting. Potato mode turns off motion too.', `<span class="val">${rm ? 'On' : 'Off'}</span>`) +
@@ -4452,13 +4468,35 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
           return window.AveragesPush.enable(pushTypes()).then(r => { LIVE.busy = ''; if (r.ok) { SG.notif = true; SGV.flip = 'notif'; redraw(); toast('Browser notifications are on.'); } else toast(r.code === 'plus_required' ? 'Browser notifications come with Plus.' : 'Couldn\'t turn on notifications. Try again in a moment.'); });
         });
   }
+  // Home shortcuts (2026-11-03, Martin: "let people edit the shortcuts in settings"): the same list Home's Edit shortcuts
+  // changes (fsmock_shortcuts2: a top row of up to 8, a second of up to 6), so either place edits it.
+  const SC_CAT = [
+    ['turnin', 'Turn in', 'upload'], ['whatif', 'What-if grades', 'calc'], ['teachers', 'Message a teacher', 'msg'], ['takes', 'What it takes', 'chart'],
+    ['missing', 'Missing work', 'alert'], ['week', 'This week', 'cal'], ['edit', 'Edit shortcuts', 'sliders'],
+    ['p-courses', 'Courses', 'binder'], ['p-grades', 'Grades', 'chart'], ['p-gb', 'Gradebook', 'table'], ['p-asg', 'Assignments', 'inbox'], ['p-cal', 'Calendar', 'cal'], ['p-files', 'Files', 'folder'], ['p-msg', 'Messages', 'msg'],
+  ];
+  const SC_DEF = ['turnin', 'whatif', 'teachers', 'takes', 'edit'], SC_MAX = 14;
+  const scInfo = id => { const k = SC_CAT.find(x => x[0] === id); if (k) return { id, t: k[1], icon: k[2] }; const c = id.startsWith('c-') && CLASSES.find(x => x.id === id.slice(2)); return c ? { id, t: c.name, cls: c } : null; };
+  const scList = () => { let r = store.get('fsmock_shortcuts2'); if (!Array.isArray(r) || !r.every(Array.isArray)) r = [store.get('fsmock_shortcuts') || SC_DEF]; const l = r.flat().filter(id => typeof id === 'string' && scInfo(id)); return l.length ? l.slice(0, SC_MAX) : SC_DEF.slice(); };
+  const scSave = l => { store.set('fsmock_shortcuts2', l.length > 8 ? [l.slice(0, 8), l.slice(8, SC_MAX)] : [l.slice()]); store.set('fsmock_sc_edit', true); };
+  const scLead = it => it.cls ? `<span class="sg-sclead">${badge(it.cls)}</span>` : `<span class="sg-sclead">${ico(it.icon)}</span>`;
+  function scRowsHTML() {
+    const l = scList(), have = new Set(l);
+    const rows = l.map(id => { const it = scInfo(id);
+      return `<div class="sg-row sg-drow" data-set="shortcuts" data-dsc="${esc(id)}"><span class="sg-grip" aria-hidden="true"><svg viewBox="0 0 16 16"><circle cx="5.5" cy="3.5" r="1.4"/><circle cx="10.5" cy="3.5" r="1.4"/><circle cx="5.5" cy="8" r="1.4"/><circle cx="10.5" cy="8" r="1.4"/><circle cx="5.5" cy="12.5" r="1.4"/><circle cx="10.5" cy="12.5" r="1.4"/></svg></span>${scLead(it)}${tx(esc(it.t))}<button class="sg-mvb" data-act="scdel" data-sc="${esc(id)}" aria-label="Remove ${esc(it.t)}"${l.length < 2 ? ' disabled' : ''}>${ico('x')}</button></div>`; }).join('');
+    const more = SC_CAT.map(k => k[0]).concat(CLASSES.map(c => 'c-' + c.id)).filter(id => !have.has(id)).map(scInfo).filter(Boolean);
+    const add = l.length >= SC_MAX ? `<div class="sg-row" data-set="shortcuts-add">${tx('Add a shortcut', `That's the most Home has room for (${SC_MAX}). Remove one to add another.`)}</div>`
+      : `<div class="sg-row wrapr" data-set="shortcuts-add">${tx('Add a shortcut')}<div class="sg-scadd">${more.map(it => `<button class="sg-scchip" data-act="scadd" data-sc="${esc(it.id)}">${it.cls ? badge(it.cls) : ico(it.icon)}${esc(it.t)}</button>`).join('')}</div></div>`;
+    const def = JSON.stringify(l) === JSON.stringify(SC_DEF);
+    return rows + add + (def ? '' : row('shortcuts-reset', 'Default shortcuts', 'Turn in, What-if grades, Message a teacher, What it takes and Edit shortcuts.', btn('screset', 'Reset')));
+  }
   // Course order (2026-11-01, Martin: move courses up and down): the same saved order as the Courses page's
   // Move up / Move down (FSX.courseOrder, shared with Windowed). With none saved it's period order.
   const courseIds = () => { const saved = FSX.courseOrder.get().filter(id => CLASSES.some(c => c.id === id)); return saved.concat(CLASSES.slice().sort((a, b) => a.period - b.period).map(c => c.id).filter(id => !saved.includes(id))); };
   function courseRows() {
     const ids = courseIds(), byId = Object.fromEntries(CLASSES.map(c => [c.id, c]));
     return ids.map((id, i) => { const c = byId[id];
-      return `<div class="sg-row" data-set="corder">${tx(esc(c.name), esc([c.teacher, c.hasPeriod ? 'Period ' + c.period : ''].filter(Boolean).join(' · ')))}<span class="sg-mv">`
+      return `<div class="sg-row sg-drow" data-set="corder" data-dcid="${esc(id)}"><span class="sg-grip" aria-hidden="true"><svg viewBox="0 0 16 16"><circle cx="5.5" cy="3.5" r="1.4"/><circle cx="10.5" cy="3.5" r="1.4"/><circle cx="5.5" cy="8" r="1.4"/><circle cx="10.5" cy="8" r="1.4"/><circle cx="5.5" cy="12.5" r="1.4"/><circle cx="10.5" cy="12.5" r="1.4"/></svg></span>${tx(esc(c.name), esc([c.teacher, c.hasPeriod ? 'Period ' + c.period : ''].filter(Boolean).join(' · ')))}<span class="sg-mv">`
         + `<button class="sg-mvb" data-act="cmove" data-cid="${esc(id)}" data-d="-1" aria-label="Move ${esc(c.name)} up"${i ? '' : ' disabled'}>${ico('kup')}</button>`
         + `<button class="sg-mvb" data-act="cmove" data-cid="${esc(id)}" data-d="1" aria-label="Move ${esc(c.name)} down"${i < ids.length - 1 ? '' : ' disabled'}>${ico('kdown')}</button></span></div>`; }).join('')
       + (FSX.courseOrder.get().length ? row('corder-reset', 'Period order', 'Put your courses back in your school\'s order.', btn('creset', 'Reset')) : '');
@@ -4469,6 +4507,39 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     const b = document.querySelector(`[data-act="cmove"][data-cid="${CSS.escape(id)}"][data-d="${d}"]:not(:disabled)`) || document.querySelector(`[data-act="cmove"][data-cid="${CSS.escape(id)}"]:not(:disabled)`);
     if (b) b.focus({ preventScroll: true });
   }
+  // Drag a course to a new place (2026-11-03, Martin: "can reordering the courses be a drag and drop in settings").
+  // With a mouse, drag the row anywhere but its buttons; on a touch screen, by its dots (so the page still scrolls).
+  // The other courses slide out of the way; the arrows stay for the keyboard.
+  let cDrag = null;
+  document.addEventListener('pointerdown', e => {
+    const row = e.target.closest && e.target.closest('.sg-drow'); if (!row || e.button || e.target.closest('button')) return;
+    if (e.pointerType === 'touch' && !e.target.closest('.sg-grip')) return;
+    const rows = [...row.parentNode.querySelectorAll('.sg-drow')], from = rows.indexOf(row);
+    cDrag = { row, rows, from, to: from, y0: e.clientY, id: e.pointerId, on: false, mids: rows.map(r => { const b = r.getBoundingClientRect(); return b.top + b.height / 2; }), h: row.getBoundingClientRect().height + 1 };
+  });
+  document.addEventListener('pointermove', e => {
+    const d = cDrag; if (!d || e.pointerId !== d.id) return;
+    const dy = e.clientY - d.y0;
+    if (!d.on) { if (Math.abs(dy) < 4) return; d.on = true; d.row.classList.add('sg-dragging'); document.body.classList.add('sg-dragon'); try { d.row.setPointerCapture(d.id); } catch (_) {} }
+    e.preventDefault();
+    const lo = d.mids[0] - d.mids[d.from], hi = d.mids[d.mids.length - 1] - d.mids[d.from], y = Math.max(lo, Math.min(hi, dy));
+    d.row.style.transform = `translateY(${y}px)`;
+    const mid = d.mids[d.from] + y; let to = d.from;
+    d.mids.forEach((m, i) => { if (i < d.from && mid < m) to = Math.min(to, i); if (i > d.from && mid > m) to = Math.max(to, i); });
+    d.to = to;
+    d.rows.forEach((r, i) => { if (r === d.row) return; r.style.transform = i >= to && i < d.from ? `translateY(${d.h}px)` : i <= to && i > d.from ? `translateY(${-d.h}px)` : ''; });
+  }, { passive: false });
+  const cDrop = e => {
+    const d = cDrag; if (!d || (e && e.pointerId !== d.id)) return; cDrag = null;
+    document.body.classList.remove('sg-dragon'); if (!d.on) return;
+    d.rows.forEach(r => { r.style.transform = ''; r.classList.remove('sg-dragging'); });
+    if (d.to === d.from) return;
+    if (d.row.dataset.dsc) { const l = scList(), [mv] = l.splice(d.from, 1); l.splice(d.to, 0, mv); scSave(l); redraw(); return; }
+    const ids = courseIds(), [moved] = ids.splice(d.from, 1); ids.splice(d.to, 0, moved);
+    FSX.courseOrder.set(ids); CLASSES.sort((a, b) => ids.indexOf(a.id) - ids.indexOf(b.id)); renderSide(); redraw();
+    const c = CLASSES.find(x => x.id === moved); toast(`Moved ${c ? c.name : 'the course'} to number ${d.to + 1}.`);
+  };
+  document.addEventListener('pointerup', cDrop); document.addEventListener('pointercancel', cDrop);
   const pushTypes = () => ({ grades: SG.nGrades, assignments: SG.nAssign, due: SG.nDue, messages: SG.nMsgs, announcements: SG.nAnn });
   // the test notification: slides in, stays 5 seconds (longer while you point at it), then slides back out to the right
   function noteGo(n) {
@@ -4628,6 +4699,9 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     else if (k === 'pay' || k === 'receipts') stripe('portal');
     else if (k === 'endnow') endEarly();
     else if (k === 'cmove') courseMove(a.dataset.cid, +a.dataset.d);
+    else if (k === 'scdel') { const l = scList().filter(x => x !== a.dataset.sc); if (l.length) { scSave(l); redraw(); toast('Shortcut removed from Home.'); } }
+    else if (k === 'scadd') { const l = scList(); if (l.length < SC_MAX && !l.includes(a.dataset.sc)) { l.push(a.dataset.sc); scSave(l); redraw(); const it = scInfo(a.dataset.sc); toast(`${it ? it.t : 'Shortcut'} added to Home.`); } }
+    else if (k === 'screset') { scSave(SC_DEF.slice()); redraw(); toast('Home shortcuts are back to the default.'); }
     else if (k === 'creset') { FSX.courseOrder.clear(); CLASSES.sort((a, b) => a.period - b.period); renderSide(); redraw(); toast('Back to period order.'); }
     else if (k === 'cache') { try { CACHE_KEYS.forEach(x => sessionStorage.removeItem(x)); Object.keys(sessionStorage).filter(x => x.startsWith('averages_extras_')).forEach(x => sessionStorage.removeItem(x)); } catch (_) {} redraw(); toast('Cleared. Pages load fresh from Schoology next time.'); }
     else if (k === 'test') testNote();

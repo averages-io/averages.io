@@ -166,9 +166,11 @@
 
   // ---------- the switch and the sign-in ----------
   function off() { try { sessionStorage.setItem('averages_fs_off', '1'); } catch (e) { /* storage off */ } goWindowed(false); }
-  fetch(API + '/config/features', { credentials: 'omit', cache: 'no-store' })
+  // asked once every 5 minutes per tab, not on every page (2026-11-03, Martin: "nothing is being cached")
+  var fchk = 0; try { fchk = +sessionStorage.getItem('averages_fs_featchk') || 0; } catch (e) {}
+  if (!(Date.now() - fchk < 300000 && Date.now() >= fchk)) fetch(API + '/config/features', { credentials: 'omit', cache: 'no-store' })
     .then(function (r) { return r.ok ? r.json() : null; })
-    .then(function (j) { if (j && j.features && j.features.fullscreen === false) off(); })
+    .then(function (j) { if (j && j.features) { try { sessionStorage.setItem('averages_fs_featchk', String(Date.now())); } catch (e) {} } if (j && j.features && j.features.fullscreen === false) off(); })
     .catch(function () { /* API unreachable: stay */ });
   // Sign-in is checked by averages-fs-data.js, which loads the page's data.
 

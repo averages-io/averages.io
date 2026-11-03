@@ -292,68 +292,67 @@ function build() {
     ".sum-view{transition:opacity 150ms ease!important}.sum-view.switching{filter:none!important}",
     // the sidebar: its width still slides; the shadow and the labels' spacing switch at once instead of
     // re-drawing a big soft shadow over the page every frame
-    ".side{transition:width .2s cubic-bezier(.2,.8,.2,1),border-radius 0s linear .2s!important}",
-    ".side:hover,.side.hold,.side:has(:focus-visible){transition-delay:.08s,0s!important}",
-    ".app.pinned .side{transition-delay:0s!important}",
-    ".side>.side-h,.side>.cls a,.nav #sideSearch{transition:none!important}",
   ].join("");
-  // The sidebar like Cloudflare's (2026-11-02; built by averages-fs-data.js's __fsSide): tighter rows, small section
-  // headings, folders with a turning arrow, each class's pages under it, Recents.
-  const OPEN = [".side:is(:hover,.hold,:has(:focus-visible))", ".app.pinned .side", ".app.menu .side"];
-  const open = (sel) => OPEN.map((o) => o + " " + sel).join(",");
-  const CLOSED = ".app:not(.pinned):not(.menu) .side:not(:hover):not(.hold):not(:has(:focus-visible))";
+  // The sidebar, set up like Cloudflare's (2026-11-03, Martin: "see how cloudflare sets up their sidebar bc this is a
+  // mess"; measured from his saved dash.cloudflare.com page, Kumo's Sidebar). One set of rules on #side replaces the
+  // pile of fixes that grew on each page's own sidebar styles. Cloudflare's numbers: 57/260 px wide, 12 px padding
+  // around the list, 34 px rows 1 px apart, 12 px from icon to name, 8 px corners, a 32 px search box 12 px above the
+  // rows, group labels 14 px grey with 16 px above and 8 below (on the closed rail: a line with 12 px either side),
+  // folder rows 28 px in with a line under the folder's icon, a 48 px footer under a line, everything moving over
+  // 250 ms on cubic-bezier(.77,0,.175,1). Here: 56/260 (our 18 px icons sit dead centre on 56), weights one step up
+  // to match the app's type, the top bar kept as it is (Cloudflare's logo row is our top bar).
+  const EASE = ".25s cubic-bezier(.77,0,.175,1)";
+  const CLOSED = ".app:not(.pinned):not(.menu) #side:not(:hover):not(.hold):not(:has(:focus-visible))";
+  const ROWBG = "color-mix(in srgb,var(--ink) 7%,transparent)";
   const SIDE_CSS = [
-    ".side [hidden]{display:none!important}",
-    // tighter rows, and nothing changes height or moves sideways when the sidebar opens (2026-11-02, Martin: opening
-    // was choppy and everything moved down): headings, folders and their insides keep their place open or closed,
-    // and only the width slides
-    ".nav{gap:2px}.nav a{height:34px;font-size:14px;border-radius:10px}.cls{gap:2px}.cls a{height:34px;font-size:14px;border-radius:10px}",
-    ".side>.cls a:not(.side-subl)," + open(".side>.cls a:not(.side-subl)") + "{padding-left:8px!important}",
-    ".side>.side-h," + open(".side>.side-h") + "{height:32px!important;padding-left:24px}",
-    CLOSED + " .side-h .side-hb{visibility:hidden}",
-    ".nav a.on{background:color-mix(in srgb,var(--ink) 8%,transparent)}",
-    // section headings: lined up with the icons; on the closed rail, a thin line in the same space
-    ".side-sec{height:28px;overflow:hidden;padding:0 16px 4px;display:flex;align-items:flex-end;font-size:12px;font-weight:800;color:var(--muted);white-space:nowrap;flex:none}",
-    CLOSED + " .side-sec{color:transparent;background:linear-gradient(var(--inner),var(--inner)) center 14px/32px 2px no-repeat}",
-    ".side-sec{transition:color .12s ease}" + open(".side-sec") + "{transition-delay:.18s}",
-    ".side-chev{display:inline-flex;width:16px;height:16px;flex:none;color:var(--muted)}.side-chev svg,.side-tw svg{width:100%;height:100%}",
-    ".side-rec .side-chev{margin-left:auto}",
-    "#sideRec[aria-expanded=true] .side-chev,.side-hb[aria-expanded=true] .side-chev,.side-tw[aria-expanded=true] svg{transform:rotate(90deg)}",
-    ".side-chev,.side-tw svg{transition:transform .2s cubic-bezier(.2,.8,.2,1)}",
-    // a folder opening: its rows drop in from a little above, one after another (2026-11-02, Martin)
-    ".side-sub.opening>*{animation:sideDrop .24s cubic-bezier(.2,.8,.2,1) both}",
-    ".side-sub.opening>:nth-child(2){animation-delay:.03s}.side-sub.opening>:nth-child(3){animation-delay:.06s}.side-sub.opening>:nth-child(4){animation-delay:.09s}.side-sub.opening>:nth-child(5){animation-delay:.12s}.side-sub.opening>:nth-child(n+6){animation-delay:.15s}",
-    "@keyframes sideDrop{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}",
-    "body.potato-mode .side-sub.opening>*{animation:none}@media (prefers-reduced-motion:reduce){.side-sub.opening>*{animation:none}}",
-    ".side-h .side-hb{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;height:100%;padding:0 8px 0 0;border:0;background:none;color:inherit;font:inherit;cursor:pointer;text-align:left}",
-    ".side-h .side-hb:hover{color:var(--ink)}",
-    ".side-cl{position:relative}",
-    ".side-cl>a>span.fade:not(.g){flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}.side-cl>a>.g{flex:none}",
-    ".side-tw{position:absolute;right:4px;top:3px;width:28px;height:28px;padding:7px;border:0;border-radius:8px;background:none;color:var(--muted);cursor:pointer}",
-    ".side-tw:hover{background:color-mix(in srgb,var(--ink) 8%,transparent);color:var(--ink)}",
-    ".side-cl>a{padding-right:36px}",
-    // a folder's insides: small icons centred on the rail when it's closed, their names lined up under the
-    // folder's name when it's open
-    // spacing like Cloudflare's (2026-11-02, Martin's screenshots): a folder's rows hang off a thin line under the
-    // folder's icon, their names lined up with the folder's name; no icons of their own
-    ".side-sub{display:flex;flex-direction:column;gap:2px;margin:2px 0 4px 24px;padding:0;border-left:1px solid color-mix(in srgb,var(--ink) 14%,transparent);flex:none}",
-    // open folders only show their rows while the sidebar is open (2026-11-02, Martin: "all closed on a closed
-    // sidebar"); they slide open with the sidebar instead of jumping (where the browser can animate to auto height)
-    ".side{interpolate-size:allow-keywords}",
-    ".side-sub{height:auto;overflow:hidden;transition:height .2s cubic-bezier(.2,.8,.2,1) .06s,margin .2s cubic-bezier(.2,.8,.2,1) .06s}",
-    CLOSED + " .side-sub{height:0;margin-top:0;margin-bottom:0;transition-delay:0s}",
-    "body.potato-mode .side-sub{transition:none}@media (prefers-reduced-motion:reduce){.side-sub{transition:none}}",
-    ".side-subl{display:flex;align-items:center;border-radius:8px;color:var(--ink-2);font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden}",
-    ".side .cls .side-subl{height:32px!important;padding:0 12px 0 25px!important;border-radius:8px}",
-    ".side-subl>.fade{min-width:0;overflow:hidden;text-overflow:ellipsis}",
-    ".side-subl:hover{background:color-mix(in srgb,var(--ink) 5%,transparent);color:var(--ink)}",
-    ".side-subl.on{background:color-mix(in srgb,var(--ink) 8%,transparent);color:var(--ink)}",
-    ".side .side-recl{height:44px;padding:0 12px 0 20px}",
-    ".side-recl .tx{display:flex;flex-direction:column;gap:2px;min-width:0}.side-recl b{font-size:13px;font-weight:800;color:var(--ink);overflow:hidden;text-overflow:ellipsis}.side-recl small{font-size:11px;font-weight:700;color:var(--muted);overflow:hidden;text-overflow:ellipsis}",
-    ".side-none{margin:0;padding:6px 12px 8px 20px;font-size:12px;font-weight:700;color:var(--muted);white-space:normal}",
-    CLOSED + " .side-none{visibility:hidden}",
-    // the pin stays on screen at the bottom while the rest scrolls under it (2026-11-02, Martin: "always on top")
-    ".side .foot{position:sticky;bottom:0;z-index:3;background:var(--frame);box-shadow:0 -1px 0 color-mix(in srgb,var(--ink) 10%,transparent)}",
+    ".app{--rail:56px;--side-open:260px}",
+    "#side [hidden]{display:none!important}",
+    "#side{display:flex;flex-direction:column;overflow:hidden!important;padding:0;border-radius:0!important}",
+    "@media (min-width:681px){#side{transition:width " + EASE + ",box-shadow .25s ease!important}#side:is(:hover,.hold,:has(:focus-visible)){transition-delay:.06s,0s!important}" +
+      ".app:not(.pinned) #side:is(:hover,.hold,:has(:focus-visible)){z-index:65;box-shadow:1px 0 0 var(--inner),12px 0 32px -12px rgba(20,21,31,.2)}}",
+    "#side .divider,#side .side-h{display:none!important}",
+    // the list scrolls under a fixed footer and fades out at an edge while there's more that way
+    "#side .side-scroll{flex:1 1 auto;min-height:0;overflow:hidden auto;overscroll-behavior:contain;scrollbar-width:none;padding:12px 10px;scroll-padding:24px 0;--ft:0px;--fb:0px;" +
+      "-webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 var(--ft),#000 calc(100% - var(--fb)),transparent 100%);mask-image:linear-gradient(to bottom,transparent 0,#000 var(--ft),#000 calc(100% - var(--fb)),transparent 100%)}",
+    "#side .side-scroll::-webkit-scrollbar{display:none}#side .side-scroll.side-up{--ft:24px}#side .side-scroll.side-more{--fb:24px}",
+    // rows
+    "#side .nav,#side .cls{display:flex;flex-direction:column;gap:1px;padding:0;margin:0;width:auto;flex:none}",
+    "#side .nav a,#side .cls a{display:flex;align-items:center;gap:12px;height:auto;min-height:34px;padding:0 9px;border-radius:8px;font-size:14px;font-weight:600;color:var(--ink-2);background:none;overflow:hidden;white-space:nowrap;position:relative;transition:background-color .12s ease!important}",
+    "#side .nav a:hover,#side .cls a:hover,#side .nav a.on,#side .cls a.here,#side .cls a[aria-current]{background:" + ROWBG + ";color:var(--ink)}",
+    "#side .nav a.on{font-weight:600}#side .nav a.on svg.i{color:inherit}",
+    "#side .fade{opacity:1;transition:none}",
+    // classes: their tile in place of an icon, the name, the grade at the end
+    "#side .cls a{gap:9px;padding:0 6px}#side .cls a>.badge{width:24px;height:24px;border-radius:7px;margin:0}",
+    "#side .side-cl>a>span.fade:not(.g){flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}#side .side-cl>a>.g{flex:none;margin-left:auto;font-size:13px}",
+    // the search box
+    "#side #sideSearch{min-height:32px;height:32px;margin:0 0 12px;gap:12px;font-weight:500;color:var(--muted);background:var(--field);box-shadow:0 0 0 1px var(--inner),0 1px 2px rgba(20,21,31,.05);transition:margin " + EASE + ",box-shadow .12s ease,background-color .12s ease!important}",
+    "#side #sideSearch:hover{background:color-mix(in srgb,var(--inner) 35%,var(--field));color:var(--ink-2)}",
+    "#side #sideSearch .side-kbd{margin-left:auto;padding:0;background:none;font-size:12px;font-weight:500;line-height:1;color:var(--muted)}",
+    CLOSED + " #sideSearch{margin-bottom:0;background:none;box-shadow:none}",
+    // group labels: a grey label open, a thin line closed
+    "#side .side-sec{display:block;flex:none;box-sizing:border-box;height:44px;margin:0;padding:16px 12px 8px;overflow:hidden;font-size:14px;line-height:20px;font-weight:600;color:var(--muted);white-space:nowrap;background:none;border-bottom:1px solid transparent;" +
+      "transition:height " + EASE + ",margin " + EASE + ",padding " + EASE + ",border-color " + EASE + "}",
+    CLOSED + " .side-sec{height:0;padding:0;margin:12px 0;border-bottom-color:var(--inner);color:transparent}",
+    // what only makes sense open: counts, grades, the arrow, the shortcut; on the rail a dot on the icon says there's a count
+    "#side :is(.side-chev,.count,.g,.side-kbd){transition:opacity .15s ease}",
+    CLOSED + " :is(.side-chev,.count,.g,.side-kbd){opacity:0}",
+    "#side .nav a .pip{left:21px;top:6px}",
+    // a folder (Recents): the arrow turns, its rows slide open, hanging off a line under the folder's icon
+    "#side .side-chev{display:inline-flex;width:16px;height:16px;flex:none;margin-left:auto;color:var(--muted);transition:transform " + EASE + ",opacity .15s ease}#side .side-chev svg{display:block;width:100%;height:100%}",
+    "#side #sideRec[aria-expanded=true] .side-chev{transform:rotate(90deg)}",
+    "#side .side-subw{display:grid;grid-template-rows:0fr;transition:grid-template-rows " + EASE + "}#side .side-subw.on{grid-template-rows:1fr}" + CLOSED + " .side-subw.on{grid-template-rows:0fr}",
+    "#side .side-subw>.side-sub{min-height:0;overflow:hidden}",
+    "#side .side-sub{position:relative;display:flex;flex-direction:column;gap:1px;margin:0;padding:0 0 0 28px;border:0;height:auto}",
+    "#side .side-sub::before{content:'';position:absolute;left:18px;top:1px;bottom:1px;width:1px;background:var(--inner)}",
+    "#side .nav a.side-recl{display:flex;flex-direction:column;align-items:stretch;justify-content:center;gap:1px;min-height:34px;padding:8px 12px 8px 11px;text-align:left;border-radius:8px;color:var(--ink);white-space:nowrap;overflow:hidden}",
+    "#side .nav a.side-recl:hover{background:" + ROWBG + "}",
+    "#side .side-recl b{font-size:14px;line-height:18px;font-weight:600;overflow:hidden;text-overflow:ellipsis}#side .side-recl small{font-size:11px;line-height:14px;font-weight:600;color:var(--muted);overflow:hidden;text-overflow:ellipsis}",
+    "#side .side-none{margin:0;padding:8px 12px 8px 11px;font-size:12px;font-weight:600;color:var(--muted);white-space:normal}",
+    // the footer: just the open/close button, under a line
+    "#side .foot{flex:none;position:static;margin:0;width:100%;height:48px;padding:0 11px;display:flex;align-items:center;gap:12px;border-top:1px solid var(--inner);background:var(--frame);box-shadow:none}",
+    "#side .foot .ibtn{width:34px;height:34px;border-radius:8px;flex:none;background:none;color:var(--muted)}#side .foot .ibtn:hover{background:" + ROWBG + ";color:var(--ink)}#side .foot #pinLabel{display:none}",
+    "@media (max-width:1020px){#side .foot{display:none}}",
+    "body.potato-mode #side,body.potato-mode #side *{transition:none!important}@media (prefers-reduced-motion:reduce){#side,#side *{transition:none!important}}",
   ].join("");
   const CHROME_JS = `(function(){var d=document,r=d.documentElement,a=d.getElementById('app'),s=d.getElementById('side');if(!a||!s)return;r.classList.add('fs-boot');try{window.__fsSide&&window.__fsSide()}catch(e){}
 try{var pin=false;try{pin=JSON.parse(localStorage.getItem('fsmock_pinned'))===true}catch(e){}if(pin)a.classList.add('pinned');
@@ -361,7 +360,7 @@ var j=JSON.parse(sessionStorage.getItem('averages_fs_chrome')||'null');if(j&&Dat
 var c=d.getElementById('sideClasses');if(c&&!c.children.length&&j.cls){c.innerHTML=j.cls;[].forEach.call(c.querySelectorAll('.here,[aria-current]'),function(x){x.classList.remove('here');x.removeAttribute('aria-current')})}
 if(j.av)[].forEach.call(d.querySelectorAll('.top [data-av]'),function(v){v.className=j.av.c;if(j.av.s)v.setAttribute('style',j.av.s);v.textContent=j.av.t;v.setAttribute('data-avk','')});
 for(var k in j.ct){var e=d.getElementById(k);if(e){e.textContent=j.ct[k].n;e.hidden=j.ct[k].h}}
-if(j.st>0){var st=j.st;s.scrollTop=st;requestAnimationFrame(function(){s.scrollTop=st})}if(j.hold&&!pin){s.classList.add('hold');var drop=function(ev){var q=s.getBoundingClientRect();if(ev.clientX>q.right||ev.clientX<q.left||ev.clientY<q.top||ev.clientY>q.bottom){s.classList.remove('hold');d.removeEventListener('pointermove',drop)}};d.addEventListener('pointermove',drop)}}}catch(e){}
+if(j.st>0){var st=j.st,sc=d.getElementById('sideScroll')||s;sc.scrollTop=st;requestAnimationFrame(function(){sc.scrollTop=st})}if(j.hold&&!pin){s.classList.add('hold');var drop=function(ev){var q=s.getBoundingClientRect();if(ev.clientX>q.right||ev.clientX<q.left||ev.clientY<q.top||ev.clientY>q.bottom){s.classList.remove('hold');d.removeEventListener('pointermove',drop)}};d.addEventListener('pointermove',drop)}}}catch(e){}
 requestAnimationFrame(function(){requestAnimationFrame(function(){r.classList.remove('fs-boot')})})})();`;
   for (const file of fs.readdirSync(SRC).filter((f) => f.endsWith(".html")).sort()) {
     let s = fs.readFileSync(path.join(SRC, file), "utf8");

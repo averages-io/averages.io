@@ -1574,7 +1574,7 @@
 
   /* the animated file icons (34px and up animate; smaller ones are drawn still) */
   .ti-chip { height: 44px; padding: 0 16px 0 8px; }
-  .ti-fmt button { width: 48px; height: 48px; padding: 0; justify-content: center; border-radius: 12px; }
+  .ti-fmt button { width: auto; height: 36px; padding: 0 12px 0 8px; gap: 6px; justify-content: flex-start; border-radius: 10px; } /* icon and name: JPG and PNG share a picture icon (2026-11-03) */
   .ti-file-top > .avfi, .ti-pk > .avfi { flex: none; }
   .ti-head > div { flex: 1; min-width: 0; }
   .ti-grade { flex: none; align-self: flex-start; display: flex; flex-direction: column; align-items: flex-end; line-height: 1; padding: 2px 0 0; animation: tiPop .4s cubic-bezier(.34, 1.4, .64, 1) backwards; }
@@ -3182,7 +3182,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       } else if (cmd.k === 'turnin') {
         if (!want.length) acts.push(genCmd('turnin'));
         else {
-          const hits = best(DUE.filter(d => d.kind !== 'test'), want, dueHay); // tests aren't turned in
+          const hits = best(DUE.filter(d => d.canTurnIn), want, dueHay); // tests, discussions and outside-tool work aren't turned in here
           hits.forEach(d => acts.push({ attrs: `data-go="turnin:${d.id}"`, cls: C[d.c], t: `Turn in ${d.t}`, sub: `${C[d.c].name} · ${dueLong(d)}` }));
           if (!hits.length) none('turnin', 'assignment');
         }
@@ -3324,8 +3324,9 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       return { acts, G, total: Object.values(G).reduce((n, g) => n + g.length, 0) };
     },
     turnin() {
+      const can = DUE.filter(d => d.canTurnIn); // (2026-11-02: discussions were listed too, with a file box)
       return { label: 'Turn in work', html: head('Turn in work', 'Pick one to open its assignment page') +
-        (DUE.length ? DUE.map(d => mi({ attrs: `data-go="turnin:${d.id}"`, lead: badge(C[d.c]), t: d.t, sub: `${C[d.c].name} · ${dueLong(d)}`, end: dueTag(d) })).join('')
+        (can.length ? can.map(d => mi({ attrs: `data-go="turnin:${d.id}"`, lead: badge(C[d.c]), t: d.t, sub: `${C[d.c].name} · ${dueLong(d)}`, end: dueTag(d) })).join('')
           : `<div class="note">Nothing left to turn in.</div>`) };
     },
     turnform(id, from) {
@@ -4448,7 +4449,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const fmtSize = b => b < 1024 * 1024 ? Math.max(1, Math.round(b / 1024)) + ' KB' : (b / 1024 / 1024).toFixed(1) + ' MB';
   const fileIco = (n, size = 38) => window.AveragesFileIcons ? AveragesFileIcons.html(n, { size }) : ico('doc');
   const tiList = () => {
-    const a = MATERIALS.filter(m => m.kind === 'assignment');
+    const a = MATERIALS.filter(m => m.kind === 'assignment' && !m.disc && !m.outside); // discussions and outside-tool work aren't turned in here
     return [a.filter(m => !m.turned).sort((x, y) => (x.due ?? 99) - (y.due ?? 99)), a.filter(m => m.turned && m.got == null).sort((x, y) => x.ago - y.ago)]; // turned in and still waiting for a grade; graded work leaves the list
   };
   function tiRow(m) {
@@ -4614,9 +4615,9 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       : f.state === 'failed' ? `<button class="btn sm" data-reup="${i}">${ico('refresh')}Try again</button>`
       : `<span class="ti-st ok${f.justDone ? ' just' : ''}">${ico('ok')}Uploaded</span>`;
     const opts = f.src === 'local' ? '' : `<div class="ti-opts">
-        <div class="ti-seg" role="radiogroup" aria-label="How to send ${esc(f.name)}" data-mode="${f.mode}"><span class="ti-seg-pill" aria-hidden="true"></span>
-          <button role="radio" aria-checked="${f.mode === 'copy'}" data-mode-set="${i}:copy">${ico('copy')}Send as a copy</button>${f.src === 'canva' ? '' : `<button role="radio" aria-checked="${f.mode === 'link'}" data-mode-set="${i}:link">${ico('link')}Send as a link</button>`}</div>
-        <div class="ti-fmt" role="radiogroup" aria-label="File type"${f.mode === 'copy' ? '' : ' hidden'}><span>File type</span>${FST.formats(f).map(([x, n]) => `<button role="radio" aria-checked="${f.fmt === x}" class="avfi-host${f.fmt === x ? ' on' : ''}" data-fmt-set="${i}:${x}" title="${n}" aria-label="${n}">${window.AveragesFileIcons ? AveragesFileIcons.html('x.' + x, { size: 38, className: 'both' }) : fileIco('x.' + x, 34)}</button>`).join('')}</div></div>`;
+        ${f.src === 'canva' ? '' /* a Canva design can only go as a copy: no switch with one side (2026-11-03, Martin's screenshot) */ : `<div class="ti-seg" role="radiogroup" aria-label="How to send ${esc(f.name)}" data-mode="${f.mode}"><span class="ti-seg-pill" aria-hidden="true"></span>
+          <button role="radio" aria-checked="${f.mode === 'copy'}" data-mode-set="${i}:copy">${ico('copy')}Send as a copy</button><button role="radio" aria-checked="${f.mode === 'link'}" data-mode-set="${i}:link">${ico('link')}Send as a link</button></div>`}
+        <div class="ti-fmt" role="radiogroup" aria-label="File type"${f.mode === 'copy' ? '' : ' hidden'}><span>File type</span>${FST.formats(f).map(([x, n]) => `<button role="radio" aria-checked="${f.fmt === x}" class="avfi-host${f.fmt === x ? ' on' : ''}" data-fmt-set="${i}:${x}" aria-label="${n}">${fileIco('x.' + x, 22)}<span>${n}</span></button>`).join('')}</div></div>`;
     const html = `<div class="ti-file avfi-host${f.fresh && !calm() ? ' fresh' : ''}${up ? ' uploading' : ''}" data-fi="${i}"><div class="ti-file-top">${icon}<span class="tx"><b>${esc(shownName(f))}</b><small>${esc(shownSub(f))}</small></span>${state}<button class="ti-x" data-unpick="${i}" aria-label="Remove ${esc(shownName(f))}">${ico('x')}</button></div>
       ${up ? `<div class="ti-up"><div class="ti-prog" aria-hidden="true"><i style="animation:none;width:${Math.round((f.frac || 0) * 100)}%"></i></div><div class="ti-up-t"><span data-upsz>${esc(f.verb)}</span></div></div>` : ''}${opts}</div>`;
     f.fresh = false; f.justDone = false;
@@ -4991,7 +4992,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (k === 'draft') { const r = DRAFTS.find(x => x.id === a), d = r && DUE.find(x => x.id === r.due); if (r && r.url) { FSX.newTab(r.url); return; } if (d) FSX.hub(d.c, 'assignments', { a: d.id }); return; }
     if (k === 'thread') { const th = T(a); if (th) { th.unread = false; FSX.seen.mark('m', a); touchRecent('Messages', th.subject, go); } FSX.go('messages', { thread: a }); return; }
     if (k === 'update') { const u = U(a); if (u) { FSX.seen.mark('u', a); touchRecent('Updates', C[u.c].name, go); FSX.hub(u.c, 'updates', { update: a }); } return; }
-    if (k === 'turnin') { tiPopup.open(a); return; } // the Turn in popup, for just this assignment
+    if (k === 'turnin') { const d = DUE.concat(DONE).find(x => x.id === a); if (d && !d.canTurnIn) { openPage('due:' + a); return; } tiPopup.open(a); return; } // the Turn in popup, for just this assignment (a discussion or a test opens its page instead)
     if (k === 'graded') { const g = GRADED.find(x => x.id === a); if (g) { FSX.seen.mark('g', a); touchRecent('Assignment', g.t, go); FSX.hub(g.c, 'grades', { a: g.id }); } return; }
     if (k === 'page') { FSX.go(PG[a] || String(a).toLowerCase()); return; }
     if (k === 'sc') { FSX.go(SCP[a] || 'home'); return; }

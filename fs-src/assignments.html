@@ -1686,7 +1686,7 @@
 
   /* the animated file icons (34px and up animate; smaller ones are drawn still) */
   .ti-chip { height: 44px; padding: 0 16px 0 8px; }
-  .ti-fmt button { width: 48px; height: 48px; padding: 0; justify-content: center; border-radius: 12px; }
+  .ti-fmt button { width: auto; height: 36px; padding: 0 12px 0 8px; gap: 6px; justify-content: flex-start; border-radius: 10px; } /* icon and name: JPG and PNG share a picture icon (2026-11-03) */
   .ti-file-top > .avfi, .ti-pk > .avfi { flex: none; }
   .ti-head > div { flex: 1; min-width: 0; }
   .ti-grade { flex: none; align-self: flex-start; display: flex; flex-direction: column; align-items: flex-end; line-height: 1; padding: 2px 0 0; animation: tiPop .4s cubic-bezier(.34, 1.4, .64, 1) backwards; }
@@ -4529,7 +4529,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const fmtSize = b => b < 1024 * 1024 ? Math.max(1, Math.round(b / 1024)) + ' KB' : (b / 1024 / 1024).toFixed(1) + ' MB';
   const fileIco = (n, size = 38) => window.AveragesFileIcons ? AveragesFileIcons.html(n, { size }) : ico('doc');
   const tiList = () => {
-    const a = MATERIALS.filter(m => m.kind === 'assignment');
+    const a = MATERIALS.filter(m => m.kind === 'assignment' && !m.disc && !m.outside); // discussions and outside-tool work aren't turned in here
     return [a.filter(m => !m.turned).sort((x, y) => (x.due ?? 99) - (y.due ?? 99)), a.filter(m => m.turned && m.got == null).sort((x, y) => x.ago - y.ago)]; // turned in and still waiting for a grade; graded work leaves the list
   };
   function tiRow(m) {
@@ -4695,9 +4695,9 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       : f.state === 'failed' ? `<button class="btn sm" data-reup="${i}">${ico('refresh')}Try again</button>`
       : `<span class="ti-st ok${f.justDone ? ' just' : ''}">${ico('ok')}Uploaded</span>`;
     const opts = f.src === 'local' ? '' : `<div class="ti-opts">
-        <div class="ti-seg" role="radiogroup" aria-label="How to send ${esc(f.name)}" data-mode="${f.mode}"><span class="ti-seg-pill" aria-hidden="true"></span>
-          <button role="radio" aria-checked="${f.mode === 'copy'}" data-mode-set="${i}:copy">${ico('copy')}Send as a copy</button>${f.src === 'canva' ? '' : `<button role="radio" aria-checked="${f.mode === 'link'}" data-mode-set="${i}:link">${ico('link')}Send as a link</button>`}</div>
-        <div class="ti-fmt" role="radiogroup" aria-label="File type"${f.mode === 'copy' ? '' : ' hidden'}><span>File type</span>${FST.formats(f).map(([x, n]) => `<button role="radio" aria-checked="${f.fmt === x}" class="avfi-host${f.fmt === x ? ' on' : ''}" data-fmt-set="${i}:${x}" title="${n}" aria-label="${n}">${window.AveragesFileIcons ? AveragesFileIcons.html('x.' + x, { size: 38, className: 'both' }) : fileIco('x.' + x, 34)}</button>`).join('')}</div></div>`;
+        ${f.src === 'canva' ? '' /* a Canva design can only go as a copy: no switch with one side (2026-11-03, Martin's screenshot) */ : `<div class="ti-seg" role="radiogroup" aria-label="How to send ${esc(f.name)}" data-mode="${f.mode}"><span class="ti-seg-pill" aria-hidden="true"></span>
+          <button role="radio" aria-checked="${f.mode === 'copy'}" data-mode-set="${i}:copy">${ico('copy')}Send as a copy</button><button role="radio" aria-checked="${f.mode === 'link'}" data-mode-set="${i}:link">${ico('link')}Send as a link</button></div>`}
+        <div class="ti-fmt" role="radiogroup" aria-label="File type"${f.mode === 'copy' ? '' : ' hidden'}><span>File type</span>${FST.formats(f).map(([x, n]) => `<button role="radio" aria-checked="${f.fmt === x}" class="avfi-host${f.fmt === x ? ' on' : ''}" data-fmt-set="${i}:${x}" aria-label="${n}">${fileIco('x.' + x, 22)}<span>${n}</span></button>`).join('')}</div></div>`;
     const html = `<div class="ti-file avfi-host${f.fresh && !calm() ? ' fresh' : ''}${up ? ' uploading' : ''}" data-fi="${i}"><div class="ti-file-top">${icon}<span class="tx"><b>${esc(shownName(f))}</b><small>${esc(shownSub(f))}</small></span>${state}<button class="ti-x" data-unpick="${i}" aria-label="Remove ${esc(shownName(f))}">${ico('x')}</button></div>
       ${up ? `<div class="ti-up"><div class="ti-prog" aria-hidden="true"><i style="animation:none;width:${Math.round((f.frac || 0) * 100)}%"></i></div><div class="ti-up-t"><span data-upsz>${esc(f.verb)}</span></div></div>` : ''}${opts}</div>`;
     f.fresh = false; f.justDone = false;

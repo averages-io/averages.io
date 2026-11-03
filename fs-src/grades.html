@@ -3861,6 +3861,7 @@
     const open = !el.classList.contains('open') || el.classList.contains('closing');
     open ? GR.open.add(id) : GR.open.delete(id); store.set('fsgrades_open', [...GR.open]);
     row.setAttribute('aria-expanded', open); allLabel();
+    el.setAttribute('data-anim-size', ''); // the card itself grows and shrinks (see the lighter-motion note in averages-fs-data.js)
     const from = el.getBoundingClientRect().height, prev = ANIM.get(el); if (prev) prev.cancel(); body.getAnimations().forEach(x => x.cancel());
     if (open) { el.classList.remove('closing'); el.classList.add('open'); if (!body.innerHTML) body.innerHTML = classBody(C[id], GR.q.toLowerCase()); }
     if (calm() || !el.animate) { if (!open) { el.classList.remove('open', 'closing'); body.innerHTML = ''; } return; }
