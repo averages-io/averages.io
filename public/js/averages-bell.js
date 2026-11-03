@@ -49,10 +49,52 @@
       v[kind] = list.slice(-SEEN_CAP);
       try { localStorage.setItem(SEEN_KEY, JSON.stringify(v)); } catch {}
       window.dispatchEvent(new CustomEvent('averages:seen', { detail: { kind } }));
+      seenPush();
     },
     mark(kind, id) { Seen.markMany(kind, [id]); },
   };
   window.AveragesSeen = Seen;
+
+  // Seen on every device (2026-11-03, Martin: the "New" stickers came back in a private tab). With Sync Across
+  // Devices on (not Incognito), the account keeps the same lists (GET/POST /sync/seen, merged by the API, never
+  // replaced): this page adds the account's on load and sends its own when something is opened. Shared with
+  // Fullscreen (averages-fs-data.js), which keeps the same averages_seen.
+  const SYNC_API = window.location.hostname.endsWith('averages.io') ? 'https://api.averages.io' : 'http://localhost:8787';
+  function seenSyncOff() {
+    try {
+      if (localStorage.getItem('schoolagy_account_mode') === 'incognito') return true;
+      const o = JSON.parse(localStorage.getItem('schoolagy_settings_options') || '{}');
+      return !!o && o.syncAcrossDevices === false;
+    } catch { return true; }
+  }
+  let seenPushT = 0;
+  function seenPush() {
+    if (seenSyncOff()) return;
+    clearTimeout(seenPushT);
+    seenPushT = setTimeout(() => {
+      fetch(SYNC_API + '/sync/seen', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ seen: readSeen() }) }).catch(() => {});
+    }, 1500);
+  }
+  function seenPull() {
+    if (seenSyncOff()) return;
+    fetch(SYNC_API + '/sync/seen', { credentials: 'include', cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)).then((j) => {
+      if (!j || !j.seen || typeof j.seen !== 'object') return;
+      const local = readSeen(), out = Object.assign({}, local);
+      let added = false, theirsMissing = false;
+      ['u', 'g', 'm'].forEach((k) => {
+        const mine = Array.isArray(local[k]) ? local[k].map(String) : [], theirs = Array.isArray(j.seen[k]) ? j.seen[k].map(String) : [];
+        const all = [...new Set([...mine, ...theirs])].slice(-SEEN_CAP);
+        if (all.length > mine.length) added = true;
+        if (mine.some((x) => !theirs.includes(x))) theirsMissing = true;
+        if (all.length) out[k] = all;
+      });
+      if (added) {
+        try { localStorage.setItem(SEEN_KEY, JSON.stringify(out)); } catch {}
+        window.dispatchEvent(new CustomEvent('averages:seen', { detail: {} }));
+      }
+      if (theirsMissing) seenPush();
+    }).catch(() => {});
+  }
   // Another tab opened something: same dots, there too.
   window.addEventListener('storage', (e) => { if (e.key === SEEN_KEY) window.dispatchEvent(new CustomEvent('averages:seen', { detail: {} })); });
 
@@ -452,6 +494,7 @@
     window.addEventListener('averages:seen', render);
     render();
     startChecks();
+    if (mode === 'live') seenPull();
     return true;
   }
 

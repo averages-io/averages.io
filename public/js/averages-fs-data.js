@@ -518,10 +518,45 @@
   // The bundle is asked for at once, alongside the sign-in check (2026-11-03: one round trip sooner); if
   // the check says signed out, the page leaves before it's used.
   var earlyBundle = bundle(); earlyBundle.catch(function () {});
+  // Seen on every device (2026-11-03, Martin: "New" stickers came back in a private tab): the account's seen
+  // notifications (GET /sync/seen, merged by the API) are added to this device's before the page draws, and this
+  // device's go up when something is opened. Not with Sync Across Devices off or in Incognito. Shared with Windowed.
+  function seenSyncOff() {
+    var o = lget('schoolagy_settings_options') || {};
+    try { if (LS.getItem('schoolagy_account_mode') === 'incognito') return true; } catch (e) { return true; }
+    return o.syncAcrossDevices === false;
+  }
+  var seenPushT = 0;
+  function seenPush() {
+    if (seenSyncOff()) return;
+    clearTimeout(seenPushT);
+    seenPushT = setTimeout(function () {
+      fetch(API + '/sync/seen', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ seen: lget('averages_seen') || {} }) }).catch(function () {});
+    }, 1500);
+  }
+  function seenPull(me) {
+    if (!me || me.incognito || seenSyncOff()) return Promise.resolve();
+    var got = fetch(API + '/sync/seen', { credentials: 'include', cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
+      if (!j || !j.seen || typeof j.seen !== 'object') return;
+      var local = lget('averages_seen'); local = local && typeof local === 'object' && !Array.isArray(local) ? local : {};
+      var out = Object.assign({}, local), added = false, theirsMissing = false;
+      ['u', 'g', 'm'].forEach(function (k) {
+        var mine = Array.isArray(local[k]) ? local[k].map(String) : [], theirs = Array.isArray(j.seen[k]) ? j.seen[k].map(String) : [];
+        var all = mine.slice(); theirs.forEach(function (x) { if (all.indexOf(x) < 0) all.push(x); }); all = all.slice(-300);
+        if (all.length > mine.length) added = true;
+        if (mine.some(function (x) { return theirs.indexOf(x) < 0; })) theirsMissing = true;
+        if (all.length) out[k] = all;
+      });
+      if (added) lset('averages_seen', out);
+      if (theirsMissing) seenPush();
+    }).catch(function () {});
+    return settle(got, 1500);   // never holds the page up for long
+  }
   var started = session().then(function (me) {
     if (!me || me.mode !== 'live' || !me.uid) { window.location.replace('/'); return null; }
-    var who = me.uid, bP = earlyBundle, xs = extrasFor(who, bP), names = Object.keys(xs);
-    return Promise.all([bP].concat(names.map(function (n) { return settle(xs[n], 8000); }))).then(function (all) {
+    var who = me.uid, bP = earlyBundle, xs = extrasFor(who, bP), names = Object.keys(xs), sP = seenPull(me);
+    return Promise.all([bP, sP].concat(names.map(function (n) { return settle(xs[n], 8000); }))).then(function (all) {
+      all.splice(1, 1);   // the seen lists are in place now; they aren't part of the data
       var raw = { me: me, bundle: all[0] };
       names.forEach(function (n, i) { raw[n] = all[i + 1] && all[i + 1].__signedOut ? undefined : all[i + 1]; });
       return raw;
@@ -715,6 +750,7 @@
         var v = FSX.seen.read(), l = Array.isArray(v[kind]) ? v[kind].map(String) : [];
         [].concat(ids).forEach(function (id) { var s = String(id == null ? '' : id); if (s && l.indexOf(s) < 0) l.push(s); });
         v[kind] = l.slice(-300); lset('averages_seen', v);
+        seenPush();
       },
     },
     lget: lget,

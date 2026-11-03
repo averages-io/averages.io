@@ -2,12 +2,12 @@
 // Our /js scripts' addresses with a version, so browsers can keep them (see public/_headers).
 export const JS = {
   "averages-avatar.js": "/js/averages-avatar.js?v=0379afd2db",
-  "averages-bell.js": "/js/averages-bell.js?v=089e7266e9",
+  "averages-bell.js": "/js/averages-bell.js?v=45e19fd8d3",
   "averages-cloud.js": "/js/averages-cloud.js?v=2640579716",
   "averages-drive-open.js": "/js/averages-drive-open.js?v=bb3393006e",
   "averages-features.js": "/js/averages-features.js?v=99f1d24474",
   "averages-file-icons.js": "/js/averages-file-icons.js?v=08e0c20458",
-  "averages-fs-data.js": "/js/averages-fs-data.js?v=9c6b415d8c",
+  "averages-fs-data.js": "/js/averages-fs-data.js?v=690f09d7c1",
   "averages-fs-turnin.js": "/js/averages-fs-turnin.js?v=d0290d1a9b",
   "averages-fs.js": "/js/averages-fs.js?v=fa6e2f120d",
   "averages-help.js": "/js/averages-help.js?v=19e87f9c0f",
