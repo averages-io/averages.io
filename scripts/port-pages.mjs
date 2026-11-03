@@ -606,7 +606,7 @@ const SCHOOLOGY_SIGNIN_ERRORS: Record<string, string> = {
     // the way to Home when they are, and gives way to the sign-in options when
     // they aren't.
     const reveal = () => document.documentElement.removeAttribute("data-av-checking");
-    getSession().then((session) => {
+    getSession(backFromSchoology ? { fresh: true } : undefined).then((session) => {
       if (cancelled) return;
       if (session.mode === "out") {
         reveal();

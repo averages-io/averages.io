@@ -137,8 +137,10 @@ export interface SessionState {
  * moment sooner, never let someone in who shouldn't be. Anything that gets a
  * 401 from the API clears it immediately.
  */
-export async function getSession(): Promise<SessionState> {
-  const cached = cacheGet(SESSION_CACHE);
+export async function getSession(opts?: { fresh?: boolean }): Promise<SessionState> {
+  // fresh: ask the API even if this tab remembers an answer. Coming back from Sign in with Schoology, the tab may
+  // still remember "signed out" from a moment ago (2026-11-03: the sign-in worked, the login page stayed).
+  const cached = opts && opts.fresh ? null : cacheGet(SESSION_CACHE);
   if (cached) {
     try {
       const parsed = JSON.parse(cached);
