@@ -308,6 +308,7 @@ function build() {
   const SIDE_CSS = [
     ".app{--rail:56px;--side-open:260px}",
     "#side [hidden]{display:none!important}",
+    "a.brand{color:inherit;text-decoration:none;border-radius:12px;cursor:pointer}a.brand:focus-visible{outline:2px solid var(--accent);outline-offset:-4px}",
     "#side{display:flex;flex-direction:column;overflow:hidden!important;padding:0;border-radius:0!important}",
     "@media (min-width:681px){#side{transition:width " + EASE + ",box-shadow .25s ease!important}#side:is(:hover,.hold,:has(:focus-visible)){transition-delay:.06s,0s!important}" +
       ".app:not(.pinned) #side:is(:hover,.hold,:has(:focus-visible)){z-index:65;box-shadow:1px 0 0 var(--inner),12px 0 32px -12px rgba(20,21,31,.2)}}",

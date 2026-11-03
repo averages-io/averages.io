@@ -209,6 +209,13 @@
   }
   window.__fsSide = function () {
     var side = document.getElementById('side'); if (!side || side.dataset.cf) return; side.dataset.cf = '1';
+    // the logo in the top bar goes Home (2026-11-03, Martin): a real link, so it also opens in a new tab
+    var brand = document.querySelector('.top .brand, .app > .top > .brand, div.brand');
+    if (brand && brand.tagName !== 'A') {
+      var home = document.createElement('a'); home.className = brand.className; home.href = '/IS/home'; home.setAttribute('aria-label', 'Averages.io, go to Home');
+      while (brand.firstChild) home.appendChild(brand.firstChild);
+      brand.replaceWith(home);
+    }
     untitle(side);
     var nav = side.querySelector('.nav'), foot = side.querySelector('.foot');
     // everything but the footer scrolls together (Cloudflare's viewport), so the footer never covers a row
