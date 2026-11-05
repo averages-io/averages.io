@@ -5469,7 +5469,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const calm = () => document.body.classList.contains('potato-mode') || matchMedia('(prefers-reduced-motion: reduce)').matches;
   // Spotify-style names: with animations on, a name that doesn't fit stays on one line and slides to show the end.
   // With potato mode or reduced motion, names go back to an ellipsis that opens up on hover.
-  const MQ_SEL = '.rg-row.mat .fn, .arow .tx > b, .gt-c .tx > b, .mi .tx > b, .rg-row.mat .tx > small, .li .tx > small, .box .row .tx > small, .mi .tx > small'; // names, plus the time and who posted it
+  const MQ_SEL = '.rg-row .tx b .rg-n, .rg-row.mat .fn, .arow .tx > b, .gt-c .tx > b, .mi .tx > b, .rg-row.mat .tx > small, .li .tx > small, .box .row .tx > small, .mi .tx > small'; // names (Recently graded too, back 2026-11-05), plus the time and who posted it
   function mqOff(el) { const inn = el.querySelector(':scope > .mq-in'); if (inn) el.innerHTML = inn.innerHTML; el.classList.remove('mq'); delete el.dataset.mq; }
   function mqFit(el) {
     if (!el.dataset.mq) { el.innerHTML = `<span class="mq-in">${el.innerHTML}</span>`; el.dataset.mq = '1'; }
