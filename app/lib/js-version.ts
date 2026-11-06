@@ -2,17 +2,17 @@
 // Our /js scripts' addresses with a version, so browsers can keep them (see public/_headers).
 export const JS = {
   "averages-avatar.js": "/js/averages-avatar.js?v=0379afd2db",
-  "averages-bell.js": "/js/averages-bell.js?v=45e19fd8d3",
+  "averages-bell.js": "/js/averages-bell.js?v=1f544c0968",
   "averages-cloud.js": "/js/averages-cloud.js?v=2640579716",
   "averages-drive-open.js": "/js/averages-drive-open.js?v=bb3393006e",
   "averages-features.js": "/js/averages-features.js?v=99f1d24474",
   "averages-file-icons.js": "/js/averages-file-icons.js?v=08e0c20458",
-  "averages-fs-data.js": "/js/averages-fs-data.js?v=690f09d7c1",
-  "averages-fs-turnin.js": "/js/averages-fs-turnin.js?v=d0290d1a9b",
-  "averages-fs.js": "/js/averages-fs.js?v=fa6e2f120d",
+  "averages-fs-data.js": "/js/averages-fs-data.js?v=5f428d2da9",
+  "averages-fs-turnin.js": "/js/averages-fs-turnin.js?v=efec2e9826",
+  "averages-fs.js": "/js/averages-fs.js?v=58e7f2a9f8",
   "averages-help.js": "/js/averages-help.js?v=19e87f9c0f",
   "averages-live.js": "/js/averages-live.js?v=382960428c",
-  "averages-note.js": "/js/averages-note.js?v=920e78d4e5",
+  "averages-note.js": "/js/averages-note.js?v=fbf77a5297",
   "averages-push.js": "/js/averages-push.js?v=76e8e6b827",
   "averages-submit.js": "/js/averages-submit.js?v=a328ad9f4c",
   "averages-tz.js": "/js/averages-tz.js?v=b318d4e42d"

@@ -297,17 +297,24 @@
    * join the bell (the pages listen for 'fs:notis') without reloading the page. The fresh answers also go in this
    * tab's cache, so the next page opens with them.
    */
-  var NOTIS_EVERY = 5 * 60 * 1000, notisAt = Date.now(), notisBusy = false;
+  // 2026-11-06 (Martin: "after the sync load, check in the background"): a page that opened with this tab's saved copy
+  // (older than a minute) checks a few seconds after it's ready instead of 5 minutes later; class files are read
+  // too, every 15 minutes, for new materials; and with browser notifications allowed, the checks go on while the tab
+  // is in the background, so the system notification can say so (averages-note.js).
+  var NOTIS_EVERY = 5 * 60 * 1000, FILES_EVERY = 15 * 60 * 1000, notisAt = Date.now(), filesAt = Date.now(), notisBusy = false;
+  function notifAllowed() { try { return 'Notification' in window && Notification.permission === 'granted'; } catch (e) { return false; } }
   function notisCheck() {
-    if (notisBusy || !window.FSD || !window.FSA || document.visibilityState !== 'visible') return;
+    if (notisBusy || !window.FSD || !window.FSA || (document.visibilityState !== 'visible' && !notifAllowed())) return;
     var me = window.FSD.me || {}; if (!me.uid) return;
     notisBusy = true; notisAt = Date.now();
-    var tz = zone();
-    Promise.all([getJSON('/data/bundle' + (tz ? '?tz=' + encodeURIComponent(tz) : '')), getJSON('/data/updates').catch(function () { return null; })]).then(function (got) {
-      var b = got[0], u = got[1];
+    var tz = zone(), withFiles = Date.now() - filesAt >= FILES_EVERY || !(window.FSD.raw && window.FSD.raw.files);
+    Promise.all([getJSON('/data/bundle' + (tz ? '?tz=' + encodeURIComponent(tz) : '')), getJSON('/data/updates').catch(function () { return null; }),
+      withFiles ? getJSON('/data/files').catch(function () { return null; }) : null]).then(function (got) {
+      var b = got[0], u = got[1], fl = got[2];
       sset('schoolagy_bundle_cache', JSON.stringify({ at: Date.now(), bundle: b }));
       if (u) sset('averages_extras_updates', JSON.stringify({ at: Date.now(), who: me.uid, data: u }));
-      var raw = Object.assign({}, window.FSD.raw, { bundle: b }); if (u) raw.updates = u;
+      if (fl && Array.isArray(fl.files)) { filesAt = Date.now(); sset('averages_extras_fs_files', JSON.stringify({ at: Date.now(), who: me.uid, data: fl })); }
+      var raw = Object.assign({}, window.FSD.raw, { bundle: b }); if (u) raw.updates = u; if (fl && Array.isArray(fl.files)) raw.files = fl;
       var fresh = window.FSA.adapt(raw), have = {};
       window.FSD.NT.forEach(function (it) { have[it.id] = true; });
       var added = fresh.NT.filter(function (it) { return !have[it.id]; });
@@ -325,11 +332,12 @@
       var cls = cname(it.c), from = String(it.d || '').split(' · ')[0], msg = String(it.t || '').split(': ');
       return {
         key: it.kind + ':' + it.raw,
-        title: it.k === 'graded' ? (cls ? 'New grade in ' + cls : 'New grade') : it.k === 'msg' ? 'Message from ' + (msg.length > 1 ? msg[0] : 'your teacher') : (from || 'Your teacher') + (cls ? ' posted in ' + cls : ' posted an update'),
-        body: it.k === 'graded' ? (it.t || 'Assignment') + (it.got != null && it.of ? ': ' + it.got + ' / ' + it.of : '') : it.k === 'msg' ? (msg.length > 1 ? msg.slice(1).join(': ') : it.t) : it.t,
+        icon: it.k === 'graded' ? 'grade' : it.k === 'msg' ? 'message' : it.k === 'new' ? (it.kind === 'a' ? 'new' : 'material') : 'update',
+        title: it.k === 'new' ? (it.kind === 'a' ? 'New assignment' : 'New file') + (cls ? ' in ' + cls : '') : it.k === 'graded' ? (cls ? 'New grade in ' + cls : 'New grade') : it.k === 'msg' ? 'Message from ' + (msg.length > 1 ? msg[0] : 'your teacher') : (from || 'Your teacher') + (cls ? ' posted in ' + cls : ' posted an update'),
+        body: it.k === 'new' ? it.t : it.k === 'graded' ? (it.t || 'Assignment') + (it.got != null && it.of ? ': ' + it.got + ' / ' + it.of : '') : it.k === 'msg' ? (msg.length > 1 ? msg.slice(1).join(': ') : it.t) : it.t,
         onClick: function () {
           FSX.seen.mark(it.kind, it.raw);
-          if (it.k === 'msg') FSX.go('messages', { thread: it.thread }); else if (it.k === 'graded') FSX.hub(it.c, 'grades', { a: it.aid }); else FSX.hub(it.c, 'updates', { update: it.raw });
+          if (it.k === 'msg') FSX.go('messages', { thread: it.thread }); else if (it.k === 'new') FSX.newGo(it); else if (it.k === 'graded') FSX.hub(it.c, 'grades', { a: it.aid }); else FSX.hub(it.c, 'updates', { update: it.raw });
         },
       };
     }), { openAll: function () { var b = document.getElementById('ntBtn'); if (b) b.click(); } });
@@ -339,8 +347,51 @@
   window.addEventListener('fs:ready', function () {
     if (window.FSX) window.FSX.notisCheck = notisCheck;   // also: check now
     // after the page's first sync has had its turn (it asks Schoology for everything once)
-    setTimeout(function () { notisAt = Date.now(); setInterval(function () { if (Date.now() - notisAt >= NOTIS_EVERY) notisCheck(); }, 30000); }, 1000);
+    var cacheAt = 0; try { cacheAt = (JSON.parse(sessionStorage.getItem('schoolagy_bundle_cache') || 'null') || {}).at || 0; } catch (e) { /* none */ }
+    var stale = cacheAt && Date.now() - cacheAt > 60000;
+    setTimeout(function () { notisAt = Date.now(); if (stale) setTimeout(notisCheck, 4000); setInterval(function () { if (Date.now() - notisAt >= NOTIS_EVERY) notisCheck(); }, 30000); }, 1000);
     document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible' && Date.now() - notisAt >= NOTIS_EVERY) notisCheck(); });
+  });
+  (function () { var st = document.createElement('style'); st.textContent = '.fs-pav{width:28px;height:28px;flex:none;display:grid;place-items:center;border-radius:50%;color:#fff;font-size:11px;font-weight:800;letter-spacing:.01em;background:#8a8d99}.fs-pav.sq{border-radius:8px}'; (document.head || document.documentElement).appendChild(st); })();
+  // Right-click menus hold the page still (2026-11-06, Martin: the page scrolled under an open right-click menu): from a
+  // right-click until its menu closes, the wheel and touch scrolling do nothing outside the menu. Every page's menus.
+  (function () {
+    var SEL = '[role="menu"], .card-pop, .fold-pop', on = false, mo = null;
+    function lock() {
+      if (on || !document.querySelector(SEL)) return; on = true;
+      mo = new MutationObserver(function () { if (!document.querySelector(SEL)) { on = false; mo.disconnect(); mo = null; } });
+      mo.observe(document.body, { childList: true, subtree: true });
+    }
+    document.addEventListener('contextmenu', function () { setTimeout(lock, 0); }, true);
+    var stop = function (e) { if (on && !(e.target.closest && e.target.closest(SEL))) e.preventDefault(); };
+    window.addEventListener('wheel', stop, { passive: false, capture: true });
+    window.addEventListener('touchmove', stop, { passive: false, capture: true });
+  })();
+  // Your photo from your account (2026-11-06, Martin: the top-right picture didn't match his): Fullscreen only used a
+  // photo already on this device, and only Windowed Settings fetched the account's. Now a Fullscreen page does too,
+  // once a tab, when Sync Across Devices is on and this device has no photo: GET /sync/settings, then /media/photo.
+  window.addEventListener('fs:ready', function () {
+    setTimeout(function () {
+      var me = window.FSD && window.FSD.me, prof = lget('schoolagy_profile') || {};
+      if (!me || me.incognito || seenSyncOff() || sget('averages_fs_photo_pulled') || (typeof prof.photo === 'string' && /^data:image\//.test(prof.photo))) return;
+      sset('averages_fs_photo_pulled', '1');
+      window.FSX.api('/sync/settings').then(function (rec) {
+        var p = rec && rec.settings && rec.settings.profile, ref = p && typeof p.photo === 'string' ? p.photo : '';
+        if (!/^r2:photo:/.test(ref)) return null;
+        return fetch(API + '/media/photo', { credentials: 'include' }).then(function (r) { return r.ok ? r.blob() : null; });
+      }).then(function (blob) {
+        if (!blob || !/^image\/(png|jpeg|webp|gif)$/.test(blob.type) || blob.size > 2 * 1024 * 1024) return;
+        var fr = new FileReader();
+        fr.onload = function () {
+          var url = String(fr.result || ''); if (!/^data:image\//.test(url)) return;
+          var cur = lget('schoolagy_profile') || {}; cur.photo = url; lset('schoolagy_profile', cur);
+          var fp = lget('fsmock_profile2') || {}; fp.photo = url; if (!fp.name) fp.name = cur.name || me.name || ''; lset('fsmock_profile2', fp);
+          window.dispatchEvent(new StorageEvent('storage', { key: 'fsmock_profile2' }));
+          document.querySelectorAll('[data-av]').forEach(function (el) { el.classList.add('photo'); el.style.backgroundImage = 'url("' + url + '")'; el.style.backgroundSize = 'cover'; el.textContent = ''; });
+        };
+        fr.readAsDataURL(blob);
+      }).catch(function () { /* the initials stay */ });
+    }, 2500);
   });
   window.addEventListener('fs:ready', function () { setTimeout(noteRecent, 50); setTimeout(function () { if (window.FSX && FSX.syncWindowType) FSX.syncWindowType(); }, 1200); });
   window.addEventListener('hashchange', function () { setTimeout(noteRecent, 50); });
@@ -540,7 +591,7 @@
       if (!j || !j.seen || typeof j.seen !== 'object') return;
       var local = lget('averages_seen'); local = local && typeof local === 'object' && !Array.isArray(local) ? local : {};
       var out = Object.assign({}, local), added = false, theirsMissing = false;
-      ['u', 'g', 'm'].forEach(function (k) {
+      ['u', 'g', 'm', 'a', 'f'].forEach(function (k) {
         var mine = Array.isArray(local[k]) ? local[k].map(String) : [], theirs = Array.isArray(j.seen[k]) ? j.seen[k].map(String) : [];
         var all = mine.slice(); theirs.forEach(function (x) { if (all.indexOf(x) < 0) all.push(x); }); all = all.slice(-300);
         if (all.length > mine.length) added = true;
@@ -555,7 +606,11 @@
   var started = session().then(function (me) {
     if (!me || me.mode !== 'live' || !me.uid) { window.location.replace('/'); return null; }
     var who = me.uid, bP = earlyBundle, xs = extrasFor(who, bP), names = Object.keys(xs), sP = seenPull(me);
-    return Promise.all([bP, sP].concat(names.map(function (n) { return settle(xs[n], 8000); }))).then(function (all) {
+    // A class's files and folders are what Files and a course's Materials show (2026-11-06, Martin: Materials showed
+    // folders but not the teacher's files): those pages wait for them longer (25 s, with the loading screen up)
+    // instead of drawing without them after 8 s. Everything else still gives up at 8 s.
+    var main = function (n) { return (page === 'files' && n === 'files') || (page === 'course-hub' && (n === 'files' || n === 'folders')); };
+    return Promise.all([bP, sP].concat(names.map(function (n) { return settle(xs[n], main(n) ? 25000 : 8000); }))).then(function (all) {
       all.splice(1, 1);   // the seen lists are in place now; they aren't part of the data
       var raw = { me: me, bundle: all[0] };
       names.forEach(function (n, i) { raw[n] = all[i + 1] && all[i + 1].__signedOut ? undefined : all[i + 1]; });
@@ -600,6 +655,45 @@
       return u + (qs.length ? '?' + qs.join('&') : '') + (hash ? '#' + String(hash).replace(/^#/, '') : '');
     },
     go: function (p, params, hash) { window.location.href = FSX.url(p, params, hash); },
+    /**
+     * Everyone search can find (2026-11-06, Martin: classmates couldn't be found anywhere, and search anything had no
+     * people): your teachers (GET /data/people) and your classmates (GET /data/classmates, this page's or the copy this
+     * tab already has). [{ id, name, teacher, sub, photo }]; teachers first.
+     */
+    people: function () {
+      var D = window.FSD || {}, out = [], have = {}, cname = function (id) { return D.C && D.C[id] ? D.C[id].name : ''; };
+      ((D.people && D.people.CONTACTS) || []).forEach(function (p) {
+        if (!p || !p.id || have[p.id]) return; have[p.id] = 1;
+        out.push({ id: String(p.id), name: p.name || 'Teacher', teacher: true, sub: (p.role || 'Teacher') + ((p.courses || []).length ? ' · ' + (p.courses || []).map(cname).filter(Boolean).slice(0, 2).join(', ') : ''), photo: p.picture || '' });
+      });
+      var mates = D.classmates;
+      if (!mates || !Object.keys(mates).length) { try { var c = JSON.parse(sessionStorage.getItem('averages_extras_fs_classmates') || 'null'); mates = c && c.data && c.data.CLASSMATES || {}; } catch (e) { mates = {}; } }
+      var me = D.me && D.me.uid ? String(D.me.uid) : '';
+      Object.keys(mates || {}).forEach(function (cid) { (mates[cid] || []).forEach(function (m) {
+        if (!m || !m.id || String(m.id) === me) return;
+        if (have[m.id]) { var x = out.filter(function (o) { return o.id === String(m.id); })[0]; if (x && !x.teacher && cname(cid) && x.sub.indexOf(cname(cid)) < 0) x.sub += ', ' + cname(cid); return; }
+        have[m.id] = 1; out.push({ id: String(m.id), name: m.name || 'Classmate', teacher: false, sub: 'Classmate · ' + cname(cid), photo: m.photo || '' });
+      }); });
+      return out;
+    },
+    /** A small picture of a person for lists: square for teachers, round for students. */
+    personAv: function (p) {
+      var A = window.AveragesAvatar, st = p.photo ? 'background-image:url(&quot;' + String(p.photo).replace(/["<>&]/g, '') + '&quot;);background-size:cover' : A ? 'background:' + A.background(p.name) : '';
+      var ini = p.photo ? '' : (A ? A.initials(p.name) : String(p.name || '?').charAt(0)) || '?';
+      return '<span class="fs-pav' + (p.teacher ? ' sq' : '') + '" style="' + st + '" aria-hidden="true">' + String(ini).replace(/[&<>"]/g, '') + '</span>';
+    },
+    /** A new assignment or file from the bell: the assignment's page, or the material the file is in. */
+    newGo: function (it) { if (it.kind === 'a') FSX.hub(it.c, '', { a: it.raw }); else FSX.hub(it.c, 'materials' + (it.mat ? '/' + it.mat : '')); },
+    /** When this tab last got fresh grades and updates, for the bell ("Last refreshed today at 7:38 PM"). */
+    lastRefreshed: function () {
+      var at = 0; try { at = (JSON.parse(sessionStorage.getItem('schoolagy_bundle_cache') || 'null') || {}).at || 0; } catch (e) { /* unreadable */ }
+      if (!at) return 'just now';
+      var mins = Math.round((Date.now() - at) / 60000);
+      if (mins < 1) return 'just now';
+      if (mins < 60) return mins + (mins === 1 ? ' minute ago' : ' minutes ago');
+      var d = new Date(at), today = new Date().toDateString() === d.toDateString();
+      return (today ? 'today' : d.toLocaleDateString('en-US', { weekday: 'long' })) + ' at ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    },
     hub: function (course, tab, params) { FSX.go('course-hub', Object.assign({ course: course }, params || {}), tab || ''); },
     hubUrl: function (course, tab, params) { return FSX.url('course-hub', Object.assign({ course: course }, params || {}), tab || ''); },
     newTab: function (u) { var w = window.open(u, '_blank', 'noopener'); if (w) w.opener = null; },
@@ -987,6 +1081,19 @@
     return h;
   }
 
+  /** The work this device has seen, and when it first did: { id: ms } for what showed up after the first visit (new). */
+  function knownWork(ids, now) {
+    var v = null; try { v = JSON.parse(localStorage.getItem('averages_known_work') || 'null'); } catch (e) { v = null; }
+    var first = !v || typeof v !== 'object' || typeof v.ids !== 'object';
+    if (first) v = { at: now, ids: {} };
+    var changed = first, out = {};
+    ids.forEach(function (id) {
+      if (!(id in v.ids)) { v.ids[id] = first ? 0 : now; changed = true; }
+      if (v.ids[id] && now - v.ids[id] < 7 * DAY) out[id] = v.ids[id];
+    });
+    if (changed) { var k = Object.keys(v.ids); if (k.length > 600) k.slice(0, k.length - 600).forEach(function (x) { delete v.ids[x]; }); try { localStorage.setItem('averages_known_work', JSON.stringify(v)); } catch (e) { /* full or off */ } }
+    return out;
+  }
   function adapt(raw) {
     var now = Date.now();
     var b = obj(raw.bundle), people = obj(raw.people), me = raw.me || {};
@@ -1027,6 +1134,8 @@
       return {
         id: id, name: c.name || 'Class', short: initials(c.name), teacher: teacherOf(id), teacherIds: tids, period: typeof c.period === 'number' ? c.period : i + 1,
         hasPeriod: typeof c.period === 'number', room: '', students: m.length ? m.length + 1 : 0, pct: typeof c.pct === 'number' ? c.pct : 0, grade: c.grade || '',
+        // nothing graded yet (2026-11-06, Martin: "Your grade" said F 0.0%): shown as N/A and left out of the GPA
+        none: !(typeof c.pct === 'number' && c.pct > 0) && !cats.some(function (k) { return arr(k.assignments).some(function (a) { return a.graded; }); }),
         trend: trend, trendHas: wk.has, trendPosted: wk.posted, due: due.length, missing: miss.length, updates: ups.length, next: next, code: c.code || '', section: c.section || '',
         predicted: c.predicted || '', predictedPct: typeof c.predictedPct === 'number' ? c.predictedPct : c.pct, dir: c.trend || 'flat', updated: c.updated || '',
         points: points, dates: arr(hist.dates), titles: arr(hist.titles), emoji: s[1], color: s[2], lmsColor: c.color || '', order: i,
@@ -1057,6 +1166,19 @@
       if (who && who.name && (!m.from || m.from === 'Teacher')) m = Object.assign({}, m, { from: who.name, courseId: m.courseId || (arr(who.courses).filter(function (c) { return C[c]; })[0] || '') });
       var cid = m.courseId && C[m.courseId] ? m.courseId : (CLASSES.filter(function (c) { return c.teacher && c.teacher === m.from; })[0] || {}).id;
       NT.push({ id: 'm:' + m.id, kind: 'm', raw: m.id, ago: agoMin(m.time), c: cid || '', k: 'msg', t: (m.from || 'Someone') + ': ' + (m.subject || 'Message'), d: (m.preview || '') + (m.time ? ' · ' + m.time : ''), unread: !!m.unread, thread: m.id });
+    });
+    // New work and new class files (2026-11-06, Martin: the background check should catch new materials and the like
+    // too). Work has no "posted" time, so this device remembers which work it has already seen (averages_known_work):
+    // anything that shows up after the first visit is new for a week. Files carry when they were posted: new for 2 days.
+    var WORK_NOW = arr(b.OVERDUE).concat(arr(b.TODAY), arr(b.UPCOMING)).filter(function (a) { return a.id && C[a.courseId]; });
+    var kw = knownWork(WORK_NOW.map(function (a) { return String(a.id); }), now), ntHave = {};
+    WORK_NOW.forEach(function (a) {
+      var id = String(a.id), at = kw[id]; if (!at || ntHave[id]) return; ntHave[id] = true;
+      NT.push({ id: 'a:' + id, kind: 'a', raw: id, ago: Math.max(0, Math.round((now - at) / 60000)), c: a.courseId, k: 'new', ic: 'new', t: a.title || 'Assignment', d: a.due ? 'Due ' + a.due : 'New assignment', unread: true });
+    });
+    arr(raw.files && raw.files.files).forEach(function (f) {
+      if (!f.id || !C[f.course] || !f.at || now - f.at > 2 * DAY || f.kind === 'submission') return;
+      NT.push({ id: 'f:' + f.id, kind: 'f', raw: String(f.id), ago: Math.max(0, Math.round((now - f.at) / 60000)), c: f.course, k: 'new', ic: 'material', t: f.name || 'File', d: f.parentTitle ? 'In ' + f.parentTitle : 'New file', unread: true, mat: f.parent || '' });
     });
     // Only what's new to the student counts; seen ones (here or in Windowed) are already "seen".
     var NT_SEEN_IDS = NT.filter(function (it) { return !it.unread || seen.has(it.kind, it.raw); }).map(function (it) { return it.id; });

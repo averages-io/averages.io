@@ -1151,6 +1151,8 @@
     /* icon tiles wiggle when you point at their row */
     body:not(.potato-mode) :is(.arow, .mrow, .mp-row, .ag-row, .nt-row, .pin, .gr-row, .crow, tr, .item, .mi):hover :is(.ktile, .nt-tile, .badge, .emo) { animation: lifeWiggle .5s var(--spring); }
     body:not(.potato-mode) .newtag { animation: lifeSticker .5s var(--spring) backwards; }
+    /* hidden until it has landed in its spot (2026-11-06, Martin's video: stickers showed by the name, then jumped) */
+    .newtag[data-tilted]:not([data-shown]) { visibility: hidden; animation: none !important; }
   }
   @keyframes lifeWiggle { 0% { transform: none; } 30% { transform: rotate(-9deg) scale(1.08); } 60% { transform: rotate(6deg) scale(1.08); } 100% { transform: none; } }
   @keyframes lifeSticker { from { transform: rotate(-14deg) scale(.6); opacity: 0; } }
@@ -3057,6 +3059,7 @@
   }
   @media (max-width: 680px) { .hub-t h1 { font-size: 34px; } }
   /* ===== end Life layer for the course page ===== */
+  .g-na { color: var(--muted) !important; }   /* nothing graded yet (2026-11-06) */
 </style>
 </head>
 <body>
@@ -3406,7 +3409,7 @@
     if (ntEl) return;
     ntFrom = document.activeElement; ntScope = NT.here || 'all';
     document.body.insertAdjacentHTML('beforeend', `<div class="nt-scrim"><div class="nt-pop" role="dialog" aria-modal="true" aria-labelledby="ntTitle">
-      <div class="nt-top"><div class="nt-top-r"><div class="nt-tt"><h2 id="ntTitle">Notifications</h2><small>Since you were last here ${esc(NT_LAST)}</small></div>${ntSegHTML()}<button class="nt-x" data-ntclose aria-label="Close">${ico('x')}</button></div></div>
+      <div class="nt-top"><div class="nt-top-r"><div class="nt-tt"><h2 id="ntTitle">Notifications</h2><small>Last refreshed ${esc(FSX.lastRefreshed ? FSX.lastRefreshed() : NT_LAST)}</small></div>${ntSegHTML()}<button class="nt-x" data-ntclose aria-label="Close">${ico('x')}</button></div></div>
       <div class="nt-body">${ntBodyHTML()}</div><div class="nt-foot">${ntFootHTML()}</div></div></div>`);
     ntEl = document.body.lastElementChild;
     const b = $('ntBtn'); if (b) b.setAttribute('aria-expanded', 'true');
@@ -3436,7 +3439,7 @@
       return; }
     if (e.target.closest('[data-ntseen]')) { const n = ntLive(ntScope).length, label = ntScope === 'all' ? 'everything' : NT_CLASSES[ntScope]; ntLive(ntScope).forEach(it => NT_SEEN.add(it.id)); ntBadge(); NT.onChange(); ntRefresh(true); toast(`Marked ${label} as seen. That's ${n} ${n === 1 ? 'notification' : 'notifications'}.`); return; }
     const go = e.target.closest('[data-ntgo]');
-    if (go) { const it = NT_ITEMS.find(x => x.id === go.dataset.ntgo); NT_SEEN.add(it.id); ntBadge(); NT.onChange(); ntClose(true); if (it.k === 'msg') FSX.go('messages', { thread: it.thread }); else if (it.k === 'graded') FSX.hub(it.c, 'grades', { a: it.aid }); else FSX.hub(it.c, 'updates', { update: it.raw }); }
+    if (go) { const it = NT_ITEMS.find(x => x.id === go.dataset.ntgo); NT_SEEN.add(it.id); ntBadge(); NT.onChange(); ntClose(true); if (it.k === 'msg') FSX.go('messages', { thread: it.thread }); else if (it.k === 'new') FSX.newGo(it); else if (it.k === 'graded') FSX.hub(it.c, 'grades', { a: it.aid }); else FSX.hub(it.c, 'updates', { update: it.raw }); }
   }
   document.addEventListener('keydown', e => {
     if (!ntEl) return;
@@ -3661,6 +3664,8 @@
       const here = !m && typeof window.CMDK_HERE === 'function' ? window.CMDK_HERE(qq) : null;
       if (here && here.rows.length) html += `<div class="lbl">${esc(here.label)}</div>` + here.rows.slice(0, 5).map(r => crow(`data-cmdkgo="${esc(r.key)}"`, r.lead, r.t, r.sub)).join('');
       const cs = m ? [] : CLASSES.filter(c => chit(qq, c.name + ' ' + c.teacher)); if (cs.length) html += `<div class="lbl">Classes</div>` + cs.map(c => cclass(c, qq)).join('');
+      // people: your teachers and classmates (2026-11-06); one opens their card in Contacts
+      const pp = m || !FSX.people ? [] : FSX.people().filter(x => chit(qq, x.name)).slice(0, 5); if (pp.length) html += `<div class="lbl">People</div>` + pp.map(x => crow(`data-go="${FSX.url('contacts', { person: x.id })}"`, FSX.personAv(x), cmark(x.name, qq), x.sub)).join('');
       const ps = m ? [] : GO_PAGES.filter(([p]) => chit(qq, p)); if (ps.length) html += `<div class="lbl">Go to</div>` + ps.map(page).join('');
       if (HERE && !m) html += crow(`data-cmdkhere="${esc(qq)}"`, ico('search'), `Search ${esc(HERE)} for "${esc(qq)}"`, 'Just this page', ' s-cmd');
       if (!html) html = `<div class="cmdk-empty">Nothing for "${esc(q)}". Try a class, a page, or a command like "message ${esc(FSD.exampleTeacher)}".</div>`;
@@ -3719,7 +3724,8 @@
   const clTrend = c => c.trend.map((v, i) => hasAt(c, i) ? v : null);
   const avg = CLASSES.length ? CLASSES.reduce((t, c) => t + c.pct, 0) / CLASSES.length : 0;
   const GPTS = { 'A+': 4, A: 4, 'A-': 3.7, 'B+': 3.3, B: 3, 'B-': 2.7, 'C+': 2.3, C: 2, 'C-': 1.7, 'D+': 1.3, D: 1, 'D-': .7, F: 0 };
-  const gpa = w => CLASSES.length ? CLASSES.reduce((t, c) => t + GPTS[letter(c.pct)] + (w && /^(AP|IB)\b|\bhonors\b/i.test(c.name) ? (/^(AP|IB)\b/.test(c.name) ? 1 : .5) : 0), 0) / CLASSES.length : 0;
+  // classes with nothing graded yet don't count (2026-11-06)
+  const gpa = w => { const L = CLASSES.filter(c => !c.none); return L.length ? L.reduce((t, c) => t + GPTS[letter(c.pct)] + (w && /^(AP|IB)\b|\bhonors\b/i.test(c.name) ? (/^(AP|IB)\b/.test(c.name) ? 1 : .5) : 0), 0) / L.length : 0; };
   const change = c => c.trend[c.trend.length - 1] - c.trend[c.trend.length - 3];
   const deltaChip = (d, long) => { const k = Math.abs(d) < .15 ? 'flat' : d > 0 ? 'up' : 'down'; return `<span class="gr-d ${k}" title="Change in the last two weeks">${k === 'flat' ? 'Steady' : (d > 0 ? '+' : '-') + Math.abs(d).toFixed(1)}${long && k !== 'flat' ? ' in 2 weeks' : ''}</span>`; };
   const pctOf = w => w.got == null ? 0 : w.got / w.of * 100;
@@ -3741,6 +3747,8 @@
   const popDelay = (i, n) => Math.max(0, Math.round(Math.acos(1 - 2 * i / (n - 1)) / Math.PI * 900) - 60);
   function chartSVG(enter) {
     if (FIRST < 0) return `<svg class="gs-svg" viewBox="0 0 ${CH.w} ${CH.h}" role="img" aria-label="No grades yet this term"><text class="band-t" x="${CH.w / 2}" y="${CH.h / 2}" text-anchor="middle">No grades yet this term</text></svg>`;
+    // grades from only one week: no line to draw yet (2026-11-06, Martin: show "Not enough data")
+    if (FIRST >= WEEKS.length - 1) return `<svg class="gs-svg" viewBox="0 0 ${CH.w} ${CH.h}" role="img" aria-label="Not enough data yet"><text class="band-t" x="${CH.w / 2}" y="${CH.h / 2 - 4}" text-anchor="middle" style="font-size:14px;font-weight:800">Not enough data yet</text><text class="band-t" x="${CH.w / 2}" y="${CH.h / 2 + 16}" text-anchor="middle">The chart starts once you have grades from two different weeks.</text></svg>`;
     const all = (GR.each ? CLASSES.flatMap(clTrend).concat(OVERALL) : OVERALL).filter(v => v != null);
     const mn = Math.min(...all), mx = Math.max(...all), mid = (mn + mx) / 2, span = Math.max(10, mx - mn + 3), lo = Math.floor(mid - span / 2), hi = Math.ceil(mid + span / 2); // at least 10 points tall, so a steady grade reads as a flat line
     const X = i => CH.l + (i / (WEEKS.length - 1)) * (CH.w - CH.l - CH.r), Y = v => CH.t + (1 - (v - lo) / (hi - lo)) * (CH.h - CH.t - CH.b);
@@ -3789,7 +3797,8 @@
     tip.innerHTML = `<small>Week of ${WEEKS[i]}${POSTED[i] ? '' : ' · no new grades'}</small><span class="r ov"><i></i>Overall<b>${OVERALL[i].toFixed(1)}% · ${letter(OVERALL[i])}</b></span>${rows}`;
     const right = dr.left + dr.width / 2 - box.left < box.width / 2;
     tip.classList.toggle('left', !right);
-    tip.style.left = (dr.left + dr.width / 2 - box.left + (right ? 14 : -14)) + 'px';
+    { const tw = tip.offsetWidth, ax = dr.left + dr.width / 2 - box.left;   // kept inside the box, never cut off (2026-11-06)
+      tip.style.left = (right ? Math.min(ax + 14, box.width - tw - 4) : Math.max(ax - 14, tw + 4)) + 'px'; }
     tip.style.top = Math.max(0, Math.min(box.height - tip.offsetHeight, dr.top - box.top - tip.offsetHeight / 2)) + 'px';
     tip.classList.add('show');
     svg.querySelectorAll('.dot').forEach(x => x.classList.toggle('on', +x.dataset.i === i));
@@ -3850,7 +3859,7 @@
     const fresh = WORK.filter(w => w.c === c.id && isNew(w)).length;
     return `<div class="gcls${open ? ' open' : ''}" data-gc="${c.id}"><button class="gc-row" data-gctoggle="${c.id}" aria-expanded="${!!open}">${badge(c)}
         <span class="gr-ct"><b>${esc(c.name)}${fresh ? `<span class="gc-new">${fresh} new</span>` : ''}</b><small>${esc([c.teacher, c.hasPeriod ? 'Period ' + c.period : ''].filter(Boolean).join(' · ') || c.code || 'Schoology class')}</small></span>
-        <span class="gc-g"><b class="${gcls(c.pct)}">${letter(c.pct)}</b><span>${c.pct.toFixed(1)}%</span></span>${deltaChip(change(c))}${spark(c)}<span class="gc-chev" aria-hidden="true">${ico('chev-r')}</span></button>
+        <span class="gc-g">${c.none ? '<b class="g-na">N/A</b><span>No grades yet</span>' : `<b class="${gcls(c.pct)}">${letter(c.pct)}</b><span>${c.pct.toFixed(1)}%</span>`}</span>${deltaChip(change(c))}${spark(c)}<span class="gc-chev" aria-hidden="true">${ico('chev-r')}</span></button>
       <div class="gc-body" role="table" aria-label="${esc(c.name)} grade details">${open ? classBody(c, q) : ''}</div></div>`;
   }
   function grList(anim) {
@@ -4151,7 +4160,7 @@
       }
     }
     if (spot === 'end') { el.style.position = el.style.left = el.style.top = el.style.margin = ''; el.style.setProperty('--tx', el.dataset.tx || '0px'); el.style.setProperty('--ty', el.dataset.ty || '0px'); fitEnd(el); }
-    el.dataset.spot = spot; el.dataset.fitted = '1';
+    el.dataset.spot = spot; el.dataset.fitted = '1'; el.dataset.shown = '1';
   }
   let rz = 0; // the layout changed: land every sticker again
   const refitAll = ms => { clearTimeout(rz); rz = setTimeout(() => document.querySelectorAll('.newtag[data-fitted]').forEach(el => { delete el.dataset.fitted; fit(el); }), ms); };
@@ -4173,6 +4182,7 @@
     el.style.setProperty('--tx', ((h >> 7) % 3) - 1 + 'px');
     el.dataset.ty = el.style.getPropertyValue('--ty'); el.dataset.tx = el.style.getPropertyValue('--tx');
     el.dataset.tilted = '1';
+    setTimeout(() => { el.dataset.shown = '1'; }, 3000); // never left hidden if it can't be measured
     if (ro) ro.observe(el); else requestAnimationFrame(() => fit(el)); // fit once it's on screen and has a size
   };
   const run = root => { if (root.querySelectorAll) root.querySelectorAll('.newtag:not([data-tilted])').forEach(place); };

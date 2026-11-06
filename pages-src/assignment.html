@@ -2368,7 +2368,7 @@
       try {
         let tz = '';
         try { tz = (window.averagesTimeZone ? window.averagesTimeZone() : Intl.DateTimeFormat().resolvedOptions().timeZone) || ''; } catch {}
-        const res = await fetch(`${averagesApiBase()}/data/assignment?section=${encodeURIComponent(item.courseId)}&id=${encodeURIComponent(item.id)}${tz ? '&tz=' + encodeURIComponent(tz) : ''}`, { credentials: 'include' });
+        const res = await fetch(`${averagesApiBase()}/data/assignment?section=${encodeURIComponent(item.courseId)}&id=${encodeURIComponent(item.id)}${item.type === 'discussion' ? '&type=discussion' : ''}${tz ? '&tz=' + encodeURIComponent(tz) : ''}`, { credentials: 'include' });
         if (res.status === 401) { window.location.href = '/'; return; }
         if (!res.ok) throw new Error('status ' + res.status);
         const d = await res.json();
@@ -3230,19 +3230,24 @@
       // its status — the status banner above still reflects the real
       // Missing/Submitted/Graded/Returned state, since Averages.io does
       // still mirror that from Schoology once it happens.
-      if (item.type === 'assessment' || item.outside) {
+      if (item.type === 'assessment' || item.type === 'discussion' || item.outside) {
         // Open in Schoology (2026-10-20, Martin's routes): straight to this item on the school's own Schoology.
         // Quizzes: /course/{section}/assessments/{id}. Assignments (outside tools): /assignment/{id}/info.
+        // Discussions (2026-11-06): /course/{section}/materials/discussion/view/{id}, answered there.
         // Missing ids fall back to the class's materials, then the school's Schoology home.
         const sgy = schoologyHome(), sec = ID_OK(item.courseId) ? item.courseId : '';
         const toolHref = item.type === 'assessment'
           ? (sec && ID_OK(item.id) ? `${sgy}/course/${sec}/assessments/${item.id}` : sec ? `${sgy}/course/${sec}/materials` : sgy)
+          : item.type === 'discussion'
+          ? (sec && ID_OK(item.id) ? `${sgy}/course/${sec}/materials/discussion/view/${item.id}` : sec ? `${sgy}/course/${sec}/materials` : sgy)
           : ID_OK(item.id) ? `${sgy}/assignment/${item.id}/info` : sgy;
         html += `
           <div class="submit-dropzone quiz-redirect-notice">
             ${EXTERNAL_LINK_ICON}
             <div>${item.type === 'assessment'
               ? 'Take this in Schoology. Your grade shows here after.'
+              : item.type === 'discussion'
+              ? 'This is a discussion. Post your reply in Schoology. Your grade shows here after.'
               : 'This uses an outside tool. Open it in Schoology to turn it in.'}</div>
             <a class="quiz-redirect-btn" href="${escapeHtml(toolHref)}" target="_blank" rel="noopener noreferrer">
               Open in Schoology
@@ -4510,7 +4515,7 @@
     renderSubmissionsPanel();
     // Signed in with Schoology: the real Submission History (2026-10-06).
     // Quizzes are taken on Schoology and show no history here.
-    if (SUBMIT_LIVE && item.type !== 'assessment' && !item.outside) loadLiveHistory();
+    if (SUBMIT_LIVE && item.type !== 'assessment' && item.type !== 'discussion' && !item.outside) loadLiveHistory();
 
     // ------------------------------------------------------------------
     // Drafts (2026-10-04, per Martin): Edit in Canva sends the file over to
@@ -4992,7 +4997,7 @@
     function draftRowHTML(d) {
       const nm = escapeHtml(d.name);
       const tip = (label, inner) => `<span class="tipwrap">${inner}<span class="tip" role="tooltip">${label}</span></span>`;
-      const testItem = item.type === 'assessment' || !!item.outside;
+      const testItem = item.type === 'assessment' || item.type === 'discussion' || !!item.outside;
       const t = TI.get(d.id);
       // Can this draft be turned in from here? (Signed in: Drive needs its download; Canva needs our API.)
       let can = !testItem, why = testItem ? (item.outside ? 'This one is turned in on Schoology' : 'Tests are turned in on Schoology') : '';
@@ -5432,7 +5437,7 @@
       } catch (e) {}
       const parsed = /^\s*\{/.test(raw) ? parseAttach(raw) : null;
       if (SUBMIT_LIVE) {
-        if (parsed && item.type !== 'assessment' && !item.outside) openAddSubmissionModal({ attach: parsed });
+        if (parsed && item.type !== 'assessment' && item.type !== 'discussion' && !item.outside) openAddSubmissionModal({ attach: parsed });
         return;
       }
       if (!CANVA_PREVIEW) return;

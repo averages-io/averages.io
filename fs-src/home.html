@@ -1153,6 +1153,8 @@
     /* icon tiles wiggle when you point at their row */
     body:not(.potato-mode) :is(.arow, .mrow, .mp-row, .ag-row, .nt-row, .pin, .gr-row, .crow, tr, .item, .mi):hover :is(.ktile, .nt-tile, .badge, .emo) { animation: lifeWiggle .5s var(--spring); }
     body:not(.potato-mode) .newtag { animation: lifeSticker .5s var(--spring) backwards; }
+    /* hidden until it has landed in its spot (2026-11-06, Martin's video: stickers showed by the name, then jumped) */
+    .newtag[data-tilted]:not([data-shown]) { visibility: hidden; animation: none !important; }
   }
   @keyframes lifeWiggle { 0% { transform: none; } 30% { transform: rotate(-9deg) scale(1.08); } 60% { transform: rotate(6deg) scale(1.08); } 100% { transform: none; } }
   @keyframes lifeSticker { from { transform: rotate(-14deg) scale(.6); opacity: 0; } }
@@ -1230,6 +1232,27 @@
   .mq, .mq > .mq-in { animation-delay: var(--mq-delay, 0s); } /* a pair runs half a cycle apart, so they move opposite ways */
   /* ===== end Spotify names ===== */
   .ti-sacts { margin-left: auto; display: flex; gap: 6px; flex: none; } .ti-sacts .btn { text-decoration: none; } .ti-sacts svg.i { width: 16px; height: 16px; }
+  /* search anything (2026-11-06, Martin: Home's sidebar Search should open the popup like every other page) */
+  .cmdk-scrim { position: fixed; inset: 0; z-index: 90; background: var(--scrim); display: flex; justify-content: center; align-items: flex-start; padding: calc(96px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 16px max(16px, env(safe-area-inset-left, 0px)); }
+  .cmdk { width: min(640px, 100%); max-height: min(560px, calc(100vh - 128px)); display: flex; flex-direction: column; border-radius: 20px; background: var(--field); box-shadow: var(--pop-shadow); overflow: hidden; }
+  .cmdk-in { display: flex; align-items: center; gap: 12px; padding: 0 16px; height: 56px; border-bottom: 2px solid var(--panel); flex: none; }
+  .cmdk-in svg.i { color: var(--muted); }
+  .cmdk-in input { flex: 1; min-width: 0; border: 0; outline: none; background: none; font-size: 17px; font-weight: 700; }
+  .cmdk-in input::placeholder { color: var(--muted); }
+  .cmdk-res { overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 2px; }
+  .cmdk-res .lbl { padding: 8px 12px 4px; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .cmdk-res .mi { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 44px; padding: 8px 12px; border-radius: 12px; text-align: left; color: var(--ink); font-weight: 700; }
+  .cmdk-res .mi:hover, .cmdk-res .mi.sel { background: var(--panel); }
+  .cmdk-res .mi .tx { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .cmdk-res .mi b { font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cmdk-res .mi small { color: var(--muted); font-weight: 600; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cmdk-res .mi > svg.i { width: 20px; height: 20px; color: var(--ink-2); margin: 0 8px; }
+  .cmdk-res mark { background: var(--mark); color: inherit; border-radius: 3px; }
+  .cmdk-empty { padding: 24px 16px; text-align: center; color: var(--muted); font-weight: 700; }
+  .cmdk-foot { display: flex; gap: 16px; padding: 8px 16px 12px; font-size: 12px; font-weight: 700; color: var(--muted); border-top: 2px solid var(--panel); flex: none; }
+  .cmdk-foot kbd { font-size: 11px; line-height: 20px; padding: 0 4px; }
+  @media (hover: none) { .cmdk-foot { display: none; } }
+  .g-na { color: var(--muted) !important; }   /* nothing graded yet (2026-11-06) */
 </style>
 <style id="tiHomeCss">/* ===== Turn in popup (from the course hub) ===== */
   /* ---------- Turn in popup ---------- */
@@ -2353,7 +2376,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     const recent = FSD.WORK.filter(w => w.c === x.id && !w.missing).slice(0, 3).map(w => [w.n, `${w.got} / ${w.of}`]);
     const points = x.points.length ? x.points : [x.pct];
     return { id: x.id, short: x.short, name: x.name, teacher: x.teacher || 'Your teacher', teacherIds: x.teacherIds, pct: x.pct, c: i + 1, pts, rem: left && pts ? rem : null,
-      room: x.hasPeriod ? 'Period ' + x.period : (x.code || 'Schoology class'), recent, predictedPct: x.predictedPct, points, dates: x.dates.length ? x.dates : ['Now'], updated: x.updated || '' };
+      room: x.hasPeriod ? 'Period ' + x.period : (x.code || 'Schoology class'), recent, predictedPct: x.predictedPct, points, dates: x.dates.length ? x.dates : ['Now'], names: (x.titles || []).map(t => Array.isArray(t) ? t[0] : t), updated: x.updated || '' };
   });
   // The projection starts from the most recent graded assignment, so its direction is latest score to projected grade
   // (a point or more either way), not the oldest score on the chart to the newest.
@@ -2624,8 +2647,8 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   function renderClasses() {
     $('gradesRows').innerHTML = sortedClasses().map(c => `<a class="gt-row" href="#" role="listitem" data-open="class:${c.id}">
         <span class="gt-c">${badge(c)}<span class="tx"><b>${esc(c.name)}</b><small>${esc([/^Period /.test(c.room || '') ? c.room : '', c.teacher].filter(Boolean).join(' · '))}</small></span></span>
-        <span class="gt-g"><b class="${gcls(c.pct)}">${letter(c.pct)}</b><small>${c.pct.toFixed(1)}%</small></span>
-        <span class="gt-p"><span class="trend ${c.trend}" data-trend="${c.id}" aria-label="Predicted ${letter(c.predictedPct)}, ${Math.round(c.predictedPct)} percent"><span class="arrow" aria-hidden="true">${TREND_ARROW[c.trend]}</span>${letter(c.predictedPct)}<span class="tp">${Math.round(c.predictedPct)}%</span></span></span>
+        <span class="gt-g">${c.none ? '<b class="g-na">N/A</b><small>No grades yet</small>' : `<b class="${gcls(c.pct)}">${letter(c.pct)}</b><small>${c.pct.toFixed(1)}%</small>`}</span>
+        <span class="gt-p">${c.none ? '<span class="g-na">N/A</span>' : `<span class="trend ${c.trend}" data-trend="${c.id}" aria-label="Predicted ${letter(c.predictedPct)}, ${Math.round(c.predictedPct)} percent"><span class="arrow" aria-hidden="true">${TREND_ARROW[c.trend]}</span>${letter(c.predictedPct)}<span class="tp">${Math.round(c.predictedPct)}%</span></span>`}</span>
         <span class="gt-u">${esc(c.updated)}</span></a>`).join('');
     // hovering the predicted grade shows the trend it comes from, as on the live Home page
     $('gradesRows').querySelectorAll('[data-trend]').forEach(el => bindTrend(el, C[el.dataset.trend]));
@@ -3077,7 +3100,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     $('statTurn').hidden = !state.charts.turn;
     $('statGpa').hidden = !state.charts.gpa;
     $('statRate').hidden = !state.charts.rate;
-    const gNow = CLASSES.reduce((a, c) => a + GP[letter(c.pct)], 0) / CLASSES.length, dG = lastV(s.gv) - firstV(s.gv);
+    const gNow = (CLASSES.filter(c => !c.none).reduce((a, c) => a + GP[letter(c.pct)], 0) / Math.max(1, CLASSES.filter(c => !c.none).length)), dG = lastV(s.gv) - firstV(s.gv);
     $('gpaNow').textContent = gNow.toFixed(2);
     $('gpaDelta').className = 'delta ' + (dG >= 0 ? 'up' : 'down');
     $('gpaDelta').innerHTML = `${ico(dG >= 0 ? 'up' : 'downr')}${Math.abs(dG).toFixed(2)}`; $('gpaNote').textContent = `vs. ${ago} ago`;
@@ -3583,7 +3606,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
         <div class="meta">${done ? '<span class="due done">Turned in</span>' : dueTag(d)}</div>
         <p class="body" id="dueDesc">${esc(d.desc || 'Loading the details…')}</p>
         <div class="acts split">${done || !d.canTurnIn ? `<button class="btn" data-go="class:${c.id}">${badge(c)}Open in class</button>` : `<button class="btn primary" data-go="turnin:${d.id}">${ico('upload')}Turn in</button>`}<button class="btn" data-go="compose:${c.id}">${ico('msg')}Message ${esc(c.teacher)}</button></div>`,
-        wire(el) { if (d.desc) return; FST.load(d.c, d.id).then(r => { const x = r.detail; d.desc = (x && x.description) || 'No description from your teacher.'; if (x && x.maxPoints) d.pts = x.maxPoints; const b = el.querySelector('#dueDesc'); if (b) b.textContent = d.desc; }).catch(() => { const b = el.querySelector('#dueDesc'); if (b) b.textContent = 'Couldn\'t load the details. Open it in class to see them.'; }); } };
+        wire(el) { if (d.desc) return; FST.load(d.c, d.id, d.disc).then(r => { const x = r.detail; d.desc = (x && x.description) || 'No description from your teacher.'; if (x && x.maxPoints) d.pts = x.maxPoints; const b = el.querySelector('#dueDesc'); if (b) b.textContent = d.desc; }).catch(() => { const b = el.querySelector('#dueDesc'); if (b) b.textContent = 'Couldn\'t load the details. Open it in class to see them.'; }); } };
     },
     alldue() {
       return { label: 'Due soon', html: head('Due soon', `${DUE.length} open`) + (DUE.length ? sortedDue().map(dueRow).join('') : '<div class="note">Nothing due. You\'re all caught up.</div>') };
@@ -3680,7 +3703,9 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     return [lo, hi];
   }
   function gradeChart(c) {
-    const labels = c.dates.concat(['Proj.']), values = c.points.concat([c.predictedPct]);
+    // scores graded the same day all said "Nov 3" (2026-11-06, Martin): then each is labeled by its assignment instead
+    const sameDay = new Set(c.dates).size < c.dates.length, nm = t => { const w = String(t || '').split(/[:\-–]/)[0].trim(); return w.length > 7 ? w.slice(0, 6).trim() + '…' : w; };
+    const labels = (sameDay && c.names && c.names.length === c.dates.length ? c.names.map(nm) : c.dates).concat(['Proj.']), values = c.points.concat([c.predictedPct]);
     const [lo, hi] = niceBounds(values);
     const W = 256, H = 116, L = 28, R = 8, T = 12, B = 18, pw = W - L - R, ph = H - T - B;
     const x = i => L + (i / (labels.length - 1)) * pw, y = v => T + ph - ((v - lo) / (hi - lo)) * ph;
@@ -3743,7 +3768,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     const range = `Last ${n} weeks (${WEEKS[WEEKS.length - n]} to ${WEEKS[WEEKS.length - 1]})`; // from the real weeks, not the sample's dates
     let body = '';
     if (k === 'gpa') {
-      const s = series(), gNow = CLASSES.reduce((a, c) => a + GP[letter(c.pct)], 0) / CLASSES.length;
+      const s = series(), gNow = (CLASSES.filter(c => !c.none).reduce((a, c) => a + GP[letter(c.pct)], 0) / Math.max(1, CLASSES.filter(c => !c.none).length));
       const cls = CLASSES.slice().sort((a, b) => GP[letter(b.pct)] - GP[letter(a.pct)]);
       body = `<section class="dpanel"><h3>GPA by week</h3>
           <div class="legend"><span><i style="background:var(--series)"></i>GPA now <b>${gNow.toFixed(2)}</b></span><span>on an unweighted 4.0 scale</span></div>
@@ -4804,7 +4829,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   // The real assignment: its description and points, and what's been turned in (every version, newest last).
   function tiEnsure(m) {
     if (!m || m._loaded) return; m._loaded = 'loading';
-    FST.load(m.c, m.id).then(r => {
+    FST.load(m.c, m.id, m.disc).then(r => {
       m._loaded = 'yes'; const d = r.detail;
       if (d) { if (d.description) m.desc = d.description; if (typeof d.maxPoints === 'number' && d.maxPoints > 0) m.pts = d.maxPoints; if (d.score && d.score.possible > 0) m.got = d.score.earned; }
       const revs = (r.revisions || []).filter(v => !v.draft), sentOf = v => (v.files || []).map(f => ({ name: f.name, size: FST.size(f.size) || 'File', url: subUrl(m, v.id, f.id) })).concat(v.text ? [{ name: 'Written answer', size: 'Text', write: true }] : []);
@@ -5125,11 +5150,81 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
 
   // sidebar Search: the same as Ctrl+K, it jumps to the search box at the top of Home
   $('sideKbd').textContent = IS_MAC ? '⌘K' : 'Ctrl K';
-  $('sideSearch').addEventListener('click', e => {
-    e.preventDefault(); $('app').classList.remove('menu'); closePop();
-    $('scroller').scrollTo({ top: 0, behavior: calm() ? 'auto' : 'smooth' });
-    big.focus({ preventScroll: true }); big.select(); state.sTab = 'all'; runSearch();
-  });
+  // (2026-11-06, Martin: it should open the search popup, like on every other page, not jump to Home's own box)
+  $('sideSearch').addEventListener('click', e => { e.preventDefault(); $('app').classList.remove('menu'); closePop(); cmdkOpen(); });
+  // "Search Home" in the popup: Home's own box at the top
+  const findFocus = () => { $('scroller').scrollTo({ top: 0, behavior: calm() ? 'auto' : 'smooth' }); big.focus({ preventScroll: true }); big.select(); state.sTab = 'all'; runSearch(); };
+  // ---------- search anything (the sidebar's Search and Ctrl K, on every page): commands, classes, pages, and what's on
+  // this page. A page adds its own results with CMDK_HERE(q) and opens one with CMDK_GO(key) ----------
+  const HERE = ((document.querySelector('.top .crumb strong') || {}).textContent || '').trim();
+  const GO_PAGES = [['Home', 'home'], ['Courses', 'binder'], ['Grades', 'chart'], ['Assignments', 'inbox'], ['Calendar', 'cal'], ['Files', 'folder'], ['Messages', 'msg'], ['Contacts', 'users'], ['Settings', 'gear']];
+  const cnorm = t => String(t || '').toLowerCase().replace(/[’']/g, '').replace(/[^a-z0-9#]+/g, ' ').trim();
+  const cwords = t => cnorm(t).split(' ').filter(Boolean);
+  const chit = (q, t) => { const have = cwords(t), want = cwords(q); return want.length > 0 && want.every(w => have.some(h => h.startsWith(w))); };
+  const cmark = (s, q) => { const w = cwords(q).sort((a, b) => b.length - a.length)[0], t = String(s); if (!w) return esc(t); const i = t.toLowerCase().indexOf(w); return i < 0 ? esc(t) : esc(t.slice(0, i)) + '<mark>' + esc(t.slice(i, i + w.length)) + '</mark>' + esc(t.slice(i + w.length)); };
+  let cmdk = null, cmdkFrom = null;
+  const crow = (attrs, lead, th, sub, cls = '') => `<button class="mi${cls}" ${attrs}>${lead}<span class="tx"><b>${th}</b>${sub ? `<small>${esc(sub)}</small>` : ''}</span></button>`;
+  const cclass = (c, q) => crow(`data-go="${FSX.hubUrl(c.id)}"`, badge(c), cmark(c.name, q), `${c.teacher} · ${letter(c.pct)} · ${c.pct.toFixed(1)}%`);
+  function cmdkRender() {
+    const q = cmdk.querySelector('input').value.trim(), res = cmdk.querySelector('.cmdk-res'); let html = '';
+    const page = ([p, ic]) => crow(p === HERE ? 'data-cmdkx' : `data-toast="the ${p} page"`, ico(ic), cmark(p, q), p === HERE ? "You're here" : '');
+    if (!q) {
+      html += `<div class="lbl">Quick actions</div>` + crow('data-cmdkmsg=""', ico('msg'), 'Message a teacher', 'Start a new message', ' s-cmd') + crow('data-toast="Turn in, on the Assignments page"', ico('upload'), 'Turn in an assignment', 'Pick from what you have due', ' s-cmd')
+        + (HERE ? crow('data-cmdkhere=""', ico('search'), `Search ${esc(HERE)}`, 'Just this page. You can also press / or T', ' s-cmd') : '');
+      html += `<div class="lbl">Your classes</div>` + CLASSES.map(c => cclass(c, '')).join('');
+      html += `<div class="s-tip">${ico('bolt')}<span>Or type a command, like <b>message ${esc(FSD.exampleTeacher)}</b> or <b>open grades</b></span></div>`;
+    } else {
+      // "message ..." picks a teacher; "open ..." or "go to ..." is the same as typing the name
+      const m = q.match(/^(message|msg|email|text|write to|ask)\b\s*(.*)$/i), o = q.match(/^(open|go to|goto|show)\b\s*(.*)$/i), qq = o ? o[2] : q;
+      if (m) { const ts = CLASSES.filter(c => !m[2].trim() || chit(m[2], c.teacher + ' ' + c.name)); html += `<div class="lbl">Actions</div>` + (ts.length ? ts : CLASSES).slice(0, 3).map(c => crow(`data-cmdkmsg="${c.id}"`, badge(c), `Message ${esc(c.teacher)}`, `${c.name} · New message`, ' s-cmd')).join(''); }
+      const here = !m && typeof window.CMDK_HERE === 'function' ? window.CMDK_HERE(qq) : null;
+      if (here && here.rows.length) html += `<div class="lbl">${esc(here.label)}</div>` + here.rows.slice(0, 5).map(r => crow(`data-cmdkgo="${esc(r.key)}"`, r.lead, r.t, r.sub)).join('');
+      const cs = m ? [] : CLASSES.filter(c => chit(qq, c.name + ' ' + c.teacher)); if (cs.length) html += `<div class="lbl">Classes</div>` + cs.map(c => cclass(c, qq)).join('');
+      // people: your teachers and classmates (2026-11-06); one opens their card in Contacts
+      const pp = m || !FSX.people ? [] : FSX.people().filter(x => chit(qq, x.name)).slice(0, 5); if (pp.length) html += `<div class="lbl">People</div>` + pp.map(x => crow(`data-go="${FSX.url('contacts', { person: x.id })}"`, FSX.personAv(x), cmark(x.name, qq), x.sub)).join('');
+      const ps = m ? [] : GO_PAGES.filter(([p]) => chit(qq, p)); if (ps.length) html += `<div class="lbl">Go to</div>` + ps.map(page).join('');
+      if (HERE && !m) html += crow(`data-cmdkhere="${esc(qq)}"`, ico('search'), `Search ${esc(HERE)} for "${esc(qq)}"`, 'Just this page', ' s-cmd');
+      if (!html) html = `<div class="cmdk-empty">Nothing for "${esc(q)}". Try a class, a page, or a command like "message ${esc(FSD.exampleTeacher)}".</div>`;
+    }
+    res.innerHTML = html; const f = res.querySelector('.mi'); if (f) f.classList.add('sel');
+  }
+  function cmdkOpen() {
+    if (cmdk) { cmdk.querySelector('input').select(); return; }
+    cmdkFrom = document.activeElement; $('app').classList.remove('menu');
+    document.body.insertAdjacentHTML('beforeend', `<div class="cmdk-scrim"><div class="cmdk" role="dialog" aria-modal="true" aria-label="Search">
+      <label class="cmdk-in">${ico('search')}<input id="cmdkInput" placeholder="search anything" autocomplete="off" spellcheck="false" aria-label="Search"></label>
+      <div class="cmdk-res" role="listbox"></div>
+      <div class="cmdk-foot" aria-hidden="true"><span><kbd>↑</kbd> <kbd>↓</kbd> to move</span><span><kbd>Enter</kbd> to open</span><span><kbd>Esc</kbd> to close</span></div></div></div>`);
+    cmdk = document.body.lastElementChild;
+    cmdk.addEventListener('click', e => {
+      if (e.target === cmdk || e.target.closest('[data-cmdkx]')) { cmdkClose(); return; }
+      const g = e.target.closest('[data-cmdkgo]'); if (g) { const k = g.dataset.cmdkgo; cmdkClose(false); if (typeof window.CMDK_GO === 'function') window.CMDK_GO(k); return; }
+      const mg = e.target.closest('[data-cmdkmsg]'); if (mg) { const id = mg.dataset.cmdkmsg; cmdkClose(false); if (typeof window.CMDK_MSG === 'function') window.CMDK_MSG(id); else FSX.go('messages', { compose: id || 'new' }); return; }
+      const h = e.target.closest('[data-cmdkhere]'); if (h) { const v = h.dataset.cmdkhere; cmdkClose(false); findFocus(); const el = document.activeElement; if (v && el && 'value' in el) { el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); } return; }
+    });
+    cmdk.querySelector('input').addEventListener('input', cmdkRender);
+    cmdkRender(); cmdk.querySelector('input').focus();
+  }
+  function cmdkClose(back = true) {
+    if (!cmdk) return; const el = cmdk; cmdk = null;
+    if (calm() || !el.animate) el.remove();
+    else { el.style.pointerEvents = 'none'; el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 160, easing: 'ease', fill: 'forwards' });
+      el.firstElementChild.animate([{ transform: 'none' }, { transform: 'translateY(-6px) scale(.98)' }], { duration: 160, easing: 'cubic-bezier(.4, 0, 1, 1)', fill: 'forwards' }).onfinish = () => el.remove(); }
+    if (back && cmdkFrom && cmdkFrom.isConnected && cmdkFrom.focus) cmdkFrom.focus({ preventScroll: true });
+  }
+  document.addEventListener('click', e => { if (cmdk && e.target.closest('.cmdk [data-toast], .cmdk [data-go]')) cmdkClose(false); }, true);
+  document.addEventListener('keydown', e => {
+    if (!cmdk) return;
+    if (e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); cmdkClose(); return; }
+    const items = [...cmdk.querySelectorAll('.mi')], i = items.findIndex(x => x.classList.contains('sel'));
+    if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && items.length) {
+      e.preventDefault(); e.stopImmediatePropagation(); items.forEach(x => x.classList.remove('sel'));
+      const n = items[e.key === 'ArrowDown' ? Math.min(items.length - 1, i + 1) : Math.max(0, i - 1)]; n.classList.add('sel'); n.scrollIntoView({ block: 'nearest' });
+    } else if (e.key === 'Enter' && items.length && document.activeElement.id === 'cmdkInput') { e.preventDefault(); e.stopImmediatePropagation(); (items[i] || items[0]).click(); }
+    else if (e.key === 'Tab') { e.preventDefault(); cmdk.querySelector('input').focus(); }
+  }, true);
+
+
 
   // collapse, drawer, refresh, quick search, dismiss
   const app = $('app');
@@ -5419,7 +5514,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (ntEl) return;
     ntFrom = document.activeElement; ntScope = NT.here || 'all';
     document.body.insertAdjacentHTML('beforeend', `<div class="nt-scrim"><div class="nt-pop" role="dialog" aria-modal="true" aria-labelledby="ntTitle">
-      <div class="nt-top"><div class="nt-top-r"><div class="nt-tt"><h2 id="ntTitle">Notifications</h2><small>Since you were last here ${esc(NT_LAST)}</small></div>${ntSegHTML()}<button class="nt-x" data-ntclose aria-label="Close">${ico('x')}</button></div></div>
+      <div class="nt-top"><div class="nt-top-r"><div class="nt-tt"><h2 id="ntTitle">Notifications</h2><small>Last refreshed ${esc(FSX.lastRefreshed ? FSX.lastRefreshed() : NT_LAST)}</small></div>${ntSegHTML()}<button class="nt-x" data-ntclose aria-label="Close">${ico('x')}</button></div></div>
       <div class="nt-body">${ntBodyHTML()}</div><div class="nt-foot">${ntFootHTML()}</div></div></div>`);
     ntEl = document.body.lastElementChild;
     const b = $('ntBtn'); if (b) b.setAttribute('aria-expanded', 'true');
@@ -5449,7 +5544,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       return; }
     if (e.target.closest('[data-ntseen]')) { const n = ntLive(ntScope).length, label = ntScope === 'all' ? 'everything' : NT_CLASSES[ntScope]; ntLive(ntScope).forEach(it => NT_SEEN.add(it.id)); ntBadge(); NT.onChange(); ntRefresh(true); toast(`Marked ${label} as seen. That's ${n} ${n === 1 ? 'notification' : 'notifications'}.`); return; }
     const go = e.target.closest('[data-ntgo]');
-    if (go) { const it = NT_ITEMS.find(x => x.id === go.dataset.ntgo); NT_SEEN.add(it.id); ntBadge(); NT.onChange(); ntClose(true); if (it.k === 'msg') FSX.go('messages', { thread: it.thread }); else if (it.k === 'graded') FSX.hub(it.c, 'grades', { a: it.aid }); else FSX.hub(it.c, 'updates', { update: it.raw }); }
+    if (go) { const it = NT_ITEMS.find(x => x.id === go.dataset.ntgo); NT_SEEN.add(it.id); ntBadge(); NT.onChange(); ntClose(true); if (it.k === 'msg') FSX.go('messages', { thread: it.thread }); else if (it.k === 'new') FSX.newGo(it); else if (it.k === 'graded') FSX.hub(it.c, 'grades', { a: it.aid }); else FSX.hub(it.c, 'updates', { update: it.raw }); }
   }
   document.addEventListener('keydown', e => {
     if (!ntEl) return;
@@ -5735,7 +5830,7 @@ document.addEventListener('keydown', e => {
       }
     }
     if (spot === 'end') { el.style.position = el.style.left = el.style.top = el.style.margin = ''; el.style.setProperty('--tx', el.dataset.tx || '0px'); el.style.setProperty('--ty', el.dataset.ty || '0px'); fitEnd(el); }
-    el.dataset.spot = spot; el.dataset.fitted = '1';
+    el.dataset.spot = spot; el.dataset.fitted = '1'; el.dataset.shown = '1';
   }
   let rz = 0; // the layout changed: land every sticker again
   const refitAll = ms => { clearTimeout(rz); rz = setTimeout(() => document.querySelectorAll('.newtag[data-fitted]').forEach(el => { delete el.dataset.fitted; fit(el); }), ms); };
@@ -5757,6 +5852,7 @@ document.addEventListener('keydown', e => {
     el.style.setProperty('--tx', ((h >> 7) % 3) - 1 + 'px');
     el.dataset.ty = el.style.getPropertyValue('--ty'); el.dataset.tx = el.style.getPropertyValue('--tx');
     el.dataset.tilted = '1';
+    setTimeout(() => { el.dataset.shown = '1'; }, 3000); // never left hidden if it can't be measured
     if (ro) ro.observe(el); else requestAnimationFrame(() => fit(el)); // fit once it's on screen and has a size
   };
   const run = root => { if (root.querySelectorAll) root.querySelectorAll('.newtag:not([data-tilted])').forEach(place); };

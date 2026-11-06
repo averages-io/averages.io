@@ -2120,7 +2120,7 @@
         if (e.target === wrap || (b && b.dataset.sgy === 'x')) { close(); return; }
         if (b && b.dataset.sgy === 'go') {
           if (draft) { try { navigator.clipboard.writeText(draft).then(() => showComposerNote('Copied your message. Paste it in Schoology.'), () => {}); } catch {} }
-          window.open(schoologyHome() + '/messages/inbox', '_blank', 'noopener');
+          window.open(schoologyHome() + '/messages', '_blank', 'noopener');
           close();
         }
       });

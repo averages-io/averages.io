@@ -15,6 +15,15 @@
  * Fullscreen "page not found", carrying the address.
  */
 export const FS_BOOT_JS = `(function () {
+  // Back after switching looks (2026-11-06, Martin: going back a page after switching modes broke the site): a page
+  // brought back from the browser's memory (back/forward cache) runs none of this, so it's checked again then, and
+  // the logo the page was still showing when it was left (the switch puts it up) is taken down.
+  window.addEventListener("pageshow", function (e) {
+    if (!e.persisted) return;
+    if (!go() && window.__averagesSplash && window.__averagesSplash.hide) window.__averagesSplash.hide();
+  });
+  go();
+  function go() {
   try {
     var o = JSON.parse(localStorage.getItem("schoolagy_settings_options") || "{}") || {};
     if (o.windowType !== "fullscreen") return;
@@ -30,8 +39,11 @@ export const FS_BOOT_JS = `(function () {
       "/gradebook": "course-hub#grades", "/assignment": "course-hub#assignments"
     };
     var t = M[p];
-    if (!t) { location.replace("/IS/404?from=" + encodeURIComponent(p + location.search)); return; }
+    if (!t) { location.replace("/IS/404?from=" + encodeURIComponent(p + location.search)); return true; }
     var h = t.split("#");
     location.replace("/IS/" + h[0] + location.search + (h[1] ? "#" + h[1] : location.hash));
+    return true;
   } catch (e) { /* storage off: the Windowed page */ }
+  return false;
+  }
 })();`;

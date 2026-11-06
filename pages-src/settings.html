@@ -1201,7 +1201,8 @@
   .drive-mark { width: 20px; height: 20px; flex: none; display: block; background: center / contain no-repeat url("/brand/google-drive.png"); }
   .brand-slot { width: 20px; height: 20px; flex: none; display: block; }
   /* Integrations rows (2026-10-21, Martin): no empty space before "OneDrive" until its logo is uploaded, so the name lines up with its description. Menus keep the slot so their names stay in a column. */
-  .integ-name .brand-slot { display: none; }
+  /* OneDrive: a plain cloud, like Fullscreen's (2026-11-06, Martin: the icon was missing); no Microsoft logo */
+  .integ-name .brand-slot { display: block; background: center / 18px no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230a62c9' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 18h10.5a4 4 0 0 0 .6-7.96A6 6 0 0 0 6.6 9.6 4.2 4.2 0 0 0 7 18z'/%3E%3C/svg%3E"); }
   .integ-name { display: flex; align-items: center; gap: 8px; }
   .integ-tm { margin-top: 4px; }
   .pick-name, #defaultEditorLabel { display: inline-flex; align-items: center; gap: 8px; }
@@ -3373,7 +3374,8 @@
           if (window.__averagesSplash && window.__averagesSplash.show) window.__averagesSplash.show(4000);
           // the account's copy gets Fullscreen before the page goes (2026-11-02, Martin: signing out and back in opened
           // Windowed; the push waited 800 ms and leaving the page cancelled it). Up to 1.5 s, then it goes anyway.
-          const goFs = () => { window.location.href = '/IS/settings'; };
+          // replace, not href (2026-11-06): Back from Fullscreen Settings goes to the page before, not to this one
+          const goFs = () => { window.location.replace('/IS/settings'); };
           if (isSyncOn() && syncPullSettled) { clearTimeout(syncPushTimer); Promise.race([pushSyncSettingsNow(), new Promise(r => setTimeout(r, 1500))]).then(goFs, goFs); }
           else goFs();
         }

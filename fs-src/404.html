@@ -1151,6 +1151,8 @@
     /* icon tiles wiggle when you point at their row */
     body:not(.potato-mode) :is(.arow, .mrow, .mp-row, .ag-row, .nt-row, .pin, .gr-row, .crow, tr, .item, .mi):hover :is(.ktile, .nt-tile, .badge, .emo) { animation: lifeWiggle .5s var(--spring); }
     body:not(.potato-mode) .newtag { animation: lifeSticker .5s var(--spring) backwards; }
+    /* hidden until it has landed in its spot (2026-11-06, Martin's video: stickers showed by the name, then jumped) */
+    .newtag[data-tilted]:not([data-shown]) { visibility: hidden; animation: none !important; }
   }
   @keyframes lifeWiggle { 0% { transform: none; } 30% { transform: rotate(-9deg) scale(1.08); } 60% { transform: rotate(6deg) scale(1.08); } 100% { transform: none; } }
   @keyframes lifeSticker { from { transform: rotate(-14deg) scale(.6); opacity: 0; } }
@@ -2980,6 +2982,7 @@
   }
   @media (max-width: 680px) { .hub-t h1 { font-size: 34px; } }
   /* ===== end Life layer for the course page ===== */
+  .g-na { color: var(--muted) !important; }   /* nothing graded yet (2026-11-06) */
 </style>
 </head>
 <body>
@@ -3546,7 +3549,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (ntEl) return;
     ntFrom = document.activeElement; ntScope = NT.here || 'all';
     document.body.insertAdjacentHTML('beforeend', `<div class="nt-scrim"><div class="nt-pop" role="dialog" aria-modal="true" aria-labelledby="ntTitle">
-      <div class="nt-top"><div class="nt-top-r"><div class="nt-tt"><h2 id="ntTitle">Notifications</h2><small>Since you were last here ${esc(NT_LAST)}</small></div>${ntSegHTML()}<button class="nt-x" data-ntclose aria-label="Close">${ico('x')}</button></div></div>
+      <div class="nt-top"><div class="nt-top-r"><div class="nt-tt"><h2 id="ntTitle">Notifications</h2><small>Last refreshed ${esc(FSX.lastRefreshed ? FSX.lastRefreshed() : NT_LAST)}</small></div>${ntSegHTML()}<button class="nt-x" data-ntclose aria-label="Close">${ico('x')}</button></div></div>
       <div class="nt-body">${ntBodyHTML()}</div><div class="nt-foot">${ntFootHTML()}</div></div></div>`);
     ntEl = document.body.lastElementChild;
     const b = $('ntBtn'); if (b) b.setAttribute('aria-expanded', 'true');
@@ -3576,7 +3579,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       return; }
     if (e.target.closest('[data-ntseen]')) { const n = ntLive(ntScope).length, label = ntScope === 'all' ? 'everything' : NT_CLASSES[ntScope]; ntLive(ntScope).forEach(it => NT_SEEN.add(it.id)); ntBadge(); NT.onChange(); ntRefresh(true); toast(`Marked ${label} as seen. That's ${n} ${n === 1 ? 'notification' : 'notifications'}.`); return; }
     const go = e.target.closest('[data-ntgo]');
-    if (go) { const it = NT_ITEMS.find(x => x.id === go.dataset.ntgo); NT_SEEN.add(it.id); ntBadge(); NT.onChange(); ntClose(true); if (it.k === 'msg') FSX.go('messages', { thread: it.thread }); else if (it.k === 'graded') FSX.hub(it.c, 'grades', { a: it.aid }); else FSX.hub(it.c, 'updates', { update: it.raw }); }
+    if (go) { const it = NT_ITEMS.find(x => x.id === go.dataset.ntgo); NT_SEEN.add(it.id); ntBadge(); NT.onChange(); ntClose(true); if (it.k === 'msg') FSX.go('messages', { thread: it.thread }); else if (it.k === 'new') FSX.newGo(it); else if (it.k === 'graded') FSX.hub(it.c, 'grades', { a: it.aid }); else FSX.hub(it.c, 'updates', { update: it.raw }); }
   }
   document.addEventListener('keydown', e => {
     if (!ntEl) return;
@@ -3801,6 +3804,8 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       const here = !m && typeof window.CMDK_HERE === 'function' ? window.CMDK_HERE(qq) : null;
       if (here && here.rows.length) html += `<div class="lbl">${esc(here.label)}</div>` + here.rows.slice(0, 5).map(r => crow(`data-cmdkgo="${esc(r.key)}"`, r.lead, r.t, r.sub)).join('');
       const cs = m ? [] : CLASSES.filter(c => chit(qq, c.name + ' ' + c.teacher)); if (cs.length) html += `<div class="lbl">Classes</div>` + cs.map(c => cclass(c, qq)).join('');
+      // people: your teachers and classmates (2026-11-06); one opens their card in Contacts
+      const pp = m || !FSX.people ? [] : FSX.people().filter(x => chit(qq, x.name)).slice(0, 5); if (pp.length) html += `<div class="lbl">People</div>` + pp.map(x => crow(`data-go="${FSX.url('contacts', { person: x.id })}"`, FSX.personAv(x), cmark(x.name, qq), x.sub)).join('');
       const ps = m ? [] : GO_PAGES.filter(([p]) => chit(qq, p)); if (ps.length) html += `<div class="lbl">Go to</div>` + ps.map(page).join('');
       if (HERE && !m) html += crow(`data-cmdkhere="${esc(qq)}"`, ico('search'), `Search ${esc(HERE)} for "${esc(qq)}"`, 'Just this page', ' s-cmd');
       if (!html) html = `<div class="cmdk-empty">Nothing for "${esc(q)}". Try a class, a page, or a command like "message ${esc(FSD.exampleTeacher)}".</div>`;
@@ -4020,7 +4025,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       }
     }
     if (spot === 'end') { el.style.position = el.style.left = el.style.top = el.style.margin = ''; el.style.setProperty('--tx', el.dataset.tx || '0px'); el.style.setProperty('--ty', el.dataset.ty || '0px'); fitEnd(el); }
-    el.dataset.spot = spot; el.dataset.fitted = '1';
+    el.dataset.spot = spot; el.dataset.fitted = '1'; el.dataset.shown = '1';
   }
   let rz = 0; // the layout changed: land every sticker again
   const refitAll = ms => { clearTimeout(rz); rz = setTimeout(() => document.querySelectorAll('.newtag[data-fitted]').forEach(el => { delete el.dataset.fitted; fit(el); }), ms); };
@@ -4042,6 +4047,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     el.style.setProperty('--tx', ((h >> 7) % 3) - 1 + 'px');
     el.dataset.ty = el.style.getPropertyValue('--ty'); el.dataset.tx = el.style.getPropertyValue('--tx');
     el.dataset.tilted = '1';
+    setTimeout(() => { el.dataset.shown = '1'; }, 3000); // never left hidden if it can't be measured
     if (ro) ro.observe(el); else requestAnimationFrame(() => fit(el)); // fit once it's on screen and has a size
   };
   const run = root => { if (root.querySelectorAll) root.querySelectorAll('.newtag:not([data-tilted])').forEach(place); };

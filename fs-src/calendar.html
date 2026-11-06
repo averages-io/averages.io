@@ -1151,6 +1151,8 @@
     /* icon tiles wiggle when you point at their row */
     body:not(.potato-mode) :is(.arow, .mrow, .mp-row, .ag-row, .nt-row, .pin, .gr-row, .crow, tr, .item, .mi):hover :is(.ktile, .nt-tile, .badge, .emo) { animation: lifeWiggle .5s var(--spring); }
     body:not(.potato-mode) .newtag { animation: lifeSticker .5s var(--spring) backwards; }
+    /* hidden until it has landed in its spot (2026-11-06, Martin's video: stickers showed by the name, then jumped) */
+    .newtag[data-tilted]:not([data-shown]) { visibility: hidden; animation: none !important; }
   }
   @keyframes lifeWiggle { 0% { transform: none; } 30% { transform: rotate(-9deg) scale(1.08); } 60% { transform: rotate(6deg) scale(1.08); } 100% { transform: none; } }
   @keyframes lifeSticker { from { transform: rotate(-14deg) scale(.6); opacity: 0; } }
@@ -3007,7 +3009,8 @@
   /* week: the same two looks as the month. Events (pills) sit at the top of the day; what's due is a line under them */
   .cw-ev { --c: #6e7088; display: flex; align-items: flex-start; gap: 8px; width: 100%; padding: 8px 8px 8px 4px; border-radius: 10px; text-align: left; color: var(--ink); transition: background-color .15s ease; }
   .cw-ev .tx { flex: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-  .cw-ev .tx > b { font-size: 13px; font-weight: 800; line-height: 1.3; overflow-wrap: break-word; hyphens: auto; }
+  /* at most 2 lines, broken between words, the rest as "…" (2026-11-06, Martin: long names ran 4 lines and split words) */
+  .cw-ev .tx > b { font-size: 13px; font-weight: 800; line-height: 1.3; overflow-wrap: normal; word-break: normal; hyphens: manual; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
   .cw-ev .tx > small { font-size: 11px; font-weight: 700; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .cw-ev > small { flex: none; padding-top: 1px; font-size: 11px; font-weight: 800; color: var(--muted); font-variant-numeric: tabular-nums; }
   .cw-ev.cdue:hover { background: color-mix(in srgb, var(--c) 10%, var(--panel)); }
@@ -3213,6 +3216,7 @@
   }
   @media (max-width: 680px) { .hub-t h1 { font-size: 34px; } }
   /* ===== end Life layer for the course page ===== */
+  .g-na { color: var(--muted) !important; }   /* nothing graded yet (2026-11-06) */
 </style>
 </head>
 <body>
@@ -3801,7 +3805,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (ntEl) return;
     ntFrom = document.activeElement; ntScope = NT.here || 'all';
     document.body.insertAdjacentHTML('beforeend', `<div class="nt-scrim"><div class="nt-pop" role="dialog" aria-modal="true" aria-labelledby="ntTitle">
-      <div class="nt-top"><div class="nt-top-r"><div class="nt-tt"><h2 id="ntTitle">Notifications</h2><small>Since you were last here ${esc(NT_LAST)}</small></div>${ntSegHTML()}<button class="nt-x" data-ntclose aria-label="Close">${ico('x')}</button></div></div>
+      <div class="nt-top"><div class="nt-top-r"><div class="nt-tt"><h2 id="ntTitle">Notifications</h2><small>Last refreshed ${esc(FSX.lastRefreshed ? FSX.lastRefreshed() : NT_LAST)}</small></div>${ntSegHTML()}<button class="nt-x" data-ntclose aria-label="Close">${ico('x')}</button></div></div>
       <div class="nt-body">${ntBodyHTML()}</div><div class="nt-foot">${ntFootHTML()}</div></div></div>`);
     ntEl = document.body.lastElementChild;
     const b = $('ntBtn'); if (b) b.setAttribute('aria-expanded', 'true');
@@ -3831,7 +3835,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       return; }
     if (e.target.closest('[data-ntseen]')) { const n = ntLive(ntScope).length, label = ntScope === 'all' ? 'everything' : NT_CLASSES[ntScope]; ntLive(ntScope).forEach(it => NT_SEEN.add(it.id)); ntBadge(); NT.onChange(); ntRefresh(true); toast(`Marked ${label} as seen. That's ${n} ${n === 1 ? 'notification' : 'notifications'}.`); return; }
     const go = e.target.closest('[data-ntgo]');
-    if (go) { const it = NT_ITEMS.find(x => x.id === go.dataset.ntgo); NT_SEEN.add(it.id); ntBadge(); NT.onChange(); ntClose(true); if (it.k === 'msg') FSX.go('messages', { thread: it.thread }); else if (it.k === 'graded') FSX.hub(it.c, 'grades', { a: it.aid }); else FSX.hub(it.c, 'updates', { update: it.raw }); }
+    if (go) { const it = NT_ITEMS.find(x => x.id === go.dataset.ntgo); NT_SEEN.add(it.id); ntBadge(); NT.onChange(); ntClose(true); if (it.k === 'msg') FSX.go('messages', { thread: it.thread }); else if (it.k === 'new') FSX.newGo(it); else if (it.k === 'graded') FSX.hub(it.c, 'grades', { a: it.aid }); else FSX.hub(it.c, 'updates', { update: it.raw }); }
   }
   document.addEventListener('keydown', e => {
     if (!ntEl) return;
@@ -4056,6 +4060,8 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       const here = !m && typeof window.CMDK_HERE === 'function' ? window.CMDK_HERE(qq) : null;
       if (here && here.rows.length) html += `<div class="lbl">${esc(here.label)}</div>` + here.rows.slice(0, 5).map(r => crow(`data-cmdkgo="${esc(r.key)}"`, r.lead, r.t, r.sub)).join('');
       const cs = m ? [] : CLASSES.filter(c => chit(qq, c.name + ' ' + c.teacher)); if (cs.length) html += `<div class="lbl">Classes</div>` + cs.map(c => cclass(c, qq)).join('');
+      // people: your teachers and classmates (2026-11-06); one opens their card in Contacts
+      const pp = m || !FSX.people ? [] : FSX.people().filter(x => chit(qq, x.name)).slice(0, 5); if (pp.length) html += `<div class="lbl">People</div>` + pp.map(x => crow(`data-go="${FSX.url('contacts', { person: x.id })}"`, FSX.personAv(x), cmark(x.name, qq), x.sub)).join('');
       const ps = m ? [] : GO_PAGES.filter(([p]) => chit(qq, p)); if (ps.length) html += `<div class="lbl">Go to</div>` + ps.map(page).join('');
       if (HERE && !m) html += crow(`data-cmdkhere="${esc(qq)}"`, ico('search'), `Search ${esc(HERE)} for "${esc(qq)}"`, 'Just this page', ' s-cmd');
       if (!html) html = `<div class="cmdk-empty">Nothing for "${esc(q)}". Try a class, a page, or a command like "message ${esc(FSD.exampleTeacher)}".</div>`;
@@ -4147,6 +4153,8 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     const school = !C[x.source], time = x.allDay ? '' : String(x.time || '');
     if (x.assignmentId && C[x.source]) {
       if (EV.some(e => e.aid === String(x.assignmentId))) return;   // already here from your assignments
+      // the same work by its name and day (2026-11-06: a discussion's event has its own id, so it showed twice)
+      if (EV.some(e => e.c === x.source && e.date === x.date && e.t === (x.title || x.assignmentTitle))) return;
       const g = gbOf(x.source, x.assignmentId), graded = g && g.graded && typeof g.score === 'number', future = x.date >= TODAY_K;
       E('e' + x.id, x.source, x.title || x.assignmentTitle || 'Assignment', x.type === 'assessment' ? 'test' : 'assignment', x.date, time, 'schoology',
         { aid: String(x.assignmentId), pts: x.points || (g && g.points) || null, st: graded ? 'graded' : g && g.missing ? 'missing' : future ? 'due' : 'done', got: graded ? g.score : undefined, desc: x.desc || '', paper: x.type !== 'assignment', disc: x.type === 'discussion' });
@@ -4234,8 +4242,8 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     return `<div class="cw">${[0, 1, 2, 3, 4, 5, 6].map(i => { const d = addD(s, i), k = key(d), evs = onDay(k, list), off = EV.find(e => e.kind === 'off' && e.date === k);
       return `<div class="cw-col${d.getDay() % 6 === 0 ? ' we' : ''}${off ? ' off' : ''}${k === TODAY_K ? ' today' : ''}" data-day="${k}"><div class="cw-h"><small>${WD[d.getDay()]}</small><b>${d.getDate()}</b></div>
         ${evs.map(e => { const c = cls(e), miss = e.st === 'missing', done = isDone(e);
-          if (!isDue(e)) return `<button class="cw-ev cpill" data-ev="${e.id}" aria-pressed="${CAL.sel === e.id}" style="--c:${c.color}"><span class="cw-top"><span class="ce-ic" aria-hidden="true">${pillIco(e)}</span>${e.kind === 'off' ? 'No school' : e.time ? esc(shortT(e.time)) : 'All day'}</span><span class="tx"><b>${esc(e.t)}</b>${e.c !== 'school' ? `<small>${esc(c.name)}</small>` : ''}</span></button>`;
-          return `<button class="cw-ev cdue${miss ? ' miss' : ''}${done ? ' done' : ''}" data-ev="${e.id}" aria-pressed="${CAL.sel === e.id}" style="--c:${c.color}"><i aria-hidden="true"></i><span class="tx"><b>${esc(e.t)}</b><small>${miss ? 'Missing' : done ? (e.st === 'graded' ? 'Graded' : 'Turned in') : esc(shortT(e.time))} · ${esc(c.name)}</small></span></button>`; }).join('') || '<span class="cw-none">Nothing</span>'}</div>`; }).join('')}</div>`;
+          if (!isDue(e)) return `<button class="cw-ev cpill" data-ev="${e.id}" title="${esc(e.t)}" aria-pressed="${CAL.sel === e.id}" style="--c:${c.color}"><span class="cw-top"><span class="ce-ic" aria-hidden="true">${pillIco(e)}</span>${e.kind === 'off' ? 'No school' : e.time ? esc(shortT(e.time)) : 'All day'}</span><span class="tx"><b>${esc(e.t)}</b>${e.c !== 'school' ? `<small>${esc(c.name)}</small>` : ''}</span></button>`;
+          return `<button class="cw-ev cdue${miss ? ' miss' : ''}${done ? ' done' : ''}" data-ev="${e.id}" title="${esc(e.t)}" aria-pressed="${CAL.sel === e.id}" style="--c:${c.color}"><i aria-hidden="true"></i><span class="tx"><b>${esc(e.t)}</b><small>${miss ? 'Missing' : done ? (e.st === 'graded' ? 'Graded' : 'Turned in') : esc(shortT(e.time))} · ${esc(c.name)}</small></span></button>`; }).join('') || '<span class="cw-none">Nothing</span>'}</div>`; }).join('')}</div>`;
   }
   // year: the whole year, with a dot per class on each day that has something
   const schoolYear = d => d.getMonth() >= 7 ? d.getFullYear() : d.getFullYear() - 1;
@@ -4255,7 +4263,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   function rowHTML(e, cl = 'cs-row') {
     const c = cls(e), miss = e.st === 'missing', done = isDone(e);
     const teach = e.c !== 'school' ? C[e.c].teacher : '', why = cl === 'cs-row' && CAL.q && teach.toLowerCase().includes(CAL.q) && !(e.t + c.name).toLowerCase().includes(CAL.q) ? teach : '';
-    const sub = [c.name, why, e.kind === 'off' ? 'No school' : KINDN[e.kind], e.place].filter(Boolean).join(' · ');
+    const sub = [c.name, why, e.kind === 'off' ? 'No school' : e.disc ? 'Discussion' : KINDN[e.kind], e.place].filter(Boolean).join(' · ');
     const when = miss ? 'Missing' : e.st === 'graded' ? 'Graded' : e.st === 'turned' ? 'Turned in' : shortT(e.time);
     return `<button class="${cl}" data-ev="${e.id}" aria-pressed="${CAL.sel === e.id}" style="--c:${c.color}">${evMark(e)}<span class="tx"><b>${cl === 'cs-row' ? markQ(e.t) : esc(e.t)}</b><small>${cl === 'cs-row' ? markQ(sub) : esc(sub)}</small></span><span class="when${miss ? ' bad' : ''}">${esc(when)}</span></button>`;
   }
@@ -4391,7 +4399,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     const acts = isDue(e)
       ? (isTodo(e) && e.kind === 'assignment' && !e.paper ? `<button class="btn${miss || e.date === TODAY_K ? ' primary' : ''}" data-go="${FSX.hubUrl(e.c, 'materials/' + e.aid, { turnin: 1, a: e.aid })}">${ico('upload')}Turn in</button>` : '') + `<button class="btn" data-go="${FSX.hubUrl(e.c, 'materials/' + e.aid)}">${ico('doc')}Open ${e.disc ? 'discussion' : e.kind === 'test' ? 'test' : 'assignment'}</button>`
       : e.c !== 'school' ? `<button class="btn" data-go="${FSX.hubUrl(e.c)}">${ico('binder')}Open ${esc(c.name)}</button>` : e.by === 'upload' ? `<button class="btn" data-cimrm="${esc(e.id)}">${ico('x')}Remove this date</button>` : '';
-    return `<div class="cd" style="--c:${c.color}"><div class="cd-top">${evMark(e)}<span class="tx"><b class="cd-t" id="cdT">${esc(e.t)}</b><small>${esc(c.name)} · ${KINDN[e.kind]}</small></span><button class="ibtn" data-popx aria-label="Close" style="width:32px;height:32px">${ico('x')}</button></div>
+    return `<div class="cd" style="--c:${c.color}"><div class="cd-top">${evMark(e)}<span class="tx"><b class="cd-t" id="cdT">${esc(e.t)}</b><small>${esc(c.name)} · ${e.disc ? 'Discussion' : KINDN[e.kind]}</small></span><button class="ibtn" data-popx aria-label="Close" style="width:32px;height:32px">${ico('x')}</button></div>
       <div class="cd-facts">${fact(e.kind === 'off' ? 'Day' : isDue(e) ? 'Due' : 'When', `${longDate(e)}${e.time ? ', ' + esc(e.time) : ''}`, miss ? ' bad' : '')}${e.pts ? fact('Points', e.pts) : ''}${st}${e.place ? fact('Where', esc(e.place)) : ''}${fact('Added by', esc(byWho(e)))}</div>
       ${e.desc && !(e.kind === 'off' && e.desc === 'No school.') ? `<p class="cd-desc">${esc(e.desc)}</p>` : ''}${acts ? `<div class="cd-acts">${acts}</div>` : ''}</div>`;
   }
@@ -4987,7 +4995,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       }
     }
     if (spot === 'end') { el.style.position = el.style.left = el.style.top = el.style.margin = ''; el.style.setProperty('--tx', el.dataset.tx || '0px'); el.style.setProperty('--ty', el.dataset.ty || '0px'); fitEnd(el); }
-    el.dataset.spot = spot; el.dataset.fitted = '1';
+    el.dataset.spot = spot; el.dataset.fitted = '1'; el.dataset.shown = '1';
   }
   let rz = 0; // the layout changed: land every sticker again
   const refitAll = ms => { clearTimeout(rz); rz = setTimeout(() => document.querySelectorAll('.newtag[data-fitted]').forEach(el => { delete el.dataset.fitted; fit(el); }), ms); };
@@ -5009,6 +5017,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     el.style.setProperty('--tx', ((h >> 7) % 3) - 1 + 'px');
     el.dataset.ty = el.style.getPropertyValue('--ty'); el.dataset.tx = el.style.getPropertyValue('--tx');
     el.dataset.tilted = '1';
+    setTimeout(() => { el.dataset.shown = '1'; }, 3000); // never left hidden if it can't be measured
     if (ro) ro.observe(el); else requestAnimationFrame(() => fit(el)); // fit once it's on screen and has a size
   };
   const run = root => { if (root.querySelectorAll) root.querySelectorAll('.newtag:not([data-tilted])').forEach(place); };

@@ -144,7 +144,12 @@ export async function getSession(opts?: { fresh?: boolean }): Promise<SessionSta
   if (cached) {
     try {
       const parsed = JSON.parse(cached);
-      if (Date.now() - parsed.at < SESSION_CACHE_MS) {
+      // Only a remembered "signed in" is trusted (2026-11-06, Martin: sign-in took 2–3 Approves). A remembered
+      // "signed out" is always asked again: right after Sign in with Schoology, the front door sends you to Home
+      // (dropping ?signin=schoology), and Home went by the "signed out" this tab saved a moment before, sent you
+      // back to the login page, and that page did the same until the minute ran out. Asking again costs one
+      // request on the login page, where a signed-out visitor is anyway.
+      if (Date.now() - parsed.at < SESSION_CACHE_MS && parsed.state && parsed.state.mode !== "out") {
         return parsed.state as SessionState;
       }
     } catch {

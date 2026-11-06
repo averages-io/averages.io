@@ -1151,6 +1151,8 @@
     /* icon tiles wiggle when you point at their row */
     body:not(.potato-mode) :is(.arow, .mrow, .mp-row, .ag-row, .nt-row, .pin, .gr-row, .crow, tr, .item, .mi):hover :is(.ktile, .nt-tile, .badge, .emo) { animation: lifeWiggle .5s var(--spring); }
     body:not(.potato-mode) .newtag { animation: lifeSticker .5s var(--spring) backwards; }
+    /* hidden until it has landed in its spot (2026-11-06, Martin's video: stickers showed by the name, then jumped) */
+    .newtag[data-tilted]:not([data-shown]) { visibility: hidden; animation: none !important; }
   }
   @keyframes lifeWiggle { 0% { transform: none; } 30% { transform: rotate(-9deg) scale(1.08); } 60% { transform: rotate(6deg) scale(1.08); } 100% { transform: none; } }
   @keyframes lifeSticker { from { transform: rotate(-14deg) scale(.6); opacity: 0; } }
@@ -3390,6 +3392,7 @@
   .fl-bigimg { max-width: 100%; max-height: 100%; object-fit: contain; display: block; margin: auto; border-radius: 8px; background: #ffffff; box-shadow: 0 16px 40px -12px rgba(0, 0, 0, .45); }
   .fl-lb-fold { height: 36px; border-radius: 10px; border: 0; background: var(--field); color: var(--ink); font: inherit; font-weight: 700; padding: 0 12px; }
   .fl-nameit input { width: 100%; border: 0; background: transparent; font: inherit; color: var(--ink); outline: none; }
+  .g-na { color: var(--muted) !important; }   /* nothing graded yet (2026-11-06) */
 </style>
 </head>
 <body>
@@ -3974,7 +3977,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (ntEl) return;
     ntFrom = document.activeElement; ntScope = NT.here || 'all';
     document.body.insertAdjacentHTML('beforeend', `<div class="nt-scrim"><div class="nt-pop" role="dialog" aria-modal="true" aria-labelledby="ntTitle">
-      <div class="nt-top"><div class="nt-top-r"><div class="nt-tt"><h2 id="ntTitle">Notifications</h2><small>Since you were last here ${esc(NT_LAST)}</small></div>${ntSegHTML()}<button class="nt-x" data-ntclose aria-label="Close">${ico('x')}</button></div></div>
+      <div class="nt-top"><div class="nt-top-r"><div class="nt-tt"><h2 id="ntTitle">Notifications</h2><small>Last refreshed ${esc(FSX.lastRefreshed ? FSX.lastRefreshed() : NT_LAST)}</small></div>${ntSegHTML()}<button class="nt-x" data-ntclose aria-label="Close">${ico('x')}</button></div></div>
       <div class="nt-body">${ntBodyHTML()}</div><div class="nt-foot">${ntFootHTML()}</div></div></div>`);
     ntEl = document.body.lastElementChild;
     const b = $('ntBtn'); if (b) b.setAttribute('aria-expanded', 'true');
@@ -4004,7 +4007,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       return; }
     if (e.target.closest('[data-ntseen]')) { const n = ntLive(ntScope).length, label = ntScope === 'all' ? 'everything' : NT_CLASSES[ntScope]; ntLive(ntScope).forEach(it => NT_SEEN.add(it.id)); ntBadge(); NT.onChange(); ntRefresh(true); toast(`Marked ${label} as seen. That's ${n} ${n === 1 ? 'notification' : 'notifications'}.`); return; }
     const go = e.target.closest('[data-ntgo]');
-    if (go) { const it = NT_ITEMS.find(x => x.id === go.dataset.ntgo); NT_SEEN.add(it.id); ntBadge(); NT.onChange(); ntClose(true); if (it.k === 'msg') FSX.go('messages', { thread: it.thread }); else if (it.k === 'graded') FSX.hub(it.c, 'grades', { a: it.aid }); else FSX.hub(it.c, 'updates', { update: it.raw }); }
+    if (go) { const it = NT_ITEMS.find(x => x.id === go.dataset.ntgo); NT_SEEN.add(it.id); ntBadge(); NT.onChange(); ntClose(true); if (it.k === 'msg') FSX.go('messages', { thread: it.thread }); else if (it.k === 'new') FSX.newGo(it); else if (it.k === 'graded') FSX.hub(it.c, 'grades', { a: it.aid }); else FSX.hub(it.c, 'updates', { update: it.raw }); }
   }
   document.addEventListener('keydown', e => {
     if (!ntEl) return;
@@ -4230,6 +4233,8 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       const here = !m && typeof window.CMDK_HERE === 'function' ? window.CMDK_HERE(qq) : null;
       if (here && here.rows.length) html += `<div class="lbl">${esc(here.label)}</div>` + here.rows.slice(0, 5).map(r => crow(`data-cmdkgo="${esc(r.key)}"`, r.lead, r.t, r.sub)).join('');
       const cs = m ? [] : CLASSES.filter(c => chit(qq, c.name + ' ' + c.teacher)); if (cs.length) html += `<div class="lbl">Classes</div>` + cs.map(c => cclass(c, qq)).join('');
+      // people: your teachers and classmates (2026-11-06); one opens their card in Contacts
+      const pp = m || !FSX.people ? [] : FSX.people().filter(x => chit(qq, x.name)).slice(0, 5); if (pp.length) html += `<div class="lbl">People</div>` + pp.map(x => crow(`data-go="${FSX.url('contacts', { person: x.id })}"`, FSX.personAv(x), cmark(x.name, qq), x.sub)).join('');
       const ps = m ? [] : GO_PAGES.filter(([p]) => chit(qq, p)); if (ps.length) html += `<div class="lbl">Go to</div>` + ps.map(page).join('');
       if (HERE && !m) html += crow(`data-cmdkhere="${esc(qq)}"`, ico('search'), `Search ${esc(HERE)} for "${esc(qq)}"`, 'Just this page', ' s-cmd');
       if (!html) html = `<div class="cmdk-empty">Nothing for "${esc(q)}". Try a class, a page, or a command like "message ${esc(FSD.exampleTeacher)}".</div>`;
@@ -4301,7 +4306,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const kindOf = n => { const x = (String(n).match(/\.([a-z0-9]+)$/i) || [, ''])[1].toLowerCase(); return /^(ppt|pptx|key|odp)$/.test(x) ? 'slides' : /^(xls|xlsx|csv|numbers|ods)$/.test(x) ? 'sheet' : /^(png|jpe?g|gif|webp|heic|bmp|svg)$/.test(x) ? 'image' : 'doc'; };
   const FILES = [];
   ((FSD.raw.files && FSD.raw.files.files) || []).forEach(f => { if (!f || !C[f.course]) return; const name = withExt(f.name, f.ext);
-    FILES.push(FF('x' + f.id, name, f.course, kindOf(name), 'class', C[f.course].teacher || 'Your teacher', f.at ? FSD.fmt.dayLabel(f.at, NOW) : '', f.at ? (NOW - f.at) / 6e4 : 1e9, sizeOf(f.size), { raw: f, isNew: !!f.at && NOW - f.at < 3 * DAYMS, from: f.parentTitle || '' })); });
+    FILES.push(FF('x' + f.id, name, f.course, kindOf(name), 'class', C[f.course].teacher || 'Your teacher', f.at ? FSD.fmt.dayLabel(f.at, NOW) : '', f.at ? (NOW - f.at) / 6e4 : 1e9, sizeOf(f.size), { raw: f, isNew: !!f.at && NOW - f.at < 3 * DAYMS, from: f.parentTitle || '', tf: f.folder || '' })); });
   ((FSD.raw.submissions && FSD.raw.submissions.files) || []).forEach(f => { if (!f || !C[f.course]) return; const name = withExt(f.name, f.ext);
     FILES.push(FF('s' + f.id + '-' + f.revision, name, f.course, kindOf(name), 'turned', 'You', f.at ? 'Turned in ' + FSD.fmt.dayLabel(f.at, NOW) : 'Turned in', f.at ? (NOW - f.at) / 6e4 : 1e9, sizeOf(f.size), { raw: f, from: f.assignmentTitle || '' })); });
   // your apps' files go in when they load; they're not tied to a class, so they show under the first one's colors
@@ -4310,7 +4315,9 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const GKIND = { gdoc: 'doc', gsheet: 'sheet', gslides: 'slides', gdraw: 'image', design: 'design' };
   const APP_NAME = { gdoc: 'Google Docs', gsheet: 'Google Sheets', gslides: 'Google Slides', gdraw: 'Google Drawings', design: 'Canva design' };
   const APPLOAD = {};   // app -> 'loading' | 'ok' | 'connect' | 'failed'
-  const T_FOLDERS = [];   // the class folders live on each course hub's Materials tab
+  // the classes' own folders (2026-11-06, Martin: folders didn't show up in Files): each class's top-level folders,
+  // [id, class, name, color], with the files that are in them
+  const T_FOLDERS = ((FSD.raw.files && FSD.raw.files.folders) || []).filter(f => f && f.id && C[f.course]).map(f => [String(f.id), f.course, f.title || 'Folder', f.color || '']);
   // quiet: when the page opens, so a connected app's files are in All files (with their previews) right away.
   // No sign-in window and no error message; if it can't, opening the app's place asks as before.
   function appLoad(k, quiet) {
@@ -4333,6 +4340,14 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   // your own folders (on this device): their names, and which file is in which
   const MY_FOLDERS = store.get('fsfiles_myfolders') || [];
   const IN_FOLDER = store.get('fsfiles_infolder') || {};
+  // Folder colors (2026-11-06, Martin: right-click a folder to change its color or delete it): the same colors and the
+  // same saved choices as a class's Materials tab (fshub_foldercolors; a class folder is 'f' + its id there, yours 'my:' + id)
+  const FOLDER_COLORS = [['blue', 'Blue', '#226699', '#55ACEE'], ['red', 'Red', '#b8352f', '#ff6b5e'], ['orange', 'Orange', '#c2560c', '#ff9a3c'], ['yellow', 'Yellow', '#a87800', '#ffc933'],
+    ['green', 'Green', '#1f7a4d', '#3fc380'], ['teal', 'Teal', '#0b737a', '#2fc4c9'], ['purple', 'Purple', '#5b3fb0', '#9b7bff'], ['pink', 'Pink', '#b0336f', '#ff7ab8'], ['gray', 'Gray', '#4a4d5e', '#9a9db0']];
+  const FCOLOR = store.get('fshub_foldercolors') || {};
+  const fKey = p => p.startsWith('t:') ? 'f' + p.slice(2) : 'my:' + p.slice(2);
+  const fcOf = p => FOLDER_COLORS.find(c => c[0] === FCOLOR[fKey(p)]) || FOLDER_COLORS[0];
+  const folderIcon = p => { const [, , back, front] = fcOf(p); return (EMOJI_SVG['📁'] || '').replace('fill="#269"', `fill="${back}"`).split('fill="#55ACEE"').join(`fill="${front}"`); };
   FILES.forEach(f => { if (IN_FOLDER[f.id]) f.folder = IN_FOLDER[f.id]; });
   const TYPES = [['doc', 'Documents'], ['slides', 'Slides'], ['sheet', 'Spreadsheets'], ['image', 'Images'], ['design', 'Designs']];
   // where the files are from: one place at a time (a class or a folder of yours counts as a place too)
@@ -4362,10 +4377,12 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
 
   // ---------- a picture of each file, drawn from what kind it is ----------
   // a class PDF's real first page over the drawn one, once it's in view (2026-11-03, FSX.prev.thumbs)
-  const classPdf = f => f.src === 'class' && f.raw && /\.pdf$/i.test(f.name);
+  // and your own turned-in PDFs and pictures too (2026-11-06, Martin: most files had no preview)
+  const classPdf = f => (f.src === 'class' || f.src === 'turned') && f.raw && /\.pdf$/i.test(f.name);
+  const viewHref = f => f.src === 'turned' ? `${FSX.apiBase}/data/submission-file?section=${encodeURIComponent(f.raw.course)}&assignment=${encodeURIComponent(f.raw.assignment)}&revision=${encodeURIComponent(f.raw.revision)}&file=${encodeURIComponent(f.raw.id)}&view=1` : FSX.fileUrl(f.raw, true);
   function thumb(f) {
-    if (classPdf(f) && !thumb.plain) { thumb.plain = true; const d = thumb(f); thumb.plain = false; return `${d}<span class="fl-pth" data-pthumb="${esc(FSX.fileUrl(f.raw, true))}"></span>`; }
-    if (f.kind === 'image' && f.raw && f.src === 'class') return `<img class="fl-img" src="${esc(FSX.fileUrl(f.raw, true))}" alt="" loading="lazy">`;
+    if (classPdf(f) && !thumb.plain) { thumb.plain = true; const d = thumb(f); thumb.plain = false; return `${d}<span class="fl-pth" data-pthumb="${esc(viewHref(f))}"></span>`; }
+    if (f.kind === 'image' && f.raw && (f.src === 'class' || f.src === 'turned')) return `<img class="fl-img" src="${esc(viewHref(f))}" alt="" loading="lazy">`;
     // Google Drive and Canva send their own preview picture; the drawn one stays under it in case the link has run out
     if (f.item && f.item.thumb && !thumb.plain) { thumb.plain = true; const d = thumb(f); thumb.plain = false; return `${d}<img class="fl-img fl-cimg" src="${esc(thumbAt(f.item.thumb, 480))}" alt="" loading="lazy" referrerpolicy="no-referrer" data-thumb-fallback>`; }
     const c = C[f.c].color, h = hashOf(f.name), w = i => 34 + ((h >> (i * 3)) % 5) * 7, line = (x, y, l, o = .14) => `<rect x="${x}" y="${y}" width="${l}" height="4" rx="2" fill="#1f2230" opacity="${o}"/>`;
@@ -4467,9 +4484,9 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     const cls = FL.place.startsWith('c:') ? FL.place.slice(2) : '', n = fn => FILES.filter(fn).length;
     const tf = T_FOLDERS.filter(([, c]) => !cls || c === cls).sort((a, b) => CLASSES.findIndex(c => c.id === a[1]) - CLASSES.findIndex(c => c.id === b[1]));
     const mine = cls ? [] : MY_FOLDERS, nf = k => `${k} ${k === 1 ? 'file' : 'files'}`;
-    $('flFoldSub').textContent = 'Yours, on this device';
-    $('flFolders').innerHTML = flFoldSort([...tf.map(([id, c, name]) => `<div class="fl-fold" role="button" tabindex="0" data-flplace="t:${id}" style="--c:${C[c].color}"><span class="fl-ftile tcls" aria-hidden="true">${EMOJI_SVG['📁'] || ''}${badge(C[c])}</span><span class="tx"><b>${esc(name)}</b><small>${nf(n(f => f.tf === id))} · ${esc(cls ? C[c].teacher : C[c].name)}</small></span>${starBtn('t:' + id, name)}</div>`),
-      ...mine.map(([id, name]) => `<div class="fl-fold" role="button" tabindex="0" data-flplace="f:${id}"><span class="fl-ftile" aria-hidden="true">${EMOJI_SVG['📁'] || ''}</span><span class="tx"><b>${esc(name)}</b><small>${nf(n(f => f.folder === id))} · Yours</small></span>${starBtn('f:' + id, name)}</div>`)]).join('');
+    $('flFoldSub').textContent = tf.length && mine.length ? 'Your classes\' folders, and yours on this device' : tf.length ? 'Your classes\' folders' : 'Yours, on this device';
+    $('flFolders').innerHTML = flFoldSort([...tf.map(([id, c, name]) => `<div class="fl-fold" role="button" tabindex="0" data-flplace="t:${id}" style="--c:${C[c].color}"><span class="fl-ftile tcls" aria-hidden="true">${folderIcon('t:' + id)}${badge(C[c])}</span><span class="tx"><b>${esc(name)}</b><small>${nf(n(f => f.tf === id))} · ${esc(cls ? C[c].teacher : C[c].name)}</small></span>${starBtn('t:' + id, name)}</div>`),
+      ...mine.map(([id, name]) => `<div class="fl-fold" role="button" tabindex="0" data-flplace="f:${id}"><span class="fl-ftile" aria-hidden="true">${folderIcon('f:' + id)}</span><span class="tx"><b>${esc(name)}</b><small>${nf(n(f => f.folder === id))} · Yours</small></span>${starBtn('f:' + id, name)}</div>`)]).join('');
     [...$('flFolders').children].forEach(c => { const p = c.dataset.flplace, k = tf.findIndex(t => 't:' + t[0] === p); c.dataset.fo = k >= 0 ? k : tf.length + mine.findIndex(m => 'f:' + m[0] === p); });
     return tf.length + mine.length;
   }
@@ -5031,7 +5048,9 @@ window.AveragesHelp = {
   const VIEW_RE = /\.(pdf|png|jpe?g|gif|webp|txt|mp3|m4a|wav|mp4|webm|mov)$/i;
   function openReal(f) {
     if (f.src === 'class') { FSX.newTab(VIEW_RE.test(f.name) ? FSX.fileUrl(f.raw, true) : FSX.schoology(`/course/${encodeURIComponent(f.raw.course)}/materials`)); return; }
-    if (f.src === 'turned') { if (VIEW_RE.test(f.name)) FSX.newTab(fileHref(f)); else FSX.go('course-hub', { course: f.c }, 'materials/' + f.raw.assignment); return; }
+    // your own turned-in files open in a new tab too, every kind (2026-11-06, Martin: some opened the assignment's
+    // page instead); one the browser can't show downloads from there
+    if (f.src === 'turned') { FSX.newTab(VIEW_RE.test(f.name) ? viewHref(f) : fileHref(f)); return; }
     if (f.src === 'canva') {
       // the tab opens inside the click; Canva's address comes a moment later
       const w = window.open('about:blank', '_blank'); toast('Opening Canva…');
@@ -5152,6 +5171,53 @@ window.AveragesHelp = {
       });
     });
   }
+  // ---------- right-click a folder: its color, open it, and (yours) delete it ----------
+  let foldMenu = null, foldFrom = null;
+  function foldMenuClose(back) { if (!foldMenu) return; foldMenu.remove(); foldMenu = null; if (back && foldFrom && foldFrom.isConnected) foldFrom.focus({ preventScroll: true }); foldFrom = null; }
+  function foldMenuOpen(p, x, y, from) {
+    foldMenuClose(); foldFrom = from;
+    const name = placeName(p), cur = fcOf(p)[0], mine = p.startsWith('f:');
+    document.body.insertAdjacentHTML('beforeend', `<div class="pop narrow card-pop fold-pop" role="menu" aria-label="${esc(name)} options">
+      <div class="lbl">${esc(name)}</div>
+      <div class="fc-h">Folder color</div>
+      <div class="fc-row" role="group" aria-label="Folder color">${FOLDER_COLORS.map(([k, label, back, front]) => `<button class="fc-sw${cur === k ? ' on' : ''}" data-fcolor="${k}" style="--fb:${back};--ff:${front}" aria-label="${label}" aria-pressed="${cur === k}" title="${label}"></button>`).join('')}</div>
+      <button class="mi" role="menuitem" data-fopen="${esc(p)}"><span class="tx"><b>Open folder</b></span></button>
+      ${cur !== 'blue' ? `<button class="mi" role="menuitem" data-fcolor="blue"><span class="tx"><b>Reset color</b></span></button>` : ''}
+      ${mine ? `<button class="mi danger" role="menuitem" data-fdel="${esc(p)}"><span class="tx"><b>Delete folder</b><small>Its files stay in All files</small></span></button>` : ''}</div>`);
+    foldMenu = document.body.lastElementChild; foldMenu.dataset.for = p;
+    const w = foldMenu.offsetWidth, h = foldMenu.offsetHeight;
+    foldMenu.style.left = Math.max(8, Math.min(x, innerWidth - w - 8)) + 'px'; foldMenu.style.top = Math.max(8, Math.min(y, innerHeight - h - 8)) + 'px';
+    (foldMenu.querySelector('.fc-sw.on') || foldMenu.querySelector('.fc-sw')).focus({ preventScroll: true });
+  }
+  document.addEventListener('contextmenu', e => {
+    const f = e.target.closest('.fl-fold[data-flplace]'); if (!f || f.hasAttribute('data-skel')) return;
+    e.preventDefault(); let x = e.clientX, y = e.clientY; if (!x && !y) { const r = f.getBoundingClientRect(); x = r.left + 24; y = r.top + 24; }
+    foldMenuOpen(f.dataset.flplace, x, y, f);
+  });
+  document.addEventListener('click', e => {
+    if (!foldMenu) return;
+    const sw = e.target.closest('[data-fcolor]'), op = e.target.closest('[data-fopen]'), del = e.target.closest('[data-fdel]');
+    if (sw) { const p = foldMenu.dataset.for, k = sw.dataset.fcolor; foldMenuClose(true); if (k === 'blue') delete FCOLOR[fKey(p)]; else FCOLOR[fKey(p)] = k; store.set('fshub_foldercolors', FCOLOR); flRender(false); toast(`${placeName(p)} is ${fcOf(p)[1].toLowerCase()} now.`); return; }
+    if (op) { const p = op.dataset.fopen; foldMenuClose(); FL.place = p; flRender(true); return; }
+    if (del) {
+      const p = del.dataset.fdel, id = p.slice(2), name = placeName(p); foldMenuClose();
+      const i = MY_FOLDERS.findIndex(m => m[0] === id); if (i < 0) return;
+      MY_FOLDERS.splice(i, 1); store.set('fsfiles_myfolders', MY_FOLDERS);
+      Object.keys(IN_FOLDER).forEach(k => { if (IN_FOLDER[k] === id) delete IN_FOLDER[k]; }); store.set('fsfiles_infolder', IN_FOLDER);
+      FILES.forEach(f => { if (f.folder === id) delete f.folder; }); delete FCOLOR[fKey(p)]; store.set('fshub_foldercolors', FCOLOR);
+      if (FL.place === p) FL.place = 'all';
+      flRender(true); toast(`Deleted ${name}. Its files are still in All files.`); return;
+    }
+    if (!foldMenu.contains(e.target)) foldMenuClose();
+  }, true);
+  document.addEventListener('keydown', e => {
+    if (!foldMenu) return;
+    if (e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); foldMenuClose(true); return; }
+    const sws = [...foldMenu.querySelectorAll('.fc-sw')], i = sws.indexOf(document.activeElement);
+    if (i >= 0 && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) { e.preventDefault(); sws[(i + (e.key === 'ArrowRight' ? 1 : -1) + sws.length) % sws.length].focus(); }
+    if (e.key === 'ArrowDown' && i >= 0) { e.preventDefault(); const mi = foldMenu.querySelector('.mi'); if (mi) mi.focus(); }
+  }, true);
+  addEventListener('resize', () => foldMenuClose());
   $('refresh').addEventListener('click', () => syncRun(false));
   window.addEventListener('fs:ready', () => syncRun(true), { once: true });
 
@@ -5295,7 +5361,7 @@ window.AveragesHelp = {
       }
     }
     if (spot === 'end') { el.style.position = el.style.left = el.style.top = el.style.margin = ''; el.style.setProperty('--tx', el.dataset.tx || '0px'); el.style.setProperty('--ty', el.dataset.ty || '0px'); fitEnd(el); }
-    el.dataset.spot = spot; el.dataset.fitted = '1';
+    el.dataset.spot = spot; el.dataset.fitted = '1'; el.dataset.shown = '1';
   }
   let rz = 0; // the layout changed: land every sticker again
   const refitAll = ms => { clearTimeout(rz); rz = setTimeout(() => document.querySelectorAll('.newtag[data-fitted]').forEach(el => { delete el.dataset.fitted; fit(el); }), ms); };
@@ -5317,6 +5383,7 @@ window.AveragesHelp = {
     el.style.setProperty('--tx', ((h >> 7) % 3) - 1 + 'px');
     el.dataset.ty = el.style.getPropertyValue('--ty'); el.dataset.tx = el.style.getPropertyValue('--tx');
     el.dataset.tilted = '1';
+    setTimeout(() => { el.dataset.shown = '1'; }, 3000); // never left hidden if it can't be measured
     if (ro) ro.observe(el); else requestAnimationFrame(() => fit(el)); // fit once it's on screen and has a size
   };
   const run = root => { if (root.querySelectorAll) root.querySelectorAll('.newtag:not([data-tilted])').forEach(place); };

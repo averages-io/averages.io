@@ -81,7 +81,7 @@
       if (!j || !j.seen || typeof j.seen !== 'object') return;
       const local = readSeen(), out = Object.assign({}, local);
       let added = false, theirsMissing = false;
-      ['u', 'g', 'm'].forEach((k) => {
+      ['u', 'g', 'm', 'a', 'f'].forEach((k) => {
         const mine = Array.isArray(local[k]) ? local[k].map(String) : [], theirs = Array.isArray(j.seen[k]) ? j.seen[k].map(String) : [];
         const all = [...new Set([...mine, ...theirs])].slice(-SEEN_CAP);
         if (all.length > mine.length) added = true;
@@ -148,6 +148,24 @@
   }
   const messagesOn = () => !(document.documentElement.getAttribute('data-feature-off') || '').split(/\s+/).includes('messaging-features');
 
+  /** The work this device has seen, and when it first did: { id: ms } for what showed up after the first visit (new). */
+  function knownWork(ids) {
+    let v = null; const now = Date.now();
+    try { v = JSON.parse(localStorage.getItem('averages_known_work') || 'null'); } catch { v = null; }
+    const first = !v || typeof v !== 'object' || !v.ids || typeof v.ids !== 'object';
+    if (first) v = { at: now, ids: {} };
+    let changed = first; const out = {};
+    ids.forEach((id) => {
+      if (!(id in v.ids)) { v.ids[id] = first ? 0 : now; changed = true; }
+      if (v.ids[id] && now - v.ids[id] < 7 * 864e5) out[id] = v.ids[id];
+    });
+    if (changed) {
+      const k = Object.keys(v.ids); if (k.length > 600) k.slice(0, k.length - 600).forEach((x) => { delete v.ids[x]; });
+      try { localStorage.setItem('averages_known_work', JSON.stringify(v)); } catch { /* full or off */ }
+    }
+    return out;
+  }
+
   function sections() {
     const d = data();
     const courses = Array.isArray(d.COURSES) ? d.COURSES : [];
@@ -190,6 +208,28 @@
             title: r.title || 'Assignment', sub: c ? c.name : '', when: r.when, label: 'Grade',
             score: pct || r.letter || '',
             href: '/gradebook?' + courseQ(r.courseId),
+          };
+        }),
+      });
+    }
+
+    // New work (2026-11-06, Martin: the background check should catch more than grades, updates and messages).
+    // Work has no "posted" time, so this device remembers the work it has seen (averages_known_work, shared with
+    // Fullscreen): anything that shows up after the first visit is new for a week.
+    const work = [].concat(d.OVERDUE || [], d.TODAY || [], d.UPCOMING || []).filter((a) => a && a.id && course(a.courseId));
+    const kw = knownWork(work.map((a) => String(a.id)));
+    const fresh = [], had = new Set();
+    work.forEach((a) => { const id = String(a.id); if (kw[id] && !had.has(id)) { had.add(id); fresh.push(a); } });
+    if (fresh.length) {
+      out.push({
+        key: 'a', title: 'New work', tab: 'New work', all: { label: 'See all assignments', href: '/assignments' },
+        items: fresh.slice(0, CAP).map((a) => {
+          const c = course(a.courseId), id = String(a.id);
+          return {
+            kind: 'a', id, unread: !Seen.has('a', id),
+            mark: initial(c ? c.name : 'A'), color: (c && c.color) || '#6b6d82',
+            title: a.title || 'Assignment', sub: c ? c.name : '', when: a.due ? 'Due ' + a.due : '', label: 'New assignment',
+            href: '/assignment?section=' + encodeURIComponent(a.courseId) + '&id=' + encodeURIComponent(id),
           };
         }),
       });
@@ -322,8 +362,9 @@
     if (!N || mode !== 'live') return;
     N.notify(unreadItems.filter((i) => i.id).map((i) => ({
       key: i.kind + ':' + i.id,
-      title: i.kind === 'g' ? (i.sub ? 'New grade in ' + i.sub : 'New grade') : i.kind === 'u' ? (i.title || 'Your teacher') + (i.sub ? ' posted in ' + i.sub : ' posted an update') : (i.title && i.title !== 'Teacher' ? 'Message from ' + i.title : 'New message from your teacher'),
-      body: i.kind === 'g' ? (i.title || 'Assignment') + (i.score ? ': ' + i.score : '') : i.body || '',
+      icon: { g: 'grade', u: 'update', m: 'message', a: 'new', f: 'material' }[i.kind],
+      title: i.kind === 'a' ? 'New assignment' + (i.sub ? ' in ' + i.sub : '') : i.kind === 'f' ? 'New file' + (i.sub ? ' in ' + i.sub : '') : i.kind === 'g' ? (i.sub ? 'New grade in ' + i.sub : 'New grade') : i.kind === 'u' ? (i.title || 'Your teacher') + (i.sub ? ' posted in ' + i.sub : ' posted an update') : (i.title && i.title !== 'Teacher' ? 'Message from ' + i.title : 'New message from your teacher'),
+      body: i.kind === 'g' ? (i.title || 'Assignment') + (i.score ? ': ' + i.score : '') : i.kind === 'a' || i.kind === 'f' ? i.title || '' : i.body || '',
       onClick: () => { Seen.mark(i.kind, i.id); window.location.href = i.href; },
     })), { openAll: () => { if (panel && panel.hidden) open(); } });
   }
@@ -339,14 +380,15 @@
   }
   function backgroundCheck() {
     const av = window.__AVERAGES__;
-    if (checking || mode !== 'live' || document.hidden || !av || !av.data) return;
+    // in a background tab only when this browser shows Averages' notifications (they then come as system ones)
+    if (checking || mode !== 'live' || (document.hidden && !notifAllowed()) || !av || !av.data) return;
     checking = true; checkedAt = Date.now();
     let tz = '';
     try { tz = (window.averagesTimeZone ? window.averagesTimeZone() : Intl.DateTimeFormat().resolvedOptions().timeZone) || ''; } catch { /* the API guesses */ }
     Promise.all([getJSON('/data/bundle' + (tz ? '?tz=' + encodeURIComponent(tz) : '')), getJSON('/data/updates')]).then(([b, u]) => {
       const d = av.data;
       if (b && Array.isArray(b.COURSES)) {
-        ['RECENT_GRADES', 'MESSAGES'].forEach((k) => {
+        ['RECENT_GRADES', 'MESSAGES', 'OVERDUE', 'TODAY', 'UPCOMING'].forEach((k) => {
           if (!Array.isArray(b[k])) return;
           if (Array.isArray(d[k])) d[k].splice(0, d[k].length, ...b[k]); else d[k] = b[k];
         });
@@ -356,9 +398,13 @@
       render();
     }).finally(() => { checking = false; });
   }
+  function notifAllowed() { try { return 'Notification' in window && Notification.permission === 'granted'; } catch { return false; } }
   function startChecks() {
     if (checkTimer || mode !== 'live') return;
     checkedAt = Date.now();
+    // A page that opened with this tab's saved copy (older than a minute) checks a few seconds in, not 5 minutes later
+    // (2026-11-06, Martin: "after the sync load, check in the background").
+    try { const at = (JSON.parse(sessionStorage.getItem('schoolagy_bundle_cache') || 'null') || {}).at || 0; if (at && Date.now() - at > 60000) setTimeout(backgroundCheck, 4000); } catch { /* none */ }
     checkTimer = setInterval(() => { if (Date.now() - checkedAt >= CHECK_EVERY) backgroundCheck(); }, 30000);
     document.addEventListener('visibilitychange', () => { if (!document.hidden && Date.now() - checkedAt >= CHECK_EVERY) backgroundCheck(); });
   }

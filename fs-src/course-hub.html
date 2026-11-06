@@ -1151,6 +1151,8 @@
     /* icon tiles wiggle when you point at their row */
     body:not(.potato-mode) :is(.arow, .mrow, .mp-row, .ag-row, .nt-row, .pin, .gr-row, .crow, tr, .item, .mi):hover :is(.ktile, .nt-tile, .badge, .emo) { animation: lifeWiggle .5s var(--spring); }
     body:not(.potato-mode) .newtag { animation: lifeSticker .5s var(--spring) backwards; }
+    /* hidden until it has landed in its spot (2026-11-06, Martin's video: stickers showed by the name, then jumped) */
+    .newtag[data-tilted]:not([data-shown]) { visibility: hidden; animation: none !important; }
   }
   @keyframes lifeWiggle { 0% { transform: none; } 30% { transform: rotate(-9deg) scale(1.08); } 60% { transform: rotate(6deg) scale(1.08); } 100% { transform: none; } }
   @keyframes lifeSticker { from { transform: rotate(-14deg) scale(.6); opacity: 0; } }
@@ -1784,7 +1786,8 @@
   .ci-t > div { flex: 1; min-width: 0; display: flex; flex-direction: column; }
   .ci-t b { font-weight: 800; }
   .ci-t small { color: var(--muted); font-size: 13px; font-weight: 700; }
-  .ci-av { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: var(--ink-2); color: #ffffff; font-weight: 900; font-size: 18px; flex: none; }
+  /* a teacher: the rounded square and class colors the Contacts list uses (2026-11-06, Martin: it was round here) */
+  .ci-av { width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; background: color-mix(in srgb, var(--c, var(--ink-2)) 18%, var(--field)); color: color-mix(in srgb, var(--c, var(--ink-2)) 80%, #000); font-weight: 900; font-size: 14px; letter-spacing: .02em; flex: none; }
   .ci-dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px 16px; margin: 0; font-size: 14px; }
   .ci-dl dt { color: var(--muted); font-weight: 700; }
   .ci-dl dd { margin: 0; font-weight: 800; }
@@ -3159,6 +3162,15 @@
   @media (max-width: 640px) { .mplb-body { padding: 0 8px 16px; } .mplb .lbl { display: none; } }
   .mp-slow { display: block; width: fit-content; margin: 12px auto 0; padding: 8px 14px; border-radius: 10px; background: var(--panel); color: var(--muted); font-weight: 700; font-size: 13px; box-shadow: 0 1px 3px rgba(20,20,40,.12); text-align: center; }
   .ti-sacts { margin-left: auto; display: flex; gap: 6px; flex: none; } .ti-sacts .btn { text-decoration: none; } .ti-sacts svg.i { width: 16px; height: 16px; }
+  .g-na { color: var(--muted) !important; }   /* nothing graded yet (2026-11-06) */
+  .gd-nodata { min-height: 160px; display: grid; place-content: center; gap: 4px; text-align: center; color: var(--muted); font-size: 13px; font-weight: 600; }
+  .gd-nodata b { color: var(--ink-2); font-size: 15px; font-weight: 800; }
+  /* the teacher's comment on a graded assignment (2026-11-06, Martin: it showed in the grades list, not here) */
+  .aw-tnote { display: flex; gap: 8px; margin: 4px 0 16px; padding: 12px; border-radius: 12px; background: var(--inner); color: var(--ink-2); font-size: 14px; font-weight: 600; line-height: 1.45; }
+  .aw-tnote svg.i { width: 18px; height: 18px; flex: none; margin-top: 1px; color: var(--muted); }
+  .aw-tnote p { margin: 0; white-space: pre-wrap; }
+  /* students are round, teachers keep the rounded square (2026-11-06, Martin) */
+  .mb-ava:not(.tch), .mb-hero .mb-ava:not(.tch) { border-radius: 50% !important; }
 </style>
 </head>
 <body>
@@ -3783,22 +3795,25 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     const kind = a ? (a.kind === 'test' ? 'test' : 'assignment') : /quiz|test|exam/i.test(title || g.title || '') ? 'test' : 'assignment';
     return { id: String(id), c: ME.id, kind, disc: !!(a && a.disc), outside: !!(a && a.outside), noDrop: !!(a && a.noDrop), name: (a && a.t) || g.title || title || 'Assignment', unit, desc: '', cat: catOf(id),
       pts: (a && a.pts) || (g.points > 0 ? g.points : null), dueAt, due: offOf(dueAt), dueTxt: dueTxtOf(dueAt),
-      got: graded ? g.score : a && a.got != null ? a.got : undefined, gradedAt: g.gradedAt || 0, note: g.comment || (wk && wk.note) || '',
+      got: graded ? g.score : a && a.got != null ? a.got : undefined, gradedAt: g.gradedAt || 0, note: g.comment || (wk && wk.note) || '', tnote: g.comment || (wk && wk.note) || '',
       turned: a && a.turned ? a.turned : undefined, sent: a && a.sent ? a.sent : undefined, missing: !!(g.missing || (a && a.st === 'missing')),
       files: handouts.length ? handouts.map(f => ({ name: withExt(f.name, f.ext), size: sizeOf(f.size), f })) : undefined,
       when: '', at: g.gradedAt || 0, ago: dueAt ? Math.abs(NOW - dueAt) / 6e4 : g.gradedAt ? (NOW - g.gradedAt) / 6e4 : 1e9,
-      sgy: SGY(kind === 'test' ? `/course/${ME.id}/assessments/${id}` : `/assignment/${id}/info`) };
+      sgy: SGY(kind === 'test' ? `/course/${ME.id}/assessments/${id}` : a && a.disc ? `/course/${ME.id}/materials/discussion/view/${id}` : `/assignment/${id}/info`) };
   };
   const done = new Set();
   (Array.isArray(RAWF.items) ? RAWF.items : []).forEach(it => {
     const [kind, id] = String(it.key || '').split(':'); if (!id || done.has(it.key)) return; done.add(it.key);
     const unit = it.folder && UNIT[it.folder] ? UNIT[it.folder] : 0;
-    if (kind === 'assignment') { MATERIALS.push(asgMat(id, it.title, unit)); return; }
+    // a graded discussion is work like an assignment (2026-11-06): its due date, grade and Schoology link
+    if (kind === 'assignment' || (kind === 'discussion' && ASG.some(a => a.id === id))) { MATERIALS.push(asgMat(id, it.title, unit)); return; }
     const fs = kind === 'document' ? filesOf('document', id) : [];
     if (fs.length) { fs.forEach(f => MATERIALS.push(fileMat(f, unit, fs.length > 1 || f.name !== it.title ? it.title : ''))); return; }
     // a link, page, discussion or a document without a file: it opens on Schoology
-    MATERIALS.push({ id: 'k' + id, kind: 'link', name: it.title || 'On Schoology', unit, desc: kind === 'discussion' ? 'Discussion' : kind === 'page' ? 'Page' : '', host: 'Schoology', when: '', at: 0, ago: 1e9,
-      sgy: SGY(`/course/${ME.id}/materials${it.folder ? '?f=' + it.folder : ''}`) });
+    // straight to the item on Schoology when we know its address (2026-11-06): a page, a discussion, a link
+    const SGY_PATH = { page: `/page/${id}`, discussion: `/course/${ME.id}/materials/discussion/view/${id}`, document: `/course/${ME.id}/materials/link/view/${id}`, album: `/album/${id}`, 'media-album': `/album/${id}` };
+    MATERIALS.push({ id: 'k' + id, kind: 'link', page: kind === 'page', disc: kind === 'discussion', name: it.title || 'On Schoology', unit, desc: kind === 'discussion' ? 'Discussion' : kind === 'page' ? 'Page' : kind === 'album' || kind === 'media-album' ? 'Album' : '', host: 'Schoology', when: '', at: 0, ago: 1e9,
+      sgy: SGY(SGY_PATH[kind] || `/course/${ME.id}/materials${it.folder ? '?f=' + it.folder : ''}`) });
   });
   // what the folders didn't list (no folders, or more than we read): documents' files, then every assignment we know of
   FILES.filter(f => f.kind === 'document' && !MATERIALS.some(m => m.f && m.f.id === f.id)).forEach(f => MATERIALS.push(fileMat(f, unitOfKey('document:' + f.parent), f.parentTitle !== f.name ? f.parentTitle : '')));
@@ -3820,6 +3835,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const mateHue = s => [...s].reduce((a, c) => a + c.charCodeAt(0) * 37, 0) % 360; // the same person gets the same color everywhere
 
   const KIND = { folder: ['Folder', '📁'], file: ['File', null], link: ['On Schoology', null], assignment: ['Assignment', '📝'], test: ['Test', '📋'], quiz: ['Quiz', '📋'] };
+  const kindL = m => m.disc ? 'Discussion' : m.page ? 'Page' : KIND[m.kind][0];   // discussions and pages say so (2026-11-06)
   // folder colors you pick with right-click (saved on this device); blue is the default
   const FOLDER_COLORS = [['blue', 'Blue', '#226699', '#55ACEE'], ['red', 'Red', '#b8352f', '#ff6b5e'], ['orange', 'Orange', '#c2560c', '#ff9a3c'], ['yellow', 'Yellow', '#a87800', '#ffc933'],
     ['green', 'Green', '#1f7a4d', '#3fc380'], ['teal', 'Teal', '#0b737a', '#2fc4c9'], ['purple', 'Purple', '#5b3fb0', '#9b7bff'], ['pink', 'Pink', '#b0336f', '#ff7ab8'], ['gray', 'Gray', '#4a4d5e', '#9a9db0']];
@@ -3845,7 +3861,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
 
   // ---------- pinned ----------
   const renderPins = () => $('pins').innerHTML = MATERIALS.filter(m => m.pin).map(m => `<button class="pin avfi-host" ${m.kind === 'folder' ? `data-pinfold="${unitOf(m)}"` : matAttr(m)}>
-      <span class="pin-top">${tile(m)}<b>${esc(m.name)}</b><span class="kind">${KIND[m.kind][0]}</span></span>
+      <span class="pin-top">${tile(m)}<b>${esc(m.name)}</b><span class="kind">${kindL(m)}</span></span>
       <p>${esc(m.desc)}</p>
       <span class="pin-foot">${m.dueTxt ? `<span>Due ${esc(m.dueTxt)}</span>` : m.size ? `<span>${esc(m.size)}</span>` : m.items ? `<span>${m.items} items</span>` : ''}${m.unit ? `<span>${esc(FOLDER[m.unit])}</span>` : ''}${m.got != null ? status(m) : ''}</span>
     </button>`).join('');
@@ -3897,7 +3913,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const EMPTY = MATERIALS.length ? `<div class="m-empty"><b>Nothing matches</b>Try another word, or set Type and Folder back to all.</div>` : `<div class="m-empty"><b>Nothing posted yet</b>What your teacher posts in Schoology shows up here.</div>`;
   let OPEN = store.get('fshub_open2') || {}, JUST_OPENED = null; // a folder that just opened draws closed for one frame, so its flap animates open
   const rowHtml = (m, inGroup) => `<button class="mrow avfi-host${m.id === SEL ? ' is-sel' : ''}" role="listitem" data-mid="${m.id}" aria-pressed="${m.id === SEL}">${tile(m)}
-        <span class="tx"><span class="t1"><b>${esc(m.name)}</b><span class="kind">${KIND[m.kind][0]}</span>${m.isNew ? '<span class="newtag">New</span>' : ''}</span>
+        <span class="tx"><span class="t1"><b>${esc(m.name)}</b><span class="kind">${kindL(m)}</span>${m.isNew ? '<span class="newtag">New</span>' : ''}</span>
         <span class="desc">${esc(m.desc)}</span><span class="meta">${meta(m, inGroup)}</span></span>
         <span class="end">${status(m)}</span></button>`;
   function renderList() {
@@ -3939,7 +3955,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (m.got != null && m.pts) { const p = m.got / m.pts * 100; return `<span class="ic-s"><b class="${gcls(p)}">${letter(p)}</b> ${m.got} / ${m.pts}</span>`; }
     if (m.due != null && m.due < 0 && !m.turned) return `<span class="ic-s late">Missing</span>`;
     if (m.due != null) return `<span class="ic-s ${m.due === 0 ? 'today' : ''}">${m.due === 0 ? 'Due today' : 'Due in ' + m.due + ' days'}</span>`;
-    return `<span class="ic-s">${m.isNew ? '<span class="newtag">New</span>' : ''}${esc(m.size || m.host || KIND[m.kind][0])}</span>`;
+    return `<span class="ic-s">${m.isNew ? '<span class="newtag">New</span>' : ''}${esc(m.size || m.host || kindL(m))}</span>`;
   };
   function renderIcons(q) {
     const inside = F.unit.v !== 'all' && F.unit.v !== '0' ? +F.unit.v : null, filtering = !!q || F.type.v !== 'all';
@@ -3987,7 +4003,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (m.got != null) rows.push(['Grade', m.pts ? `${letter(m.got / m.pts * 100)} · ${m.got} / ${m.pts}` : `${m.got} points`]);
     const turnIn = FSD.canTurnIn(m) && m.got == null && !m.turned;
     $('mDet').innerHTML = `<button class="mdet-x" data-detclose aria-label="Close details">${ico('x')}</button>${m.kind === 'file' ? pageFan(m) : bigIcon(m)}<h3>${esc(m.name)}</h3>
-      <div class="tags"><span class="kind">${KIND[m.kind][0]}</span>${m.isNew ? '<span class="newtag">New</span>' : ''}${status(m)}</div>
+      <div class="tags"><span class="kind">${kindL(m)}</span>${m.isNew ? '<span class="newtag">New</span>' : ''}${status(m)}</div>
       ${m.desc ? `<p>${esc(m.desc)}</p>` : ''}${m.files ? `<div class="att"><div class="att-h">${ico('clip')}Attachments<span>${m.files.length}</span></div>${m.files.map((f, i) => `<button class="att-f avfi-host" data-matgo="${m.id}a${i}"><span class="att-i">${window.AveragesFileIcons ? AveragesFileIcons.html(f.name, { size: 38 }) : ''}</span><span class="att-t"><b>${esc(f.name)}</b><small>${esc(f.size)}</small></span>${ico('up')}</button>`).join('')}</div>` : ''}<dl>${rows.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join('')}</dl>
       <div class="acts"><button class="btn ${turnIn ? '' : 'primary'}" data-open-mid="${m.id}">${m.kind === 'folder' ? 'Open folder' : m.kind === 'link' ? 'Open in Schoology' : 'Open'}</button>${turnIn ? `<button class="btn primary" data-turnin="${m.id}">Turn in</button>` : ''}</div>
       <div class="hint">Tip: double-click an item to open it.</div>`;
@@ -4100,6 +4116,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   }
   function renderGradeNow(animate) {
     const box = $('gNow').querySelector('.gr-now');
+    if (ME.none) { box.innerHTML = `<b class="g-na">N/A</b><span>No grades yet</span>`; return; }   // nothing graded yet (2026-11-06)
     if (!animate || calm()) { box.innerHTML = `<b class="${gcls(ME.pct)}">${letter(ME.pct)}</b><span>${ME.pct.toFixed(1)}%</span>`; return; }
     countUp(box, ME.pct, 900);
   }
@@ -4129,9 +4146,11 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   // the projected grade (Schoology's numbers and the bundle's projection), and the last few graded assignments behind it
   const PROJ = { predictedPct: Math.round((ME.predictedPct || ME.pct) * 10) / 10, items: WORK.filter(x => !x.missing && x.of > 0 && typeof x.got === 'number').slice(0, 5).reverse()
     .map(x => ({ t: x.n, got: x.got, of: x.of, date: x.at ? FSD.fmt.shortDate(x.at) : '' })) };
-  PROJ.points = PROJ.items.map(a => Math.round(a.got / a.of * 100)); PROJ.dates = PROJ.items.map(a => a.date);
+  PROJ.points = PROJ.items.map(a => Math.round(a.got / a.of * 100)); PROJ.dates = PROJ.items.map(a => a.date); PROJ.names = PROJ.items.map(a => a.t);
   function gradeChart(c) {
-    const labels = c.dates.concat(['Proj.']), values = c.points.concat([c.predictedPct]);
+    // scores graded the same day all said "Nov 3" (2026-11-06, Martin): then each is labeled by its assignment instead
+    const sameDay = new Set(c.dates).size < c.dates.length, nm = t => { const w = String(t || '').split(/[:\-–]/)[0].trim(); return w.length > 7 ? w.slice(0, 6).trim() + '…' : w; };
+    const labels = (sameDay && c.names && c.names.length === c.dates.length ? c.names.map(nm) : c.dates).concat(['Proj.']), values = c.points.concat([c.predictedPct]);
     const [lo, hi] = niceBounds(values);
     const W = Math.max(220, Math.round(c.w || 300)), H = 148, L = 40, R = 16, T = 16, B = 24, pw = W - L - R, ph = H - T - B;
     const x = i => L + (i / (labels.length - 1)) * pw, y = v => T + ph - ((v - lo) / (hi - lo)) * ph;
@@ -4224,7 +4243,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     const open = MATERIALS.filter(m => m.due != null && !m.turned && m.got == null && ['assignment', 'test', 'quiz'].includes(m.kind) && (m.due >= 0 || m.missing || FSD.canTurnIn(m))).sort((a, b) => a.due - b.due);
     const late = open.filter(m => m.due < 0), next = open.filter(m => m.due >= 0);
     const daysLate = m => { const d = -m.due; return d === 1 ? '1 day late' : d + ' days late'; };
-    const row = m => `<a class="arow${m.due < 0 ? ' late' : ''}" href="#" data-matgo="${m.id}">${tile(m)}<span class="tx"><b>${esc(m.name)}</b><small>${m.due < 0 ? `Was due ${esc(m.dueTxt.split(' · ')[0])} · ${daysLate(m)}` : [m.disc ? 'Discussion' : KIND[m.kind][0], m.pts ? m.pts + ' points' : ''].filter(Boolean).join(' · ')}</small></span>${m.due < 0 && FSD.canTurnIn(m) ? `<button class="btn sm primary" data-turnin="${m.id}">Turn in</button>` : status(m)}</a>`;
+    const row = m => `<a class="arow${m.due < 0 ? ' late' : ''}" href="#" data-matgo="${m.id}">${tile(m)}<span class="tx"><b>${esc(m.name)}</b><small>${m.due < 0 ? `Was due ${esc(m.dueTxt.split(' · ')[0])} · ${daysLate(m)}` : [kindL(m), m.pts ? m.pts + ' points' : ''].filter(Boolean).join(' · ')}</small></span>${m.due < 0 && FSD.canTurnIn(m) ? `<button class="btn sm primary" data-turnin="${m.id}">Turn in</button>` : status(m)}</a>`;
     $('coming').innerHTML = (late.length ? `<div class="grp bad">Missing<em>${late.length}</em></div>${late.map(row).join('')}` : '')
       + (next.length ? `${late.length ? '<div class="grp">Upcoming</div>' : ''}${next.map(row).join('')}` : '')
       + (open.length ? '' : `<div class="list-empty">Nothing assigned right now. You're all caught up.</div>`);
@@ -4699,7 +4718,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
           if (!hits.length) miss('turnin', 'assignment'); }
       } else if (cmd.k === 'open') {
         if (want.length) {
-          best(MATERIALS, want, m => m.name, 3).forEach(m => acts.push({ attrs: matAttr(m), lead: tile(m), t: `Open ${m.name}`, sub: [KIND[m.kind][0], m.unit ? FOLDER[m.unit] : ''].filter(Boolean).join(' · ') }));
+          best(MATERIALS, want, m => m.name, 3).forEach(m => acts.push({ attrs: matAttr(m), lead: tile(m), t: `Open ${m.name}`, sub: [kindL(m), m.unit ? FOLDER[m.unit] : ''].filter(Boolean).join(' · ') }));
           best(CLASSES.filter(c => c !== ME), want, c => c.name, 2).forEach(c => acts.push({ attrs: `data-go="${FSX.hubUrl(c.id)}"`, lead: badge(c), t: `Open ${c.name}`, sub: [c.teacher, 'Course hub'].filter(Boolean).join(' · ') }));
           best(PAGES, want, p => p, 2).forEach(p => acts.push({ attrs: `data-toast="the ${p} page"`, lead: ico(PAGE_ICON[p]), t: `Go to ${p}`, sub: '' }));
           acts.splice(3);
@@ -4765,7 +4784,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (!typed) {
       cmdkRaw = null;
       html = `<div class="lbl">Quick actions</div>` + ['turnin', 'msg', 'whatif', 'proj'].map(k => actRow(GEN[k]())).join('') +
-        `<div class="lbl">Suggested in ${esc(ME.name)}</div>` + MATERIALS.filter(m => m.pin).map(m => row(matAttr(m), tile(m), esc(m.name), [KIND[m.kind][0], m.unit ? FOLDER[m.unit] : ''].filter(Boolean).join(' · '))).join('') +
+        `<div class="lbl">Suggested in ${esc(ME.name)}</div>` + MATERIALS.filter(m => m.pin).map(m => row(matAttr(m), tile(m), esc(m.name), [kindL(m), m.unit ? FOLDER[m.unit] : ''].filter(Boolean).join(' · '))).join('') +
         `<div class="s-tip">${ico('bolt')}<span>Or type a command, like <b>message ${esc(TNAME)}</b>, <b>turn in</b> or <b>what if</b></span></div>`;
       res.innerHTML = html; const f = res.querySelector('.mi'); if (f) f.classList.add('sel'); return;
     }
@@ -4776,7 +4795,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     const { acts, q, mats, cls, pages } = R;
     if (fixed) html += `<div class="s-fix">Showing results for <b>${esc(fixed)}</b><button data-sraw="${esc(typed)}">Search for "${esc(typed)}" instead</button></div>`;
     if (acts.length) html += `<div class="lbl">Actions</div>` + acts.map(actRow).join('');
-    if (mats.length) html += `<div class="lbl">In ${esc(ME.name)}</div>` + mats.map(m => row(matAttr(m), tile(m), hl(m.name, q), [KIND[m.kind][0], m.unit ? FOLDER[m.unit] : ''].filter(Boolean).join(' · '))).join('');
+    if (mats.length) html += `<div class="lbl">In ${esc(ME.name)}</div>` + mats.map(m => row(matAttr(m), tile(m), hl(m.name, q), [kindL(m), m.unit ? FOLDER[m.unit] : ''].filter(Boolean).join(' · '))).join('');
     if (cls.length) html += `<div class="lbl">Classes</div>` + cls.map(c => row(`data-go="${FSX.hubUrl(c.id)}"`, badge(c), hl(c.name, q), [c.teacher, `${letter(c.pct)} · ${c.pct.toFixed(1)}%`].filter(Boolean).join(' · '))).join('');
     if (pages.length) html += `<div class="lbl">Go to</div>` + pages.map(p => row(`data-toast="the ${p} page"`, ico(PAGE_ICON[p]), hl(p, q), '')).join('');
     res.innerHTML = html || `<div class="cmdk-empty">Nothing for "${esc(typed)}". Try a material, a class, a page, or a command like "message ${esc(FSD.exampleTeacher)}".</div>`;
@@ -5308,7 +5327,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   // The real assignment: its description and points, and what's been turned in (every version, newest last).
   function tiEnsure(m) {
     if (!m || m._loaded) return; m._loaded = 'loading';
-    FST.load(m.c, m.id).then(r => {
+    FST.load(m.c, m.id, m.disc).then(r => {
       m._loaded = 'yes'; const d = r.detail;
       if (d) { if (d.description) m.desc = d.description; if (typeof d.maxPoints === 'number' && d.maxPoints > 0) m.pts = d.maxPoints; if (d.score && d.score.possible > 0) m.got = d.score.earned; }
       const revs = (r.revisions || []).filter(v => !v.draft), sentOf = v => (v.files || []).map(f => ({ name: f.name, size: FST.size(f.size) || 'File', url: subUrl(m, v.id, f.id) })).concat(v.text ? [{ name: 'Written answer', size: 'Text', write: true }] : []);
@@ -5575,7 +5594,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       <div class="ci-emos" id="ciEmos" role="listbox" aria-label="Pick an emoji for this course" hidden>${COURSE_EMOJI.map(k => `<button role="option" data-emo="${k}" aria-selected="${k === ME.emoji}" aria-label="${k}">${EMOJI_SVG[k]}</button>`).join('')}</div>
       <div class="ci-body">
         ${ME.teacher ? `<div class="ci-sec"><div class="ci-h">Teacher</div>
-          <div class="ci-t"><span class="ci-av" aria-hidden="true">${esc(FSD.fmt.initials(ME.teacher))}</span><div><b>${esc(ME.teacher)}</b><small>Message them in Averages.io or Schoology</small></div><button class="btn" data-hubmsg>${ico('msg')}Message</button></div></div>` : ''}
+          <div class="ci-t"><span class="ci-av" style="--c:${ME.color}" aria-hidden="true">${esc(FSD.fmt.initials(ME.teacher))}</span><div><b>${esc(ME.teacher)}</b><small>Message them in Averages.io or Schoology</small></div><button class="btn" data-hubmsg>${ico('msg')}Message</button></div></div>` : ''}
         <div class="ci-sec"><div class="ci-h">How your grade works</div>
           <div class="ci-w">${CATS.map(([n, w], i) => `<div><i style="background:${shades[i % shades.length]}"></i><b>${esc(n)}</b><span>${w}%</span></div>`).join('')}</div>
           <div class="ci-scale" aria-label="Grading scale">${scale}</div></div>
@@ -5709,7 +5728,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (ntEl) return;
     ntFrom = document.activeElement; ntScope = NT.here || 'all';
     document.body.insertAdjacentHTML('beforeend', `<div class="nt-scrim"><div class="nt-pop" role="dialog" aria-modal="true" aria-labelledby="ntTitle">
-      <div class="nt-top"><div class="nt-top-r"><div class="nt-tt"><h2 id="ntTitle">Notifications</h2><small>Since you were last here ${esc(NT_LAST)}</small></div>${ntSegHTML()}<button class="nt-x" data-ntclose aria-label="Close">${ico('x')}</button></div></div>
+      <div class="nt-top"><div class="nt-top-r"><div class="nt-tt"><h2 id="ntTitle">Notifications</h2><small>Last refreshed ${esc(FSX.lastRefreshed ? FSX.lastRefreshed() : NT_LAST)}</small></div>${ntSegHTML()}<button class="nt-x" data-ntclose aria-label="Close">${ico('x')}</button></div></div>
       <div class="nt-body">${ntBodyHTML()}</div><div class="nt-foot">${ntFootHTML()}</div></div></div>`);
     ntEl = document.body.lastElementChild;
     const b = $('ntBtn'); if (b) b.setAttribute('aria-expanded', 'true');
@@ -5739,7 +5758,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       return; }
     if (e.target.closest('[data-ntseen]')) { const n = ntLive(ntScope).length, label = ntScope === 'all' ? 'everything' : NT_CLASSES[ntScope]; ntLive(ntScope).forEach(it => NT_SEEN.add(it.id)); ntBadge(); NT.onChange(); ntRefresh(true); toast(`Marked ${label} as seen. That's ${n} ${n === 1 ? 'notification' : 'notifications'}.`); return; }
     const go = e.target.closest('[data-ntgo]');
-    if (go) { const it = NT_ITEMS.find(x => x.id === go.dataset.ntgo); NT_SEEN.add(it.id); ntBadge(); NT.onChange(); ntClose(true); if (it.k === 'msg') FSX.go('messages', { thread: it.thread }); else if (it.k === 'graded') FSX.hub(it.c, 'grades', { a: it.aid }); else FSX.hub(it.c, 'updates', { update: it.raw }); }
+    if (go) { const it = NT_ITEMS.find(x => x.id === go.dataset.ntgo); NT_SEEN.add(it.id); ntBadge(); NT.onChange(); ntClose(true); if (it.k === 'msg') FSX.go('messages', { thread: it.thread }); else if (it.k === 'new') FSX.newGo(it); else if (it.k === 'graded') FSX.hub(it.c, 'grades', { a: it.aid }); else FSX.hub(it.c, 'updates', { update: it.raw }); }
   }
   document.addEventListener('keydown', e => {
     if (!ntEl) return;
@@ -5869,7 +5888,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const mpWork = m => ['assignment', 'test', 'quiz'].includes(m.kind);
   const mpTypeOk = m => MP.type === 'all' || (MP.type === 'files' ? m.kind === 'file' : MP.type === 'work' ? mpWork(m) : m.kind === 'link');
   const mpExt = m => (m.name.match(/\.(\w+)$/) || [])[1];
-  const mpKind = m => m.kind === 'folder' ? 'Folder' : m.kind === 'file' ? ({ pdf: 'PDF', xlsx: 'Spreadsheet', docx: 'Document', pptx: 'Slides' }[(mpExt(m) || '').toLowerCase()] || 'File') : KIND[m.kind][0];
+  const mpKind = m => m.kind === 'folder' ? 'Folder' : m.kind === 'file' ? ({ pdf: 'PDF', xlsx: 'Spreadsheet', docx: 'Document', pptx: 'Slides' }[(mpExt(m) || '').toLowerCase()] || 'File') : kindL(m);
   const mpSize = m => m.kind === 'folder' ? (n => n === 1 ? '1 item' : n + ' items')(mpIn(mpUnit(m)).length) : m.size || '';
   const mpTabOn = () => !$('matPage').hidden;
   // a folder downloads its files plus the handouts attached to its assignments
@@ -6075,13 +6094,14 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     const scored = m.got != null ? (m.pts ? `You got ${m.got} / ${m.pts}, ${letter(m.got / m.pts * 100)}.` : `You got ${m.got} points.`) : '';
     const work = FSD.canTurnIn(m)
       ? `<section class="aw-turn" aria-labelledby="awTurnH"><h4 class="aw-h" id="awTurnH">Your work</h4><div id="awDrafts" data-aw="${m.id}">${awDraftsHTML(m)}</div><div id="awTurn"></div></section>`
-      : `<section class="aw-turn"><h4 class="aw-h">Your work</h4><div class="aw-class">${ico('cal')}<span><b>${m.disc ? 'A discussion on Schoology' : m.noDrop ? 'Turned in on paper or in class' : m.outside ? 'Turned in with an outside tool' : m.kind === 'test' ? 'Taken on Schoology or in class' : 'Nothing to upload here'}</b>${scored || (m.disc ? 'Reply to it on Schoology.' : 'Open it on Schoology. Your score shows up here once it\'s graded.')}</span></div><button class="btn primary" data-mpact="sgy">${ico('up')}${m.disc ? 'Reply on Schoology' : 'Open in Schoology'}</button></section>`;
+      : `<section class="aw-turn"><h4 class="aw-h">Your work</h4><div class="aw-class">${ico('cal')}<span><b>${m.disc ? 'A discussion on Schoology' : m.noDrop ? (m.missing || (m.got === 0 && m.pts) ? 'Missing: hand it in on paper or in class' : m.got != null ? 'Handed in on paper or in class' : 'Hand this in on paper or in class') : m.outside ? 'Turned in with an outside tool' : m.kind === 'test' ? 'Taken on Schoology or in class' : 'Nothing to upload here'}</b>${scored || (m.disc ? 'Reply to it on Schoology.' : 'Open it on Schoology. Your score shows up here once it\'s graded.')}</span></div><button class="btn primary" data-mpact="sgy">${ico('up')}${m.disc ? 'Reply on Schoology' : 'Open in Schoology'}</button></section>`;
     if (!m._loaded) tiEnsure(m);
-    return mpVHead(m, [m.disc ? 'Discussion' : KIND[m.kind][0], GD_CAT(m), m.pts ? m.pts + ' points' : ''].filter(Boolean).map(esc).join(' · '), `<span class="mp-vstatus">${status(m)}</span>`) + `<div class="mp-work aw" style="--c:${ME.color}">
+    return mpVHead(m, [kindL(m), GD_CAT(m), m.pts ? m.pts + ' points' : ''].filter(Boolean).map(esc).join(' · '), `<span class="mp-vstatus">${status(m)}</span>`) + `<div class="mp-work aw" style="--c:${ME.color}">
       ${awFacts(m)}
       <div class="aw-grid">
         <section class="aw-main">
           <div id="awDesc">${awDescHTML(m)}</div>
+          ${m.tnote ? `<h4 class="aw-h">${esc(ME.teacher || 'Your teacher')}'s comment</h4><div class="aw-tnote">${ico('msg')}<p>${esc(m.tnote)}</p></div>` : ''}
           ${atts.length ? `<h4 class="aw-h">From ${esc(ME.teacher || 'your teacher')} <span>${plural(atts.length, 'file')}</span></h4>
           <div class="aw-atts">${atts.map(f => `<div class="aw-att avfi-host"><button class="aw-open" data-mpgo="${f.id}" aria-label="Open ${esc(f.name)}"><span class="aw-thumb" aria-hidden="true">${mpPaper(f)}</span><span class="aw-an">${fileIco(f.name, 24)}<span class="tx"><b>${esc(f.name)}</b><small>${mpKind(f)} · ${esc(f.size)}</small></span></span></button>${FSD.canTurnIn(m) && m.got == null ? awEditBtn(m, f) : ''}</div>`).join('')}</div>` : ''}
         </section>
@@ -6581,8 +6601,11 @@ window.AveragesHelp = {
     try { history.pushState(null, '', h || location.pathname + location.search); } catch (_) {}
   }
   // ---------- Grades tab: this class's grade, how it's weighted, and every graded assignment ----------
-  const GD_WEEKS = FSD.WEEKS;
-  const GD_TREND = ME.trend;
+  // only the weeks since the first grade (2026-11-06, Martin: a flat line, then the projection): before that there's
+  // nothing to show. Fewer than two such weeks: "Not enough data yet" instead of a chart.
+  const GD_FROM = (ME.trendHas || []).indexOf(true), GD_AT = GD_FROM < 0 ? ME.trend.length : GD_FROM;
+  const GD_WEEKS = FSD.WEEKS.slice(GD_AT);
+  const GD_TREND = ME.trend.slice(GD_AT);
   const GD_CAT = m => m.cat || '';
   const GD_ICON = new Proxy({}, { get: (_, n) => catIcon(String(n)) });   // each category's emoji, from its name
   const GD = { type: 'all' };
@@ -6597,11 +6620,12 @@ window.AveragesHelp = {
   const gdDelta = () => { if (GD_TREND.length < 3) return ''; const d = GD_TREND[GD_TREND.length - 1] - GD_TREND[GD_TREND.length - 3], k = Math.abs(d) < .15 ? 'flat' : d > 0 ? 'up' : 'down'; return `<span class="gd-d ${k}">${k === 'flat' ? 'Steady' : (d > 0 ? '+' : '-') + Math.abs(d).toFixed(1) + ' in 2 weeks'}</span>`; };
   function gdSumLine() {
     const it = gdItems(), n = it.filter(x => !x.missing).length, miss = it.filter(x => x.missing).length;
-    $('gdSum').innerHTML = `${letter(ME.pct)} · ${ME.pct.toFixed(1)}% · ${n} graded${miss ? ` · <span style="color:var(--bad)">${miss} missing</span>` : ''}`;
+    $('gdSum').innerHTML = ME.none ? 'No grades yet' : `${letter(ME.pct)} · ${ME.pct.toFixed(1)}% · ${n} graded${miss ? ` · <span style="color:var(--bad)">${miss} missing</span>` : ''}`;
   }
   // the chart: same entrance as Home's (the line draws across, then the points pop in)
   const GCH = { w: 600, h: 190, l: 34, r: 12, t: 12, b: 26 };
   function gdChartSVG(enter) {
+    if (GD_TREND.length < 2) return `<div class="gd-nodata"><b>Not enough data yet</b><span>Your grade week by week shows up once you have grades from two different weeks.</span></div>`;
     // the real grade week by week, then a dashed step to the projected grade (if your recent scores hold), in a striped "not yet" zone
     const t = GD_TREND, last = t.length - 1, P = PROJ.predictedPct, all = t.concat([P]), mn = Math.min(...all), mx = Math.max(...all), mid = (mn + mx) / 2, span = Math.max(10, mx - mn + 3), lo = Math.floor(mid - span / 2), hi = Math.max(Math.ceil(mid + span / 2), Math.ceil(P + span * .16)); // room above the projected point for its label
     const n = last + 1, X = i => GCH.l + (i / n) * (GCH.w - GCH.l - GCH.r), Y = v => GCH.t + (1 - (v - lo) / (hi - lo)) * (GCH.h - GCH.t - GCH.b);
@@ -6621,17 +6645,17 @@ window.AveragesHelp = {
       <circle class="gd-pdot" cx="${px}" cy="${py}" r="5"/><text class="gd-plbl" x="${px - 8}" y="${py + (py > ly ? 18 : -10)}" text-anchor="end">${letter(P)} ${P}%</text>
       ${t.map((v, i) => `<rect class="gd-hit" data-gdwk="${i}" x="${X(i) - colW / 2}" y="0" width="${colW}" height="${GCH.h - GCH.b}"/>`).join('')}<rect class="gd-hit" data-gdwk="p" x="${px - colW / 2}" y="0" width="${colW / 2 + GCH.r}" height="${GCH.h - GCH.b}"/></svg>`;
   }
-  function gdFit(enter) { const box = $('gdBox'); if (!box) return; const w = Math.round(box.clientWidth); if (w > 0 && Math.abs(w - GCH.w) > 1) { GCH.w = w; box.querySelector('svg').outerHTML = gdChartSVG(enter); } }
+  function gdFit(enter) { const box = $('gdBox'); if (!box || !box.querySelector('svg')) return; const w = Math.round(box.clientWidth); if (w > 0 && Math.abs(w - GCH.w) > 1) { GCH.w = w; box.querySelector('svg').outerHTML = gdChartSVG(enter); } }
   function gdTop(enter) {
     const it = gdItems().filter(x => !x.missing && x.pts), got = it.reduce((a, x) => a + x.got, 0), of = it.reduce((a, x) => a + x.pts, 0);
-    $('grdTop').innerHTML = `<div class="gd-card"><div class="gd-gr"><span class="l ${gcls(ME.pct)}">${letter(ME.pct)}</span><span class="p">${ME.pct.toFixed(1)}%<small>right now</small></span></div>${gdDelta()}
-        <div class="gd-tiles"><div class="gd-tile" title="If your recent scores hold"><small>Projected</small><b>${letter(PROJ.predictedPct)} <span>${PROJ.predictedPct}%</span></b></div><div class="gd-tile"><small>Points</small><b>${Math.round(got * 10) / 10}<span> / ${Math.round(of * 10) / 10}</span></b></div></div></div>
+    $('grdTop').innerHTML = `<div class="gd-card"><div class="gd-gr">${ME.none ? '<span class="l g-na">N/A</span><span class="p"><small>No grades yet</small></span>' : `<span class="l ${gcls(ME.pct)}">${letter(ME.pct)}</span><span class="p">${ME.pct.toFixed(1)}%<small>right now</small></span>`}</div>${gdDelta()}
+        <div class="gd-tiles"><div class="gd-tile" title="If your recent scores hold"><small>Projected</small>${ME.none ? '<b class="g-na">N/A</b>' : `<b>${letter(PROJ.predictedPct)} <span>${PROJ.predictedPct}%</span></b>`}</div><div class="gd-tile"><small>Points</small><b>${Math.round(got * 10) / 10}<span> / ${Math.round(of * 10) / 10}</span></b></div></div></div>
       <div class="gd-ch"><div class="gd-cht"><b>Your grade, week by week</b><button class="btn" data-whatif="${ME.id}">${ico('calc')}What-if</button></div><div class="gd-chartbox" id="gdBox">${gdChartSVG(enter)}<div class="gs-tip gd-tip" id="gdTip"></div></div></div>`;
     gdFit(enter);
   }
   function gdCats() {
     $('grdCats').innerHTML = CATS.map(([n, w, p]) => `<div class="gd-cat"><span class="gd-ic">${EMOJI_SVG[GD_ICON[n]]}</span><span class="gd-ct"><b>${esc(n)}</b><small>${w}% of your grade${p == null ? ' · nothing graded yet' : ` · adds ${(w * p / 100).toFixed(1)} points`}</small></span><span class="gd-cp ${p == null ? '' : gcls(p)}">${p == null ? 'None yet' : p.toFixed(1) + '%'}</span><span class="gd-bar"><i style="width:${p || 0}%"></i></span></div>`).join('')
-      + `<div class="gd-total"><span>Your grade</span><b class="${gcls(ME.pct)}">${letter(ME.pct)} · ${ME.pct.toFixed(1)}%</b></div>`;
+      + `<div class="gd-total"><span>Your grade</span>${ME.none ? '<b class="g-na">N/A</b>' : `<b class="${gcls(ME.pct)}">${letter(ME.pct)} · ${ME.pct.toFixed(1)}%</b>`}</div>`;
   }
   function gdWork() {
     const it = gdItems().filter(x => GD.type === 'all' || x.cat === GD.type);
@@ -6684,7 +6708,10 @@ window.AveragesHelp = {
     tip.innerHTML = proj ? `<small>Projected, if your recent scores hold</small><span class="r ov"><i></i>${esc(ME.name)}<b>${PROJ.predictedPct}% · ${letter(PROJ.predictedPct)}</b></span>`
       : `<small>Week of ${esc(GD_WEEKS[i] || '')}</small><span class="r ov"><i></i>${esc(ME.name)}<b>${GD_TREND[i].toFixed(1)}% · ${letter(GD_TREND[i])}</b></span>`;
     const right = dr.left + dr.width / 2 - box.left < box.width / 2; tip.classList.toggle('left', !right);
-    tip.style.left = (dr.left + dr.width / 2 - box.left + (right ? 14 : -14)) + 'px'; tip.style.top = Math.max(0, dr.top - box.top - tip.offsetHeight / 2) + 'px'; tip.classList.add('show');
+    // kept inside the chart's box, so it's never cut off at an edge (2026-11-06)
+    const tw = tip.offsetWidth, th = tip.offsetHeight, ax = dr.left + dr.width / 2 - box.left;
+    tip.style.left = (right ? Math.min(ax + 14, box.width - tw - 4) : Math.max(ax - 14, tw + 4)) + 'px';
+    tip.style.top = Math.max(0, Math.min(box.height - th, dr.top - box.top - th / 2)) + 'px'; tip.classList.add('show');
     svg.querySelectorAll('.gd-dot').forEach((x, k) => x.classList.toggle('on', !proj && k === i)); svg.querySelector('.gd-pdot').classList.toggle('on', proj);
   });
   $('grdTop').addEventListener('pointerleave', () => { const tip = $('gdTip'); if (tip) tip.classList.remove('show'); const xh = $('gdXh'); if (xh) xh.setAttribute('visibility', 'hidden'); $('grdTop').querySelectorAll('.gd-dot').forEach((x, k, all) => x.classList.toggle('on', k === all.length - 1)); });
@@ -6771,7 +6798,7 @@ window.AveragesHelp = {
     const turn = FSD.canTurnIn(m) && (st === 'todo' || st === 'missing') ? `<button class="btn sm${st === 'missing' ? ' primary' : ''}" data-turnin="${m.id}">Turn in</button>` : '';
     const sub = [m.dueTxt ? (st === 'missing' ? 'Missing · was due ' : st === 'todo' ? 'Due ' : 'Was due ') + m.dueTxt.split(' · ')[0] : 'No due date', m.got != null ? (m.pts ? `${letter(m.got / m.pts * 100)} · ${m.got} / ${m.pts}` : `${m.got} points`) : st === 'turned' ? 'Turned in' : null].filter(Boolean).join(' · ');
     return `<div class="ag-row" role="row" tabindex="0" data-agopen="${m.id}">
-      <span class="ag-n" role="cell">${tile(m)}<span class="ag-nt"><b>${esc(m.name)}</b><small>${m.disc ? 'Discussion' : KIND[m.kind][0]}${m.cat ? ' · ' + esc(m.cat) : ''}${f ? ' · ' + esc(f.name) : ''}</small><small class="ag-sub">${esc(sub)}</small></span></span>
+      <span class="ag-n" role="cell">${tile(m)}<span class="ag-nt"><b>${esc(m.name)}</b><small>${kindL(m)}${m.cat ? ' · ' + esc(m.cat) : ''}${f ? ' · ' + esc(f.name) : ''}</small><small class="ag-sub">${esc(sub)}</small></span></span>
       <span class="c-due" role="cell">${agDue(m)}</span><span class="c-st" role="cell">${agStatus(m)}</span><span class="c-pts" role="cell">${agPts(m)}</span>
       <span class="ag-act" role="cell">${turn}${false ? '' : `<button class="ibtn" data-agmore="${m.id}" aria-label="More for ${esc(m.name)}" aria-haspopup="menu">${ico('dots')}</button>`}</span></div>`;
   }
@@ -6941,7 +6968,7 @@ window.AveragesHelp = {
   }
   function upCard(id) {
     const m = mpGet(id); if (!m) return `<p class="up-miss">${ico('alert')}<span>An attachment on this update couldn't be loaded.</span><button data-upsgy>Open in Schoology</button></p>`;
-    if (m.kind !== 'file') return `<div class="up-card asg" tabindex="0" role="link" data-matgo="${m.id}" aria-label="Open ${esc(m.name)}">${tile(m)}<span class="up-cb"><small>${KIND[m.kind][0]} · ${GD_CAT(m)} · ${m.pts} points</small><b>${esc(m.name)}</b><span>${m.dueTxt ? 'Due ' + esc(m.dueTxt) : 'No due date'}</span></span><span class="up-cend">${status(m)}${m.kind === 'assignment' && !m.turned ? `<button class="btn sm primary" data-turnin="${m.id}">${ico('upload')}Turn in</button>` : ''}</span></div>`;
+    if (m.kind !== 'file') return `<div class="up-card asg" tabindex="0" role="link" data-matgo="${m.id}" aria-label="Open ${esc(m.name)}">${tile(m)}<span class="up-cb"><small>${kindL(m)} · ${GD_CAT(m)} · ${m.pts} points</small><b>${esc(m.name)}</b><span>${m.dueTxt ? 'Due ' + esc(m.dueTxt) : 'No due date'}</span></span><span class="up-cend">${status(m)}${m.kind === 'assignment' && !m.turned ? `<button class="btn sm primary" data-turnin="${m.id}">${ico('upload')}Turn in</button>` : ''}</span></div>`;
     const f = m.unit ? mpFolder(m.unit) : null;
     return `<button class="up-card" data-matgo="${m.id}"><span class="up-cthumb" aria-hidden="true"><span class="aw-pg">${mpPaper(m, 0)}</span></span><span class="up-cb"><small>${esc(f ? f.name : 'Materials')}</small><b>${esc(m.name)}</b>${m.desc ? `<span>${esc(m.desc)}</span>` : ''}<em>${mpKind(m)} · ${esc(m.size || '')}${m.pages ? ` · ${plural(m.pages, 'page')}` : ''}</em></span>${ico('chev-r')}</button>`;
   }
@@ -6988,7 +7015,7 @@ window.AveragesHelp = {
   function upSideDue() {
     const due = MATERIALS.filter(m => ['assignment', 'test', 'quiz'].includes(m.kind) && !m.turned && m.got == null && m.due != null && m.due >= -7).sort((a, b) => a.due - b.due).slice(0, 5);
     const dueTag = m => m.due < 0 ? '<span class="due late">Missing</span>' : m.due === 0 ? '<span class="due today">Today</span>' : `<span class="due">In ${m.due} days</span>`;
-    $('upDue').innerHTML = due.length ? due.map(m => `<button class="up-ln" data-matgo="${m.id}">${tile(m)}<span class="tx"><b>${esc(m.name)}</b><small>${KIND[m.kind][0]} · ${esc(m.dueTxt.split(' · ')[0].replace(/^./, c => c.toUpperCase()))}</small></span>${dueTag(m)}</button>`).join('') : '<p class="up-empty">Nothing due right now.</p>';
+    $('upDue').innerHTML = due.length ? due.map(m => `<button class="up-ln" data-matgo="${m.id}">${tile(m)}<span class="tx"><b>${esc(m.name)}</b><small>${kindL(m)} · ${esc(m.dueTxt.split(' · ')[0].replace(/^./, c => c.toUpperCase()))}</small></span>${dueTag(m)}</button>`).join('') : '<p class="up-empty">Nothing due right now.</p>';
   }
   // while it syncs, the counts in the header and the filters wait too
   function upSkelTop() { $('upSum').innerHTML = bar('220px', 12); $('upTypes').querySelectorAll('[data-uptype] em').forEach(em => { em.innerHTML = bar('12px', 10, '5px'); }); }
@@ -7488,7 +7515,7 @@ window.AveragesHelp = {
       }
     }
     if (spot === 'end') { el.style.position = el.style.left = el.style.top = el.style.margin = ''; el.style.setProperty('--tx', el.dataset.tx || '0px'); el.style.setProperty('--ty', el.dataset.ty || '0px'); fitEnd(el); }
-    el.dataset.spot = spot; el.dataset.fitted = '1';
+    el.dataset.spot = spot; el.dataset.fitted = '1'; el.dataset.shown = '1';
   }
   let rz = 0; // the layout changed: land every sticker again
   const refitAll = ms => { clearTimeout(rz); rz = setTimeout(() => document.querySelectorAll('.newtag[data-fitted]').forEach(el => { delete el.dataset.fitted; fit(el); }), ms); };
@@ -7510,6 +7537,7 @@ window.AveragesHelp = {
     el.style.setProperty('--tx', ((h >> 7) % 3) - 1 + 'px');
     el.dataset.ty = el.style.getPropertyValue('--ty'); el.dataset.tx = el.style.getPropertyValue('--tx');
     el.dataset.tilted = '1';
+    setTimeout(() => { el.dataset.shown = '1'; }, 3000); // never left hidden if it can't be measured
     if (ro) ro.observe(el); else requestAnimationFrame(() => fit(el)); // fit once it's on screen and has a size
   };
   const run = root => { if (root.querySelectorAll) root.querySelectorAll('.newtag:not([data-tilted])').forEach(place); };

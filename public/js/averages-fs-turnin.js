@@ -70,11 +70,12 @@
     ready: function () { return Promise.all([S(), Cl()]); },
     size: size,
     /** The assignment's description, points, attachments and the student's turn-ins (newest first). */
-    load: function (section, id) {
+    load: function (section, id, disc) {
       var z = tz();
+      // a discussion (2026-11-06): its own read, and nothing turned in here (it's answered on Schoology)
       return Promise.all([
-        get('/data/assignment?section=' + encodeURIComponent(section) + '&id=' + encodeURIComponent(id) + (z ? '&tz=' + encodeURIComponent(z) : '')).catch(function () { return null; }),
-        S().then(function (s) { return s.history({ section: section, assignment: id }); }).catch(function () { return []; }),
+        get('/data/assignment?section=' + encodeURIComponent(section) + '&id=' + encodeURIComponent(id) + (disc ? '&type=discussion' : '') + (z ? '&tz=' + encodeURIComponent(z) : '')).catch(function () { return null; }),
+        disc ? Promise.resolve([]) : S().then(function (s) { return s.history({ section: section, assignment: id }); }).catch(function () { return []; }),
       ]).then(function (r) { return { detail: r[0], revisions: r[1] || [] }; });
     },
     /** Is this app connected (for the picker's empty state)? */

@@ -1151,6 +1151,8 @@
     /* icon tiles wiggle when you point at their row */
     body:not(.potato-mode) :is(.arow, .mrow, .mp-row, .ag-row, .nt-row, .pin, .gr-row, .crow, tr, .item, .mi):hover :is(.ktile, .nt-tile, .badge, .emo) { animation: lifeWiggle .5s var(--spring); }
     body:not(.potato-mode) .newtag { animation: lifeSticker .5s var(--spring) backwards; }
+    /* hidden until it has landed in its spot (2026-11-06, Martin's video: stickers showed by the name, then jumped) */
+    .newtag[data-tilted]:not([data-shown]) { visibility: hidden; animation: none !important; }
   }
   @keyframes lifeWiggle { 0% { transform: none; } 30% { transform: rotate(-9deg) scale(1.08); } 60% { transform: rotate(6deg) scale(1.08); } 100% { transform: none; } }
   @keyframes lifeSticker { from { transform: rotate(-14deg) scale(.6); opacity: 0; } }
@@ -3258,6 +3260,9 @@
   .sg-crop-stage img { position: absolute; left: 50%; top: 50%; max-width: none; user-select: none; pointer-events: none; }
   .sg-crop-box input[type=range] { width: 100%; accent-color: var(--accent); }
   .sg-crop-btns { display: flex; gap: 8px; justify-content: flex-end; width: 100%; }
+  .g-na { color: var(--muted) !important; }   /* nothing graded yet (2026-11-06) */
+  /* a switch you can't use yet (Plus, Incognito) greys out its picture too (2026-11-06, Martin: Calendar sync) */
+  .sg-row[aria-disabled="true"] > .sg-app { filter: grayscale(1); opacity: .5; }
 </style>
 </head>
 <body>
@@ -3822,7 +3827,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (ntEl) return;
     ntFrom = document.activeElement; ntScope = NT.here || 'all';
     document.body.insertAdjacentHTML('beforeend', `<div class="nt-scrim"><div class="nt-pop" role="dialog" aria-modal="true" aria-labelledby="ntTitle">
-      <div class="nt-top"><div class="nt-top-r"><div class="nt-tt"><h2 id="ntTitle">Notifications</h2><small>Since you were last here ${esc(NT_LAST)}</small></div>${ntSegHTML()}<button class="nt-x" data-ntclose aria-label="Close">${ico('x')}</button></div></div>
+      <div class="nt-top"><div class="nt-top-r"><div class="nt-tt"><h2 id="ntTitle">Notifications</h2><small>Last refreshed ${esc(FSX.lastRefreshed ? FSX.lastRefreshed() : NT_LAST)}</small></div>${ntSegHTML()}<button class="nt-x" data-ntclose aria-label="Close">${ico('x')}</button></div></div>
       <div class="nt-body">${ntBodyHTML()}</div><div class="nt-foot">${ntFootHTML()}</div></div></div>`);
     ntEl = document.body.lastElementChild;
     const b = $('ntBtn'); if (b) b.setAttribute('aria-expanded', 'true');
@@ -3852,7 +3857,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       return; }
     if (e.target.closest('[data-ntseen]')) { const n = ntLive(ntScope).length, label = ntScope === 'all' ? 'everything' : NT_CLASSES[ntScope]; ntLive(ntScope).forEach(it => NT_SEEN.add(it.id)); ntBadge(); NT.onChange(); ntRefresh(true); toast(`Marked ${label} as seen. That's ${n} ${n === 1 ? 'notification' : 'notifications'}.`); return; }
     const go = e.target.closest('[data-ntgo]');
-    if (go) { const it = NT_ITEMS.find(x => x.id === go.dataset.ntgo); NT_SEEN.add(it.id); ntBadge(); NT.onChange(); ntClose(true); if (it.k === 'msg') FSX.go('messages', { thread: it.thread }); else if (it.k === 'graded') FSX.hub(it.c, 'grades', { a: it.aid }); else FSX.hub(it.c, 'updates', { update: it.raw }); }
+    if (go) { const it = NT_ITEMS.find(x => x.id === go.dataset.ntgo); NT_SEEN.add(it.id); ntBadge(); NT.onChange(); ntClose(true); if (it.k === 'msg') FSX.go('messages', { thread: it.thread }); else if (it.k === 'new') FSX.newGo(it); else if (it.k === 'graded') FSX.hub(it.c, 'grades', { a: it.aid }); else FSX.hub(it.c, 'updates', { update: it.raw }); }
   }
   document.addEventListener('keydown', e => {
     if (!ntEl) return;
@@ -4079,6 +4084,8 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       const here = !m && typeof window.CMDK_HERE === 'function' ? window.CMDK_HERE(qq) : null;
       if (here && here.rows.length) html += `<div class="lbl">${esc(here.label)}</div>` + here.rows.slice(0, 5).map(r => crow(`data-cmdkgo="${esc(r.key)}"`, r.lead, r.t, r.sub)).join('');
       const cs = m ? [] : CLASSES.filter(c => chit(qq, c.name + ' ' + c.teacher)); if (cs.length) html += `<div class="lbl">Classes</div>` + cs.map(c => cclass(c, qq)).join('');
+      // people: your teachers and classmates (2026-11-06); one opens their card in Contacts
+      const pp = m || !FSX.people ? [] : FSX.people().filter(x => chit(qq, x.name)).slice(0, 5); if (pp.length) html += `<div class="lbl">People</div>` + pp.map(x => crow(`data-go="${FSX.url('contacts', { person: x.id })}"`, FSX.personAv(x), cmark(x.name, qq), x.sub)).join('');
       const ps = m ? [] : GO_PAGES.filter(([p]) => chit(qq, p)); if (ps.length) html += `<div class="lbl">Go to</div>` + ps.map(page).join('');
       if (HERE && !m) html += crow(`data-cmdkhere="${esc(qq)}"`, ico('search'), `Search ${esc(HERE)} for "${esc(qq)}"`, 'Just this page', ' s-cmd');
       if (!html) html = `<div class="cmdk-empty">Nothing for "${esc(q)}". Try a class, a page, or a command like "message ${esc(FSD.exampleTeacher)}".</div>`;
@@ -4132,7 +4139,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const SG = { sec: (savedFs.sec && /^[a-z]+$/.test(savedFs.sec)) ? savedFs.sec : 'account', plan: 'free', mode: FSD.me.incognito || (() => { try { return localStorage.getItem('schoolagy_account_mode') === 'incognito'; } catch (_) { return false; } })() ? 'incognito' : 'classic',
     layout: 'full', skin: 'is', theme: darkPref(), accent: savedFs.accent || 'punch', previews: OPTS().filePreviews !== false,
     notif: false, nGrades: true, nAssign: true, nDue: true, nMsgs: true, nAnn: true,
-    drive: false, canva: false, onedrive: false, openIn: (() => { try { return localStorage.getItem('schoolagy_default_editor') === 'onedrive' ? 'onedrive' : 'drive'; } catch (_) { return 'drive'; } })(), cal: false };
+    drive: false, canva: false, onedrive: false, openIn: (() => { try { const v = localStorage.getItem('schoolagy_default_editor'); return v === 'onedrive' ? 'onedrive' : v === 'gdrive' ? 'drive' : 'canva'; } catch (_) { return 'canva'; } })(), cal: false };
   { const q = FSX.q.get('section'); if (q && ['account', 'plan', 'appearance', 'notifications', 'apps', 'privacy', 'about'].includes(q)) SG.sec = q; }
   // what the API says (filled in as each answer comes back): Plus, the calendar link, Canva, notifications, early features
   const LIVE = { billing: null, cal: null, canva: null, push: null, pushCfg: null, early: [], busy: '' };
@@ -4313,7 +4320,8 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
         const right = blocked ? chip('Off in Incognito') : !ready ? chip('Not available yet') : on ? btn('disconnect', 'Disconnect', ` data-app="${k}"`) : btn('connect', 'Connect', ` data-app="${k}"`, ' primary');
         return `<div class="sg-row has-ic" data-set="${k}">${art}${tx(APPS[k], blocked ? 'Canva needs an account with us, so it\'s off in Incognito.' : on ? sub + (k !== 'canva' ? ' Connected in this browser.' : (LIVE.canva && LIVE.canva.name ? ` Connected as ${esc(LIVE.canva.name)}.` : '')) : sub)}${right}</div>`;
       };
-      const oi = SG.openIn, offs = ['drive', 'onedrive'].filter(k => !SG[k]);
+      // Canva is one of the choices again, and the default, like Windowed (2026-11-06, Martin: "why was Canva replaced")
+      const offs = ['canva', 'drive', 'onedrive'].filter(k => !SG[k]), oi = SG[SG.openIn] ? SG.openIn : (['canva', 'drive', 'onedrive'].find(k => SG[k]) || SG.openIn);
       const C2 = LIVE.cal, calOn = !!(C2 && C2.on && C2.url), calLock = incog() || (C2 && C2.plusRequired && !plus()) || (C2 && C2.enabled === false);
       const webcal = calOn ? C2.url.replace(/^https?:/, 'webcal:') : '';
       return `
@@ -4323,7 +4331,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
         app('canva', `<span class="sg-app canva"><img src="${CANVA_SRC}" alt=""></span>`, 'Edit files and turn in designs.') +
         app('onedrive', `<span class="sg-app od">${ico('cloud')}</span>`, 'Save and add files.'),
         'Averages only sees the files you pick, and doesn\'t keep them. Work you turn in goes to Schoology. Google Drive is a trademark of Google LLC.')}
-      ${grp('Editing', `<div class="sg-row wrapr" data-set="openIn">${tx('Open Word, PowerPoint and Excel files in', offs.length === 2 ? 'Connect Google Drive or OneDrive to edit these.' : offs.length ? `Connect ${APPS[offs[0]]} to choose.` : 'Where they open when you press Edit.')}${seg('openIn', [['drive', 'Google Drive'], ['onedrive', 'OneDrive']], oi, 'Open Office files in', offs)}</div>`)}
+      ${grp('Editing', `<div class="sg-row wrapr" data-set="openIn">${tx('Open Word, PowerPoint and Excel files in', offs.length === 3 ? 'Connect Canva, Google Drive or OneDrive to edit these.' : 'Where they open when you press Edit.')}${seg('openIn', [['canva', 'Canva'], ['drive', 'Google Drive'], ['onedrive', 'OneDrive']], oi, 'Open Office files in', offs)}</div>`)}
       ${grp('Calendar', tog('cal', 'Calendar sync', !C2 ? 'Checking…' : incog() ? 'Off in Incognito mode.' : C2.enabled === false ? 'Not available right now.' : C2.plusRequired && !plus() ? 'Comes with Plus. Your due dates in Google Calendar or Apple Calendar, kept up to date.' : 'Your due dates in Google Calendar or Apple Calendar, kept up to date.', calOn, !C2 || calLock, `<span class="sg-app">${ico('cal')}</span>`) +
         (calOn ? `<div class="sg-row wrapr" data-set="calLink"><div class="sg-link"><input id="sgCalLink" readonly value="${esc(webcal)}" aria-label="Your calendar link">${btn('calcopy', ico('copy') + 'Copy')}</div><div class="sg-btns">${btn('calg', 'Add to Google Calendar')}${btn('cala', 'Add to Apple Calendar')}${btn('calnew', 'New link')}</div></div>` : ''),
         calOn ? 'Anyone with this link can see your due dates, so keep it to yourself. New link makes the old one stop working.' : '')}`;
@@ -4697,7 +4705,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   function disconnect(k) {
     const keep = { drive: 'Files in your Google Drive stay there.', canva: 'Designs you made stay in your Canva account.', onedrive: 'Files in your OneDrive stay there.' }[k];
     dlgOpen({ title: `Disconnect ${APPS[k]}?`, ok: 'Disconnect', danger: true, body: `<p>${keep} Averages just can't open them anymore. You can connect again anytime.</p>`,
-      onOk: () => { FST.disconnect(k).then(() => { SG[k] = false; if (SG.openIn === k) SG.openIn = ['drive', 'onedrive'].find(a => SG[a]) || 'drive'; redraw(); toast(`Disconnected ${APPS[k]}.`); }, e => toast(FST.message(e))); } });
+      onOk: () => { FST.disconnect(k).then(() => { SG[k] = false; if (SG.openIn === k) SG.openIn = ['canva', 'drive', 'onedrive'].find(a => SG[a]) || 'canva'; redraw(); toast(`Disconnected ${APPS[k]}.`); }, e => toast(FST.message(e))); } });
   }
   function deleteAccount() {
     dlgOpen({ title: 'Delete your Averages account?', ok: 'Delete everything', danger: true, body: `<p>This deletes everything Averages stored about you: synced settings, your profile picture and background, notifications, your calendar link and your connected apps. Then you're signed out.</p><p>Schoology isn't changed. Your classes, grades and work stay there.</p>`,
@@ -4772,10 +4780,10 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
         saveOpt('windowType', 'windowed');
         try { sessionStorage.setItem('averages_mode_logo', String(Date.now())); } catch (_) {}
         if (window.__averagesSplash && window.__averagesSplash.show) window.__averagesSplash.show(4000);
-        location.href = '/settings';
+        location.replace('/settings');   // Back then goes to the page before, not to this one (2026-11-06)
       }
       if (k === 'theme') { sgPane(); FSX.syncPush(); toast(v === 'dark' ? 'Dark colors on.' : v === 'auto' ? 'Pages follow your device now.' : 'Light colors on.'); }
-      if (k === 'openIn') { try { localStorage.setItem('schoolagy_default_editor', v === 'onedrive' ? 'onedrive' : 'gdrive'); } catch (_) {} toast(`Office files open in ${APPS[v]}.`); }
+      if (k === 'openIn') { try { localStorage.setItem('schoolagy_default_editor', v === 'onedrive' ? 'onedrive' : v === 'drive' ? 'gdrive' : 'canva'); } catch (_) {} toast(`Office files open in ${APPS[v]}.`); }
       return;
     }
     const sw = e.target.closest('[data-accent]');
@@ -4998,7 +5006,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       }
     }
     if (spot === 'end') { el.style.position = el.style.left = el.style.top = el.style.margin = ''; el.style.setProperty('--tx', el.dataset.tx || '0px'); el.style.setProperty('--ty', el.dataset.ty || '0px'); fitEnd(el); }
-    el.dataset.spot = spot; el.dataset.fitted = '1';
+    el.dataset.spot = spot; el.dataset.fitted = '1'; el.dataset.shown = '1';
   }
   let rz = 0; // the layout changed: land every sticker again
   const refitAll = ms => { clearTimeout(rz); rz = setTimeout(() => document.querySelectorAll('.newtag[data-fitted]').forEach(el => { delete el.dataset.fitted; fit(el); }), ms); };
@@ -5020,6 +5028,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     el.style.setProperty('--tx', ((h >> 7) % 3) - 1 + 'px');
     el.dataset.ty = el.style.getPropertyValue('--ty'); el.dataset.tx = el.style.getPropertyValue('--tx');
     el.dataset.tilted = '1';
+    setTimeout(() => { el.dataset.shown = '1'; }, 3000); // never left hidden if it can't be measured
     if (ro) ro.observe(el); else requestAnimationFrame(() => fit(el)); // fit once it's on screen and has a size
   };
   const run = root => { if (root.querySelectorAll) root.querySelectorAll('.newtag:not([data-tilted])').forEach(place); };

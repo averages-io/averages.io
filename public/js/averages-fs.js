@@ -51,6 +51,16 @@
     window.location.replace(page === 'settings' && save ? '/settings?section=general' : windowedPath());
   }
   var opts = json('schoolagy_settings_options') || {};
+  // Back after switching looks (2026-11-06, Martin: going back a page after switching modes broke the site): the
+  // browser can bring a page back from its memory (back/forward cache) without running anything. A Fullscreen page
+  // brought back after Windowed was picked goes to its Windowed page; one brought back in Fullscreen drops the logo
+  // it was still showing when it was left.
+  window.addEventListener('pageshow', function (e) {
+    if (!e.persisted) return;
+    var o = json('schoolagy_settings_options') || {};
+    if (o.windowType !== 'fullscreen') { goWindowed(false); return; }
+    if (window.__averagesSplash && window.__averagesSplash.hide) window.__averagesSplash.hide();
+  });
   if (opts.windowType !== 'fullscreen') { goWindowed(false); return; }
 
   // ---------- theme ----------

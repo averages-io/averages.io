@@ -1151,6 +1151,8 @@
     /* icon tiles wiggle when you point at their row */
     body:not(.potato-mode) :is(.arow, .mrow, .mp-row, .ag-row, .nt-row, .pin, .gr-row, .crow, tr, .item, .mi):hover :is(.ktile, .nt-tile, .badge, .emo) { animation: lifeWiggle .5s var(--spring); }
     body:not(.potato-mode) .newtag { animation: lifeSticker .5s var(--spring) backwards; }
+    /* hidden until it has landed in its spot (2026-11-06, Martin's video: stickers showed by the name, then jumped) */
+    .newtag[data-tilted]:not([data-shown]) { visibility: hidden; animation: none !important; }
   }
   @keyframes lifeWiggle { 0% { transform: none; } 30% { transform: rotate(-9deg) scale(1.08); } 60% { transform: rotate(6deg) scale(1.08); } 100% { transform: none; } }
   @keyframes lifeSticker { from { transform: rotate(-14deg) scale(.6); opacity: 0; } }
@@ -3307,51 +3309,50 @@
   .btn.danger-fill:hover { background: color-mix(in srgb, var(--bad) 86%, #000000); }
   .btn.danger-fill:disabled { opacity: .7; }
   @media (max-width: 640px) { .ms-sgy { padding: 0 10px; font-size: 0; gap: 0; } .ms-sgy svg.i { width: 16px; height: 16px; } }
-  /* the conversation's details sheet (Messages' contact sheet) */
-  .ms-info { position: relative; width: min(440px, 100%); max-height: min(820px, calc(100vh - 32px)); background: var(--panel); }
-  .ms-ix { position: absolute; top: 14px; left: 14px; z-index: 2; width: 36px; height: 36px; border-radius: 18px; display: grid; place-items: center; background: var(--field); color: var(--ink-2); }
-  .ms-ix:hover { color: var(--ink); background: var(--inner); }
-  .ms-ihd { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 24px 24px 8px; text-align: center; flex: none; }
-  .ms-ihd .ms-av.ms-iav { width: 84px; height: 84px; border-radius: 26px; font-size: 28px; }
-  .ms-ihd .ms-iav .badge { width: 32px; height: 32px; right: -6px; bottom: -6px; border-radius: 10px; }
-  .ms-ihd .ms-iav .badge svg { width: 20px; height: 20px; }
-  .ms-iavw { display: block; margin: 18px 0 14px; transform: scale(1.8); }
-  .ms-ihd h2 { margin: 8px 0 0; font-size: 24px; font-weight: 900; line-height: 1.15; }
-  .ms-ihd small { font-size: 13px; font-weight: 700; color: var(--muted); }
-  .ms-iacts { display: flex; justify-content: center; gap: 12px; padding: 8px 16px 12px; flex: none; }
-  .ms-iact { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 64px; color: var(--ink-2); text-decoration: none; }
-  .ms-iact > span { width: 48px; height: 48px; border-radius: 24px; display: grid; place-items: center; background: var(--field); color: var(--accent); transition: background-color .15s ease; }
-  .ms-iact:hover > span { background: var(--inner); }
-  .ms-iact small { font-size: 11px; font-weight: 800; }
-  .ms-itabs { display: flex; gap: 4px; padding: 4px 16px 12px; overflow-x: auto; scrollbar-width: none; flex: none; }
-  .ms-itabs button { flex: none; height: 32px; padding: 0 14px; border-radius: 16px; font-size: 14px; font-weight: 800; color: var(--muted); }
-  .ms-itabs button:hover { color: var(--ink); }
-  .ms-itabs button[aria-selected="true"] { background: var(--field); color: var(--ink); box-shadow: 0 1px 2px rgba(20, 20, 40, .08); }
-  .ms-itabs em { font-style: normal; margin-left: 4px; opacity: .7; font-variant-numeric: tabular-nums; }
-  .ms-ibody { flex: 1; min-height: 0; overflow-y: auto; padding: 0 16px 16px; display: flex; flex-direction: column; gap: 12px; scrollbar-width: thin; }
-  .ms-icard { display: flex; flex-direction: column; border-radius: 16px; background: var(--field); padding: 0 16px; }
-  .ms-icard > * + * { border-top: 2px solid var(--panel); }
-  .ms-ilinks button { height: 46px; text-align: left; font-size: 15px; font-weight: 700; color: var(--today, var(--focus)); }
-  .ms-ilinks button.bad { color: var(--bad); }
-  .ms-ilinks button:hover { text-decoration: underline; text-underline-offset: 3px; }
-  .ms-irow { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 8px 0; text-align: left; color: inherit; text-decoration: none; width: 100%; }
-  .ms-irow .tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
-  .ms-irow .tx small { font-size: 12px; font-weight: 700; color: var(--muted); }
-  .ms-irow .tx b { font-size: 15px; font-weight: 700; overflow-wrap: anywhere; }
-  .ms-ilink .tx b, .ms-ifile .tx b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .ms-ilink:hover b, .ms-ifile:hover b { text-decoration: underline; text-underline-offset: 3px; }
-  .ms-ibtn { flex: none; width: 34px; height: 34px; border-radius: 17px; display: grid; place-items: center; background: var(--panel); color: var(--ink-2); }
-  .ms-ibtn:hover { background: var(--inner); color: var(--ink); }
-  .ms-ibtn svg.i { width: 16px; height: 16px; }
-  .ms-isw .sw { flex: none; position: relative; width: 50px; height: 30px; border-radius: 15px; background: var(--inner); transition: background-color .2s ease; }
-  .ms-isw .sw i { position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 12px; background: #ffffff; box-shadow: 0 1px 3px rgba(0, 0, 0, .25); transition: transform .2s cubic-bezier(.2, .8, .2, 1); }
-  .ms-isw .sw.on { background: var(--good); }
-  .ms-isw .sw.on i { transform: translateX(20px); }
-  .ms-igrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
-  .ms-iph { aspect-ratio: 1; border-radius: 10px; overflow: hidden; background: var(--field); }
+  /* the conversation's details (the "i" button), in the app's own dialog style: the Messages settings box, its
+     sections and rows, the sliding tabs and the switches from Settings */
+  .ms-info { width: min(480px, 100%); max-height: min(780px, calc(100vh - 32px)); }
+  .ms-ihd { padding-right: 12px; }
+  .ms-ihd .tx { flex: 1; min-width: 0; }
+  .ms-ihd h2 { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ms-ihd .ms-av.ms-iav { width: 52px; height: 52px; border-radius: 16px; font-size: 17px; }
+  .ms-ihd .ms-iav .badge { box-shadow: 0 0 0 2px var(--panel); }
+  .ms-iavw { display: block; flex: none; }
+  .ms-ix { flex: none; align-self: flex-start; }
+  .ms-iacts { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 20px 12px; flex: none; }
+  .ms-iacts .btn { background: var(--field); gap: 6px; }
+  .ms-iacts .btn:hover { background: var(--inner); }
+  .ms-iacts .btn svg.i { width: 15px; height: 15px; }
+  .ms-itabw { padding: 0 16px 8px; flex: none; }
+  .ms-itabs { width: fit-content; max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+  .ms-itabs em { font-style: normal; margin-left: 6px; font-variant-numeric: tabular-nums; color: var(--muted); }
+  .ms-ibody { padding-bottom: 16px; }
+  .ms-irow2 { width: 100%; text-align: left; color: inherit; text-decoration: none; cursor: pointer; }
+  a.ms-irow2:hover b, button.ms-irow2:hover b { text-decoration: underline; text-underline-offset: 3px; }
+  button.ms-irow2[role="switch"]:hover b { text-decoration: none; }
+  .ms-irow2 > svg.i { flex: none; width: 16px; height: 16px; color: var(--muted); }
+  .ms-irow2.bad b { color: var(--bad); }
+  .ms-irow2 .tx b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ms-ibadge { flex: none; width: 36px; height: 36px; border-radius: 12px; display: grid; place-items: center; background: color-mix(in srgb, var(--c, var(--muted)) 16%, var(--field)); }
+  .ms-ibadge svg { width: 22px; height: 22px; display: block; }
+  .ms-ibadge0 { background: var(--panel); color: var(--ink-2); }
+  .ms-ibadge0 svg.i { width: 17px; height: 17px; }
+  .ms-irow2.bad .ms-ibadge0 { color: var(--bad); background: color-mix(in srgb, var(--bad) 10%, var(--field)); }
+  .ms-ifav { width: 36px; height: 36px; border-radius: 12px; padding: 6px; background: #ffffff; box-shadow: inset 0 0 0 2px var(--panel); }
+  /* the switches, as in Settings: the knob slides over with a little overshoot */
+  .ms-info .sw { width: 40px; height: 24px; border-radius: 12px; transition: background-color .25s ease; }
+  .ms-info .sw::after { width: 20px; height: 20px; border-radius: 10px; box-shadow: 0 1px 3px rgba(20, 21, 31, .2); transition: transform .38s cubic-bezier(.34, 1.45, .5, 1); }
+  .ms-info .sw.on::after { transform: translateX(16px); }
+  .potato-mode .ms-info .sw, .potato-mode .ms-info .sw::after { transition: none; }
+  @media (prefers-reduced-motion: reduce) { .ms-info .sw, .ms-info .sw::after { transition: none; } }
+  .ms-igrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .ms-iph { aspect-ratio: 1; border-radius: 14px; overflow: hidden; background: var(--field); box-shadow: 0 1px 2px rgba(20, 20, 40, .08); transition: transform .2s var(--spring, ease); }
+  .ms-iph:hover { transform: translateY(-2px); }
   .ms-iph img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .ms-inone { margin: 24px 0; text-align: center; font-size: 14px; font-weight: 700; color: var(--muted); }
-  .potato-mode .ms-isw .sw, .potato-mode .ms-isw .sw i { transition: none; }
+  .ms-inone { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 32px 16px; border-radius: 16px; background: var(--field); text-align: center; }
+  .ms-inone .emo, .ms-inone .emo svg { width: 40px; height: 40px; margin-bottom: 4px; }
+  .ms-inone b { font-size: 15px; font-weight: 800; }
+  .ms-inone small { font-size: 13px; font-weight: 700; color: var(--muted); }
   .ms-sscrim { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 16px; background: rgba(20, 21, 31, .32); }
   .ms-sscrim.in { animation: msSFade .16s ease backwards; }
   .ms-sscrim.in .ms-sbox { animation: msSIn .22s cubic-bezier(.2, .8, .2, 1) backwards; }
@@ -3454,6 +3455,10 @@
   }
   @media (max-width: 680px) { .hub-t h1 { font-size: 34px; } }
   /* ===== end Life layer for the course page ===== */
+  .g-na { color: var(--muted) !important; }   /* nothing graded yet (2026-11-06) */
+  .ms-tbar button svg { width: 22px; height: 22px; display: block; }
+  .ms-rx i svg { width: 15px; height: 15px; display: block; }
+  .ms-rx i { display: inline-flex; }
 </style>
 </head>
 <body>
@@ -4026,7 +4031,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (ntEl) return;
     ntFrom = document.activeElement; ntScope = NT.here || 'all';
     document.body.insertAdjacentHTML('beforeend', `<div class="nt-scrim"><div class="nt-pop" role="dialog" aria-modal="true" aria-labelledby="ntTitle">
-      <div class="nt-top"><div class="nt-top-r"><div class="nt-tt"><h2 id="ntTitle">Notifications</h2><small>Since you were last here ${esc(NT_LAST)}</small></div>${ntSegHTML()}<button class="nt-x" data-ntclose aria-label="Close">${ico('x')}</button></div></div>
+      <div class="nt-top"><div class="nt-top-r"><div class="nt-tt"><h2 id="ntTitle">Notifications</h2><small>Last refreshed ${esc(FSX.lastRefreshed ? FSX.lastRefreshed() : NT_LAST)}</small></div>${ntSegHTML()}<button class="nt-x" data-ntclose aria-label="Close">${ico('x')}</button></div></div>
       <div class="nt-body">${ntBodyHTML()}</div><div class="nt-foot">${ntFootHTML()}</div></div></div>`);
     ntEl = document.body.lastElementChild;
     const b = $('ntBtn'); if (b) b.setAttribute('aria-expanded', 'true');
@@ -4056,7 +4061,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       return; }
     if (e.target.closest('[data-ntseen]')) { const n = ntLive(ntScope).length, label = ntScope === 'all' ? 'everything' : NT_CLASSES[ntScope]; ntLive(ntScope).forEach(it => NT_SEEN.add(it.id)); ntBadge(); NT.onChange(); ntRefresh(true); toast(`Marked ${label} as seen. That's ${n} ${n === 1 ? 'notification' : 'notifications'}.`); return; }
     const go = e.target.closest('[data-ntgo]');
-    if (go) { const it = NT_ITEMS.find(x => x.id === go.dataset.ntgo); NT_SEEN.add(it.id); ntBadge(); NT.onChange(); ntClose(true); if (it.k === 'msg') FSX.go('messages', { thread: it.thread }); else if (it.k === 'graded') FSX.hub(it.c, 'grades', { a: it.aid }); else FSX.hub(it.c, 'updates', { update: it.raw }); }
+    if (go) { const it = NT_ITEMS.find(x => x.id === go.dataset.ntgo); NT_SEEN.add(it.id); ntBadge(); NT.onChange(); ntClose(true); if (it.k === 'msg') FSX.go('messages', { thread: it.thread }); else if (it.k === 'new') FSX.newGo(it); else if (it.k === 'graded') FSX.hub(it.c, 'grades', { a: it.aid }); else FSX.hub(it.c, 'updates', { update: it.raw }); }
   }
   document.addEventListener('keydown', e => {
     if (!ntEl) return;
@@ -4285,6 +4290,8 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       const here = !m && typeof window.CMDK_HERE === 'function' ? window.CMDK_HERE(qq) : null;
       if (here && here.rows.length) html += `<div class="lbl">${esc(here.label)}</div>` + here.rows.slice(0, 5).map(r => crow(`data-cmdkgo="${esc(r.key)}"`, r.lead, r.t, r.sub)).join('');
       const cs = m ? [] : CLASSES.filter(c => chit(qq, c.name + ' ' + c.teacher)); if (cs.length) html += `<div class="lbl">Classes</div>` + cs.map(c => cclass(c, qq)).join('');
+      // people: your teachers and classmates (2026-11-06); one opens their card in Contacts
+      const pp = m || !FSX.people ? [] : FSX.people().filter(x => chit(qq, x.name)).slice(0, 5); if (pp.length) html += `<div class="lbl">People</div>` + pp.map(x => crow(`data-go="${FSX.url('contacts', { person: x.id })}"`, FSX.personAv(x), cmark(x.name, qq), x.sub)).join('');
       const ps = m ? [] : GO_PAGES.filter(([p]) => chit(qq, p)); if (ps.length) html += `<div class="lbl">Go to</div>` + ps.map(page).join('');
       if (HERE && !m) html += crow(`data-cmdkhere="${esc(qq)}"`, ico('search'), `Search ${esc(HERE)} for "${esc(qq)}"`, 'Just this page', ' s-cmd');
       if (!html) html = `<div class="cmdk-empty">Nothing for "${esc(q)}". Try a class, a page, or a command like "message ${esc(FSD.exampleTeacher)}".</div>`;
@@ -4353,6 +4360,9 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const PEOPLE = {};
   ((FSD.people && FSD.people.CONTACTS) || []).forEach(x => { const c = (x.courses || []).find(id => C[id]); if (!c) return;
     PEOPLE[String(x.id)] = { id: String(x.id), name: x.name || 'Teacher', role: 'Teacher', c, room: '', email: x.email || '' }; });
+  // and your classmates (2026-11-06, Martin: they couldn't be found to write to), from your classes' member lists
+  Object.entries(FSD.classmates || {}).forEach(([cid, list]) => { if (!C[cid]) return; (list || []).forEach(m => { const id = String(m.id || ''); if (!id || (PEOPLE[id] && PEOPLE[id].role === 'Teacher') || id === String((FSD.me || {}).uid || '')) return;
+    if (PEOPLE[id]) { if (!PEOPLE[id].cls.includes(cid)) PEOPLE[id].cls.push(cid); return; } PEOPLE[id] = { id, name: m.name || 'Classmate', role: 'Student', cls: [cid], photo: m.photo || '' }; }); });
   const MSG = (FSD.raw.messages && Array.isArray(FSD.raw.messages.CONVERSATIONS)) ? FSD.raw.messages : { CONVERSATIONS: [], PEOPLE: {}, me: '' };
   const MSG_NAMES = MSG.PEOPLE || {};
   const person = id => { id = String(id || ''); if (!id) id = 'x-unknown'; if (!PEOPLE[id]) PEOPLE[id] = { id, name: (MSG_NAMES[id] || {}).name || 'Someone in Schoology', role: 'Other', cls: [] }; return id; };
@@ -4886,6 +4896,10 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   // "Loved “…”", "Removed a heart from “…”" and Android's "Reacted 👍 to “…”"), shows as a little badge on the
   // message it quotes instead of as a message. One reaction per person per message; picking the same one again
   // takes it back. If the quoted message isn't found, it stays a normal message.
+  // the reactions as Twemoji pictures (2026-11-06, Martin: use twemoji, like the rest of the app's emoji), not the
+  // device's own emoji font; any other emoji someone reacts with stays as text
+  const RX_SVG = {"❤️": "<svg aria-hidden=\"true\" focusable=\"false\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 36 36\"><path fill=\"#DD2E44\" d=\"M35.885 11.833c0-5.45-4.418-9.868-9.867-9.868-3.308 0-6.227 1.633-8.018 4.129-1.791-2.496-4.71-4.129-8.017-4.129-5.45 0-9.868 4.417-9.868 9.868 0 .772.098 1.52.266 2.241C1.751 22.587 11.216 31.568 18 34.034c6.783-2.466 16.249-11.447 17.617-19.959.17-.721.268-1.469.268-2.242z\"/></svg>", "👍": "<svg aria-hidden=\"true\" focusable=\"false\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 36 36\"><path fill=\"#FFDB5E\" d=\"M34.956 17.916c0-.503-.12-.975-.321-1.404-1.341-4.326-7.619-4.01-16.549-4.221-1.493-.035-.639-1.798-.115-5.668.341-2.517-1.282-6.382-4.01-6.382-4.498 0-.171 3.548-4.148 12.322-2.125 4.688-6.875 2.062-6.875 6.771v10.719c0 1.833.18 3.595 2.758 3.885C8.195 34.219 7.633 36 11.238 36h18.044a3.337 3.337 0 0 0 3.333-3.334c0-.762-.267-1.456-.698-2.018 1.02-.571 1.72-1.649 1.72-2.899 0-.76-.266-1.454-.696-2.015 1.023-.57 1.725-1.649 1.725-2.901 0-.909-.368-1.733-.961-2.336a3.311 3.311 0 0 0 1.251-2.581z\"/><path fill=\"#EE9547\" d=\"M23.02 21.249h8.604c1.17 0 2.268-.626 2.866-1.633a.876.876 0 0 0-1.506-.892 1.588 1.588 0 0 1-1.361.775h-8.81c-.873 0-1.583-.71-1.583-1.583s.71-1.583 1.583-1.583H28.7a.875.875 0 0 0 0-1.75h-5.888a3.337 3.337 0 0 0-3.333 3.333c0 1.025.475 1.932 1.205 2.544a3.32 3.32 0 0 0-.998 2.373c0 1.028.478 1.938 1.212 2.549a3.318 3.318 0 0 0 .419 5.08 3.305 3.305 0 0 0-.852 2.204 3.337 3.337 0 0 0 3.333 3.333h5.484a3.35 3.35 0 0 0 2.867-1.632.875.875 0 0 0-1.504-.894 1.594 1.594 0 0 1-1.363.776h-5.484c-.873 0-1.583-.71-1.583-1.583s.71-1.583 1.583-1.583h6.506a3.35 3.35 0 0 0 2.867-1.633.875.875 0 1 0-1.504-.894 1.572 1.572 0 0 1-1.363.777h-7.063a1.585 1.585 0 0 1 0-3.167h8.091a3.35 3.35 0 0 0 2.867-1.632.875.875 0 0 0-1.504-.894 1.573 1.573 0 0 1-1.363.776H23.02a1.585 1.585 0 0 1 0-3.167z\"/></svg>", "👎": "<svg aria-hidden=\"true\" focusable=\"false\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 36 36\"><path fill=\"#FFDB5E\" d=\"M34.956 18.084c0 .503-.12.975-.321 1.404-1.341 4.326-7.619 4.01-16.549 4.221-1.493.035-.639 1.798-.115 5.668.341 2.517-1.282 6.382-4.01 6.382-4.498 0-.171-3.548-4.148-12.322-2.125-4.688-6.875-2.062-6.875-6.771V5.948c0-1.833.18-3.595 2.758-3.885C8.195 1.781 7.633 0 11.238 0h18.044a3.337 3.337 0 0 1 3.333 3.334c0 .762-.267 1.456-.698 2.018 1.02.571 1.72 1.649 1.72 2.899 0 .76-.266 1.454-.696 2.015 1.023.57 1.725 1.649 1.725 2.901 0 .909-.368 1.733-.961 2.336a3.311 3.311 0 0 1 1.251 2.581z\"/><path fill=\"#EE9547\" d=\"M23.02 14.751h8.604c1.17 0 2.268.626 2.866 1.633a.876.876 0 0 1-1.506.892 1.588 1.588 0 0 0-1.361-.775h-8.81c-.873 0-1.583.71-1.583 1.583s.71 1.583 1.583 1.583H28.7a.875.875 0 0 1 0 1.75h-5.888a3.337 3.337 0 0 1-3.333-3.333c0-1.025.475-1.932 1.205-2.544a3.32 3.32 0 0 1-.998-2.373c0-1.028.478-1.938 1.212-2.549a3.318 3.318 0 0 1 .419-5.08 3.305 3.305 0 0 1-.852-2.204A3.337 3.337 0 0 1 23.798.001h5.484a3.35 3.35 0 0 1 2.867 1.632.875.875 0 0 1-1.504.894 1.594 1.594 0 0 0-1.363-.776h-5.484c-.873 0-1.583.71-1.583 1.583s.71 1.583 1.583 1.583h6.506c1.17 0 2.27.626 2.867 1.633a.875.875 0 1 1-1.504.894 1.572 1.572 0 0 0-1.363-.777h-7.063a1.585 1.585 0 0 0 0 3.167h8.091a3.35 3.35 0 0 1 2.867 1.632.875.875 0 0 1-1.504.894 1.573 1.573 0 0 0-1.363-.776H23.02a1.585 1.585 0 0 0 0 3.167z\"/></svg>", "😂": "<svg aria-hidden=\"true\" focusable=\"false\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 36 36\"><path fill=\"#FFCC4D\" d=\"M36 18c0 9.941-8.059 18-18 18-9.94 0-18-8.059-18-18C0 8.06 8.06 0 18 0c9.941 0 18 8.06 18 18\"/><path fill=\"#664500\" d=\"M28.457 17.797c-.06-.135-1.499-3.297-4.457-3.297-2.957 0-4.397 3.162-4.457 3.297a.503.503 0 0 0 .755.605c.012-.009 1.262-.902 3.702-.902 2.426 0 3.674.881 3.702.901a.498.498 0 0 0 .755-.604zm-12 0c-.06-.135-1.499-3.297-4.457-3.297-2.957 0-4.397 3.162-4.457 3.297a.499.499 0 0 0 .754.605C8.31 18.393 9.559 17.5 12 17.5c2.426 0 3.674.881 3.702.901a.498.498 0 0 0 .755-.604zM31 16c-.396 0-.772-.238-.929-.629-1.778-4.445-6.223-5.381-6.268-5.391a1 1 0 1 1 .393-1.961c.226.045 5.556 1.168 7.732 6.608A1 1 0 0 1 31 16zM5 16a1 1 0 0 1-.928-1.372c2.176-5.44 7.506-6.563 7.732-6.608a1 1 0 0 1 .396 1.96c-.185.038-4.506.98-6.271 5.391A1.002 1.002 0 0 1 5 16zm13 6c-3.623 0-6.027-.422-9-1-.679-.131-2 0-2 2 0 4 4.595 9 11 9 6.404 0 11-5 11-9 0-2-1.321-2.132-2-2-2.973.578-5.377 1-9 1z\"/><path fill=\"#FFF\" d=\"M9 23s3 1 9 1 9-1 9-1-2 4-9 4-9-4-9-4z\"/><path fill=\"#5DADEC\" d=\"M10.847 28.229a5 5 0 0 1-9.693-2.461c.679-2.677 6.337-8.708 7.307-8.462.97.247 3.065 8.247 2.386 10.923zm14.286 0a5 5 0 0 0 6.077 3.615 4.998 4.998 0 0 0 3.616-6.076c-.68-2.677-6.338-8.708-7.308-8.462-.968.247-3.064 8.247-2.385 10.923z\"/></svg>", "‼️": "<svg aria-hidden=\"true\" focusable=\"false\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 36 36\"><circle cx=\"11\" cy=\"31\" r=\"3\" fill=\"#BE1931\"/><path fill=\"#BE1931\" d=\"M14 23a3 3 0 1 1-6 0V4a3 3 0 1 1 6 0v19z\"/><circle cx=\"25\" cy=\"31\" r=\"3\" fill=\"#BE1931\"/><path fill=\"#BE1931\" d=\"M28 23a3 3 0 0 1-6 0V4a3 3 0 0 1 6 0v19z\"/></svg>", "❓": "<svg aria-hidden=\"true\" focusable=\"false\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 36 36\"><path fill=\"#BE1931\" d=\"M17 27a3 3 0 0 1-3-3v-4a3 3 0 0 1 3-3c.603-.006 6-1 6-5 0-2-2-4-5-4-2.441 0-4 2-4 3a3 3 0 1 1-6 0c0-4.878 4.58-9 10-9 8 0 11 5.982 11 11 0 4.145-2.277 7.313-6.413 8.92-.9.351-1.79.587-2.587.747V24a3 3 0 0 1-3 3z\"/><circle cx=\"17\" cy=\"32\" r=\"3\" fill=\"#BE1931\"/></svg>"};
+  const rxPic = e => RX_SVG[e] || esc(e);
   const RX = [['love', '❤️', 'loved', 'a heart'], ['like', '👍', 'liked', 'a like'], ['dislike', '👎', 'disliked', 'a dislike'], ['laugh', '😂', 'laughed at', 'a laugh'], ['emph', '‼️', 'emphasized', 'an exclamation mark'], ['ques', '❓', 'questioned', 'a question mark']];
   const RX_NOUN = { heart: 'love', like: 'like', dislike: 'dislike', laugh: 'laugh', exclamation: 'emph', emphasis: 'emph', question: 'ques' };
   const RX_WHAT = '(?:[“"](.+)[”"]|(an image|a file|an attachment|a photo))';
@@ -4921,7 +4935,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (!m.rx || !m.rx.length) return '';
     const seen = [...new Set(m.rx.map(r => r.e))].slice(0, 3);
     const who = m.rx.map(r => `${r.by === 'me' ? 'You' : P(r.by).name} ${r.v || 'reacted to'} this`).join(' · ');
-    return `<span class="ms-rx${m.rx.some(r => r.by === 'me') ? ' mine' : ''}" title="${esc(who)}" aria-label="${esc(who)}">${seen.map(e => `<i>${e}</i>`).join('')}${m.rx.length > 1 ? `<b>${m.rx.length}</b>` : ''}</span>`;
+    return `<span class="ms-rx${m.rx.some(r => r.by === 'me') ? ' mine' : ''}" title="${esc(who)}" aria-label="${esc(who)}">${seen.map(e => `<i>${rxPic(e)}</i>`).join('')}${m.rx.length > 1 ? `<b>${m.rx.length}</b>` : ''}</span>`;
   }
   let tbar = null;
   function tbClose() { if (!tbar) return; tbar.el.remove(); tbar = null; }
@@ -4929,7 +4943,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     const was = tbar && tbar.mid; tbClose(); if (was === mid) return;
     const [t, m] = msgById(mid); if (!t || !canReact(m)) return;
     const mine = (m.rx || []).find(r => r.by === 'me');
-    document.body.insertAdjacentHTML('beforeend', `<div class="ms-tbar${calm() ? '' : ' in'}" role="dialog" aria-label="React">${RX.map(r => `<button data-msrx="${r[0]}" aria-pressed="${!!mine && mine.k === r[0]}" aria-label="${r[2][0].toUpperCase() + r[2].slice(1)}" title="${r[2][0].toUpperCase() + r[2].slice(1)}">${r[1]}</button>`).join('')}</div>`);
+    document.body.insertAdjacentHTML('beforeend', `<div class="ms-tbar${calm() ? '' : ' in'}" role="dialog" aria-label="React">${RX.map(r => `<button data-msrx="${r[0]}" aria-pressed="${!!mine && mine.k === r[0]}" aria-label="${r[2][0].toUpperCase() + r[2].slice(1)}" title="${r[2][0].toUpperCase() + r[2].slice(1)}">${rxPic(r[1])}</button>`).join('')}</div>`);
     const el = document.body.lastElementChild, anchor = (from && from.closest('.ms-rxw')) || from, rc = anchor.getBoundingClientRect(), w = el.offsetWidth;
     const me = m.from === 'me', left = Math.max(8, Math.min(innerWidth - w - 8, me ? rc.right - w : rc.left));
     el.style.left = left + 'px'; el.style.top = Math.max(8, rc.top - el.offsetHeight - 8) + 'px';
@@ -5021,7 +5035,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   function composeHTML() {
     const c = MS.compose, box = $('msThread');
     const chips = c.to.map(id => `<span class="ms-chip">${av(P(id))}${esc(P(id).name)}<button data-msunto="${id}" aria-label="Remove ${esc(P(id).name)}">${ico('x')}</button></span>`).join('');
-    box.innerHTML = `<div class="ms-top"><button class="ibtn ms-back" data-msback aria-label="Back to your messages">${ico('chev-l')}</button><span class="ms-av" style="--h:210" aria-hidden="true">${ico('plus')}</span><span class="tx"><b>New message</b><small>To your teachers</small></span><button class="btn sm ms-sgy" data-mssgy title="Start this conversation on Schoology's own site">${ico('up')}Start in Schoology</button><button class="ibtn" data-msdiscard aria-label="Throw away this message">${ico('x')}</button></div>
+    box.innerHTML = `<div class="ms-top"><button class="ibtn ms-back" data-msback aria-label="Back to your messages">${ico('chev-l')}</button><span class="ms-av" style="--h:210" aria-hidden="true">${ico('plus')}</span><span class="tx"><b>New message</b><small>To your teachers and classmates</small></span><button class="btn sm ms-sgy" data-mssgy title="Start this conversation on Schoology's own site">${ico('up')}Start in Schoology</button><button class="ibtn" data-msdiscard aria-label="Throw away this message">${ico('x')}</button></div>
       <div class="ms-to${c.bad === 'to' ? ' bad' : ''}" id="msTo"><small>To</small>${chips}<input id="msToIn" placeholder="${c.to.length ? 'Add someone' : 'Type a name'}" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="msFindList" aria-label="Who it's to" value="${esc(c.q || '')}"></div>
       <label class="ms-subin${c.bad === 'subj' ? ' bad' : ''}"><small>Subject</small><input id="msSubIn" placeholder="What it's about" autocomplete="off" value="${esc(c.subject)}"></label>
       <div class="ms-feed"><div class="ms-empty"><span class="emo">${EMOJI_SVG['💬'] || ''}</span><b>${c.to.length ? `Write to ${esc(c.to.map(id => P(id).name.split(' ')[0] === P(id).name ? P(id).name : P(id).name).join(', '))}` : 'Who is it to?'}</b><span>${c.bad === 'subj' ? 'Add a subject. Schoology needs one for a new message.' : c.bad === 'to' ? 'Pick at least one person first.' : sgyBlocked() ? 'Your school only lets students start new conversations on Schoology.' : 'Schoology needs a subject for a new message.'}</span>${sgyBlocked() ? `<button class="btn sm primary ms-sgy2" data-mssgy>${ico('up')}Start it in Schoology</button>` : ''}</div></div>`
@@ -5042,7 +5056,9 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   function findShow() {
     const c = MS.compose, q = (c.q || '').trim().toLowerCase(), box = $('msTo'); findHide();
     if (!q) return; // nobody's suggested until you type a letter
-    const pool = Object.values(PEOPLE).filter(p => p.role === 'Teacher' && !c.to.includes(p.id) && !BLOCKED.some(b => b.id === p.id) && (!q || (p.name + ' ' + (p.role === 'Teacher' ? C[p.c].name : p.cls.map(id => C[id].name).join(' '))).toLowerCase().includes(q)));
+    // teachers and classmates (2026-11-06, Martin: classmates couldn't be found); a school that doesn't let students
+    // write to each other says so when it's sent, and Start in Schoology takes over
+    const pool = Object.values(PEOPLE).filter(p => !c.to.includes(p.id) && !BLOCKED.some(b => b.id === p.id) && (!q || (p.name + ' ' + (p.role === 'Teacher' ? C[p.c].name : p.cls.map(id => C[id].name).join(' '))).toLowerCase().includes(q)));
     const t = pool.filter(p => p.role === 'Teacher'), s = pool.filter(p => p.role !== 'Teacher');
     const opt = (p, i) => `<button class="ms-opt${i === 0 ? ' on' : ''}" role="option" data-msto="${p.id}">${av(p)}<span class="tx"><b>${esc(p.name)}</b><small>${p.role === 'Teacher' ? esc(C[p.c].name) + ' teacher' : 'In ' + esc(p.cls.map(id => C[id].name).join(' and '))}</small></span></button>`;
     let k = 0; const html = (t.length ? `<div class="ms-lbl lbl">Teachers</div>` + t.map(p => opt(p, k++)).join('') : '') + (s.length ? `<div class="ms-lbl lbl">Classmates</div>` + s.map(p => opt(p, k++)).join('') : '');
@@ -5097,7 +5113,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       if (e.target === sgy.el || e.target.closest('[data-sgyx]')) { sgyClose(); return; }
       if (e.target.closest('[data-sgygo]')) {
         const d = sgy.draft; if (d) { try { navigator.clipboard.writeText(d).then(() => toast('Copied your message. Paste it in Schoology.'), () => {}); } catch (err) { /* no clipboard: they can copy it themselves */ } }
-        FSX.newTab(FSX.schoology('/messages/inbox')); sgyClose();
+        FSX.newTab(FSX.schoology('/messages')); sgyClose();
       }
     });
   }
@@ -5212,37 +5228,51 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   function infoHTML() {
     const I = info, ts = tsOf(I.id); if (!ts.length) return '';
     const t = ts[0], one = t.with.length === 1, p = one ? P(t.with[0]) : null, c = p && p.role === 'Teacher' ? C[p.c] : null;
-    const it = infoItems(ts), n = { info: 0, photos: it.photos.length, links: it.links.length, files: it.files.length };
+    const it = infoItems(ts), n = { photos: it.photos.length, links: it.links.length, files: it.files.length };
     const loading = ts.some(x => !x.loaded);
     const when = d => `${dayName(d)}, ${fmtTime(d)}`;
-    const big = one ? av(p, ' ms-iav') : `<span class="ms-iavw">${tav(t)}</span>`;
-    const act = (k, icon, label, extra = '') => `<button class="ms-iact" data-msi="${k}" ${extra}><span>${ico(icon)}</span><small>${label}</small></button>`;
+    const sw = on => `<span class="sw${on ? ' on' : ''}" aria-hidden="true"></span>`;
+    const row = (inner, attrs = '') => `<div class="ms-srow"${attrs}>${inner}</div>`;
+    const sub = one ? (c ? `${esc(c.name)} teacher${c.hasPeriod ? ` · Period ${c.period}` : ''}` : 'In your Schoology messages') : `${t.with.length + 1} people · from Schoology`;
     const tabs = [['info', 'Info'], ['photos', 'Photos'], ['links', 'Links'], ['files', 'Files']];
+    const none = what => `<div class="ms-inone"><span class="emo" aria-hidden="true">${EMOJI_SVG['💬'] || ''}</span><b>${loading ? 'Loading…' : `No ${what} yet`}</b>${loading ? '' : `<small>${what[0].toUpperCase() + what.slice(1)} sent in this conversation show up here.</small>`}</div>`;
     let body = '';
     if (I.tab === 'info') {
       const pinned = ts.some(x => x.pinned), muted = ts.some(x => MUTED.has(x.id));
-      body = `<div class="ms-icard ms-ilinks"><button data-msi="unread">Mark as unread</button><button data-msi="hide">Hide here</button><button class="bad" data-msi="erase">Delete conversation…</button></div>`
-        + (one ? `<div class="ms-icard"><div class="ms-irow"><span class="tx"><small>${p.role === 'Teacher' ? 'teacher' : 'in your messages'}</small><b>${esc(p.name)}</b></span></div>${c ? `<div class="ms-irow"><span class="tx"><small>class</small><b>${esc(c.name)}${c.hasPeriod ? ` · period ${c.period}` : ''}</b></span><button class="ms-ibtn" data-go="${FSX.hubUrl(c.id)}" aria-label="Open ${esc(c.name)}">${ico('binder')}</button></div>` : ''}${p.email ? `<div class="ms-irow"><span class="tx"><small>email</small><b>${esc(p.email)}</b></span><a class="ms-ibtn" href="mailto:${esc(p.email)}" aria-label="Email ${esc(p.name)}">${ico('mail')}</a></div>` : ''}</div>`
-          : `<div class="ms-icard">${['me', ...t.with].map(id => { const q = P(id); return `<div class="ms-irow">${av(q)}<span class="tx"><b>${id === 'me' ? 'You' : esc(q.name)}</b><small>${id === 'me' ? '' : esc(q.role || '')}</small></span></div>`; }).join('')}</div>`)
-        + `<div class="ms-icard"><div class="ms-irow ms-isw"><span class="tx"><b>Hide alerts</b><small>No bell or popups for it on this device</small></span><button class="sw${muted ? ' on' : ''}" role="switch" aria-checked="${muted}" data-msi="mute" aria-label="Hide alerts"><i></i></button></div><div class="ms-irow ms-isw"><span class="tx"><b>Pin to the top</b></span><button class="sw${pinned ? ' on' : ''}" role="switch" aria-checked="${pinned}" data-msi="pin" aria-label="Pin to the top"><i></i></button></div></div>`
-        + `<div class="ms-icard"><div class="ms-irow"><span class="tx"><small>${ts.length > 1 ? 'subjects' : 'subject'}</small><b>${ts.map(x => esc(x.subject)).join(' · ')}</b></span></div></div>`;
+      body = `<section class="ms-ssec"><h3>This conversation</h3><div class="ms-sgrp">`
+        + `<button class="ms-srow ms-irow2" role="switch" aria-checked="${pinned}" data-msi="pin"><span class="tx"><b>Pin to the top</b><small>Keeps it first in your messages</small></span>${sw(pinned)}</button>`
+        + `<button class="ms-srow ms-irow2" role="switch" aria-checked="${muted}" data-msi="mute"><span class="tx"><b>Hide alerts</b><small>No bell or popups for it on this device</small></span>${sw(muted)}</button>`
+        + row(`<span class="tx"><small>${ts.length > 1 ? 'Subjects' : 'Subject'}</small><b>${ts.map(x => esc(x.subject)).join(' · ')}</b></span>`)
+        + `</div></section>`
+        + (one ? `<section class="ms-ssec"><h3>${p.role === 'Teacher' ? 'Your teacher' : 'Who it\'s with'}</h3><div class="ms-sgrp">`
+            + row(`${av(p)}<span class="tx"><b>${esc(p.name)}</b><small>${p.role === 'Teacher' ? 'Teacher' : 'In your messages'}</small></span>`)
+            + (c ? row(`<span class="ms-ibadge" style="--c:${c.color}" aria-hidden="true">${EMOJI_SVG[c.emoji] || ''}</span><span class="tx"><b>${esc(c.name)}</b><small>${c.hasPeriod ? `Period ${c.period}` : 'Class'}</small></span><button class="btn sm" data-go="${FSX.hubUrl(c.id)}">Open class</button>`) : '')
+            + (p.email ? row(`<span class="ms-ibadge ms-ibadge0" aria-hidden="true">${ico('mail')}</span><span class="tx"><b>${esc(p.email)}</b><small>Email</small></span><a class="btn sm" href="mailto:${esc(p.email)}">Email</a>`) : '')
+            + `</div></section>`
+          : `<section class="ms-ssec"><h3>People</h3><div class="ms-sgrp">${['me', ...t.with].map(id => { const q = P(id); return row(`${av(q)}<span class="tx"><b>${id === 'me' ? 'You' : esc(q.name)}</b><small>${id === 'me' ? '' : esc(q.role || '')}</small></span>`); }).join('')}</div></section>`)
+        + `<section class="ms-ssec"><h3>Manage</h3><div class="ms-sgrp">`
+        + `<button class="ms-srow ms-irow2" data-msi="unread"><span class="ms-ibadge ms-ibadge0" aria-hidden="true">${ico('mail')}</span><span class="tx"><b>Mark as unread</b><small>It gets its dot back</small></span></button>`
+        + `<button class="ms-srow ms-irow2" data-msi="hide"><span class="ms-ibadge ms-ibadge0" aria-hidden="true">${ico('eyeoff')}</span><span class="tx"><b>Hide here</b><small>Only on this device. It stays in Schoology.</small></span></button>`
+        + `<button class="ms-srow ms-irow2 bad" data-msi="erase"><span class="ms-ibadge ms-ibadge0" aria-hidden="true">${ico('trash')}</span><span class="tx"><b>Delete conversation…</b><small>From your Schoology messages too</small></span></button>`
+        + `</div></section>`;
     } else if (I.tab === 'photos') {
-      body = n.photos ? `<div class="ms-igrid">${it.photos.map(x => `<button class="ms-iph" data-msifile="${x.m.id}" aria-label="${esc(x.m.att.name)}"><img src="${esc(x.m.att.url)}" alt="" loading="lazy"></button>`).join('')}</div>` : `<p class="ms-inone">${loading ? 'Loading…' : 'No photos in this conversation yet.'}</p>`;
+      body = n.photos ? `<div class="ms-igrid">${it.photos.map(x => `<button class="ms-iph" data-msifile="${x.m.id}" aria-label="${esc(x.m.att.name)}"><img src="${esc(x.m.att.url)}" alt="" loading="lazy"></button>`).join('')}</div>` : none('photos');
     } else if (I.tab === 'links') {
-      body = n.links ? `<div class="ms-icard">${it.links.map(x => { const L = LP[x.u]; return `<a class="ms-irow ms-ilink" href="${esc(x.u)}" target="_blank" rel="noopener noreferrer" data-lpi="${esc(x.u)}">${L && L.icon ? `<img class="ms-lfav" src="${esc(lpImg(L.icon))}" alt="" onerror="this.remove()">` : `<span class="ms-lfav ms-lfav0">${ico('link')}</span>`}<span class="tx"><b>${esc(L && L.title || hostOf(x.u))}</b><small>${esc(prettyUrl(x.u))} · ${when(x.m.when)}</small></span></a>`; }).join('')}</div>` : `<p class="ms-inone">${loading ? 'Loading…' : 'No links in this conversation yet.'}</p>`;
+      body = n.links ? `<div class="ms-sgrp">${it.links.map(x => { const L = LP[x.u]; return `<a class="ms-srow ms-irow2" href="${esc(x.u)}" target="_blank" rel="noopener noreferrer">${L && L.icon ? `<img class="ms-lfav ms-ifav" src="${esc(lpImg(L.icon))}" alt="" onerror="this.remove()">` : `<span class="ms-ibadge ms-ibadge0" aria-hidden="true">${ico('link')}</span>`}<span class="tx"><b>${esc(L && L.title || hostOf(x.u))}</b><small>${esc(hostOf(x.u))} · ${when(x.m.when)}</small></span>${ico('up')}</a>`; }).join('')}</div>` : none('links');
     } else {
-      body = n.files ? `<div class="ms-icard">${it.files.map(x => `<button class="ms-irow ms-ifile" data-msifile="${x.m.id}">${window.AveragesFileIcons ? AveragesFileIcons.html(x.m.att.name, { size: 32 }) : ico('doc')}<span class="tx"><b>${esc(x.m.att.name)}</b><small>${esc(x.m.att.size)} · ${x.m.from === 'me' ? 'You' : esc(P(x.m.from).name)} · ${when(x.m.when)}</small></span></button>`).join('')}</div>` : `<p class="ms-inone">${loading ? 'Loading…' : 'No files in this conversation yet.'}</p>`;
+      body = n.files ? `<div class="ms-sgrp">${it.files.map(x => `<button class="ms-srow ms-irow2 avfi-host" data-msifile="${x.m.id}">${window.AveragesFileIcons ? AveragesFileIcons.html(x.m.att.name, { size: 32 }) : ico('doc')}<span class="tx"><b>${esc(x.m.att.name)}</b><small>${esc(x.m.att.size)} · ${x.m.from === 'me' ? 'You' : esc(P(x.m.from).name)} · ${when(x.m.when)}</small></span></button>`).join('')}</div>` : none('files');
     }
-    return `<button class="ms-ix" data-msi="x" aria-label="Close">${ico('x')}</button>
-      <div class="ms-ihd">${big}<h2 id="msInfoT">${esc(one ? p.name : title(t))}</h2><small>${one ? (c ? `Your ${esc(c.name)} teacher` : 'In your Schoology messages') : `${t.with.length + 1} people`}</small></div>
-      <div class="ms-iacts">${act('msg', 'msg', 'Message')}${one && p.email ? `<a class="ms-iact" href="mailto:${esc(p.email)}"><span>${ico('mail')}</span><small>Email</small></a>` : ''}${c ? act('class', 'binder', 'Class', `data-go="${FSX.hubUrl(c.id)}"`) : ''}${act('sgy', 'up', 'Schoology')}</div>
-      <div class="ms-itabs" role="tablist">${tabs.map(([k, l]) => `<button role="tab" data-msitab="${k}" aria-selected="${I.tab === k}">${l}${k !== 'info' && n[k] ? ` <em>${n[k]}</em>` : ''}</button>`).join('')}</div>
-      <div class="ms-ibody" role="tabpanel">${body}</div>`;
+    return `<div class="ms-shd ms-ihd">${one ? av(p, ' ms-iav') : `<span class="ms-iavw">${tav(t)}</span>`}<span class="tx"><h2 id="msInfoT">${esc(one ? p.name : title(t))}</h2><small>${sub}</small></span><button class="ibtn ms-ix" data-msi="x" aria-label="Close">${ico('x')}</button></div>
+      <div class="ms-iacts"><button class="btn sm" data-msi="msg">${ico('msg')}Message</button>${c ? `<button class="btn sm" data-go="${FSX.hubUrl(c.id)}">${ico('binder')}Class</button>` : ''}<button class="btn sm" data-msi="sgy">${ico('up')}Open in Schoology</button></div>
+      <div class="ms-itabw"><div class="mp-types ms-itabs" role="group" aria-label="Show"><span class="mp-pill" aria-hidden="true"></span>${tabs.map(([k, l]) => `<button data-msitab="${k}" aria-pressed="${I.tab === k}">${l}${k !== 'info' && n[k] ? `<em>${n[k]}</em>` : ''}</button>`).join('')}</div></div>
+      <div class="ms-sbody ms-ibody">${body}</div>
+      <div class="ms-sfoot"><button class="btn primary" data-msi="x">Done</button></div>`;
   }
   function infoDraw(keepScroll) {
     if (!info) return; const sc = info.el.querySelector('.ms-ibody'), top = keepScroll && sc ? sc.scrollTop : 0;
     const f = document.activeElement && document.activeElement.dataset ? (document.activeElement.dataset.msitab || document.activeElement.dataset.msi) : '';
     info.box.innerHTML = infoHTML();
+    mpPill(info.el.querySelector('.ms-itabs'), !!info.anim); info.anim = false;
     const sc2 = info.el.querySelector('.ms-ibody'); if (sc2) sc2.scrollTop = top;
     const ff = f && (info.el.querySelector(`[data-msitab="${f}"]`) || info.el.querySelector(`[data-msi="${f}"]`)); if (ff) ff.focus({ preventScroll: true });
     if (info.tab === 'links') tsOf(info.id).length && infoItems(tsOf(info.id)).links.forEach(x => { if (!LP[x.u]) lpGet(x.u).then(() => { if (info && info.tab === 'links') infoDraw(true); }, () => {}); });
@@ -5256,14 +5286,14 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     tsOf(id).forEach(thLoad); infoDraw(); info.el.querySelector('.ms-ix').focus({ preventScroll: true });
     info.el.addEventListener('click', e => {
       if (e.target === info.el) { infoClose(); return; }
-      const tb = e.target.closest('[data-msitab]'); if (tb) { info.tab = tb.dataset.msitab; infoDraw(); return; }
+      const tb = e.target.closest('[data-msitab]'); if (tb) { if (info.tab === tb.dataset.msitab) return; info.tab = tb.dataset.msitab; info.anim = true; infoDraw(); return; }
       const fl = e.target.closest('[data-msifile]'); if (fl) { fileLbOpen(fl.dataset.msifile); return; }
       const g = e.target.closest('[data-go]'); if (g) return; // the page's own handler opens it
       const b = e.target.closest('[data-msi]'); if (!b) return;
       const k = b.dataset.msi, ts = tsOf(info.id);
       if (k === 'x') { infoClose(); return; }
       if (k === 'msg') { infoClose(); const ta = $('msText'); if (ta) ta.focus(); return; }
-      if (k === 'sgy') { FSX.newTab(FSX.schoology('/messages/inbox')); return; }
+      if (k === 'sgy') { FSX.newTab(FSX.schoology('/messages')); return; }
       if (k === 'mute') { const on = !ts.some(x => MUTED.has(x.id)); ts.forEach(x => on ? MUTED.add(x.id) : MUTED.delete(x.id)); store.set('fsmsg_muted', [...MUTED]); infoDraw(true); toast(on ? 'Alerts hidden for this conversation.' : 'Alerts are back on for this conversation.'); return; }
       if (k === 'pin') { const on = !ts.some(x => x.pinned); ts.forEach(x => { x.pinned = on; on ? PINS.add(x.id) : PINS.delete(x.id); }); store.set('fsmsg_pins', [...PINS]); msRows(); infoDraw(true); return; }
       if (k === 'unread') { ts.forEach(x => { x.unread = true; }); infoClose(true); MS.open = null; msRows(); msThread(); msView(); msMeta(); toast('Marked as unread.'); return; }
@@ -5295,7 +5325,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       <section class="ms-ssec"><h3>How messages work here</h3>
         <div class="ms-sgrp">
           <div class="ms-srow"><span class="tx"><b>Message your teachers</b><small>Sent through Schoology, so they're in Schoology too</small></span>${onOff(true)}</div>
-          <div class="ms-srow"><span class="tx"><b>Message classmates</b><small>Not in Averages.io for now</small></span>${onOff(false)}</div>
+          <div class="ms-srow"><span class="tx"><b>Message classmates</b><small>When your school lets students write to each other</small></span>${onOff(true)}</div>
           <div class="ms-srow"><span class="tx"><b>Attach files</b><small>Not yet. Attach them in Schoology</small></span>${onOff(false)}</div>
         </div>
         <p class="ms-sfine">${FSD.me.school ? esc(FSD.me.school) + ' decides' : 'Your school decides'} who can message whom in Schoology. <a href="${FSX.schoology('/messages')}" target="_blank" rel="noopener">Open your Schoology messages</a></p></section>`;
@@ -5556,7 +5586,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       }
     }
     if (spot === 'end') { el.style.position = el.style.left = el.style.top = el.style.margin = ''; el.style.setProperty('--tx', el.dataset.tx || '0px'); el.style.setProperty('--ty', el.dataset.ty || '0px'); fitEnd(el); }
-    el.dataset.spot = spot; el.dataset.fitted = '1';
+    el.dataset.spot = spot; el.dataset.fitted = '1'; el.dataset.shown = '1';
   }
   let rz = 0; // the layout changed: land every sticker again
   const refitAll = ms => { clearTimeout(rz); rz = setTimeout(() => document.querySelectorAll('.newtag[data-fitted]').forEach(el => { delete el.dataset.fitted; fit(el); }), ms); };
@@ -5578,6 +5608,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     el.style.setProperty('--tx', ((h >> 7) % 3) - 1 + 'px');
     el.dataset.ty = el.style.getPropertyValue('--ty'); el.dataset.tx = el.style.getPropertyValue('--tx');
     el.dataset.tilted = '1';
+    setTimeout(() => { el.dataset.shown = '1'; }, 3000); // never left hidden if it can't be measured
     if (ro) ro.observe(el); else requestAnimationFrame(() => fit(el)); // fit once it's on screen and has a size
   };
   const run = root => { if (root.querySelectorAll) root.querySelectorAll('.newtag:not([data-tilted])').forEach(place); };
