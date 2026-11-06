@@ -66,19 +66,22 @@ fs.writeFileSync(
  * here doesn't change the ported pages each time. Pages write
  * __AVERAGES_BASE__, __AVERAGES_BUILD__ and __AVERAGES_COMMIT__; this fills
  * them in on every port. To move to 0.2.0 and so on, change "version" in
- * package.json.
+ * package.json. The word in front ("Beta") is "versionName" there (2026-11-06,
+ * Martin): change it to anything, or "" for none. Pages write __AVERAGES_STAGE__.
  */
 function buildVersion() {
   const pkg = JSON.parse(fs.readFileSync(path.resolve(HERE, "../package.json"), "utf8"));
   const base = String(pkg.version || "0.0.0");
-  if (!process.env.WORKERS_CI) return { base, build: "local", commit: "Built on this computer", label: `Beta ${base} (Build local)` };
+  const stage = typeof pkg.versionName === "string" ? pkg.versionName.trim().slice(0, 40) : "Beta";
+  const named = (t) => (stage ? `${stage} ${t}` : t);
+  if (!process.env.WORKERS_CI) return { base, stage, build: "local", commit: "Built on this computer", label: named(`${base} (Build local)`) };
   let sha = String(process.env.WORKERS_CI_COMMIT_SHA || "").trim();
   if (!/^[0-9a-f]{7,40}$/i.test(sha)) {
     try { sha = execFileSync("git", ["rev-parse", "HEAD"], { cwd: path.resolve(HERE, ".."), encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim(); } catch { sha = ""; }
   }
   const when = new Date().toLocaleString("en-US", { timeZone: "America/Los_Angeles", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
   const build = /^[0-9a-f]{7,40}$/i.test(sha) ? sha.slice(0, 7).toLowerCase() : "unknown";
-  return { base, build, commit: sha ? `Commit ${sha.toLowerCase()}, built ${when} Pacific` : `Built ${when} Pacific`, label: `Beta ${base} (Build ${build})` };
+  return { base, stage, build, commit: sha ? `Commit ${sha.toLowerCase()}, built ${when} Pacific` : `Built ${when} Pacific`, label: named(`${base} (Build ${build})`) };
 }
 const VERSION = buildVersion();
 const escapeText = (v) => v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -177,6 +180,7 @@ function maskEmbeddedBlocks(html) {
 
 function extract(srcPath) {
   const html = fs.readFileSync(srcPath, "utf8")
+    .replaceAll("__AVERAGES_STAGE__ ", VERSION.stage ? escapeText(VERSION.stage) + " " : "")
     .replaceAll("__AVERAGES_BASE__", escapeText(VERSION.base))
     .replaceAll("__AVERAGES_BUILD__", escapeText(VERSION.build))
     .replaceAll("__AVERAGES_COMMIT__", escapeText(VERSION.commit));

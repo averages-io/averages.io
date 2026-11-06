@@ -61,13 +61,15 @@ import { execFileSync } from "node:child_process";
 function buildVersion() {
   const pkg = JSON.parse(fs.readFileSync(path.resolve(HERE, "../package.json"), "utf8"));
   const base = String(pkg.version || "0.0.0");
-  if (!process.env.WORKERS_CI) return { base, sha: "local", when: "Built on this computer" };
+  // the word in front of the version, "versionName" in package.json (2026-11-06): "Beta", anything else, or "" for none
+  const stage = typeof pkg.versionName === "string" ? pkg.versionName.trim().slice(0, 40) : "Beta";
+  if (!process.env.WORKERS_CI) return { base, stage, sha: "local", when: "Built on this computer" };
   let sha = String(process.env.WORKERS_CI_COMMIT_SHA || "").trim();
   if (!/^[0-9a-f]{7,40}$/i.test(sha)) {
     try { sha = execFileSync("git", ["rev-parse", "HEAD"], { cwd: path.resolve(HERE, ".."), encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim(); } catch { sha = ""; }
   }
   const when = new Date().toLocaleString("en-US", { timeZone: "America/Los_Angeles", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
-  return /^[0-9a-f]{7,40}$/i.test(sha) ? { base, sha: sha.toLowerCase(), when: `Commit ${sha.toLowerCase()}, built ${when} Pacific` } : { base, sha: "unknown", when: `Built ${when} Pacific` };
+  return /^[0-9a-f]{7,40}$/i.test(sha) ? { base, stage, sha: sha.toLowerCase(), when: `Commit ${sha.toLowerCase()}, built ${when} Pacific` } : { base, stage, sha: "unknown", when: `Built ${when} Pacific` };
 }
 const VERSION = buildVersion();
 const TURNIN_PAGES = new Set(["home.html", "assignments.html", "course-hub.html", "files.html", "settings.html"]);
@@ -369,7 +371,7 @@ requestAnimationFrame(function(){requestAnimationFrame(function(){r.classList.re
     const styles = [...s.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/g)].map((m) => m[1]).join("\n");
     // 1. the link to the app, first thing in <head>
     if (!/<head>/.test(s)) throw new Error(`${file}: no <head>`);
-    s = s.replace(/const VER = "[^"]*", SHA = "[^"]*", WHEN = "[^"]*";/, `const VER = ${JSON.stringify(VERSION.base)}, SHA = ${JSON.stringify(VERSION.sha)}, WHEN = ${JSON.stringify(VERSION.when)};`);
+    s = s.replace(/const VER = "[^"]*", SHA = "[^"]*", WHEN = "[^"]*", STAGE = "[^"]*";/, `const VER = ${JSON.stringify(VERSION.base)}, SHA = ${JSON.stringify(VERSION.sha)}, WHEN = ${JSON.stringify(VERSION.when)}, STAGE = ${JSON.stringify(VERSION.stage ? VERSION.stage + " " : "")};`);
     s = s.replace(/<head>/, `<head>\n${tag}${TURNIN_PAGES.has(file) ? `\n<script src="/js/averages-fs-turnin.js?v=${ver(TURNIN_FILE)}"></script>` : ""}`);
     // 2. "In the app, this opens ..." moves for real
     const before = s;
