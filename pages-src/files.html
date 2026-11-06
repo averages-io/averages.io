@@ -63,18 +63,6 @@
   *::-webkit-scrollbar-thumb:hover { background-color: rgba(20, 21, 31, 0.45); }
   *::-webkit-scrollbar-corner { background: transparent; }
 
-  /* Declared so the browser themes ITS OWN chrome — scrollbars, the
-
-     overscroll gutter, form controls — against this page rather than
-
-     guessing. Without it Firefox drew a light-theme scrollbar over the
-
-     dark canvas and tinted it (Martin saw it as pink on a blue
-
-     background). LegacyPage's applyStoredTheme() updates both of these
-
-     to match whatever background the user actually saved. */
-
   html {
 
     color-scheme: dark;
@@ -82,7 +70,6 @@
     background-color: #0c0c0e;
 
   }
-
 
   html, body {
     margin: 0;
@@ -96,16 +83,6 @@
     overflow: hidden; /* scrolling now happens inside .page (see below), so
       the scrollbar sits at the edge of the app's own window/card instead of
       out at the browser's outer edge, over the wallpaper margin */
-    /* Neutral black instead of a baked-in accent gradient here —
-       2026-09-11, per Martin. This is only ever visible for a split
-       second on reload/navigation, before applyStoredTheme() (or this
-       page's own appearance-reading script) sets the user's actual
-       saved background over it. The old default was the sample
-       red-orange gradient baked into this file, which read as a real
-       glitch flashing in between pages; a neutral black reads as
-       "still loading" instead, and matches the app's own Black
-       preset (#0c0c0e) so it's not a color that appears nowhere else
-       in the app. */
     background-color: #0c0c0e;
     background-image: none;
     background-size: cover;
@@ -156,9 +133,6 @@
   }
 
   .profile-menu-wrap { position: relative; flex-shrink: 0; }
-  /* No photo: an Apple-style monogram (2026-10-21, Martin: "make the default no pfp letters
-     look more like the apple ones"), the grey gradient and rounded white initials of a contact
-     with no picture. A photo replaces it (set inline as background-image). */
   .profile-btn {
     width: 42px;
     height: 42px;
@@ -177,8 +151,6 @@
     flex-shrink: 0;
   }
 
-  /* A photo has no ring (2026-10-23, Martin: "remove the ugly border if it is a custom upload");
-     the letter avatars keep theirs. Same size: the border goes clear and the photo fills it. */
   .profile-btn.has-photo { border-color: transparent; background-origin: border-box; background-repeat: no-repeat; }
   .profile-menu {
     position: absolute;
@@ -254,12 +226,6 @@
   #contactsSearch::placeholder { color: var(--text-faint); }
   #contactsSearch:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
 
-  /* ---------- Contact row — flat, alphabetical, no role/category
-     filters (2026-09-02, per Martin: real faculty records don't
-     consistently have a title/role filled in, so filtering or grouping
-     by it isn't reliable — a plain searchable list, same idea as
-     PowerSchool's own Faculty directory, works for everyone whether or
-     not their role happens to be on file). ---------- */
   .contact-row { display: flex; align-items: center; gap: 10px; padding: 9px 6px; border-bottom: 1px solid var(--border); cursor: pointer; border-radius: var(--window-radius-sm); }
   .contact-row:last-child { border-bottom: none; }
   .contact-row:hover { background: var(--panel-inner); }
@@ -277,9 +243,6 @@
   .contact-name { font-weight: 800; font-style: italic; font-size: 0.86rem; color: var(--text-dark); margin: 0; letter-spacing: -0.005em; }
   .contact-role { font-weight: 500; font-size: 0.78rem; color: var(--text-muted); margin: 1px 0 0; }
   .contact-meta { font-size: 0.68rem; color: var(--text-faint); margin: 2px 0 0; text-transform: uppercase; letter-spacing: 0.03em; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  /* Row-level Email quick-action (2026-09-02, per Martin) — a mailto:
-     link, so it works without opening the contact card at all; clicking
-     it stops the row's own click (which opens the card) from firing. */
   .contact-email-btn {
     flex-shrink: 0;
     width: 30px; height: 30px;
@@ -345,9 +308,6 @@
   .modal-row .k { color: var(--text-faint); font-weight: 700; }
   .modal-row .v { color: var(--text-dark); font-weight: 700; text-align: right; }
   .modal-rows { margin-top: 14px; }
-  /* Message + Email actions — always both present now (2026-09-02, per
-     Martin: every contact's card should offer a working Send Message
-     button alongside their email, not just current teachers). */
   .contact-modal-actions { display: flex; gap: 8px; margin-top: 16px; }
   .contact-modal-btn {
     display: flex; align-items: center; justify-content: center; gap: 7px;
@@ -412,10 +372,6 @@
   .nav-link .dot { width: 4px; height: 4px; border-radius: 50%; background: transparent; }
   .nav-link.active .label { color: var(--text-dark); }
   .nav-link.active .dot { background: var(--accent); }
-  /* ---------- "More" overflow (2026-10-01, per Martin: "if the text has
-     to get ... we should add a more button on the far right side with a
-     list of the other options"). Labels never truncate: when they would,
-     the rightmost pages move into the More menu instead. ---------- */
   .nav-link[hidden], .nav-more[hidden], .nav-more-menu[hidden] { display: none; }
   /* While the More menu is open the whole bar sits above everything else on
      the page (sticky headers, pop-ups, the edit button go up to z-index 90),
@@ -478,8 +434,6 @@
   .nav-more-item.active { color: var(--text-dark); }
   .nav-more-item.active span { position: relative; display: inline-block; padding-bottom: 6px; margin-bottom: -6px; }
   .nav-more-item.active span::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; border-radius: 999px; background: var(--accent); }
-  /* Labels sit centered in the bar; the active page is underlined in the
-     accent color instead of marked with a dot (2026-10-01, per Martin). */
   .app-nav-inner .nav-link, .app-nav-inner .nav-more { justify-content: center; gap: 0; padding-top: 10px; padding-bottom: 10px; }
   .app-nav-inner .nav-link .dot, .app-nav-inner .nav-more .dot { display: none; }
   .app-nav-inner .nav-link .label, .app-nav-inner .nav-more .label { position: relative; padding: 6px 0; }
@@ -495,7 +449,6 @@
     .nav-link { min-width: 0; padding: 10px 3px 8px; }
     .nav-link .label { font-size: 0.58rem; }
   }
-  /* ---------- Files (2026-10-04): every course's files, plus Google Drive and Canva ---------- */
   .fx-card-outer { padding: 4px; }
   .fx { display: grid; grid-template-columns: 236px minmax(0, 1fr); min-height: 0; }
   .fx-side { padding: 18px 14px; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 4px; min-width: 0; }
@@ -559,7 +512,6 @@
   .fx-note { margin: 10px 2px 0; font-size: 0.74rem; font-weight: 600; color: var(--text-faint); }
   .fx-empty { margin: 24px 0 8px; padding: 26px; border-radius: 14px; background: var(--panel-inner); text-align: center; font-size: 0.86rem; font-weight: 600; color: var(--text-muted); }
   .fx-empty strong { display: block; font-size: 1rem; color: var(--text-dark); margin-bottom: 4px; }
-  /* Signed in: real Canva designs (2026-10-05) */
   .fx-side[hidden] { display: none; }   /* display:flex above beat the hidden attribute, so the signed-in pages still showed the sidebar */
   .fx-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .fx-tile[aria-busy="true"] { opacity: 0.6; cursor: progress; }
@@ -592,8 +544,6 @@
   .fx-next { display: inline-flex; flex-shrink: 0; }
   .fx-next svg { width: 14px; height: 14px; fill: none; stroke: var(--text-muted); stroke-width: 2.55; stroke-linecap: butt; stroke-linejoin: miter; }
   .fx-soon { font-size: 0.66rem; font-weight: 800; color: var(--text-faint); white-space: nowrap; }
-  /* 2026-10-06: Drive, OneDrive and Canva tiles have their own ... menu, and
-     the Attach chooser can be long (every class), so the menu scrolls. */
   .lf-tile { position: relative; min-width: 0; }
   .lf-tile .fx-tile { height: 100%; }
   .lf-tile-more { position: absolute; top: 12px; right: 12px; width: 28px; height: 28px; background: var(--panel-bg); color: var(--text-muted); box-shadow: 0 2px 8px -3px rgba(0,0,0,0.3); }
@@ -603,7 +553,6 @@
   .fx-menu-group { display: flex; align-items: center; gap: 8px; padding: 12px 10px 4px; font-size: 0.68rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-faint); }
   .fx-menu-group span:last-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .fx-menu-note { padding: 4px 10px 10px; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); }
-  /* Signed in, the preview's layout with real files (2026-10-06) */
   .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
   .lf-ell { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
   .lf-states { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
@@ -662,10 +611,6 @@
     .fx-name small { display: block; }
   }
 
-  /* Official app logos (2026-10-19): the files Martin added in public/brand/.
-     Only ever resized, never changed (Google's and Canva's brand rules). A
-     brand-slot is an empty space the same size, so names line up where an app
-     has no logo yet (OneDrive). */
   .canva-mark { width: 20px; height: 20px; flex: none; display: block; border-radius: 50%; background: center / contain no-repeat url("/brand/canva-mark.svg"); }
   .drive-mark { width: 20px; height: 20px; flex: none; display: block; background: center / contain no-repeat url("/brand/google-drive.png"); }
   .brand-slot { width: 20px; height: 20px; flex: none; display: block; }
@@ -752,10 +697,6 @@
   </nav>
 
   <script>
-    // ---- Links by id (2026-10-07, Martin) ----
-    // A real class (Schoology/Classroom ids are digits) links as
-    // assignment?id=<id> and course-home?id=<section id>; the sample classes
-    // (word ids like "apchem") keep ?course=&title=. Pages read both.
     function avgIsId(v) { return /^\d{1,24}$/.test(String(v == null ? '' : v)); }
     function avgCourseQ(course) { return (avgIsId(course) ? 'id=' : 'course=') + encodeURIComponent(course == null ? '' : course); }
     function avgAssignHref(course, title, id, extra) {
@@ -764,11 +705,6 @@
       return `assignment.html?course=${encodeURIComponent(course == null ? '' : course)}&title=${encodeURIComponent(title || '')}${avgIsId(id) ? `&id=${id}` : ''}${extra}`;
     }
 
-    // Potato PC Mode on every page (2026-10-04, per Martin). The saved
-    // setting turns off all CSS animations and transitions, makes animate()
-    // calls and smooth scrolling instant, and drops the slanted page title.
-    // Same code as app/lib/theme-boot.ts, which runs it before first paint in
-    // the app; this copy covers the preview and pages theme-boot skips.
     (function () {
     var POTATO_CSS = "body.potato-mode,body.potato-mode *,body.potato-mode *::before,body.potato-mode *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important;filter:none!important;text-shadow:none!important}html:has(body.potato-mode){scroll-behavior:auto!important}body.potato-mode,body.potato-mode *{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif!important}body.potato-mode h1.title{font-style:normal!important;transform:none!important}body.potato-mode .trend.has-popup:focus-visible{outline:2px solid currentColor;outline-offset:2px}";
     function potatoOn() { return !!(document.body && document.body.classList.contains("potato-mode")); }
@@ -889,17 +825,7 @@
     })();
   </script>
 
-
   <script>
-    // ------------------------------------------------------------------
-    // Shared appearance (accent + background) — 2026-09-08, per Martin:
-    // "wallpapers + accent colors don't save across pages." Settings'
-    // Appearance section (and onboarding's Theme step) are the only
-    // writers of schoolagy_appearance; every other real app page,
-    // including this one, applies whatever's saved there, read-only, on
-    // its own load — same shared-localStorage-record pattern already
-    // used for schoolagy_dark_mode/schoolagy_profile.
-    // ------------------------------------------------------------------
     (function () {
       function darken(hex, amount) {
         const n = parseInt(hex.slice(1), 16);
@@ -937,18 +863,6 @@
       });
     })();
 
-    // ------------------------------------------------------------------
-    // Files (2026-10-04, per Martin). Every course's files in one place,
-    // plus the Google Drive files a student added or made with Averages
-    // (drive.file only, never their whole Drive) and their Canva designs.
-    //
-    // Sample data for the preview only. Signed in (LegacyPage.tsx sets
-    // window.__AVERAGES_MODE__) a student never sees these samples: live
-    // mode shows the same layout with their real course files, Google
-    // Drive, OneDrive and Canva files instead (liveFiles below).
-    // FILE_COURSES (not COURSES) on purpose, so scripts/port-pages.mjs
-    // doesn't swap in live course data next to sample files.
-    // ------------------------------------------------------------------
     const FILES_SIGNED_IN = !!window.__AVERAGES_MODE__;
     const FILE_COURSES = [
       { id: 'apchem', name: 'AP Chemistry', color: '#a67a22' },
@@ -1021,7 +935,6 @@
       if (f.src === 'course') { const c = courseOf(f.course); return `<span class="fx-dot" style="background:${esc(c ? c.color : '#888')}"></span>${esc(c ? c.name : 'Course')}`; }
       return esc(SRC_NAME[f.src]);
     }
-    // New file icons (2026-10-09, public/js/averages-file-icons.js); the old badge if that script isn't loaded.
     const AVFI = () => window.AveragesFileIcons || null;
     function badgeHTML(f) {
       if (AVFI()) return AVFI().html(f.type, { size: 34 });
@@ -1056,9 +969,7 @@
     }
     const byNewest = (a, b) => b.date.localeCompare(a.date) || a.name.localeCompare(b.name);
 
-    // Logos in the Sources list and the phone chips (2026-10-19). Course Files, Turned In
-    // and OneDrive keep an empty slot so the names line up.
-    const SRC_MARK = { gdrive: '<span class="drive-mark" aria-hidden="true"></span>', canva: '<span class="canva-mark" aria-hidden="true"></span>', onedrive: '<span class="brand-slot" aria-hidden="true"></span>' };   // Course Files and Turned In have no logo slot (2026-10-21, Martin): their names line up with the logos
+    const SRC_MARK = { gdrive: '<span class="drive-mark" aria-hidden="true"></span>', canva: '<span class="canva-mark" aria-hidden="true"></span>', onedrive: '<span class="brand-slot" aria-hidden="true"></span>' };
     function renderNav() {
       const count = filter => FILES.filter(f => inFilter(f, filter)).length;
       const item = (filter, label, extra) => `<button class="fx-item${fxFilter === filter ? ' on' : ''}" type="button" data-filter="${esc(filter)}" aria-current="${fxFilter === filter ? 'true' : 'false'}">${extra || ''}<span class="nm">${esc(label)}</span><span class="n">${count(filter)}</span></button>`;
@@ -1133,7 +1044,6 @@
     function openFxMenu(anchor, label, items, at) {
       if (fxMenuFor === anchor && !at) { closeFxMenu(true); return; }
       closeFxMenu(false);
-      // The Attach chooser (2026-10-06): `group` heads each class, `note` says there's nothing to pick.
       fxMenu.innerHTML = `<div class="fx-menu-label">${esc(label)}</div>` + items.map((it, i) =>
         it.group ? `<div class="fx-menu-group" role="presentation">${it.color ? `<span class="fx-dot" style="background:${esc(it.color)}"></span>` : ''}<span>${esc(it.group)}</span></div>`
         : it.note ? `<div class="fx-menu-note" role="presentation">${esc(it.note)}</div>`
@@ -1157,26 +1067,11 @@
       const first = fxMenu.querySelector('.fx-menu-item:not(:disabled)');
       if (first) first.focus();
     }
-    // ------------------------------------------------------------------
-    // Signed in (2026-10-06, per Martin: "can you go back to the old
-    // version"): the same layout as the preview, with real files. One list
-    // across course files, Google Drive, OneDrive and Canva, newest first,
-    // with Recents, the sidebar (All Files, Recents, Sources, Courses),
-    // search and List/Grid. Each source fills in as it loads, so a slow one
-    // never holds the page up. Picking Canva in the sidebar shows the
-    // student's Canva folders when that's switched on (GET /canva/status's
-    // `folders`).
-    // Google Drive and OneDrive run in this browser (public/js/averages-cloud.js)
-    // and only ever see the files Averages.io made or the student picked:
-    // Google's drive.file permission, and OneDrive's Averages.io folder.
-    // ------------------------------------------------------------------
     function liveFiles() {
       const api = window.location.hostname.endsWith('averages.io') ? 'https://api.averages.io' : 'http://localhost:8787';
       const CANVA_EDIT_URL = /^https:\/\/(www\.)?canva\.com\//i;
       const main = document.getElementById('fxMain');
       const fxRoot = document.getElementById('fx');
-      // Incognito (set by LegacyPage.tsx): Canva is off; Google Drive and OneDrive
-      // work through this browser only (2026-10-14).
       const INCOGNITO = !!(window.__AVERAGES_INCOGNITO__ && window.__AVERAGES_INCOGNITO__.on);
       const DAY = 86400000;
       const RECENT_DAYS = 7;
@@ -1226,14 +1121,11 @@
       function normalize(app, f) {
         if (app === 'gdrive') {
           const [type, kind] = typeOf(f.name, f.mimeType);
-          // thumbnailLink (2026-10-07): Google's own short-lived preview image, when it has one.
           return { id: String(f.id || ''), name: String(f.name || 'Untitled'), type, kind, url: String(f.webViewLink || ''), t: Date.parse(f.modifiedTime) || 0, size: Number(f.size) || 0, thumb: String(f.thumbnailLink || '') };
         }
         const [type, kind] = typeOf(f.name, '');
         return { id: String(f.id || ''), name: String(f.name || 'Untitled'), type, kind, url: String(f.webUrl || ''), t: Date.parse(f.lastModifiedDateTime) || 0, picked: !!f.picked, size: Number(f.size) || 0 };
       }
-      // Add from OneDrive: our own picker (needs the app id). Google Drive has no picker any more
-      // (2026-10-09): files come in from Drive itself with "Open with → Averages.io" (driveOpenPending).
       const canPick = app => (app === 'gdrive' ? false : !!(cfg && cfg.microsoft));
       async function listCloud(app, token) {
         const c = CLOUD[app];
@@ -1243,7 +1135,6 @@
           const raw = app === 'gdrive' ? await C().googleList(token) : await C().oneDriveList(token);
           c.files = raw.map(f => normalize(app, f)).sort((a, b) => b.t - a.t);
           c.state = 'ready';
-          // A file opened from Google Drive that can't be read anymore (2026-10-21): said once, not dropped quietly.
           const gone = app === 'gdrive' && Array.isArray(raw.gone) ? raw.gone.length : 0;
           if (gone) flash(gone === 1 ? 'A file you opened from Google Drive isn’t available anymore. If it’s still in your Drive, open it again with Open with → Averages.io for Drive.' : `${gone} files you opened from Google Drive aren’t available anymore. If they’re still in your Drive, open them again with Open with → Averages.io for Drive.`, true);
           if (app === 'gdrive') setTimeout(() => driveOpenPending(token), 0);
@@ -1258,7 +1149,6 @@
         const c = CLOUD[app];
         const configured = app === 'gdrive' ? !!cfg.google : !!cfg.microsoft;
         if (!configured) { c.state = 'soon'; render(); return; }
-        // Google / Microsoft disconnected it (2026-10-09): ask to reconnect, don't just drop it.
         if (C().lost && C().lost(app)) { c.state = 'reconnect'; render(); return; }
         if (!C().accounts()[app]) {
           c.state = 'connect';
@@ -1268,13 +1158,6 @@
         const quiet = app === 'gdrive' ? C().googleToken({}) : C().oneDriveToken({});
         quiet.then(t => listCloud(app, t), err => { c.state = err && err.code === 'reconnect' ? 'reconnect' : 'click'; render(); });
       }
-      /*
-       * "Open with → Averages.io" in Google Drive (2026-10-09, replacing the Picker).
-       * public/js/averages-drive-open.js kept the file IDs; once Drive is listed,
-       * the file shows in Google Drive's list here with its menu open (Attach to
-       * an assignment, Open in Google Drive). A file from a different Google
-       * account than the connected one can't be opened (drive.file is per account).
-       */
       let driveOpenBusy = false;
       async function driveOpenPending(token) {
         const D = window.AveragesDriveOpen;
@@ -1287,7 +1170,6 @@
           for (const id of p.ids) {
             try { const f = await C().googleFile(token, id); if (f && f.id) got.push(f); } catch (err) { failed = failed || err; }
           }
-          // The connection itself failed (2026-10-21): keep the file to open after reconnecting, and say so.
           if (!got.length && failed) {
             const c = CLOUD.gdrive;
             if (failed.code === 'reconnect' || failed.code === 'needs_click') { c.state = failed.code === 'reconnect' ? 'reconnect' : 'connect'; render(); return; }
@@ -1348,8 +1230,6 @@
               const picked = await K.oneDrivePick(token);
               if (!picked.length && c.state === 'ready') return;
               await listCloud(app, token);
-              // 2026-10-08: say what was added, and show a picked Google file
-              // even if Drive's list hasn't caught up with it yet.
               if (picked.length && c.state === 'ready') {
                 if (app === 'gdrive') {
                   const have = new Set(c.files.map(f => f.id));
@@ -1395,15 +1275,9 @@
         }
       }
 
-      // ---------- Course files (2026-10-05) ----------
-      // Every file in the student's classes: what teachers posted in
-      // Materials and what's attached to assignments (GET /data/files, ids and
-      // names only). Download goes through the API; Save to Google Drive /
-      // OneDrive copies it into their drive from this browser.
       const CF = { state: 'loading', courses: [], files: [], partial: false, classroom: false };
       const CF_BADGE = { pdf: ['PDF', '#c1443a'], doc: ['DOC', '#3b6fd1'], docx: ['DOCX', '#3b6fd1'], ppt: ['PPT', '#d1852f'], pptx: ['PPTX', '#d1852f'], xls: ['XLS', '#2f7d54'], xlsx: ['XLSX', '#2f7d54'], csv: ['CSV', '#2f7d54'], png: ['PNG', '#7a5ba6'], jpg: ['JPG', '#7a5ba6'], jpeg: ['JPG', '#7a5ba6'], gif: ['GIF', '#7a5ba6'], txt: ['TXT', '#83849a'], zip: ['ZIP', '#83849a'] };
       const ID_OK = v => /^\d{1,24}$/.test(String(v || ''));
-      // Google Classroom (2026-10-05): its files are Google Drive files, listed with their Drive link.
       const DRIVE_ID_OK = v => /^[A-Za-z0-9_-]{10,128}$/.test(String(v || ''));
       const DRIVE_URL_OK = u => /^https:\/\/(drive|docs)\.google\.com\//.test(String(u || ''));
       Object.assign(CF_BADGE, { gdoc: ['DOC', '#3b6fd1'], gsheet: ['SHEET', '#2f7d54'], gslides: ['SLIDES', '#d1852f'], gdraw: ['DRAW', '#7a5ba6'], sheet: ['SHEET', '#2f7d54'], slides: ['SLIDES', '#d1852f'] });
@@ -1456,11 +1330,6 @@
         if (LV.filter.startsWith('c:') && !CF.courses.some(c => 'c:' + c.id === LV.filter)) LV.filter = 'all';
         render();
       }
-      // ---------- Remove from Averages.io (2026-10-09, Martin) ----------
-      // Takes a Google Drive, OneDrive or Canva file off the Files page only:
-      // nothing is deleted or changed in Google Drive, OneDrive or Canva.
-      // Kept on this device for this student (file ids only). Opening the
-      // same file again with Drive's "Open with → Averages.io" brings it back.
       const HIDE_KEY = 'averages_files_hidden';
       const HIDDEN = (() => {
         try {
@@ -1483,11 +1352,6 @@
         else flash(`“${e.name}” is back in Averages.io.`);
       }
 
-      // ---------- Turned in (2026-10-09, Martin) ----------
-      // Files the student turned in on Schoology (GET /data/submissions: the
-      // recent assignments' own revisions, ids and names only). Download goes
-      // through GET /data/submission-file. Kept 5 minutes in this tab like the
-      // course files; the assignment page clears it after turning something in.
       const SUB = { state: 'loading', courses: [], files: [], partial: false };
       const SUB_CACHE = 'averages_subs_cache';
       async function loadSubs(fresh) {
@@ -1553,13 +1417,6 @@
           .catch(err => flash(K.messageFor(err), !err || err.code !== 'popup_closed'));
       }
 
-      // ---------- Attach to an assignment (2026-10-06) ----------
-      // Opens the assignment with the file already in Add Submission
-      // (assignment.html reads ?attach=). Assignments only (tests are taken on
-      // Schoology, discussions are posts): the open ones and the overdue ones,
-      // from the bundle's UPCOMING and OVERDUE, the latest due date first.
-      // Google Classroom work is turned in on Classroom, so Classroom students
-      // don't get Attach.
       const LIVE_DATA = (window.__AVERAGES__ && window.__AVERAGES__.data) || {};
       function isClassroom() { return LIVE_DATA.platform === 'classroom' || !!CF.classroom; }
       const DUE_MONTH = /\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s+(\d{1,2})\b/i;
@@ -1654,11 +1511,6 @@
         render();
       }
 
-      // ---- Canva opens in a new tab (2026-10-07, Martin) ----
-      // The tab is opened on the click itself (a tab opened after waiting for
-      // our API would be blocked as a pop-up), shows "Opening Canva…", and is
-      // sent to Canva once the API answers. Blocked anyway: this tab goes.
-      // Canva opens in this tab again (2026-10-09, Martin); its Return button comes back to Files.
       const CANVA_NEW_TAB = false;
       function openCanvaTab() {
         if (!CANVA_NEW_TAB) return null;
@@ -1680,10 +1532,6 @@
         return false;
       }
       function closeCanvaTab(tab) { try { if (tab && !tab.closed) tab.close(); } catch {} }
-      // Martin's "Before you open Canva" popup (2026-10-21, public/js/averages-help.js). It shows until they tick
-      // "Don't show this again". Canva is asked for the edit link while it's up: Open Canva stays grey until it answers.
-      // A problem Try again can't fix (design gone, not connected...) closes it and is handled the usual way.
-      // Returns false when the popup isn't shown, so the caller opens Canva the usual way.
       function canvaWithHelp(from, getUrl, onProblem) {
         if (!(window.AveragesHelp && window.AveragesHelp.shouldShow('canva'))) return false;
         window.AveragesHelp.open('canva', {
@@ -1736,8 +1584,6 @@
         }
       }
 
-      // ---------- Canva folders (2026-10-06) ----------
-      // path: where the student is, from the top of their Canva Projects.
       const FD = { path: [{ id: 'root', name: 'Projects' }], items: [], next: null, state: 'idle', form: null, formBusy: false };
       const FOLDER_ERR = {
         canva_item_in_multiple_folders: 'It’s in several folders, so move it in Canva instead.',
@@ -1840,15 +1686,10 @@
         if (src === 'canva') return CV.state;
         return CLOUD[src].state;
       }
-      // Only the sources a student has (Martin, 10-6: "if a source is not
-      // connected can you remove it"): one that isn't connected, or isn't
-      // switched on yet, leaves the sidebar. Add files connects them.
       const HIDDEN_STATES = ['connect', 'soon', 'off'];
       function srcList() {
         // Turned in comes from the school platform like course files, so Incognito keeps it.
         const subs = SUB.state === 'off' ? [] : ['turnedin'];
-        // Incognito (2026-10-14): Google Drive and OneDrive work in this tab
-        // only, nothing on our servers; Canva stays off (its sign-in needs our server).
         return ['course'].concat(subs, (INCOGNITO ? ['gdrive', 'onedrive'] : ['gdrive', 'onedrive', 'canva']).filter(src => !HIDDEN_STATES.includes(sourceState(src))));
       }
       function entries() {
@@ -1926,7 +1767,6 @@
         }
         const plain = AVFI() ? `<span class="fx-thumb avfi-thumb" style="background:${AVFI().color(iconKey(e))}14">${AVFI().html(iconKey(e), { size: 64 })}</span>`
           : `<span class="fx-thumb" style="background:${THUMB[e.ext] || '#e4e4e8'}"><span class="page"><i></i><i></i><i></i><i></i><i></i></span></span>`;
-        // Google Drive previews (2026-10-07): Google's image, or the plain page if it won't load.
         if (e.src === 'gdrive' && GDRIVE_THUMB_OK(e.thumb)) {
           return `<span class="fx-thumb lf-gthumb" style="background:${THUMB[e.ext] || '#e4e4e8'}"><img src="${esc(e.thumb)}" alt="" loading="lazy" referrerpolicy="no-referrer" data-thumb-fallback></span>`;
         }
@@ -1994,9 +1834,6 @@
         if (st === 'click') return `<div class="fx-empty"><strong>Your ${esc(c.name)} files</strong>${acct && (acct.email || acct.username) ? 'Connected as ' + esc(acct.email || acct.username) + '. ' : ''}${esc(c.name)} may ask you to confirm it’s you.<br><button class="fx-connect" type="button" data-cloud-show="${src}"${c.busy ? ' disabled' : ''}>Show files</button></div>`;
         return '';
       }
-      // A drive that needs its sign-in again (Martin, 10-6): one banner each,
-      // on every view except that drive's own (its panel already asks).
-      // Its x hides it for the rest of this tab's visit (Martin, 10-6).
       const REAUTH_KEY = 'averages_files_reauth_hidden';
       const reauthHidden = new Set((() => { try { const v = JSON.parse(sessionStorage.getItem(REAUTH_KEY) || '[]'); return Array.isArray(v) ? v : []; } catch { return []; } })());
       function hideReauth(app) {
@@ -2004,7 +1841,6 @@
         try { sessionStorage.setItem(REAUTH_KEY, JSON.stringify([...reauthHidden])); } catch {}
         render();
       }
-      // Disconnected by Google / Microsoft (2026-10-09): who it was, and what to do.
       function lostText(app) {
         const who = C() && C().lost ? (C().lost(app) || {}) : {};
         const name = CLOUD[app].name;
@@ -2013,7 +1849,6 @@
       function reauthHTML() {
         if (INCOGNITO) return '';
         let out = '';
-        // Opened a file with "Open with → Averages.io" but Google Drive isn't connected here (2026-10-09).
         const D = window.AveragesDriveOpen;
         const g = CLOUD.gdrive;
         if (D && D.pending() && (g.state === 'connect' || g.state === 'reconnect')) {
@@ -2051,11 +1886,9 @@
         else if (f === 'gdrive' || f === 'onedrive') {
           const st = CLOUD[f].state;
           if ((st === 'ready' || st === 'click') && canPick(f)) extra = `<button class="fx-add" type="button" ${f === 'gdrive' ? 'data-pick-drive' : 'data-pick-onedrive'}${CLOUD[f].busy ? ' disabled' : ''}>${PLUS_ICON}Add from ${esc(CLOUD[f].name)}</button>`;
-          // Google Drive (2026-10-09): opens Drive, where they choose Open with → Averages.io.
           else if (f === 'gdrive' && (st === 'ready' || st === 'click')) extra = `<button class="fx-add" type="button" data-pick-drive title="In Google Drive, right-click a file → Open with → Averages.io for Drive">${PLUS_ICON}Add from Google Drive</button>`;
         } else if (f === 'canva') {
           if (foldersOn()) extra = `<button class="fx-add" type="button" data-folder-new${FD.formBusy ? ' disabled' : ''}>${PLUS_ICON}New folder</button>`;
-          // Open Canva (2026-10-23, Martin): their projects in Canva, in a new tab.
           extra += `<a class="fx-add" href="https://www.canva.com/projects" target="_blank" rel="noopener noreferrer">Open Canva${OUT_ICON}</a>`;
         } else extra = `<button class="fx-add" type="button" data-lv-add aria-haspopup="menu" aria-expanded="false">${PLUS_ICON}Add files</button>`;
         return seg + extra;
@@ -2151,7 +1984,6 @@
       function cfItems(f) {
         const items = [];
         if (f.kind === 'assignment') items.push({ label: 'Open assignment', sub: f.parentTitle, run: () => { window.location.href = avgAssignHref(f.course, f.parentTitle, f.parent); } });
-        // Show in Materials (2026-10-06): the class's Materials, open at the teacher's folder holding it.
         const show = { label: 'Show in Materials', run: () => { window.location.href = `course-materials.html?${avgCourseQ(f.course)}&show=${encodeURIComponent(`${f.kind}:${f.parent}:${f.id}`)}`; } };
         // Classroom files are already in Google Drive: they open there.
         if (f.url) {
@@ -2159,12 +1991,10 @@
           items.push(show);
           return items;
         }
-        // PDFs, pictures, text, audio and video open in the browser's own viewer (2026-10-21, as in Course Materials).
         if (['pdf', 'png', 'jpg', 'jpeg', 'gif', 'webp', 'txt', 'mp3', 'm4a', 'wav', 'mp4', 'webm', 'mov'].includes(String(f.ext || '').toLowerCase())) {
           items.unshift({ label: 'Open in New Tab', run: () => { window.open(cfDownloadUrl(f) + '&view=1', '_blank', 'noopener'); } });
         }
         items.push(show);
-        // Not for a file that came with an assignment (2026-10-07, Martin): it's the teacher's, already on it.
         if (!isClassroom() && f.kind !== 'assignment') items.push({ label: 'Attach to an assignment', next: true, run: () => openAttach({ src: 'course', id: f.id, name: f.name, kind: f.kind, parent: f.parent, course: f.course }, f.course) });
         items.push({ label: 'Download', run: () => { window.location.href = cfDownloadUrl(f); } });
         if (cfg && cfg.google) items.push({ label: 'Save to Google Drive', run: () => cfSave('gdrive', f) });
@@ -2348,9 +2178,6 @@
     function materialsHref(f) {
       return `course-materials.html?${avgCourseQ(f.course)}&file=${encodeURIComponent(f.name)}`;
     }
-    // Attach to an assignment (2026-10-05): a second menu, in the same spot,
-    // lists open assignments (the file's own course first). Picking one opens
-    // that assignment with the file in Drafts, ready to Submit.
     const DRIVE_EXT = { doc: 'docx', sheet: 'xlsx', slides: 'pptx' };
     function fileExt(f) {
       if (f.src === 'canva') return 'pdf';
@@ -2452,22 +2279,12 @@
     // Profile menu — same behavior as every other page.
     // ------------------------------------------------------------------
     const profileBtn = document.getElementById('profileBtn');
-    // Shared profile photo/name (2026-09-07) — settings.html's Edit
-    // Profile modal is the only place this is ever set, but every other
-    // page's top-right profile button used to just show a fixed "M" no
-    // matter what was saved there: the button never read anything back,
-    // so a photo you set in Settings was invisible the moment you left
-    // it. schoolagy_profile is the same localStorage record
-    // settings.html writes on every save; this is read-only here.
     (function () {
       var profile = null;
       try {
         var raw = localStorage.getItem('schoolagy_profile');
         if (raw) profile = JSON.parse(raw);
       } catch (e) {}
-      // No name saved on this device (new device, or signed out with Sync
-      // off): the account's own name from the sign-in, never a sample name
-      // (2026-10-14; this used to fall back to "Martin" / "M").
       if (!profile || !profile.name || !String(profile.name).trim()) profile = Object.assign({}, profile, { name: window.__AVERAGES_NAME__ || '' });
       if (profile.photo) {
         profileBtn.style.backgroundImage = 'url("' + profile.photo + '")';
@@ -2476,7 +2293,7 @@
         profileBtn.textContent = '';
         profileBtn.classList.add('has-photo');
       } else if (profile.name) {
-        if (window.AveragesAvatar) window.AveragesAvatar.paint(profileBtn, profile.name);   // initials on their own color (2026-10-23, averages-avatar.js)
+        if (window.AveragesAvatar) window.AveragesAvatar.paint(profileBtn, profile.name);
         else profileBtn.textContent = (function (n) { var p = String(n).trim().split(/\s+/).filter(Boolean); var f = function (w) { return w ? Array.from(w)[0] : ''; }; return (f(p[0]) + (p.length > 1 ? f(p[p.length - 1]) : '')).toUpperCase(); })(profile.name);
       }
     })();
@@ -2494,11 +2311,6 @@
     });
   </script>
   <script>
-    // Back link (2026-10-01, per Martin: "where it returns to ... is always
-    // wrong"). Every page records itself in a short per-tab trail; a page's
-    // back link then says and goes to the page before it ("Back to AP
-    // Chemistry Hub", "Back to Grades"...). With no trail (the page was
-    // opened directly) the page's own default back link is left alone.
     (function () {
       const SELF = 'files.html';
       const KEY = 'averages_nav_trail';

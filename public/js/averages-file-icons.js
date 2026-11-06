@@ -1,30 +1,7 @@
-/*
- * File type icons (2026-10-09, Martin; design in the project doc claude/file-icons.md).
- *
- * A see-through page with a line in the type's color around it and a folded
- * corner. The label (PDF, DOC, ZIP…, Fredoka Bold, same color) runs across
- * the page and cuts through the outline; a small drawing for the type sits
- * above it, cut off by the fold along the crease's own curve.
- *   - At rest only the drawing shows; hovering the file's row or tile (or
- *     focusing it) slides the drawing up, opens the outline and fades the
- *     label in. Devices without hover always show the label.
- *   - The outline glows only in dark mode (body.dark-mode).
- *   - Below 34 px (list rows) there's no label: the drawing alone, outline whole.
- *
- * Loaded in <head> by app/layout.tsx. Pages call
- *   AveragesFileIcons.html(extOrName, { mime, size })  -> <span class="avfi">…</span>
- *   AveragesFileIcons.svg(extOrName, { mime, size, small }) -> <svg>…</svg> (fills its box when size is left out)
- *   AveragesFileIcons.key(extOrName, mime)            -> 'pdf' | 'doc' | … | 'file'
- *   AveragesFileIcons.color(extOrName, mime)          -> '#E5484D' …
- * Pages keep their old badge when this script isn't there, so nothing breaks.
- * Off in Potato mode (2026-10-20), so those plain badges show there.
- */
+// File type icons.
 (function () {
   'use strict';
   if (window.AveragesFileIcons) return;
-  // Potato mode (2026-10-20): no drawn icons; every page falls back to its
-  // plain colored type label. Read from the saved setting, since this runs in
-  // <head>, before the theme script marks <body>.
   try {
     if ((JSON.parse(localStorage.getItem('schoolagy_settings_options') || '{}') || {}).potatoMode === true) return;
   } catch (e) { /* storage blocked: draw them */ }

@@ -94,7 +94,6 @@
   .quick-l { order: -1; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); line-height: 1; padding-right: 8px; border-right: 2px solid #c6c6cc; height: 24px; display: flex; align-items: center; }
   .top .me { width: 40px; height: 40px; border-radius: 50%; flex: none; margin-left: 8px; }
   .top .me { position: relative; }
-  /* two initials stay clear of the gear (2026-10-30) */
   .top .me .av { font-size: 14px; letter-spacing: -.02em; }
   .top .me .gear { position: absolute; right: -4px; bottom: -4px; width: 18px; height: 18px; border-radius: 50%; background: var(--field); box-shadow: 0 0 0 2px var(--frame); display: grid; place-items: center; color: #66757f; }
   .top .me .gear svg.i { width: 12px; height: 12px; display: block; }
@@ -143,7 +142,7 @@
   .nav .side-kbd { margin-left: auto; font-size: 11px; line-height: 20px; padding: 0 4px; background: var(--inner); color: var(--muted); }
   .nav a:hover .side-kbd { background: var(--field); }
   /* Search turns into a search bar once the sidebar opens (an icon on the closed rail) */
-  .nav #sideSearch { transition: background .12s ease, box-shadow .12s ease; margin-bottom: 8px; } /* a little room between Search and the pages under it (2026-10-30) */
+  .nav #sideSearch { transition: background .12s ease, box-shadow .12s ease; margin-bottom: 8px; }
   .side:is(:hover, .hold, :has(:focus-visible)) #sideSearch, .app.pinned .side #sideSearch { background: var(--field); box-shadow: inset 0 0 0 2px var(--inner); color: var(--muted); transition-delay: .12s; }
   .side:is(:hover, .hold, :has(:focus-visible)) #sideSearch:hover, .app.pinned .side #sideSearch:hover { background: color-mix(in srgb, var(--inner) 35%, var(--field)); color: var(--ink-2); }
   .side:is(:hover, .hold, :has(:focus-visible)) #sideSearch .side-kbd, .app.pinned .side #sideSearch .side-kbd { background: var(--panel); }
@@ -166,7 +165,6 @@
   .side > .nav, .side > .divider, .side > .side-h, .side > .foot { flex: none; }
   .side > .cls > * { flex: none; }
   /* no scrollbar here: it would take width and push the class icons off center. The fade at the bottom shows there's more. */
-  /* the whole sidebar scrolls (2026-10-30, Martin: "not just the tiny courses section"); the class list is as tall as it needs */
   .side > .cls { flex: none; min-height: 0; overflow: visible; }
   .side { overscroll-behavior: contain; scrollbar-width: none; }
   .side::-webkit-scrollbar { display: none; }
@@ -1135,7 +1133,6 @@
   .chip svg.i { color: var(--chip-c, var(--ink-2)); }
   .chip:nth-child(5n + 1) { --chip-c: var(--warm-a); } .chip:nth-child(5n + 2) { --chip-c: var(--sky); } .chip:nth-child(5n + 3) { --chip-c: var(--mint); } .chip:nth-child(5n + 4) { --chip-c: var(--grape); } .chip:nth-child(5n + 5) { --chip-c: #c98a00; }
   /* sticker tags: New pops off the page a little */
-  /* dark mode only (2026-10-30): dark letters on a deeper yellow (white on yellow was about 1.4:1), and the paper ring in the card's dark */
   html[data-theme="dark"] body .newtag { background: #e0aa2e !important; color: #1f1604 !important; box-shadow: 0 0 0 2px var(--field), 0 3px 8px -2px rgba(0, 0, 0, .55); }
   .newtag { background: var(--sun) !important; color: var(--ink) !important; border-radius: 8px; transform: translate(var(--tx, 0px), var(--ty, 0px)) rotate(var(--tilt, -4deg)); box-shadow: 0 0 0 2px var(--field), 0 3px 8px -2px rgba(20, 21, 31, .25); will-change: transform; backface-visibility: hidden; } /* always drawn on its own layer, so hovering a row never redraws the text thinner or bolder */
   .wrap { position: relative; isolation: isolate; }
@@ -1151,7 +1148,6 @@
     /* icon tiles wiggle when you point at their row */
     body:not(.potato-mode) :is(.arow, .mrow, .mp-row, .ag-row, .nt-row, .pin, .gr-row, .crow, tr, .item, .mi):hover :is(.ktile, .nt-tile, .badge, .emo) { animation: lifeWiggle .5s var(--spring); }
     body:not(.potato-mode) .newtag { animation: lifeSticker .5s var(--spring) backwards; }
-    /* hidden until it has landed in its spot (2026-11-06, Martin's video: stickers showed by the name, then jumped) */
     .newtag[data-tilted]:not([data-shown]) { visibility: hidden; animation: none !important; }
   }
   @keyframes lifeWiggle { 0% { transform: none; } 30% { transform: rotate(-9deg) scale(1.08); } 60% { transform: rotate(6deg) scale(1.08); } 100% { transform: none; } }
@@ -1580,7 +1576,6 @@
     :is(.ti-scrim, .ti-pop, .ti-row, .ti-drop, .ti-drop svg.i, .ti-add svg.i, .ti-pk, .ti-prog i, .ti-file, .ti-st, .ti-swap, .ti-foot .btn, .ti-yay, .ti-yay *, .ti-done svg, .ti-head .ktile, .ti-hl, .ti-x svg, .ti-close svg) { animation: none !important; transition: none !important; }
     .ti-foot .btn.primary.go::after { display: none; }
   }
-
 
   .ti-pk-add { display: inline-flex; align-items: center; gap: 4px; height: 28px; padding: 0 12px 0 8px; border-radius: 8px; background: var(--field); font-size: 12px; font-weight: 800; color: var(--ink); }
   .ti-pk-add:hover { background: var(--inner); }
@@ -3026,8 +3021,6 @@
 
   /* Appearance: theme pictures, then accent swatches */
   .sg-thms { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; width: 100%; }
-  /* Appearance (2026-10-30, Martin's design): Window as two plain buttons, the Fullscreen Theme as cards with a preview,
-     Mode as a compact row of three. Picked = an ink ring, the same as onboarding. */
   .sg-opts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
   .sg-opt { display: flex; flex-direction: column; justify-content: center; gap: 2px; min-height: 64px; padding: 8px 16px; border-radius: 16px; background: var(--field); text-align: left; color: var(--ink); transition: box-shadow .15s ease; }
   .sg-opt b { font-size: 15px; font-weight: 800; }
@@ -3051,9 +3044,7 @@
   .sg-is .isp-l2 { left: 34px; top: 59px; width: 30%; height: 3px; border-radius: 2px; background: var(--accent); }
   .sg-is .isp-l3 { left: 34px; top: 68px; width: 22%; height: 3px; border-radius: 2px; background: var(--muted); opacity: .6; }
   .sg-modes { display: flex; flex-wrap: wrap; gap: 8px; }
-  /* Course order: small up and down buttons on each course (2026-11-01) */
   .sg-mv { display: flex; gap: 8px; flex: none; }
-  /* drag to reorder (2026-11-03) */
   .sg-sclead { display: grid; place-items: center; width: 32px; height: 32px; flex: none; border-radius: 10px; background: color-mix(in srgb, var(--ink) 7%, transparent); color: var(--ink-2); }
   .sg-sclead .badge { width: 32px; height: 32px; }
   .sg-drow > .tx { flex: 1; min-width: 0; }
@@ -3166,7 +3157,6 @@
   .sg-dh h2 { margin: 0; font-size: 20px; font-weight: 900; }
   .sg-db { padding: 4px 20px 16px; overflow-y: auto; font-size: 14px; font-weight: 600; color: var(--ink-2); line-height: 1.5; }
   .sg-db p { margin: 0 0 8px; }
-  /* End early: type the word to confirm; the word sits in a dashed box you can click to copy (2026-11-02) */
   .sg-typeto { margin-top: 16px; }
   .sg-copyw { display: inline-flex; align-items: center; gap: 4px; vertical-align: middle; margin: 0 4px; padding: 0 8px; border: 1px dashed color-mix(in srgb, var(--ink) 40%, transparent); border-radius: 6px; font: inherit; font-weight: 800; color: var(--ink); background: none; cursor: copy; }
   .sg-cpe { display: inline-flex; width: 14px; height: 14px; }
@@ -3189,6 +3179,7 @@
   .sg-fl input { height: 44px; border: 0; border-radius: 12px; padding: 0 16px; background: var(--field); font: inherit; font-size: 15px; font-weight: 700; color: var(--ink); outline: none; box-shadow: inset 0 0 0 2px var(--inner); transition: box-shadow .15s ease; }
   .sg-fl input:focus { box-shadow: inset 0 0 0 2px var(--focus); }
   .sg-fl small { font-size: 12px; font-weight: 700; color: var(--muted); }
+  .sg-lnk { border: 0; background: none; padding: 0; font: inherit; color: var(--ink); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
   .sg-ph2 { display: flex; align-items: center; gap: 12px; }
   .sg-ph2 .av-wrap { width: 56px; height: 56px; flex: none; border-radius: 50%; }
   .sg-ph2 .av { font-size: 22px; }
@@ -3252,7 +3243,6 @@
   }
   @media (max-width: 680px) { .hub-t h1 { font-size: 34px; } }
   /* ===== end Life layer for the course page ===== */
-  /* the round photo crop (2026-11-03) */
   .sg-crop { position: fixed; inset: 0; z-index: 400; display: grid; place-items: center; background: rgba(12,12,20,.45); padding: 16px; }
   .sg-crop-box { background: var(--panel); border-radius: 20px; padding: 24px; width: min(340px, 100%); display: flex; flex-direction: column; align-items: center; gap: 12px; box-shadow: 0 12px 40px rgba(0,0,0,.25); }
   .sg-crop-box h3 { margin: 0; font-size: 18px; font-weight: 900; } .sg-crop-box p { margin: 0; color: var(--muted); font-weight: 600; font-size: 13px; }
@@ -3260,13 +3250,20 @@
   .sg-crop-stage img { position: absolute; left: 50%; top: 50%; max-width: none; user-select: none; pointer-events: none; }
   .sg-crop-box input[type=range] { width: 100%; accent-color: var(--accent); }
   .sg-crop-btns { display: flex; gap: 8px; justify-content: flex-end; width: 100%; }
-  .g-na { color: var(--muted) !important; }   /* nothing graded yet (2026-11-06) */
-  /* a switch you can't use yet (Plus, Incognito) greys out its picture too (2026-11-06, Martin: Calendar sync) */
+  .g-na { color: var(--muted) !important; }
   .sg-row[aria-disabled="true"] > .sg-app { filter: grayscale(1); opacity: .5; }
-  /* the big emoji next to a page title: smooth even when the tile is tilted (2026-11-06, Martin: they looked jagged on
-     some pages, the tilted ones). Drawn upright on its own layer and then turned, so its edges and the emoji stay smooth. */
   .hub-logo { backface-visibility: hidden; -webkit-backface-visibility: hidden; outline: 1px solid transparent; }
   .hub-logo svg { shape-rendering: geometricPrecision; }
+  .me-pop .confirm { margin: 4px 4px 4px; padding: 12px; background: var(--panel); border-radius: 14px; }
+  .me-pop .confirm b { display: block; margin-bottom: 4px; font-weight: 800; }
+  .me-pop .confirm .note { display: block; color: var(--muted); font-size: 13px; font-weight: 600; line-height: 1.45; }
+  .me-pop .confirm .acts { display: flex; gap: 8px; justify-content: flex-end; padding: 8px 0 0; }
+  .me-pop .confirm .btn { background: var(--field); }
+  .me-pop .confirm .btn.primary { background: var(--accent); color: #fff; }
+  .sg-soc { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 12px 16px; border-radius: 16px; background: var(--field); }
+  .sg-soc .t { flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 2px; }
+  .sg-soc .t small { color: var(--muted); font-weight: 600; }
+  .sg-soc .sg-soyes { background: var(--accent); color: #fff; }
 </style>
 </head>
 <body>
@@ -3405,27 +3402,6 @@
 </svg>
 
 <script>
-/* Copied from averages.io public/js/averages-file-icons.js (2026-10-09). Fredoka Bold (OFL, see THIRD-PARTY-NOTICES.md) is inlined so the labels render here. */
-/*
- * File type icons (2026-10-09, Martin; design in the project doc claude/file-icons.md).
- *
- * A see-through page with a line in the type's color around it and a folded
- * corner. The label (PDF, DOC, ZIP…, Fredoka Bold, same color) runs across
- * the page and cuts through the outline; a small drawing for the type sits
- * above it, cut off by the fold along the crease's own curve.
- *   - At rest only the drawing shows; hovering the file's row or tile (or
- *     focusing it) slides the drawing up, opens the outline and fades the
- *     label in. Devices without hover always show the label.
- *   - The outline glows only in dark mode (body.dark-mode).
- *   - Below 34 px (list rows) there's no label: the drawing alone, outline whole.
- *
- * Loaded in <head> by app/layout.tsx. Pages call
- *   AveragesFileIcons.html(extOrName, { mime, size })  -> <span class="avfi">…</span>
- *   AveragesFileIcons.svg(extOrName, { mime, size, small }) -> <svg>…</svg> (fills its box when size is left out)
- *   AveragesFileIcons.key(extOrName, mime)            -> 'pdf' | 'doc' | … | 'file'
- *   AveragesFileIcons.color(extOrName, mime)          -> '#E5484D' …
- * Pages keep their old badge when this script isn't there, so nothing breaks.
- */
 (function () {
   'use strict';
   if (window.AveragesFileIcons) return;
@@ -3999,7 +3975,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       ${meItem('potato', 'bolt', 'Potato mode', 'System font, no animation', `<span class="sw${potato ? ' on' : ''}" aria-hidden="true"></span>`)}
       <div class="hr"></div>
       ${meItem('settings', 'gear', 'Settings', '')}
-      ${meItem('signout', 'out', 'Sign out', '', '', ' danger')}</div>`);
+      <div class="me-so">${meItem('signout', 'out', 'Sign out', '', '', ' danger')}</div></div>`);
     meMenu = document.body.lastElementChild;
     meMenu.querySelector('[data-me="potato"]').setAttribute('role', 'menuitemcheckbox');
     meMenu.querySelector('[data-me="potato"]').setAttribute('aria-checked', potato);
@@ -4022,9 +3998,14 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
         toast(on ? 'Potato mode on' : 'Potato mode off'); return;
       }
       
+      if (k === 'signout') {
+        meMenu.querySelector('.me-so').innerHTML = `<div class="confirm"><b>Sign out of Averages.io?</b><span class="note">You can sign back in with Schoology any time.</span><div class="acts"><button class="btn" data-me="socancel">Cancel</button><button class="btn primary" data-me="soyes">Sign out</button></div></div>`;
+        meMenu.querySelector('[data-me="socancel"]').focus({ preventScroll: true }); return;
+      }
+      if (k === 'socancel') { meMenu.querySelector('.me-so').innerHTML = meItem('signout', 'out', 'Sign out', '', '', ' danger'); meMenu.querySelector('[data-me="signout"]').focus({ preventScroll: true }); return; }
       meClose(true);
       if (window.SG_ME && window.SG_ME(k)) return;
-      ({ profile: () => FSX.go('settings', { section: 'account' }), customize: () => FSX.go('home', { customize: 1 }), settings: () => FSX.go('settings'), signout: () => FSX.confirmSignOut() }[k] || (() => {}))();
+      ({ profile: () => FSX.go('settings', { section: 'account' }), customize: () => FSX.go('home', { customize: 1 }), settings: () => FSX.go('settings'), soyes: () => FSX.signOut() }[k] || (() => {}))();
     });
   }
   function meClose(refocus) {
@@ -4046,7 +4027,6 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   });
   let toastT;
   function toast(text) { const t = $('toast'); t.textContent = text; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2600); }
-
 
   document.addEventListener('click', e => { const t = e.target.closest('[data-toast]'); if (t) { e.preventDefault(); if (!FSX.open(t.dataset.toast)) toast('That isn\'t ready yet.'); } });
   const IS_MAC = /mac|iphone|ipad|ipod/i.test(navigator.userAgentData?.platform || navigator.platform || '');
@@ -4088,7 +4068,6 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       const here = !m && typeof window.CMDK_HERE === 'function' ? window.CMDK_HERE(qq) : null;
       if (here && here.rows.length) html += `<div class="lbl">${esc(here.label)}</div>` + here.rows.slice(0, 5).map(r => crow(`data-cmdkgo="${esc(r.key)}"`, r.lead, r.t, r.sub)).join('');
       const cs = m ? [] : CLASSES.filter(c => chit(qq, c.name + ' ' + c.teacher)); if (cs.length) html += `<div class="lbl">Classes</div>` + cs.map(c => cclass(c, qq)).join('');
-      // people: your teachers and classmates (2026-11-06); one opens their card in Contacts
       const pp = m || !FSX.people ? [] : FSX.people().filter(x => chit(qq, x.name)).slice(0, 5); if (pp.length) html += `<div class="lbl">People</div>` + pp.map(x => crow(`data-go="${FSX.url('contacts', { person: x.id })}"`, FSX.personAv(x), cmark(x.name, qq), x.sub)).join('');
       const ps = m ? [] : GO_PAGES.filter(([p]) => chit(qq, p)); if (ps.length) html += `<div class="lbl">Go to</div>` + ps.map(page).join('');
       if (HERE && !m) html += crow(`data-cmdkhere="${esc(qq)}"`, ico('search'), `Search ${esc(HERE)} for "${esc(qq)}"`, 'Just this page', ' s-cmd');
@@ -4096,6 +4075,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     }
     res.innerHTML = html; const f = res.querySelector('.mi'); if (f) f.classList.add('sel');
   }
+  window.addEventListener('fs:people', () => { if (cmdk) cmdkRender(); });
   function cmdkOpen() {
     if (cmdk) { cmdk.querySelector('input').select(); return; }
     cmdkFrom = document.activeElement; $('app').classList.remove('menu');
@@ -4132,7 +4112,6 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     else if (e.key === 'Tab') { e.preventDefault(); cmdk.querySelector('input').focus(); }
   }, true);
 
-
   // ---------- Settings ----------
   // Most settings follow you to every device (Classic). Your school, email and student ID come from Schoology,
   // so they're shown here but changed there. Names people typed (yours, blocked classmates) go through esc().
@@ -4168,7 +4147,6 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const ACCENTS = [['punch', 'Punch', '#b8352f', '#9c2b26'], ['blue', 'Blue', '#2f5fb3', '#264d93'], ['green', 'Green', '#2e7d4f', '#246340'], ['plum', 'Plum', '#7a3fa0', '#663486'],
                    ['orange', 'Orange', '#b25600', '#964800'], ['teal', 'Teal', '#0f7470', '#0b5e5b'], ['graphite', 'Graphite', '#44465a', '#33354a']];
   const THEMES = { light: 'Light', dark: 'Dark', auto: 'System' };
-  // the Fullscreen themes (2026-10-30): IS (Industry Standard) for now; more will join it
   const FS_SKINS = [['is', 'IS', 'Industry Standard']];
   const STARTS = [['home', 'Home', 'home'], ['courses', 'Courses', 'binder'], ['grades', 'Grades', 'chart'], ['assignments', 'Assignments', 'inbox'], ['calendar', 'Calendar', 'cal'], ['messages', 'Messages', 'msg']];
   // what's being tried out right now: each one can be turned on by itself once New features early is on
@@ -4189,12 +4167,12 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     const unit = { day: 'day', week: 'week', month: 'month', year: 'year' }[p.interval] || '';
     if (!unit) return money;
     return n === 1 ? money + ' a ' + unit : money + ' every ' + n + ' ' + unit + 's';
-  }   // no Messaging Standard: teachers only for now (2026-10-28)
+  }
   const APPS = { drive: 'Google Drive', canva: 'Canva', onedrive: 'OneDrive' };
   // every setting, for the search box here and for Search anything
   const IDX = [
     ['account', 'profile', 'Name and photo', 'profile picture edit name avatar'], ['account', 'email', 'Email', 'address school'], ['account', 'school', 'School', 'lincoln high district student id'], ['account', 'sgy', 'Schoology website', 'schoology url address domain site link'],
-    ['account', 'signin', 'Signed in with Schoology', 'sign in password login account'], ['account', 'signout', 'Sign out', 'log out leave'],
+    ['account', 'avemail', 'Averages email', 'email address verify change add code'], ['account', 'signin', 'Signed in with Schoology', 'sign in password login account'], ['account', 'signout', 'Sign out', 'log out leave'],
     ['plan', 'current', 'Your plan', 'averages plus subscription renew billing'], ['plan', 'other', 'Other plans', 'free classic switch cancel downgrade get plus upgrade'], ['plan', 'payment', 'Payment and receipts', 'card billing cancel receipt'], ['plan', 'early', 'New features early', 'beta preview try'], ['plan', 'experiments', 'Experiments', 'beta labs try new features study planner grade goals focus timer weekly recap'],
     ['appearance', 'layout', 'Window', 'layout fullscreen windowed full screen background'], ['appearance', 'fstheme', 'Theme', 'is industry standard look style fullscreen theme'], ['appearance', 'theme', 'Mode', 'dark mode light system auto colors night'], ['appearance', 'accent', 'Accent color', 'color highlight buttons'],
     ['appearance', 'corder', 'Course order', 'courses order move up down reorder sort classes'], ['appearance', 'shortcuts', 'Home shortcuts', 'shortcuts home buttons chips quick actions customize add remove'], ['appearance', 'potato', 'Potato mode', 'performance animations chromebook slow fast font'], ['appearance', 'motion', 'Reduce motion', 'animation accessibility'], ['appearance', 'previews', 'File previews', 'thumbnails images pdf'], ['appearance', 'cache', 'Saved on this device', 'cache storage clear space'],
@@ -4262,6 +4240,10 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
         row('sgy', 'Schoology website', 'Where you sign in to Schoology', `<a class="val" href="https://${esc(SGY)}" target="_blank" rel="noopener noreferrer">${esc(SGY)}</a>`) +
         (EMAIL ? row('email', 'School email', esc(EMAIL), '') : ''),
         'These come from Schoology. To change them, talk to your school.')}
+      ${incog() ? '' : (() => { const P = store.get('schoolagy_profile') || {}, em = typeof P.email === 'string' ? P.email : '', ok = !!em && P.emailVerified === true;
+        return grp('Averages email', row('avemail', em ? esc(em) : 'No email yet', em ? (ok ? 'For grade reports and signing in on new devices.' : 'Not verified yet. Verify it to use it.') : 'Add one for grade reports and to sign in on new devices.',
+          (ok ? chip(ico('ok') + 'Verified', ' on') : '') + btn('avemail', !em ? 'Add email' : ok ? 'Change' : 'Verify', '', em ? '' : ' primary')),
+          'Only you see this. We never share it.'); })()}
       ${grp('Sign-in', row('signin', 'Signed in with Schoology', 'Your classes and grades come straight from Schoology.', chip(ico('ok') + 'Connected', ' on')))}
       <button class="btn sg-out" data-act="signout" data-set="signout">Sign out</button>`,
 
@@ -4324,7 +4306,6 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
         const right = blocked ? chip('Off in Incognito') : !ready ? chip('Not available yet') : on ? btn('disconnect', 'Disconnect', ` data-app="${k}"`) : btn('connect', 'Connect', ` data-app="${k}"`, ' primary');
         return `<div class="sg-row has-ic" data-set="${k}">${art}${tx(APPS[k], blocked ? 'Canva needs an account with us, so it\'s off in Incognito.' : on ? sub + (k !== 'canva' ? ' Connected in this browser.' : (LIVE.canva && LIVE.canva.name ? ` Connected as ${esc(LIVE.canva.name)}.` : '')) : sub)}${right}</div>`;
       };
-      // Canva is one of the choices again, and the default, like Windowed (2026-11-06, Martin: "why was Canva replaced")
       const offs = ['canva', 'drive', 'onedrive'].filter(k => !SG[k]), oi = SG[SG.openIn] ? SG.openIn : (['canva', 'drive', 'onedrive'].find(k => SG[k]) || SG.openIn);
       const C2 = LIVE.cal, calOn = !!(C2 && C2.on && C2.url), calLock = incog() || (C2 && C2.plusRequired && !plus()) || (C2 && C2.enabled === false);
       const webcal = calOn ? C2.url.replace(/^https?:/, 'webcal:') : '';
@@ -4397,9 +4378,6 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   function sgAll(fresh) { $('sg').classList.toggle('open', SGV.open); sgNav(); sgPane(fresh); sgMeta(); }
   const redraw = () => { sgSave(); sgNav(); sgPane(); sgMeta(); };
 
-  // Each section keeps its own spot (Martin, 2026-10-30: switching tabs reset where you were on the page).
-  // Back to a section: right where you left it. A new one: the page stays put, unless you'd scrolled
-  // past the top of the section, then it starts at its top. Phones (a list, then one section) start at the top.
   const SG_SPOT = (() => { try { return JSON.parse(sessionStorage.getItem('fs_settings_spots') || '{}') || {}; } catch (e) { return {}; } })();
   const spotSave = () => { try { sessionStorage.setItem('fs_settings_spots', JSON.stringify(SG_SPOT)); } catch (e) {} };
   function openSec(id, focusTop) {
@@ -4452,10 +4430,50 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   }
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && dlg) { e.preventDefault(); e.stopImmediatePropagation(); dlgClose(true); } }, true);
 
-  // ---------- a new profile photo, in Fullscreen (2026-11-03) ----------
-  // 1. pick a PNG, JPG or WebP; 2. the picture check (app/scan/page.tsx in a hidden frame, the same check Windowed and
-  // onboarding run; the picture never leaves the device); 3. a round crop; 4. on Save, it goes up as the account's
-  // copy (PUT /media/photo, as Windowed does) and then into the profile, which syncs.
+  // ---------- Averages email: add, change or remove it, with a 6-digit code (public/js/averages-email.js) ----------
+  function editEmail() {
+    const P = store.get('schoolagy_profile') || {}, cur = typeof P.email === 'string' ? P.email : '';
+    let sentTo = '';
+    const d = dlgOpen({ title: cur ? 'Your Averages email' : 'Add your email', ok: 'Send code', body: `
+      <label class="sg-fl"><b>Email</b><input id="sgEm" type="email" maxlength="200" autocomplete="email" placeholder="you@example.com" value="${esc(cur)}"><small id="sgEmMsg">We'll email you a 6-digit code to check it's yours.</small></label>
+      <label class="sg-fl" id="sgEmCodeW" hidden><b>Code</b><input id="sgEmCode" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="000000" style="letter-spacing:.3em;font-variant-numeric:tabular-nums"><small><button class="sg-lnk" type="button" data-dact="resend">Send a new code</button></small></label>`,
+      onOk: () => { go(); return false; } });
+    const el = d.el, $e = el.querySelector('#sgEm'), $c = el.querySelector('#sgEmCode'), $m = el.querySelector('#sgEmMsg'), okB = el.querySelector('[data-dlg="ok"]');
+    const say = (t, bad) => { $m.textContent = t; $m.style.color = bad ? '#e5484d' : ''; };
+    const label = () => { const v = $e.value.trim(); okB.textContent = !v ? (cur ? 'Remove email' : 'Save') : sentTo && sentTo === v.toLowerCase() ? 'Verify' : 'Send code'; };
+    const save = (email, verified) => {
+      const p = store.get('schoolagy_profile') || {}; if (!p.name && PROFILE.name) p.name = PROFILE.name; p.email = email; p.emailVerified = !!verified;
+      store.set('schoolagy_profile', p); FSX.syncPush(); dlgClose(true); redraw();
+      toast(!email ? 'Removed your email.' : 'Email verified.');
+    };
+    const send = async () => {
+      const v = $e.value.trim();
+      if (!window.AveragesEmail) { say("Couldn't load. Refresh the page and try again.", true); return; }
+      if (!window.AveragesEmail.valid(v)) { say("That doesn't look like an email address yet.", true); $e.focus(); return; }
+      okB.disabled = true;
+      try { await window.AveragesEmail.send(v); sentTo = v.toLowerCase(); el.querySelector('#sgEmCodeW').hidden = false; say(`Enter the 6-digit code we sent to ${v}. It works for 10 minutes.`); $c.value = ''; $c.focus(); }
+      catch (e) { say(window.AveragesEmail.say(e), true); }
+      finally { okB.disabled = false; label(); }
+    };
+    const check = async () => {
+      const v = $e.value.trim();
+      if (!/^\d{6}$/.test($c.value)) { say('Enter all 6 digits.', true); $c.focus(); return; }
+      okB.disabled = true; $c.disabled = true;
+      try { await window.AveragesEmail.check(v, $c.value); save(v, true); }
+      catch (e) { say(window.AveragesEmail.say(e), true); $c.disabled = false; $c.select(); }
+      finally { okB.disabled = false; $c.disabled = false; }
+    };
+    function go() {
+      const v = $e.value.trim();
+      if (!v) { if (cur) save('', false); else dlgClose(true); return; }
+      if (sentTo && sentTo === v.toLowerCase()) check(); else send();
+    }
+    $e.addEventListener('input', () => { if (sentTo && sentTo !== $e.value.trim().toLowerCase()) { sentTo = ''; el.querySelector('#sgEmCodeW').hidden = true; say("We'll email you a 6-digit code to check it's yours."); } label(); });
+    $c.addEventListener('input', () => { $c.value = $c.value.replace(/\D/g, '').slice(0, 6); if ($c.value.length === 6) check(); });
+    d.onAct = k => { if (k === 'resend') { sentTo = ''; send(); } };
+    label();
+  }
+
   let scanFrame = null, scanReady = null;
   function scanPicture(file) {
     if (!scanReady) scanReady = new Promise((ok, no) => {
@@ -4547,10 +4565,8 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
         const save = () => { store.set('fsmock_profile2', photo ? { name: n, photo } : { name: n, photo: '' }); redraw(); avSync(); FSX.syncPush(); toast('Saved your profile.'); };
         if (fresh) { toast('Saving your photo…'); photoUpload(photo).then(save, save); } else save();
       } });
-    const pv = () => { const a = d.el.querySelector('#sgPhAv'), nm = d.el.querySelector('#sgName').value.trim() || PROFILE.name, A = window.AveragesAvatar; a.classList.toggle('photo', !!photo); // the same colored initials as everywhere else (2026-11-03)
+    const pv = () => { const a = d.el.querySelector('#sgPhAv'), nm = d.el.querySelector('#sgName').value.trim() || PROFILE.name, A = window.AveragesAvatar; a.classList.toggle('photo', !!photo);
       if (photo) { a.textContent = ''; a.style.backgroundImage = `url("${photo}")`; } else if (A) { a.textContent = A.initials(nm) || '?'; a.style.backgroundImage = A.background(nm); a.style.backgroundColor = A.color(nm); } else { a.textContent = nm.charAt(0); a.style.backgroundImage = ''; } d.el.querySelector('[data-dact="rm"]').hidden = !photo; };
-    // A new photo, right here (2026-11-03, Martin: it used to send you to Windowed Settings): checked on this
-    // device by the same picture check as Windowed (the hidden /scan page), cropped round, then shown here.
     d.onAct = k => { if (k === 'pick') { photoPick(url => { photo = url; pv(); d.el.querySelector('[data-dact="pick"]').focus({ preventScroll: true }); }); } else { photo = ''; pv(); d.el.querySelector('[data-dact="pick"]').focus(); } };
     d.el.querySelector('#sgName').addEventListener('input', pv); pv();
   }
@@ -4573,8 +4589,6 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
           return window.AveragesPush.enable(pushTypes()).then(r => { LIVE.busy = ''; if (r.ok) { SG.notif = true; SGV.flip = 'notif'; redraw(); toast('Browser notifications are on.'); } else toast(r.code === 'plus_required' ? 'Browser notifications come with Plus.' : 'Couldn\'t turn on notifications. Try again in a moment.'); });
         });
   }
-  // Home shortcuts (2026-11-03, Martin: "let people edit the shortcuts in settings"): the same list Home's Edit shortcuts
-  // changes (fsmock_shortcuts2: a top row of up to 8, a second of up to 6), so either place edits it.
   const SC_CAT = [
     ['turnin', 'Turn in', 'upload'], ['whatif', 'What-if grades', 'calc'], ['teachers', 'Message a teacher', 'msg'], ['takes', 'What it takes', 'chart'],
     ['missing', 'Missing work', 'alert'], ['week', 'This week', 'cal'], ['edit', 'Edit shortcuts', 'sliders'],
@@ -4595,8 +4609,6 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     const def = JSON.stringify(l) === JSON.stringify(SC_DEF);
     return rows + add + (def ? '' : row('shortcuts-reset', 'Default shortcuts', 'Turn in, What-if grades, Message a teacher, What it takes and Edit shortcuts.', btn('screset', 'Reset')));
   }
-  // Course order (2026-11-01, Martin: move courses up and down): the same saved order as the Courses page's
-  // Move up / Move down (FSX.courseOrder, shared with Windowed). With none saved it's period order.
   const courseIds = () => { const saved = FSX.courseOrder.get().filter(id => CLASSES.some(c => c.id === id)); return saved.concat(CLASSES.slice().sort((a, b) => a.period - b.period).map(c => c.id).filter(id => !saved.includes(id))); };
   function courseRows() {
     const ids = courseIds(), byId = Object.fromEntries(CLASSES.map(c => [c.id, c]));
@@ -4612,9 +4624,6 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     const b = document.querySelector(`[data-act="cmove"][data-cid="${CSS.escape(id)}"][data-d="${d}"]:not(:disabled)`) || document.querySelector(`[data-act="cmove"][data-cid="${CSS.escape(id)}"]:not(:disabled)`);
     if (b) b.focus({ preventScroll: true });
   }
-  // Drag a course to a new place (2026-11-03, Martin: "can reordering the courses be a drag and drop in settings").
-  // With a mouse, drag the row anywhere but its buttons; on a touch screen, by its dots (so the page still scrolls).
-  // The other courses slide out of the way; the arrows stay for the keyboard.
   let cDrag = null;
   document.addEventListener('pointerdown', e => {
     const row = e.target.closest && e.target.closest('.sg-drow'); if (!row || e.button || e.target.closest('button')) return;
@@ -4665,11 +4674,8 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       if (/^https:\/\/(checkout|billing)\.stripe\.com\//.test(url)) location.assign(url); else toast('Couldn\'t open that page. Try again.');
     }, e => toast(e && e.message === 'billing_already_subscribed' ? 'You already have Plus.' : e && e.message === 'incognito_mode' ? 'Plus needs Classic mode.' : e && e.message === 'billing_no_account' ? 'There\'s no plan to manage yet.' : 'Couldn\'t open that page. Try again.'));
   }
-  // End early (2026-11-01): a plan that's already set to end can end today. Asked first, since it can't be undone
-  // and the days left aren't paid back.
   function endEarly() {
     const B = LIVE.billing || {}, ends = B.renewsAt ? new Date(B.renewsAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '';
-    // like deleting something on Cloudflare (2026-11-02, Martin): type the word (or copy it from the dashed box) first
     const WORD = 'unsubscribe';
     if (!EMOJI_SVG['📋']) EMOJI_SVG['📋'] = "<svg aria-hidden=\"true\" focusable=\"false\" viewBox=\"0 0 36 36\"><path fill=\"#C1694F\" d=\"M32 34a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h24a2 2 0 0 1 2 2v27z\"/><path fill=\"#FFF\" d=\"M29 32a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1h20a1 1 0 0 1 1 1v23z\"/><path fill=\"#CCD6DD\" d=\"M25 3h-4a3 3 0 1 0-6 0h-4a2 2 0 0 0-2 2v5h18V5a2 2 0 0 0-2-2z\"/><circle cx=\"18\" cy=\"3\" r=\"2\" fill=\"#292F33\"/><path fill=\"#99AAB5\" d=\"M20 14a1 1 0 0 1-1 1h-9a1 1 0 0 1 0-2h9a1 1 0 0 1 1 1zm7 4a1 1 0 0 1-1 1H10a1 1 0 0 1 0-2h16a1 1 0 0 1 1 1zm0 4a1 1 0 0 1-1 1H10a1 1 0 1 1 0-2h16a1 1 0 0 1 1 1zm0 4a1 1 0 0 1-1 1H10a1 1 0 1 1 0-2h16a1 1 0 0 1 1 1zm0 4a1 1 0 0 1-1 1h-9a1 1 0 1 1 0-2h9a1 1 0 0 1 1 1z\"/></svg>";
     const d = dlgOpen({ title: 'End Plus now?', ok: 'End Plus now', danger: true, body: `<p>Plus stops right away and you're on Classic. You lose browser notifications, calendar sync and early features today${ends ? ` instead of ${esc(ends)}` : ''}.</p><p>The days left aren't paid back.</p>
@@ -4780,11 +4786,10 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       const k = s.dataset.seg, v = s.dataset.v; if (SG[k] === v) return; SG[k] = v;
       s.parentElement.querySelectorAll('[data-seg]').forEach(b => b.setAttribute('aria-pressed', b === s)); segSync(s.parentElement.parentElement, true); sgSave(); sgNav();
       if (k === 'layout' && v === 'windowed') {
-        // the logo on the way (2026-10-30): up here at once, and the Windowed page keeps it up until it's ready (app/lib/splash.ts)
         saveOpt('windowType', 'windowed');
         try { sessionStorage.setItem('averages_mode_logo', String(Date.now())); } catch (_) {}
         if (window.__averagesSplash && window.__averagesSplash.show) window.__averagesSplash.show(4000);
-        location.replace('/settings');   // Back then goes to the page before, not to this one (2026-11-06)
+        location.replace('/settings');
       }
       if (k === 'theme') { sgPane(); FSX.syncPush(); toast(v === 'dark' ? 'Dark colors on.' : v === 'auto' ? 'Pages follow your device now.' : 'Light colors on.'); }
       if (k === 'openIn') { try { localStorage.setItem('schoolagy_default_editor', v === 'onedrive' ? 'onedrive' : v === 'drive' ? 'gdrive' : 'canva'); } catch (_) {} toast(`Office files open in ${APPS[v]}.`); }
@@ -4798,7 +4803,13 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (k === 'back') { SGV.open = false; sgAll(); const r = $('sgNav').querySelector(`[data-sec="${SG.sec}"]`); if (r) r.focus({ preventScroll: true }); }
     else if (k === 'startdd') ddOpen(a);
     else if (k === 'profile') editProfile();
-    else if (k === 'signout') FSX.confirmSignOut();
+    else if (k === 'avemail') editEmail();
+    else if (k === 'signout') {
+      a.outerHTML = `<div class="sg-soc" role="group" aria-label="Sign out"><span class="t"><b>Sign out of Averages.io?</b><small>You can sign back in with Schoology any time.</small></span><button class="btn" data-act="socancel">Cancel</button><button class="btn sg-soyes" data-act="soyes">Sign out</button></div>`;
+      document.querySelector('.sg-soc [data-act="socancel"]').focus({ preventScroll: true });
+    }
+    else if (k === 'socancel') { const b = document.querySelector('.sg-soc'); if (b) b.outerHTML = `<button class="btn sg-out" data-act="signout" data-set="signout">Sign out</button>`; const o = document.querySelector('.sg-out'); if (o) o.focus({ preventScroll: true }); }
+    else if (k === 'soyes') FSX.signOut();
     else if (k === 'plan') setPlan(a.dataset.plan);
     else if (k === 'goplan') go('plan', 'other');
     else if (k === 'pay' || k === 'receipts') stripe('portal');
@@ -4981,9 +4992,6 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     el.style.top = (c.top - r.top - op.clientTop + op.scrollTop).toFixed(1) + 'px';
     return true;
   }
-  // Something around the sticker still sliding or popping in (its row landing, the class icon it sits by): measuring
-  // now puts it in the wrong place, even under the card (2026-10-31, Martin's screenshots). Wait for it to stop.
-  // only its own item and the few boxes around it are asked (asking the whole page was slow, 2026-11-01)
   const moving = el => { const host = el.closest(HOST) || el.parentElement; if (!host || !host.getAnimations) return false;
     const busy = list => list.some(a => { const t = a.effect && a.effect.target, tm = a.effect && a.effect.getTiming ? a.effect.getTiming() : null;
       return a.playState === 'running' && t && t !== el && !(t.classList && t.classList.contains('newtag')) && tm && tm.iterations !== Infinity; });

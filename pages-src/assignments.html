@@ -63,18 +63,6 @@
   *::-webkit-scrollbar-thumb:hover { background-color: rgba(20, 21, 31, 0.45); }
   *::-webkit-scrollbar-corner { background: transparent; }
 
-  /* Declared so the browser themes ITS OWN chrome — scrollbars, the
-
-     overscroll gutter, form controls — against this page rather than
-
-     guessing. Without it Firefox drew a light-theme scrollbar over the
-
-     dark canvas and tinted it (Martin saw it as pink on a blue
-
-     background). LegacyPage's applyStoredTheme() updates both of these
-
-     to match whatever background the user actually saved. */
-
   html {
 
     color-scheme: dark;
@@ -82,7 +70,6 @@
     background-color: #0c0c0e;
 
   }
-
 
   html, body {
     margin: 0;
@@ -96,16 +83,6 @@
     overflow: hidden; /* scrolling now happens inside .page (see below), so
       the scrollbar sits at the edge of the app's own window/card instead of
       out at the browser's outer edge, over the wallpaper margin */
-    /* Neutral black instead of a baked-in accent gradient here —
-       2026-09-11, per Martin. This is only ever visible for a split
-       second on reload/navigation, before applyStoredTheme() (or this
-       page's own appearance-reading script) sets the user's actual
-       saved background over it. The old default was the sample
-       red-orange gradient baked into this file, which read as a real
-       glitch flashing in between pages; a neutral black reads as
-       "still loading" instead, and matches the app's own Black
-       preset (#0c0c0e) so it's not a color that appears nowhere else
-       in the app. */
     background-color: #0c0c0e;
     background-image: none;
     background-size: cover;
@@ -156,9 +133,6 @@
   }
 
   .profile-menu-wrap { position: relative; flex-shrink: 0; }
-  /* No photo: an Apple-style monogram (2026-10-21, Martin: "make the default no pfp letters
-     look more like the apple ones"), the grey gradient and rounded white initials of a contact
-     with no picture. A photo replaces it (set inline as background-image). */
   .profile-btn {
     width: 42px;
     height: 42px;
@@ -177,8 +151,6 @@
     flex-shrink: 0;
   }
 
-  /* A photo has no ring (2026-10-23, Martin: "remove the ugly border if it is a custom upload");
-     the letter avatars keep theirs. Same size: the border goes clear and the photo fills it. */
   .profile-btn.has-photo { border-color: transparent; background-origin: border-box; background-repeat: no-repeat; }
   .profile-menu {
     position: absolute;
@@ -257,30 +229,6 @@
   .assign-filter.active { background: var(--accent); color: #fff; }
   .assign-filter:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
 
-  /* Class filter — a dropdown among the status pills above, added
-     2026-09-03 (per Martin: "on the all assignments we should just add a
-     class filter dropdown ... same shape and color as the other filters
-     but will have a down arrow, which when selected will be the accent
-     color until they reset it"). Same pill shape/background/type scale
-     as .assign-filter, plus a chevron to read as a dropdown rather than
-     a toggle, and the same active-state accent fill the status pills
-     use, applied for as long as a specific class (not "All Classes")
-     stays selected. **Position (2026-09-03 follow-up, per Martin)**: sits
-     right after "All" by default — a real DOM position (not just visual,
-     so tab order matches what's on screen — see the JS's
-     `moveClassFilterWrap()`), moving to the end of the row (after Graded)
-     with a FLIP-animated slide while a class stays selected, and back
-     next to "All" the moment it's reset. **Rebuilt as a custom dropdown
-     (2026-09-03, second follow-up, per Martin: "can you make a custom
-     dropdown for selecting a class to filter by")**: was a native
-     `<select>` at first — swapped for a real button + floating listbox
-     panel (the same open/close/outside-click/Escape convention this
-     page's own profile menu already uses, just role="listbox" instead of
-     role="menu"), so the option list can carry each course's own color
-     dot and match the app's own visual language instead of the browser's
-     native dropdown chrome. Still fully keyboard-operable (a real
-     `<button>` plus real `<button role="option">` rows, not a `<div>`
-     stack), just no longer a native form control. */
   .assign-filter-select-wrap { position: relative; display: inline-flex; }
   .assign-filter-select-btn {
     display: inline-flex;
@@ -334,20 +282,6 @@
   .assign-group-label { font-size: 0.66rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-faint); margin: 16px 0 2px; }
   .assign-group-label:first-child { margin-top: 0; }
 
-  /* ---------- Assignment row — the draft PDF's row shape (bold-italic
-     class name on top, a lighter assignment-title line beneath) laid
-     over the status-tick/due-date component every other Assignment
-     List already uses, so this page matches both the draft and the
-     rest of the app. Course color comes in per-row via a custom
-     property, since (unlike course-home.html) this page isn't scoped
-     to one course's --course-color. **Divider removed, padding grows
-     when unfiltered (2026-09-03, per Martin)**: the `border-bottom`
-     divider between rows is gone — rows are separated by spacing alone
-     now, not a rule line. That freed-up padding grew to compensate
-     (10px → 16px) for the default "All Classes" view; the class-filtered
-     state below dials it back down, since that view's rows carry less
-     visual weight (course name shrinks to a small caption) and don't
-     need as much breathing room. ---------- */
   .assign-row { display: flex; align-items: flex-start; gap: 10px; padding: 16px 0; }
   #assignListBody.class-filtered .assign-row { padding: 10px 0; }
   .assign-tick { width: 4px; align-self: stretch; min-height: 40px; border-radius: 999px; flex-shrink: 0; background: var(--text-faint); }
@@ -360,14 +294,6 @@
   .assign-title { order: 1; font-weight: 500; font-size: 0.82rem; color: var(--text-muted); margin: 2px 0 0; }
   .assign-meta { order: 2; font-size: 0.68rem; color: var(--text-faint); margin: 3px 0 0; text-transform: uppercase; letter-spacing: 0.03em; font-weight: 800; }
 
-  /* Class-filtered typography swap (2026-09-03, per Martin: "the name of
-     the assignment should get bigger and the course name get smaller and
-     move to the bottom") — every row already shows the same one class
-     once a class filter is active, so the course name stops earning top
-     billing: the assignment title takes over as the bold headline, and
-     the course name demotes to a small caption below the type label.
-     `.assign-text` is a column flexbox specifically so this can reorder
-     via `order` alone — no DOM changes needed between the two states. */
   #assignListBody.class-filtered .assign-title { order: 0; font-size: 0.98rem; font-weight: 800; color: var(--text-dark); margin: 0; }
   #assignListBody.class-filtered .assign-meta { order: 1; margin: 3px 0 0; }
   #assignListBody.class-filtered .assign-course { order: 2; font-size: 0.66rem; font-weight: 700; margin: 4px 0 0; }
@@ -378,8 +304,6 @@
   .assign-row.pending .assign-due { color: var(--text-muted); }
   .assign-empty { font-size: 0.8rem; color: var(--text-faint); font-style: italic; padding: 10px 0; }
 
-  /* Rows are clickable — each opens its own assignment.html detail
-     page (2026-08-29, per Martin's singular-assignment draft). */
   .assign-row { cursor: pointer; border-radius: var(--window-radius-sm); }
   .assign-row:hover { background: var(--panel-inner); }
   .assign-row:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring) inset; }
@@ -427,10 +351,6 @@
   .nav-link .dot { width: 4px; height: 4px; border-radius: 50%; background: transparent; }
   .nav-link.active .label { color: var(--text-dark); }
   .nav-link.active .dot { background: var(--accent); }
-  /* ---------- "More" overflow (2026-10-01, per Martin: "if the text has
-     to get ... we should add a more button on the far right side with a
-     list of the other options"). Labels never truncate: when they would,
-     the rightmost pages move into the More menu instead. ---------- */
   .nav-link[hidden], .nav-more[hidden], .nav-more-menu[hidden] { display: none; }
   /* While the More menu is open the whole bar sits above everything else on
      the page (sticky headers, pop-ups, the edit button go up to z-index 90),
@@ -493,8 +413,6 @@
   .nav-more-item.active { color: var(--text-dark); }
   .nav-more-item.active span { position: relative; display: inline-block; padding-bottom: 6px; margin-bottom: -6px; }
   .nav-more-item.active span::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; border-radius: 999px; background: var(--accent); }
-  /* Labels sit centered in the bar; the active page is underlined in the
-     accent color instead of marked with a dot (2026-10-01, per Martin). */
   .app-nav-inner .nav-link, .app-nav-inner .nav-more { justify-content: center; gap: 0; padding-top: 10px; padding-bottom: 10px; }
   .app-nav-inner .nav-link .dot, .app-nav-inner .nav-more .dot { display: none; }
   .app-nav-inner .nav-link .label, .app-nav-inner .nav-more .label { position: relative; padding: 6px 0; }
@@ -604,10 +522,6 @@
   </nav>
 
   <script>
-    // ---- Links by id (2026-10-07, Martin) ----
-    // A real class (Schoology/Classroom ids are digits) links as
-    // assignment?id=<id> and course-home?id=<section id>; the sample classes
-    // (word ids like "apchem") keep ?course=&title=. Pages read both.
     function avgIsId(v) { return /^\d{1,24}$/.test(String(v == null ? '' : v)); }
     function avgCourseQ(course) { return (avgIsId(course) ? 'id=' : 'course=') + encodeURIComponent(course == null ? '' : course); }
     function avgAssignHref(course, title, id, extra) {
@@ -616,11 +530,6 @@
       return `assignment.html?course=${encodeURIComponent(course == null ? '' : course)}&title=${encodeURIComponent(title || '')}${avgIsId(id) ? `&id=${id}` : ''}${extra}`;
     }
 
-    // Potato PC Mode on every page (2026-10-04, per Martin). The saved
-    // setting turns off all CSS animations and transitions, makes animate()
-    // calls and smooth scrolling instant, and drops the slanted page title.
-    // Same code as app/lib/theme-boot.ts, which runs it before first paint in
-    // the app; this copy covers the preview and pages theme-boot skips.
     (function () {
     var POTATO_CSS = "body.potato-mode,body.potato-mode *,body.potato-mode *::before,body.potato-mode *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important;filter:none!important;text-shadow:none!important}html:has(body.potato-mode){scroll-behavior:auto!important}body.potato-mode,body.potato-mode *{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif!important}body.potato-mode h1.title{font-style:normal!important;transform:none!important}body.potato-mode .trend.has-popup:focus-visible{outline:2px solid currentColor;outline-offset:2px}";
     function potatoOn() { return !!(document.body && document.body.classList.contains("potato-mode")); }
@@ -741,17 +650,7 @@
     })();
   </script>
 
-
   <script>
-    // ------------------------------------------------------------------
-    // Shared appearance (accent + background) — 2026-09-08, per Martin:
-    // "wallpapers + accent colors don't save across pages." Settings'
-    // Appearance section (and onboarding's Theme step) are the only
-    // writers of schoolagy_appearance; every other real app page,
-    // including this one, applies whatever's saved there, read-only, on
-    // its own load — same shared-localStorage-record pattern already
-    // used for schoolagy_dark_mode/schoolagy_profile.
-    // ------------------------------------------------------------------
     (function () {
       function darken(hex, amount) {
         const n = parseInt(hex.slice(1), 16);
@@ -798,22 +697,6 @@
     // matter which page it's viewed from.
     // ------------------------------------------------------------------
 
-    // ------------------------------------------------------------------
-    // Course customization persistence — added 2026-09-08. Renaming,
-    // recoloring, or reordering a course (in home.html's Customize editor
-    // or courses.html's Reorder tool — the only places that WRITE these)
-    // used to be invisible everywhere else, since every page just
-    // re-generated its own hardcoded COURSES array from scratch on load.
-    // schoolagy_course_custom holds per-course name/color overrides
-    // (object keyed by course id, only actually-customized courses
-    // present); schoolagy_course_order holds a full custom ordering of
-    // course ids (array), written only once the user has actually
-    // reordered. This page only READS both — applyCourseCustomizationsInPlace()
-    // is called right after the raw array literal below, mutating COURSES
-    // in place, so it's already the customized/reordered version before
-    // anything on this page ever renders it. Same defensive
-    // try/catch-per-key style as AVERAGES_DARK_MODE_KEY in settings.html.
-    // ------------------------------------------------------------------
     const AVERAGES_COURSE_CUSTOM_KEY = 'schoolagy_course_custom';
     const AVERAGES_COURSE_ORDER_KEY = 'schoolagy_course_order';
     function loadCourseCustom() {
@@ -830,12 +713,6 @@
       } catch {}
       return null;
     }
-    // Subject table (2026-10-01, per Martin): each course gets a color that
-    // fits its subject, picked from its name. First match wins, so specific
-    // subjects come before broad ones ("Computer Science" before "Science",
-    // "Physical Education" before "Physics"). A color the student picked in
-    // the course's info pop-up still wins over this. No match keeps the
-    // course's own color. All colors pass 4.5:1 with white text.
     const COURSE_SUBJECTS = [
       [/\bchem/, '🧪', '#1b7f67'],
       [/\bbio|anatom|physiolog/, '🧬', '#387f33'],
@@ -940,19 +817,12 @@
       { type: 'assignment', title: 'Problem Set 7', courseId: 'algebra2', due: 'Wed Aug 26' },
       { type: 'assignment', title: 'Titration Lab Prep', courseId: 'apchem', due: 'Mon Aug 24' },
     ];
-    // Recently Submitted — turned in but not graded yet, sitting between
-    // Upcoming and Graded in the assignment lifecycle (added 2026-08-29,
-    // per Martin's request). Same values assignment.html reads for its
-    // own lookup, so a submitted item matches wherever it's viewed.
     const SUBMITTED = [
       { type: 'assignment', title: 'Molarity Practice Set', courseId: 'apchem', submittedOn: 'Sat Aug 22' },
       { type: 'assessment', title: 'Quiz Corrections', courseId: 'algebra2', submittedOn: 'Sun Aug 23' },
       { type: 'assignment', title: 'Composición 2', courseId: 'spanish3', submittedOn: 'Fri Aug 21' },
     ];
 
-    // Signed in with real data (2026-10-06); a demo sign-in shows the samples.
-    // Schoology can't say what's turned in, so its bundle has no SUBMITTED:
-    // empty, never the sample list.
     const AV_LIVE = !!(window.__AVERAGES__ && window.__AVERAGES__.data) && window.__AVERAGES__.mode !== 'demo';
     if (AV_LIVE && !Array.isArray(window.__AVERAGES__.data.SUBMITTED)) SUBMITTED.length = 0;
 
@@ -970,8 +840,6 @@
     // ------------------------------------------------------------------
     // Live items with a real due time sort by it (day of month alone breaks across months).
     const sortDay = x => (x.dueAt && !isNaN(Date.parse(x.dueAt)) ? Date.parse(x.dueAt) : dayNum(x.due));
-    // Google Assignments, Turnitin and other outside tools (2026-10-16): turned in on
-    // Schoology where we can't see it, so past due is Pending (All tab), never Missing.
     const overdueItems = OVERDUE.filter(o => !o.outside)
       .map(o => ({ status: 'overdue', type: o.type, title: o.title, courseId: o.courseId, day: sortDay(o), due: o.due, id: o.id }))
       .sort((a, b) => a.day - b.day);
@@ -1005,7 +873,6 @@
     const gradedRecent = gradedItems.slice(0, 8);
 
     function assignRowHTML(item) {
-      // A class that isn't in the list (2026-10-06): a neutral row, not an error.
       const course = findCourse(item.courseId) || { name: '', color: 'var(--text-faint)' };
       const dueText = item.status === 'graded' ? (typeof item.score === 'number' && isFinite(item.score) ? `Graded · ${item.score}%` : 'Graded')
         : item.status === 'overdue' ? (item.due ? `Missing · ${item.due}` : 'Missing')
@@ -1030,12 +897,6 @@
       return `<p class="assign-group-label">${label}</p>` + items.map(assignRowHTML).join('');
     }
 
-    // Class filter (added 2026-09-03) — narrows every status tab down to
-    // one course, on top of whichever status filter is already active;
-    // '' (the "All Classes" option) means no narrowing. Kept as its own
-    // variable rather than baked into the four *Items arrays above, since
-    // those are computed once at load and this needs to re-filter on
-    // every dropdown change without losing the original full lists.
     let currentStatusFilter = 'all';
     let selectedCourseId = '';
 
@@ -1072,18 +933,6 @@
       renderAssignList(currentStatusFilter);
     });
 
-    // Class filter — a custom dropdown (2026-09-03, replacing an earlier
-    // native <select> per Martin: "can you make a custom dropdown for
-    // selecting a class to filter by") built the same way this page's
-    // own profile menu already is: a button that toggles a floating
-    // panel, closed on an outside click or Escape. Options are built
-    // from the same COURSES list every other lookup on this page already
-    // uses, so there's no second hardcoded class list to drift out of
-    // sync, each with a small color dot matching that course's own
-    // identity color everywhere else in the app. Selecting a real class
-    // (anything but "All Classes") turns the pill the accent color,
-    // matching the status pills' own active state, and it stays that
-    // color until reset back to "All Classes".
     const classFilterBtn = document.getElementById('classFilterBtn');
     const classFilterLabel = document.getElementById('classFilterLabel');
     const classFilterMenu = document.getElementById('classFilterMenu');
@@ -1104,15 +953,6 @@
     document.addEventListener('click', e => { if (!classFilterMenu.hidden && !e.target.closest('.assign-filter-select-wrap')) closeClassMenu(); });
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && !classFilterMenu.hidden) { closeClassMenu(); classFilterBtn.focus(); } });
 
-    // Moves the class-filter pill between "right after All" (its resting
-    // spot) and "the far end of the row, after Graded" (2026-09-03, per
-    // Martin: "when a class is selected it moves to the far right in an
-    // animation"). A real DOM move (insertAdjacentElement/appendChild),
-    // not just a visual `order` shuffle, so keyboard tab order always
-    // matches what's on screen. Animated with a small FLIP (First, Last,
-    // Invert, Play): read the pill's position before the move, let the
-    // browser lay it out in its new spot, then animate a transform from
-    // the old position to the new one instead of letting it just snap.
     const assignFiltersEl = document.getElementById('assignFilters');
     const allFilterBtn = assignFiltersEl.querySelector('.assign-filter[data-filter="all"]');
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1152,9 +992,6 @@
       closeClassMenu();
     });
 
-    // Rows navigate to their own assignment detail page (2026-08-29) —
-    // delegated on the shared body container since renderAssignList()
-    // rebuilds its innerHTML on every filter change.
     document.getElementById('assignListBody').addEventListener('click', e => {
       const row = e.target.closest('.assign-row');
       if (row) window.location.href = row.dataset.href;
@@ -1186,22 +1023,12 @@
     // Profile menu — same behavior as every other page.
     // ------------------------------------------------------------------
     const profileBtn = document.getElementById('profileBtn');
-    // Shared profile photo/name (2026-09-07) — settings.html's Edit
-    // Profile modal is the only place this is ever set, but every other
-    // page's top-right profile button used to just show a fixed "M" no
-    // matter what was saved there: the button never read anything back,
-    // so a photo you set in Settings was invisible the moment you left
-    // it. schoolagy_profile is the same localStorage record
-    // settings.html writes on every save; this is read-only here.
     (function () {
       var profile = null;
       try {
         var raw = localStorage.getItem('schoolagy_profile');
         if (raw) profile = JSON.parse(raw);
       } catch (e) {}
-      // No name saved on this device (new device, or signed out with Sync
-      // off): the account's own name from the sign-in, never a sample name
-      // (2026-10-14; this used to fall back to "Martin" / "M").
       if (!profile || !profile.name || !String(profile.name).trim()) profile = Object.assign({}, profile, { name: window.__AVERAGES_NAME__ || '' });
       if (profile.photo) {
         profileBtn.style.backgroundImage = 'url("' + profile.photo + '")';
@@ -1210,7 +1037,7 @@
         profileBtn.textContent = '';
         profileBtn.classList.add('has-photo');
       } else if (profile.name) {
-        if (window.AveragesAvatar) window.AveragesAvatar.paint(profileBtn, profile.name);   // initials on their own color (2026-10-23, averages-avatar.js)
+        if (window.AveragesAvatar) window.AveragesAvatar.paint(profileBtn, profile.name);
         else profileBtn.textContent = (function (n) { var p = String(n).trim().split(/\s+/).filter(Boolean); var f = function (w) { return w ? Array.from(w)[0] : ''; }; return (f(p[0]) + (p.length > 1 ? f(p[p.length - 1]) : '')).toUpperCase(); })(profile.name);
       }
     })();
@@ -1228,11 +1055,6 @@
     });
   </script>
   <script>
-    // Back link (2026-10-01, per Martin: "where it returns to ... is always
-    // wrong"). Every page records itself in a short per-tab trail; a page's
-    // back link then says and goes to the page before it ("Back to AP
-    // Chemistry Hub", "Back to Grades"...). With no trail (the page was
-    // opened directly) the page's own default back link is left alone.
     (function () {
       const SELF = 'assignments.html';
       const KEY = 'averages_nav_trail';

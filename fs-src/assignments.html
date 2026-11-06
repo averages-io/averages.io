@@ -94,7 +94,6 @@
   .quick-l { order: -1; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); line-height: 1; padding-right: 8px; border-right: 2px solid #c6c6cc; height: 24px; display: flex; align-items: center; }
   .top .me { width: 40px; height: 40px; border-radius: 50%; flex: none; margin-left: 8px; }
   .top .me { position: relative; }
-  /* two initials stay clear of the gear (2026-10-30) */
   .top .me .av { font-size: 14px; letter-spacing: -.02em; }
   .top .me .gear { position: absolute; right: -4px; bottom: -4px; width: 18px; height: 18px; border-radius: 50%; background: var(--field); box-shadow: 0 0 0 2px var(--frame); display: grid; place-items: center; color: #66757f; }
   .top .me .gear svg.i { width: 12px; height: 12px; display: block; }
@@ -143,7 +142,7 @@
   .nav .side-kbd { margin-left: auto; font-size: 11px; line-height: 20px; padding: 0 4px; background: var(--inner); color: var(--muted); }
   .nav a:hover .side-kbd { background: var(--field); }
   /* Search turns into a search bar once the sidebar opens (an icon on the closed rail) */
-  .nav #sideSearch { transition: background .12s ease, box-shadow .12s ease; margin-bottom: 8px; } /* a little room between Search and the pages under it (2026-10-30) */
+  .nav #sideSearch { transition: background .12s ease, box-shadow .12s ease; margin-bottom: 8px; }
   .side:is(:hover, .hold, :has(:focus-visible)) #sideSearch, .app.pinned .side #sideSearch { background: var(--field); box-shadow: inset 0 0 0 2px var(--inner); color: var(--muted); transition-delay: .12s; }
   .side:is(:hover, .hold, :has(:focus-visible)) #sideSearch:hover, .app.pinned .side #sideSearch:hover { background: color-mix(in srgb, var(--inner) 35%, var(--field)); color: var(--ink-2); }
   .side:is(:hover, .hold, :has(:focus-visible)) #sideSearch .side-kbd, .app.pinned .side #sideSearch .side-kbd { background: var(--panel); }
@@ -166,7 +165,6 @@
   .side > .nav, .side > .divider, .side > .side-h, .side > .foot { flex: none; }
   .side > .cls > * { flex: none; }
   /* no scrollbar here: it would take width and push the class icons off center. The fade at the bottom shows there's more. */
-  /* the whole sidebar scrolls (2026-10-30, Martin: "not just the tiny courses section"); the class list is as tall as it needs */
   .side > .cls { flex: none; min-height: 0; overflow: visible; }
   .side { overscroll-behavior: contain; scrollbar-width: none; }
   .side::-webkit-scrollbar { display: none; }
@@ -1135,7 +1133,6 @@
   .chip svg.i { color: var(--chip-c, var(--ink-2)); }
   .chip:nth-child(5n + 1) { --chip-c: var(--warm-a); } .chip:nth-child(5n + 2) { --chip-c: var(--sky); } .chip:nth-child(5n + 3) { --chip-c: var(--mint); } .chip:nth-child(5n + 4) { --chip-c: var(--grape); } .chip:nth-child(5n + 5) { --chip-c: #c98a00; }
   /* sticker tags: New pops off the page a little */
-  /* dark mode only (2026-10-30): dark letters on a deeper yellow (white on yellow was about 1.4:1), and the paper ring in the card's dark */
   html[data-theme="dark"] body .newtag { background: #e0aa2e !important; color: #1f1604 !important; box-shadow: 0 0 0 2px var(--field), 0 3px 8px -2px rgba(0, 0, 0, .55); }
   .newtag { background: var(--sun) !important; color: var(--ink) !important; border-radius: 8px; transform: translate(var(--tx, 0px), var(--ty, 0px)) rotate(var(--tilt, -4deg)); box-shadow: 0 0 0 2px var(--field), 0 3px 8px -2px rgba(20, 21, 31, .25); will-change: transform; backface-visibility: hidden; } /* always drawn on its own layer, so hovering a row never redraws the text thinner or bolder */
   .wrap { position: relative; isolation: isolate; }
@@ -1151,7 +1148,6 @@
     /* icon tiles wiggle when you point at their row */
     body:not(.potato-mode) :is(.arow, .mrow, .mp-row, .ag-row, .nt-row, .pin, .gr-row, .crow, tr, .item, .mi):hover :is(.ktile, .nt-tile, .badge, .emo) { animation: lifeWiggle .5s var(--spring); }
     body:not(.potato-mode) .newtag { animation: lifeSticker .5s var(--spring) backwards; }
-    /* hidden until it has landed in its spot (2026-11-06, Martin's video: stickers showed by the name, then jumped) */
     .newtag[data-tilted]:not([data-shown]) { visibility: hidden; animation: none !important; }
   }
   @keyframes lifeWiggle { 0% { transform: none; } 30% { transform: rotate(-9deg) scale(1.08); } 60% { transform: rotate(6deg) scale(1.08); } 100% { transform: none; } }
@@ -1581,7 +1577,6 @@
     .ti-foot .btn.primary.go::after { display: none; }
   }
 
-
   .ti-pk-add { display: inline-flex; align-items: center; gap: 4px; height: 28px; padding: 0 12px 0 8px; border-radius: 8px; background: var(--field); font-size: 12px; font-weight: 800; color: var(--ink); }
   .ti-pk-add:hover { background: var(--inner); }
   .ti-pk-add svg.i { width: 14px; height: 14px; color: var(--accent); transition: transform .2s cubic-bezier(.34, 1.4, .64, 1); }
@@ -1688,7 +1683,7 @@
 
   /* the animated file icons (34px and up animate; smaller ones are drawn still) */
   .ti-chip { height: 44px; padding: 0 16px 0 8px; }
-  .ti-fmt button { width: auto; height: 36px; padding: 0 12px 0 8px; gap: 6px; justify-content: flex-start; border-radius: 10px; } /* icon and name: JPG and PNG share a picture icon (2026-11-03) */
+  .ti-fmt button { width: auto; height: 36px; padding: 0 12px 0 8px; gap: 6px; justify-content: flex-start; border-radius: 10px; }
   .ti-file-top > .avfi, .ti-pk > .avfi { flex: none; }
   .ti-head > div { flex: 1; min-width: 0; }
   .ti-grade { flex: none; align-self: flex-start; display: flex; flex-direction: column; align-items: flex-end; line-height: 1; padding: 2px 0 0; animation: tiPop .4s cubic-bezier(.34, 1.4, .64, 1) backwards; }
@@ -2922,7 +2917,6 @@
   .as-bar .mp-types button em { font-style: normal; margin-left: 8px; font-variant-numeric: tabular-nums; opacity: .7; }
   /* which class: one button that opens a short list, instead of a chip for every class */
   .as-dd { position: relative; flex: none; }
-  /* Contains attachment (2026-10-30): only work your teacher attached files to */
   .as-att { flex: none; display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 12px; border-radius: 12px; background: var(--field); font-size: 14px; font-weight: 800; color: var(--ink); white-space: nowrap; transition: background-color .15s ease, box-shadow .15s ease; }
   .as-att svg.i { width: 18px; height: 18px; color: var(--ink-2); }
   .as-att em { display: inline-grid; place-items: center; box-sizing: border-box; height: 20px; min-width: 20px; padding: 0 8px; border-radius: 10px; background: var(--inner); color: var(--ink-2); font-style: normal; font-size: 12px; }
@@ -3050,7 +3044,13 @@
   @media (max-width: 680px) { .hub-t h1 { font-size: 34px; } }
   /* ===== end Life layer for the course page ===== */
   .ti-sacts { margin-left: auto; display: flex; gap: 6px; flex: none; } .ti-sacts .btn { text-decoration: none; } .ti-sacts svg.i { width: 16px; height: 16px; }
-  .g-na { color: var(--muted) !important; }   /* nothing graded yet (2026-11-06) */
+  .g-na { color: var(--muted) !important; }
+  .me-pop .confirm { margin: 4px 4px 4px; padding: 12px; background: var(--panel); border-radius: 14px; }
+  .me-pop .confirm b { display: block; margin-bottom: 4px; font-weight: 800; }
+  .me-pop .confirm .note { display: block; color: var(--muted); font-size: 13px; font-weight: 600; line-height: 1.45; }
+  .me-pop .confirm .acts { display: flex; gap: 8px; justify-content: flex-end; padding: 8px 0 0; }
+  .me-pop .confirm .btn { background: var(--field); }
+  .me-pop .confirm .btn.primary { background: var(--accent); color: #fff; }
 </style>
 <style id="avh-css">
 /* Averages.io first-time help popups: "Before you open Canva" and "Add files from Google Drive".
@@ -3058,7 +3058,6 @@
    The popup uses the app's font (it inherits it) and its own copy of the Averages colors.
    Logos: /brand/canva-mark.svg and /brand/google-drive.png from your repo. */
 .avh-hp-scrim {
-    /* the page's own colors (light or dark, and the student's accent), not a fixed light copy (2026-10-30) */
         --ease: cubic-bezier(.2, .8, .2, 1);
     font-family: inherit; color: var(--ink); -webkit-font-smoothing: antialiased; text-align: left;
 }
@@ -3261,8 +3260,6 @@
   .avh-tab .avh-mk.avh-av, .avh-menu .avh-mk.avh-av { background-size: 66%; background-position: 50% 50%; }
   .avh-hp-st kbd.avh-dots3 { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 18px; padding: 0; vertical-align: -3px; }
   .avh-hp-st kbd.avh-dots3 svg { width: 12px; height: 12px; display: block; }
-  /* the big emoji next to a page title: smooth even when the tile is tilted (2026-11-06, Martin: they looked jagged on
-     some pages, the tilted ones). Drawn upright on its own layer and then turned, so its edges and the emoji stay smooth. */
   .hub-logo { backface-visibility: hidden; -webkit-backface-visibility: hidden; outline: 1px solid transparent; }
   .hub-logo svg { shape-rendering: geometricPrecision; }
 </style>
@@ -3423,27 +3420,6 @@
 </svg>
 
 <script>
-/* Copied from averages.io public/js/averages-file-icons.js (2026-10-09). Fredoka Bold (OFL, see THIRD-PARTY-NOTICES.md) is inlined so the labels render here. */
-/*
- * File type icons (2026-10-09, Martin; design in the project doc claude/file-icons.md).
- *
- * A see-through page with a line in the type's color around it and a folded
- * corner. The label (PDF, DOC, ZIP…, Fredoka Bold, same color) runs across
- * the page and cuts through the outline; a small drawing for the type sits
- * above it, cut off by the fold along the crease's own curve.
- *   - At rest only the drawing shows; hovering the file's row or tile (or
- *     focusing it) slides the drawing up, opens the outline and fades the
- *     label in. Devices without hover always show the label.
- *   - The outline glows only in dark mode (body.dark-mode).
- *   - Below 34 px (list rows) there's no label: the drawing alone, outline whole.
- *
- * Loaded in <head> by app/layout.tsx. Pages call
- *   AveragesFileIcons.html(extOrName, { mime, size })  -> <span class="avfi">…</span>
- *   AveragesFileIcons.svg(extOrName, { mime, size, small }) -> <svg>…</svg> (fills its box when size is left out)
- *   AveragesFileIcons.key(extOrName, mime)            -> 'pdf' | 'doc' | … | 'file'
- *   AveragesFileIcons.color(extOrName, mime)          -> '#E5484D' …
- * Pages keep their old badge when this script isn't there, so nothing breaks.
- */
 (function () {
   'use strict';
   if (window.AveragesFileIcons) return;
@@ -4016,7 +3992,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       ${meItem('potato', 'bolt', 'Potato mode', 'System font, no animation', `<span class="sw${potato ? ' on' : ''}" aria-hidden="true"></span>`)}
       <div class="hr"></div>
       ${meItem('settings', 'gear', 'Settings', '')}
-      ${meItem('signout', 'out', 'Sign out', '', '', ' danger')}</div>`);
+      <div class="me-so">${meItem('signout', 'out', 'Sign out', '', '', ' danger')}</div></div>`);
     meMenu = document.body.lastElementChild;
     meMenu.querySelector('[data-me="potato"]').setAttribute('role', 'menuitemcheckbox');
     meMenu.querySelector('[data-me="potato"]').setAttribute('aria-checked', potato);
@@ -4039,8 +4015,13 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
         toast(on ? 'Potato mode on' : 'Potato mode off'); return;
       }
       
+      if (k === 'signout') {
+        meMenu.querySelector('.me-so').innerHTML = `<div class="confirm"><b>Sign out of Averages.io?</b><span class="note">You can sign back in with Schoology any time.</span><div class="acts"><button class="btn" data-me="socancel">Cancel</button><button class="btn primary" data-me="soyes">Sign out</button></div></div>`;
+        meMenu.querySelector('[data-me="socancel"]').focus({ preventScroll: true }); return;
+      }
+      if (k === 'socancel') { meMenu.querySelector('.me-so').innerHTML = meItem('signout', 'out', 'Sign out', '', '', ' danger'); meMenu.querySelector('[data-me="signout"]').focus({ preventScroll: true }); return; }
       meClose(true);
-      ({ profile: () => FSX.go('settings', { section: 'account' }), customize: () => FSX.go('home', { customize: 1 }), settings: () => FSX.go('settings'), signout: () => FSX.confirmSignOut() }[k] || (() => {}))();
+      ({ profile: () => FSX.go('settings', { section: 'account' }), customize: () => FSX.go('home', { customize: 1 }), settings: () => FSX.go('settings'), soyes: () => FSX.signOut() }[k] || (() => {}))();
     });
   }
   function meClose(refocus) {
@@ -4062,7 +4043,6 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   });
   let toastT;
   function toast(text) { const t = $('toast'); t.textContent = text; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2600); }
-
 
   document.addEventListener('click', e => { const t = e.target.closest('[data-toast]'); if (t) { e.preventDefault(); if (!FSX.open(t.dataset.toast)) toast('That isn\'t ready yet.'); } });
   const IS_MAC = /mac|iphone|ipad|ipod/i.test(navigator.userAgentData?.platform || navigator.platform || '');
@@ -4104,7 +4084,6 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       const here = !m && typeof window.CMDK_HERE === 'function' ? window.CMDK_HERE(qq) : null;
       if (here && here.rows.length) html += `<div class="lbl">${esc(here.label)}</div>` + here.rows.slice(0, 5).map(r => crow(`data-cmdkgo="${esc(r.key)}"`, r.lead, r.t, r.sub)).join('');
       const cs = m ? [] : CLASSES.filter(c => chit(qq, c.name + ' ' + c.teacher)); if (cs.length) html += `<div class="lbl">Classes</div>` + cs.map(c => cclass(c, qq)).join('');
-      // people: your teachers and classmates (2026-11-06); one opens their card in Contacts
       const pp = m || !FSX.people ? [] : FSX.people().filter(x => chit(qq, x.name)).slice(0, 5); if (pp.length) html += `<div class="lbl">People</div>` + pp.map(x => crow(`data-go="${FSX.url('contacts', { person: x.id })}"`, FSX.personAv(x), cmark(x.name, qq), x.sub)).join('');
       const ps = m ? [] : GO_PAGES.filter(([p]) => chit(qq, p)); if (ps.length) html += `<div class="lbl">Go to</div>` + ps.map(page).join('');
       if (HERE && !m) html += crow(`data-cmdkhere="${esc(qq)}"`, ico('search'), `Search ${esc(HERE)} for "${esc(qq)}"`, 'Just this page', ' s-cmd');
@@ -4112,6 +4091,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     }
     res.innerHTML = html; const f = res.querySelector('.mi'); if (f) f.classList.add('sel');
   }
+  window.addEventListener('fs:people', () => { if (cmdk) cmdkRender(); });
   function cmdkOpen() {
     if (cmdk) { cmdk.querySelector('input').select(); return; }
     cmdkFrom = document.activeElement; $('app').classList.remove('menu');
@@ -4148,7 +4128,6 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     else if (e.key === 'Tab') { e.preventDefault(); cmdk.querySelector('input').focus(); }
   }, true);
 
-
   // ---------- Assignments ----------
   // Every class's assignments (averages-fs-data.js): what's due, what's missing, what's turned in and waiting, and
   // what was graded in the last three weeks. Dates are days from today (0 is today); WEEK is this week, Monday to Friday.
@@ -4172,7 +4151,6 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const TYPES = [['todo', 'To do'], ['missing', 'Missing'], ['turned', 'Turned in'], ['graded', 'Graded'], ['all', 'All']];
   const ofType = (a, t) => t === 'all' ? true : t === 'todo' ? isTodo(a) : a.st === t;
   const hit = a => (!AS.c || a.c === AS.c) && (!AS.att || hasAtt(a)) && (!AS.q || (a.t + ' ' + C[a.c].name + ' ' + C[a.c].teacher).toLowerCase().includes(AS.q));
-  // from another page (2026-11-01: the Courses tags): ?course=<class>&show=missing|todo|turned|graded|all
   { const qc = FSX.q.get('course'), qs = FSX.q.get('show');
     if (qc && C[qc]) AS.c = qc;
     if (qs && TYPES.some(t => t[0] === qs)) { AS.type = qs; AS.att = false; } }
@@ -4240,7 +4218,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const todoIn = c => ASG.filter(a => (!c || a.c === c) && isTodo(a)).length;
   function asCls() {
     const c = AS.c && C[AS.c];
-    $('asCls').innerHTML = `<button class="as-ddb${c ? ' on' : ' all'}" id="asDdb" aria-haspopup="listbox" aria-expanded="false" aria-label="Class: ${c ? esc(c.name) : 'All classes'}"${c ? ` style="--c:${c.color}"` : ''}>${c ? badge(c) : ''}<span>${c ? esc(c.name) : 'All classes'}</span>${ico('chev-r')}</button>`; // no count on the filters (2026-10-30); the class list still says how many are to do
+    $('asCls').innerHTML = `<button class="as-ddb${c ? ' on' : ' all'}" id="asDdb" aria-haspopup="listbox" aria-expanded="false" aria-label="Class: ${c ? esc(c.name) : 'All classes'}"${c ? ` style="--c:${c.color}"` : ''}>${c ? badge(c) : ''}<span>${c ? esc(c.name) : 'All classes'}</span>${ico('chev-r')}</button>`;
   }
   // the class list: opens under the button, arrow keys move, Escape closes
   let ddOpen = false;
@@ -4546,9 +4524,6 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     const sub = m.turned ? `Turned in ${esc(m.turned)}` : m.due < 0 ? `Missing · was due ${esc(m.dueTxt.split(' · ')[0])}` : m.dueTxt ? `Due ${esc(m.dueTxt.split(' · ')[0])}` : 'No due date';
     return `<button class="ti-row avfi-host${m.id === tiSel ? ' on' : ''}" data-ti="${m.id}" role="option" aria-selected="${m.id === tiSel}">${tile(m)}<span class="tx"><b>${esc(m.name)}</b><small>${sub}</small></span>${status(m)}</button>`;
   }
-  // a new version is being put together on the assignment page (the popup always shows what's turned in)
-  // A file you turned in (2026-11-03, Martin: "let people download/view their submissions"): GET /data/submission-file
-  // looks it up again in your own Schoology history; view=1 opens it in the browser where it can.
   const subUrl = (m, rev, file) => /^\d+$/.test(String(rev)) && /^\d+$/.test(String(file)) ? `${FSX.API}/data/submission-file?section=${encodeURIComponent(m.c)}&assignment=${encodeURIComponent(m.id)}&revision=${encodeURIComponent(rev)}&file=${encodeURIComponent(file)}` : '';
   const tiDone = m => !!m.turned && !(tiInline && m.again);
   const tiVers = m => (m.prev || []).concat(m.turned ? [{ turned: m.turned, sent: m.sent, answerSent: m.answerSent, note: m.note, sentLog: m.sentLog }] : []);
@@ -4708,7 +4683,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       : f.state === 'failed' ? `<button class="btn sm" data-reup="${i}">${ico('refresh')}Try again</button>`
       : `<span class="ti-st ok${f.justDone ? ' just' : ''}">${ico('ok')}Uploaded</span>`;
     const opts = f.src === 'local' ? '' : `<div class="ti-opts">
-        ${f.src === 'canva' ? '' /* a Canva design can only go as a copy: no switch with one side (2026-11-03, Martin's screenshot) */ : `<div class="ti-seg" role="radiogroup" aria-label="How to send ${esc(f.name)}" data-mode="${f.mode}"><span class="ti-seg-pill" aria-hidden="true"></span>
+        ${f.src === 'canva' ? '' : `<div class="ti-seg" role="radiogroup" aria-label="How to send ${esc(f.name)}" data-mode="${f.mode}"><span class="ti-seg-pill" aria-hidden="true"></span>
           <button role="radio" aria-checked="${f.mode === 'copy'}" data-mode-set="${i}:copy">${ico('copy')}Send as a copy</button><button role="radio" aria-checked="${f.mode === 'link'}" data-mode-set="${i}:link">${ico('link')}Send as a link</button></div>`}
         <div class="ti-fmt" role="radiogroup" aria-label="File type"${f.mode === 'copy' ? '' : ' hidden'}><span>File type</span>${FST.formats(f).map(([x, n]) => `<button role="radio" aria-checked="${f.fmt === x}" class="avfi-host${f.fmt === x ? ' on' : ''}" data-fmt-set="${i}:${x}" aria-label="${n}">${fileIco('x.' + x, 22)}<span>${n}</span></button>`).join('')}</div></div>`;
     const html = `<div class="ti-file avfi-host${f.fresh && !calm() ? ' fresh' : ''}${up ? ' uploading' : ''}" data-fi="${i}"><div class="ti-file-top">${icon}<span class="tx"><b>${esc(shownName(f))}</b><small>${esc(shownSub(f))}</small></span>${state}<button class="ti-x" data-unpick="${i}" aria-label="Remove ${esc(shownName(f))}">${ico('x')}</button></div>
@@ -5092,8 +5067,6 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     $('asMeta').querySelectorAll('.gm').forEach((el, i) => el.animate && el.animate([{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: 480, delay: 40 + i * 60, easing: 'cubic-bezier(.16, 1, .3, 1)', fill: 'backwards' }));
     $('asMeta').querySelectorAll('[data-n]').forEach((el, k) => { const to = +el.dataset.n, t0 = performance.now() + 40 + k * 60; el.textContent = '0'; const step = now => { const p = Math.min(1, Math.max(0, (now - t0) / 560)), e = 1 - Math.pow(1 - p, 3); el.textContent = Math.round(to * e); if (p < 1) requestAnimationFrame(step); }; requestAnimationFrame(step); });
   }
-  // Sync (Martin's sync animation, 2026-10-30): each part lands when its own request comes back (FSX.sync), and
-  // syncRun(true) is the same animation when the page opens.
   let loading = false, spin = null;
   $('syncLabel').textContent = FSX.synced(); $('refresh').setAttribute('aria-label', 'Refresh your assignments. ' + FSX.synced() + '.');
   function syncRun(first) {
@@ -5234,9 +5207,6 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     el.style.top = (c.top - r.top - op.clientTop + op.scrollTop).toFixed(1) + 'px';
     return true;
   }
-  // Something around the sticker still sliding or popping in (its row landing, the class icon it sits by): measuring
-  // now puts it in the wrong place, even under the card (2026-10-31, Martin's screenshots). Wait for it to stop.
-  // only its own item and the few boxes around it are asked (asking the whole page was slow, 2026-11-01)
   const moving = el => { const host = el.closest(HOST) || el.parentElement; if (!host || !host.getAnimations) return false;
     const busy = list => list.some(a => { const t = a.effect && a.effect.target, tm = a.effect && a.effect.getTiming ? a.effect.getTiming() : null;
       return a.playState === 'running' && t && t !== el && !(t.classList && t.classList.contains('newtag')) && tm && tm.iterations !== Infinity; });

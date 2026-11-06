@@ -1,38 +1,4 @@
-/*
- * Averages.io: browser notifications, the browser half (2026-10-05).
- *
- * The API half is averages-api's /push routes: a student who turns this on
- * gets their sign-in stored there, encrypted with a separate key, so it can
- * check their classes about every 20 minutes and send a notification that
- * only says what kind of thing changed. This file registers the service
- * worker (/sw.js), subscribes this browser with the API's VAPID key, and
- * tells the API about it.
- *
- *   window.AveragesPush = {
- *     supported()        this browser can do push at all
- *     config()           { publicKey } (null until the API is set up), or { failed: true }
- *     status()           { ok, on, here, types, plusRequired, turnedOff } for this student and this browser
- *     enable(types)      subscribe this browser and turn notifications on
- *     disable()          unsubscribe this browser; the API deletes everything
- *                        once no browser is left
- *     setTypes(types)    which kinds of notification
- *     test()             a test notification to this browser
- *     touchIfDue()       at most once a day: keep the stored sign-in in step
- *                        with this session (the app shell calls it on load)
- *     forgetLocal()      sign-out: unsubscribe and forget, on this device only
- *   }
- * Every call resolves (never rejects); a failure is { ok: false, code }.
- *
- * Kept on this device (localStorage):
- *   averages_push_endpoint        this browser's subscription, while it's on
- *   averages_push_touched         when /push/touch last ran (ms)
- *   averages_push_pending_delete  a turn-off the API hasn't heard about yet
- *                                 (offline): retried by touchIfDue()
- *
- * Loaded by settings.html (signed in only). Notification.requestPermission()
- * must run inside the click that asked for it, so callers ask for permission
- * themselves before calling enable().
- */
+// Averages.io: browser notifications, the browser half.
 (function () {
   'use strict';
   if (window.AveragesPush) return;
@@ -151,9 +117,6 @@
     const here = !!r.data.here;
     if (here) setLocal(ENDPOINT_KEY, endpoint);
     else removeLocal(ENDPOINT_KEY);
-    // Averages Plus (2026-10-21): plusRequired = notifications are a Plus perk
-    // and this student doesn't have Plus; turnedOff = the API just turned them
-    // off for that reason (this browser stops too).
     const turnedOff = typeof r.data.turnedOff === 'string' ? r.data.turnedOff : '';
     if (turnedOff && sub) {
       try { await sub.unsubscribe(); } catch (e) {}
@@ -199,7 +162,6 @@
       return fail(e && e.name === 'NotAllowedError' ? 'blocked' : 'subscribe_failed');
     }
     const json = sub.toJSON();
-    // Time zone (2026-10-07): Schoology due times are local, so "due within a day" needs it.
     let tz = '';
     try { tz = (window.averagesTimeZone ? window.averagesTimeZone() : Intl.DateTimeFormat().resolvedOptions().timeZone) || ''; } catch (e) {}
     const r = await api('POST', '/push/subscribe', { subscription: { endpoint: json.endpoint, keys: json.keys }, types: cleanTypes(types), tz: String(tz).slice(0, 64) });
@@ -258,9 +220,6 @@
 
   async function test() {
     let sub = await currentSubscription();
-    // 2026-10-12: a subscription made with an older server key can never be sent
-    // to (the push service turns down our signature). Make a fresh one first, with
-    // the same types, then send the test to it.
     const c = await config();
     if (sub && c.publicKey && !sameKey(sub.options && sub.options.applicationServerKey, c.publicKey)) {
       const st = await status();

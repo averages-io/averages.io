@@ -1,61 +1,4 @@
-/*
- * Averages.io — Google Drive and OneDrive, in the browser (2026-10-05).
- *
- * Both connect straight from the student's browser: their Google / Microsoft
- * tokens never reach our servers. Our API only serves the public app IDs
- * (GET /config/cloud) and the assignment files (GET /data/attachment) that get
- * copied into their drive.
- *
- *   Google Drive  Google Identity Services token client, scope drive.file
- *                 (Averages.io only ever sees files it made or the student
- *                 picked), plus the Google Picker for "Add from Google Drive".
- *   OneDrive      Microsoft identity platform, authorization code + PKCE from
- *                 a popup that returns to /auth/microsoftgraph (single-page
- *                 app registration, no client secret), scope
- *                 Files.ReadWrite.AppFolder: saving only ever goes into its
- *                 own Apps/Averages.io folder.
- *                 Add from OneDrive (2026-10-06) also needs Files.Read
- *                 (read-only), asked for the first time Add from OneDrive is
- *                 clicked and nowhere else (incremental consent). It's a
- *                 separate token ("onedriveRead"); everything else keeps the
- *                 app-folder token. Our own picker (oneDrivePick) browses
- *                 their OneDrive with it, and only the files they pick are
- *                 listed. Nothing is ever written outside Apps/Averages.io.
- *
- * Where things are kept (all on this device only):
- *   sessionStorage averages_cloud_tokens    access/refresh tokens, per app:
- *                                           gdrive, onedrive (app folder) and
- *                                           onedriveRead (+ Files.Read). Gone
- *                                           when the tab closes, which matters
- *                                           on shared school Chromebooks.
- *   localStorage   averages_cloud_accounts  which account is connected
- *                                           ("Connected as ...").
- *   localStorage   averages_drive_drafts    Edit in Google Drive drafts.
- *   localStorage   averages_drive_opened    ids of files brought in with
- *                                           Open with → Averages.io for Drive
- *                                           (2026-10-21), at most 200.
- *   localStorage   averages_onedrive_picked files picked with Add from
- *                                           OneDrive: [{ id, name }], newest
- *                                           first, at most 200. Only ids and
- *                                           names; each is looked up again.
- * Signing out of Averages.io clears all four (app/lib/averages.ts); a
- * different Microsoft account or Disconnect forgets the picked files too.
- *
- * Staying connected (2026-10-08, Martin: "why can it not be like Canva"):
- * when our API has the app set up (GET /cloud/status says `configured`), the
- * Worker holds the student's Google / Microsoft sign-in (a refresh token in
- * their own storage, like Canva) and hands this page short-lived access
- * tokens (POST /cloud/:app/token). Connect is a page redirect through
- * /cloud/:app/connect, and the connection lasts across tabs, visits and
- * devices until they disconnect. The browser-only way below stays for an app
- * the API hasn't set up yet. Either way the files themselves go straight
- * between this browser and Google / Microsoft.
- *
- * Shared by settings.html, assignment.html and files.html, which load it only
- * in a signed-in session. Popups must open inside the click that asked for
- * them, so googleToken / oneDriveToken / connect* are deliberately NOT async:
- * call them before any `await` in a click handler.
- */
+// Averages.io — Google Drive and OneDrive, in the browser.
 (function () {
   'use strict';
   if (window.AveragesCloud) return;
@@ -70,15 +13,11 @@
   const MAX_OPENED = 200;
   const FOLDER = 'Averages.io';
   const MAX_COPY_BYTES = 250 * 1024 * 1024;
-  // Turning in (2026-10-06): Schoology takes files up to 95 MB, so a file
-  // fetched from a drive to attach stops there instead of downloading for nothing.
   const MAX_ATTACH_BYTES = 95 * 1024 * 1024;
 
   const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
   const GOOGLE_SCOPES = DRIVE_SCOPE + ' https://www.googleapis.com/auth/drive.install openid email profile';
   const DRIVE = 'https://www.googleapis.com/drive/v3';
-  // Shared drives (2026-10-09): a school's shared-drive file opened with "Open with → Averages.io"
-  // needs this on every call that reads a file, or Drive answers 404. Harmless for My Drive files.
   const ALL_DRIVES = 'supportsAllDrives=true';
   const DRIVE_UPLOAD = 'https://www.googleapis.com/upload/drive/v3';
   const MS_AUTH = 'https://login.microsoftonline.com/common/oauth2/v2.0';
@@ -164,7 +103,6 @@
     const all = {};
     const acct = accounts();
     for (const app of ['gdrive', 'onedrive']) if (raw[app] && acct[app]) all[app] = raw[app];
-    // The read token (2026-10-06) belongs to the same connected Microsoft account.
     if (raw.onedriveRead && acct.onedrive) all.onedriveRead = raw.onedriveRead;
     return all;
   }
@@ -185,11 +123,6 @@
     const raw = readJSON('session', TOKENS_KEY, {});
     return (raw.owner || '') === owner() ? raw[app] || null : null;
   }
-  /*
-   * Files picked with Add from OneDrive (2026-10-06), newest first. Ids and
-   * names only: the rest is asked of Microsoft Graph again whenever they're
-   * listed, so a file renamed or deleted in OneDrive shows that here too.
-   */
   function pickedList() {
     const v = readJSON('local', PICKED_KEY, []);
     if (!Array.isArray(v)) return [];
@@ -214,15 +147,6 @@
     } catch {}
   }
 
-  /*
-   * Files brought in from Google Drive with Open with → Averages.io for Drive
-   * (2026-10-21, Martin: after disconnecting and reconnecting, an opened file
-   * "would show then reload and disappear" with no error). Google's file list
-   * can leave such a file out even though the file itself can still be read,
-   * so the list was rebuilt without it on the next load. Their ids are kept
-   * here and looked up one by one when they're missing from the list. Ids
-   * only, never names or contents; forgotten on Disconnect and sign-out.
-   */
   const DRIVE_ID = /^[A-Za-z0-9_-]{10,128}$/;
   function openedList() {
     const v = readJSON('local', OPENED_KEY, []);
@@ -244,8 +168,6 @@
     if (e.key === null || e.key === OWNER_KEY || e.key === ACCOUNTS_KEY) window.dispatchEvent(new Event('averages-cloud-change'));
   });
 
-  /* ── connections our server keeps (2026-10-08) ──────────────────────── */
-
   /*
    * SRV.status is GET /cloud/status: { gdrive: { configured, connected,
    * email, name, scopes }, onedrive: {...}, incognito? }, or null when the API
@@ -255,13 +177,6 @@
    */
   const SRV = { status: null, statusAt: 0, pending: null, tok: {}, result: null };
   const APPS = ['gdrive', 'onedrive'];
-  /*
-   * Incognito on this page (2026-10-14): Google Drive and OneDrive work, but
-   * only through this browser's own sign-in (tokens in this tab), never our
-   * server's connection, so nothing about them is stored on our servers. Also
-   * when Incognito was picked in Settings, where the API session itself isn't
-   * marked Incognito (only an under-13 sign-in is).
-   */
   function localOnly() {
     const st = SRV.status;
     const page = typeof window !== 'undefined' && window.__AVERAGES_INCOGNITO__;
@@ -316,13 +231,6 @@
   function hasScope(scopes, want) {
     return Array.isArray(scopes) && scopes.some((x) => String(x).toLowerCase() === want.toLowerCase() || String(x).toLowerCase().endsWith('/' + want.toLowerCase()));
   }
-  /*
-   * Disconnected by Google / Microsoft (2026-10-09): the student removed
-   * Averages.io from their account, or the sign-in ran out. Our API then
-   * forgets the connection but remembers who it was (GET /cloud/status
-   * `lost: true`), so pages can say "got disconnected, reconnect" instead of
-   * quietly showing nothing. Null when that isn't the case.
-   */
   function lost(app) {
     const st = SRV.status;
     const a = st && !localOnly() && st[app];
@@ -338,15 +246,6 @@
     clearAccount(app);
     try { window.dispatchEvent(new CustomEvent('averages-cloud-status')); } catch {}
   }
-  /**
-   * A token from our API for `app`. `need`: '' (the app folder), 'read' (also
-   * Files.Read: adding a file from OneDrive) or 'write' (also Files.ReadWrite:
-   * sharing a OneDrive file as a link, 2026-10-12); `true` means 'read'. Rejects
-   * needs_click when they must connect, and `reconnect` when Google /
-   * Microsoft took the connection back. `force` (after a 401 from the drive)
-   * asks the API for a new one even if the old one looks fresh: when access
-   * is removed in their Google account, the old one stops working at once.
-   */
   const needOf = (v) => (v === 'write' ? 'write' : v === 'read' || v === true ? 'read' : '');
   /** The token's scopes cover `need`: Files.ReadWrite also covers reading. */
   function scopesCover(scopes, need) {
@@ -450,7 +349,6 @@
    * isn't cached, so the next call tries again.
    */
   function config() {
-    // the public app ids, kept for the tab (they're the same for everyone), so each page doesn't ask again (2026-11-03)
     if (!configCache) { try { const k = JSON.parse(sessionStorage.getItem('averages_cloud_config') || 'null'); if (k && typeof k === 'object' && 'google' in k) configCache = { google: k.google || null, microsoft: k.microsoft || null }; } catch {} }
     if (configCache) return serverStatus().then(() => configCache);
     return Promise.all([fetch(API + '/config/cloud'), serverStatus()]).then(([r]) => r)
@@ -628,11 +526,6 @@
     });
   }
 
-  /*
-   * Request log (2026-10-12): the Add Submission popup shows what's being sent
-   * while it turns work in. setLogger(fn) gets { kind: 'req', method, url, body }
-   * and { kind: 'res', status }; never a token (the page also hides ids).
-   */
   let LOGGER = null;
   function setLogger(fn) { LOGGER = typeof fn === 'function' ? fn : null; }
   function logReq(method, url, body) {
@@ -745,8 +638,6 @@
     return id;
   }
 
-  // size (2026-10-06): the Files page adds up its files' sizes. Google Docs, Sheets and Slides have none.
-  // thumbnailLink (2026-10-07): Google's preview image for the Files page.
   const DRIVE_FIELDS = 'id,name,mimeType,webViewLink,modifiedTime,size,thumbnailLink';
 
   /** Uploads into the Averages.io folder. `convertTo` turns an Office file into a Google Doc/Slides/Sheet. */
@@ -812,12 +703,6 @@
     return f.trashed ? null : f;
   }
 
-  /*
-   * Turn in a view link (2026-10-09, Martin; drafts only since 10-10): gives
-   * the file "Anyone with the link: Viewer" (or Commenter) and answers { url, name }. drive.file covers this for files
-   * Averages.io can see. School accounts often aren't allowed to share outside
-   * the school: Google says 403 and we say so (share_blocked).
-   */
   async function googleShareLink(token, id, role) {
     // Viewer or commenter only: a link that lets anyone edit a student's work is never made.
     const as = role === 'commenter' ? 'commenter' : 'reader';
@@ -868,12 +753,6 @@
     return files;
   }
 
-  /*
-   * The Google Picker is gone (2026-10-09, Martin: "it's so bad"). Students
-   * bring a Drive file in from Google Drive itself: right-click it, Open with,
-   * Averages.io (drive.install; see public/js/averages-drive-open.js and the
-   * Files page). Opening it that way grants drive.file for that one file.
-   */
   const DRIVE_INSTALL = 'https://www.googleapis.com/auth/drive.install';
   /** 'on': "Open with Averages.io" is in their Drive; 'reconnect': connected before it existed; 'off': not connected. */
   function googleOpenWith() {
@@ -901,11 +780,6 @@
     'application/vnd.google-apps.drawing',
   ]);
 
-  /**
-   * What a Google Doc, Sheet, Slides or Drawing can be turned in as (the type
-   * pill, 2026-10-15), first one is the default: Google exports each of these
-   * itself. CSV is the first sheet only (Google's rule).
-   */
   const EXPORT_AS = {
     'application/vnd.google-apps.document': ['pdf', 'docx'],
     'application/vnd.google-apps.spreadsheet': ['pdf', 'xlsx', 'csv'],
@@ -925,14 +799,6 @@
     return (EXPORT_AS[String(mimeType || '')] || []).slice();
   }
 
-  /**
-   * One of their Google Drive files as bytes, for turning in (2026-10-06):
-   * { blob, name, mimeType }. Docs, Sheets, Slides and Drawings come as a PDF
-   * named "<name>.pdf", or as `opts.as` (docx, xlsx, csv, pptx, png) when
-   * that's one their kind can be (the type pill, 2026-10-15). Any other file
-   * comes as it is. drive.file only reaches files Averages.io made or they
-   * picked, which are the ones Files shows. Stops at 95 MB.
-   */
   async function googleDownload(token, fileId, opts) {
     const id = String(fileId || '');
     if (!/^[A-Za-z0-9_-]{10,200}$/.test(id)) throw fail('file_gone');
@@ -1122,10 +988,6 @@
     }
   }
 
-  /**
-   * `slot` (2026-10-06): 'onedrive' is the app-folder token everything uses;
-   * 'onedriveRead' is the one with Files.Read too, for Add from OneDrive.
-   */
   async function msTokenRequest(clientId, fields, slot) {
     slot = slot || 'onedrive';
     let r;
@@ -1287,8 +1149,6 @@
         });
       });
     }
-    // This tab only signed in for Add from OneDrive (2026-10-06): the same
-    // sign-in gives the app-folder token too, without a window. Tried once.
     const rd = tokens().onedriveRead;
     if (!opts.prompt && rd && rd.refresh && !baseFromReadFailed) {
       return config().then((c) => {
@@ -1310,15 +1170,6 @@
     return msLogin(popup, opts.prompt);
   }
 
-  /*
-   * The read token (Add from OneDrive, 2026-10-06). Incremental consent: the
-   * first time, Microsoft's window asks for read access on top of what the
-   * student already allowed. After that a refresh token gets it quietly: the
-   * read token's own, or the app-folder one (Microsoft's refresh tokens work
-   * for any permission the student has allowed this app). Without
-   * `interactive` it never opens a window; Files uses that to look up the
-   * picked files.
-   */
   let readQuietFailed = false; // the quiet try failed (read access never allowed): don't keep asking
   let baseFromReadFailed = false;
   function quietReadToken() {
@@ -1476,10 +1327,6 @@
     return { id: item.id, name: item.name, webUrl: item.webUrl, modified: item.lastModifiedDateTime };
   }
 
-  /**
-   * What's in Apps/Averages.io plus the files picked with Add from OneDrive
-   * (2026-10-06, `picked: true`), newest first.
-   */
   async function oneDriveList(token) {
     const r = await mfetch(token, `${GRAPH}${APPROOT}/children?$top=100&$select=${ONEDRIVE_SELECT}`);
     let own = [];
@@ -1542,16 +1389,6 @@
     return found;
   }
 
-  /**
-   * One OneDrive file as bytes, for turning in (2026-10-06): { blob, name,
-   * mimeType }. Works with the app-folder token for files in Apps/Averages.io
-   * and needs the read token for picked ones. Stops at 95 MB.
-   *
-   * Graph's /content answers with a redirect, which browsers won't follow on
-   * a request that carries an Authorization header from another site, so the
-   * file's own short-lived download link (@microsoft.graph.downloadUrl, which
-   * needs no header) is used first, and /content only when there isn't one.
-   */
   async function oneDriveDownload(token, id) {
     id = String(id || '');
     if (!ITEM_ID.test(id)) throw fail('file_gone');
@@ -1593,13 +1430,6 @@
     return { blob: blob.type === type ? blob : new Blob([blob], { type }), name, mimeType: type };
   }
 
-  /*
-   * Share as a Link from OneDrive (2026-10-12, Martin): an "anyone with the link
-   * can view" link (createLink), falling back to "people in your school" when
-   * the school doesn't allow links for anyone. Needs Files.ReadWrite, asked for
-   * only when a student picks Share as a Link on a OneDrive file
-   * (oneDriveToken({ write: true })). Never an edit link. { url, name, scope }.
-   */
   async function oneDriveShareLink(token, id) {
     id = String(id || '');
     if (!ITEM_ID.test(id)) throw fail('file_gone');
@@ -1635,8 +1465,6 @@
     const scopes = (t && t.owner === owner() && Array.isArray(t.scopes) && t.scopes.length ? t.scopes : SRV.status.onedrive.scopes) || [];
     return hasScope(scopes, 'Files.ReadWrite') ? 'on' : 'ask';
   }
-
-  /* ── Add from OneDrive: our own picker (2026-10-06) ───────────────── */
 
   /*
    * Microsoft's own File Picker is a whole page from Microsoft in a frame,
@@ -2034,7 +1862,6 @@
     drive_full_or_blocked: 'Your drive refused the file. It may be full or blocked.',
     signed_out: 'You’ve been signed out of Averages.io. Sign in again.',
     download_failed: 'Couldn’t get the file from your school. Try again.',
-    // Getting a drive file to turn in (2026-10-06)
     file_too_large: 'This file is too big to attach (95 MB max).',
     file_gone: 'That file isn’t there anymore. It may have been moved or deleted.',
     cloud_download_failed: 'Couldn’t download the file from your drive. Try again.',
@@ -2063,7 +1890,6 @@
     config,
     accounts,
     hasToken: (app) => {
-      // Kept by our server (2026-10-09): a token is one quick request away.
       if (serverOn(app) && SRV.status[app].connected) return true;
       const t = tokens()[app];
       return !!(t && ((t.token && t.exp - 60000 > Date.now()) || (t.access && t.exp - 60000 > Date.now()) || t.refresh));
@@ -2075,10 +1901,6 @@
     GOOGLE_TYPE,
     // Google Drive
     prepareGoogle,
-    // Ready = Google's sign-in script loaded, or (2026-10-09) our server keeps the
-    // connection and the script isn't needed at all. Before, a school filter or a
-    // tracker blocker that stopped accounts.google.com left Edit in Google Drive,
-    // Save to Google Drive and turning in from Drive stuck on "still loading".
     googleReady: () => !!gClient || serverOn('gdrive'),
     googleToken,
     googleSession,
@@ -2108,7 +1930,6 @@
     oneDriveDownload,
     oneDriveShareLink,
     oneDriveCanShare,
-    // Request log for the Add Submission popup (2026-10-12)
     setLogger,
     /** True for a file picked with Add from OneDrive: downloading it needs `oneDriveToken({ read: true })`. */
     oneDrivePicked: (id) => pickedList().some((p) => p.id === String(id)),

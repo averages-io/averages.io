@@ -1,28 +1,4 @@
-/**
- * Builds the Fullscreen pages (2026-10-28, behind the `fullscreen` switch).
- *
- *   fs-src/<page>.html  ->  public/IS/<page>.html, served as app.averages.io/IS/<page>
- *
- * IS (Industry Standard) is the first Fullscreen theme (2026-10-30); more will
- * get their own folder. The old /fs/<page> addresses (10-28 to 10-30) still
- * work: public/fs/<page>.html is a tiny page that moves to /IS/<page>, keeping
- * the query and the #part (a server redirect can't see the #part).
- *
- * fs-src/ holds Martin's Fullscreen designs (whole, self-contained pages with
- * their own sample data). Each one gets, at build time:
- *   1. /js/averages-fs.js in <head> (versioned), which joins it to the app:
- *      the switch, sign-in, theme, accent, name and photo, and moving
- *      between pages (see that file);
- *   2. its "In the app, this opens ..." messages routed through that file,
- *      so they move between pages instead of only saying so;
- *   3. its scripts held back (type="text/fs-wait") until
- *      /js/averages-fs-data.js has loaded the student's real data (window.FSD)
- *      and runs them;
- *   4. a dark theme: the design is light only, so every rule with a color in
- *      it gets a dark twin under html[data-theme="dark"] (see darkCss below).
- * The title drops the word "Mock". public/IS/ and public/fs/ are generated (gitignored): edit
- * fs-src/ and rebuild. Runs from `npm run port`.
- */
+// Builds the Fullscreen pages.
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
@@ -35,12 +11,9 @@ const OLD = path.resolve(HERE, "../public/fs");
 const JS_FILE = path.resolve(HERE, "../public/js/averages-fs.js");
 const DATA_FILE = path.resolve(HERE, "../public/js/averages-fs-data.js");
 const TURNIN_FILE = path.resolve(HERE, "../public/js/averages-fs-turnin.js");
-const NOTE_FILE = path.resolve(HERE, "../public/js/averages-note.js"); // the new-notification popup, shared with Windowed (2026-11-03)
-const AVATAR_FILE = path.resolve(HERE, "../public/js/averages-avatar.js"); // the same profile colors as Windowed (2026-10-30)
-// The logo screen (app/lib/splash.ts), the same one the Windowed pages use (2026-10-30). Coming from Windowed (Settings'
-// Fullscreen button leaves averages_fs_logo in this tab), it stays up until a second has passed since the click and the
-// page has its data. splash.ts is plain string constants, so it's read as JavaScript; its automatic first-open start
-// is cut off (the Fullscreen pages have their own loading), leaving show(ms) and hide().
+const EMAIL_FILE = path.resolve(HERE, "../public/js/averages-email.js");
+const NOTE_FILE = path.resolve(HERE, "../public/js/averages-note.js");
+const AVATAR_FILE = path.resolve(HERE, "../public/js/averages-avatar.js");
 const SPLASH_FILE = path.resolve(HERE, "../app/lib/splash.ts");
 function splashTag() {
   const src = fs.readFileSync(SPLASH_FILE, "utf8").replace(/^export /gm, "");
@@ -61,7 +34,6 @@ import { execFileSync } from "node:child_process";
 function buildVersion() {
   const pkg = JSON.parse(fs.readFileSync(path.resolve(HERE, "../package.json"), "utf8"));
   const base = String(pkg.version || "0.0.0");
-  // the word in front of the version, "versionName" in package.json (2026-11-06): "Beta", anything else, or "" for none
   const stage = typeof pkg.versionName === "string" ? pkg.versionName.trim().slice(0, 40) : "Beta";
   if (!process.env.WORKERS_CI) return { base, stage, sha: "local", when: "Built on this computer" };
   let sha = String(process.env.WORKERS_CI_COMMIT_SHA || "").trim();
@@ -285,27 +257,11 @@ function build() {
   const ver = (f) => crypto.createHash("sha256").update(fs.readFileSync(f)).digest("hex").slice(0, 10);
   const tag = `${SPLASH_TAG}\n<script src="/js/averages-avatar.js?v=${ver(AVATAR_FILE)}"></script>\n<script src="/js/averages-note.js?v=${ver(NOTE_FILE)}"></script>\n<script src="/js/averages-fs.js?v=${ver(JS_FILE)}"></script>\n<script src="/js/averages-fs-data.js?v=${ver(DATA_FILE)}"></script>`;
   let n = 0;
-  // Lighter motion (2026-11-01, Martin: the animations were "very choppy and heavy on my computer"). The same look,
-  // cheaper to draw: nothing re-draws in a loop while a page sits still, and the moves that stay use only
-  // transform and opacity, which the graphics card does on its own.
   const LIGHT_CSS = [
-    // (long titles keep sliding on their own, like Spotify: Martin wants that, 2026-11-02. Potato mode and
-    // reduced motion still stop them.)
-    // the Home summary card switches with a fade (a blur re-drew the whole card every frame)
     ".sum-view{transition:opacity 150ms ease!important}.sum-view.switching{filter:none!important}",
     // the sidebar: its width still slides; the shadow and the labels' spacing switch at once instead of
     // re-drawing a big soft shadow over the page every frame
   ].join("");
-  // The sidebar, set up like Cloudflare's (2026-11-03, Martin: "see how cloudflare sets up their sidebar bc this is a
-  // mess"; measured from his saved dash.cloudflare.com page, Kumo's Sidebar). One set of rules on #side replaces the
-  // pile of fixes that grew on each page's own sidebar styles. Cloudflare's numbers: 57/260 px wide, 12 px padding
-  // around the list, 34 px rows 1 px apart, 12 px from icon to name, 8 px corners, a 32 px search box 12 px above the
-  // rows, group labels 14 px grey with 16 px above and 8 below (on the closed rail: a line with 12 px either side),
-  // folder rows 28 px in with a line under the folder's icon, a 48 px footer under a line, everything moving over
-  // 250 ms on cubic-bezier(.77,0,.175,1). Here: 56/260 (our 18 px icons sit dead centre on 56), the top bar kept as it
-  // is (Cloudflare's logo row is our top bar). Type, colours and states are the site's own (2026-11-03, Martin: "change
-  // the font and integrate it into the site more"): 700/800 weights, the page-you're-on pill in --sheet with an accent
-  // icon, hovers in --inner, labels like the menus' small caps, the kbd chip, the pin's label, names fading in.
   const EASE = ".25s cubic-bezier(.77,0,.175,1)";
   const CLOSED = ".app:not(.pinned):not(.menu) #side:not(:hover):not(.hold):not(:has(:focus-visible))";
   const SIDE_CSS = [
@@ -372,7 +328,7 @@ requestAnimationFrame(function(){requestAnimationFrame(function(){r.classList.re
     // 1. the link to the app, first thing in <head>
     if (!/<head>/.test(s)) throw new Error(`${file}: no <head>`);
     s = s.replace(/const VER = "[^"]*", SHA = "[^"]*", WHEN = "[^"]*", STAGE = "[^"]*";/, `const VER = ${JSON.stringify(VERSION.base)}, SHA = ${JSON.stringify(VERSION.sha)}, WHEN = ${JSON.stringify(VERSION.when)}, STAGE = ${JSON.stringify(VERSION.stage ? VERSION.stage + " " : "")};`);
-    s = s.replace(/<head>/, `<head>\n${tag}${TURNIN_PAGES.has(file) ? `\n<script src="/js/averages-fs-turnin.js?v=${ver(TURNIN_FILE)}"></script>` : ""}`);
+    s = s.replace(/<head>/, `<head>\n${tag}${TURNIN_PAGES.has(file) ? `\n<script src="/js/averages-fs-turnin.js?v=${ver(TURNIN_FILE)}"></script>` : ""}${file === "settings.html" ? `\n<script src="/js/averages-email.js?v=${ver(EMAIL_FILE)}" defer></script>` : ""}`);
     // 2. "In the app, this opens ..." moves for real
     const before = s;
     s = s.replace(/function toast\((\w+)\) \{/, (m, a) => `${m} if (window.__fsNav && window.__fsNav(${a})) return;`);
@@ -382,8 +338,6 @@ requestAnimationFrame(function(){requestAnimationFrame(function(){r.classList.re
     if (at < 0) throw new Error(`${file}: no <body>`);
     const held = s.slice(at).replace(/<script(\s+id="[^"]*")?>/g, (m, id) => `<script type="text/fs-wait"${id || ""}>`);
     s = s.slice(0, at) + held;
-    // 3b. the sidebar and top bar come up as the last page left them (pinned, open under the pointer, the classes,
-    // counts and picture), before the page's data arrives; averages-fs-data.js keeps the copy (2026-10-30)
     {
       const sideAt = s.indexOf('<aside class="side" id="side"'), end = sideAt < 0 ? -1 : s.indexOf("</aside>", sideAt);
       if (end < 0) throw new Error(`${file}: no sidebar`);
@@ -393,7 +347,6 @@ requestAnimationFrame(function(){requestAnimationFrame(function(){r.classList.re
     s = s.replace(/(<div class="wrap[^"]*">)/, '$1<script>window.__fsSkel&&window.__fsSkel()</script>');
     // 4. dark theme, after the page's own styles
     s = s.replace(/<\/head>/, `<style id="fsDark">\n${darkCss(styles)}</style>\n</head>`);
-    // 4b. lighter motion, after everything else so it wins (2026-11-01)
     s = s.replace(/<\/head>/, `<style id="fsLight">${LIGHT_CSS}</style>\n</head>`);
     s = s.replace(/<\/head>/, `<style id="fsSide">${SIDE_CSS}</style>\n</head>`);
     s = s.replace(/<title>([^<]*?)\s*Mock<\/title>/, "<title>$1</title>");

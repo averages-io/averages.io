@@ -1,19 +1,4 @@
-/*
- * "Open with → Averages.io" from Google Drive (2026-10-09, replacing the Google Picker).
- *
- * Google Drive sends the student to our Open URL (https://app.averages.io/files?drive=open)
- * with ?state={"ids":[...],"action":"open","userId":"..."} (Google Docs, Sheets and
- * Slides come as "exportIds"). Opening a file that way grants drive.file for it.
- *
- * Loaded in <head> by app/layout.tsx, so it runs before anything else:
- *   1. Keeps the file IDs for this tab (sessionStorage, 15 minutes) and takes
- *      ?state off the address, so a reload or a shared link doesn't repeat it.
- *   2. If the student had to sign in first (Files sends signed-out visitors to
- *      the sign-in page, which then opens Home), the next signed-in page sends
- *      them back to Files to finish.
- * The Files page does the rest: AveragesDriveOpen.pending() / .clear().
- * Only file IDs are kept, never anything from inside the file.
- */
+// "Open with → Averages.io" from Google Drive.
 (function () {
   'use strict';
   const KEY = 'averages_drive_open';
@@ -51,11 +36,6 @@
     }
   } catch { /* nothing to keep */ }
 
-  // 2. Finish on Files. The sign-in page ("/"), onboarding, Settings and Files
-  //    itself stay put. Only once per file (2026-10-09, Martin: "it traps you
-  //    on the files page"): before, every other page sent the student back to
-  //    Files for 15 minutes, so leaving Files to connect Google Drive or to do
-  //    anything else bounced them straight back.
   const path = window.location.pathname.replace(/\.html$/, '').replace(/\/+$/, '') || '/';
   const p = pending();
   if (p && !p.bounced && path !== '/' && path !== '/files' && path !== '/settings' && !/^\/onboard/.test(path)) {

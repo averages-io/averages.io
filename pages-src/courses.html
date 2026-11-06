@@ -63,18 +63,6 @@
   *::-webkit-scrollbar-thumb:hover { background-color: rgba(20, 21, 31, 0.45); }
   *::-webkit-scrollbar-corner { background: transparent; }
 
-  /* Declared so the browser themes ITS OWN chrome — scrollbars, the
-
-     overscroll gutter, form controls — against this page rather than
-
-     guessing. Without it Firefox drew a light-theme scrollbar over the
-
-     dark canvas and tinted it (Martin saw it as pink on a blue
-
-     background). LegacyPage's applyStoredTheme() updates both of these
-
-     to match whatever background the user actually saved. */
-
   html {
 
     color-scheme: dark;
@@ -82,7 +70,6 @@
     background-color: #0c0c0e;
 
   }
-
 
   html, body {
     margin: 0;
@@ -96,16 +83,6 @@
     overflow: hidden; /* scrolling now happens inside .page (see below), so
       the scrollbar sits at the edge of the app's own window/card instead of
       out at the browser's outer edge, over the wallpaper margin */
-    /* Neutral black instead of a baked-in accent gradient here —
-       2026-09-11, per Martin. This is only ever visible for a split
-       second on reload/navigation, before applyStoredTheme() (or this
-       page's own appearance-reading script) sets the user's actual
-       saved background over it. The old default was the sample
-       red-orange gradient baked into this file, which read as a real
-       glitch flashing in between pages; a neutral black reads as
-       "still loading" instead, and matches the app's own Black
-       preset (#0c0c0e) so it's not a color that appears nowhere else
-       in the app. */
     background-color: #0c0c0e;
     background-image: none;
     background-size: cover;
@@ -156,9 +133,6 @@
   }
 
   .profile-menu-wrap { position: relative; flex-shrink: 0; }
-  /* No photo: an Apple-style monogram (2026-10-21, Martin: "make the default no pfp letters
-     look more like the apple ones"), the grey gradient and rounded white initials of a contact
-     with no picture. A photo replaces it (set inline as background-image). */
   .profile-btn {
     width: 42px;
     height: 42px;
@@ -177,8 +151,6 @@
     flex-shrink: 0;
   }
 
-  /* A photo has no ring (2026-10-23, Martin: "remove the ugly border if it is a custom upload");
-     the letter avatars keep theirs. Same size: the border goes clear and the photo fills it. */
   .profile-btn.has-photo { border-color: transparent; background-origin: border-box; background-repeat: no-repeat; }
   .profile-menu {
     position: absolute;
@@ -326,10 +298,6 @@
   table.courses-table tbody tr:hover td:first-child { border-top-left-radius: var(--window-radius-sm); border-bottom-left-radius: var(--window-radius-sm); }
   table.courses-table tbody tr:hover td:last-child { border-top-right-radius: var(--window-radius-sm); border-bottom-right-radius: var(--window-radius-sm); }
 
-  /* Class column: colored tick, full name + course-ID code on one line,
-     a smaller "Pd:{N} Teacher - Section" line underneath — matches the
-     Schoology reference Martin shared, so this reads as sourced from
-     real PowerSchool/Schoology data rather than a generic list. */
   .course-row { display: flex; align-items: flex-start; gap: 10px; }
   .course-tick { width: 4px; align-self: stretch; min-height: 34px; border-radius: 999px; flex-shrink: 0; margin-top: 1px; }
   .course-row-text { min-width: 0; }
@@ -362,12 +330,6 @@
   .trend.flat .arrow { color: var(--text-faint); transform: translateY(-3px); }
   .trend .grade-pct { display: inline; margin-top: 0; margin-left: 2px; }
 
-  /* Predicted-grade cell doubles as a hover/focus target for the same
-     reasoning popup home.html's Grades table has — ported over per
-     Martin's request rather than reinvented. The chip is already
-     tinted unconditionally on this page (unlike home.html, where the
-     tint only appears once has-popup is added), so this just adds the
-     interactive affordance on top. */
   .trend.has-popup { cursor: help; }
   .trend.has-popup:hover,
   .trend.has-popup:focus-visible { filter: brightness(0.94); }
@@ -593,10 +555,6 @@
   .nav-link .dot { width: 4px; height: 4px; border-radius: 50%; background: transparent; }
   .nav-link.active .label { color: var(--text-dark); }
   .nav-link.active .dot { background: var(--accent); }
-  /* ---------- "More" overflow (2026-10-01, per Martin: "if the text has
-     to get ... we should add a more button on the far right side with a
-     list of the other options"). Labels never truncate: when they would,
-     the rightmost pages move into the More menu instead. ---------- */
   .nav-link[hidden], .nav-more[hidden], .nav-more-menu[hidden] { display: none; }
   /* While the More menu is open the whole bar sits above everything else on
      the page (sticky headers, pop-ups, the edit button go up to z-index 90),
@@ -659,8 +617,6 @@
   .nav-more-item.active { color: var(--text-dark); }
   .nav-more-item.active span { position: relative; display: inline-block; padding-bottom: 6px; margin-bottom: -6px; }
   .nav-more-item.active span::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; border-radius: 999px; background: var(--accent); }
-  /* Labels sit centered in the bar; the active page is underlined in the
-     accent color instead of marked with a dot (2026-10-01, per Martin). */
   .app-nav-inner .nav-link, .app-nav-inner .nav-more { justify-content: center; gap: 0; padding-top: 10px; padding-bottom: 10px; }
   .app-nav-inner .nav-link .dot, .app-nav-inner .nav-more .dot { display: none; }
   .app-nav-inner .nav-link .label, .app-nav-inner .nav-more .label { position: relative; padding: 6px 0; }
@@ -676,8 +632,6 @@
     .nav-link { min-width: 0; padding: 10px 3px 8px; }
     .nav-link .label { font-size: 0.58rem; }
   }
-  /* Emoji icons (2026-10-01, per Martin): icons that show a thing are emoji;
-     buttons and action icons stay line icons. */
   /* Each emoji is an inline SVG sized by font-size (1em box), so it is
      exactly as big as its box and sits dead center. The svg rule undoes
      the line-icon styles (stroke, fill:none, opacity) that the parent
@@ -685,9 +639,6 @@
   .emo { display: inline-block; width: 1em; height: 1em; line-height: 0; flex-shrink: 0; vertical-align: middle; }
   .emo svg { display: block; width: 100%; height: 100%; fill: initial; stroke: none; opacity: 1; }
   .course-row-meta .emo { font-size: 12px; }
-  /* 2026-10-01, per Martin: assignment names are links; one overdue item
-     shows its name in red with how long ago it was due; an open course row
-     drops its divider so it and its assignment list read as one block. */
   .assign-link { color: inherit; text-decoration: none; }
   .assign-link:hover { text-decoration: underline; }
   .assign-link:focus-visible { outline: none; border-radius: 4px; box-shadow: 0 0 0 2px var(--accent-ring); }
@@ -699,9 +650,6 @@
     .assign-status.overdue, .assign-status.upcoming { flex-direction: column; align-items: flex-start; }
     table.courses-table tbody tr.is-expanded { border-bottom-color: transparent; }
   }
-  /* The expand (+) button hangs off the right of the assignment name instead
-     of taking up width, so every name centers under the ASSIGNMENTS header
-     (2026-10-01, per Martin). */
   .assign-cell { position: relative; }
   .assign-cell .assign-expand-btn { position: absolute; left: 100%; top: 50%; transform: translateY(-50%); margin-left: 6px; }
 </style>
@@ -797,10 +745,6 @@
   </nav>
 
   <script>
-    // ---- Links by id (2026-10-07, Martin) ----
-    // A real class (Schoology/Classroom ids are digits) links as
-    // assignment?id=<id> and course-home?id=<section id>; the sample classes
-    // (word ids like "apchem") keep ?course=&title=. Pages read both.
     function avgIsId(v) { return /^\d{1,24}$/.test(String(v == null ? '' : v)); }
     function avgCourseQ(course) { return (avgIsId(course) ? 'id=' : 'course=') + encodeURIComponent(course == null ? '' : course); }
     function avgAssignHref(course, title, id, extra) {
@@ -809,11 +753,6 @@
       return `assignment.html?course=${encodeURIComponent(course == null ? '' : course)}&title=${encodeURIComponent(title || '')}${avgIsId(id) ? `&id=${id}` : ''}${extra}`;
     }
 
-    // Potato PC Mode on every page (2026-10-04, per Martin). The saved
-    // setting turns off all CSS animations and transitions, makes animate()
-    // calls and smooth scrolling instant, and drops the slanted page title.
-    // Same code as app/lib/theme-boot.ts, which runs it before first paint in
-    // the app; this copy covers the preview and pages theme-boot skips.
     (function () {
     var POTATO_CSS = "body.potato-mode,body.potato-mode *,body.potato-mode *::before,body.potato-mode *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important;filter:none!important;text-shadow:none!important}html:has(body.potato-mode){scroll-behavior:auto!important}body.potato-mode,body.potato-mode *{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif!important}body.potato-mode h1.title{font-style:normal!important;transform:none!important}body.potato-mode .trend.has-popup:focus-visible{outline:2px solid currentColor;outline-offset:2px}";
     function potatoOn() { return !!(document.body && document.body.classList.contains("potato-mode")); }
@@ -934,17 +873,7 @@
     })();
   </script>
 
-
   <script>
-    // ------------------------------------------------------------------
-    // Shared appearance (accent + background) — 2026-09-08, per Martin:
-    // "wallpapers + accent colors don't save across pages." Settings'
-    // Appearance section (and onboarding's Theme step) are the only
-    // writers of schoolagy_appearance; every other real app page,
-    // including this one, applies whatever's saved there, read-only, on
-    // its own load — same shared-localStorage-record pattern already
-    // used for schoolagy_dark_mode/schoolagy_profile.
-    // ------------------------------------------------------------------
     (function () {
       function darken(hex, amount) {
         const n = parseInt(hex.slice(1), 16);
@@ -982,34 +911,6 @@
       });
     })();
 
-    // ------------------------------------------------------------------
-    // Sample data — same six courses as home.html's COURSES array (same
-    // id/name/color/grade/predicted/updated values) plus two fields Home
-    // doesn't need but this list page's draft called for: a PowerSchool/
-    // Schoology-style course code and a period/teacher/section line
-    // (format lifted from the Schoology screenshot Martin shared:
-    // "76_[Letter][4 digits]" for the code, "Pd:{N} Teacher - Section"
-    // underneath). Teacher names for apchem/english10/pe match the
-    // Messages widget's senders in home.html for consistency; the other
-    // three are new (Martin said "add anything you want").
-    //
-    // ------------------------------------------------------------------
-    // Course customization persistence — added 2026-09-08. Same
-    // schoolagy_course_custom (per-course name/color overrides, keyed by
-    // course id, only actually-customized courses present) and
-    // schoolagy_course_order (full custom ordering of course ids) keys
-    // home.html's Customize editor uses — see that file for the fuller
-    // note. This page's own Reorder tool below is the other place that
-    // WRITES schoolagy_course_order (it has no rename/color UI of its
-    // own, so it never writes schoolagy_course_custom); every other page
-    // only reads both. applyCourseCustomizationsInPlace() is called right
-    // after the raw array literal, mutating COURSES in place, so it's
-    // already customized/reordered before anything renders it, and the
-    // reorder tool's existing in-place COURSES.splice() calls need no
-    // other change. Same
-    // defensive try/catch-per-key style as AVERAGES_DARK_MODE_KEY in
-    // settings.html.
-    // ------------------------------------------------------------------
     const AVERAGES_COURSE_CUSTOM_KEY = 'schoolagy_course_custom';
     const AVERAGES_COURSE_ORDER_KEY = 'schoolagy_course_order';
     function loadCourseCustom() {
@@ -1062,15 +963,8 @@
       "🔬": "<svg aria-hidden=\"true\" focusable=\"false\" viewBox=\"0 0 36 36\"><g fill=\"#66757F\"><path d=\"m19.78 21.345-6.341-6.342-.389 4.38 2.35 2.351z\"/><path d=\"M15.4 22.233a.507.507 0 0 1-.354-.146l-2.351-2.351a.501.501 0 0 1-.145-.397l.389-4.38a.5.5 0 0 1 .851-.309l6.341 6.342a.5.5 0 0 1-.31.851l-4.379.389-.042.001zm-1.832-3.039 2.021 2.021 3.081-.273-4.828-4.828-.274 3.08z\"/></g><path fill=\"#8899A6\" d=\"M31 32h-3c0-3.314-2.63-6-5.875-6-3.244 0-5.875 2.686-5.875 6H8.73a2 2 0 0 0-4 0 2 2 0 0 0 0 4H31a2 2 0 0 0 0-4z\"/><path fill=\"#8899A6\" d=\"M20 10v4a7 7 0 1 1 0 14h-8.485c2.018 2.443 5.069 4 8.485 4 6.075 0 11-4.925 11-11s-4.925-11-11-11z\"/><path fill=\"#67757F\" d=\"M16.414 30.414a2 2 0 0 1-2.828 0l-9.899-9.9a2 2 0 1 1 2.829-2.828l9.899 9.9a2 2 0 0 1-.001 2.828zm-7.225-1.786a1 1 0 1 1 .278 1.98l-5.942.834a1 1 0 1 1-.277-1.981l5.941-.833z\"/><path fill=\"#66757F\" d=\"m27.341 2.98 4.461 4.461-3.806 3.807-4.461-4.461z\"/><path fill=\"#AAB8C2\" d=\"M34.037 7.083a2.12 2.12 0 0 1-2.997 0l-3.339-3.34A2.12 2.12 0 0 1 30.696.747l3.342 3.34a2.12 2.12 0 0 1-.001 2.996zm-14.56 15.026-6.802-6.803a1.003 1.003 0 0 1 0-1.414l9.858-9.858a1.003 1.003 0 0 1 1.414 0l6.801 6.803a1.003 1.003 0 0 1 0 1.414l-9.858 9.858a1.001 1.001 0 0 1-1.413 0z\"/><path fill=\"#E1E8ED\" d=\"m13.766 12.8 1.638-1.637 8.216 8.216-1.638 1.637z\"/></svg>",
       "📚": "<svg aria-hidden=\"true\" focusable=\"false\" viewBox=\"0 0 36 36\"><path fill=\"#553788\" d=\"M15 31c0 2.209-.791 4-3 4H5c-4 0-4-14 0-14h7c2.209 0 3 1.791 3 4v6z\"/><path fill=\"#9266CC\" d=\"M34 33h-1V23h1a1 1 0 1 0 0-2H10c-4 0-4 14 0 14h24a1 1 0 1 0 0-2z\"/><path fill=\"#CCD6DD\" d=\"M34.172 33H11c-2 0-2-10 0-10h23.172c1.104 0 1.104 10 0 10z\"/><path fill=\"#99AAB5\" d=\"M11.5 25h23.35c-.135-1.175-.36-2-.678-2H11c-1.651 0-1.938 6.808-.863 9.188C9.745 29.229 10.199 25 11.5 25z\"/><path fill=\"#269\" d=\"M12 8a4 4 0 0 1-4 4H4C0 12 0 1 4 1h4a4 4 0 0 1 4 4v3z\"/><path fill=\"#55ACEE\" d=\"M31 10h-1V3h1a1 1 0 1 0 0-2H7C3 1 3 12 7 12h24a1 1 0 1 0 0-2z\"/><path fill=\"#CCD6DD\" d=\"M31.172 10H8c-2 0-2-7 0-7h23.172c1.104 0 1.104 7 0 7z\"/><path fill=\"#99AAB5\" d=\"M8 5h23.925c-.114-1.125-.364-2-.753-2H8C6.807 3 6.331 5.489 6.562 7.5 6.718 6.142 7.193 5 8 5z\"/><path fill=\"#F4900C\" d=\"M20 17a4 4 0 0 1-4 4H6c-4 0-4-9 0-9h10a4 4 0 0 1 4 4v1z\"/><path fill=\"#FFAC33\" d=\"M35 19h-1v-5h1a1 1 0 1 0 0-2H15c-4 0-4 9 0 9h20a1 1 0 1 0 0-2z\"/><path fill=\"#CCD6DD\" d=\"M35.172 19H16c-2 0-2-5 0-5h19.172c1.104 0 1.104 5 0 5z\"/><path fill=\"#99AAB5\" d=\"M16 16h19.984c-.065-1.062-.334-2-.812-2H16c-1.274 0-1.733 2.027-1.383 3.5.198-.839.657-1.5 1.383-1.5z\"/></svg>"
     };
-    // Potato mode (2026-10-20): the plain emoji character, not the drawn picture.
     function emojiSvg(e) { if (document.body.classList.contains('potato-mode')) return EMOJI_SVG[e] ? e : '📚'; return EMOJI_SVG[e] || EMOJI_SVG['📚']; }
 
-    // Subject table (2026-10-01, per Martin): each course gets a color that
-    // fits its subject, picked from its name. First match wins, so specific
-    // subjects come before broad ones ("Computer Science" before "Science",
-    // "Physical Education" before "Physics"). A color the student picked in
-    // the course's info pop-up still wins over this. No match keeps the
-    // course's own color. All colors pass 4.5:1 with white text.
     const COURSE_SUBJECTS = [
       [/\bchem/, '🧪', '#1b7f67'],
       [/\bbio|anatom|physiolog/, '🧬', '#387f33'],
@@ -1138,8 +1032,6 @@
       { id: 'pe', name: 'PE', code: '76_P0300', period: 6, teacher: 'Reyes', section: '1125', color: '#4f8c8a', grade: 'A', pct: 97, predicted: 'A', predictedPct: 97, trend: 'flat', updated: '2d ago' },
     ];
     applyCourseCustomizationsInPlace(COURSES);
-    // Signed in (2026-10-05): what the API doesn't know about a class yet
-    // (code, period, teacher, section) is empty, never "undefined".
     COURSES.forEach(c => { ['code', 'period', 'teacher', 'section'].forEach(k => { if (c[k] === undefined || c[k] === null) c[k] = ''; }); });
     function courseMetaLine(c) {
       const left = [c.period !== '' ? `Pd:${c.period}` : '', c.teacher].filter(Boolean).join(' ');
@@ -1320,9 +1212,6 @@
       return [lo, hi];
     }
 
-    // Grades given on the same day become one point: their average, with
-    // the date labeled "Aug 18 ×3" (2026-10-01). Otherwise three grades on
-    // one day drew as a zigzag across three fake "days".
     function groupSameDay(h) {
       const days = [];
       h.points.forEach((p, i) => {
@@ -1452,8 +1341,6 @@
           tr.setAttribute('role', 'link');
           tr.setAttribute('aria-label', `Open ${c.name}`);
         }
-        // Grade and Predicted columns removed 2026-10-01 (per Martin); grades
-        // live on the Grades page and the course hub.
         const items = courseAssignments(c.id);
         const expandable = items.length > 1 && !reorderModeOn;
         const isExpanded = expandable && expandedCourseIds.has(c.id);
@@ -1499,8 +1386,6 @@
       bindGradePopupTriggers();
     }
     renderCoursesTable();
-    // Cards that load on their own (2026-10-20): teachers' names come in
-    // after the page draws; fill them into each row's meta line.
     window.__averagesExtraLanded = function (name) {
       if (name !== 'people') return;
       document.querySelectorAll('#coursesBody tr[data-id]').forEach(tr => {
@@ -1746,22 +1631,12 @@
     // Profile menu — same behavior as home.html.
     // ------------------------------------------------------------------
     const profileBtn = document.getElementById('profileBtn');
-    // Shared profile photo/name (2026-09-07) — settings.html's Edit
-    // Profile modal is the only place this is ever set, but every other
-    // page's top-right profile button used to just show a fixed "M" no
-    // matter what was saved there: the button never read anything back,
-    // so a photo you set in Settings was invisible the moment you left
-    // it. schoolagy_profile is the same localStorage record
-    // settings.html writes on every save; this is read-only here.
     (function () {
       var profile = null;
       try {
         var raw = localStorage.getItem('schoolagy_profile');
         if (raw) profile = JSON.parse(raw);
       } catch (e) {}
-      // No name saved on this device (new device, or signed out with Sync
-      // off): the account's own name from the sign-in, never a sample name
-      // (2026-10-14; this used to fall back to "Martin" / "M").
       if (!profile || !profile.name || !String(profile.name).trim()) profile = Object.assign({}, profile, { name: window.__AVERAGES_NAME__ || '' });
       if (profile.photo) {
         profileBtn.style.backgroundImage = 'url("' + profile.photo + '")';
@@ -1770,7 +1645,7 @@
         profileBtn.textContent = '';
         profileBtn.classList.add('has-photo');
       } else if (profile.name) {
-        if (window.AveragesAvatar) window.AveragesAvatar.paint(profileBtn, profile.name);   // initials on their own color (2026-10-23, averages-avatar.js)
+        if (window.AveragesAvatar) window.AveragesAvatar.paint(profileBtn, profile.name);
         else profileBtn.textContent = (function (n) { var p = String(n).trim().split(/\s+/).filter(Boolean); var f = function (w) { return w ? Array.from(w)[0] : ''; }; return (f(p[0]) + (p.length > 1 ? f(p[p.length - 1]) : '')).toUpperCase(); })(profile.name);
       }
     })();
@@ -1788,11 +1663,6 @@
     });
   </script>
   <script>
-    // Back link (2026-10-01, per Martin: "where it returns to ... is always
-    // wrong"). Every page records itself in a short per-tab trail; a page's
-    // back link then says and goes to the page before it ("Back to AP
-    // Chemistry Hub", "Back to Grades"...). With no trail (the page was
-    // opened directly) the page's own default back link is left alone.
     (function () {
       const SELF = 'courses.html';
       const KEY = 'averages_nav_trail';

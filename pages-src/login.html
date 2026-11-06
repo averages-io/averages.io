@@ -73,10 +73,6 @@
     align-items: center;
     justify-content: center;
     padding: 24px;
-    /* Gradient rebuilt from color stops sampled straight down Martin's
-       Illustrator export, rather than a tiny raster crop stretched to
-       cover (which blew up into a zoomed/blurry look at full-page size).
-       background-color is the fallback before the gradient paints. */
     background-image: linear-gradient(180deg, #1e5b96 0%, #004298 16.7%, #001e92 33.3%, #001498 50%, #0015a2 66.7%, #0016ad 83.3%, #1c2aaa 100%);
     background-size: cover;
     background-position: center;
@@ -389,22 +385,6 @@
   }
   .tooltip.show { display: block; }
 
-
-  /* ---------- Sign-in (redone 2026-10-06, same flow as Martin's "Select
-     your LMS" mock, per Martin: "it just looks kind of funky").
-     One card in two parts on computers: a navy side with the logo and the
-     three steps (Platform, School, Log in), and the
-     light main side with the screens. Phones get the main side only, with
-     the logo on top. Screens are unchanged:
-     1. Select your platform: Schoology (Google Classroom sign-in was removed
-        2026-10-19: the public beta is Schoology only).
-     2. Schoology: search your school, the 13+ check, Log in with
-        Schoology. The button sends the student to their school's
-        own sign-in page (its SSO or a password); the password is never
-        typed into Averages.io.
-     Screens are hash routes (#schoology) so the browser's
-     Back button walks back through them. No colored borders, no glass, no
-     fades on hover; spacing on the 4px scale. ---------- */
   :root {
     --side-bg: #0b1150;
     --side-text: #ffffff;
@@ -578,13 +558,9 @@
     box-shadow: 0 1px 2px rgba(20, 21, 31, 0.06), inset 0 0 0 1px var(--line);
   }
   .school-results:empty { display: none; }
-  /* The results and the "no match" line drop down over the page instead of pushing it (2026-11-06, Martin: clicking
-     the search box shifted the whole page; the card is centered, so anything that grew it moved everything). */
   .school-results, .school-hint { position: absolute; left: 0; right: 0; top: 100%; z-index: 5; }
   .school-results { box-shadow: 0 18px 40px -12px rgba(20, 21, 31, 0.35), inset 0 0 0 1px var(--line); }
   .school-hint { margin: 8px 0 0; padding: 12px 16px; border-radius: 14px; background: #ffffff; box-shadow: 0 18px 40px -12px rgba(20, 21, 31, 0.3), inset 0 0 0 1px var(--line); }
-  /* A school picked: it's shown as the choice, with Change; the search box comes back only to change it (2026-11-06,
-     Martin: with a school selected, an empty search box and a card under it was confusing). */
   .lms-body.has-pick:not(.changing) .school-search { display: none; }
   .lms-body.has-pick:not(.changing) .school-pick { margin-top: 0; }
   .school-pick .pick-change { margin-left: auto; flex: none; border: 0; padding: 8px 14px; border-radius: 12px; background: #eef0f8; color: var(--blue); font: inherit; font-size: 0.92rem; font-weight: 800; cursor: pointer; }
@@ -647,7 +623,6 @@
   .age-why:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--ring); }
   .age-note { margin: -4px 0 0; font-size: 0.92rem; font-weight: 600; color: var(--ink-muted); line-height: 1.5; }
   .age-note[hidden] { display: none; }
-  /* The same 13+ check, sized to the smaller API-key form (2026-11-03). */
   .key-form .age-row { gap: 10px; margin-bottom: 14px; }
   .key-form .age-check { gap: 10px; font-size: 0.9rem; }
   .key-form .age-check input { width: 22px; height: 22px; }
@@ -676,11 +651,9 @@
   .signin-note { margin: 0; padding: 12px 16px; border-radius: 14px; background: #e4e5ec; color: var(--ink); font-size: 0.92rem; font-weight: 700; line-height: 1.45; }
   .signin-note[hidden] { display: none; }
 
-
   .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
   .signin-foot { margin: 0; font-size: 0.85rem; font-weight: 700; color: rgba(255, 255, 255, 0.85); text-align: center; }
   .signin-foot a { color: inherit; font-weight: 800; text-decoration: underline; text-underline-offset: 2px; }
-  /* The build, linked to the code on GitHub (2026-10-23): underlined only on hover. */
   .signin-foot a.build-link { font-weight: inherit; text-decoration: none; }
   .signin-foot a.build-link:hover, .signin-foot a.build-link:focus-visible { text-decoration: underline; outline: none; }
   .dev-keys { margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--line); }
@@ -858,11 +831,6 @@
   </div>
 
   <script>
-    // Potato PC Mode on every page (2026-10-04, per Martin). The saved
-    // setting turns off all CSS animations and transitions, makes animate()
-    // calls and smooth scrolling instant, and drops the slanted page title.
-    // Same code as app/lib/theme-boot.ts, which runs it before first paint in
-    // the app; this copy covers the preview and pages theme-boot skips.
     (function () {
     var POTATO_CSS = "body.potato-mode,body.potato-mode *,body.potato-mode *::before,body.potato-mode *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important;filter:none!important;text-shadow:none!important}html:has(body.potato-mode){scroll-behavior:auto!important}body.potato-mode,body.potato-mode *{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif!important}body.potato-mode h1.title{font-style:normal!important;transform:none!important}body.potato-mode .trend.has-popup:focus-visible{outline:2px solid currentColor;outline-offset:2px}";
     function potatoOn() { return !!(document.body && document.body.classList.contains("potato-mode")); }
@@ -906,16 +874,6 @@
     })();
 
     
-    // ------------------------------------------------------------------
-    // Sign in by LMS (draft, 2026-10-06). Same hooks as the current login
-    // page, so it can replace it as-is: window.__averagesSignIn (the API-key
-    // sign-in the built app wires in). Google Classroom sign-in was removed
-    // 2026-10-19 (Schoology-only beta). Schoology sign-in isn't built yet: the
-    // built app will provide window.__averagesLmsSignIn(lms, address) for it
-    // (it sends the browser to that school's own sign-in page); until then
-    // their button says it's coming. In the preview every button walks on to
-    // onboarding like the old mock.
-    // ------------------------------------------------------------------
     const SCREENS = { choose: 'screenChoose', schoology: 'screenSchool' };
     const LMS = {
       // Schoology: any district, listed or not. Some use their own address
@@ -957,8 +915,6 @@
     function readJSON(key) { try { return JSON.parse(localStorage.getItem(key) || 'null'); } catch { return null; } }
     function writeJSON(key, v) { try { localStorage.setItem(key, JSON.stringify(v)); } catch {} }
 
-    // 13+ (2026-10-04): decides which modes onboarding offers. One answer,
-    // shown on whichever screen you're on, kept on this device only.
     const ageBoxes = [...document.querySelectorAll('[data-age]')];
     function savedAge() { try { return localStorage.getItem('schoolagy_13plus') === 'yes'; } catch { return false; } }
     function saveAge(on) { try { localStorage.setItem('schoolagy_13plus', on ? 'yes' : 'no'); } catch {} ageBoxes.forEach(b => { b.checked = on; }); }
@@ -1152,12 +1108,17 @@
       b.setAttribute('aria-expanded', note.hidden ? 'false' : 'true');
     }));
 
-    // Back from the school's sign-in with the browser's Back button: undo "busy".
-    window.addEventListener('pageshow', e => {
-      if (!e.persisted) return;
+    // Back from the school's sign-in with the browser's Back button (the page comes back from the browser's cache just
+    // as it was left): take down the loading logo and undo "busy", or the page sits on the logo at /#schoology.
+    function unstick() {
       ssoBtn.classList.remove('busy');
       if (lms) ssoBtn.textContent = LMS[lms].button;
-    });
+      if (window.__averagesLoginLogo) window.__averagesLoginLogo.hide();
+      document.documentElement.removeAttribute('data-av-checking');
+    }
+    window.addEventListener('pageshow', e => { if (e.persisted) unstick(); });
+    // Still here 20 s after pressing the button (the school's page never loaded): let them try again.
+    ssoBtn.addEventListener('click', () => { setTimeout(() => { if (document.visibilityState === 'visible' && ssoBtn.classList.contains('busy')) unstick(); }, 20000); });
 
     // ---------- Start ----------
     const q = new URLSearchParams(location.search);
@@ -1190,7 +1151,6 @@
         apiKeyForm.style.overflow = 'visible';
       }
     });
-
 
     const apiKeyInput = document.getElementById('apiKey');
     const apiSecretInput = document.getElementById('apiSecret');

@@ -1,15 +1,4 @@
-/**
- * The image check's model, run in a Web Worker (2026-10-05).
- *
- * Why a worker: loading TensorFlow and warming the model compiles its GPU
- * programs, which used to freeze Settings and Onboarding for several seconds
- * right after they opened (no clicks, no scrolling), worst on Chromebooks.
- * Here that work happens on its own thread; the page stays responsive.
- *
- * Messages in:  {id, type: "warm"} | {id, type: "scan", width, height, pixels: ArrayBuffer (RGBA)}
- * Messages out: {id, ok: true, predictions?} | {id, ok: false}
- * Same model, same files, same IndexedDB cache key as the old in-page code.
- */
+// The image check's model, run in a Web Worker.
 import * as tf from "@tensorflow/tfjs";
 import * as nsfwjs from "nsfwjs";
 

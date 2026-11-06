@@ -1,35 +1,6 @@
-/**
- * app.averages.io's front door (2026-10-13).
- *
- * Everything else on app.averages.io is static files from ./out, served by
- * Cloudflare straight from the assets without running this. Only "/" (the
- * login page) comes through here; see run_worker_first in wrangler.jsonc.
- *
- * Why: the login page used to load, start the app, ask the API whether you're
- * signed in, and only then send you to Home. Signed in, that meant staring at
- * the sign-in buttons (later a black screen) for a few seconds. The browser
- * already sends the session cookie with the request for this page, because
- * the API sets it for all of .averages.io, so the answer is here before any
- * page is sent: a cookie means Home, no cookie means the login page.
- *
- * This only looks for the cookie, it can't open it (the secret lives in the
- * API, not here). That's enough for choosing a page. It is not a security
- * check: Home asks the API for real, and a dead cookie gets a 401 there, which
- * also deletes it, so the next visit lands on the login page.
- *
- * The bounce cookie is the loop guard. If Home can't use the session for any
- * reason (API down, school platform refusing, a 401 that didn't clear the
- * cookie), it sends you back to "/"; without the guard this would send you
- * straight back to Home, forever. After one redirect, "/" serves the login
- * page for the next 15 seconds whatever the cookies say, and the login page's
- * own check takes over from there.
- *
- * Plain JavaScript on purpose: Next type-checks every .ts file in the repo and
- * doesn't know Cloudflare's Worker types.
- */
+// app.averages.io's front door.
 
 const SESSION_COOKIE = "averages_session";
-// the old name (renamed 2026-10-31); the API moves it over on the next request
 const LEGACY_SESSION_COOKIE = "schoolagy_session";
 const BOUNCE_COOKIE = "averages_bounced";
 const BOUNCE_SECONDS = 15;
@@ -65,10 +36,6 @@ export function frontDoor(request) {
 export default {
   /** @param {Request} request @param {{ ASSETS: { fetch: (r: Request) => Promise<Response> } }} env */
   async fetch(request, env) {
-    // Just signed out (2026-11-06, Martin: signing out left session storage, local storage and cookies behind):
-    // /signout comes here as "/?signedout=1", and the login page is sent with Clear-Site-Data, so the browser
-    // itself wipes everything app.averages.io kept (both storages, IndexedDB, the service worker) and every
-    // averages.io cookie, the API's sign-in included. Nothing a page script could miss.
     const url = new URL(request.url);
     if (request.method === "GET" && url.pathname === "/" && url.searchParams.has("signedout")) {
       const page = await env.ASSETS.fetch(new Request(new URL("/", url).toString(), { headers: request.headers }));
@@ -83,7 +50,6 @@ export default {
         status: 302,
         headers: {
           Location: to,
-          // Not HttpOnly: it holds nothing ("1"), and sign-out clears it from the page (2026-10-14).
           "Set-Cookie": `${BOUNCE_COOKIE}=1; Path=/; Max-Age=${BOUNCE_SECONDS}; Secure; SameSite=Lax`,
           "Cache-Control": "no-store",
         },

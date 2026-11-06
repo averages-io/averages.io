@@ -1,23 +1,4 @@
-/**
- * Per-page extras (2026-10-06): the pure half.
- *
- * The bundle (/data/bundle) is one call that every page shares. Some pages
- * need more than it carries: who teaches each class, teachers' updates, the
- * calendar's events, one class's exact gradebook, its folders, the inbox.
- * Each of those is its own API call, because asking Schoology for all of it
- * on every page would blow the Worker's subrequest budget and make Home wait
- * for the calendar. So each page asks only for what it shows (EXTRAS_BY_PAGE),
- * in parallel with the bundle, and the answers are merged into
- * `window.__AVERAGES__.data` before the page's script runs.
- *
- * This file is only the decisions (which calls, which cache keys, how an
- * answer lands in the data) so it can be tested in Node without a browser:
- * `node --experimental-strip-types --no-warnings scripts/extras.test.mjs`. The fetching,
- * caching and the 4 s wait are loadExtras() in ./averages.ts.
- *
- * A field that isn't set means that extra failed or ran out of time. Pages
- * then show their signed-in empty state, never their sample data.
- */
+// Per-page extras: the pure half.
 
 export type ExtraName = "people" | "updates" | "events" | "gradebook" | "folders" | "messages" | "locate";
 
@@ -43,7 +24,6 @@ export const EXTRAS_BY_PAGE: Readonly<Record<string, readonly ExtraName[]>> = {
   home: ["people", "updates"],
   courses: ["people"],
   grades: ["people"],
-  // The Assignments page never shows teachers (2026-10-20): no people call.
   assignments: [],
   "course-home": ["people", "updates", "events"],
   gradebook: ["people", "gradebook"],
@@ -51,33 +31,10 @@ export const EXTRAS_BY_PAGE: Readonly<Record<string, readonly ExtraName[]>> = {
   calendar: ["events"],
   messages: ["people", "messages"],
   contacts: ["people"],
-  // Opened as assignment?id=<id> (2026-10-07): which class it's in, for work
-  // that isn't in the bundle (older, graded). Skipped when ?course= is there.
   assignment: ["locate"],
-  // Not a page: the notifications bell (2026-10-19, public/js/averages-bell.js).
-  // LegacyPage asks for this in the background, after the page has drawn, on
-  // pages that didn't load course updates themselves. Same cache key as Home's,
-  // so it's usually already there.
   bell: ["updates"],
 };
 
-/**
- * Cards that load on their own (2026-10-20, Martin: "make requests for every
- * card and then reveal them when the data comes in").
- *
- * A page no longer waits for these extras: it draws as soon as the bundle is
- * in, each card listed here holds its placeholders, and when that card's own
- * call answers (or fails) the page redraws just that card and it reveals like
- * the rest did. Value: the containers that hold placeholders meanwhile ([] for
- * an extra that only fills in text, like teachers' names).
- *
- * Extras not listed are still waited for (up to EXTRAS_WAIT_MS), because they
- * are the page itself: the calendar's events, the inbox, the directory, a
- * class's folders, its exact gradebook, which class an assignment is in.
- *
- * Every page listed here sets window.__averagesExtraLanded(name), which redraws
- * what that extra feeds. LegacyPage waits for any extra whose page lacks it.
- */
 export const LATE_EXTRAS: Readonly<Record<string, Readonly<Partial<Record<ExtraName, readonly string[]>>>>> = {
   home: { updates: ["#updatesList"], people: [] },
   courses: { people: [] },
@@ -90,7 +47,6 @@ export const LATE_EXTRAS: Readonly<Record<string, Readonly<Partial<Record<ExtraN
 /** A card that's still loading this long after the page drew gives up and shows its "didn't load" state. */
 export const EXTRAS_LATE_GIVE_UP_MS = 20000;
 
-/** The pages about one class: since 2026-10-07 a real class comes as ?id=<section id>. */
 const COURSE_PAGES = new Set(["course-home", "gradebook", "course-materials"]);
 /** An assignment or class id from Schoology or Classroom. */
 const LMS_ID = /^\d{1,24}$/;
@@ -120,10 +76,6 @@ function addDays(d: Date, days: number): Date {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate() + days);
 }
 
-/**
- * The class a page is about: ?course=, or on a class page ?id= (a real
- * class's id, 2026-10-07). "" when there's no usable one.
- */
 export function courseParam(search: string, pageId = ""): string {
   let value = "";
   try {
@@ -320,7 +272,6 @@ export function mergeLateExtra(data: Data, req: Pick<ExtraRequest, "name" | "cou
   return true;
 }
 
-/** "&tz=<zone>" (2026-10-28): Classroom's UTC times land on the student's day (Settings > Time Zone, else this device's). */
 function zoneParam(): string {
   try {
     const w = window as unknown as { averagesTimeZone?: () => string };

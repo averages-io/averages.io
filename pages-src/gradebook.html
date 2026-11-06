@@ -28,19 +28,12 @@
     --grade-good: #2f7d54;
     --grade-mid: #a67a22;
     --grade-bad: #b6432f;
-    /* A/B/C/D/F letter-grade color scale (2026-08-31, per Martin's
-       request) — A and C reuse the existing good/mid tokens above (they
-       already read as "green"/"amber"), F reuses bad ("red"); B and D
-       are new in-between stops so all five letters read as a smooth
-       green→red gradient rather than only three buckets. */
     --grade-b: #5c8a3f;
     --grade-d: #c1602f;
     /* Set per-course at load (see JS setCourseVars), same convention as
        course-home.html — everything specific to "whose gradebook this
        is" reads from these instead of a fixed color, so the one page
        genuinely serves any of the six sample courses via ?course=. */
-    /* Neutral until the class's own color arrives (2026-10-23): this used to be a
-       sample class's gold, which flashed before every real class. */
     --course-color: #6E7582;
     --course-color-dark: #535B6B;
     --course-color-tint: rgba(110, 117, 130, 0.14);
@@ -79,18 +72,6 @@
   *::-webkit-scrollbar-thumb:hover { background-color: rgba(20, 21, 31, 0.45); }
   *::-webkit-scrollbar-corner { background: transparent; }
 
-  /* Declared so the browser themes ITS OWN chrome — scrollbars, the
-
-     overscroll gutter, form controls — against this page rather than
-
-     guessing. Without it Firefox drew a light-theme scrollbar over the
-
-     dark canvas and tinted it (Martin saw it as pink on a blue
-
-     background). LegacyPage's applyStoredTheme() updates both of these
-
-     to match whatever background the user actually saved. */
-
   html {
 
     color-scheme: dark;
@@ -98,7 +79,6 @@
     background-color: #0c0c0e;
 
   }
-
 
   html, body {
     margin: 0;
@@ -112,16 +92,6 @@
     overflow: hidden; /* scrolling now happens inside .page (see below), so
       the scrollbar sits at the edge of the app's own window/card instead of
       out at the browser's outer edge, over the wallpaper margin */
-    /* Neutral black instead of a baked-in accent gradient here —
-       2026-09-11, per Martin. This is only ever visible for a split
-       second on reload/navigation, before applyStoredTheme() (or this
-       page's own appearance-reading script) sets the user's actual
-       saved background over it. The old default was the sample
-       red-orange gradient baked into this file, which read as a real
-       glitch flashing in between pages; a neutral black reads as
-       "still loading" instead, and matches the app's own Black
-       preset (#0c0c0e) so it's not a color that appears nowhere else
-       in the app. */
     background-color: #0c0c0e;
     background-image: none;
     background-size: cover;
@@ -199,9 +169,6 @@
   }
 
   .profile-menu-wrap { position: relative; flex-shrink: 0; }
-  /* No photo: an Apple-style monogram (2026-10-21, Martin: "make the default no pfp letters
-     look more like the apple ones"), the grey gradient and rounded white initials of a contact
-     with no picture. A photo replaces it (set inline as background-image). */
   .profile-btn {
     width: 42px;
     height: 42px;
@@ -220,8 +187,6 @@
     flex-shrink: 0;
   }
 
-  /* A photo has no ring (2026-10-23, Martin: "remove the ugly border if it is a custom upload");
-     the letter avatars keep theirs. Same size: the border goes clear and the photo fills it. */
   .profile-btn.has-photo { border-color: transparent; background-origin: border-box; background-repeat: no-repeat; }
   .profile-menu {
     position: absolute;
@@ -286,14 +251,6 @@
   .grade-hero-block { flex: 1; min-width: 140px; background: var(--panel-inner); border-radius: var(--window-radius-md); padding: 14px 16px; }
   .grade-hero-label { font-size: 0.64rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-faint); margin: 0 0 4px; }
   .grade-hero-val { font-size: 2.1rem; font-weight: 900; font-style: italic; line-height: 1; }
-  /* Descendant selectors, not compound ones — curVal's own letter grade
-     is a separate inner <span class="a|b|c|d|f"> nested inside the
-     #curVal.grade-hero-val element (see the JS below), not an element
-     that carries both classes itself. A pre-existing bug caught while
-     reworking this for A-F coloring (2026-08-31): the old
-     .grade-hero-val.good/.mid/.bad compound selectors had the same
-     mismatch and never actually matched anything, so the current-grade
-     letter has always silently rendered in the default text color. */
   .grade-hero-val .a { color: var(--grade-good); }
   .grade-hero-val .b { color: var(--grade-b); }
   .grade-hero-val .c { color: var(--grade-mid); }
@@ -359,7 +316,6 @@
     font-size: 0.8rem;
   }
   .gb-assign-title { color: var(--text-dark); font-weight: 600; }
-  /* Rows open the assignment (2026-10-04). Buttons, reset to look like the old rows. */
   button.gb-assign-row { width: calc(100% + 16px); margin: 0 -8px; padding: 5px 8px; background: none; border: none; border-radius: var(--window-radius-sm); font: inherit; font-size: 0.8rem; text-align: left; cursor: pointer; color: inherit; }
   button.gb-assign-row:hover { background: var(--panel-inner); }
   button.gb-assign-row:hover .gb-assign-title { text-decoration: underline; text-underline-offset: 2px; }
@@ -371,17 +327,6 @@
     font-style: italic;
     font-weight: 600;
   }
-  /* Demonstrated Skills rows (2026-08-31 rework, corrected 2026-09-01) —
-     per Martin's correction, Skills is now just another GRADEBOOK
-     category (like Tests or Homework), weighted differently, not a
-     separate parallel track — its rows score and display exactly like
-     any other graded assignment (a colored letter + raw fraction, e.g.
-     "A 5/5"), not a qualitative Demonstrated/Developing/Not Yet pill
-     (that pill design was replaced 2026-09-01 after Martin shared a real
-     Schoology gradebook screenshot showing a skills category rendering
-     its items as plain scored assignments). The teacher-note sub-line
-     these rows used to also show was removed the same day, also per
-     Martin — every row uses the plain single-line layout now. */
   .gb-assign-score .a { color: var(--grade-good); }
   .gb-assign-score .b { color: var(--grade-b); }
   .gb-assign-score .c { color: var(--grade-mid); }
@@ -460,10 +405,6 @@
   .nav-link .dot { width: 4px; height: 4px; border-radius: 50%; background: transparent; }
   .nav-link.active .label { color: var(--text-dark); }
   .nav-link.active .dot { background: var(--accent); }
-  /* ---------- "More" overflow (2026-10-01, per Martin: "if the text has
-     to get ... we should add a more button on the far right side with a
-     list of the other options"). Labels never truncate: when they would,
-     the rightmost pages move into the More menu instead. ---------- */
   .nav-link[hidden], .nav-more[hidden], .nav-more-menu[hidden] { display: none; }
   /* While the More menu is open the whole bar sits above everything else on
      the page (sticky headers, pop-ups, the edit button go up to z-index 90),
@@ -526,8 +467,6 @@
   .nav-more-item.active { color: var(--text-dark); }
   .nav-more-item.active span { position: relative; display: inline-block; padding-bottom: 6px; margin-bottom: -6px; }
   .nav-more-item.active span::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; border-radius: 999px; background: var(--accent); }
-  /* Labels sit centered in the bar; the active page is underlined in the
-     accent color instead of marked with a dot (2026-10-01, per Martin). */
   .app-nav-inner .nav-link, .app-nav-inner .nav-more { justify-content: center; gap: 0; padding-top: 10px; padding-bottom: 10px; }
   .app-nav-inner .nav-link .dot, .app-nav-inner .nav-more .dot { display: none; }
   .app-nav-inner .nav-link .label, .app-nav-inner .nav-more .label { position: relative; padding: 6px 0; }
@@ -560,15 +499,6 @@
     transition: transform 0.15s ease;
   }
   .modal-overlay.show .modal-box { transform: translateY(0); }
-  /* .wide (the Grade Calculator) scrolls internally — the scrolling has
-     to happen on an inner wrapper (.modal-box-scroll), not this element
-     itself, or the browser's native scrollbar renders at this box's flat
-     edge and pokes out past its own rounded corners (reported 2026-09-01
-     by Martin — a screenshot showed the scrollbar thumb sticking out
-     above/below the modal). This element now just clips (overflow:
-     hidden + the border-radius it already had) and un-pads itself so all
-     padding — and the actual overflow-y: auto — moves to the inner div,
-     whose content therefore never draws past the rounded corner. */
   .modal-box.wide { max-width: 520px; max-height: 85vh; overflow: hidden; padding: 0; }
   .modal-box-scroll { max-height: 85vh; overflow-y: auto; padding: 22px 24px; }
   .modal-close {
@@ -626,28 +556,12 @@
     font-weight: 700;
     font-size: 0.78rem;
     text-align: right;
-    /* Extra breathing room before the "/ out-of-points" text next to it
-       (2026-09-01, per Martin) — the input and its label used to sit
-       flush against each other. */
     margin-right: 6px;
   }
   .calc-input:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
   .calc-input.hyp { background: rgba(217, 74, 43, 0.08); border-color: var(--accent); }
-  /* Fixed width (2026-09-01, per Martin: the score boxes didn't line up
-     into a clean column) — without this, "/ 5" vs "/ 50" are different
-     text widths, and since .calc-assign-score is pinned to the row's
-     right edge, that difference pushed the input box itself left or
-     right row to row. A fixed-width label keeps every input's left edge
-     in the same column regardless of how many digits the point value has. */
   .calc-out-of { display: inline-block; width: 30px; text-align: left; color: var(--text-muted); font-weight: 700; }
   .calc-divider { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
-  /* Final Exam mini-calculator (reworked 2026-09-01, per Martin, to match
-     a reference "Final Grade Calculator" tool he shared) — used to be
-     gated behind an "Include a hypothetical final assessment" checkbox
-     with an explanatory paragraph; both are gone. The three fields are
-     always visible and always live: Current grade / Grade you want /
-     Final exam weight, solving for the score still needed rather than
-     projecting a score forward like the category inputs above do. */
   .calc-final-heading { font-weight: 800; font-size: 0.82rem; color: var(--text-dark); margin: 0 0 8px; }
   .calc-final-inputs { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
   .calc-final-field { flex: 1 1 100px; min-width: 90px; }
@@ -699,7 +613,6 @@
     .gb-open-calc-btn { width: 100%; justify-content: center; }
     .grade-hero-row { flex-direction: column; }
   }
-  /* ---------- Course banner + tabs, shared with the course hub (2026-10-01) ---------- */
   .page { max-width: 1120px; }
   .back-link { display: none; }
   .sheet { background: var(--panel-bg); border-radius: var(--window-radius-lg); overflow: hidden; }
@@ -737,8 +650,6 @@
   @media (max-width: 560px) { .sheet-score { padding: 16px; gap: 24px; } .sheet-letter, .sheet-grade-val, .sheet-score .grade-hero-val { font-size: 2.4rem; } }
   .section-head-row .gb-open-calc-btn { margin-left: auto; }
   #gradingPeriodNote { margin: 0 0 12px; }
-  /* ---------- Course pages round 4 (2026-10-01) ---------- */
-  /* no italics on the course pages (Martin's rule) */
   html body * { font-style: normal !important; }
   /* "Back to ..." sits in the profile button's row, left side, no arrow */
   .topbar.hub-topbar, .topbar.sheet-topbar { justify-content: space-between; align-items: center; margin: 0 0 12px; }
@@ -746,9 +657,7 @@
   .topbar .back-link:hover { background: rgba(255,255,255,0.2); color: #fff; }
   .topbar .back-link:focus-visible { outline: none; box-shadow: 0 0 0 2px #fff; text-decoration: none; }
   .topbar .back-link svg { display: none; }
-  /* grade box: no stretching, same size as the hub's (2026-10-02) */
   .sheet-score .grade-hero-block { flex: none; min-width: 0; }
-  /* Teacher contact card (2026-10-02): same card as the Contacts page */
   .teacher-link { background: none; border: none; padding: 0; margin: 0; font: inherit; color: inherit; cursor: pointer; text-decoration: underline; text-decoration-color: rgba(255,255,255,0.45); text-underline-offset: 3px; }
   .teacher-link:hover { text-decoration-color: currentColor; }
   .teacher-link:focus-visible { outline: none; box-shadow: 0 0 0 2px currentColor; border-radius: 4px; }
@@ -779,9 +688,7 @@
   .tc-btn.secondary:hover { background: var(--border); }
   .tc-btn[hidden] { display: none; }
   .tc-row[hidden] { display: none; }
-  /* Signed in with nothing to list (2026-10-06). */
   .gb-empty, .calc-empty { margin: 14px 0 4px; font-size: 0.8rem; font-weight: 700; color: var(--text-faint); }
-  /* Back link (2026-10-03): same as every other page, plain text with the arrow, no bubble */
   .topbar .back-link { gap: 5px; padding: 0; background: none; border-radius: 0; color: rgba(255,255,255,0.82); font-size: 0.76rem; font-weight: 800; }
   .topbar .back-link:hover { background: none; color: #fff; }
   .topbar .back-link:focus-visible { box-shadow: none; text-decoration: underline; }
@@ -844,7 +751,6 @@
         <div class="section-head-row">
           <h2>Assignments</h2>
           <span class="course-total" id="gradeSummaryTotal"></span>
-          <!-- Hidden until there's a gradebook to calculate with (2026-10-23): renderCategories() shows it. -->
           <button class="gb-open-calc-btn" id="openCalcBtn" type="button" style="display:none">
             <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="11" x2="8.01" y2="11"/><line x1="12" y1="11" x2="12.01" y2="11"/><line x1="16" y1="11" x2="16.01" y2="11"/><line x1="8" y1="15" x2="8.01" y2="15"/><line x1="12" y1="15" x2="12.01" y2="15"/><line x1="16" y1="15" x2="16.01" y2="15"/><line x1="8" y1="19" x2="8.01" y2="19"/><line x1="12" y1="19" x2="12.01" y2="19"/></svg>
             Final Grade Calculator
@@ -859,7 +765,6 @@
 
   <div class="grade-popup" id="gradePopup" role="tooltip"></div>
 
-  <!-- Teacher contact card (2026-10-02): the Contacts page's card -->
   <div class="tc-overlay" id="teacherCard">
     <div class="tc-box" role="dialog" aria-modal="true" aria-labelledby="tcName">
       <button class="tc-close" id="tcClose" type="button" aria-label="Close contact info">✕</button>
@@ -936,10 +841,6 @@
   </nav>
 
   <script>
-    // ---- Links by id (2026-10-07, Martin) ----
-    // A real class (Schoology/Classroom ids are digits) links as
-    // assignment?id=<id> and course-home?id=<section id>; the sample classes
-    // (word ids like "apchem") keep ?course=&title=. Pages read both.
     function avgIsId(v) { return /^\d{1,24}$/.test(String(v == null ? '' : v)); }
     function avgCourseQ(course) { return (avgIsId(course) ? 'id=' : 'course=') + encodeURIComponent(course == null ? '' : course); }
     function avgAssignHref(course, title, id, extra) {
@@ -948,11 +849,6 @@
       return `assignment.html?course=${encodeURIComponent(course == null ? '' : course)}&title=${encodeURIComponent(title || '')}${avgIsId(id) ? `&id=${id}` : ''}${extra}`;
     }
 
-    // Potato PC Mode on every page (2026-10-04, per Martin). The saved
-    // setting turns off all CSS animations and transitions, makes animate()
-    // calls and smooth scrolling instant, and drops the slanted page title.
-    // Same code as app/lib/theme-boot.ts, which runs it before first paint in
-    // the app; this copy covers the preview and pages theme-boot skips.
     (function () {
     var POTATO_CSS = "body.potato-mode,body.potato-mode *,body.potato-mode *::before,body.potato-mode *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important;filter:none!important;text-shadow:none!important}html:has(body.potato-mode){scroll-behavior:auto!important}body.potato-mode,body.potato-mode *{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif!important}body.potato-mode h1.title{font-style:normal!important;transform:none!important}body.potato-mode .trend.has-popup:focus-visible{outline:2px solid currentColor;outline-offset:2px}";
     function potatoOn() { return !!(document.body && document.body.classList.contains("potato-mode")); }
@@ -1073,7 +969,6 @@
     })();
   </script>
 
-
   <!-- Grade Calculator — same site-map.md Final Grade Calculator spec as
        grades.html's per-course modal, copied verbatim; scoped to this
        page's own single course, so there's no course picker to wire. -->
@@ -1113,15 +1008,6 @@
   </div>
 
   <script>
-    // ------------------------------------------------------------------
-    // Shared appearance (accent + background) — 2026-09-08, per Martin:
-    // "wallpapers + accent colors don't save across pages." Settings'
-    // Appearance section (and onboarding's Theme step) are the only
-    // writers of schoolagy_appearance; every other real app page,
-    // including this one, applies whatever's saved there, read-only, on
-    // its own load — same shared-localStorage-record pattern already
-    // used for schoolagy_dark_mode/schoolagy_profile.
-    // ------------------------------------------------------------------
     (function () {
       function darken(hex, amount) {
         const n = parseInt(hex.slice(1), 16);
@@ -1165,22 +1051,6 @@
     // architecture-decisions.md's shared-stylesheet note).
     // ------------------------------------------------------------------
 
-    // ------------------------------------------------------------------
-    // Course customization persistence — added 2026-09-08. Renaming,
-    // recoloring, or reordering a course (in home.html's Customize editor
-    // or courses.html's Reorder tool — the only places that WRITE these)
-    // used to be invisible everywhere else, since every page just
-    // re-generated its own hardcoded COURSES array from scratch on load.
-    // schoolagy_course_custom holds per-course name/color overrides
-    // (object keyed by course id, only actually-customized courses
-    // present); schoolagy_course_order holds a full custom ordering of
-    // course ids (array), written only once the user has actually
-    // reordered. This page only READS both — applyCourseCustomizationsInPlace()
-    // is called right after the raw array literal below, mutating COURSES
-    // in place, so it's already the customized/reordered version before
-    // anything on this page ever renders it. Same defensive
-    // try/catch-per-key style as AVERAGES_DARK_MODE_KEY in settings.html.
-    // ------------------------------------------------------------------
     const AVERAGES_COURSE_CUSTOM_KEY = 'schoolagy_course_custom';
     const AVERAGES_COURSE_ORDER_KEY = 'schoolagy_course_order';
     function loadCourseCustom() {
@@ -1197,12 +1067,6 @@
       } catch {}
       return null;
     }
-    // Subject table (2026-10-01, per Martin): each course gets a color that
-    // fits its subject, picked from its name. First match wins, so specific
-    // subjects come before broad ones ("Computer Science" before "Science",
-    // "Physical Education" before "Physics"). A color the student picked in
-    // the course's info pop-up still wins over this. No match keeps the
-    // course's own color. All colors pass 4.5:1 with white text.
     const COURSE_SUBJECTS = [
       [/\bchem/, '🧪', '#1b7f67'],
       [/\bbio|anatom|physiolog/, '🧬', '#387f33'],
@@ -1261,12 +1125,6 @@
         courses.splice(0, courses.length, ...ordered);
       }
     }
-    // ------------------------------------------------------------------
-    // Teacher contact card (2026-10-02, per Martin): the teacher's name on the
-    // banner (and in Course info) opens the same card as the Contacts page.
-    // CONTACTS is the school directory: live data replaces this sample at
-    // build time, same as contacts.html. Only "my teachers" are needed here.
-    // ------------------------------------------------------------------
     const CONTACTS = [
       { id: 'cho', name: 'Mr. Cho', role: 'Teacher', dept: 'English Department', school: 'Lincoln High School', email: 'j.cho@lincolnusd.org', phone: '(555) 201-4471', color: '#6b8f5e', category: 'myTeachers' },
       { id: 'alvarez', name: 'Mr. Alvarez', role: 'Teacher', dept: 'Science Department', school: 'Lincoln High School', email: 'r.alvarez@lincolnusd.org', phone: '(555) 201-4482', color: '#a67a22', category: 'myTeachers' },
@@ -1275,8 +1133,6 @@
       { id: 'ortiz', name: 'Sra. Ortiz', role: 'Teacher', dept: 'World Languages Department', school: 'Lincoln High School', email: 'm.ortiz@lincolnusd.org', phone: '(555) 201-4515', color: '#8a6ba1', category: 'myTeachers' },
       { id: 'reyes', name: 'Coach Reyes', role: 'Teacher', dept: 'Physical Education Department', school: 'Lincoln High School', email: 'd.reyes@lincolnusd.org', phone: '(555) 201-4526', color: '#4f8c8a', category: 'myTeachers' }
     ];
-    // Signed in with real data (2026-10-06). A demo sign-in also has
-    // __AVERAGES__ (with an empty bundle) and shows the samples, like the preview.
     const AV_LIVE = !!(window.__AVERAGES__ && window.__AVERAGES__.data) && window.__AVERAGES__.mode !== 'demo';
     const AV_DATA = AV_LIVE ? window.__AVERAGES__.data : {};
     const AV_CLASSROOM = AV_LIVE && (AV_DATA.platform === 'classroom' || AV_DATA.PEOPLE_PLATFORM === 'classroom');
@@ -1291,8 +1147,6 @@
       const list = Array.isArray(CONTACTS) ? CONTACTS : [];
       const exact = list.find(c => c && String(c.name).toLowerCase() === String(name).toLowerCase());
       if (exact) return exact;
-      // Live contacts list the classes they teach (2026-10-06): this class's
-      // one teacher, when the name on the class doesn't match exactly.
       const teaching = courseId ? list.filter(c => c && Array.isArray(c.courses) && c.courses.map(String).includes(String(courseId))) : [];
       if (teaching.length === 1) return teaching[0];
       const last = tcLastName(name);
@@ -1306,11 +1160,8 @@
       const set = (id, v) => { document.getElementById(id).textContent = v || '—'; };
       const avatar = document.getElementById('tcAvatar');
       avatar.textContent = tcInitials(c.name); avatar.style.background = color;
-      if (window.AveragesAvatar) window.AveragesAvatar.paint(avatar, c.name);   // their own color (2026-10-23)
+      if (window.AveragesAvatar) window.AveragesAvatar.paint(avatar, c.name);
       set('tcName', c.name); set('tcRole', c.role || c.dept); set('tcDept', c.dept); set('tcSchool', c.school); set('tcEmail', c.email); set('tcPhone', c.phone);
-      // Signed in (2026-10-06): rows the school doesn't share are left out,
-      // "Department" is the classes they teach here, and Message is only for
-      // a Schoology teacher (Classroom teachers can't be messaged).
       if (AV_LIVE) {
         [['tcDept', c.dept], ['tcSchool', c.school], ['tcEmail', c.email], ['tcPhone', c.phone]].forEach(([id, v]) => {
           const row = document.getElementById(id).closest('.tc-row');
@@ -1475,38 +1326,6 @@
           { title: 'Wellness Log', score: 10, points: 10, graded: true },
           { title: 'Reflection', score: 9, points: 10, graded: true },
         ]},
-        // Demonstrated Skills (2026-08-31, reworked same day per Martin's
-        // correction) — originally built as a separate parallel
-        // competency track sitting outside the weighted grade entirely.
-        // Martin: "demonstrated skills is a part of the gradebook, its
-        // just a catagory just like assignments, they both are grades,
-        // just diff catagories and weighted diff." So this is now a
-        // normal GRADEBOOK category like any other, just with a rubric
-        // scale (Demonstrated/Developing/Not Yet Demonstrated) instead of
-        // a raw point score — each level is still given a real
-        // score/points pair (10/8/6 out of 10) so it feeds the exact same
-        // weighted-average math every other category uses; `status`/
-        // `note` are extra fields renderCategories()/the Calculator read
-        // to show the qualitative pill + teacher note instead of a plain
-        // fraction. The other three PE categories' weights were scaled
-        // down from 50/30/20 to make room for this one at 20%, so the
-        // course's categories still sum to 100.
-        // Scored out of 5, not 10 (corrected 2026-09-01) — per Martin's
-        // real Schoology gradebook screenshot, a skills-rubric item there
-        // is a normal small-point assignment (his example: "Unit 1
-        // Lesson 1 ... A 5/5"), not a 10-point one. Scores below keep the
-        // same percentages as before (100/80/60%) so the category
-        // average is unchanged, just expressed out of 5 instead of 10.
-        // Qualitative rubric labels (Demonstrated/Developing/Not Yet
-        // Demonstrated) removed 2026-09-01 per Martin: real Schoology
-        // doesn't expose that wording to students/parents, only the
-        // score. The `status` field (and the SKILL_LABEL lookup that
-        // rendered it) is gone; these rows are now indistinguishable in
-        // shape from any other graded assignment — just score/points/
-        // graded. The teacher `note` field these rows used to also carry
-        // (rendered as a sub-line under the title) was removed the same
-        // day too, also per Martin — real Schoology doesn't show a note
-        // like that either.
         { name: 'Demonstrated Skills', weight: 20, assignments: [
           { title: 'Teamwork & Communication', score: 5, points: 5, graded: true },
           { title: 'Sportsmanship', score: 5, points: 5, graded: true },
@@ -1517,9 +1336,6 @@
       ]},
     };
 
-    // Signed in (2026-10-06): GRADEBOOK is the bundle's, with this class's
-    // exact one from the gradebook extra when it came; never the samples.
-    // Each entry is tidied once so nothing below meets a missing number.
     if (AV_LIVE) {
       if (!AV_DATA.GRADEBOOK || typeof AV_DATA.GRADEBOOK !== 'object') Object.keys(GRADEBOOK).forEach(k => { delete GRADEBOOK[k]; });
       Object.keys(GRADEBOOK).forEach(k => {
@@ -1536,8 +1352,6 @@
         })) };
       });
     }
-    // A weighted class leaves 0-weight categories out ("No category", say);
-    // a class with no weights at all counts every point (2026-10-06).
     function gbWeighted(gb) { return !!gb && Array.isArray(gb.categories) && gb.categories.some(c => Number(c.weight) > 0); }
     function gbWeightLabel(cat, weighted) {
       if (Number(cat.weight) > 0) return `${cat.weight}% of grade`;
@@ -1545,13 +1359,6 @@
     }
     const GRADING_PERIOD = 'HS-Fall: 2026-08-17 - 2026-12-18';
 
-    // A/B/C/D/F color coding (2026-08-31, per Martin's request) — each
-    // letter tier gets its own distinct color instead of the old 3-way
-    // good/mid/bad grouping (which lumped B and C together, and D with
-    // F). GRADE_COLOR is the single source of truth for both the CSS
-    // class name (gradeBand) and the actual color value (for the one
-    // place — the Calculator's hero letter — that sets color via inline
-    // style rather than a class).
     const GRADE_COLOR = { a: 'var(--grade-good)', b: 'var(--grade-b)', c: 'var(--grade-mid)', d: 'var(--grade-d)', f: 'var(--grade-bad)' };
     function gradeBand(letter) {
       const l = letter[0];
@@ -1576,18 +1383,9 @@
       if (pct >= 60) return 'D-';
       return 'F';
     }
-    // Category progress bar coloring (2026-09-01, per Martin: "if the
-    // grade of a category is under 90, start making the color red...
-    // dark red...if your grade is a F or lower") — a continuous
-    // green-through-dark-red gradient scoped to just the .gb-bar-fill
-    // bars, distinct from the discrete 5-tier GRADE_COLOR/gradeBand
-    // system used for letter-grade text elsewhere on this page. Fully
-    // green at 90%+ (matches the letter-grade "A" cutoff), interpolating
-    // through amber around the mid-70s, reaching fully dark red by 60%
-    // (the top of the F range) and staying there for anything lower.
     const BAR_GREEN = [47, 125, 84];    // matches --grade-good
     const BAR_AMBER = [212, 130, 34];   // transitional midpoint
-    const BAR_DARKRED = [122, 36, 26];  // darker than --grade-bad on purpose — this is the "F or lower" color Martin asked for
+    const BAR_DARKRED = [122, 36, 26];
     function lerpChannel(a, b, t) { return Math.round(a + (b - a) * t); }
     function lerpRGB(c1, c2, t) { return `rgb(${lerpChannel(c1[0], c2[0], t)}, ${lerpChannel(c1[1], c2[1], t)}, ${lerpChannel(c1[2], c2[2], t)})`; }
     function barColorForPct(pct) {
@@ -1605,7 +1403,7 @@
     // falling back to PE since that's this page's own wireframe example
     // (Gradebook.pdf was literally titled "PE Gradebook").
     // ------------------------------------------------------------------
-    const courseId = (q => q.get('course') || (avgIsId(q.get('id')) ? q.get('id') : '') || 'pe')(new URLSearchParams(location.search));   // ?id= since 2026-10-07
+    const courseId = (q => q.get('course') || (avgIsId(q.get('id')) ? q.get('id') : '') || 'pe')(new URLSearchParams(location.search));
     const course = findCourse(courseId) || COURSES[0];
 
     function setCourseVars() {
@@ -1626,8 +1424,6 @@
       window.location.href = `course-home.html?${avgCourseQ(course.id)}`;
     });
 
-    // Current and Predicted (a function since 2026-10-27, so live grades can
-    // paint them again; data-live marks the values that roll).
     function paintHero() {
       const id = escapeHtml(course.id);
       document.getElementById('curVal').innerHTML = `<span class="${course.grade === '—' ? '' : gradeBand(course.grade)}" data-live="${id}:grade">${escapeHtml(course.grade)}</span>${course.grade === '—' ? '' : `<span class="grade-hero-pct" data-live="${id}:pct">${escapeHtml(course.pct)}%</span>`}`;
@@ -1635,28 +1431,9 @@
       document.getElementById('predBlock').setAttribute('aria-label', `Why is ${course.name} predicted ${course.predicted}, ${course.predictedPct} percent? Show reasoning.`);
     }
     paintHero();
-    // The grading period is sample text: the API doesn't send one (2026-10-06).
     if (AV_LIVE) document.getElementById('gradingPeriodNote').style.display = 'none';
     else document.getElementById('gradingPeriodNote').textContent = `Grading period: ${GRADING_PERIOD}`;
 
-    // Assignments — the same read-only category/weight/progress-bar/
-    // assignment-row breakdown as grades.html's Gradebook pop-out,
-    // rendered as a full page section instead of a modal.
-    //
-    // Every graded row shows a colored letter grade (via
-    // gradeBand/GRADE_COLOR, derived from its own score/points through
-    // letterFromPct) in front of its raw fraction, e.g. "A 5/5" — this
-    // used to be Demonstrated Skills-only, now every assignment in every
-    // category gets it (2026-09-01, per Martin). Demonstrated Skills rows
-    // used to also carry a teacher-note sub-line under the title — that
-    // was removed the same day (also per Martin), so every row now uses
-    // the same plain one-line layout regardless of category.
-    //
-    // The category progress bar is colored on barColorForPct's continuous
-    // green-through-dark-red scale (see that function above), not a flat
-    // course-accent color or the discrete letter-grade bucket — a
-    // category with no graded work yet falls back to a neutral border
-    // color rather than implying an F.
     function categoryAverage(assignments) {
       let earned = 0, possible = 0;
       assignments.forEach(a => { if (a.graded) { earned += a.score; possible += a.points; } });
@@ -1700,17 +1477,11 @@
       }).join('');
     }
     renderCategories();
-    // Live grades (2026-10-27, public/js/averages-live.js): this class's grade
-    // moved while the page was open. `course` and GRADEBOOK are already
-    // updated in place (GRADEBOOK once the full grades land, a moment later).
     window.__averagesLiveGrades = function (changed) {
       if (!changed.includes(String(course.id))) return;
       paintHero();
       renderCategories();
     };
-    // Clicking a row opens that assignment (2026-10-04, per Martin). The row's
-    // graded state rides along in sessionStorage (this tab only, never the URL)
-    // for items assignment.html has no record of.
     document.getElementById('gbCategories').addEventListener('click', e => {
       const row = e.target.closest('.gb-assign-row[data-idx]');
       if (!row) return;
@@ -1735,9 +1506,6 @@
       if (hi - lo < 20) { hi = Math.min(100, lo + 20); }
       return [lo, hi];
     }
-    // Grades given on the same day become one point: their average, with
-    // the date labeled "Aug 18 ×3" (2026-10-01). Otherwise three grades on
-    // one day drew as a zigzag across three fake "days".
     function groupSameDay(h) {
       const days = [];
       h.points.forEach((p, i) => {
@@ -1862,26 +1630,11 @@
 
     function assignKey(catName, title) { return catName + '::' + title; }
 
-    // A short muted qualifier shown after an assignment's title: "(not
-    // yet graded)" for a real ungraded item, context for what the
-    // pre-filled/blank number means. (The Demonstrated Skills rubric-
-    // label qualifier this used to also show, e.g. "(Demonstrated)", was
-    // removed 2026-09-01 along with the `status` field it read — per
-    // Martin, that wording isn't something real Schoology surfaces.)
     function calcAssignQualifier(a) {
       if (!a.graded) return ` <span style="color:var(--text-faint); font-weight:600;">(not yet graded)</span>`;
       return '';
     }
 
-    // Every assignment gets an editable input now (2026-08-31, per
-    // Martin's request to be able to change any grade — not just fill in
-    // an ungraded one — to see the hypothetical effect on the overall
-    // grade). A graded assignment's input is pre-filled with its real
-    // score; an ungraded one starts blank, same as before. Either way,
-    // `calcEdits` only holds what the user has actually typed — an
-    // untouched graded input still uses the real score in
-    // recomputeCalc() below, so simply opening the Calculator and not
-    // touching anything reproduces the real grade exactly.
     function renderCalcCategories() {
       const gb = GRADEBOOK[course.id];
       if (!gb || !Array.isArray(gb.categories) || !gb.categories.length) { calcCategories.innerHTML = '<p class="calc-empty">Nothing graded in this class yet.</p>'; return; }
@@ -1912,13 +1665,6 @@
       }).join('');
     }
 
-    // The category breakdown always reflects its own real weights now —
-    // the old "scale categories down to make room for a hypothetical
-    // final" behavior went away with the checkbox it was tied to
-    // (2026-09-01). The Final Exam section below is a separate, simpler
-    // calculation: given a current grade, a target grade, and how much
-    // the final is worth, solve for the score still needed — it doesn't
-    // feed back into the category list above.
     function recomputeCalc() {
       const gb = GRADEBOOK[course.id];
       const cats = gb && Array.isArray(gb.categories) ? gb.categories : [];
@@ -1939,17 +1685,12 @@
           // same as before (doesn't count as a zero).
           if (scoreToUse !== null) { earned += scoreToUse; possible += a.points; }
         });
-        // A category with nothing counted yet is left out and the other
-        // weights scale up (2026-10-05), as in Google Classroom.
         if (possible > 0) {
           const w = Number(cat.weight) > 0 ? Number(cat.weight) : 0;
           overall += (earned / possible) * 100 * w; weightUsed += w;
           allEarned += earned; allPossible += possible;
         }
       });
-      // Weighted: the categories with work, scaled. No weights at all (a
-      // total-points class): every point counts. Nothing counted yet: "—",
-      // not an F (2026-10-06).
       const raw = weighted ? (weightUsed > 0 ? overall / weightUsed : null) : (allPossible > 0 ? (allEarned / allPossible) * 100 : null);
       if (raw === null || !isFinite(raw)) {
         calcHeroLetter.textContent = '—';
@@ -1970,10 +1711,6 @@
       calcHeroLetter.textContent = letter;
       calcHeroLetter.style.color = GRADE_COLOR[gradeBand(letter)];
       calcHeroPct.textContent = `${pct.toFixed(1)}%`;
-      // "Current grade" until an assignment's real score is actually
-      // edited (calcEdits empty means every input is still showing its
-      // real value) — flips to "Projected grade" the moment there's a
-      // hypothetical in play, per Martin.
       calcHeroLabel.textContent = Object.keys(calcEdits).length > 0 ? 'Projected grade' : 'Current grade';
 
       calcCategories.querySelectorAll('.calc-category').forEach((box, i) => {
@@ -1988,11 +1725,6 @@
       updateFinalAnswer();
     }
 
-    // Final Exam mini-calculator (2026-09-01, per Martin's reference
-    // screenshot of a standalone "Final Grade Calculator" tool) — solves
-    // for the score needed on the final, the reverse of the category
-    // calculator above (which projects a grade forward from scores).
-    // overall = current*(1 - w) + needed*w  →  needed = (want - current*(1-w)) / w
     function updateFinalAnswer() {
       const current = Number(calcFinalCurrent.value);
       const wantRaw = calcFinalWant.value;
@@ -2032,10 +1764,6 @@
       const input = e.target.closest('.calc-input');
       if (!input) return;
       const key = input.dataset.key;
-      // No upper clamp (2026-09-01, per Martin: some teachers give extra
-      // credit, so a hypothetical score can legitimately exceed the
-      // assignment's own point value) — only floor at 0, since a
-      // negative score isn't meaningful here.
       let val = input.value;
       if (val !== '' && Number(val) < 0) { val = '0'; input.value = val; }
       calcEdits[key] = val;
@@ -2071,22 +1799,12 @@
     // Profile menu — same behavior as every other page.
     // ------------------------------------------------------------------
     const profileBtn = document.getElementById('profileBtn');
-    // Shared profile photo/name (2026-09-07) — settings.html's Edit
-    // Profile modal is the only place this is ever set, but every other
-    // page's top-right profile button used to just show a fixed "M" no
-    // matter what was saved there: the button never read anything back,
-    // so a photo you set in Settings was invisible the moment you left
-    // it. schoolagy_profile is the same localStorage record
-    // settings.html writes on every save; this is read-only here.
     (function () {
       var profile = null;
       try {
         var raw = localStorage.getItem('schoolagy_profile');
         if (raw) profile = JSON.parse(raw);
       } catch (e) {}
-      // No name saved on this device (new device, or signed out with Sync
-      // off): the account's own name from the sign-in, never a sample name
-      // (2026-10-14; this used to fall back to "Martin" / "M").
       if (!profile || !profile.name || !String(profile.name).trim()) profile = Object.assign({}, profile, { name: window.__AVERAGES_NAME__ || '' });
       if (profile.photo) {
         profileBtn.style.backgroundImage = 'url("' + profile.photo + '")';
@@ -2095,7 +1813,7 @@
         profileBtn.textContent = '';
         profileBtn.classList.add('has-photo');
       } else if (profile.name) {
-        if (window.AveragesAvatar) window.AveragesAvatar.paint(profileBtn, profile.name);   // initials on their own color (2026-10-23, averages-avatar.js)
+        if (window.AveragesAvatar) window.AveragesAvatar.paint(profileBtn, profile.name);
         else profileBtn.textContent = (function (n) { var p = String(n).trim().split(/\s+/).filter(Boolean); var f = function (w) { return w ? Array.from(w)[0] : ''; }; return (f(p[0]) + (p.length > 1 ? f(p[p.length - 1]) : '')).toUpperCase(); })(profile.name);
       }
     })();
@@ -2112,9 +1830,6 @@
       });
     });
 
-    // ------------------------------------------------------------------
-    // Course banner + tabs, shared with the course hub (2026-10-01).
-    // ------------------------------------------------------------------
     (function fillCourseSheet() {
       const SHEET_EMOJI_SVG = {
         "🧪": "<svg aria-hidden=\"true\" focusable=\"false\" viewBox=\"0 0 36 36\"><path fill=\"#CCD6DD\" d=\"M14.563 14.414 25.47 3.505l6.961 6.962-10.908 10.908z\"/><path fill=\"#68E090\" d=\"M8.103 34.399C2.5 34 1.5 30.062 1.635 27.932c.322-5.07 15.601-16.551 15.601-16.551l12.517 1.93c.001 0-17.389 21.392-21.65 21.088z\"/><path fill=\"#8899A6\" d=\"M32.326 3.708C29.405.787 26.104-.649 24.954.502c-.013.013-.022.031-.034.044-.006.006-.015.008-.021.014L2.295 23.164a7.43 7.43 0 0 0-2.19 5.288c0 1.997.778 3.875 2.19 5.287a7.429 7.429 0 0 0 5.288 2.19 7.426 7.426 0 0 0 5.287-2.189l22.604-22.604c.007-.007.009-.016.015-.023.013-.012.03-.02.043-.033 1.151-1.15-.285-4.451-3.206-7.372zM10.75 31.619c-.846.846-1.97 1.311-3.166 1.311s-2.321-.466-3.167-1.312a4.448 4.448 0 0 1-1.312-3.167c0-1.196.466-2.32 1.311-3.166L25.412 4.29c.622 1.144 1.56 2.394 2.749 3.584 1.189 1.189 2.44 2.127 3.584 2.749L10.75 31.619z\"/><path fill=\"#17BF63\" d=\"M29.196 13.144c-.058.379-2.627.751-5.691.343-3.063-.408-5.482-1.223-5.403-1.82.08-.597 2.627-.751 5.691-.343s5.495 1.224 5.403 1.82zM10.84 23.247a.794.794 0 1 1-1.123-1.124.794.794 0 0 1 1.123 1.124zm3.317 2.615a1.298 1.298 0 1 1-1.835-1.836 1.298 1.298 0 0 1 1.835 1.836zm1.677-5.324a1.222 1.222 0 0 1-1.726-1.726 1.22 1.22 0 1 1 1.726 1.726zm-6.868 8.858a1.489 1.489 0 1 1-2.105-2.106 1.489 1.489 0 0 1 2.105 2.106zm11.396-9.158a1.058 1.058 0 1 1-1.496-1.497 1.058 1.058 0 0 1 1.496 1.497zm-1.207-4.288a.693.693 0 1 1-.979-.98.693.693 0 0 1 .979.98z\"/><ellipse cx=\"30.817\" cy=\"5.223\" fill=\"#CCD6DD\" rx=\"1.184\" ry=\"4.847\" transform=\"rotate(-45.001 30.817 5.223)\"/></svg>",
@@ -2169,7 +1884,6 @@
       }
       const subject = (typeof courseSubject === 'function') ? courseSubject(course.name) : null;
       const emoji = course.emoji || (subject ? subject[1] : '📚');
-      // Potato mode (2026-10-20): the plain emoji character, not the drawn picture.
       if (document.body.classList.contains('potato-mode')) el('sheetEmoji').textContent = SHEET_EMOJI_SVG[emoji] ? emoji : '📚';
       else el('sheetEmoji').innerHTML = SHEET_EMOJI_SVG[emoji] || SHEET_EMOJI_SVG['📚'];
       el('sheetTitle').textContent = course.name;
@@ -2180,8 +1894,6 @@
       if (course.code) meta.push(course.code);
       el('sheetMeta').textContent = meta.join(' · ');
       linkTeacherIn(el('sheetMeta'), course.teacher, course.name);
-      // Cards that load on their own (2026-10-20): the teacher's name (and the
-      // directory behind the teacher card) comes in after the page draws.
       window.__averagesExtraLanded = function (name) {
         if (name !== 'people' || !window.__AVERAGES__ || !window.__AVERAGES__.data) return;
         const data = window.__AVERAGES__.data;
@@ -2206,11 +1918,6 @@
     })();
   </script>
   <script>
-    // Back link (2026-10-01, per Martin: "where it returns to ... is always
-    // wrong"). Every page records itself in a short per-tab trail; a page's
-    // back link then says and goes to the page before it ("Back to AP
-    // Chemistry Hub", "Back to Grades"...). With no trail (the page was
-    // opened directly) the page's own default back link is left alone.
     (function () {
       const SELF = 'gradebook.html';
       const KEY = 'averages_nav_trail';

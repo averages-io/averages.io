@@ -1,16 +1,5 @@
-/**
- * Tests for the per-page extras (2026-10-06).
- *
- * Run: node --experimental-strip-types --no-warnings scripts/extras.test.mjs
- * (--no-warnings only hides Node's notes about loading .ts files.)
- *
- * app/lib/extras.ts is pure (which calls a page makes, cache keys, how each
- * answer lands in the page's data) and is tested directly. loadExtras() and
- * the cache clearing in app/lib/averages.ts are tested against a fake
- * window, fetch and sessionStorage; averages.ts imports "./extras" without an
- * extension (the app's bundler resolves it), so a small resolve hook adds the
- * ".ts" for Node.
- */
+// Tests for the per-page extras.
+// Run: node --experimental-strip-types --no-warnings scripts/extras.test.mjs
 import assert from "node:assert/strict";
 import { register } from "node:module";
 
@@ -39,7 +28,7 @@ await test("each page asks for what the contract lists", () => {
   assert.deepEqual(names("home"), ["people", "updates"]);
   assert.deepEqual(names("courses"), ["people"]);
   assert.deepEqual(names("grades"), ["people"]);
-  assert.deepEqual(names("assignments"), []);   // never shows teachers (2026-10-20)
+  assert.deepEqual(names("assignments"), []);
   assert.deepEqual(names("course-home", "?course=123"), ["people", "updates", "events"]);
   assert.deepEqual(names("gradebook", "?course=123"), ["people", "gradebook"]);
   assert.deepEqual(names("course-materials", "?course=123"), ["people", "folders"]);
@@ -441,7 +430,7 @@ await test("signOut: extras, cloud (incl. OneDrive picks) and push notes gone; p
   for (const k of ["averages_push_endpoint", "averages_push_touched", "averages_push_pending_delete", "averages_onedrive_picked", "averages_cloud_accounts"]) assert.equal(local.getItem(k), null, k);
   assert.equal(local.getItem("schoolagy_dark_mode"), null, "everything goes, the theme too (2026-11-06)");
   assert.equal(unsubscribed, 1);
-  assert.ok(calls.some((c) => /^\/auth\/session(\?|$)/.test(c.path) && c.init.method === "DELETE"));   // ?forget=1 since 2026-10-26
+  assert.ok(calls.some((c) => /^\/auth\/session(\?|$)/.test(c.path) && c.init.method === "DELETE"));
 });
 
 await test("signOut uses AveragesPush.forgetLocal() when it's loaded", async () => {

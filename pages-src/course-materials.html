@@ -5,13 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Averages — Course Materials</title>
 <link rel="stylesheet" href="https://use.typekit.net/gsk6off.css">
-<!-- JSZip (2026-09-03, per Martin's "save the whole folder to their
-     computer" request) — served from /vendor (cdnjs until 2026-10-23) so "Download Folder" can build
-     a real .zip client-side; there's no backend to zip on. `defer` so it
-     doesn't block the page while loading — the download handler only
-     needs it once a user actually clicks Download Folder, well after
-     load. Same "needs a real internet connection to work" caveat as the
-     Typekit stylesheet above (this sandboxed preview can't reach either). -->
 <script defer src="/vendor/jszip-3.10.1/jszip.min.js"></script>
 <style>
   /* ---------- Shared design system — copied verbatim from course-home.html
@@ -32,25 +25,11 @@
     --window-radius-lg: 22px;
     --window-radius-md: 14px;
     --window-radius-sm: 10px;
-    /* Neutral until the class's own color arrives (2026-10-23): this used to be a
-       sample class's gold, which flashed before every real class. */
     --course-color: #6E7582;
     --course-color-dark: #535B6B;
     --course-color-tint: rgba(110, 117, 130, 0.14);
   }
 
-  /* Finder-window palette (2026-08-28: unified with the rest of the app —
-     see below) — every --finder-* token is now a direct reference to the
-     same global tokens the rest of this page (and Home/Courses/the Course
-     Hub) already use, rather than its own separate set of hardcoded
-     values. `--finder-selected`/`--finder-icon-*` are the only tokens
-     that don't map onto an existing global one-for-one, since selection
-     highlighting and paper-icon rendering aren't really "chrome" — kept
-     as their own small, self-contained values (still deriving from
-     --accent/--border where that makes sense) rather than forcing a
-     global token to do a job it isn't really for. Still scoped to
-     `.finder-window` (not :root) purely so it's easy to find/read as one
-     block, not because the values themselves differ from :root anymore. */
   .finder-window {
     --finder-bg: var(--panel-bg);
     --finder-titlebar-bg: var(--panel-inner);
@@ -69,28 +48,6 @@
     --finder-disabled: var(--text-faint);
     --finder-icon-ink: var(--text-faint);
   }
-  /* A per-page dark/white mode toggle used to live here (2026-08-26) but
-     was removed 2026-08-28: several of this page's popups (Get Info,
-     Share, the delete confirmation) intentionally use the app's global
-     panel tokens rather than these --finder-* ones, so they always
-     rendered light even with the toggle set to dark — reading as a bug
-     rather than the deliberate "system dialogs look the same in either
-     Finder theme" choice it actually was. Per Martin's decision, this
-     page no longer offers its own theme switch. **Then unified with the
-     rest of the site's theme (2026-08-28, same-day follow-up)**: rather
-     than leave the Finder chrome's colors as its own separate palette
-     that merely happened to resemble the app's light theme, every
-     --finder-* token above now points straight at the same --panel-bg/
-     --text-dark/--border/etc. tokens the rest of the app (and this
-     page's own popups) already use — so Materials isn't a visually
-     distinct "file browser surface" anymore, it's the same surface as
-     the rest of the site. This also means it's future-proofed for real
-     app-wide dark mode: whenever a Settings page exists and actually
-     swaps those global tokens (the same way onboarding.html's preview
-     toggle already does for its own page), Materials will pick up the
-     change automatically through this same variable chain, with no
-     Materials-specific dark-mode work needed later — see
-     architecture-decisions.md.  */
 
   * { box-sizing: border-box; }
 
@@ -125,18 +82,6 @@
   *::-webkit-scrollbar-thumb:hover { background-color: rgba(20, 21, 31, 0.45); }
   *::-webkit-scrollbar-corner { background: transparent; }
 
-  /* Declared so the browser themes ITS OWN chrome — scrollbars, the
-
-     overscroll gutter, form controls — against this page rather than
-
-     guessing. Without it Firefox drew a light-theme scrollbar over the
-
-     dark canvas and tinted it (Martin saw it as pink on a blue
-
-     background). LegacyPage's applyStoredTheme() updates both of these
-
-     to match whatever background the user actually saved. */
-
   html {
 
     color-scheme: dark;
@@ -144,7 +89,6 @@
     background-color: #0c0c0e;
 
   }
-
 
   html, body {
     margin: 0;
@@ -158,16 +102,6 @@
     overflow: hidden; /* scrolling now happens inside .page (see below), so
       the scrollbar sits at the edge of the app's own window/card instead of
       out at the browser's outer edge, over the wallpaper margin */
-    /* Neutral black instead of a baked-in accent gradient here —
-       2026-09-11, per Martin. This is only ever visible for a split
-       second on reload/navigation, before applyStoredTheme() (or this
-       page's own appearance-reading script) sets the user's actual
-       saved background over it. The old default was the sample
-       red-orange gradient baked into this file, which read as a real
-       glitch flashing in between pages; a neutral black reads as
-       "still loading" instead, and matches the app's own Black
-       preset (#0c0c0e) so it's not a color that appears nowhere else
-       in the app. */
     background-color: #0c0c0e;
     background-image: none;
     background-size: cover;
@@ -251,13 +185,6 @@
   .finder-toolbar { display: flex; align-items: center; gap: 8px; margin-left: auto; }
 
   .view-toggle { display: flex; background: var(--finder-control-bg); border-radius: 8px; padding: 2px; }
-  /* Same equal-specificity gotcha as .edit-fab[hidden] elsewhere in this
-     mock: a plain `.view-toggle { display: flex }` class rule and the
-     browser's own `[hidden] { display: none }` rule tie on specificity,
-     so without this override the later-declared `display: flex` above
-     would win and the group would stay visibly flexed even with its
-     `hidden` attribute set (2026-08-28, caught while hiding this group
-     for the Assignments quick-access view — see below). */
   .view-toggle[hidden] { display: none; }
   .view-btn {
     width: 28px; height: 24px;
@@ -324,13 +251,6 @@
   .search-clear-btn svg { width: 100%; height: 100%; stroke: currentColor; fill: none; stroke-width: 2.55; stroke-linecap: butt; stroke-linejoin: miter; }
   .search-clear-btn:hover { color: var(--finder-text); }
   .search-clear-btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); border-radius: 3px; }
-  /* Search-match highlighting (2026-08-26, per Martin's request) — every
-     occurrence of the current search text inside a visible item's name
-     gets wrapped in this, so it's obvious at a glance *why* an item
-     matched, not just that it did. Blue is deliberately not var(--accent)
-     (which is this app's warm orange/red) — it reads as a distinct
-     "search hit" marker the same way find-in-page highlighting does in
-     most browsers/editors, rather than looking like a selection state. */
   mark.search-highlight {
     background: #2f7dfa;
     color: #fff;
@@ -338,9 +258,6 @@
     padding: 0 1px;
   }
 
-  /* Right-click item menu (2026-08-26) — modeled on Martin's own Finder
-     screenshot; uses --finder-* tokens (see comment on the markup) so it
-     matches whichever theme the window is currently in. */
   .context-menu {
     position: fixed;
     z-index: 250;
@@ -375,9 +292,6 @@
   }
   .context-menu-item:hover, .context-menu-item:focus-visible { background: var(--accent); color: #fff; outline: none; }
   .context-menu-item .cm-chevron { width: 10px; height: 10px; stroke: currentColor; fill: none; stroke-width: 3.6; stroke-linecap: butt; stroke-linejoin: miter; opacity: 0.75; flex-shrink: 0; }
-  /* Move to Trash when the item isn't user-created (2026-08-27) — reads
-     as unavailable rather than just missing, so it's still discoverable
-     as "this exists but isn't allowed here" instead of silently absent. */
   .context-menu-item:disabled { color: var(--finder-text-muted); cursor: default; opacity: 0.55; }
   .context-menu-item:disabled:hover, .context-menu-item:disabled:focus-visible { background: none; color: var(--finder-text-muted); }
   .context-menu-divider { height: 1px; background: var(--finder-border); margin: 5px 4px; flex-shrink: 0; }
@@ -385,9 +299,6 @@
   .context-menu-tags { display: flex; justify-content: center; gap: 7px; padding: 6px 10px 8px; }
   .context-menu-tags .tag-dot { width: 15px; height: 15px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.15); padding: 0; cursor: pointer; }
   .context-menu-tags .tag-dot:hover, .context-menu-tags .tag-dot:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
-  /* Marks whichever swatch is the folder's current color (2026-08-27) —
-     a ring outside the dot rather than an inner checkmark, so it stays
-     legible against every swatch color including the lightest (yellow). */
   .context-menu-tags .tag-dot.active { box-shadow: 0 0 0 2px var(--finder-bg), 0 0 0 4px var(--finder-text); }
 
   .finder-body { display: flex; align-items: stretch; }
@@ -442,15 +353,6 @@
     position: relative; /* anchors free-positioned tiles below */
     min-height: 40px;
   }
-  /* Free-drop-anywhere (2026-08-26, per Martin's request) — dragging a
-     tile and releasing it over empty space (not onto a folder) drops it
-     exactly there, like real Finder icon view, instead of only snapping
-     back to its old spot or being confined to a thin band near its
-     original row. `.free-drop-active` is a live "you can drop here"
-     outline shown on the whole content pane while dragging over open
-     space, so the affordance doesn't just appear silently on drop — it's
-     on `.finder-content` rather than `.item-grid` so it covers the full
-     droppable area, not just however tall the grid's in-flow rows are. */
   .finder-content.free-drop-active { outline: 2px dashed var(--accent); outline-offset: -3px; border-radius: 8px; }
   .item-tile.free-pos { position: absolute; width: 84px; z-index: 4; }
   .item-tile {
@@ -475,7 +377,6 @@
      dropping reads as "into this folder" rather than "reorder near it". */
   .item-tile.drop-target { background: var(--finder-selected); box-shadow: 0 0 0 2px var(--accent) inset; }
   .item-tile.dragging { opacity: 0.35; }
-  /* Names don't get text-highlighted when you press and drag (2026-10-04), same as Finder. The rename box still selects. */
   .item-tile, .item-list tbody tr { -webkit-user-select: none; user-select: none; }
   .item-tile input, .item-list input { -webkit-user-select: text; user-select: text; }
   body.cm-dragging, body.cm-dragging * { -webkit-user-select: none !important; user-select: none !important; cursor: grabbing; }
@@ -502,10 +403,6 @@
     border-radius: 3px;
     padding: 1px 3px;
   }
-  /* Starred badge (2026-08-27, per Martin's "add to starred" request) —
-     top-right corner of a grid tile (the spot the rename pencil used to
-     occupy, now free since that button was removed), inline after the
-     name in list view. */
   .item-star-badge { position: absolute; top: 2px; right: 2px; width: 15px; height: 15px; color: #f2b400; pointer-events: none; }
   .item-star-badge svg { width: 100%; height: 100%; fill: currentColor; }
   .item-list .item-star-badge { position: static; display: inline-block; width: 12px; height: 12px; margin-left: 6px; vertical-align: middle; }
@@ -559,11 +456,6 @@
   .drag-ghost .item-icon { width: 34px; height: 34px; }
   .drag-ghost .item-name { font-size: 0.66rem; font-weight: 700; color: #fff; text-align: center; text-shadow: 0 1px 3px rgba(0,0,0,0.6); }
 
-  /* Delete confirmation (2026-08-26) — sits outside .finder-window, so it
-     uses the app's own global panel tokens (same convention as the
-     Course Hub's "Course info" modal) rather than --finder-* — a system
-     dialog like this isn't really part of the Finder chrome, and this
-     way it looks the same regardless of the page's light/dark toggle. */
   .confirm-overlay {
     position: fixed;
     inset: 0;
@@ -596,10 +488,6 @@
   .confirm-btn:disabled { opacity: 0.5; cursor: default; }
   .confirm-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring); }
 
-  /* Quick Look (2026-08-27, per Martin's request — "quick peek shows a
-     popup of whats inside"). A folder's peek lists its immediate
-     contents; a file's peek is a preview card, since there's no real
-     file content in this mock to actually display. */
   .quicklook-modal { width: min(400px, 100%); }
   .ql-header { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
   .ql-icon { width: 40px; height: 40px; flex-shrink: 0; }
@@ -615,15 +503,12 @@
   .ql-row .ql-row-icon { width: 22px; height: 22px; flex-shrink: 0; }
   .ql-row .ql-row-icon svg { width: 100%; height: 100%; }
   .ql-row-name { flex: 1; word-break: break-word; }
-  /* File previews (2026-10-16): the picture fills the icon's square, with a hairline so white pages show */
   .item-icon.has-thumb { width: 64px; height: 64px; }
   .item-thumb { max-width: 100%; max-height: 100%; border-radius: 4px; box-shadow: 0 0 0 1px var(--border), 0 2px 6px -2px rgba(0,0,0,0.25); background: #fff; display: block; }
   .ql-preview { display: flex; align-items: center; justify-content: center; min-height: 120px; margin-bottom: 10px; border-radius: 8px; background: var(--panel-inner); overflow: hidden; }
   .ql-preview img { max-width: 100%; max-height: 360px; display: block; }
   .ql-preview.loading span { font-size: 0.76rem; font-weight: 700; color: var(--text-faint); }
 
-  /* Get Info (2026-08-27, per Martin's request — including a Teacher/
-     Student "created by" line). */
   .info-body { margin-bottom: 18px; }
   .info-row { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 0.82rem; }
   .info-row:last-child { border-bottom: none; }
@@ -693,10 +578,6 @@
   .nav-link .dot { width: 4px; height: 4px; border-radius: 50%; background: transparent; }
   .nav-link.active .label { color: var(--text-dark); }
   .nav-link.active .dot { background: var(--accent); }
-  /* ---------- "More" overflow (2026-10-01, per Martin: "if the text has
-     to get ... we should add a more button on the far right side with a
-     list of the other options"). Labels never truncate: when they would,
-     the rightmost pages move into the More menu instead. ---------- */
   .nav-link[hidden], .nav-more[hidden], .nav-more-menu[hidden] { display: none; }
   /* While the More menu is open the whole bar sits above everything else on
      the page (sticky headers, pop-ups, the edit button go up to z-index 90),
@@ -759,8 +640,6 @@
   .nav-more-item.active { color: var(--text-dark); }
   .nav-more-item.active span { position: relative; display: inline-block; padding-bottom: 6px; margin-bottom: -6px; }
   .nav-more-item.active span::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; border-radius: 999px; background: var(--accent); }
-  /* Labels sit centered in the bar; the active page is underlined in the
-     accent color instead of marked with a dot (2026-10-01, per Martin). */
   .app-nav-inner .nav-link, .app-nav-inner .nav-more { justify-content: center; gap: 0; padding-top: 10px; padding-bottom: 10px; }
   .app-nav-inner .nav-link .dot, .app-nav-inner .nav-more .dot { display: none; }
   .app-nav-inner .nav-link .label, .app-nav-inner .nav-more .label { position: relative; padding: 6px 0; }
@@ -776,8 +655,6 @@
     .nav-link { min-width: 0; padding: 10px 3px 8px; }
     .nav-link .label { font-size: 0.58rem; }
   }
-  /* Emoji icons (2026-10-01, per Martin): icons that show a thing are emoji;
-     buttons and action icons stay line icons. */
   /* Each emoji is an inline SVG sized by font-size (1em box), so it is
      exactly as big as its box and sits dead center. The svg rule undoes
      the line-icon styles (stroke, fill:none, opacity) that the parent
@@ -786,8 +663,6 @@
   .emo svg { display: block; width: 100%; height: 100%; fill: initial; stroke: none; opacity: 1; }
   .fs-item .emo { font-size: 16px; }
   .item-star-badge svg { display: block; width: 100%; height: 100%; fill: initial; stroke: none; }
-  /* Sidebar Course Folders draw the same folder as the big icons in the main
-     view, including the folder's own color (2026-10-01, per Martin). */
   .fs-item .fs-folder { display: block; width: 20px; height: 20px; flex-shrink: 0; margin: -2px 0; }
   .fs-item .fs-folder svg { width: 100%; height: 100%; stroke: none; }
   .topbar {
@@ -817,9 +692,6 @@
   }
 
   .profile-menu-wrap { position: relative; flex-shrink: 0; }
-  /* No photo: an Apple-style monogram (2026-10-21, Martin: "make the default no pfp letters
-     look more like the apple ones"), the grey gradient and rounded white initials of a contact
-     with no picture. A photo replaces it (set inline as background-image). */
   .profile-btn {
     width: 42px;
     height: 42px;
@@ -838,8 +710,6 @@
     flex-shrink: 0;
   }
 
-  /* A photo has no ring (2026-10-23, Martin: "remove the ugly border if it is a custom upload");
-     the letter avatars keep theirs. Same size: the border goes clear and the photo fills it. */
   .profile-btn.has-photo { border-color: transparent; background-origin: border-box; background-repeat: no-repeat; }
   .profile-menu {
     position: absolute;
@@ -868,7 +738,6 @@
   }
   .profile-menu-item:hover { background: var(--panel-inner); }
   .profile-menu-item.signout { color: var(--grade-bad); }
-  /* ---------- Course banner + tabs, shared with the course hub (2026-10-01) ---------- */
   .page { max-width: 1120px; }
   .back-link { display: none; }
   .sheet { background: var(--panel-bg); border-radius: var(--window-radius-lg); overflow: hidden; }
@@ -898,8 +767,6 @@
   .sheet-grade-proj.sheet-static { cursor: default; }
   .sheet-score .grade-hero-block.sheet-grade-proj { padding: 8px; margin: -8px; }
   .sheet-grade-proj.sheet-static:hover { background: none; }
-  /* ---------- Projected-grade popup (2026-10-04): same as gradebook.html's,
-     without the italic footnote (no italics on course pages). ---------- */
   .grade-popup {
     position: fixed;
     z-index: 50;
@@ -930,8 +797,6 @@
   .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
   @media (max-width: 900px) { .sheet-head { padding: 24px; } .sheet-tabs { padding: 0 24px; } }
   @media (max-width: 560px) { .sheet-score { padding: 16px; gap: 24px; } .sheet-letter, .sheet-grade-val, .sheet-score .grade-hero-val { font-size: 2.4rem; } }
-  /* ---------- Course pages round 4 (2026-10-01) ---------- */
-  /* no italics on the course pages (Martin's rule) */
   html body * { font-style: normal !important; }
   /* "Back to ..." sits in the profile button's row, left side, no arrow */
   .topbar.hub-topbar, .topbar.sheet-topbar { justify-content: space-between; align-items: center; margin: 0 0 12px; }
@@ -946,7 +811,6 @@
     --accent-ring: rgb(from var(--course-color) r g b / 0.35);
     --finder-selected: rgb(from var(--course-color) r g b / 0.16);
   }
-  /* ---------- Materials restyle (2026-10-02): same look as the hub's cards ---------- */
   .finder-window { --finder-hover: var(--panel-inner); --finder-selected: rgb(from var(--course-color) r g b / 0.14);
     background: var(--panel-bg); border: none; border-radius: var(--window-radius-lg); margin-bottom: 24px; }
   .finder-titlebar { background: none; border-bottom: none; padding: 24px 32px 16px; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
@@ -1040,7 +904,6 @@
   /* search results from subfolders say where they are */
   .item-where { display: block; font-size: 0.68rem; font-weight: 700; color: var(--text-faint); text-align: center; line-height: 1.3; overflow-wrap: anywhere; }
   .item-list .item-where { display: inline; margin-left: 8px; }
-  /* Clamp to Grid fix (2026-10-02): even rows so free-placed items line up */
   .item-grid { grid-auto-rows: 136px; }
   .item-grid.searching { grid-auto-rows: min-content; }
   .item-tile.free-pos { width: var(--cell-w, 104px); height: 136px; }
@@ -1049,7 +912,6 @@
   .cloud-menu { min-width: 224px; }
   .cloud-menu .context-menu-tags-label { padding: 4px 12px 8px; text-transform: none; letter-spacing: 0; font-size: 0.72rem; }
   .cloud-soon { font-size: 0.66rem; font-weight: 800; color: var(--text-faint); }
-  /* Background tasks: Save to Canva and folder downloads (2026-10-16) */
   .task-panel { position: fixed; right: 16px; bottom: 96px; z-index: 60; width: min(340px, calc(100vw - 32px)); display: flex; flex-direction: column; gap: 8px; }
   .task-panel[hidden] { display: none; }
   .task { background: var(--panel-bg); color: var(--text-dark); border-radius: var(--window-radius-md, 12px); padding: 12px 12px 10px; box-shadow: 0 16px 40px -12px rgba(0,0,0,0.45); }
@@ -1072,7 +934,6 @@
   .task-problems ul { margin: 6px 0 0; padding-left: 16px; max-height: 120px; overflow: auto; }
   .task-problems li { margin: 2px 0; }
   .task-problems b { color: var(--text-dark); font-weight: 800; overflow-wrap: anywhere; }
-  /* Teacher contact card (2026-10-02): same card as the Contacts page */
   .teacher-link { background: none; border: none; padding: 0; margin: 0; font: inherit; color: inherit; cursor: pointer; text-decoration: underline; text-decoration-color: rgba(255,255,255,0.45); text-underline-offset: 3px; }
   .teacher-link:hover { text-decoration-color: currentColor; }
   .teacher-link:focus-visible { outline: none; box-shadow: 0 0 0 2px currentColor; border-radius: 4px; }
@@ -1103,16 +964,11 @@
   .tc-btn.secondary { background: var(--panel-inner); color: var(--text-dark); }
   .tc-btn.secondary:hover { background: var(--border); }
   .tc-btn[hidden] { display: none; }
-  /* Back link (2026-10-03): same as every other page, plain text with the arrow, no bubble */
   .topbar .back-link { gap: 5px; padding: 0; background: none; border-radius: 0; color: rgba(255,255,255,0.82); font-size: 0.76rem; font-weight: 800; }
   .topbar .back-link:hover { background: none; color: #fff; }
   .topbar .back-link:focus-visible { box-shadow: none; text-decoration: underline; }
   .topbar .back-link svg { display: block; }
 
-  /* Official app logos (2026-10-19): the files Martin added in public/brand/.
-     Only ever resized, never changed (Google's and Canva's brand rules). A
-     brand-slot is an empty space the same size, so names line up where an app
-     has no logo yet (OneDrive). */
   .canva-mark { width: 20px; height: 20px; flex: none; display: block; border-radius: 50%; background: center / contain no-repeat url("/brand/canva-mark.svg"); }
   .drive-mark { width: 20px; height: 20px; flex: none; display: block; background: center / contain no-repeat url("/brand/google-drive.png"); }
   .brand-slot { width: 20px; height: 20px; flex: none; display: block; }
@@ -1240,24 +1096,9 @@
         </div>
       </div>
 
-      <!-- Right-click menu (2026-08-26, per Martin's request — modeled on
-           his own uploaded Finder context-menu screenshot). Lives inside
-           .finder-window so it inherits the same --finder-* theme tokens
-           as the rest of the window despite being position:fixed. Rename,
-           Duplicate and Move to Trash are wired to the real actions this
-           mockup already supports elsewhere; everything else mirrors the
-           reference menu's wording but is a visual-only placeholder, same
-           convention as this page's disabled toolbar buttons. -->
       <div class="context-menu" id="contextMenu" role="menu" aria-label="Item actions" hidden></div>
       <div class="context-menu cloud-menu" id="cloudMenu" role="menu" aria-label="Save to cloud" hidden></div>
 
-      <!-- Quick Look (2026-08-27, per Martin's request — a real peek at
-           what's inside a folder, or a preview card for a file). Lives
-           inside .finder-window (like #contextMenu above) so the file/
-           folder icons it renders pick up the same --finder-icon-* theme
-           tokens the grid/list views use — outside this scope those
-           tokens are undefined and the icons render as solid black
-           shapes instead of themed ones. -->
       <div class="confirm-overlay" id="quickLookOverlay" hidden>
         <div class="confirm-modal quicklook-modal" role="dialog" aria-modal="true" aria-labelledby="qlTitle">
           <div class="ql-header">
@@ -1274,11 +1115,6 @@
     </div>
   </div>
 
-  <!-- Delete confirmation (2026-08-26, per Martin's request — Backspace/
-       Delete on a selected folder or file). A folder's message spells out
-       what's inside it, since deleting a folder deletes everything nested
-       in it too — the point of the popup is to make that cost visible
-       before it happens, not just gate an ordinary click. -->
   <div class="confirm-overlay" id="deleteOverlay" hidden>
     <div class="confirm-modal" role="alertdialog" aria-modal="true" aria-labelledby="deleteModalTitle" aria-describedby="deleteModalMsg">
       <h3 id="deleteModalTitle">Delete this item?</h3>
@@ -1290,8 +1126,6 @@
     </div>
   </div>
 
-  <!-- Get Info (2026-08-27, per Martin's request — including whether the
-       item was teacher- or student-created). -->
   <div class="confirm-overlay" id="infoOverlay" hidden>
     <div class="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="infoTitle">
       <h3 id="infoTitle">Info</h3>
@@ -1302,7 +1136,6 @@
     </div>
   </div>
 
-  <!-- Teacher contact card (2026-10-02): the Contacts page's card -->
   <div class="grade-popup" id="gradePopup" role="tooltip"></div>
 
   <div class="tc-overlay" id="teacherCard">
@@ -1381,10 +1214,6 @@
   </nav>
 
   <script>
-    // ---- Links by id (2026-10-07, Martin) ----
-    // A real class (Schoology/Classroom ids are digits) links as
-    // assignment?id=<id> and course-home?id=<section id>; the sample classes
-    // (word ids like "apchem") keep ?course=&title=. Pages read both.
     function avgIsId(v) { return /^\d{1,24}$/.test(String(v == null ? '' : v)); }
     function avgCourseQ(course) { return (avgIsId(course) ? 'id=' : 'course=') + encodeURIComponent(course == null ? '' : course); }
     function avgAssignHref(course, title, id, extra) {
@@ -1393,11 +1222,6 @@
       return `assignment.html?course=${encodeURIComponent(course == null ? '' : course)}&title=${encodeURIComponent(title || '')}${avgIsId(id) ? `&id=${id}` : ''}${extra}`;
     }
 
-    // Potato PC Mode on every page (2026-10-04, per Martin). The saved
-    // setting turns off all CSS animations and transitions, makes animate()
-    // calls and smooth scrolling instant, and drops the slanted page title.
-    // Same code as app/lib/theme-boot.ts, which runs it before first paint in
-    // the app; this copy covers the preview and pages theme-boot skips.
     (function () {
     var POTATO_CSS = "body.potato-mode,body.potato-mode *,body.potato-mode *::before,body.potato-mode *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important;filter:none!important;text-shadow:none!important}html:has(body.potato-mode){scroll-behavior:auto!important}body.potato-mode,body.potato-mode *{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif!important}body.potato-mode h1.title{font-style:normal!important;transform:none!important}body.potato-mode .trend.has-popup:focus-visible{outline:2px solid currentColor;outline-offset:2px}";
     function potatoOn() { return !!(document.body && document.body.classList.contains("potato-mode")); }
@@ -1518,17 +1342,7 @@
     })();
   </script>
 
-
   <script>
-    // ------------------------------------------------------------------
-    // Shared appearance (accent + background) — 2026-09-08, per Martin:
-    // "wallpapers + accent colors don't save across pages." Settings'
-    // Appearance section (and onboarding's Theme step) are the only
-    // writers of schoolagy_appearance; every other real app page,
-    // including this one, applies whatever's saved there, read-only, on
-    // its own load — same shared-localStorage-record pattern already
-    // used for schoolagy_dark_mode/schoolagy_profile.
-    // ------------------------------------------------------------------
     (function () {
       function darken(hex, amount) {
         const n = parseInt(hex.slice(1), 16);
@@ -1573,22 +1387,6 @@
     // shared-stylesheet note).
     // ------------------------------------------------------------------
 
-    // ------------------------------------------------------------------
-    // Course customization persistence — added 2026-09-08. Renaming,
-    // recoloring, or reordering a course (in home.html's Customize editor
-    // or courses.html's Reorder tool — the only places that WRITE these)
-    // used to be invisible everywhere else, since every page just
-    // re-generated its own hardcoded COURSES array from scratch on load.
-    // schoolagy_course_custom holds per-course name/color overrides
-    // (object keyed by course id, only actually-customized courses
-    // present); schoolagy_course_order holds a full custom ordering of
-    // course ids (array), written only once the user has actually
-    // reordered. This page only READS both — applyCourseCustomizationsInPlace()
-    // is called right after the raw array literal below, mutating COURSES
-    // in place, so it's already the customized/reordered version before
-    // anything on this page ever renders it. Same defensive
-    // try/catch-per-key style as AVERAGES_DARK_MODE_KEY in settings.html.
-    // ------------------------------------------------------------------
     const AVERAGES_COURSE_CUSTOM_KEY = 'schoolagy_course_custom';
     const AVERAGES_COURSE_ORDER_KEY = 'schoolagy_course_order';
     function loadCourseCustom() {
@@ -1605,12 +1403,6 @@
       } catch {}
       return null;
     }
-    // Subject table (2026-10-01, per Martin): each course gets a color that
-    // fits its subject, picked from its name. First match wins, so specific
-    // subjects come before broad ones ("Computer Science" before "Science",
-    // "Physical Education" before "Physics"). A color the student picked in
-    // the course's info pop-up still wins over this. No match keeps the
-    // course's own color. All colors pass 4.5:1 with white text.
     const COURSE_SUBJECTS = [
       [/\bchem/, '🧪', '#1b7f67'],
       [/\bbio|anatom|physiolog/, '🧬', '#387f33'],
@@ -1669,12 +1461,6 @@
         courses.splice(0, courses.length, ...ordered);
       }
     }
-    // ------------------------------------------------------------------
-    // Teacher contact card (2026-10-02, per Martin): the teacher's name on the
-    // banner (and in Course info) opens the same card as the Contacts page.
-    // CONTACTS is the school directory: live data replaces this sample at
-    // build time, same as contacts.html. Only "my teachers" are needed here.
-    // ------------------------------------------------------------------
     const CONTACTS = [
       { id: 'cho', name: 'Mr. Cho', role: 'Teacher', dept: 'English Department', school: 'Lincoln High School', email: 'j.cho@lincolnusd.org', phone: '(555) 201-4471', color: '#6b8f5e', category: 'myTeachers' },
       { id: 'alvarez', name: 'Mr. Alvarez', role: 'Teacher', dept: 'Science Department', school: 'Lincoln High School', email: 'r.alvarez@lincolnusd.org', phone: '(555) 201-4482', color: '#a67a22', category: 'myTeachers' },
@@ -1683,8 +1469,6 @@
       { id: 'ortiz', name: 'Sra. Ortiz', role: 'Teacher', dept: 'World Languages Department', school: 'Lincoln High School', email: 'm.ortiz@lincolnusd.org', phone: '(555) 201-4515', color: '#8a6ba1', category: 'myTeachers' },
       { id: 'reyes', name: 'Coach Reyes', role: 'Teacher', dept: 'Physical Education Department', school: 'Lincoln High School', email: 'd.reyes@lincolnusd.org', phone: '(555) 201-4526', color: '#4f8c8a', category: 'myTeachers' }
     ];
-    // Signed in with real data (2026-10-06). A demo sign-in also has
-    // __AVERAGES__ (with an empty bundle) and shows the samples, like the preview.
     const TC_LIVE = !!(window.__AVERAGES__ && window.__AVERAGES__.data) && window.__AVERAGES__.mode !== 'demo';
     const TC_DATA = TC_LIVE ? window.__AVERAGES__.data : {};
     const TC_CLASSROOM = TC_LIVE && (TC_DATA.platform === 'classroom' || TC_DATA.PEOPLE_PLATFORM === 'classroom');
@@ -1699,8 +1483,6 @@
       const list = Array.isArray(CONTACTS) ? CONTACTS : [];
       const exact = list.find(c => c && String(c.name).toLowerCase() === String(name).toLowerCase());
       if (exact) return exact;
-      // Live contacts list the classes they teach (2026-10-06): this class's
-      // one teacher, when the name on the class doesn't match exactly.
       const teaching = courseId ? list.filter(c => c && Array.isArray(c.courses) && c.courses.map(String).includes(String(courseId))) : [];
       if (teaching.length === 1) return teaching[0];
       const last = tcLastName(name);
@@ -1714,11 +1496,8 @@
       const set = (id, v) => { document.getElementById(id).textContent = v || '—'; };
       const avatar = document.getElementById('tcAvatar');
       avatar.textContent = tcInitials(c.name); avatar.style.background = color;
-      if (window.AveragesAvatar) window.AveragesAvatar.paint(avatar, c.name);   // their own color (2026-10-23)
+      if (window.AveragesAvatar) window.AveragesAvatar.paint(avatar, c.name);
       set('tcName', c.name); set('tcRole', c.role || c.dept); set('tcDept', c.dept); set('tcSchool', c.school); set('tcEmail', c.email); set('tcPhone', c.phone);
-      // Signed in (2026-10-06): rows the school doesn't share are left out,
-      // "Department" is the classes they teach here, and Message is only for
-      // a Schoology teacher with a real id.
       if (TC_LIVE) {
         [['tcDept', c.dept], ['tcSchool', c.school], ['tcEmail', c.email], ['tcPhone', c.phone]].forEach(([id, v]) => {
           const row = document.getElementById(id).closest('.tc-row');
@@ -1765,20 +1544,11 @@
       { id: 'pe', name: 'PE', code: '76_P0300', period: 6, teacher: 'Coach Reyes', section: '1125', color: '#4f8c8a', grade: 'A', pct: 97, predicted: 'A', predictedPct: 97, trend: 'flat', updated: '2d ago', desc: 'Fitness training and team sports, graded on participation and fitness logs.' },
     ];
     applyCourseCustomizationsInPlace(COURSES);
-    const courseId = (q => q.get('course') || (avgIsId(q.get('id')) ? q.get('id') : '') || 'apchem')(new URLSearchParams(location.search));   // ?id= since 2026-10-07
+    const courseId = (q => q.get('course') || (avgIsId(q.get('id')) ? q.get('id') : '') || 'apchem')(new URLSearchParams(location.search));
     const course = COURSES.find(c => c.id === courseId) || COURSES[0];
     document.getElementById('backToHubBtn').addEventListener('click', () => {
       window.location.href = `course-home.html?${avgCourseQ(course.id)}`;
     });
-    // Opens an assignment-flagged file's own detail page. `from=materials`
-    // tells assignment.html to swap its "Back to Assignments" breadcrumb
-    // for "Back to Course Materials" pointing back at this folder, since
-    // that's genuinely where the user came from (added 2026-08-29, per
-    // Martin's request). The title strips the file extension so it
-    // matches assignment.html's title keys (e.g. "Lab Report #4.pdf" ->
-    // "Lab Report #4") — for files with no matching entry there,
-    // assignment.html falls back to generic placeholder content rather
-    // than showing the wrong assignment.
     function openAssignmentDetail(f) {
       // Signed in: the exact assignment the file is attached to.
       if (f.live && f.live.parent) {
@@ -1786,24 +1556,9 @@
         return;
       }
       const title = f.name.replace(/\.[^.]+$/, '');
-      // `file`: the preview's assignment page lists this file as attached (2026-10-05).
       window.location.href = `assignment.html?course=${encodeURIComponent(courseId)}&title=${encodeURIComponent(title)}&from=materials${f.quiz ? '' : `&file=${encodeURIComponent(f.name)}`}`;
     }
 
-    // ------------------------------------------------------------------
-    // Course materials sample tree — a realistic-but-invented set per
-    // course (matching the "add anything you want" license the rest of
-    // this mock's sample data was built under), NOT a literal copy of
-    // the reference screenshot's own file names (those were Martin's own
-    // personal Mac files — Finder chrome/layout was the actual brief,
-    // not that specific content). Each course's node has `folders`
-    // (each itself a node) and `files` (name + ext, no real content —
-    // this is a browsing preview, not a working file store — plus an
-    // optional `assignment: true` flag on files that are actually work
-    // to turn in, e.g. worksheets/labs/logs, as opposed to plain course
-    // material like slides, notes, and the syllabus; the file icon draws
-    // a small pencil badge for the former — see fileIconSVG below).
-    // ------------------------------------------------------------------
     const MATERIALS = {
   "apchem": {
     "name": "Materials",
@@ -2419,29 +2174,15 @@
 
     const STARRED = { apchem: ['Syllabus.pdf'], algebra2: ['Syllabus.pdf'], english10: ['Syllabus.pdf'], ushistory: ['Syllabus.pdf'], spanish3: ['Syllabus.pdf'], pe: ['Syllabus.pdf'] };
 
-    // Signed in (2026-10-05): the class's real files load from the API
-    // (see liveMaterials at the end); the sample tree is the preview's and
-    // demo's only. It used to show AP Chemistry's sample folders, with their
-    // file-less sample assignments, for every real class.
     const MATERIALS_LIVE = window.__AVERAGES_MODE__ === 'live';
     const root = MATERIALS_LIVE ? { name: 'Materials', folders: [], files: [] } : (MATERIALS[course.id] || MATERIALS.apchem);
     root.name = `${course.name} Materials`;
 
-    // An assignment with no attached file isn't a material (2026-10-05, per
-    // Martin): it has nothing to open, download or edit, so it stays on the
-    // Assignments page and the course hub and is left out here (every view:
-    // folders, Recents, Starred, Assignments, search). "Attached file" = the
-    // item has a file type (`ext`); web links (`url`) and tests (`quiz`) are
-    // not assignments and are unaffected.
     (function dropFilelessAssignments(node) {
       node.files = node.files.filter(f => !(f && f.assignment && !f.ext && !f.url));
       node.folders.forEach(dropFilelessAssignments);
     })(root);
 
-    // Every folder/file gets a stable `_id`, assigned once here — needed
-    // once items can be renamed and dragged between folders (2026-08-26,
-    // per Martin's request), since matching on `.name` alone would break
-    // the moment two items share a name or an item gets renamed mid-drag.
     let idCounter = 0;
     (function assignIds(node) {
       node._id = 'n' + (idCounter++);
@@ -2467,7 +2208,6 @@
     let mode = 'browse'; // 'browse' | 'recents' | 'starred'
     let view = 'grid';
     let selectedId = null;
-    // Materials round 4 (2026-10-01): click once to select, again to open.
     function selectItem(id) {
       selectedId = id;
       document.querySelectorAll('.item-tile[data-id], .item-list tbody tr[data-id]').forEach(el => el.classList.toggle('selected', el.dataset.id === id));
@@ -2477,10 +2217,6 @@
     function openLink(f) {
       if (/^https?:\/\//i.test(f.url || '')) window.open(f.url, '_blank', 'noopener');
     }
-    // Opening a course file (double-click, or Enter) (2026-10-21, Martin: "open them in the new
-    // tab like the pdf viewer built in to the browser without downloading"): PDFs, pictures,
-    // text, audio and video open in a new tab in the browser's own viewer (the API's ?view=1).
-    // Anything a browser can't show (Word, PowerPoint...) still opens Quick Look.
     const VIEW_IN_BROWSER = new Set(['pdf', 'png', 'jpg', 'jpeg', 'gif', 'webp', 'txt', 'mp3', 'm4a', 'wav', 'mp4', 'webm', 'mov']);
     function opensInBrowser(f) {
       return !!(f && f.live && !f.url && VIEW_IN_BROWSER.has(String(f.ext || '').toLowerCase()));
@@ -2507,14 +2243,6 @@
       return folder.folders.some(f => f._id === maybeChild._id || isDescendant(f, maybeChild));
     }
 
-    // Finds the *real* folder a given child `_id` lives in by walking the
-    // actual tree, rather than assuming `currentNode()` — needed because
-    // the right-click menu (2026-08-27, per Martin's request: "let the
-    // user right click anything") now also works on tiles rendered from
-    // Recents/Starred, which are computed flat lists with no folder of
-    // their own; `currentNode()` there would be the wrong parent (or not
-    // a real one at all) for actions like Rename/Duplicate/Move to Trash
-    // that need to splice the item out of its actual containing array.
     function findParentOf(childId) {
       function walk(node) {
         if (node.folders.some(f => f._id === childId) || node.files.some(f => f._id === childId)) return node;
@@ -2530,12 +2258,6 @@
       return out;
     }
 
-    // Finds any item — file OR folder — anywhere in the tree by `_id`,
-    // returning both the item and whether it's a folder. Used by the
-    // toolbar's "More options" button below (2026-08-28: reworked to act
-    // on whatever's selected, not just assignment files) so it works the
-    // same way findParentOf()/the right-click menu already do — from any
-    // course folder, subfolder, or quick-access view.
     function findItemById(id) {
       if (!id) return null;
       function walk(node) {
@@ -2561,25 +2283,6 @@
       return '#7c7c86';
     }
 
-    // Icon fills read the finder-window's own CSS custom properties (via
-    // `style="fill:var(...)"`, which SVG honors from an inline style
-    // attribute) rather than being hardcoded, so the file "page" shape
-    // stays legible without regenerating markup if the theme tokens ever
-    // change again — a light page needs a visible border to read against
-    // a light window, so --finder-icon-border is a soft gray now (it was
-    // transparent back when this page had a dark theme).
-    // A file's icon takes the whole file object (not just its ext) so it
-    // can also read `f.assignment` — files with `assignment: true` (work
-    // to actually turn in, e.g. a worksheet or lab report) get a few
-    // short handwriting-style lines drawn right on the page, so an
-    // assignment reads as "something's been written on this" versus a
-    // blank page of plain course material (slides, notes, the syllabus).
-    // An earlier version marked this with a small pencil badge instead —
-    // replaced per Martin's follow-up ("remove the pencil, if its a
-    // assignment put writting on the paper") in favor of putting the
-    // cue directly on the paper itself. Accepts a bare ext string too
-    // (defensive — some callers only have the extension on hand) and
-    // simply skips the lines in that case.
     function writingLinesSVG() {
       return [[10, 10, 15], [10, 14.5, 11], [10, 19, 14]]
         .map(([x, y, w]) => `<rect x="${x}" y="${y}" width="${w}" height="1.6" rx="0.8" fill="var(--finder-icon-ink)"/>`)
@@ -2590,22 +2293,6 @@
         .map(([x, y, w]) => `<rect x="${x}" y="${y}" width="${w}" height="0.9" rx="0.45" fill="var(--finder-icon-ink)"/>`)
         .join('');
     }
-    // Quiz icon (2026-09-03, per Martin: "the icon should be the paper
-    // with a b c d and lines to show its a quiz") — an A/B/C/D multiple-
-    // choice answer sheet drawn right on the same page shape every other
-    // file uses, instead of the usual colored PDF/DOCX/PPTX badge (a quiz
-    // item has no real `ext` — it isn't a document at all, it's taken
-    // inside Schoology itself; see the redirect notice on assignment.html
-    // — so there's no file-type badge to show here in the first place).
-    // **Made more obvious, same-day follow-up** — the first version drew
-    // the letters in the same neutral ink color the plain assignment
-    // "writing lines" already use, so at actual icon size a quiz read as
-    // just another vague scribbled page, not clearly different from a
-    // regular assignment. Each letter is now a small solid color badge
-    // (white text on a filled circle) using a new `QUIZ_COLOR` purple —
-    // deliberately a hue none of the other file-type badges use
-    // (PDF red / DOCX blue / PPTX orange / generic gray) — so a quiz
-    // pops with real color instead of blending into the page.
     const QUIZ_COLOR = '#7c5cd6';
     function quizAnswerRowsSVG() {
       return [['A', 12, 13], ['B', 17.5, 10], ['C', 23, 12], ['D', 28.5, 8]]
@@ -2617,8 +2304,6 @@
         .map(([letter, y, w]) => `<circle cx="4.3" cy="${y}" r="1.5" fill="${QUIZ_COLOR}"/><text x="4.3" y="${y + 0.6}" font-size="2" font-weight="800" fill="#fff" text-anchor="middle" font-family="-apple-system, sans-serif">${letter}</text><rect x="6.6" y="${y - 0.5}" width="${w}" height="1" rx="0.5" fill="var(--finder-icon-ink)"/>`)
         .join('');
     }
-    // New file icons (2026-10-09, public/js/averages-file-icons.js) for files, assignment files and
-    // links; quizzes keep their own icon, and everything stays as before if that script isn't loaded.
     function newFileIcon(f, small) {
       const I = window.AveragesFileIcons;
       if (!I || (f && typeof f === 'object' && f.quiz)) return null;
@@ -2677,9 +2362,6 @@
     function smallFolderIconSVG(color) {
       return `<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M2 5a1 1 0 0 1 1-1h5l1.4 1.4H17a1 1 0 0 1 1 1V15a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V5z" style="fill:${color || 'var(--course-color)'}"/></svg>`;
     }
-    // Small filled-star badge for a starred file (2026-08-27, per
-    // Martin's "add to starred" request) — same star outline as the
-    // sidebar's own Starred nav icon, so it reads as the same concept.
     function starBadgeSVG() {
       return `<svg aria-hidden="true" focusable="false" viewBox="0 0 36 36"><path fill="#FFAC33" d="M27.287 34.627c-.404 0-.806-.124-1.152-.371L18 28.422l-8.135 5.834a1.97 1.97 0 0 1-2.312-.008 1.971 1.971 0 0 1-.721-2.194l3.034-9.792-8.062-5.681a1.98 1.98 0 0 1-.708-2.203 1.978 1.978 0 0 1 1.866-1.363L12.947 13l3.179-9.549a1.976 1.976 0 0 1 3.749 0L23 13l10.036.015a1.975 1.975 0 0 1 1.159 3.566l-8.062 5.681 3.034 9.792a1.97 1.97 0 0 1-.72 2.194 1.957 1.957 0 0 1-1.16.379z"/></svg>`;
     }
@@ -2722,29 +2404,9 @@
       render();
     }
 
-    // ------------------------------------------------------------------
-    // Drag-to-move (2026-08-26, per Martin's request: "let users make
-    // folders and move things around by dragging"). Built on Pointer
-    // Events rather than native HTML5 Drag-and-Drop — same reliability/
-    // touch-support reasoning already documented for the Courses page's
-    // reorder tool in architecture-decisions.md (native DnD there was
-    // found to silently cancel instead of firing `drop`, and has no
-    // touch equivalent at all, which matters for a mockup of a phone
-    // app). A move is a straight splice-out/push-into on the real
-    // `folders`/`files` arrays, using `_id` so it's correct even when
-    // names collide. Only active in 'browse' mode — Recents/Starred are
-    // computed views with no single real parent to drag out of.
-    // ------------------------------------------------------------------
     let dragCtx = null;
     let lastDropEl = null;
 
-    // ------------------------------------------------------------------
-    // Teacher folders (2026-10-02, per Martin): a folder the teacher made
-    // can't be renamed, duplicated, trashed, moved into another folder or
-    // dragged around the grid (2026-10-04), and it stays in its spot,
-    // and the teacher's things inside it can't be moved out. The student
-    // can still add their own items to it (and move those back out).
-    // ------------------------------------------------------------------
     function isTeacherFolder(item, isFolder) { return !!isFolder && !!item && !item.userCreated && item !== root; }
     // The teacher's own things that came inside a teacher folder (worked out
     // once, from where everything started, so a teacher file the student
@@ -2776,16 +2438,6 @@
         document.addEventListener('pointerup', onDragEnd);
       });
       el.addEventListener('contextmenu', e => {
-        // **No longer gated to browse mode (2026-08-27, per Martin's
-        // request — "it wont let you right click unless your in a
-        // folder... let the user right click anything")**: right-click
-        // now works on every tile everywhere, including Recents/Starred,
-        // by resolving the item's real parent via `findParentOf()` below
-        // instead of assuming `currentNode()` (which is only correct in
-        // browse mode — Recents/Starred are computed lists, not a real
-        // folder). Dragging above is unaffected and stays browse-only,
-        // since "move this into that folder" has no sensible meaning
-        // from a Recents/Starred list.
         e.preventDefault();
         selectedId = item._id;
         const parent = findParentOf(item._id) || currentNode();
@@ -2883,22 +2535,6 @@
         } else if (target) {
           moveItemTo(dragCtx.item, dragCtx.isFolder, dragCtx.parent, target.folder);
         } else if (overFreeDropZone(e.clientX, e.clientY)) {
-          // Free-drop-anywhere (2026-08-26, per Martin's request): landing
-          // on open space (not a folder) parks the item exactly there —
-          // same idiom as real Finder icon view, where you can scatter
-          // icons freely instead of only ever filing them into folders or
-          // having them stay lined up in a row. A drop outside the pane
-          // entirely still just snaps back (falls through with neither
-          // branch running).
-          //
-          // The item's `pos` is stored relative to #itemGrid (its
-          // positioning container), but the *bounds* it's clamped to come
-          // from `.finder-content` — the whole visible/scrollable pane —
-          // not from itemGrid's own box, which is only as tall as
-          // whatever's currently laid out in flow. Clamping to itemGrid's
-          // own height is what previously kept a "freely" dropped item
-          // stuck in a thin band near its original row instead of letting
-          // it land anywhere on the page (2026-08-26, follow-up fix).
           const gridRect = document.getElementById('itemGrid').getBoundingClientRect();
           const contentRect = document.querySelector('.finder-content').getBoundingClientRect();
           const TILE_W = gridGeometry().cellW, TILE_H = TILE_ROW_H;
@@ -2913,14 +2549,6 @@
       if (wasDragging) { render(); renderUnitList(); }
     }
 
-    // ------------------------------------------------------------------
-    // New folder (2026-08-26, per Martin's request — the toolbar "+"
-    // button). Drops a fresh, empty folder into whatever folder is
-    // currently open and immediately starts renaming it, matching real
-    // Finder's own "new folder starts in rename mode" behavior. Switches
-    // out of Recents/Starred back to All Materials first, since a new
-    // folder needs a real parent to live in.
-    // ------------------------------------------------------------------
     document.getElementById('newFolderBtn').addEventListener('click', () => {
       if (mode !== 'browse') { mode = 'browse'; setActiveSidebar('all'); history = [root]; pointer = 0; }
       const node = currentNode();
@@ -2938,15 +2566,6 @@
       renderUnitList();
     });
 
-    // Upload was removed 2026-10-02 (per Martin): uploaded files only lived on
-    // the open page, so they vanished on reload and couldn't be downloaded.
-
-    // ------------------------------------------------------------------
-    // Rename (the pencil icon, 2026-08-26, per Martin's request — "make
-    // the assignments have a pencil"). Swaps the tile/row's name span
-    // for a text input in place; commits on Enter/blur, cancels on
-    // Escape. Works by `_id`, so it's safe even mid-Recents/Starred view.
-    // ------------------------------------------------------------------
     function commitRename(item, value) {
       const trimmed = value.trim();
       if (trimmed) item.name = trimmed;
@@ -2974,13 +2593,6 @@
       input.addEventListener('blur', () => { if (renamingId === item._id) commitRename(item, input.value); });
     }
 
-    // ------------------------------------------------------------------
-    // Delete via Backspace/Delete (2026-08-26, per Martin's request).
-    // Selecting a folder or file and pressing Backspace (or Delete) asks
-    // for confirmation before removing it — a folder's confirmation
-    // spells out everything nested inside it, since deleting a folder
-    // deletes its whole contents too, not just the folder itself.
-    // ------------------------------------------------------------------
     function countContents(folder) {
       let files = folder.files.length, folders = folder.folders.length;
       folder.folders.forEach(sub => {
@@ -3039,25 +2651,6 @@
       renderUnitList();
     });
 
-    // ------------------------------------------------------------------
-    // Right-click menu (2026-08-26, per Martin's request, originally
-    // modeled on his own uploaded Finder context-menu screenshot).
-    // **Trimmed down (2026-08-27)** to just the actions this page
-    // genuinely supports, then **grown back out the same day** as each
-    // one below was made real: Rename and Duplicate (reusing the exact
-    // rename-in-place and duplicate logic), Add to Starred (reuses the
-    // same `starredIds` set the sidebar's Starred view already reads),
-    // Folder Color, Quick Look, Get Info (all new — see their own
-    // functions below), and Move to Trash (reusing the
-    // same delete-confirmation flow as Backspace/Delete, and — per
-    // Martin's request — now only enabled for items the user actually
-    // created, not the original teacher-provided course materials).
-    // **No longer gated to browse mode** (2026-08-27, per Martin's
-    // report that right-click "wont let you right click unless your in a
-    // folder") — see `findParentOf()` above and the `contextmenu`
-    // listener in `attachDragHandlers` for how every action here now
-    // resolves the item's real parent even from Recents/Starred.
-    // ------------------------------------------------------------------
     const contextMenu = document.getElementById('contextMenu');
     const FOLDER_TAG_COLORS = ['#ff453a', '#ff9f0a', '#ffd60a', '#32d74b', '#0a84ff', '#bf5af2', '#98989d'];
     // Mixes a hex color toward white by `amt` (0-1) — used to derive the
@@ -3071,29 +2664,6 @@
       return '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('');
     }
 
-    // Clamp to Grid (2026-08-29, per Martin's request) — snaps every
-    // free-positioned item in the CURRENT folder to its NEAREST grid cell,
-    // rather than clearing `.pos` outright. An earlier version deleted
-    // `.pos` entirely, which dropped every dragged item back into default
-    // flow order — that could teleport an item clear across the window to
-    // wherever it would have landed alphabetically/by-array-order, which
-    // isn't what "clean up" should feel like. Real Finder's own "Clean Up"
-    // has the same distinction (snap in place vs. "Clean Up By" which
-    // re-sorts) — this is the snap-in-place one. `CLAMP_STEP_X`/`_Y` match
-    // the tile's own footprint (84px width + the grid's 4px gap = 88;
-    // `_Y` reuses the 96px row-height assumption `render()`'s own
-    // `maxBottom` calc below already makes when growing the grid's
-    // `minHeight` to fit free-positioned tiles). Scoped to the current
-    // folder rather than the whole tree, since that's the only layout the
-    // user can actually see and judge "did this work" against. Lives in
-    // the one shared `buildContextMenu()` below, so it's available from
-    // both dropdowns (right-click and the "..." More Options button) for
-    // free, same as every other menu item — but unlike the per-item
-    // actions around it, it ignores which item was clicked entirely and
-    // acts on the whole folder. Snapped positions aren't de-collided
-    // against each other — two tiles dragged very close together can snap
-    // to the same cell — matching the simple "align, don't re-lay-out"
-    // scope Martin asked for rather than a full grid-packing algorithm.
     const TILE_ROW_H = 136;   // same as .item-grid's grid-auto-rows
     // The grid's real cell size: columns stretch to fill the width.
     function gridGeometry() {
@@ -3107,9 +2677,6 @@
       const node = currentNode();
       return node.folders.some(f => f.pos) || node.files.some(f => f.pos);
     }
-    // Clamp to Grid (fixed 2026-10-02): every free-placed item moves to the
-    // nearest cell that's empty. Items still in the normal flow fill the first
-    // cells in order (folders, then files), so those cells count as taken.
     function clampToGrid() {
       const node = currentNode();
       const g = gridGeometry();
@@ -3194,23 +2761,12 @@
       renderUnitList();
     }
 
-    // Add to Starred (2026-08-27, per Martin's request) — files only,
-    // same scope as the existing Starred quick-access view (which is
-    // built from `allFilesFlat()`, so it only ever lists files anyway).
-    // Toggles membership in the same `starredIds` set that view already
-    // reads, so the change shows up there immediately with no separate
-    // "starred" data model needed.
     function toggleStarred(item) {
       if (starredIds.has(item._id)) starredIds.delete(item._id);
       else starredIds.add(item._id);
       render();
     }
 
-    // Quick Look (2026-08-27, per Martin's request — "quick peek shows a
-    // popup of whats inside"). A folder's peek lists its immediate
-    // contents (not a full recursive tree — a peek, not a full browse);
-    // a file's peek is a preview card, since there's no real file
-    // content in this mock to actually display.
     const quickLookOverlay = document.getElementById('quickLookOverlay');
     const qlIcon = document.getElementById('qlIcon');
     const qlTitle = document.getElementById('qlTitle');
@@ -3261,8 +2817,6 @@
     qlCloseBtn.addEventListener('click', closeQuickLook);
     quickLookOverlay.addEventListener('click', e => { if (e.target === quickLookOverlay) closeQuickLook(); });
 
-    // Get Info (2026-08-27, per Martin's request — including whether the
-    // item is teacher- or student-created).
     const infoOverlay = document.getElementById('infoOverlay');
     const infoTitle = document.getElementById('infoTitle');
     const infoBody = document.getElementById('infoBody');
@@ -3297,16 +2851,6 @@
     infoCloseBtn.addEventListener('click', closeInfoModal);
     infoOverlay.addEventListener('click', e => { if (e.target === infoOverlay) closeInfoModal(); });
 
-    // Real client-side download (2026-09-03, per Martin's material-types
-    // scoping decision: real file preview/editing waits for the Drive/
-    // Canva integrations already on the roadmap for Release 1.0.0, but
-    // "for now we should just have a download option"). There's no real
-    // backend holding actual file bytes in this mock, so this generates a
-    // small placeholder text blob and downloads it under the file's real
-    // name/extension via a throwaway <a download> link — the download
-    // itself genuinely fires (a real Save/Downloads-folder event), only
-    // the file's *content* is a stand-in, same honesty convention Quick
-    // Look already uses ("No preview available in this mock").
     function downloadPlaceholderFile(item) {
       if (item.live && !item.url) { window.location.href = liveFileUrl(item); return; }   // signed in: the real file
       const content = `${item.name}\n\nThis is a placeholder file from the Averages mockup — no real file content is stored yet.\nReal file delivery is coming with the Drive/Canva integrations (Release 1.0.0).`;
@@ -3321,15 +2865,6 @@
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
 
-    // Whole-folder download (2026-09-03, per Martin: "Allow users to save
-    // the whole folder to their computer") — builds a real .zip client-
-    // side via JSZip (served from /vendor, see the <script> tag in <head>),
-    // recursing through the folder's own `folders`/`files` tree so the
-    // zip's own internal structure matches what's on screen. Each file
-    // inside gets the same placeholder-text-blob treatment
-    // downloadPlaceholderFile() uses for a single file — the zip itself
-    // is completely real and genuinely downloads, only each file's
-    // *content* inside it is a stand-in.
     function addFolderToZip(zipFolder, node) {
       (node.files || []).forEach(f => {
         const content = `${f.name}\n\nThis is a placeholder file from the Averages mockup — no real file content is stored yet.\nReal file delivery is coming with the Drive/Canva integrations (Release 1.0.0).`;
@@ -3349,7 +2884,6 @@
         infoCloseBtn.focus();
         return;
       }
-      // Signed in: the real files, through the steady downloader below (2026-10-16).
       if (MATERIALS_LIVE) { downloadLiveFolder(folder); return; }
       const zip = new JSZip();
       addFolderToZip(zip, folder);
@@ -3371,12 +2905,6 @@
 
       if (!isFolder && opensInBrowser(item)) add(cmItem('Open in New Tab', () => openFile(item)));
       add(cmItem('Quick Look', () => openQuickLook(item, isFolder)));
-      // Download — real files only. A folder gets its own "Download
-      // Folder" (a real .zip, see downloadFolderAsZip() above — added
-      // 2026-09-03 per Martin's "save the whole folder to their
-      // computer" request). A quiz item gets neither: it isn't a
-      // document at all, it's taken in Schoology (see the redirect
-      // notice on assignment.html), so there's nothing here to download.
       if (isFolder) {
         add(cmItem('Download Folder', () => downloadFolderAsZip(item)));
       } else {
@@ -3393,7 +2921,6 @@
       add(item.quiz ? lockedItem(cloud, 'tests stay in Schoology') : item.url ? lockedItem(cloud, item.drive ? 'it\'s already in Google Drive' : 'web links open in the browser') : cloud);
       add(cmItem('Get Info', () => openInfoModal(item, isFolder)));
       divider();
-      // Tests and teacher folders: no Rename / Duplicate (2026-10-02)
       const locked = item.quiz ? 'tests stay in Schoology' : isTeacherFolder(item, isFolder) ? "the teacher's folder" : '';
       const ren = cmItem('Rename', () => { if (locked) return; selectedId = item._id; renamingId = item._id; render(); });
       const dup = cmItem('Duplicate', () => { if (!locked) duplicateItem(item, isFolder, parent); });
@@ -3404,13 +2931,6 @@
         add(cmItem(starred ? 'Remove from Starred' : 'Add to Starred', () => toggleStarred(item)));
       }
 
-      // Folder Color (2026-08-27, per Martin's request) — folders only,
-      // since a file's icon doesn't have a body fill to recolor. Clicking
-      // a swatch sets `item.tagColor` and re-renders; clicking the swatch
-      // that's already applied clears it back to the default blue, same
-      // toggle-off behavior real Finder tags have. Labeled with an actual
-      // word (per Martin's follow-up) rather than just an unlabeled row
-      // of dots, so it's clear what the row does at a glance.
       if (isFolder) {
         divider();
         const tagsLabel = document.createElement('div');
@@ -3453,11 +2973,6 @@
       }
       add(clampBtn);
       divider();
-      // Move to Trash (2026-08-27, per Martin's request — "only let them
-      // add file to trash if its user created"): disabled for anything
-      // from the original teacher-provided sample data, real only for
-      // items the user made (New Folder, Duplicate) — see `userCreated`.
-      // The Backspace/Delete shortcut gets the same check, below.
       const canTrash = !!item.userCreated;
       const trashBtn = cmItem('Move to Trash', () => { if (canTrash) requestDelete(item, isFolder, parent); });
       trashBtn.disabled = !canTrash;
@@ -3488,23 +3003,6 @@
       if (e.target.id === 'itemGrid') closeContextMenu();
     });
 
-    // "More options" toolbar button (2026-08-28, per Martin's request —
-    // "make the three dots when clicked on bring down the same dropdown
-    // as right clicking but make them only work when a assignment is
-    // selected") — opens the exact same `buildContextMenu`/
-    // `openContextMenu` a right-click on an item already opens, just
-    // anchored under this button instead of at the cursor. **Widened
-    // 2026-08-28 (per Martin's request: "make the share and three dot
-    // buttons work on every page of the materials hub, not just on the
-    // assignment tab") from assignment-files-only to any selected file OR
-    // folder** — the original assignment-only gating meant these stayed
-    // disabled the moment you selected an ordinary file/folder anywhere
-    // outside the Assignments quick-access view, which read as broken
-    // rather than intentional. `selectedItem()` below resolves whatever's
-    // currently selected (via the whole-tree `findItemById()` above) the
-    // same way `findParentOf()` already does for the right-click handler,
-    // so this button works identically from any course folder, subfolder,
-    // or quick-access view — not just Assignments.
     const moreOptionsBtn = document.getElementById('moreOptionsBtn');
     function selectedItem() {
       return findItemById(selectedId);
@@ -3540,9 +3038,6 @@
       const node = findParentOf(selectedId) || currentNode();
       const folderMatch = node.folders.find(x => x._id === selectedId);
       const fileMatch = !folderMatch && node.files.find(x => x._id === selectedId);
-      // Only items the user actually created can be deleted this way too
-      // (2026-08-27, per Martin's request) — same `userCreated` check as
-      // the right-click menu's Move to Trash.
       if (folderMatch && folderMatch.userCreated) { e.preventDefault(); requestDelete(folderMatch, true, node); }
       else if (fileMatch && fileMatch.userCreated) { e.preventDefault(); requestDelete(fileMatch, false, node); }
     });
@@ -3556,14 +3051,6 @@
 
     document.querySelectorAll('.fs-item[data-quick]').forEach(btn => {
       btn.addEventListener('click', () => {
-        // The "All Materials" sidebar item's own data-quick is "all", but
-        // every mode check elsewhere in the file (back/forward buttons,
-        // drag-and-drop, free positioning, and now the "+" New Folder
-        // gating below) tests for the real state name "browse" — using
-        // the raw "all" string here left `mode` stuck out of sync with
-        // those checks whenever a user returned to All Materials via the
-        // sidebar rather than by paging back through folder history
-        // (2026-08-28 fix, found while wiring up New Folder's gating).
         const quick = btn.dataset.quick;
         mode = quick === 'all' ? 'browse' : quick;
         renamingId = null;
@@ -3614,16 +3101,10 @@
       if (mode === 'starred') {
         return { folders: [], files: allFilesFlat(root).filter(f => starredIds.has(f._id)) };
       }
-      // Assignments (2026-08-28, per Martin's request) — a flat,
-      // course-wide list of every file flagged `assignment: true`,
-      // regardless of which folder it lives in, same "computed view"
-      // idiom Recents/Starred already use. Sorted soonest-due-first so
-      // the table reads like a real to-do list rather than tree order.
       if (mode === 'assignments') {
         return { folders: [], files: allFilesFlat(root).filter(f => f.assignment).sort((a, b) => parseMockDue(a.due) - parseMockDue(b.due)) };
       }
       const node = currentNode();
-      // Searching (2026-10-02): everything under this folder, not just its top level.
       if (deepSearchActive()) {
         const folders = [], files = [];
         (function walk(n) { files.push(...n.files); n.folders.forEach(f => { folders.push(f); walk(f); }); })(node);
@@ -3645,12 +3126,6 @@
       return !q || name.toLowerCase().includes(q);
     }
 
-    // Wraps every occurrence of the current search text inside `name` in
-    // a blue <mark>, so a match is visibly obvious rather than just
-    // implied by the item surviving the filter (2026-08-26, per Martin's
-    // request). Escapes the name first (this was interpolated raw into
-    // markup before — piggybacking that fix onto this change rather than
-    // leaving the new <mark> tags as the only escaped part of the name).
     function escapeHtml(str) {
       return str.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     }
@@ -3668,35 +3143,15 @@
       document.getElementById('finderTitle').textContent =
         mode === 'recents' ? 'Recents' : mode === 'starred' ? 'Starred' : mode === 'assignments' ? 'Assignments' : currentNode().name;
 
-      // Assignments (2026-08-28) is a table-only view — per Martin's
-      // request it never shows as a grid, and the Grid/List toggle
-      // itself is hidden while it's active rather than left sitting
-      // there pointing at a mode it can't actually switch away from.
-      // `effectiveView` (not the underlying `view` state) drives every
-      // grid-vs-table decision below, so a user's own Grid/List
-      // preference is preserved and restored the moment they leave
-      // Assignments for any other quick-access item or folder.
       const inAssignments = mode === 'assignments';
       const effectiveView = inAssignments ? 'list' : view;
       document.getElementById('viewToggleGroup').hidden = inAssignments;
       document.getElementById('listThirdColHeader').textContent = inAssignments ? 'Due' : 'Created';
 
-      // "+" New folder only makes sense in All Materials (2026-08-28, per
-      // Martin's request) — Recents/Starred/Assignments are computed,
-      // read-only views over the real tree with no folder of their own to
-      // drop a new one into, so the button is greyed out there rather than
-      // silently redirecting the user back to All Materials on click.
       const newFolderBtn = document.getElementById('newFolderBtn');
       newFolderBtn.disabled = mode !== 'browse';
       newFolderBtn.setAttribute('aria-label', mode === 'browse' ? 'New folder' : 'New folder (switch to All Materials)');
 
-      // "More options" toolbar button lights up whenever anything is
-      // selected — any file or folder, on any page of the Materials hub,
-      // not just an assignment in the Assignments view (see the click
-      // handler above for the 2026-08-28 widening). Re-checked on every
-      // render (not just on click) so it stays in sync as `selectedId`
-      // changes from any of the several places that set it (a tile/row
-      // click, right-click, etc.).
       const moreBtn = document.getElementById('moreOptionsBtn');
       const sel = selectedItem();
       const selEnabled = !!sel;
@@ -3716,14 +3171,6 @@
       grid.hidden = effectiveView !== 'grid' || total === 0;
       list.hidden = effectiveView !== 'list' || total === 0;
 
-      // Builds the name span/input shared by both grid tiles and list
-      // rows. **The hover-reveal pencil button is gone (2026-08-27, per
-      // Martin's request — "remove the pencil icon and let users use
-      // rename from there")** — "from there" being the right-click menu's
-      // own Rename item (see buildContextMenu below), which sets the same
-      // `renamingId` this always read from. Renaming itself is otherwise
-      // unchanged: the same in-place `<input>` swap, the same
-      // commit/cancel behavior.
       function nameAndEditMarkup(item) {
         if (renamingId === item._id) {
           return `<input type="text" class="item-name-input" value="${escapeHtml(item.name)}">`;
@@ -3765,13 +3212,6 @@
           tile.className = 'item-tile' + (selectedId === f._id ? ' selected' : '') + (useFreePos && f.pos ? ' free-pos' : '');
           if (useFreePos && f.pos) { tile.style.left = f.pos.x + 'px'; tile.style.top = f.pos.y + 'px'; }
           tile.innerHTML = `<span class="item-icon">${folderIconSVG(f.tagColor)}</span>${nameAndEditMarkup(f)}${whereMarkup(f)}`;
-          // Single click opens the folder — fixed 2026-09-08. This used to
-          // require a real double-click, which reads as "you can't click
-          // into folders" on a touch device (a double-tap doesn't reliably
-          // fire two 'click' events close enough together to register as a
-          // browser dblclick), matching Martin's report. dblclick stays
-          // wired below too, harmlessly redundant for anyone with mouse
-          // muscle memory.
           tile.addEventListener('click', () => { if (renamingId !== f._id) { if (selectedId === f._id) { openNode(f, true); } else { selectItem(f._id); } } });
           tile.addEventListener('keydown', e => { if (e.key === 'Enter' && renamingId !== f._id) openNode(f, true); });
           attachDragHandlers(tile, f, true);
@@ -3786,25 +3226,6 @@
           tile.className = 'item-tile' + (selectedId === f._id ? ' selected' : '') + (useFreePos && f.pos ? ' free-pos' : '');
           if (useFreePos && f.pos) { tile.style.left = f.pos.x + 'px'; tile.style.top = f.pos.y + 'px'; }
           tile.innerHTML = `<span class="item-icon">${fileIconSVG(f)}</span>${nameAndEditMarkup(f)}${whereMarkup(f)}${starBadgeMarkup(f)}`;
-          // Assignment-flagged files open their own detail page (added
-          // 2026-08-29, so this page's Assignments quick-access view and
-          // the app-level assignments.html both lead somewhere real);
-          // Quiz items (2026-09-03) route the same way — assignment.html
-          // is exactly where the "taken in Schoology" redirect notice
-          // already lives, so a quiz material here should land on it too
-          // rather than needing its own separate destination.
-          //
-          // Fixed 2026-09-07: plain course-material files used to have no
-          // open action at all beyond selecting — a real double-click did
-          // nothing, which read as "you can't open anything in here."
-          // Quick Look already exists (right-click > Quick Look) and
-          // already handles "no preview available in this mock" cleanly,
-          // so it's what double-click/Enter open for a plain file too,
-          // instead of leaving it dead.
-          //
-          // Fixed 2026-09-08: single click now does the same open action
-          // dblclick already did — see the matching folder-tile comment
-          // above for why (touch devices don't reliably deliver dblclick).
           if (f.assignment || f.quiz) {
             tile.addEventListener('click', () => { if (renamingId !== f._id) { if (selectedId === f._id) { openAssignmentDetail(f); } else { selectItem(f._id); } } });
             tile.addEventListener('keydown', e => { if (e.key === 'Enter' && renamingId !== f._id) openAssignmentDetail(f); });
@@ -3846,12 +3267,6 @@
           tr.className = selectedId === f._id ? 'selected' : '';
           const kindLabel = f.quiz ? 'Quiz' : f.drive ? `Google Drive${f.assignment ? ' · Assignment' : ''}` : (f.url ? 'Web link' : `${f.ext.toUpperCase()} Document${f.assignment ? ' · Assignment' : ''}`);
           tr.innerHTML = `<td class="name-cell"><span class="item-icon">${smallFileIconSVG(f)}</span>${nameAndEditMarkup(f)}${whereMarkup(f)}${starBadgeMarkup(f)}</td><td class="kind-cell">${escapeHtml(kindLabel)}</td><td class="size-cell">${escapeHtml(inAssignments ? (f.due || '—') : (f.created || '—'))}</td>`;
-          // Same fix as the grid tile above (2026-09-07 for the open action
-          // existing at all, 2026-09-08 for single click triggering it): a
-          // plain file's row used to have no open action at all, only an
-          // assignment/quiz row did, and both required a real double-click,
-          // unreliable on touch. Quick Look fills the "no action" gap;
-          // single click now does what dblclick already did.
           if (f.assignment || f.quiz) {
             tr.addEventListener('click', () => { if (renamingId !== f._id) { if (selectedId === f._id) { openAssignmentDetail(f); } else { selectItem(f._id); } } });
           } else {
@@ -3864,24 +3279,14 @@
       }
     }
 
-
-    // Download button (2026-10-01): the selected file, the selected folder as
-    // a .zip, or the open folder as a .zip when nothing is selected. A web
-    // link can't be downloaded or saved to the cloud (greyed out, 2026-10-04).
     document.getElementById('downloadBtn').addEventListener('click', () => {
       const hit = selectedId ? findItemById(selectedId) : null;
       if (hit && hit.isFolder) { downloadFolderAsZip(hit.item); return; }
-      if (hit && hit.item.url) return;   // web links can't be downloaded (2026-10-04); the button is greyed out
+      if (hit && hit.item.url) return;
       if (hit) { downloadPlaceholderFile(hit.item); return; }
       downloadFolderAsZip(currentNode());
     });
 
-    // ------------------------------------------------------------------
-    // Undo (Ctrl+Z / Cmd+Z, 2026-10-01): after every render, if the
-    // materials changed, keep a copy. Undo restores the copy before it and
-    // points Back/Forward at the restored folders. Typing in a rename box
-    // keeps the browser's own text undo.
-    // ------------------------------------------------------------------
     const undoStack = [];
     function materialsKey() { return JSON.stringify([root.folders, root.files, [...starredIds].sort()]); }
     function captureMaterials() {
@@ -3916,10 +3321,6 @@
     const renderWithoutUndo = render;
     render = function () { renderWithoutUndo(); captureMaterials(); };
 
-    // Toolbar buttons that depend on the selection (2026-10-02). Also run on a
-    // plain click-to-select, which doesn't re-render (so More used to stay
-    // grey until something else redrew the page). Tests: Download / Save to
-    // cloud off while one is selected.
     function syncSelectionButtons() {
       const hit = selectedId ? findItemById(selectedId) : null;
       const more = document.getElementById('moreOptionsBtn');
@@ -3939,9 +3340,6 @@
     const renderWithoutTestLock = render;
     render = function () { renderWithoutTestLock(); syncSelectionButtons(); };
 
-    // Save to cloud (2026-10-02): where Upload used to be. Same target as
-    // Download (the selected item, or the open folder). Google Drive isn't
-    // connected yet, so it's shown as Coming soon (OneDrive back 2026-10-05).
     const cloudBtn = document.getElementById('cloudBtn');
     const cloudMenu = document.getElementById('cloudMenu');
     function closeCloudMenu() { cloudMenu.hidden = true; cloudBtn.setAttribute('aria-expanded', 'false'); }
@@ -3955,18 +3353,13 @@
         hit ? { item: hit.item, isFolder: hit.isFolder } : { item: mode === 'browse' ? currentNode() : root, isFolder: true });
       cloudBtn.setAttribute('aria-expanded', 'true');
     });
-    // Shared by the toolbar button and the right-click menu's "Save to Cloud".
-    // alignRight: the menu's right edge sits at x (toolbar); otherwise its left edge.
-    // Files Canva can open (2026-10-02). Not folders or web links.
     const CANVA_EXTS = ['pdf', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'key', 'numbers', 'pages', 'odt', 'odp', 'ods', 'png', 'jpg', 'jpeg', 'gif', 'heic', 'ai', 'psd'];
     function canvaCanOpen(item, isFolder) { return !!item && !isFolder && !item.url && !item.quiz && CANVA_EXTS.includes(String(item.ext || '').toLowerCase()); }
     let cloudMenuTarget = null;
     function openCloudMenu(targetName, x, y, alignRight, withCanva, target) {
       cloudMenuTarget = target || null;
-      // Logos (2026-10-19): OneDrive keeps an empty slot until it has one, so the names line up.
       const CM_MARK = { 'Google Drive': '<span class="drive-mark" aria-hidden="true"></span>', OneDrive: '<span class="brand-slot" aria-hidden="true"></span>', Canva: '<span class="canva-mark" aria-hidden="true"></span>' };
       const soon = n => `<button class="context-menu-item" type="button" role="menuitem" disabled><span class="cm-name">${CM_MARK[n] || ''}<span>${n}</span></span><span class="cloud-soon">Coming soon</span></button>`;
-      // Signed in (2026-10-16): Canva is real, for a file or a whole folder (see "Save to Canva" below).
       let canva = '';
       if (MATERIALS_LIVE && target) {
         const n = canvaFilesIn(target).length;
@@ -3995,11 +3388,6 @@
       if (target) startCanvaSave(target);
     });
 
-    // ------------------------------------------------------------------
-    // Background tasks (2026-10-16): Save to Canva and folder downloads show
-    // their progress in one small panel at the bottom right, so the page
-    // stays usable while they run.
-    // ------------------------------------------------------------------
     const SAVE_MAX_FILES = 50;
     let canvaReady = null;   // null until /canva/status answers
     if (MATERIALS_LIVE) {
@@ -4149,10 +3537,6 @@
     }
     if (MATERIALS_LIVE) savedJobs().forEach(x => followSave(x.job, x.name, null));
 
-    // Folder downloads (2026-10-16): three files at a time, each tried again
-    // when the server is busy (it says how long to wait) or the network
-    // blinks, so one hiccup no longer loses the whole folder. Files that still
-    // fail are listed; the zip has everything else.
     const ZIP_MAX_BYTES = 100 * 1024 * 1024;
     async function fetchWithRetry(url, ctl) {
       for (let attempt = 0; ; attempt++) {
@@ -4168,8 +3552,6 @@
       }
     }
     async function downloadLiveFolder(folder) {
-      // Each entry: the file and where it goes in the zip. Teachers' names can hold
-      // "/" or ".." (2026-10-06): each is one plain entry, repeats get " (2)".
       const zipName = (name, used) => {
         let n = String(name || 'File').replace(/[\\/\u0000-\u001f]/g, '_').replace(/^\.+/, '_').trim().slice(0, 180) || 'File';
         const dot = n.lastIndexOf('.');
@@ -4236,20 +3618,9 @@
       drawTasks();
     }
 
-    // ------------------------------------------------------------------
-    // File previews (2026-10-16): a small picture of each image and PDF
-    // (its first page) in place of the file icon, and a bigger one in Quick
-    // Look. Made on this device from the file the API already serves (PDFs
-    // drawn with PDF.js), never stored on our servers. Only for tiles on
-    // screen, two at a time; small ones are kept for this tab
-    // (sessionStorage, like the rest of the page cache). Off with Settings >
-    // File Previews, in Potato PC Mode, and when the browser asks to save data.
-    // Word, PowerPoint and Excel keep their icons for now.
-    // ------------------------------------------------------------------
     const PREVIEW_IMG = ['png', 'jpg', 'jpeg', 'gif', 'webp'];
     const PREVIEW_MAX = { img: 8 * 1024 * 1024, pdf: 10 * 1024 * 1024 };
     const PREVIEW_KEY = 'averages_previews';
-    // pdf.js 4.10.38, served by the app itself (2026-10-23; npm's pdfjs-dist build, byte for byte the same as cdnjs's).
     const PDFJS = '/vendor/pdfjs-4.10.38/';
     function previewsOn() {
       if (!MATERIALS_LIVE || document.body.classList.contains('potato-mode')) return false;
@@ -4386,8 +3757,6 @@
         .catch(() => box.remove());
     };
 
-    // Clamp to Grid fix (2026-10-02): free-placed tiles are one column wide;
-    // search results keep flexible rows.
     const renderWithoutCells = render;
     render = function () {
       renderWithoutCells();
@@ -4396,7 +3765,6 @@
       if (!grid.hidden) grid.style.setProperty('--cell-w', gridGeometry().cellW + 'px');
     };
 
-    // Materials restyle (2026-10-02): "N items" under the title.
     const renderWithoutMeta = render;
     render = function () {
       renderWithoutMeta();
@@ -4412,12 +3780,6 @@
     renderUnitList();
     render();
 
-    // Show in Materials (Files page, 2026-10-04): ?file=<name> opens the
-    // folder that file is in (Back goes up through its parents), selects it
-    // and scrolls to it. The first file with that name wins. ?file= is then
-    // dropped from the address so a reload doesn't jump again.
-    // Signed in (2026-10-06) it's ?show=<kind>:<parent>:<fileId>, the exact
-    // file, once the class's files and folders have loaded (liveMaterials).
     function dropParam(name) {
       try {
         const u = new URL(location.href);
@@ -4470,9 +3832,6 @@
       });
     });
 
-    // ------------------------------------------------------------------
-    // Course banner + tabs, shared with the course hub (2026-10-01).
-    // ------------------------------------------------------------------
     (function fillCourseSheet() {
       const SHEET_EMOJI_SVG = {
         "🧪": "<svg aria-hidden=\"true\" focusable=\"false\" viewBox=\"0 0 36 36\"><path fill=\"#CCD6DD\" d=\"M14.563 14.414 25.47 3.505l6.961 6.962-10.908 10.908z\"/><path fill=\"#68E090\" d=\"M8.103 34.399C2.5 34 1.5 30.062 1.635 27.932c.322-5.07 15.601-16.551 15.601-16.551l12.517 1.93c.001 0-17.389 21.392-21.65 21.088z\"/><path fill=\"#8899A6\" d=\"M32.326 3.708C29.405.787 26.104-.649 24.954.502c-.013.013-.022.031-.034.044-.006.006-.015.008-.021.014L2.295 23.164a7.43 7.43 0 0 0-2.19 5.288c0 1.997.778 3.875 2.19 5.287a7.429 7.429 0 0 0 5.288 2.19 7.426 7.426 0 0 0 5.287-2.189l22.604-22.604c.007-.007.009-.016.015-.023.013-.012.03-.02.043-.033 1.151-1.15-.285-4.451-3.206-7.372zM10.75 31.619c-.846.846-1.97 1.311-3.166 1.311s-2.321-.466-3.167-1.312a4.448 4.448 0 0 1-1.312-3.167c0-1.196.466-2.32 1.311-3.166L25.412 4.29c.622 1.144 1.56 2.394 2.749 3.584 1.189 1.189 2.44 2.127 3.584 2.749L10.75 31.619z\"/><path fill=\"#17BF63\" d=\"M29.196 13.144c-.058.379-2.627.751-5.691.343-3.063-.408-5.482-1.223-5.403-1.82.08-.597 2.627-.751 5.691-.343s5.495 1.224 5.403 1.82zM10.84 23.247a.794.794 0 1 1-1.123-1.124.794.794 0 0 1 1.123 1.124zm3.317 2.615a1.298 1.298 0 1 1-1.835-1.836 1.298 1.298 0 0 1 1.835 1.836zm1.677-5.324a1.222 1.222 0 0 1-1.726-1.726 1.22 1.22 0 1 1 1.726 1.726zm-6.868 8.858a1.489 1.489 0 1 1-2.105-2.106 1.489 1.489 0 0 1 2.105 2.106zm11.396-9.158a1.058 1.058 0 1 1-1.496-1.497 1.058 1.058 0 0 1 1.496 1.497zm-1.207-4.288a.693.693 0 1 1-.979-.98.693.693 0 0 1 .979.98z\"/><ellipse cx=\"30.817\" cy=\"5.223\" fill=\"#CCD6DD\" rx=\"1.184\" ry=\"4.847\" transform=\"rotate(-45.001 30.817 5.223)\"/></svg>",
@@ -4527,7 +3886,6 @@
       }
       const subject = (typeof courseSubject === 'function') ? courseSubject(course.name) : null;
       const emoji = course.emoji || (subject ? subject[1] : '📚');
-      // Potato mode (2026-10-20): the plain emoji character, not the drawn picture.
       if (document.body.classList.contains('potato-mode')) el('sheetEmoji').textContent = SHEET_EMOJI_SVG[emoji] ? emoji : '📚';
       else el('sheetEmoji').innerHTML = SHEET_EMOJI_SVG[emoji] || SHEET_EMOJI_SVG['📚'];
       el('sheetTitle').textContent = course.name;
@@ -4538,8 +3896,6 @@
       if (course.code) meta.push(course.code);
       el('sheetMeta').textContent = meta.join(' · ');
       linkTeacherIn(el('sheetMeta'), course.teacher, course.name);
-      // Cards that load on their own (2026-10-20): the teacher's name (and the
-      // directory behind the teacher card) comes in after the page draws.
       window.__averagesExtraLanded = function (name) {
         if (name !== 'people' || !window.__AVERAGES__ || !window.__AVERAGES__.data) return;
         const data = window.__AVERAGES__.data;
@@ -4553,8 +3909,6 @@
         linkTeacherIn(el('sheetMeta'), course.teacher, course.name);
       };
       const ARROW = { up: '↗', down: '↘', flat: '–' };
-      // A function since 2026-10-27 so live grades can paint it again;
-      // data-live marks the values that roll (public/js/averages-live.js).
       function paintSheetScore() {
         const id = esc(course.id);
         document.querySelector('.sheet-score').hidden = !course.grade;
@@ -4571,13 +3925,6 @@
       });
     })();
 
-    // ------------------------------------------------------------------
-    // Projected-grade popup (2026-10-04, per Martin): hovering or focusing
-    // Projected shows the score trend behind it, same as the Updates and
-    // Grades tabs. HISTORY is the same sample as gradebook.html's, and live
-    // data replaces it (see OVERRIDABLE in scripts/port-pages.mjs). With no
-    // history for this course, Projected just stays a plain number.
-    // ------------------------------------------------------------------
     const HISTORY = {
       apchem: { points: [72, 79, 84, 88, 90], dates: ['Aug 4', 'Aug 8', 'Aug 12', 'Aug 18', 'Aug 24'] },
       algebra2: { points: [94, 96, 93, 97, 95], dates: ['Aug 3', 'Aug 7', 'Aug 11', 'Aug 17', 'Aug 23'] },
@@ -4675,7 +4022,6 @@
       window.addEventListener('scroll', hideGradePopup, { passive: true });
     })();
 
-    // Current grade opens this course's Grades tab (2026-10-04, per Martin).
     (function () {
       const b = document.getElementById('curBlock');
       if (!b) return;
@@ -4685,19 +4031,6 @@
       b.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
     })();
 
-    // ------------------------------------------------------------------
-    // Profile menu — same behavior as every other page.
-    // ------------------------------------------------------------------
-    // ------------------------------------------------------------------
-    // Signed in: the class's real files (2026-10-05). GET /data/files lists
-    // every file in the student's classes (teachers' Materials documents and
-    // files attached to assignments), so an assignment with nothing attached
-    // never appears. Same 5-minute cache as the Files page. Google Classroom
-    // files are Google Drive links. Teacher files can't be renamed or deleted
-    // (they aren't the student's); the student's own folders work as before,
-    // on this page only. Since 2026-10-06 the teachers' own folders show too
-    // (teacherFolders below).
-    // ------------------------------------------------------------------
     function liveApiBase() { return window.location.hostname.endsWith('averages.io') ? 'https://api.averages.io' : 'http://localhost:8787'; }
     function liveFileUrl(f) {
       const l = f.live || {};
@@ -4728,13 +4061,6 @@
       const dueById = new Map();
       [].concat(Array.isArray(data.OVERDUE) ? data.OVERDUE : [], Array.isArray(data.UPCOMING) ? data.UPCOMING : []).forEach(x => { if (x && x.id) dueById.set(String(x.id), String(x.due || '')); });
       const label = ms => (ms ? new Date(ms).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '');
-      // Teachers' folders (2026-10-06): FOLDERS (GET /data/folders, loaded by
-      // LegacyPage for this page) lists this class's folders and which folder
-      // each item is in, keyed "<kind>:<parent>" like the items themselves.
-      // Folders nest by `parent`; a folder whose parent is missing (or that
-      // loops back on itself) and any item that isn't placed sit at the top.
-      // Without FOLDERS for this class the list stays flat, as before.
-      // Google Classroom's topics come the same way.
       const FOLDER_ID = /^[A-Za-z0-9_-]{1,64}$/;
       // Schoology names its folder colours; anything else must be a hex colour.
       const NAMED_COLOR = { red: '#ff453a', orange: '#ff9f0a', yellow: '#ffd60a', green: '#32d74b', blue: '#0a84ff', purple: '#bf5af2', pink: '#ff375f', gray: '#98989d', grey: '#98989d', black: '#3a3a3c' };
@@ -4822,8 +4148,6 @@
         render();
         showLiveFile();
       }
-      // Show in Materials from Files (2026-10-06): ?show=<kind>:<parent>:<fileId>.
-      // Read now and dropped right away; used once the files have loaded.
       const pendingShow = new URLSearchParams(location.search).get('show');
       if (pendingShow) dropParam('show');
       function showLiveFile() {
@@ -4838,22 +4162,12 @@
     })();
 
     const profileBtn = document.getElementById('profileBtn');
-    // Shared profile photo/name (2026-09-07) — settings.html's Edit
-    // Profile modal is the only place this is ever set, but every other
-    // page's top-right profile button used to just show a fixed "M" no
-    // matter what was saved there: the button never read anything back,
-    // so a photo you set in Settings was invisible the moment you left
-    // it. schoolagy_profile is the same localStorage record
-    // settings.html writes on every save; this is read-only here.
     (function () {
       var profile = null;
       try {
         var raw = localStorage.getItem('schoolagy_profile');
         if (raw) profile = JSON.parse(raw);
       } catch (e) {}
-      // No name saved on this device (new device, or signed out with Sync
-      // off): the account's own name from the sign-in, never a sample name
-      // (2026-10-14; this used to fall back to "Martin" / "M").
       if (!profile || !profile.name || !String(profile.name).trim()) profile = Object.assign({}, profile, { name: window.__AVERAGES_NAME__ || '' });
       if (profile.photo) {
         profileBtn.style.backgroundImage = 'url("' + profile.photo + '")';
@@ -4862,7 +4176,7 @@
         profileBtn.textContent = '';
         profileBtn.classList.add('has-photo');
       } else if (profile.name) {
-        if (window.AveragesAvatar) window.AveragesAvatar.paint(profileBtn, profile.name);   // initials on their own color (2026-10-23, averages-avatar.js)
+        if (window.AveragesAvatar) window.AveragesAvatar.paint(profileBtn, profile.name);
         else profileBtn.textContent = (function (n) { var p = String(n).trim().split(/\s+/).filter(Boolean); var f = function (w) { return w ? Array.from(w)[0] : ''; }; return (f(p[0]) + (p.length > 1 ? f(p[p.length - 1]) : '')).toUpperCase(); })(profile.name);
       }
     })();
@@ -4880,11 +4194,6 @@
     });
   </script>
   <script>
-    // Back link (2026-10-01, per Martin: "where it returns to ... is always
-    // wrong"). Every page records itself in a short per-tab trail; a page's
-    // back link then says and goes to the page before it ("Back to AP
-    // Chemistry Hub", "Back to Grades"...). With no trail (the page was
-    // opened directly) the page's own default back link is left alone.
     (function () {
       const SELF = 'course-materials.html';
       const KEY = 'averages_nav_trail';

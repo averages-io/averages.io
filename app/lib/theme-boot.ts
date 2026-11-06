@@ -1,34 +1,4 @@
-/**
- * The user's saved dark-mode / accent / background, applied before the browser
- * paints anything at all.
- *
- * ── Why this is a string of JS and not a normal function ──────────────────
- * It has to run earlier than React can run anything. LegacyPage used to apply
- * the theme in a layout effect, which is before paint — but only once React
- * has hydrated, and the server-rendered HTML is on screen well before that.
- * The visible result, caught on video 2026-09-16: the page appears on the
- * near-black CSS default, then flips to the saved wallpaper about a tenth of
- * a second later. Same class of bug as the missing skeleton.
- *
- * The fix is the standard no-flash pattern — a synchronous inline <script>,
- * which blocks parsing where it sits, so it is guaranteed to have run before
- * the markup after it is parsed, let alone painted. layout.tsx puts it as the
- * first child of <body> rather than in <head> on purpose: from there
- * `document.body` already exists, so the background can be set directly on
- * both elements instead of through an injected stylesheet fighting each
- * page's own `html { background-color }` rule for precedence.
- *
- * It is also the ONLY copy of this logic. It hangs the applier on
- * `window.__averagesApplyTheme` so LegacyPage's `storage` listener (another
- * tab changing the setting) can call the same code rather than keeping a
- * second implementation in sync with it.
- *
- * Why both <html> and <body> get the background: browser-drawn UI —
- * scrollbars, the overscroll gutter, form controls — is themed from
- * `color-scheme` and from the CANVAS background, which comes from <html>, not
- * from whatever JS later set on <body>. Declaring neither is what made
- * Firefox draw a pink scrollbar against a blue background.
- */
+// The user's saved dark-mode / accent / background, applied before the browser paints anything at all.
 export const THEME_BOOT_JS = `(function () {
   function darken(hex, amount) {
     var n = parseInt(hex.slice(1), 16);
@@ -75,9 +45,6 @@ export const THEME_BOOT_JS = `(function () {
     for (var k in tokens) root.setProperty(k, tokens[k]);
     if (body) body.classList.toggle("dark-mode", isDark);
 
-    // A wallpaper always fills the window once (2026-11-01, Martin: "sometimes the background glitches out and shows
-    // 20 of the same background in a grid"). Each page's own CSS sizes it, but while one page's styles are swapped
-    // for the next, the picture showed at its own size, repeated. This rule is always there, so that never shows.
     if (!document.getElementById("avBgFit")) {
       var fit = document.createElement("style");
       fit.id = "avBgFit";
@@ -159,8 +126,6 @@ export const THEME_BOOT_JS = `(function () {
     }
   }
 
-  // Potato PC Mode (2026-10-04): applied here too, before first paint, so the
-  // loading skeleton and every page start with animations already off.
   window.__averagesApplyTheme = function () { apply(); applyPotato(); };
   apply();
   applyPotato();

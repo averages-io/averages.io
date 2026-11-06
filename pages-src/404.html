@@ -1581,7 +1581,6 @@
     .ti-foot .btn.primary.go::after { display: none; }
   }
 
-
   .ti-pk-add { display: inline-flex; align-items: center; gap: 4px; height: 28px; padding: 0 10px 0 6px; border-radius: 8px; background: var(--field); font-size: 12px; font-weight: 800; color: var(--ink); }
   .ti-pk-add:hover { background: var(--inner); }
   .ti-pk-add svg.i { width: 14px; height: 14px; color: var(--accent); transition: transform .2s cubic-bezier(.34, 1.4, .64, 1); }
@@ -3132,27 +3131,6 @@
 </svg>
 
 <script>
-/* Copied from averages.io public/js/averages-file-icons.js (2026-10-09). Fredoka Bold (OFL, see THIRD-PARTY-NOTICES.md) is inlined so the labels render here. */
-/*
- * File type icons (2026-10-09, Martin; design in the project doc claude/file-icons.md).
- *
- * A see-through page with a line in the type's color around it and a folded
- * corner. The label (PDF, DOC, ZIP…, Fredoka Bold, same color) runs across
- * the page and cuts through the outline; a small drawing for the type sits
- * above it, cut off by the fold along the crease's own curve.
- *   - At rest only the drawing shows; hovering the file's row or tile (or
- *     focusing it) slides the drawing up, opens the outline and fades the
- *     label in. Devices without hover always show the label.
- *   - The outline glows only in dark mode (body.dark-mode).
- *   - Below 34 px (list rows) there's no label: the drawing alone, outline whole.
- *
- * Loaded in <head> by app/layout.tsx. Pages call
- *   AveragesFileIcons.html(extOrName, { mime, size })  -> <span class="avfi">…</span>
- *   AveragesFileIcons.svg(extOrName, { mime, size, small }) -> <svg>…</svg> (fills its box when size is left out)
- *   AveragesFileIcons.key(extOrName, mime)            -> 'pdf' | 'doc' | … | 'file'
- *   AveragesFileIcons.color(extOrName, mime)          -> '#E5484D' …
- * Pages keep their old badge when this script isn't there, so nothing breaks.
- */
 (function () {
   'use strict';
   if (window.AveragesFileIcons) return;
@@ -3797,10 +3775,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   let toastT;
   function toast(text) { const t = $('toast'); t.textContent = text; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2600); }
 
-
   document.addEventListener('click', e => { const t = e.target.closest('[data-toast]'); if (t) { e.preventDefault(); toast(`In the app, this opens ${t.dataset.toast}.`); } });
-  // Real navigation (2026-10-28): anything with data-nav goes to that page. Paths use the
-  // page's own file name; scripts/port-pages.mjs rewrites them to the app's routes (home.html -> /home).
   document.addEventListener('click', e => { const n = e.target.closest('[data-nav]'); if (!n) return; e.preventDefault(); location.href = n.getAttribute('data-nav'); });
   const IS_MAC = /mac|iphone|ipad|ipod/i.test(navigator.userAgentData?.platform || navigator.platform || '');
   $('sideKbd').textContent = IS_MAC ? '⌘K' : 'Ctrl K';
@@ -3883,7 +3858,6 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     else if (e.key === 'Tab') { e.preventDefault(); cmdk.querySelector('input').focus(); }
   }, true);
 
-
   // ---------- 404 ----------
   // The search box only finds the main pages (Home, Courses, Assignments and so on) and Log in. Ctrl K is still search anything.
   const PLACES = [['Home', 'home', 'Your day at a glance', 'home.html'], ['Courses', 'binder', `${CLASSES.length} classes`, 'courses.html'], ['Grades', 'chart', 'Every score', 'grades.html'],
@@ -3925,10 +3899,6 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (history.length > 1 && !offsite) history.back(); else location.href = 'home.html';
   });
   $('nfReport').addEventListener('click', () => {
-    // A GitHub issue form, filled in (2026-10-28, Martin). The form
-    // (.github/ISSUE_TEMPLATE/broken-link.yml) has a text box per question;
-    // these query names are its field ids. It also adds the "broken link"
-    // label, which a URL can't do for people without write access.
     const u = 'https://github.com/averages-io/averages.io/issues/new?template=broken-link.yml'
       + '&title=' + encodeURIComponent('Broken link: ' + location.host + location.pathname)
       + '&link=' + encodeURIComponent(location.href)
@@ -3938,7 +3908,6 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   if (!EMOJI_SVG['🧭']) EMOJI_SVG['🧭'] = "<svg aria-hidden=\"true\" focusable=\"false\" viewBox=\"0 0 36 36\"><circle fill=\"#F4900C\" cx=\"18\" cy=\"18\" r=\"18\"/><circle fill=\"#FFD983\" cx=\"18\" cy=\"18\" r=\"14.5\"/><circle fill=\"#F5F8FA\" cx=\"18\" cy=\"18\" r=\"13\"/><path fill=\"#CCD6DD\" d=\"M18 8l1.531 6.304 5.54-3.375-3.375 5.54L28 18l-6.304 1.531 3.375 5.54-5.54-3.375L18 28l-1.531-6.304-5.54 3.375 3.375-5.54L8 18l6.304-1.531-3.375-5.54 5.54 3.375z\"/><g class=\"nf-needle\"><path fill=\"#292F33\" d=\"M17.343 20.748l8.777 5.381-5.379-8.778z\"/><path fill=\"#DD2E44\" d=\"M18.657 15.267L9.879 9.886l5.38 8.779z\"/></g><circle fill=\"#8899A6\" cx=\"18\" cy=\"18.008\" r=\"3.055\"/><circle fill=\"#F5F8FA\" cx=\"18\" cy=\"18.008\" r=\"1.648\"/></svg>";
   $('nfLogo').innerHTML = EMOJI_SVG['🧭'] || '';
   if (!calm()) $('nfLogo').classList.add('wobble');
-  // ntInit() removed (2026-10-28): the 404 has no top bar, so no notification bell.
 /* ===== Life layer script: New stickers land at their own angle, in one of a few set spots on their item =====
    The tilt, nudge and overlap come from the item's text, so a sticker lands the same way every time the list redraws.
    Each one lands differently: high or low on the end of the word before it, or somewhere along the top of the line under it, always covering 2 to 4px, or the top of the line under it, so the text stays readable. */

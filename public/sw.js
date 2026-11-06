@@ -1,17 +1,4 @@
-/*
- * Averages.io service worker: browser notifications only (2026-10-05).
- *
- * Registered by public/js/averages-push.js when a student turns on Browser
- * Notifications in Settings. It does two things and nothing else:
- *   push               shows the notification the API sent (encrypted end to
- *                      end; the push service never sees the text)
- *   notificationclick  brings an open Averages tab forward and takes it to the
- *                      notification's page, or opens one
- *
- * Deliberately no fetch handler and no caching: the app keeps working exactly
- * as it does without a service worker, and nothing about the student is ever
- * stored here.
- */
+// Averages.io service worker: browser notifications only.
 'use strict';
 
 self.addEventListener('install', () => self.skipWaiting());
@@ -27,8 +14,6 @@ function safePath(value) {
   try {
     const url = new URL(value, self.location.origin);
     if (url.origin !== self.location.origin) return '/home';
-    // "/..//evil.com" normalizes to "//evil.com": still ours, but a second
-    // pass would read it as another host, so it's refused here (2026-10-06 review).
     if (/^\/[\/\\]/.test(url.pathname)) return '/home';
     return url.pathname + url.search + url.hash;
   } catch (e) {

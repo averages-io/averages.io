@@ -1,31 +1,4 @@
-/*
- * Feature switches in the app (2026-10-09). The API says what's on at
- * GET /config/features (Cloudflare Flagship behind it, see the API's
- * src/flags.ts); this hides what's off, shows the maintenance banner, and
- * puts a notice over a page that's switched off (Messages, the school form).
- *
- * Loaded in <head> by app/layout.tsx, before the page draws: the last answer
- * (kept for this tab in sessionStorage) is applied at once, so a switched-off
- * button doesn't flash, then the fresh answer replaces it. If the API can't
- * be reached, everything stays as it is (all on, no banner).
- *
- * How things get hidden: <html data-feature-off="key key ..."> plus the CSS
- * below. Anything marked data-feature="key" hides when that key is off, and
- * RULES lists the app's existing buttons and rows for each key, so most pages
- * needed no changes. Pages can also ask: AveragesFeatures.on('turnin-feature'),
- * and listen for the "averages:features" event.
- *
- * The API refuses a switched-off feature anyway (503 feature_off); hiding is
- * only so nobody is offered something that won't work.
- *
- * Early access (2026-10-21, an Averages Plus perk): /config/features also
- * lists `early`, switches that are off for everyone but on for Plus members.
- * When there are any, this asks /billing/status (signed in only, kept for
- * this tab for 10 minutes); for a Plus member those count as on, and
- * <html data-feature-preview="key ..."> lets a page show a Preview tag:
- * anything marked data-preview-tag="key" only shows while that key is a
- * preview. AveragesFeatures.preview(key) says the same.
- */
+// Feature switches in the app.
 (function () {
   'use strict';
   const KEYS = [
@@ -35,9 +8,6 @@
     'turnin-feature', 'messaging-features', 'notifications-features',
     'billing', 'calendar-sync', 'live-grades', 'fullscreen',
   ];
-  // Averages Plus shows first and hides if it turns out to be off (2026-10-26, Martin: "show plus
-  // then check"), instead of staying hidden until the API says it's on.
-  // Fullscreen (2026-10-28) stays hidden until the API says it's on.
   const DEFAULTS = { 'maintenance-banner': false, 'coursematerialpreview-feature': false, billing: true, fullscreen: false };
   const NAMES = {
     'canva-integration': 'Canva is', 'onedrive-integration': 'OneDrive is', 'drive-integration': 'Google Drive is',

@@ -1,34 +1,4 @@
-/*
- * Live grades (2026-10-27, Martin: "can it be the refresh animation that we
- * already made that's on the landing page, the scrolling numbers").
- *
- * While a signed-in page is open and on screen, this asks the API for each
- * class's grade every few minutes (GET /data/grades: one Schoology call). When
- * one moved, the page redraws its grades and every number or letter that
- * changed rolls to its new value like the landing page's tiles: the old value
- * slides out and the new one slides in, up when the grade went up and down
- * when it went down (560 ms, the landing page's curve).
- *
- * How often: the API says, in `next` (5 minutes, 2 with Averages Plus). The
- * time of the last check is kept for this tab (averages_live_at), and a fresh
- * load of the grades counts as one, so moving between pages never adds
- * checks. Nothing is checked while the tab is hidden; coming back checks
- * right away if one is due. Stops for demo and Google Classroom sign-ins
- * (COURSES: null), and when the live-grades switch is off.
- *
- * When something changed it also reloads the full grades in the background
- * (the same GET /data/bundle a page load makes) and keeps them for this tab,
- * so the next page shows the new assignment rows and Recent grades too.
- *
- * Pages take part with two things:
- *   - data-live="<class id>:<field>" on the element holding a value (grade,
- *     pct, predicted, predictedPct), with nothing else inside it;
- *   - window.__averagesLiveGrades(changedIds), which redraws the page's
- *     grades from COURSES (already updated in place when it's called).
- * Pages without the hook still get their data and the tab's cache updated.
- *
- * Potato mode and reduced motion: the values change without rolling.
- */
+// Live grades: while a signed-in page is on screen, checks each class's grade every few minutes and rolls any number that changed.
 (function () {
   'use strict';
   if (window.AveragesLive) return;

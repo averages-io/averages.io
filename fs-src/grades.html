@@ -94,7 +94,6 @@
   .quick-l { order: -1; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); line-height: 1; padding-right: 8px; border-right: 2px solid #c6c6cc; height: 24px; display: flex; align-items: center; }
   .top .me { width: 40px; height: 40px; border-radius: 50%; flex: none; margin-left: 8px; }
   .top .me { position: relative; }
-  /* two initials stay clear of the gear (2026-10-30) */
   .top .me .av { font-size: 14px; letter-spacing: -.02em; }
   .top .me .gear { position: absolute; right: -4px; bottom: -4px; width: 18px; height: 18px; border-radius: 50%; background: var(--field); box-shadow: 0 0 0 2px var(--frame); display: grid; place-items: center; color: #66757f; }
   .top .me .gear svg.i { width: 12px; height: 12px; display: block; }
@@ -143,7 +142,7 @@
   .nav .side-kbd { margin-left: auto; font-size: 11px; line-height: 20px; padding: 0 4px; background: var(--inner); color: var(--muted); }
   .nav a:hover .side-kbd { background: var(--field); }
   /* Search turns into a search bar once the sidebar opens (an icon on the closed rail) */
-  .nav #sideSearch { transition: background .12s ease, box-shadow .12s ease; margin-bottom: 8px; } /* a little room between Search and the pages under it (2026-10-30) */
+  .nav #sideSearch { transition: background .12s ease, box-shadow .12s ease; margin-bottom: 8px; }
   .side:is(:hover, .hold, :has(:focus-visible)) #sideSearch, .app.pinned .side #sideSearch { background: var(--field); box-shadow: inset 0 0 0 2px var(--inner); color: var(--muted); transition-delay: .12s; }
   .side:is(:hover, .hold, :has(:focus-visible)) #sideSearch:hover, .app.pinned .side #sideSearch:hover { background: color-mix(in srgb, var(--inner) 35%, var(--field)); color: var(--ink-2); }
   .side:is(:hover, .hold, :has(:focus-visible)) #sideSearch .side-kbd, .app.pinned .side #sideSearch .side-kbd { background: var(--panel); }
@@ -166,7 +165,6 @@
   .side > .nav, .side > .divider, .side > .side-h, .side > .foot { flex: none; }
   .side > .cls > * { flex: none; }
   /* no scrollbar here: it would take width and push the class icons off center. The fade at the bottom shows there's more. */
-  /* the whole sidebar scrolls (2026-10-30, Martin: "not just the tiny courses section"); the class list is as tall as it needs */
   .side > .cls { flex: none; min-height: 0; overflow: visible; }
   .side { overscroll-behavior: contain; scrollbar-width: none; }
   .side::-webkit-scrollbar { display: none; }
@@ -1135,7 +1133,6 @@
   .chip svg.i { color: var(--chip-c, var(--ink-2)); }
   .chip:nth-child(5n + 1) { --chip-c: var(--warm-a); } .chip:nth-child(5n + 2) { --chip-c: var(--sky); } .chip:nth-child(5n + 3) { --chip-c: var(--mint); } .chip:nth-child(5n + 4) { --chip-c: var(--grape); } .chip:nth-child(5n + 5) { --chip-c: #c98a00; }
   /* sticker tags: New pops off the page a little */
-  /* dark mode only (2026-10-30): dark letters on a deeper yellow (white on yellow was about 1.4:1), and the paper ring in the card's dark */
   html[data-theme="dark"] body .newtag { background: #e0aa2e !important; color: #1f1604 !important; box-shadow: 0 0 0 2px var(--field), 0 3px 8px -2px rgba(0, 0, 0, .55); }
   .newtag { background: var(--sun) !important; color: var(--ink) !important; border-radius: 8px; transform: translate(var(--tx, 0px), var(--ty, 0px)) rotate(var(--tilt, -4deg)); box-shadow: 0 0 0 2px var(--field), 0 3px 8px -2px rgba(20, 21, 31, .25); will-change: transform; backface-visibility: hidden; } /* always drawn on its own layer, so hovering a row never redraws the text thinner or bolder */
   .wrap { position: relative; isolation: isolate; }
@@ -1151,7 +1148,6 @@
     /* icon tiles wiggle when you point at their row */
     body:not(.potato-mode) :is(.arow, .mrow, .mp-row, .ag-row, .nt-row, .pin, .gr-row, .crow, tr, .item, .mi):hover :is(.ktile, .nt-tile, .badge, .emo) { animation: lifeWiggle .5s var(--spring); }
     body:not(.potato-mode) .newtag { animation: lifeSticker .5s var(--spring) backwards; }
-    /* hidden until it has landed in its spot (2026-11-06, Martin's video: stickers showed by the name, then jumped) */
     .newtag[data-tilted]:not([data-shown]) { visibility: hidden; animation: none !important; }
   }
   @keyframes lifeWiggle { 0% { transform: none; } 30% { transform: rotate(-9deg) scale(1.08); } 60% { transform: rotate(6deg) scale(1.08); } 100% { transform: none; } }
@@ -1580,7 +1576,6 @@
     :is(.ti-scrim, .ti-pop, .ti-row, .ti-drop, .ti-drop svg.i, .ti-add svg.i, .ti-pk, .ti-prog i, .ti-file, .ti-st, .ti-swap, .ti-foot .btn, .ti-yay, .ti-yay *, .ti-done svg, .ti-head .ktile, .ti-hl, .ti-x svg, .ti-close svg) { animation: none !important; transition: none !important; }
     .ti-foot .btn.primary.go::after { display: none; }
   }
-
 
   .ti-pk-add { display: inline-flex; align-items: center; gap: 4px; height: 28px; padding: 0 12px 0 8px; border-radius: 8px; background: var(--field); font-size: 12px; font-weight: 800; color: var(--ink); }
   .ti-pk-add:hover { background: var(--inner); }
@@ -3059,11 +3054,15 @@
   }
   @media (max-width: 680px) { .hub-t h1 { font-size: 34px; } }
   /* ===== end Life layer for the course page ===== */
-  .g-na { color: var(--muted) !important; }   /* nothing graded yet (2026-11-06) */
-  /* the big emoji next to a page title: smooth even when the tile is tilted (2026-11-06, Martin: they looked jagged on
-     some pages, the tilted ones). Drawn upright on its own layer and then turned, so its edges and the emoji stay smooth. */
+  .g-na { color: var(--muted) !important; }
   .hub-logo { backface-visibility: hidden; -webkit-backface-visibility: hidden; outline: 1px solid transparent; }
   .hub-logo svg { shape-rendering: geometricPrecision; }
+  .me-pop .confirm { margin: 4px 4px 4px; padding: 12px; background: var(--panel); border-radius: 14px; }
+  .me-pop .confirm b { display: block; margin-bottom: 4px; font-weight: 800; }
+  .me-pop .confirm .note { display: block; color: var(--muted); font-size: 13px; font-weight: 600; line-height: 1.45; }
+  .me-pop .confirm .acts { display: flex; gap: 8px; justify-content: flex-end; padding: 8px 0 0; }
+  .me-pop .confirm .btn { background: var(--field); }
+  .me-pop .confirm .btn.primary { background: var(--accent); color: #fff; }
 </style>
 </head>
 <body>
@@ -3225,7 +3224,6 @@
   <symbol id="i-poll" viewBox="0 0 24 24" data-adj><g transform="translate(12.6 12) scale(1) translate(-12 -12)" style="stroke-width:calc(var(--isw, 2.2) / 1)"><path d="M4 6h10M4 12h16M4 18h7"/></g></symbol>
   <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3.4c.42 0 .8.24.98.62l2.06 4.2 4.62.68c.9.13 1.26 1.23.6 1.86l-3.34 3.26.79 4.6c.15.9-.79 1.58-1.6 1.16L12 17.6l-4.13 2.18c-.81.42-1.75-.26-1.6-1.16l.79-4.6-3.34-3.26c-.65-.63-.3-1.73.6-1.86l4.62-.68 2.07-4.2c.18-.38.56-.62.99-.62Z"/></symbol>
 </svg>
-
 
 <script>
   const $ = id => document.getElementById(id);
@@ -3580,7 +3578,7 @@
       ${meItem('potato', 'bolt', 'Potato mode', 'System font, no animation', `<span class="sw${potato ? ' on' : ''}" aria-hidden="true"></span>`)}
       <div class="hr"></div>
       ${meItem('settings', 'gear', 'Settings', '')}
-      ${meItem('signout', 'out', 'Sign out', '', '', ' danger')}</div>`);
+      <div class="me-so">${meItem('signout', 'out', 'Sign out', '', '', ' danger')}</div></div>`);
     meMenu = document.body.lastElementChild;
     meMenu.querySelector('[data-me="potato"]').setAttribute('role', 'menuitemcheckbox');
     meMenu.querySelector('[data-me="potato"]').setAttribute('aria-checked', potato);
@@ -3603,8 +3601,13 @@
         toast(on ? 'Potato mode on' : 'Potato mode off'); return;
       }
       
+      if (k === 'signout') {
+        meMenu.querySelector('.me-so').innerHTML = `<div class="confirm"><b>Sign out of Averages.io?</b><span class="note">You can sign back in with Schoology any time.</span><div class="acts"><button class="btn" data-me="socancel">Cancel</button><button class="btn primary" data-me="soyes">Sign out</button></div></div>`;
+        meMenu.querySelector('[data-me="socancel"]').focus({ preventScroll: true }); return;
+      }
+      if (k === 'socancel') { meMenu.querySelector('.me-so').innerHTML = meItem('signout', 'out', 'Sign out', '', '', ' danger'); meMenu.querySelector('[data-me="signout"]').focus({ preventScroll: true }); return; }
       meClose(true);
-      ({ profile: () => FSX.go('settings', { section: 'account' }), customize: () => FSX.go('home', { customize: 1 }), settings: () => FSX.go('settings'), signout: () => FSX.confirmSignOut() }[k] || (() => {}))();
+      ({ profile: () => FSX.go('settings', { section: 'account' }), customize: () => FSX.go('home', { customize: 1 }), settings: () => FSX.go('settings'), soyes: () => FSX.signOut() }[k] || (() => {}))();
     });
   }
   function meClose(refocus) {
@@ -3626,7 +3629,6 @@
   });
   let toastT;
   function toast(text) { const t = $('toast'); t.textContent = text; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2600); }
-
 
   document.addEventListener('click', e => { const t = e.target.closest('[data-toast]'); if (t) { e.preventDefault(); if (!FSX.open(t.dataset.toast)) toast('That isn\'t ready yet.'); } });
   const IS_MAC = /mac|iphone|ipad|ipod/i.test(navigator.userAgentData?.platform || navigator.platform || '');
@@ -3668,7 +3670,6 @@
       const here = !m && typeof window.CMDK_HERE === 'function' ? window.CMDK_HERE(qq) : null;
       if (here && here.rows.length) html += `<div class="lbl">${esc(here.label)}</div>` + here.rows.slice(0, 5).map(r => crow(`data-cmdkgo="${esc(r.key)}"`, r.lead, r.t, r.sub)).join('');
       const cs = m ? [] : CLASSES.filter(c => chit(qq, c.name + ' ' + c.teacher)); if (cs.length) html += `<div class="lbl">Classes</div>` + cs.map(c => cclass(c, qq)).join('');
-      // people: your teachers and classmates (2026-11-06); one opens their card in Contacts
       const pp = m || !FSX.people ? [] : FSX.people().filter(x => chit(qq, x.name)).slice(0, 5); if (pp.length) html += `<div class="lbl">People</div>` + pp.map(x => crow(`data-go="${FSX.url('contacts', { person: x.id })}"`, FSX.personAv(x), cmark(x.name, qq), x.sub)).join('');
       const ps = m ? [] : GO_PAGES.filter(([p]) => chit(qq, p)); if (ps.length) html += `<div class="lbl">Go to</div>` + ps.map(page).join('');
       if (HERE && !m) html += crow(`data-cmdkhere="${esc(qq)}"`, ico('search'), `Search ${esc(HERE)} for "${esc(qq)}"`, 'Just this page', ' s-cmd');
@@ -3676,6 +3677,7 @@
     }
     res.innerHTML = html; const f = res.querySelector('.mi'); if (f) f.classList.add('sel');
   }
+  window.addEventListener('fs:people', () => { if (cmdk) cmdkRender(); });
   function cmdkOpen() {
     if (cmdk) { cmdk.querySelector('input').select(); return; }
     cmdkFrom = document.activeElement; $('app').classList.remove('menu');
@@ -3712,15 +3714,12 @@
     else if (e.key === 'Tab') { e.preventDefault(); cmdk.querySelector('input').focus(); }
   }, true);
 
-
   // ---------- Grades ----------
   // How each class is weighted (name, weight %, your %), and every graded assignment, newest first.
   // A missing assignment counts as a zero until it's turned in.
   const CATS = FSD.CATS;   // [name, weight %, your % (null: nothing graded yet), points so far], from the gradebook
   const WORK = FSD.WORK;   // every graded (or missing) piece of work, newest first: { c, n, got, of, on, ago, fresh, note, missing, id }
   const WEEKS = FSD.WEEKS;   // the last 8 weeks (each class's trend has a grade for each, worked out from its gradebook)
-  // Only weeks that really had grades (2026-11-03, Martin: points showed for weeks with none). A class counts from
-  // the week it first had a grade; a point is drawn where grades were posted that week (and on this week). null: no grades yet.
   const hasAt = (c, i) => !c.trendHas || !!c.trendHas[i], postedAt = (c, i) => !c.trendPosted || !!c.trendPosted[i];
   const OVERALL = WEEKS.map((_, i) => { const cs = CLASSES.filter(c => hasAt(c, i)); return cs.length ? cs.reduce((t, c) => t + c.trend[i], 0) / cs.length : null; });
   const FIRST = OVERALL.findIndex(v => v != null);
@@ -3728,7 +3727,6 @@
   const clTrend = c => c.trend.map((v, i) => hasAt(c, i) ? v : null);
   const avg = CLASSES.length ? CLASSES.reduce((t, c) => t + c.pct, 0) / CLASSES.length : 0;
   const GPTS = { 'A+': 4, A: 4, 'A-': 3.7, 'B+': 3.3, B: 3, 'B-': 2.7, 'C+': 2.3, C: 2, 'C-': 1.7, 'D+': 1.3, D: 1, 'D-': .7, F: 0 };
-  // classes with nothing graded yet don't count (2026-11-06)
   const gpa = w => { const L = CLASSES.filter(c => !c.none); return L.length ? L.reduce((t, c) => t + GPTS[letter(c.pct)] + (w && /^(AP|IB)\b|\bhonors\b/i.test(c.name) ? (/^(AP|IB)\b/.test(c.name) ? 1 : .5) : 0), 0) / L.length : 0; };
   const change = c => c.trend[c.trend.length - 1] - c.trend[c.trend.length - 3];
   const deltaChip = (d, long) => { const k = Math.abs(d) < .15 ? 'flat' : d > 0 ? 'up' : 'down'; return `<span class="gr-d ${k}" title="Change in the last two weeks">${k === 'flat' ? 'Steady' : (d > 0 ? '+' : '-') + Math.abs(d).toFixed(1)}${long && k !== 'flat' ? ' in 2 weeks' : ''}</span>`; };
@@ -3751,7 +3749,6 @@
   const popDelay = (i, n) => Math.max(0, Math.round(Math.acos(1 - 2 * i / (n - 1)) / Math.PI * 900) - 60);
   function chartSVG(enter) {
     if (FIRST < 0) return `<svg class="gs-svg" viewBox="0 0 ${CH.w} ${CH.h}" role="img" aria-label="No grades yet this term"><text class="band-t" x="${CH.w / 2}" y="${CH.h / 2}" text-anchor="middle">No grades yet this term</text></svg>`;
-    // grades from only one week: no line to draw yet (2026-11-06, Martin: show "Not enough data")
     if (FIRST >= WEEKS.length - 1) return `<svg class="gs-svg" viewBox="0 0 ${CH.w} ${CH.h}" role="img" aria-label="Not enough data yet"><text class="band-t" x="${CH.w / 2}" y="${CH.h / 2 - 4}" text-anchor="middle" style="font-size:14px;font-weight:800">Not enough data yet</text><text class="band-t" x="${CH.w / 2}" y="${CH.h / 2 + 16}" text-anchor="middle">The chart starts once you have grades from two different weeks.</text></svg>`;
     const all = (GR.each ? CLASSES.flatMap(clTrend).concat(OVERALL) : OVERALL).filter(v => v != null);
     const mn = Math.min(...all), mx = Math.max(...all), mid = (mn + mx) / 2, span = Math.max(10, mx - mn + 3), lo = Math.floor(mid - span / 2), hi = Math.ceil(mid + span / 2); // at least 10 points tall, so a steady grade reads as a flat line
@@ -3801,7 +3798,7 @@
     tip.innerHTML = `<small>Week of ${WEEKS[i]}${POSTED[i] ? '' : ' · no new grades'}</small><span class="r ov"><i></i>Overall<b>${OVERALL[i].toFixed(1)}% · ${letter(OVERALL[i])}</b></span>${rows}`;
     const right = dr.left + dr.width / 2 - box.left < box.width / 2;
     tip.classList.toggle('left', !right);
-    { const tw = tip.offsetWidth, ax = dr.left + dr.width / 2 - box.left;   // kept inside the box, never cut off (2026-11-06)
+    { const tw = tip.offsetWidth, ax = dr.left + dr.width / 2 - box.left;
       tip.style.left = (right ? Math.min(ax + 14, box.width - tw - 4) : Math.max(ax - 14, tw + 4)) + 'px'; }
     tip.style.top = Math.max(0, Math.min(box.height - tip.offsetHeight, dr.top - box.top - tip.offsetHeight / 2)) + 'px';
     tip.classList.add('show');
@@ -3967,8 +3964,6 @@
     $('grMeta').querySelectorAll('.gm').forEach((el, i) => el.animate && el.animate([{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: 480, delay: 40 + i * 60, easing: 'cubic-bezier(.16, 1, .3, 1)', fill: 'backwards' }));
     $('grMeta').querySelectorAll('[data-n]').forEach((el, k) => { const to = +el.dataset.n, dp = +el.dataset.dp, t0 = performance.now() + 40 + k * 60; el.textContent = (0).toFixed(dp); const step = now => { const p = Math.min(1, Math.max(0, (now - t0) / 560)), e = 1 - Math.pow(1 - p, 3); el.textContent = (to * e).toFixed(dp); if (p < 1) requestAnimationFrame(step); }; requestAnimationFrame(step); });
   }
-  // Sync (Martin's sync animation, 2026-10-30): each part lands when its own request comes back (FSX.sync), and
-  // syncRun(true) is the same animation when the page opens.
   let loading = false, spin = null;
   $('syncLabel').textContent = FSX.synced(); $('refresh').setAttribute('aria-label', 'Refresh your grades. ' + FSX.synced() + '.');
   function syncRun(first) {
@@ -3998,7 +3993,6 @@
   window.addEventListener('fs:ready', () => syncRun(true), { once: true });
 
   $('grSort').querySelectorAll('[data-grsort]').forEach(x => x.setAttribute('aria-pressed', x.dataset.grsort === GR.sort));
-  // ---------- right-click "This term so far" to hide it; while it's hidden, right-click the Grades heading to bring it back (2026-10-30: was anywhere) ----------
   GR.sum = store.get('fsgrades_sum') !== false;
   let gxMenu = null;
   const gxClose = () => { if (gxMenu) { gxMenu.remove(); gxMenu = null; } };
@@ -4135,9 +4129,6 @@
     el.style.top = (c.top - r.top - op.clientTop + op.scrollTop).toFixed(1) + 'px';
     return true;
   }
-  // Something around the sticker still sliding or popping in (its row landing, the class icon it sits by): measuring
-  // now puts it in the wrong place, even under the card (2026-10-31, Martin's screenshots). Wait for it to stop.
-  // only its own item and the few boxes around it are asked (asking the whole page was slow, 2026-11-01)
   const moving = el => { const host = el.closest(HOST) || el.parentElement; if (!host || !host.getAnimations) return false;
     const busy = list => list.some(a => { const t = a.effect && a.effect.target, tm = a.effect && a.effect.getTiming ? a.effect.getTiming() : null;
       return a.playState === 'running' && t && t !== el && !(t.classList && t.classList.contains('newtag')) && tm && tm.iterations !== Infinity; });

@@ -1,28 +1,4 @@
-/**
- * Client-side image screening for user uploads (profile photos + wallpapers),
- * using NSFWJS with a SELF-HOSTED model.
- *
- * Self-hosting is deliberate, not incidental:
- *   - NSFWJS's own README warns the CDN-hosted model has moved/been pulled
- *     because of hotlinkers, so depending on it would mean the filter silently
- *     stops working one day.
- *   - The model files ship in this repo under public/models/mobilenet_v2/ and
- *     are served from the app's own origin, so screening keeps working with no
- *     third-party dependency at runtime.
- *
- * The scan runs entirely in the user's browser. The image is never uploaded
- * anywhere to be checked — which matters for a privacy policy that promises
- * academic data never leaves the device, and means the filter costs nothing
- * to run per user.
- *
- * Since 2026-10-05 the model runs in a Web Worker (nsfw.worker.ts). Loading
- * TensorFlow and warming the model in the page itself froze Settings and
- * Onboarding for several seconds after they opened (Martin: "the website just
- * locks up and won't let you click anything for a good 4 secs"). The page now
- * only decodes the picture and hands the pixels over. Browsers that can't run
- * the worker fall back to the old in-page check, loaded only when a picture is
- * actually picked, never in the background.
- */
+// Client-side image screening for user uploads (profile photos + wallpapers), using NSFWJS with a SELF-HOSTED model.
 
 export interface ScanVerdict {
   allowed: boolean;

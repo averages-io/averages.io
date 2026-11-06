@@ -39,24 +39,14 @@ const SESSION_CACHE_MS = 60 * 1000;
 const BUNDLE_CACHE = "schoolagy_bundle_cache";
 /** The Files page's course-file list (pages-src/files.html keeps it 5 minutes). */
 const FILES_CACHE = "averages_files_cache";
-/** The Files page's list of turned-in files (2026-10-09, also 5 minutes). Cleared with FILES_CACHE. */
 const SUBS_CACHE = "averages_subs_cache";
 
 export const API_BASE =
   typeof window !== "undefined" &&
-  window.location.hostname.endsWith("averages.io")   // app.averages.io (schoolagy.io until 2026-10-05)
+  window.location.hostname.endsWith("averages.io")
     ? "https://api.averages.io"
     : "http://localhost:8787";
 
-/**
- * "Was this browser signed in last time we asked?" — "1", "0", or missing for
- * never asked. Not a secret and not authorization (the session cookie is
- * httpOnly, so page code can't see it at all): it only decides whether the
- * login page stays black while it checks, so a signed-in student goes straight
- * on to Home instead of seeing the sign-in buttons for a few seconds
- * (Martin, 2026-10-13). The login page reads it before the page paints; see
- * scripts/port-pages.mjs. Lives in localStorage so a new tab knows too.
- */
 export const SIGNED_IN_HINT = "averages_signed_in";
 export function setSignedInHint(on: boolean): void {
   try {
@@ -88,16 +78,6 @@ function cacheClear(key: string): void {
   }
 }
 
-/**
- * Drops every page extra (people, updates, events...) cached in this tab.
- * Called wherever the bundle cache is dropped (2026-10-06): they're the same
- * student's data and go stale together.
- */
-/**
- * Bumped by clearExtras(). An extra that's still in flight when the student
- * signs out (it ran past the 4 s wait) lands after the wipe; it's only cached
- * if this hasn't moved since it started (2026-10-06 review).
- */
 let extrasGeneration = 0;
 
 export function clearExtras(): void {
@@ -120,12 +100,7 @@ export interface SessionState {
   name?: string;
   /** Signed in as under 13: Incognito only (sealed into the session by the API). */
   incognito?: boolean;
-  /** Which sign-in this is: Schoology, or Google (for Google Classroom, 2026-10-05). */
   provider?: "schoology" | "google";
-  /**
-   * The account id (2026-10-06). Page extras are cached under it, so one
-   * student's cached teachers or events are never shown to another.
-   */
   uid?: string;
 }
 
@@ -138,17 +113,10 @@ export interface SessionState {
  * 401 from the API clears it immediately.
  */
 export async function getSession(opts?: { fresh?: boolean }): Promise<SessionState> {
-  // fresh: ask the API even if this tab remembers an answer. Coming back from Sign in with Schoology, the tab may
-  // still remember "signed out" from a moment ago (2026-11-03: the sign-in worked, the login page stayed).
   const cached = opts && opts.fresh ? null : cacheGet(SESSION_CACHE);
   if (cached) {
     try {
       const parsed = JSON.parse(cached);
-      // Only a remembered "signed in" is trusted (2026-11-06, Martin: sign-in took 2–3 Approves). A remembered
-      // "signed out" is always asked again: right after Sign in with Schoology, the front door sends you to Home
-      // (dropping ?signin=schoology), and Home went by the "signed out" this tab saved a moment before, sent you
-      // back to the login page, and that page did the same until the minute ran out. Asking again costs one
-      // request on the login page, where a signed-out visitor is anyway.
       if (Date.now() - parsed.at < SESSION_CACHE_MS && parsed.state && parsed.state.mode !== "out") {
         return parsed.state as SessionState;
       }
@@ -243,12 +211,6 @@ export async function signIn(key: string, secret: string): Promise<SignInResult>
   }
 }
 
-/**
- * Google Drive and OneDrive connect in the browser (public/js/averages-cloud.js),
- * so their tokens, "Connected as" markers and Edit in Google Drive drafts live
- * on this device. Signing out forgets all of it, so the next person on a shared
- * Chromebook can't reach this student's drive. (Added 2026-10-05.)
- */
 const CLOUD_OWNER_KEY = "averages_cloud_owner";
 
 export function clearCloudConnections(): void {
@@ -260,9 +222,7 @@ export function clearCloudConnections(): void {
   try {
     window.localStorage.removeItem("averages_cloud_accounts");
     window.localStorage.removeItem("averages_drive_drafts");
-    // Files picked from OneDrive (names and ids) for Add from OneDrive (2026-10-06).
     window.localStorage.removeItem("averages_onedrive_picked");
-    // Ids of files opened with "Open with → Averages.io for Drive" (2026-10-21).
     window.localStorage.removeItem("averages_drive_opened");
     window.localStorage.removeItem(CLOUD_OWNER_KEY);
   } catch {
@@ -290,16 +250,6 @@ function claimCloudConnections(uid: string): void {
 /** Browser notifications' notes on this device (public/js/averages-push.js). */
 const PUSH_KEYS = ["averages_push_endpoint", "averages_push_touched", "averages_push_pending_delete"];
 
-/**
- * Sign-out stops browser notifications on this device (2026-10-06). The API
- * deletes the stored sign-in itself when DELETE /auth/session lands; this
- * unsubscribes the browser and forgets it was on, so the next person on a
- * shared Chromebook doesn't get this student's notifications.
- *
- * averages-push.js has forgetLocal() for exactly this, but it's only loaded
- * on some pages; without it, the same steps inline. Never throws, and never
- * makes sign-out wait more than its own 3 seconds.
- */
 function forgetPushOnThisDevice(): Promise<void> {
   // The notes go first and synchronously: they're what the next page load
   // reads, and navigating away can cut the async part off.
@@ -325,36 +275,10 @@ function forgetPushOnThisDevice(): Promise<void> {
   })();
 }
 
-/**
- * Everything Averages.io keeps in this browser: every key the app writes
- * starts with one of these (localStorage and sessionStorage alike). The
- * Fullscreen pages' own keys too (2026-11-03, found while updating Your data:
- * fs* such as fsmock_profile2, fsct_notes, fscal_imported_<uid> and the
- * recent searches, wi_class, av_help_skip_*), which signing out used to leave.
- */
 const OUR_STORAGE_KEY = /^(schoolagy_|averages_|fs|wi_|av_help_)/;
 
 /** Whether this device was syncing settings to the account when signing out. */
-/**
- * Signing out leaves nothing behind on this device (Martin, 2026-10-13, and
- * 2026-10-14: "it is keeping the dark mode theme and the background still,
- * can you make it clear all cookies on sign out"). Settings, dark mode, theme
- * and wallpaper, profile name and photo, course nicknames and order, Home
- * layout, hidden files, onboarding done, every cache: all of it, Sync on or
- * off, so the next person on a shared Chromebook starts from nothing.
- *
- * This replaces the earlier rules that the saved appearance survives sign-out
- * (2026-09-16) and, for one day, that it survived when Sync was on. With Sync
- * on the account still has a copy: turning Sync on again after signing in
- * brings it back. With Sync off it is gone for good.
- *
- * Not touched: the NSFW model in IndexedDB (Averages.io's own download, the
- * same for everyone, nothing about the student) and the HttpOnly cookies,
- * which the API's sign-out answer deletes (session, Google access, profile).
- */
 function forgetEverythingOnThisDevice(): void {
-  // Every key now, not only ones that look like ours (2026-11-06, Martin: signing out left things behind). This
-  // origin only holds Averages.io's; the front door's Clear-Site-Data then wipes the rest (worker/index.js).
   void OUR_STORAGE_KEY;
   for (const store of [window.localStorage, window.sessionStorage]) {
     try {
@@ -367,7 +291,6 @@ function forgetEverythingOnThisDevice(): void {
 
 /** The app's own cookie (worker/index.js's loop guard), the only one page code can reach. */
 function clearAppCookies(): void {
-  // every cookie a page can see on this site (2026-11-06), on this host and on .averages.io
   try {
     const host = window.location.hostname, parent = host.split(".").slice(-2).join(".");
     document.cookie.split(";").map((c) => c.split("=")[0].trim()).filter(Boolean).forEach((name) => {
@@ -390,10 +313,6 @@ function clearAppCookies(): void {
 }
 
 export async function signOut(): Promise<void> {
-  // Connected apps are always disconnected on sign-out (2026-10-26, Martin:
-  // "integrations are not auto disconnecting ... when i sign out"). Until then
-  // only Sync off did that, and Classic always syncs, so nobody's were. Sync
-  // keeps the settings, not the connections: the next sign-in connects again.
   const forgetOnServer = true;
   setSignedInHint(false);
   cacheClear(SESSION_CACHE);
@@ -411,27 +330,6 @@ export async function signOut(): Promise<void> {
   clearAppCookies();
   // The one note kept: the login page shows its buttons straight away.
   setSignedInHint(false);
-  // The DELETE below is what actually clears the httpOnly session cookie —
-  // the API responds with a Set-Cookie that expires it; nothing on this side
-  // can touch that cookie directly (that's the point of httpOnly). It has to
-  // be allowed to finish on its own terms.
-  //
-  // Fixed 2026-09-08 (per Martin: "signing out should clear all your
-  // cookies" — it wasn't reliably doing that). The previous version wrapped
-  // this fetch in an AbortController that hard-cancelled it after 3 seconds
-  // "so the button never feels stuck." That's a real UX goal, but
-  // `controller.abort()` doesn't just stop waiting — it tears down the
-  // in-flight connection, so whenever the request hadn't finished by the 3s
-  // mark (a Workers cold start alone can eat a meaningful chunk of that),
-  // the server's clearing Set-Cookie was never received or processed, and
-  // the session cookie was silently left behind even though the app itself
-  // had already moved on as if signed out. The fix: race a timeout against
-  // how long THIS FUNCTION waits, not against the request itself — the
-  // fetch keeps running in the background and still gets to clear the
-  // cookie whenever its response actually lands, however long that takes.
-  // ?forget=1: the API also disconnects Canva, Google Drive and OneDrive,
-  // which it keeps for this student on our servers (2026-10-13; every
-  // sign-out since 2026-10-26).
   const deleteRequest = fetch(`${API_BASE}/auth/session${forgetOnServer ? "?forget=1" : ""}`, {
     method: "DELETE",
     credentials: "include",
@@ -455,11 +353,6 @@ export interface Bundle {
   MESSAGES?: unknown[];
 }
 
-/**
- * The student's time zone (2026-10-28): their pick in Settings > Time Zone
- * (public/js/averages-tz.js), else this device's. Sent to the API as ?tz= so
- * due times, "overdue" and "today" are worked out in it.
- */
 export function studentTimeZone(): string {
   const w = window as unknown as { averagesTimeZone?: () => string };
   if (typeof w.averagesTimeZone === "function") return w.averagesTimeZone() || "";
@@ -518,11 +411,6 @@ export function invalidateBundle(): void {
   clearExtras();
 }
 
-/**
- * Drops expired extras (2026-10-06 review). Event keys carry their date
- * window, so yesterday's never get read again; without this a tab left open
- * for weeks would fill sessionStorage and every later save would fail.
- */
 function sweepExtras(): void {
   try {
     const store = window.sessionStorage;
@@ -565,29 +453,8 @@ export interface ExtrasRun extends ExtrasResult {
   settled: Partial<Record<ExtraName, Promise<ExtraOutcome>>>;
 }
 
-/**
- * How old a cached course-updates answer the bell will still use (2026-10-20,
- * Martin: "just make it less frequent"). Pages that show updates themselves
- * keep the usual 5 minutes; the bell's background check, on every other
- * page, asks the API again only once this is up.
- */
 export const BELL_UPDATES_MAX_AGE_MS = 15 * 60 * 1000;
 
-/**
- * Starts one page's extras (2026-10-06; which ones: EXTRAS_BY_PAGE in
- * ./extras.ts) and returns straight away. Live sessions only: demo pages run
- * on sample data and the API answers these with 403 there anyway.
- *
- *   - All in parallel, each cached in sessionStorage for 5 minutes under a
- *     key starting "averages_extras_", tagged with the student (`who`): a
- *     cached answer from another account is ignored.
- *   - `settled` says when each one is in. LegacyPage waits for the ones the
- *     page needs to draw at all (up to EXTRAS_WAIT_MS) and lets the rest
- *     (LATE_EXTRAS) fill their own cards when they land (2026-10-20).
- *   - A call keeps going however long it takes and fills the cache, so the
- *     next page has it.
- *   - A failed call (network, 5xx, 403, 404) is simply absent. Never cached.
- */
 export function startExtras(pageId: string, search: string, who = "", opts: { maxAgeMs?: number } = {}): ExtrasRun {
   sweepExtras();
   const generation = extrasGeneration;
@@ -662,20 +529,6 @@ export async function loadExtras(pageId: string, search: string, who = "", opts:
   return run;
 }
 
-/**
- * The account's synced copy, written to this device (2026-10-26). Shared by
- * the onboarding restore and the every-page pull below; Settings has its own
- * copy of the same steps (applySyncedSettings) for its pull.
- *
- * Writes settings (keeping this browser's own notifications on/off),
- * appearance, dark mode and the profile. A picture stored as an "r2:..."
- * reference is reused when this device already has that version, otherwise
- * downloaded from /media; one that can't be downloaded keeps whatever this
- * device shows. Records what Settings needs to know this device matches the
- * account (schoolagy_sync_meta, averages_sync_media), so it neither
- * re-downloads nor re-uploads the pictures. Returns the storage keys whose
- * value changed.
- */
 async function adoptSyncedRecord(remote: any, stamp: string, ask: (path: string) => Promise<Response>): Promise<string[]> {
   const ls = window.localStorage;
   const readJson = (k: string) => {
@@ -783,19 +636,6 @@ async function fetchSyncedRecord(ask: (path: string) => Promise<Response>): Prom
   return settings && typeof settings === "object" && stamp ? { settings, stamp } : null;
 }
 
-/**
- * Signing back in on a cleared device (2026-10-26, Martin: "i am having to
- * always go thru onboarding even tho I have sync across devices on, when i
- * sign out"). Sign-out wipes this device, including the "onboarding done"
- * note, and only Settings pulled the account's synced copy, so every sign-in
- * started at onboarding again.
- *
- * The onboarding page asks this first (LegacyPage). When the account has a
- * synced copy (Classic syncs; Incognito never stores one), it's written to
- * this device (adoptSyncedRecord), onboarding is marked done, and the caller
- * goes to Home. Returns false (onboarding runs as usual) when there's no
- * copy, or on any error or after 4 s.
- */
 export async function restoreSyncedSetup(): Promise<boolean> {
   try {
     const ask = apiAsk(4000);
@@ -809,19 +649,6 @@ export async function restoreSyncedSetup(): Promise<boolean> {
   }
 }
 
-/**
- * Sync pull on every page (2026-10-26; the gap found 10-21: the account's
- * synced settings only came down when Settings was opened, so a change made
- * on another device didn't show up here until then).
- *
- * Signed-in pages call this a moment after they've drawn, and again when the
- * tab comes back into view, at most once every 5 minutes per tab
- * (SYNC_PULL_EVERY_MS). When the account's copy is newer than what this
- * device last agreed with (schoolagy_sync_meta), it's written here and the
- * changed keys are returned so the page can repaint without a reload. Only
- * Settings ever pushes, after its own pull, so this can't send anything old
- * back up.
- */
 export const SYNC_PULL_EVERY_MS = 5 * 60 * 1000;
 const SYNC_PULLED_AT = "averages_sync_pulled_at";
 export async function pullSyncedSettings(): Promise<string[]> {

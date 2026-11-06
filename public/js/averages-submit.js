@@ -1,31 +1,4 @@
-/*
- * Averages.io: turning in work on Schoology from the assignment page
- * (2026-10-06).
- *
- * The browser does the heavy lifting so our Worker never has to hold a file:
- *   1. The file's MD5, worked out here in 2 MB pieces with a pause between
- *      pieces, so even a big file never freezes the page. (Schoology's upload
- *      API wants the checksum before the bytes.)
- *   2. POST /submit/upload: our API asks Schoology for an upload slot and
- *      hands back a sealed token. The real upload address never reaches the
- *      browser.
- *   3. PUT /submit/upload/<token> with the raw bytes, which the Worker streams
- *      on to Schoology. XMLHttpRequest rather than fetch, because only it can
- *      report upload progress.
- *   4. One POST /submit/file with every file id: that's the actual turn-in.
- * Since 2026-10-12 the Add Submission popup does 1-3 as soon as a file is
- * added (uploadFile) and 4 when Turn in is pressed (turnInFiles); submitFiles
- * still does all four in one go. A link the student shares (Google Drive,
- * OneDrive, Canva) is turned in as a small web page that opens it (linkFile),
- * so files and links are one turn-in.
- * A written answer is one POST /submit/text. A Canva design is turned into a
- * PDF by our API (POST /canva/designs/<id>/export, polled) and then goes
- * through the same four steps.
- *
- * Loaded by assignment.html only in a signed-in Schoology session (Google
- * Classroom work is turned in on Classroom). It doesn't need `window`, so the
- * MD5 can be unit tested in Node.
- */
+// Averages.io: turning in work on Schoology from the assignment page.
 (function (root) {
   'use strict';
   if (root.AveragesSubmit) return;
@@ -192,11 +165,6 @@
     return tz ? `${first ? '?' : '&'}tz=${enc(tz)}` : '';
   }
 
-  /*
-   * Request log (2026-10-12): setLogger(fn) gets { kind: 'req', method, url,
-   * body } before each request and { kind: 'res', status, body } after, for the
-   * popup's "what's being sent" box. The page hides ids and tokens in it.
-   */
   let LOGGER = null;
   function setLogger(fn) { LOGGER = typeof fn === 'function' ? fn : null; }
   function log(entry) {
@@ -300,15 +268,9 @@
     return { blob: f.blob, name };
   }
 
-  /**
-   * Uploads one file to Schoology without turning it in yet (2026-10-12): the
-   * MD5, an upload slot, the bytes. Resolves { fileId, name, size }; give the
-   * ids to turnInFiles. onProgress({ phase: 'hashing' | 'uploading', fraction }).
-   */
   async function uploadFile(o) {
     o = o || {};
     const section = String(o.section || ''), assignment = String(o.assignment || ''), signal = o.signal, forMessage = o.purpose === 'message';
-    // A file for a message (2026-11-03): the same upload, not tied to an assignment.
     if (!forMessage && (!ID_OK(section) || !ID_OK(assignment))) throw fail('bad_request');
     const f = checkedFile({ blob: o.blob, name: o.name });
     const report = (phase, fraction) => { if (o.onProgress) try { o.onProgress({ phase, fraction }); } catch {} };
@@ -325,12 +287,6 @@
 
   /** Longest description on a file turn-in (the API's limit too). */
   const MAX_DESCRIPTION = 1000;
-  /**
-   * The turn-in itself, for files already uploaded with uploadFile. Resolves
-   * { ok, revision, description }. An optional `description` (2026-10-23) goes
-   * on as a comment on the turn-in; `description` in the answer is 'added',
-   * 'failed' (the files are still turned in) or '' when there was none.
-   */
   async function turnInFiles(o) {
     o = o || {};
     const section = String(o.section || ''), assignment = String(o.assignment || '');
@@ -380,12 +336,6 @@
     return turnInFiles({ section, assignment, fileIds, signal, description: o.description });
   }
 
-  /**
-   * A shared link as a small web page (2026-10-12, Martin: links go in as
-   * files, so files and links are one turn-in). Opening it goes straight to
-   * the link; it also shows the link to click, for when that doesn't happen.
-   * Only https links. Resolves { blob, name } named "<title> (link).html".
-   */
   function linkFile(title, url, from) {
     const u = String(url || '').trim();
     if (!/^https:\/\/[^\s"'<>]{1,2000}$/i.test(u)) throw fail('bad_request');
@@ -445,8 +395,6 @@
    * minutes, then fetch the file. onStatus('starting' | 'exporting' | 'downloading').
    * Resolves { blob, name }.
    */
-  /** What the type pill can offer, a turn-in type, and its file's MIME type (2026-10-15). */
-  // (2026-11-03: Word is gone with the converter container; JPG added; a PNG is one image of the whole design)
   const CANVA_TYPES = ['pdf', 'pptx', 'png', 'jpg'];
   const TYPE_MIME = {
     pdf: 'application/pdf',
@@ -488,8 +436,6 @@
     const limit = 120000;
     const start = await call('POST', `/canva/designs/${enc(designId)}/export`, format === 'pdf' ? {} : { format }, signal);
     const job = String(start.job || '');
-    // The API's job token is sealed: "<iv>.<data>", a few hundred characters. (Until 2026-10-15 this
-    // check allowed no dot and 128 characters at most, so every Canva turn-in stopped here.)
     if (!/^[A-Za-z0-9_-]{8,64}\.[A-Za-z0-9_-]{16,3000}$/.test(job)) throw fail('canva_export_failed');
     status('exporting');
     let files = 1;

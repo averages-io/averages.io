@@ -1,25 +1,4 @@
-/*
- * The Fullscreen pages' real data (2026-10-28, Martin: "nothing is wired
- * inside the fs theme ... make sure everything works"). Loaded in <head>
- * right after averages-fs.js.
- *
- * Each page in /IS/ is built (scripts/build-fs.mjs) with its own scripts
- * held back (<script type="text/fs-wait">). This file:
- *   1. asks the API who's signed in and loads what the page shows: the
- *      shared bundle (/data/bundle) plus the page's extras (teachers,
- *      course updates, events, files, messages, folders, classmates), using
- *      the same sessionStorage caches as the Windowed pages, so switching
- *      looks costs nothing;
- *   2. turns the API's answers into window.FSD, in the shapes the pages
- *      draw from (see FSA below);
- *   3. runs the page's scripts, in order, once that's in.
- * A loading screen covers the page meanwhile. Signed out goes to sign-in; if
- * the grades can't load, the page says so with Try again (never sample data).
- *
- * window.FSX has what the pages need to act for real: moving between pages
- * (FSX.go / FSX.hub), calling the API (FSX.api), opening Schoology, the
- * notifications seen-list (shared with Windowed's AveragesSeen), sign-out.
- */
+// The Fullscreen pages' real data.
 (function () {
   'use strict';
   var API = window.location.hostname.endsWith('averages.io') ? 'https://api.averages.io' : 'http://localhost:8787';
@@ -38,10 +17,6 @@
   var ID = /^[A-Za-z0-9_-]{1,64}$/;
   var courseQ = ID.test(Q.get('course') || '') ? Q.get('course') : '';
 
-  // ---------- lighter motion (2026-11-01, Martin: "very choppy and heavy on my computer") ----------
-  // The pages' own scripted animations (Element.animate) only move what the graphics card can move by itself, the way
-  // CSS transform and opacity animations do. A box that grew or shrank in height (re-laying out the page every frame)
-  // now fades in place; a bar that filled by width now fills with a scale from the left. Same timing, same callbacks.
   (function () {
     var E = window.Element && window.Element.prototype;
     if (!E || typeof E.animate !== 'function' || E.animate.__light) return;
@@ -57,8 +32,6 @@
       if (!frames.some(function (f) { return f && Object.keys(f).some(function (k) { return HEAVY.test(k); }); })) return frames;
       return frames.map(function (f) { var g = {}; Object.keys(f || {}).forEach(function (k) { if (!HEAVY.test(k)) g[k] = f[k]; }); return g; });
     }
-    // a box marked data-anim-size keeps its own size animation (2026-11-03, Martin: a Grades card should close as a box,
-    // not just fade its insides)
     var light = function (frames, opts) { return orig.call(this, this.hasAttribute && this.hasAttribute('data-anim-size') ? frames : lighten(this, frames), opts); };
     light.__light = true;
     E.animate = light;
@@ -67,17 +40,6 @@
   // ---------- loading screen ----------
   root.classList.add('fs-wait');
   var css = document.createElement('style');
-  // While the data loads (2026-10-30, Martin: no whole-screen loading icon between pages): the top bar and the sidebar
-  // stay, and only the page's own content waits; it then opens with its placeholders and lands (FSX.sync(true)).
-  // Anything that would show this page's sample text until then is hidden too (the class name in the top bar).
-  // The sidebar and top bar come up already drawn (2026-10-30, Martin: "like it is built into the page"): each page
-  // keeps a copy of them as you leave (the classes list, counts, your picture), the next page paints that copy before
-  // its data arrives (the small script build-fs puts after the sidebar), and the browser holds both still while only
-  // the content changes (a view transition between the pages, where the browser has them).
-  // The page skeleton (2026-10-30, Martin: "re-add the page skeleton, tweaked for the new theme"): the page's own
-  // header shows right away, and where its data will go there are shimmer placeholders in the theme's panels
-  // (build-fs puts a call to __fsSkel at the top of each page's .wrap). The real content is laid out but not shown
-  // until it's ready, then the placeholders go and it lands with the page's own animation (syncRun(true)).
   css.textContent = (page === 'course-hub' ? 'html.fs-wait .crumb strong,html.fs-wait .hub-t h1,' : '') + 'html.fs-wait #syncLabel,html.fs-wait [data-av]:not([data-avk]){visibility:hidden}'
     + 'html.fs-wait #scroller .wrap>:not(.fs-skel):not(.hub-h){display:none!important}'
     + 'html:not(.fs-wait) .fs-skel{display:none}'
@@ -93,10 +55,6 @@
     + '.fs-skel .k-tx{display:flex;flex-direction:column;gap:8px;flex:1;min-width:0}'
     + '.fs-skel .k-grid{display:grid;gap:12px}'
     + '.fs-skel .skel-bar{display:block;max-width:100%}'
-    // the placeholders in the theme's own ink (the old bar was a fixed gray band that split into two tones on wide
-    // bars, and looked heavy in dark mode)
-    // (2026-11-01) a soft pulse in opacity: the graphics card does it alone, where a moving light re-drew every
-    // placeholder on every frame, which was heavy on slower computers
     + ':root:root .skel-bar,html.fs-wait .hub-meta:empty::before,html.fs-wait .hub-logo:empty{background-color:color-mix(in srgb,var(--ink) 10%,transparent)!important;background-image:none!important;animation:fsPulse 1.6s ease-in-out infinite!important}'
     + '@keyframes fsPulse{0%,100%{opacity:1}50%{opacity:.5}}'
     + '@media (prefers-reduced-motion:reduce){:root:root .skel-bar{animation:none!important}}'
@@ -106,8 +64,6 @@
     + 'html.fs-wait .hub-meta:empty::before{width:min(440px,100%);height:16px;margin-top:12px;border-radius:999px}'
 
     + 'html.fs-boot .app,html.fs-boot .side,html.fs-boot .side *{transition:none!important}'
-    // the shared popups from the Windowed scripts (Add from OneDrive, the Google sign-in notes) read the Windowed
-    // names for colors; here they get this page's, so they follow dark mode and the accent (2026-10-30)
     + 'html{--panel-bg:var(--field);--panel-inner:var(--panel);--text-dark:var(--ink);--text-muted:var(--ink-2);--text-faint:var(--muted);--border:var(--inner);--accent-dark:var(--accent-hover);--accent-ring:color-mix(in srgb,var(--accent) 35%,transparent)}'
     + '@view-transition{navigation:auto}'
     + '::view-transition-old(fs-top),::view-transition-old(fs-side){display:none}'
@@ -169,13 +125,6 @@
     wrap.insertBefore(el, wrap.firstChild);
   };
 
-  // ---------- the sidebar, set up like Cloudflare's (2026-11-03, from Martin's saved dash.cloudflare.com page) ----------
-  // Cloudflare's own build: a 57/260 px rail; a 32 px "Quick search" box; 34 px rows 1 px apart with 12 px between
-  // icon and name; groups headed by a small grey label that becomes a thin line when the rail is closed; folders
-  // (Recents) that slide open, their rows hanging off a line under the folder's icon; the list fading out at its top
-  // and bottom edges while there's more to scroll; a 48 px footer with just the open/close button. Built from the
-  // sidebar each page already has (its ids and links stay, so the pages' own scripts keep working); build-fs calls
-  // this right after the sidebar, before anything is drawn. The styles are build-fs's fsSide block.
   var SIDE_OPEN_KEY = 'averages_fs_side_open', RECENT_KEY = 'averages_fs_recents';
   // a clock with an arrow going back, at the same weight as the other icons (svg.i's own stroke)
   var CLOCK = '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.6 12.6A8.5 8.5 0 1 0 5.6 6.2"/><path d="M4.4 3.6v3.4h3.4"/><path d="M12 7.6V12l3 2"/></svg>';
@@ -196,10 +145,7 @@
     var h = a.getAttribute('data-go') || a.getAttribute('href') || '', q = h.match(/[?&]course=([^&#]+)/);
     return q ? decodeURIComponent(q[1]) : '';
   }
-  // no browser tooltips in the sidebar: it opens when you point at it, so its words are already showing,
-  // and a tooltip only covered the row under it (2026-11-02). The name stays as data-title.
   function untitle(root) { [].forEach.call(root.querySelectorAll('[title]'), function (x) { x.setAttribute('data-title', x.getAttribute('title')); x.removeAttribute('title'); }); }
-  // classes are plain links (2026-11-03, Martin: no drop-downs or folding for classes; the class page has its tabs)
   function decorateClasses(box) {
     if (!box) return; untitle(box);
     [].slice.call(box.children).forEach(function (a) {
@@ -209,7 +155,6 @@
   }
   window.__fsSide = function () {
     var side = document.getElementById('side'); if (!side || side.dataset.cf) return; side.dataset.cf = '1';
-    // the logo in the top bar goes Home (2026-11-03, Martin): a real link, so it also opens in a new tab
     var brand = document.querySelector('.top .brand, .app > .top > .brand, div.brand');
     if (brand && brand.tagName !== 'A') {
       var home = document.createElement('a'); home.className = brand.className; home.href = '/IS/home'; home.setAttribute('aria-label', 'Averages.io, go to Home');
@@ -282,7 +227,6 @@
         t = { assignments: 'Assignments', grades: 'Grades', materials: 'Materials', updates: 'Updates', members: 'Members' }[tab]; if (!t) return; s = c.name; k = tab;
       }
     } else {
-      // the other pages (2026-11-02, Martin: everything but Home); one entry per page, wherever you were on it
       if (!PAGE_NAME[page]) return; t = PAGE_NAME[page]; s = 'Page'; k = page; u = location.pathname;
     }
     var l = lget(RECENT_KEY); l = Array.isArray(l) ? l : [];
@@ -290,18 +234,7 @@
     lset(RECENT_KEY, l);
     var rl = document.getElementById('sideRecList'); if (rl && recOpen()) rl.innerHTML = recentsHTML();
   }
-  /*
-   * Notifications keep coming in (2026-11-03, Martin: "the notification counter won't change"): once the page's
-   * own sync is done, and then every 5 minutes while the tab is showing (and when it comes back into view after
-   * that long), the bundle and course updates are read again in the background. New grades, updates and messages
-   * join the bell (the pages listen for 'fs:notis') without reloading the page. The fresh answers also go in this
-   * tab's cache, so the next page opens with them.
-   */
-  // 2026-11-06 (Martin: "after the sync load, check in the background"): a page that opened with this tab's saved copy
-  // (older than a minute) checks a few seconds after it's ready instead of 5 minutes later; class files are read
-  // too, every 15 minutes, for new materials; and with browser notifications allowed, the checks go on while the tab
-  // is in the background, so the system notification can say so (averages-note.js).
-  var NOTIS_EVERY = 5 * 60 * 1000, FILES_EVERY = 15 * 60 * 1000, notisAt = Date.now(), filesAt = Date.now(), notisBusy = false;
+  var NOTIS_EVERY = 60 * 1000, FILES_EVERY = 15 * 60 * 1000, notisAt = Date.now(), filesAt = Date.now(), notisBusy = false;
   function notifAllowed() { try { return 'Notification' in window && Notification.permission === 'granted'; } catch (e) { return false; } }
   function notisCheck() {
     if (notisBusy || !window.FSD || !window.FSA || (document.visibilityState !== 'visible' && !notifAllowed())) return;
@@ -323,8 +256,6 @@
       window.dispatchEvent(new CustomEvent('fs:notis', { detail: { added: added } }));
     }).catch(function () { /* try again next time */ }).then(function () { notisBusy = false; });
   }
-  // A popup at the top right for each new one (2026-11-03, Martin's notification-popup design, averages-note.js): once
-  // per item on this device, shared with Windowed. Whatever's new when a page opens, and what the check above brings.
   function notePop(items) {
     var N = window.AveragesNote, D = window.FSD; if (!N || !D || !window.FSX) return;
     var cname = function (id) { var c = D.C && D.C[id]; return c ? c.name : ''; };
@@ -349,12 +280,10 @@
     // after the page's first sync has had its turn (it asks Schoology for everything once)
     var cacheAt = 0; try { cacheAt = (JSON.parse(sessionStorage.getItem('schoolagy_bundle_cache') || 'null') || {}).at || 0; } catch (e) { /* none */ }
     var stale = cacheAt && Date.now() - cacheAt > 60000;
-    setTimeout(function () { notisAt = Date.now(); if (stale) setTimeout(notisCheck, 4000); setInterval(function () { if (Date.now() - notisAt >= NOTIS_EVERY) notisCheck(); }, 30000); }, 1000);
+    setTimeout(function () { notisAt = Date.now(); if (stale) setTimeout(notisCheck, 4000); setInterval(function () { if (Date.now() - notisAt >= NOTIS_EVERY) notisCheck(); }, 15000); }, 1000);
     document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible' && Date.now() - notisAt >= NOTIS_EVERY) notisCheck(); });
   });
   (function () { var st = document.createElement('style'); st.textContent = '.fs-pav{width:28px;height:28px;flex:none;display:grid;place-items:center;border-radius:50%;color:#fff;font-size:11px;font-weight:800;letter-spacing:.01em;background:#8a8d99}.fs-pav.sq{border-radius:8px}'; (document.head || document.documentElement).appendChild(st); })();
-  // Right-click menus hold the page still (2026-11-06, Martin: the page scrolled under an open right-click menu): from a
-  // right-click until its menu closes, the wheel and touch scrolling do nothing outside the menu. Every page's menus.
   (function () {
     var SEL = '[role="menu"], .card-pop, .fold-pop', on = false, mo = null;
     function lock() {
@@ -367,9 +296,6 @@
     window.addEventListener('wheel', stop, { passive: false, capture: true });
     window.addEventListener('touchmove', stop, { passive: false, capture: true });
   })();
-  // Your photo from your account (2026-11-06, Martin: the top-right picture didn't match his): Fullscreen only used a
-  // photo already on this device, and only Windowed Settings fetched the account's. Now a Fullscreen page does too,
-  // once a tab, when Sync Across Devices is on and this device has no photo: GET /sync/settings, then /media/photo.
   window.addEventListener('fs:ready', function () {
     setTimeout(function () {
       var me = window.FSD && window.FSD.me, prof = lget('schoolagy_profile') || {};
@@ -393,6 +319,7 @@
       }).catch(function () { /* the initials stay */ });
     }, 2500);
   });
+  window.addEventListener('fs:ready', function () { setTimeout(function () { if (window.FSX && FSX.people) FSX.people(); }, 4000); });
   window.addEventListener('fs:ready', function () { setTimeout(noteRecent, 50); setTimeout(function () { if (window.FSX && FSX.syncWindowType) FSX.syncWindowType(); }, 1200); });
   window.addEventListener('hashchange', function () { setTimeout(noteRecent, 50); });
 
@@ -484,7 +411,6 @@
   function extrasFor(who, bundleP) {
     var x = extrasPlan(), out = {};
     Object.keys(x).forEach(function (k) {
-      // '@after' (2026-11-03): asked once the bundle is in, so the first calls to Schoology aren't all at once
       if (x[k][0] === '@for') out[k] = bundleP.then(function (b) { var q = turnedInFor(b); return q ? extra(k, '/data/submissions?for=' + q, 'fs_subs_' + q.length + '_' + q.slice(-24), who) : { files: [] }; });
       else if (x[k][2] === '@after') out[k] = bundleP.then(function () { return extra(k, x[k][0], x[k][1], who); });
       else out[k] = extra(k, x[k][0], x[k][1], who);
@@ -511,7 +437,7 @@
     if (page === 'messages' || page === 'home' || page === 'contacts') x.messages = ['/messages', 'messages', page === 'home' ? '@after' : '']; // Home: after the bundle, which has just read the inbox
     if (page === 'files' || page === 'home' || page === 'course-hub' || page === 'assignments') x.files = ['/data/files', 'fs_files', page === 'files' ? '' : '@after']; // assignments: Contains attachment
     // what's been turned in (files), so finished work isn't called missing
-    if (page === 'assignments' || page === 'home' || page === 'course-hub' || page === 'files' || page === 'calendar') x.submissions = page === 'files' ? ['/data/submissions', 'fs_submissions'] : ['@for']; // 2026-11-03: only the work the page shows, except on Files
+    if (page === 'assignments' || page === 'home' || page === 'course-hub' || page === 'files' || page === 'calendar') x.submissions = page === 'files' ? ['/data/submissions', 'fs_submissions'] : ['@for'];
     if (page === 'contacts' || page === 'course-hub' || page === 'messages') x.classmates = ['/data/classmates', 'fs_classmates'];
     if (page === 'course-hub' && courseQ) {
       x.folders = ['/data/folders?course=' + encodeURIComponent(courseQ), 'folders_' + courseQ];
@@ -546,9 +472,6 @@
     var said = sget('averages_fs_toast'); if (said) { sdel('averages_fs_toast'); setTimeout(function () { if (typeof window.toast === 'function') window.toast(said); }, 400); }
     setTimeout(touchPush, 1500);
   }
-  // Browser notifications keep working (2026-10-30): the Windowed pages keep the stored sign-in in step with this
-  // session once a day (LegacyPage's touchPushIfOn); the Fullscreen pages never did, so after a while the API's copy went
-  // stale and notifications stopped. Same rule here: only when this device has them on (or a turn-off still to send).
   function touchPush() {
     if (!lget0('averages_push_endpoint') && !lget0('averages_push_pending_delete')) return;
     var go = function () { try { var r = window.AveragesPush && window.AveragesPush.touchIfDue && window.AveragesPush.touchIfDue(); if (r && r.catch) r.catch(function () {}); } catch (e) {} };
@@ -566,12 +489,7 @@
     });
   }
 
-  // The bundle is asked for at once, alongside the sign-in check (2026-11-03: one round trip sooner); if
-  // the check says signed out, the page leaves before it's used.
   var earlyBundle = bundle(); earlyBundle.catch(function () {});
-  // Seen on every device (2026-11-03, Martin: "New" stickers came back in a private tab): the account's seen
-  // notifications (GET /sync/seen, merged by the API) are added to this device's before the page draws, and this
-  // device's go up when something is opened. Not with Sync Across Devices off or in Incognito. Shared with Windowed.
   function seenSyncOff() {
     var o = lget('schoolagy_settings_options') || {};
     try { if (LS.getItem('schoolagy_account_mode') === 'incognito') return true; } catch (e) { return true; }
@@ -606,9 +524,6 @@
   var started = session().then(function (me) {
     if (!me || me.mode !== 'live' || !me.uid) { window.location.replace('/'); return null; }
     var who = me.uid, bP = earlyBundle, xs = extrasFor(who, bP), names = Object.keys(xs), sP = seenPull(me);
-    // A class's files and folders are what Files and a course's Materials show (2026-11-06, Martin: Materials showed
-    // folders but not the teacher's files): those pages wait for them longer (25 s, with the loading screen up)
-    // instead of drawing without them after 8 s. Everything else still gives up at 8 s.
     var main = function (n) { return (page === 'files' && n === 'files') || (page === 'course-hub' && (n === 'files' || n === 'folders')); };
     return Promise.all([bP, sP].concat(names.map(function (n) { return settle(xs[n], main(n) ? 25000 : 8000); }))).then(function (all) {
       all.splice(1, 1);   // the seen lists are in place now; they aren't part of the data
@@ -655,11 +570,6 @@
       return u + (qs.length ? '?' + qs.join('&') : '') + (hash ? '#' + String(hash).replace(/^#/, '') : '');
     },
     go: function (p, params, hash) { window.location.href = FSX.url(p, params, hash); },
-    /**
-     * Everyone search can find (2026-11-06, Martin: classmates couldn't be found anywhere, and search anything had no
-     * people): your teachers (GET /data/people) and your classmates (GET /data/classmates, this page's or the copy this
-     * tab already has). [{ id, name, teacher, sub, photo }]; teachers first.
-     */
     people: function () {
       var D = window.FSD || {}, out = [], have = {}, cname = function (id) { return D.C && D.C[id] ? D.C[id].name : ''; };
       ((D.people && D.people.CONTACTS) || []).forEach(function (p) {
@@ -668,6 +578,7 @@
       });
       var mates = D.classmates;
       if (!mates || !Object.keys(mates).length) { try { var c = JSON.parse(sessionStorage.getItem('averages_extras_fs_classmates') || 'null'); mates = c && c.data && c.data.CLASSMATES || {}; } catch (e) { mates = {}; } }
+      if ((!mates || !Object.keys(mates).length) && FSX.loadClassmates) FSX.loadClassmates();
       var me = D.me && D.me.uid ? String(D.me.uid) : '';
       Object.keys(mates || {}).forEach(function (cid) { (mates[cid] || []).forEach(function (m) {
         if (!m || !m.id || String(m.id) === me) return;
@@ -675,6 +586,15 @@
         have[m.id] = 1; out.push({ id: String(m.id), name: m.name || 'Classmate', teacher: false, sub: 'Classmate · ' + cname(cid), photo: m.photo || '' });
       }); });
       return out;
+    },
+    loadClassmates: function () {
+      if (FSX._matesAsked || !window.FSD || !window.FSD.me || !window.FSD.me.uid) return; FSX._matesAsked = true;
+      var who = window.FSD.me.uid;
+      fetch(API + '/data/classmates', { credentials: 'include', cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+        if (!d || !d.CLASSMATES) return;
+        sset('averages_extras_fs_classmates', JSON.stringify({ at: Date.now(), who: who, data: d }));
+        window.dispatchEvent(new CustomEvent('fs:people'));
+      }).catch(function () { /* search still finds your teachers */ });
     },
     /** A small picture of a person for lists: square for teachers, round for students. */
     personAv: function (p) {
@@ -702,12 +622,6 @@
      * Sync across devices (Classic only): the same record the Windowed Settings pushes (PUT /sync/settings:
      * settingsOptions, appearance, darkMode, profile). Pictures go as their stored references; a picture
      * changed on this device and not uploaded yet is left to the Windowed Settings, so nothing is lost.
-     */
-    /**
-     * Fullscreen in the account's synced copy (2026-11-02, Martin: "when I sign out then back in it defaults to
-     * windowed even when I am on fs"). Signing in on a cleared device takes the account's copy; Fullscreen picked
-     * in onboarding, or in Settings just before the page changed, never reached it. Once a tab: if the account's
-     * copy says Windowed, only its window type is changed (everything else in it stays as it is).
      */
     syncWindowType: function () {
       var me = window.FSD && window.FSD.me, LSs = window.sessionStorage;
@@ -770,17 +684,6 @@
       try { for (var i = SS.length - 1; i >= 0; i--) { var k = SS.key(i); if (k && k.indexOf('averages_extras_') === 0) SS.removeItem(k); } } catch (e) { /* off */ }
     },
     reload: function () { FSX.refresh(); window.location.reload(); },
-    /**
-     * Sync buttons and the page-open animation (2026-10-30, Martin's sync animations: "it is meant to play the
-     * loading line animation not reload the page"). FSX.sync() asks Schoology again for everything this page shows,
-     * one request each, without reloading. sync.wait(keys) resolves when those requests are back ('bundle', or an
-     * extra: 'files', 'messages', 'updates', 'events', 'people', 'classmates', 'submissions', ...); then that part of
-     * the page lands. The page's drawing code can't take new data in place, so if an answer comes back different from
-     * what's on screen, its part stays as placeholders and, once every request is back, the page reloads into the new
-     * data and opens with the same animation. FSX.sync(true) is the page opening: nothing is asked again, and the parts
-     * land one after another after a short beat, like the Windowed pages. sync.say(text) is the closing toast, or
-     * why it couldn't sync.
-     */
     sync: function (first) {
       var S = { first: !!first, changed: false, failed: false };
       if (first) {
@@ -830,22 +733,6 @@
       return m < 1 ? 'Synced just now' : m < 60 ? 'Synced ' + m + ' min ago' : 'Synced ' + Math.round(m / 60) + ' h ago';
     },
     signOut: function () { window.location.href = '/signout'; },
-    /** "Are you sure?" first (2026-11-06, Martin: the profile menu signed out straight away). */
-    confirmSignOut: function () {
-      if (document.getElementById('fsSignOut')) return;
-      var from = document.activeElement, w = document.createElement('div');
-      w.id = 'fsSignOut';
-      w.setAttribute('style', 'position:fixed;inset:0;z-index:2147483000;background:var(--scrim,rgba(10,11,18,.45));display:grid;place-items:center;padding:16px');
-      w.innerHTML = '<div role="alertdialog" aria-modal="true" aria-labelledby="fsSoT" aria-describedby="fsSoD" style="width:min(380px,100%);box-sizing:border-box;padding:24px;border-radius:20px;background:var(--field,#fff);color:var(--ink,#14151f);box-shadow:0 24px 60px -20px rgba(0,0,0,.5)">'
-        + '<h2 id="fsSoT" style="margin:0 0 6px;font-size:20px;font-weight:800">Sign out of Averages.io?</h2>'
-        + '<p id="fsSoD" style="margin:0 0 20px;font-size:14px;font-weight:600;line-height:1.45;color:var(--muted,#5a5c70)">This clears everything Averages.io saved on this device. You can sign back in with Schoology any time.</p>'
-        + '<div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" data-so="no">Cancel</button><button class="btn primary" data-so="yes">Sign out</button></div></div>';
-      var done = function (yes) { document.removeEventListener('keydown', key, true); w.remove(); if (yes) FSX.signOut(); else if (from && from.isConnected) from.focus({ preventScroll: true }); };
-      var key = function (e) { if (e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); done(false); } };
-      w.addEventListener('click', function (e) { var b = e.target.closest('[data-so]'); if (e.target === w || (b && b.dataset.so === 'no')) done(false); else if (b) done(true); });
-      document.addEventListener('keydown', key, true);
-      document.body.appendChild(w); w.querySelector('[data-so="yes"]').focus();
-    },
     /** Notifications already opened (the Windowed bell's list, averages_seen). kind: 'u' update, 'g' grade, 'm' message. */
     /** The student's course order (shared with Windowed): ids, or [] for the school's. set() saves it for both looks. */
     courseOrder: {
@@ -870,12 +757,6 @@
     fileUrl: function (f, view) {
       return API + '/data/attachment?section=' + encodeURIComponent(f.course) + '&' + (f.kind === 'document' ? 'document' : 'assignment') + '=' + encodeURIComponent(f.parent) + '&file=' + encodeURIComponent(f.id) + (view ? '&view=1' : '');
     },
-    /**
-     * File previews (2026-11-03, Martin: "add back file previews/popups"). The class's own files are drawn right in
-     * the page: PDFs page by page with pdf.js (the app's own copy, loaded only when a PDF shows up), text as text,
-     * pictures, sound and video in the browser's own players. Files are fetched with the session cookie from
-     * /data/attachment?view=1 and kept in memory only (the last 8 PDFs), never stored.
-     */
     prev: {
       kind: function (name) {
         var x = (String(name || '').match(/\.([a-z0-9]+)$/i) || [, ''])[1].toLowerCase();
@@ -926,7 +807,6 @@
     thread: function (id) { var z = zone(); return FSX.api('/messages/thread?id=' + encodeURIComponent(id) + (z ? '&tz=' + encodeURIComponent(z) : '')); },
     reply: function (id, message, fileIds) { return FSX.api('/messages/reply', { method: 'POST', json: { id: String(id), message: message, fileIds: fileIds || [] } }).then(function (r) { sdel('averages_extras_messages'); return r; }); },
     send: function (recipientIds, subject, message, fileIds) { return FSX.api('/messages', { method: 'POST', json: { recipientIds: recipientIds, subject: subject, message: message, fileIds: fileIds || [] } }).then(function (r) { sdel('averages_extras_messages'); return r; }); },
-    /** A file for a message, up to Schoology now (2026-11-03): resolves its file id to send with the message. */
     msgUpload: function (file, onProgress) {
       var load = window.AveragesSubmit ? Promise.resolve(window.AveragesSubmit) : new Promise(function (ok, no) {
         var sc = document.createElement('script'); sc.src = '/js/averages-submit.js'; sc.onload = function () { window.AveragesSubmit ? ok(window.AveragesSubmit) : no({ code: 'not_configured' }); }; sc.onerror = function () { no({ code: 'network' }); }; document.head.appendChild(sc);
@@ -1071,12 +951,6 @@
   }
 
   /** The student's grade in each class, one value per day it was seen (this device), for the trend charts. */
-  /**
-   * Which of those weeks the class really had grades for (2026-11-03, Martin: the chart showed points for
-   * weeks with no grades). has[i]: something was graded by the end of week i (before that, weeklyTrend
-   * only repeats the first real value). posted[i]: a grade was entered during week i. Work with no graded
-   * time counts from the start.
-   */
   function weeklyHas(cats, weeks, now) {
     var times = [];
     cats.forEach(function (c) { arr(c.assignments).forEach(function (a) { if (a.graded && typeof a.score === 'number' && a.points > 0) times.push(a.gradedAt || 0); }); });
@@ -1150,15 +1024,12 @@
       return {
         id: id, name: c.name || 'Class', short: initials(c.name), teacher: teacherOf(id), teacherIds: tids, period: typeof c.period === 'number' ? c.period : i + 1,
         hasPeriod: typeof c.period === 'number', room: '', students: m.length ? m.length + 1 : 0, pct: typeof c.pct === 'number' ? c.pct : 0, grade: c.grade || '',
-        // nothing graded yet (2026-11-06, Martin: "Your grade" said F 0.0%): shown as N/A and left out of the GPA
         none: !(typeof c.pct === 'number' && c.pct > 0) && !cats.some(function (k) { return arr(k.assignments).some(function (a) { return a.graded; }); }),
         trend: trend, trendHas: wk.has, trendPosted: wk.posted, due: due.length, missing: miss.length, updates: ups.length, next: next, code: c.code || '', section: c.section || '',
         predicted: c.predicted || '', predictedPct: typeof c.predictedPct === 'number' ? c.predictedPct : c.pct, dir: c.trend || 'flat', updated: c.updated || '',
         points: points, dates: arr(hist.dates), titles: arr(hist.titles), emoji: s[1], color: s[2], lmsColor: c.color || '', order: i,
       };
     });
-    // the student's own course order (2026-11-01): the same saved order Windowed's Courses page writes
-    // (schoolagy_course_order, course ids), so both looks list classes the same way; new classes go at the end
     var saved = arr(window.FSX.lget('schoolagy_course_order')).map(String);
     if (saved.length) CLASSES.sort(function (x, y) { var a = saved.indexOf(String(x.id)), b = saved.indexOf(String(y.id)); return (a < 0 ? 1e6 : a) - (b < 0 ? 1e6 : b); });
     var C = {}; CLASSES.forEach(function (c) { C[c.id] = c; });
@@ -1177,15 +1048,11 @@
     var muted = []; try { muted = JSON.parse(localStorage.getItem('fsmsg_muted') || '[]'); muted = Array.isArray(muted) ? muted.map(String) : []; } catch (e) { muted = []; }   // Hide alerts (messages' details sheet)
     arr(b.MESSAGES).forEach(function (m) {
       if (!m.id || muted.indexOf(String(m.id)) >= 0) return;
-      // The sender by id among the student's teachers (2026-11-03): the API may only know "Teacher".
       var who = m.authorId ? arr(people.CONTACTS).filter(function (p) { return String(p.id) === String(m.authorId); })[0] : null;
       if (who && who.name && (!m.from || m.from === 'Teacher')) m = Object.assign({}, m, { from: who.name, courseId: m.courseId || (arr(who.courses).filter(function (c) { return C[c]; })[0] || '') });
       var cid = m.courseId && C[m.courseId] ? m.courseId : (CLASSES.filter(function (c) { return c.teacher && c.teacher === m.from; })[0] || {}).id;
       NT.push({ id: 'm:' + m.id, kind: 'm', raw: m.id, ago: agoMin(m.time), c: cid || '', k: 'msg', t: (m.from || 'Someone') + ': ' + (m.subject || 'Message'), d: (m.preview || '') + (m.time ? ' · ' + m.time : ''), unread: !!m.unread, thread: m.id });
     });
-    // New work and new class files (2026-11-06, Martin: the background check should catch new materials and the like
-    // too). Work has no "posted" time, so this device remembers which work it has already seen (averages_known_work):
-    // anything that shows up after the first visit is new for a week. Files carry when they were posted: new for 2 days.
     var WORK_NOW = arr(b.OVERDUE).concat(arr(b.TODAY), arr(b.UPCOMING)).filter(function (a) { return a.id && C[a.courseId]; });
     var kw = knownWork(WORK_NOW.map(function (a) { return String(a.id); }), now), ntHave = {};
     WORK_NOW.forEach(function (a) {
@@ -1260,11 +1127,8 @@
       if (a.graded && a.gradedAt && now - a.gradedAt < 21 * DAY) addWork(c.id, a, a.due || null, {});
       else if (!a.graded && a.due && a.due > now - 14 * DAY) addWork(c.id, a, a.due, {});
     }); }); });
-    // Not on Schoology's turn-in (2026-11-03): discussions, tests, outside tools, and work that takes no turn-ins (paper, in class)
     var canTurnIn = function (a) { return a.kind === 'assignment' && !a.disc && !a.outside && !a.noDrop; };
 
-    // The sidebar's counts: work still to do (missing or due, with a due date: the same list Home shows, so
-    // the number is the same on every page; 2026-11-03, Martin: Home said 14, Settings 34), and messages not opened yet.
     var counts = {
       assign: WORK_ALL.filter(function (a) { return (a.st === 'missing' || a.st === 'due') && a.dueAt; }).length,
       msg: arr(b.MESSAGES).filter(function (m) { return m.unread && !seen.has('m', m.id); }).length,

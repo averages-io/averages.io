@@ -1,25 +1,4 @@
-/*
- * AveragesAvatar (2026-10-23, Martin: the default profile picture for the
- * student and teachers should have "random colors as in the background not
- * the letter", and "make sure that all letters are always visible").
- *
- * One look for every person without a photo: Apple-style initials (first
- * and last name, or one letter; Mr./Mrs./Dr. and the like left out) in
- * white, on a colored gradient. The color is picked from the person's name,
- * so it's random across people but the same for one person everywhere: the
- * profile button, Settings, the bell, Messages, Contacts, Home and the class
- * pages.
- *
- * Every color keeps white letters readable: at least 4.6:1 against even the
- * lighter top of its gradient (WCAG AA asks 4.5:1 for normal text).
- *
- *   AveragesAvatar.initials(name)    'RP' for "Ms. Rachel Patel", '' when there's no name
- *   AveragesAvatar.background(name)  the CSS gradient for that person
- *   AveragesAvatar.color(name)       its darker color (for a solid fill)
- *   AveragesAvatar.paint(el, name)   sets an element's background and initials
- *
- * Loaded in <head> by app/layout.tsx, before the page scripts.
- */
+// AveragesAvatar.
 (function () {
   'use strict';
   if (window.AveragesAvatar) return;

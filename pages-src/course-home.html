@@ -33,8 +33,6 @@
        dots, assignment ticks) reads from these two instead of a fixed
        color, so the same page serves any of the six sample courses via
        ?course=. */
-    /* Neutral until the class's own color arrives (2026-10-23): this used to be a
-       sample class's gold, which flashed before every real class. */
     --course-color: #6E7582;
     --course-color-dark: #535B6B;
     --course-color-tint: rgba(110, 117, 130, 0.14);
@@ -73,18 +71,6 @@
   *::-webkit-scrollbar-thumb:hover { background-color: rgba(20, 21, 31, 0.45); }
   *::-webkit-scrollbar-corner { background: transparent; }
 
-  /* Declared so the browser themes ITS OWN chrome — scrollbars, the
-
-     overscroll gutter, form controls — against this page rather than
-
-     guessing. Without it Firefox drew a light-theme scrollbar over the
-
-     dark canvas and tinted it (Martin saw it as pink on a blue
-
-     background). LegacyPage's applyStoredTheme() updates both of these
-
-     to match whatever background the user actually saved. */
-
   html {
 
     color-scheme: dark;
@@ -92,7 +78,6 @@
     background-color: #0c0c0e;
 
   }
-
 
   html, body {
     margin: 0;
@@ -106,16 +91,6 @@
     overflow: hidden; /* scrolling now happens inside .page (see below), so
       the scrollbar sits at the edge of the app's own window/card instead of
       out at the browser's outer edge, over the wallpaper margin */
-    /* Neutral black instead of a baked-in accent gradient here —
-       2026-09-11, per Martin. This is only ever visible for a split
-       second on reload/navigation, before applyStoredTheme() (or this
-       page's own appearance-reading script) sets the user's actual
-       saved background over it. The old default was the sample
-       red-orange gradient baked into this file, which read as a real
-       glitch flashing in between pages; a neutral black reads as
-       "still loading" instead, and matches the app's own Black
-       preset (#0c0c0e) so it's not a color that appears nowhere else
-       in the app. */
     background-color: #0c0c0e;
     background-image: none;
     background-size: cover;
@@ -189,9 +164,6 @@
   }
 
   .profile-menu-wrap { position: relative; flex-shrink: 0; }
-  /* No photo: an Apple-style monogram (2026-10-21, Martin: "make the default no pfp letters
-     look more like the apple ones"), the grey gradient and rounded white initials of a contact
-     with no picture. A photo replaces it (set inline as background-image). */
   .profile-btn {
     width: 42px;
     height: 42px;
@@ -210,8 +182,6 @@
     flex-shrink: 0;
   }
 
-  /* A photo has no ring (2026-10-23, Martin: "remove the ugly border if it is a custom upload");
-     the letter avatars keep theirs. Same size: the border goes clear and the photo fills it. */
   .profile-btn.has-photo { border-color: transparent; background-origin: border-box; background-repeat: no-repeat; }
   .profile-menu {
     position: absolute;
@@ -268,9 +238,6 @@
     align-items: start;
   }
   .hub-middle, .hub-right { display: flex; flex-direction: column; gap: 18px; }
-  /* The course banner and section nav stay put while the middle and right
-     columns scroll (2026-10-01, per Martin). Sticks 24px below the top of
-     .page (the scrolling box) so it never touches the edge. Side-by-side layout only; see 900px rule. */
   .hub-sidebar { position: sticky; top: 24px; }
 
   /* ---------- Sidebar: banner + course nav ---------- */
@@ -282,7 +249,7 @@
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
-    background: var(--course-color); /* solid, per Martin 2026-10-01 (was a gradient + light stripe) */
+    background: var(--course-color);
     overflow: hidden;
   }
   .course-banner::before {
@@ -299,7 +266,6 @@
     color: rgba(255,255,255,0.9);
     margin-bottom: 8px;
   }
-  /* Emoji instead of the line-drawn book (2026-10-01, per Martin). */
   .banner-icon { display: block; position: relative; }
   .banner-icon svg { display: block; width: 100%; height: 100%; }
   .banner-name { color: #fff; font-weight: 800; font-size: 1rem; font-style: italic; line-height: 1.15; position: relative; }
@@ -358,10 +324,6 @@
   .grade-hero-row { display: flex; align-items: stretch; gap: 14px; }
   .grade-hero-block { flex: 1; background: var(--panel-inner); border-radius: var(--window-radius-md); padding: 14px 16px; }
   .grade-hero-label { font-size: 0.64rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-faint); margin: 0 0 4px; }
-  /* The letter is an inner <span class="good|mid|bad"> inside .grade-hero-val,
-     so these are descendant selectors (the old compound ones never matched,
-     which left both letters white on the light card; fixed 2026-10-01, same
-     bug gradebook.html fixed on 2026-08-31). */
   .grade-hero-val { font-size: 1.9rem; font-weight: 900; line-height: 1; color: var(--text-dark); }
   .grade-hero-val .good { color: var(--grade-good); }
   .grade-hero-val .mid { color: var(--grade-mid); }
@@ -491,15 +453,6 @@
   .hub-assign-item.graded .hub-assign-due { color: var(--grade-good); }
   .assign-empty { font-size: 0.8rem; color: var(--text-faint); font-style: italic; padding: 10px 0; }
 
-  /* ---------- Announcements widget — new card in the middle column,
-     above Current + Predicted Grade, since teacher posts are the most
-     time-sensitive thing on a course hub. (The sidebar used to also
-     have an "Updates" sub-nav tab this widget was meant to stay
-     distinct from — that tab was removed 2026-08-28 per Martin's
-     request, so this widget is now the only "recent activity" surface
-     on the Home tab.) Pinned posts float to the top; clicking a post
-     marks it read and clears its dot, same lightweight interaction as
-     the rest of this mock (no backend). */
   .announce-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
   .announce-head-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
   .announce-count {
@@ -538,7 +491,6 @@
   .announce-modal-list { max-height: 60vh; overflow-y: auto; margin: 8px -4px 0; padding: 0 4px 2px; }
   .announce-item { padding: 10px 0; border-bottom: 1px solid var(--border); cursor: pointer; background: none; border-left: none; border-right: none; border-top: none; width: 100%; text-align: left; font: inherit; }
   .announce-item:last-child { border-bottom: none; }
-  /* Opened from Home or the bell (?update=<id>, 2026-10-19): the post lights up once. */
   .sheet-updates { scroll-margin-top: 24px; }
   /* The ring reaches past the row's own edges, so the tint has room around the text. */
   @keyframes announceFlash { 0%, 30% { background: rgb(from var(--accent) r g b / 0.16); box-shadow: 0 0 0 8px rgb(from var(--accent) r g b / 0.16); } 100% { background: transparent; box-shadow: 0 0 0 8px transparent; } }
@@ -559,7 +511,6 @@
     flex-shrink: 0;
   }
   .announce-author { font-weight: 800; font-size: 0.78rem; color: var(--text-dark); }
-  /* No pinned marker next to the name (removed 2026-10-04, per Martin). Pinned posts still sort to the top. */
   .announce-time { font-size: 0.66rem; color: var(--text-faint); margin-left: auto; white-space: nowrap; flex-shrink: 0; }
   .announce-unread-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--course-color); flex-shrink: 0; }
   .announce-text { font-size: 0.78rem; color: var(--text-muted); line-height: 1.45; margin: 4px 0 0; padding-left: 32px; }
@@ -694,9 +645,6 @@
     outline: none;
   }
 
-  /* ---------- Bottom nav — permanently visible (2026-08-26, per
-     Martin's request — was previously hidden by default and revealed
-     by an up-arrow tab; the tab and its show/hide toggle are gone). ---------- */
   .app-nav {
     position: fixed;
     left: 0;
@@ -738,10 +686,6 @@
   .nav-link .dot { width: 4px; height: 4px; border-radius: 50%; background: transparent; }
   .nav-link.active .label { color: var(--text-dark); }
   .nav-link.active .dot { background: var(--accent); }
-  /* ---------- "More" overflow (2026-10-01, per Martin: "if the text has
-     to get ... we should add a more button on the far right side with a
-     list of the other options"). Labels never truncate: when they would,
-     the rightmost pages move into the More menu instead. ---------- */
   .nav-link[hidden], .nav-more[hidden], .nav-more-menu[hidden] { display: none; }
   /* While the More menu is open the whole bar sits above everything else on
      the page (sticky headers, pop-ups, the edit button go up to z-index 90),
@@ -804,8 +748,6 @@
   .nav-more-item.active { color: var(--text-dark); }
   .nav-more-item.active span { position: relative; display: inline-block; padding-bottom: 6px; margin-bottom: -6px; }
   .nav-more-item.active span::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; border-radius: 999px; background: var(--accent); }
-  /* Labels sit centered in the bar; the active page is underlined in the
-     accent color instead of marked with a dot (2026-10-01, per Martin). */
   .app-nav-inner .nav-link, .app-nav-inner .nav-more { justify-content: center; gap: 0; padding-top: 10px; padding-bottom: 10px; }
   .app-nav-inner .nav-link .dot, .app-nav-inner .nav-more .dot { display: none; }
   .app-nav-inner .nav-link .label, .app-nav-inner .nav-more .label { position: relative; padding: 6px 0; }
@@ -832,8 +774,6 @@
     .nav-link { min-width: 0; padding: 10px 3px 8px; }
     .nav-link .label { font-size: 0.58rem; }
   }
-  /* Emoji icons (2026-10-01, per Martin): icons that show a thing are emoji;
-     buttons and action icons stay line icons. */
   /* Each emoji is an inline SVG sized by font-size (1em box), so it is
      exactly as big as its box and sits dead center. The svg rule undoes
      the line-icon styles (stroke, fill:none, opacity) that the parent
@@ -841,8 +781,6 @@
   .emo { display: inline-block; width: 1em; height: 1em; line-height: 0; flex-shrink: 0; vertical-align: middle; }
   .emo svg { display: block; width: 100%; height: 100%; fill: initial; stroke: none; opacity: 1; }
   .course-nav-item .emo { font-size: 18px; }
-  /* ---------- Hub laid out like the school platform's course page
-     (2026-10-01, per Martin) ---------- */
   h1.title .emo { font-size: 0.85em; margin-left: 8px; vertical-align: -0.08em; }
   .up-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
   .up-head-emo { font-size: 18px; margin-left: 4px; vertical-align: -3px; }
@@ -858,7 +796,6 @@
   .up-item.overdue .up-title { color: var(--grade-bad); }
   .up-time { font-size: 0.72rem; font-weight: 700; color: var(--text-faint); white-space: nowrap; }
   .up-done { font-size: 0.64rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; color: var(--grade-good); white-space: nowrap; }
-  /* ---------- Hub round 2 (2026-10-01, Martin's mockup) ---------- */
   .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
   /* only the profile button is left in the top bar: lift it into the back link's row */
   .topbar.hub-topbar { justify-content: flex-end; margin-top: -18px; margin-bottom: 12px; pointer-events: none; }
@@ -876,13 +813,11 @@
   .banner-foot .banner-icon { width: 36px; height: 36px; margin: 0; flex-shrink: 0; }
   .hub-middle > .card:first-child { margin-top: 0; }
   @media (max-width: 900px) { .course-banner { min-height: 180px; } }
-  /* current grade, under the projected grade (2026-10-01) */
   .banner-current { position: relative; display: flex; flex-direction: column; gap: 2px; margin-top: 12px; }
   .banner-current-val { display: flex; align-items: baseline; gap: 8px; color: #fff; }
   .banner-current-letter { font-size: 1.6rem; font-weight: 900; line-height: 1; }
   .banner-current-pct { font-size: 0.8rem; font-weight: 800; color: rgba(255,255,255,0.82); }
   .course-banner .banner-foot { margin-top: 16px; }
-  /* swapped (2026-10-01, per Martin): current grade on top and big, projected under it */
   .banner-current { margin-top: 0; gap: 4px; }
   .banner-current-letter { font-size: 3.4rem; }
   .banner-current-pct { font-size: 0.9rem; }
@@ -890,7 +825,6 @@
   .banner-grade-val .grade-hero-trend { font-size: 1.6rem; gap: 4px; }
   .banner-grade-val .grade-hero-trend .arrow { font-size: 1rem; }
   .banner-grade-val .grade-hero-pct { font-size: 0.8rem; }
-  /* ================= Course hub redo (2026-10-01) ================= */
   .sheet { background: var(--panel-bg); border-radius: var(--window-radius-lg); overflow: hidden; margin-bottom: 24px; }
   .sheet-head { background: var(--course-color); color: #fff; padding: 32px; display: flex; align-items: flex-end; justify-content: space-between; gap: 32px; flex-wrap: wrap; }
   .sheet-id { display: flex; align-items: center; gap: 16px; min-width: 0; flex: 1 1 320px; }
@@ -956,7 +890,6 @@
   .sheet-trend { border-left: 1px solid var(--border); }
   .trend-chart { position: relative; }
   .trend-chart svg { width: 100%; height: auto; display: block; overflow: visible; }
-  /* Dot hover labels (2026-10-15): assignment name and score. */
   .trend-dot { cursor: pointer; outline: none; }
   .trend-dot .trend-dot-mark { transition: r 120ms ease; }
   .trend-dot.on .trend-dot-mark, .trend-dot:focus-visible .trend-dot-mark { r: 5.5; }
@@ -1000,13 +933,10 @@
     .sheet-score { gap: 24px; }
     .sheet-grade-now .sheet-letter { font-size: 3rem; }
   }
-  /* scoreboard box (2026-10-01): one size for both grades, on a solid darker
-     shade of the course color (no blur/transparency: glassmorphism is on the ban list) */
   .sheet-score { background: var(--course-color-dark); border-radius: var(--window-radius-md); padding: 16px 24px; gap: 32px; align-items: flex-start; }
   .sheet-grade-now .sheet-letter, .sheet-grade-proj .sheet-letter { font-size: 2.7rem; }
   .sheet-grade-proj { margin: -8px -8px -8px -8px; }
   @media (max-width: 560px) { .sheet-score { padding: 16px; gap: 24px; } .sheet-grade-now .sheet-letter, .sheet-grade-proj .sheet-letter { font-size: 2.4rem; } }
-  /* ---------- Hub round 3 (2026-10-01) ---------- */
   .back-link { display: none; }                   /* no back arrow on the course pages */
   .topbar.hub-topbar { margin-top: 0; }
   .sheet-head { align-items: center; padding: 24px 32px 28px; }
@@ -1014,7 +944,6 @@
   .sheet-tab-action { margin-left: auto; background: var(--panel-inner); border: none; border-radius: 999px; padding: 8px 16px; font: inherit; font-weight: 800; font-size: 0.76rem; color: var(--text-dark); cursor: pointer; }
   .sheet-tab-action:hover { background: var(--border); }
   .sheet-tab-action:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
-  /* Open in Schoology sits right after Course info (2026-10-26). */
   .sheet-tab-action + .sheet-tab-out { margin-left: -16px; }
   .sheet-tab-out { display: inline-flex; align-items: center; gap: 4px; text-decoration: none; white-space: nowrap; }
   .sheet-tab-out[hidden] { display: none; }
@@ -1047,8 +976,6 @@
   .emoji-cell:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
   .emoji-cell.auto { grid-column: span 2; }
   @media (max-width: 900px) { .week-wrap { padding: 0 40px; } .sheet-head { padding: 24px; } }
-  /* ---------- Course pages round 4 (2026-10-01) ---------- */
-  /* no italics on the course pages (Martin's rule) */
   html body * { font-style: normal !important; }
   /* "Back to ..." sits in the profile button's row, left side, no arrow */
   .topbar.hub-topbar, .topbar.sheet-topbar { justify-content: space-between; align-items: center; margin: 0 0 12px; }
@@ -1079,9 +1006,6 @@
   .week-when { font-size: 0.76rem; }
   .week-done { font-size: 0.68rem; }
   .week-free { text-align: center; font-size: 0.76rem; }
-  /* More room on the right of the calendar, and long names stay in their
-     day (2026-10-15, per Martin): a name wraps anywhere it has to (even one
-     long word) and stops at four lines; the full name is on hover. */
   .sheet-week .week { padding-right: 16px; }
   .week-item { min-width: 0; max-width: 100%; }
   .week-item-text { width: 100%; }
@@ -1109,7 +1033,6 @@
   .week-icons, .week-assigned .week-icons { position: relative; display: inline-block; flex-direction: initial; line-height: 0; width: max-content; }
   .week-icons .soon-clock { position: absolute; right: -4px; bottom: -4px; width: 16px; height: 16px; border-radius: 50%; box-shadow: 0 0 0 2px var(--panel-bg); }
   .week-item:hover .week-icons .soon-clock { box-shadow: 0 0 0 2px var(--panel-inner); }
-  /* Teacher contact card (2026-10-02): same card as the Contacts page */
   .teacher-link { background: none; border: none; padding: 0; margin: 0; font: inherit; color: inherit; cursor: pointer; text-decoration: underline; text-decoration-color: rgba(255,255,255,0.45); text-underline-offset: 3px; }
   .teacher-link:hover { text-decoration-color: currentColor; }
   .teacher-link:focus-visible { outline: none; box-shadow: 0 0 0 2px currentColor; border-radius: 4px; }
@@ -1140,7 +1063,6 @@
   .tc-btn.secondary:hover { background: var(--border); }
   .tc-btn[hidden] { display: none; }
   .tc-row[hidden], .modal-row[hidden] { display: none; }
-  /* Back link (2026-10-03): same as every other page, plain text with the arrow, no bubble */
   .topbar .back-link { gap: 5px; padding: 0; background: none; border-radius: 0; color: rgba(255,255,255,0.82); font-size: 0.76rem; font-weight: 800; }
   .topbar .back-link:hover { background: none; color: #fff; }
   .topbar .back-link:focus-visible { box-shadow: none; text-decoration: underline; }
@@ -1189,7 +1111,6 @@
         <button class="sheet-tab" type="button" data-href="course-materials.html">Materials</button>
         <button class="sheet-tab" type="button" data-href="gradebook.html">Grades</button>
         <button class="sheet-tab-action" id="infoBtn" type="button" aria-haspopup="dialog">Course info</button>
-        <!-- Open in Schoology (2026-10-26): this class on the school's own Schoology, filled in below. -->
         <a class="sheet-tab-action sheet-tab-out" id="openLmsBtn" target="_blank" rel="noopener noreferrer" hidden><span id="openLmsLabel">Open in Schoology</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 13v6H5V8h6"/><path d="M15 3h6v6"/><path d="M10 14L21 3"/></svg></a>
       </nav>
     </section>
@@ -1273,7 +1194,6 @@
     </div>
   </div>
 
-  <!-- Teacher contact card (2026-10-02): the Contacts page's card -->
   <div class="tc-overlay" id="teacherCard">
     <div class="tc-box" role="dialog" aria-modal="true" aria-labelledby="tcName">
       <button class="tc-close" id="tcClose" type="button" aria-label="Close contact info">✕</button>
@@ -1350,10 +1270,6 @@
   </nav>
 
   <script>
-    // ---- Links by id (2026-10-07, Martin) ----
-    // A real class (Schoology/Classroom ids are digits) links as
-    // assignment?id=<id> and course-home?id=<section id>; the sample classes
-    // (word ids like "apchem") keep ?course=&title=. Pages read both.
     function avgIsId(v) { return /^\d{1,24}$/.test(String(v == null ? '' : v)); }
     function avgCourseQ(course) { return (avgIsId(course) ? 'id=' : 'course=') + encodeURIComponent(course == null ? '' : course); }
     function avgAssignHref(course, title, id, extra) {
@@ -1362,11 +1278,6 @@
       return `assignment.html?course=${encodeURIComponent(course == null ? '' : course)}&title=${encodeURIComponent(title || '')}${avgIsId(id) ? `&id=${id}` : ''}${extra}`;
     }
 
-    // Potato PC Mode on every page (2026-10-04, per Martin). The saved
-    // setting turns off all CSS animations and transitions, makes animate()
-    // calls and smooth scrolling instant, and drops the slanted page title.
-    // Same code as app/lib/theme-boot.ts, which runs it before first paint in
-    // the app; this copy covers the preview and pages theme-boot skips.
     (function () {
     var POTATO_CSS = "body.potato-mode,body.potato-mode *,body.potato-mode *::before,body.potato-mode *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important;filter:none!important;text-shadow:none!important}html:has(body.potato-mode){scroll-behavior:auto!important}body.potato-mode,body.potato-mode *{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif!important}body.potato-mode h1.title{font-style:normal!important;transform:none!important}body.potato-mode .trend.has-popup:focus-visible{outline:2px solid currentColor;outline-offset:2px}";
     function potatoOn() { return !!(document.body && document.body.classList.contains("potato-mode")); }
@@ -1487,17 +1398,7 @@
     })();
   </script>
 
-
   <script>
-    // ------------------------------------------------------------------
-    // Shared appearance (accent + background) — 2026-09-08, per Martin:
-    // "wallpapers + accent colors don't save across pages." Settings'
-    // Appearance section (and onboarding's Theme step) are the only
-    // writers of schoolagy_appearance; every other real app page,
-    // including this one, applies whatever's saved there, read-only, on
-    // its own load — same shared-localStorage-record pattern already
-    // used for schoolagy_dark_mode/schoolagy_profile.
-    // ------------------------------------------------------------------
     (function () {
       function darken(hex, amount) {
         const n = parseInt(hex.slice(1), 16);
@@ -1628,29 +1529,6 @@
       return { close: closePopup };
     }
 
-    // ------------------------------------------------------------------
-    // Same six sample courses as home.html/courses.html (same id/name/
-    // color/grade/predicted/updated values), plus the course-code/period/
-    // teacher/section fields courses.html added. Kept in sync by hand
-    // across the three files for now — see architecture-decisions.md's
-    // note about promoting shared sample data once there's a build step.
-    //
-    // ------------------------------------------------------------------
-    // Course customization persistence — added 2026-09-08. Same
-    // schoolagy_course_custom (per-course name/color overrides, keyed by
-    // course id, only actually-customized courses present) and
-    // schoolagy_course_order (full custom ordering of course ids) keys
-    // home.html's Customize editor uses — see that file for the fuller
-    // note. This page's own info pop-out (course name field + color
-    // swatch below) is the other place that WRITES
-    // schoolagy_course_custom — it never reorders, so it doesn't write
-    // schoolagy_course_order. applyCourseCustomizationsInPlace() is
-    // called right after the raw array literal below, mutating COURSES
-    // in place, so `course` (found from COURSES right below) already
-    // reflects any saved rename/recolor before this page renders
-    // anything. Same defensive try/catch-per-key style as
-    // AVERAGES_DARK_MODE_KEY in settings.html.
-    // ------------------------------------------------------------------
     const AVERAGES_COURSE_CUSTOM_KEY = 'schoolagy_course_custom';
     const AVERAGES_COURSE_ORDER_KEY = 'schoolagy_course_order';
     function loadCourseCustom() {
@@ -1713,15 +1591,8 @@
       "🔬": "<svg aria-hidden=\"true\" focusable=\"false\" viewBox=\"0 0 36 36\"><g fill=\"#66757F\"><path d=\"m19.78 21.345-6.341-6.342-.389 4.38 2.35 2.351z\"/><path d=\"M15.4 22.233a.507.507 0 0 1-.354-.146l-2.351-2.351a.501.501 0 0 1-.145-.397l.389-4.38a.5.5 0 0 1 .851-.309l6.341 6.342a.5.5 0 0 1-.31.851l-4.379.389-.042.001zm-1.832-3.039 2.021 2.021 3.081-.273-4.828-4.828-.274 3.08z\"/></g><path fill=\"#8899A6\" d=\"M31 32h-3c0-3.314-2.63-6-5.875-6-3.244 0-5.875 2.686-5.875 6H8.73a2 2 0 0 0-4 0 2 2 0 0 0 0 4H31a2 2 0 0 0 0-4z\"/><path fill=\"#8899A6\" d=\"M20 10v4a7 7 0 1 1 0 14h-8.485c2.018 2.443 5.069 4 8.485 4 6.075 0 11-4.925 11-11s-4.925-11-11-11z\"/><path fill=\"#67757F\" d=\"M16.414 30.414a2 2 0 0 1-2.828 0l-9.899-9.9a2 2 0 1 1 2.829-2.828l9.899 9.9a2 2 0 0 1-.001 2.828zm-7.225-1.786a1 1 0 1 1 .278 1.98l-5.942.834a1 1 0 1 1-.277-1.981l5.941-.833z\"/><path fill=\"#66757F\" d=\"m27.341 2.98 4.461 4.461-3.806 3.807-4.461-4.461z\"/><path fill=\"#AAB8C2\" d=\"M34.037 7.083a2.12 2.12 0 0 1-2.997 0l-3.339-3.34A2.12 2.12 0 0 1 30.696.747l3.342 3.34a2.12 2.12 0 0 1-.001 2.996zm-14.56 15.026-6.802-6.803a1.003 1.003 0 0 1 0-1.414l9.858-9.858a1.003 1.003 0 0 1 1.414 0l6.801 6.803a1.003 1.003 0 0 1 0 1.414l-9.858 9.858a1.001 1.001 0 0 1-1.413 0z\"/><path fill=\"#E1E8ED\" d=\"m13.766 12.8 1.638-1.637 8.216 8.216-1.638 1.637z\"/></svg>",
       "📚": "<svg aria-hidden=\"true\" focusable=\"false\" viewBox=\"0 0 36 36\"><path fill=\"#553788\" d=\"M15 31c0 2.209-.791 4-3 4H5c-4 0-4-14 0-14h7c2.209 0 3 1.791 3 4v6z\"/><path fill=\"#9266CC\" d=\"M34 33h-1V23h1a1 1 0 1 0 0-2H10c-4 0-4 14 0 14h24a1 1 0 1 0 0-2z\"/><path fill=\"#CCD6DD\" d=\"M34.172 33H11c-2 0-2-10 0-10h23.172c1.104 0 1.104 10 0 10z\"/><path fill=\"#99AAB5\" d=\"M11.5 25h23.35c-.135-1.175-.36-2-.678-2H11c-1.651 0-1.938 6.808-.863 9.188C9.745 29.229 10.199 25 11.5 25z\"/><path fill=\"#269\" d=\"M12 8a4 4 0 0 1-4 4H4C0 12 0 1 4 1h4a4 4 0 0 1 4 4v3z\"/><path fill=\"#55ACEE\" d=\"M31 10h-1V3h1a1 1 0 1 0 0-2H7C3 1 3 12 7 12h24a1 1 0 1 0 0-2z\"/><path fill=\"#CCD6DD\" d=\"M31.172 10H8c-2 0-2-7 0-7h23.172c1.104 0 1.104 7 0 7z\"/><path fill=\"#99AAB5\" d=\"M8 5h23.925c-.114-1.125-.364-2-.753-2H8C6.807 3 6.331 5.489 6.562 7.5 6.718 6.142 7.193 5 8 5z\"/><path fill=\"#F4900C\" d=\"M20 17a4 4 0 0 1-4 4H6c-4 0-4-9 0-9h10a4 4 0 0 1 4 4v1z\"/><path fill=\"#FFAC33\" d=\"M35 19h-1v-5h1a1 1 0 1 0 0-2H15c-4 0-4 9 0 9h20a1 1 0 1 0 0-2z\"/><path fill=\"#CCD6DD\" d=\"M35.172 19H16c-2 0-2-5 0-5h19.172c1.104 0 1.104 5 0 5z\"/><path fill=\"#99AAB5\" d=\"M16 16h19.984c-.065-1.062-.334-2-.812-2H16c-1.274 0-1.733 2.027-1.383 3.5.198-.839.657-1.5 1.383-1.5z\"/></svg>"
     };
-    // Potato mode (2026-10-20): the plain emoji character, not the drawn picture.
     function emojiSvg(e) { if (document.body.classList.contains('potato-mode')) return EMOJI_SVG[e] ? e : '📚'; return EMOJI_SVG[e] || EMOJI_SVG['📚']; }
 
-    // Subject table (2026-10-01, per Martin): each course gets a color that
-    // fits its subject, picked from its name. First match wins, so specific
-    // subjects come before broad ones ("Computer Science" before "Science",
-    // "Physical Education" before "Physics"). A color the student picked in
-    // the course's info pop-up still wins over this. No match keeps the
-    // course's own color. All colors pass 4.5:1 with white text.
     const COURSE_SUBJECTS = [
       [/\bchem/, '🧪', '#1b7f67'],
       [/\bbio|anatom|physiolog/, '🧬', '#387f33'],
@@ -1780,12 +1651,6 @@
         courses.splice(0, courses.length, ...ordered);
       }
     }
-    // ------------------------------------------------------------------
-    // Teacher contact card (2026-10-02, per Martin): the teacher's name on the
-    // banner (and in Course info) opens the same card as the Contacts page.
-    // CONTACTS is the school directory: live data replaces this sample at
-    // build time, same as contacts.html. Only "my teachers" are needed here.
-    // ------------------------------------------------------------------
     const CONTACTS = [
       { id: 'cho', name: 'Mr. Cho', role: 'Teacher', dept: 'English Department', school: 'Lincoln High School', email: 'j.cho@lincolnusd.org', phone: '(555) 201-4471', color: '#6b8f5e', category: 'myTeachers' },
       { id: 'alvarez', name: 'Mr. Alvarez', role: 'Teacher', dept: 'Science Department', school: 'Lincoln High School', email: 'r.alvarez@lincolnusd.org', phone: '(555) 201-4482', color: '#a67a22', category: 'myTeachers' },
@@ -1794,8 +1659,6 @@
       { id: 'ortiz', name: 'Sra. Ortiz', role: 'Teacher', dept: 'World Languages Department', school: 'Lincoln High School', email: 'm.ortiz@lincolnusd.org', phone: '(555) 201-4515', color: '#8a6ba1', category: 'myTeachers' },
       { id: 'reyes', name: 'Coach Reyes', role: 'Teacher', dept: 'Physical Education Department', school: 'Lincoln High School', email: 'd.reyes@lincolnusd.org', phone: '(555) 201-4526', color: '#4f8c8a', category: 'myTeachers' }
     ];
-    // Signed in with real data (2026-10-06). A demo sign-in also has
-    // __AVERAGES__ (with an empty bundle) and shows the samples, like the preview.
     const AV_LIVE = !!(window.__AVERAGES__ && window.__AVERAGES__.data) && window.__AVERAGES__.mode !== 'demo';
     const AV_DATA = AV_LIVE ? window.__AVERAGES__.data : {};
     const AV_CLASSROOM = AV_LIVE && (AV_DATA.platform === 'classroom' || AV_DATA.PEOPLE_PLATFORM === 'classroom');
@@ -1810,8 +1673,6 @@
       const list = Array.isArray(CONTACTS) ? CONTACTS : [];
       const exact = list.find(c => c && String(c.name).toLowerCase() === String(name).toLowerCase());
       if (exact) return exact;
-      // Live contacts list the classes they teach (2026-10-06): this class's
-      // one teacher, when the name on the class doesn't match exactly.
       const teaching = courseId ? list.filter(c => c && Array.isArray(c.courses) && c.courses.map(String).includes(String(courseId))) : [];
       if (teaching.length === 1) return teaching[0];
       const last = tcLastName(name);
@@ -1825,11 +1686,8 @@
       const set = (id, v) => { document.getElementById(id).textContent = v || '—'; };
       const avatar = document.getElementById('tcAvatar');
       avatar.textContent = tcInitials(c.name); avatar.style.background = color;
-      if (window.AveragesAvatar) window.AveragesAvatar.paint(avatar, c.name);   // their own color (2026-10-23)
+      if (window.AveragesAvatar) window.AveragesAvatar.paint(avatar, c.name);
       set('tcName', c.name); set('tcRole', c.role || c.dept); set('tcDept', c.dept); set('tcSchool', c.school); set('tcEmail', c.email); set('tcPhone', c.phone);
-      // Signed in (2026-10-06): rows the school doesn't share are left out,
-      // "Department" is the classes they teach here, and Message is only for
-      // a Schoology teacher (Classroom teachers can't be messaged).
       if (AV_LIVE) {
         [['tcDept', c.dept], ['tcSchool', c.school], ['tcEmail', c.email], ['tcPhone', c.phone]].forEach(([id, v]) => {
           const row = document.getElementById(id).closest('.tc-row');
@@ -1876,8 +1734,6 @@
       { id: 'pe', name: 'PE', code: '76_P0300', period: 6, teacher: 'Coach Reyes', section: '1125', color: '#4f8c8a', grade: 'A', pct: 97, predicted: 'A', predictedPct: 97, trend: 'flat', updated: '2d ago', desc: 'Fitness training and team sports, graded on participation and fitness logs.' },
     ];
     applyCourseCustomizationsInPlace(COURSES);
-    // Signed in (2026-10-05): what the API doesn't know about a class yet
-    // (code, period, teacher, section) is empty, never "undefined".
     COURSES.forEach(c => { ['code', 'period', 'teacher', 'section'].forEach(k => { if (c[k] === undefined || c[k] === null) c[k] = ''; }); });
     function courseMetaLine(c) {
       const left = [c.period !== '' ? `Pd:${c.period}` : '', c.teacher].filter(Boolean).join(' ');
@@ -1888,7 +1744,7 @@
     // same route shape as site-map.md's /courses/{course_id}. Falls back
     // to AP Chemistry (this draft's own "Your Ap Chem Hub" example) for
     // a bare visit with no query string.
-    const courseId = (q => q.get('course') || (avgIsId(q.get('id')) ? q.get('id') : '') || 'apchem')(new URLSearchParams(location.search));   // ?id= since 2026-10-07
+    const courseId = (q => q.get('course') || (avgIsId(q.get('id')) ? q.get('id') : '') || 'apchem')(new URLSearchParams(location.search));
     const course = COURSES.find(c => c.id === courseId) || COURSES[0];
 
     function lighten(hex, amt) {
@@ -1987,15 +1843,8 @@
         { id: 'a1', text: 'Bring your fitness log and a water bottle. Outdoor circuit training all week.', time: '1d ago', pinned: false, unread: false },
       ],
     };
-    // Signed in: Google Classroom announcements come with the bundle (2026-10-05).
-    // Schoology's come from the updates extra (2026-10-06), with who posted
-    // them; Classroom's say "Announcement", shown as the class's teacher when
-    // there's exactly one. Missing means the extra failed: no samples, a note.
-    // Notification dots (2026-10-19): read on this device = no dot. See public/js/averages-bell.js.
     const SEEN = window.AveragesSeen || { has: () => false, mark() {}, markMany() {} };
     let UPDATES_FAILED = false;
-    // A function since 2026-10-20: it runs again when the updates (or the
-    // teachers' names) land after the page has drawn.
     function fillLiveAnnouncements() {
       if (!AV_LIVE) return;
       const LIVE_UPDATES = AV_DATA.COURSE_UPDATES;
@@ -2005,7 +1854,6 @@
       ANNOUNCEMENTS[course.id] = (Array.isArray(LIVE_UPDATES) ? LIVE_UPDATES : []).filter(u => u && String(u.courseId) === String(course.id))
         .map((u, i) => {
           const from = String(u.from || '').trim();
-          // The real id (2026-10-19), so Home and the bell can open this exact post.
           const id = u.id != null && u.id !== '' ? String(u.id) : 'live' + i;
           return { id, text: String(u.body || ''), time: String(u.when || ''), pinned: false, unread: !!u.unread && !SEEN.has('u', id), author: from && from !== 'Announcement' ? from : fallback };
         });
@@ -2060,9 +1908,6 @@
     document.getElementById('announceList').addEventListener('click', handleAnnounceItemClick);
     document.getElementById('announceModalList').addEventListener('click', handleAnnounceItemClick);
 
-    // Opened from Home's Course updates or the bell (2026-10-19, Martin):
-    // ?update=<id>#updates. Scroll to Updates, mark the post read and light it
-    // up; past the first three it's only in "See all", so that opens instead.
     (function openLinkedUpdate() {
       const params = new URLSearchParams(window.location.search);
       const wanted = params.get('update');
@@ -2114,8 +1959,6 @@
     const TREND_ARROW = { up: '↗', down: '↘', flat: '–' };
     const TREND_WORD = { up: 'Trending up', down: 'Trending down', flat: 'Holding steady' };
 
-    // Current and Projected grade (a function since 2026-10-27, so live
-    // grades can paint them again; data-live marks the values that roll).
     function paintGradeSheet() {
       const id = escapeHtml(course.id);
       document.getElementById('curVal').innerHTML = `<span class="sheet-letter" data-live="${id}:grade">${escapeHtml(course.grade)}</span>${course.grade === '—' ? '' : `<span class="sheet-pct" data-live="${id}:pct">${escapeHtml(course.pct)}%</span>`}`;
@@ -2125,7 +1968,6 @@
     }
     paintGradeSheet();
 
-    // Current grade opens this course's Grades tab (2026-10-04, per Martin).
     (function () {
       const b = document.getElementById('curBlock');
       if (!b) return;
@@ -2180,18 +2022,6 @@
 
     const TYPE_LABEL = { assignment: 'Assignment', discussion: 'Discussion', assessment: 'Quiz' };
 
-    // ------------------------------------------------------------------
-    // This course's full Assignment List: graded items derived from
-    // HISTORY (so the popup chart and this list always agree), plus its
-    // Overdue ("Missing") and Upcoming items. Per Martin's request
-    // (2026-08-26), the list is grouped by status rather than merged
-    // into one chronological stream — Missing first (most urgent),
-    // then Upcoming, then Graded — and the Graded group only ever shows
-    // the most recent 5 scores (`.slice(-5)` after sorting by day),
-    // matching the same "last 5 graded assignments" window the
-    // Predicted-grade popup chart already uses, so the two can't
-    // disagree about how far back "recent" reaches.
-    // ------------------------------------------------------------------
     const hist = HISTORY[course.id];
     // Live HISTORY has no sample `titles` (assignment.html skips it the same way).
     const gradedItems = (!hist || !Array.isArray(hist.titles) ? [] : hist.points).map((score, i) => ({
@@ -2207,14 +2037,6 @@
     function assignmentHref(item) {
       return avgAssignHref(course.id, item.title, item.id);
     }
-    // ------------------------------------------------------------------
-    // Upcoming (right column, 2026-10-01, per Martin; replaces the month
-    // calendar and the Assignment List). "All" lists everything coming up
-    // for this course by date: assignments (submitted or not) and course
-    // events. "Assigned" narrows it to unfinished work, overdue first.
-    // Sample times/submitted flags live on this page's own copies of
-    // UPCOMING; live data can send `time`, `submitted` and `dueAt`.
-    // ------------------------------------------------------------------
     const COURSE_EVENTS = [
       { courseId: 'apchem', title: 'Lab Safety Demo', due: 'Tue Aug 25', time: '10:00 AM' },
       { courseId: 'algebra2', title: 'Review Session', due: 'Thu Aug 27', time: '3:15 PM' },
@@ -2223,10 +2045,6 @@
       { courseId: 'spanish3', title: 'Conversation Partners', due: 'Thu Aug 27', time: '11:30 AM' },
       { courseId: 'pe', title: 'Mile Run', due: 'Wed Aug 26', time: '7:45 AM' },
     ];
-    // Signed in (2026-10-06): this class's teacher-made events from the events
-    // extra, from today on (assignments are already in UPCOMING, and a past
-    // event isn't "coming up"). The samples above are the preview's only.
-    // A function since 2026-10-20: it runs again when the events land after the page has drawn.
     function fillLiveEvents() {
       if (!AV_LIVE) return;
       COURSE_EVENTS.length = 0;
@@ -2248,7 +2066,6 @@
     const UP_TYPE_EMOJI = { assignment: '📝', discussion: '💬', assessment: '📋', event: '🗓️' };
     const FULL_MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
     const FULL_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    // The wall clock in the student's time zone (2026-10-28, Settings > Time Zone; public/js/averages-tz.js).
     function avWall(x) { return window.averagesWallClock ? window.averagesWallClock(x) : (x == null ? new Date() : new Date(x)); }
     // "Fri Aug 21" (or a full `dueAt` timestamp) -> Date. Sample dates have no
     // year; the mock's year is 2026 (same convention as the rest of the page).
@@ -2293,13 +2110,6 @@
       const h = (d.getTime() - REF_NOW.getTime()) / 3600000;
       return h > 0 && h < 48;
     }
-    // ------------------------------------------------------------------
-    // "Coming up" ribbon (hub redo, 2026-10-01): one column per day for the
-    // next 7 days, starting today (or at the first sample item, since the
-    // sample data sits in August 2026). A Late column leads when something
-    // is overdue and unfinished; a Later column trails for anything past
-    // the 7 days. "Assigned" keeps only unfinished assignments.
-    // ------------------------------------------------------------------
     const SHORT_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const SHORT_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     function dayStart(d) { return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
@@ -2319,7 +2129,6 @@
     }
     // Small blue clock: due in under 2 days.
     const SOON_CLOCK = '<svg class="soon-clock" viewBox="0 0 16 16" role="img" aria-label="Due within 2 days"><circle cx="8" cy="8" r="8" fill="#2f72a8"/><path d="M8 3.5V8l3 2" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="butt" stroke-linejoin="miter"/></svg>';
-    // An event opens the calendar on its date with it selected (2026-10-04).
     function eventHref(item) {
       const d = upDate(item);
       if (!d) return 'calendar.html';
@@ -2365,7 +2174,6 @@
       const allItems = UPCOMING.filter(u => u.courseId === course.id).concat(events)
         .map(i => ({ ...i, _d: upDate(i) })).filter(i => i._d).sort((a, b) => a._d - b._d);
       const today = dayStart(REF_NOW);
-      // Outside tools (Google Assignments, Turnitin; 2026-10-16) are turned in on Schoology where we can't see it: never Late.
       const late = OVERDUE.filter(o => o.courseId === course.id && !o.submitted && !o.outside);
       const body = document.getElementById('upcomingBody');
       const range = document.getElementById('weekRange');
@@ -2455,14 +2263,10 @@
       if (hi - lo < 20) { hi = Math.min(100, lo + 20); }
       return [lo, hi];
     }
-    // Grades given on the same day become one point: their average, with
-    // the date labeled "Aug 18 ×3" (2026-10-01). Otherwise three grades on
-    // one day drew as a zigzag across three fake "days".
     function groupSameDay(h) {
       const days = [];
       h.points.forEach((p, i) => {
         const d = h.dates[i];
-        // Each grade's own assignment, for the dot's hover label (2026-10-15).
         const one = { title: (Array.isArray(h.titles) && Array.isArray(h.titles[i]) && h.titles[i][0]) ? String(h.titles[i][0]) : '', score: p };
         const last = days[days.length - 1];
         if (last && last.date === d) { last.sum += p; last.n++; last.items.push(one); }
@@ -2474,9 +2278,6 @@
         days: days.map(x => ({ date: x.date, items: x.items })),
       });
     }
-    // enter (2026-10-19): the first time the page's own trend chart draws, its
-    // line draws itself in, the score dots pop as it reaches them and the
-    // projection fades in after (svg.enter, app/lib/averages-loading.css).
     function buildGradeChartSVG(c, interactive, enter) {
       if (!HISTORY[c.id] || !Array.isArray(HISTORY[c.id].points) || !HISTORY[c.id].points.length) return '<p class="trend-note">No graded work yet. The trend shows up after the first grades.</p>';
       const h = groupSameDay(HISTORY[c.id]);
@@ -2499,7 +2300,6 @@
         const pop = enter ? ` pt" style="--d:${Math.round(actualPts.length > 1 ? (i / (actualPts.length - 1)) * 820 : 0)}ms` : '';
         const dot = `<circle class="trend-dot-mark${pop}" cx="${x}" cy="${y}" r="4" fill="${escapeHtml(c.color)}" stroke="var(--panel-bg)" stroke-width="2"/>`;
         if (!interactive) return dot;
-        // Hover or focus a dot for its assignment and score (2026-10-15).
         const day = h.days[i] || { date: h.dates[i], items: [] };
         const label = day.items.map(it => `${it.title || 'Graded assignment'}, ${it.score}%`).join('; ') + (day.date ? `, ${day.date}` : '');
         return `<g class="trend-dot" data-dot="${i}" tabindex="0" role="img" aria-label="${escapeHtml(label)}"><circle class="trend-dot-hit" cx="${x}" cy="${y}" r="11" fill="transparent"/>${dot}</g>`;
@@ -2620,26 +2420,6 @@
       body.addEventListener('keydown', e => { if (e.key === 'Escape') hideTip(); });
     })();
 
-    // ------------------------------------------------------------------
-    // Upcoming Calendar — a real month grid, built from Date objects
-    // rather than a hand-typed layout so the weekday-per-day-number can
-    // never drift out of sync with the due dates above. Only Overdue/
-    // Upcoming days get a dot (not graded days) — this card is about
-    // what's still ahead, same as the wireframe's "Upcoming Calendar"
-    // label. Today (Aug 24, 2026 — the same mock "today" home.html's
-    // Today card uses) gets a ring; clicking any day updates the info
-    // panel underneath.
-    //
-    // Back/forward month navigation (added 2026-08-26, per Martin's
-    // request to browse past/future events): the grid starts on August
-    // 2026 (the month every sample due-date string in the app already
-    // assumes) but `calYear`/`calMonthIdx` can move independently —
-    // renderCalendar() rebuilds the grid for whatever month is current,
-    // and the "today" ring / due-date dots only ever apply when that's
-    // actually August 2026, since that's the only month the sample
-    // data covers. Browsing to another month just shows an empty
-    // month, same as a real calendar with nothing scheduled yet.
-    // ------------------------------------------------------------------
     const TODAY_DAY = 24, TODAY_MONTH = 7, TODAY_YEAR = 2026; // Aug 24, 2026
     const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
     const dueDays = new Map(); // day -> [{title, type, status}] — all within August 2026
@@ -2647,7 +2427,6 @@
       if (!dueDays.has(i.day)) dueDays.set(i.day, []);
       dueDays.get(i.day).push(i);
     });
-
 
     // ------------------------------------------------------------------
     // Course info pop-out — the "course info pop-out (shows course
@@ -2679,10 +2458,6 @@
     }
     paintModalTeacher();
 
-    // Cards that load on their own (2026-10-20): the page draws before the
-    // teachers' updates, the class's events and the teachers' names are in.
-    // LegacyPage keeps the Updates and Coming up placeholders up and calls
-    // this as each one lands (or fails), then reveals that card.
     window.__averagesExtraLanded = function (name) {
       if (!AV_LIVE) return;
       if (name === 'people') {
@@ -2706,15 +2481,12 @@
       document.getElementById('modalGrade').textContent = course.grade === '—' ? '—' : `${course.grade} (${course.pct}%)`;
     }
     paintModalGrade();
-    // Live grades (2026-10-27, public/js/averages-live.js): this class's grade
-    // moved while the page was open. `course` is already updated in place.
     window.__averagesLiveGrades = function (changed) {
       if (!changed.includes(String(course.id))) return;
       paintGradeSheet();
       paintModalGrade();
     };
     document.getElementById('modalDesc').textContent = course.desc || '';
-    // Signed in (2026-10-06): a row with nothing to show is left out.
     if (AV_LIVE) ['modalTeacher', 'modalPeriod', 'modalSection'].forEach(id => {
       const v = document.getElementById(id);
       if (!String(v.textContent || '').trim()) v.closest('.modal-row').hidden = true;
@@ -2726,8 +2498,6 @@
       applyCourseColor(hex);
       saveCourseCustom(course.id, { color: hex });
     });
-    // Class emoji (2026-10-01, per Martin): pick one in the info pop-up.
-    // "Auto" goes back to the subject match. Saved like the color/name.
     const modalEmojiBtn = document.getElementById('modalEmojiBtn');
     const modalEmojiGrid = document.getElementById('modalEmojiGrid');
     const EMOJI_CHOICES = ["🧪", "🧬", "🏃", "🩺", "⚛️", "🔭", "🌍", "🤖", "💻", "⚙️", "🏛️", "📈", "🧠", "🗺️", "📜", "📊", "📐", "🧮", "📖", "🗣️", "🎭", "🎵", "📷", "🍳", "🎨", "💼", "📰", "🔬", "📚"];
@@ -2757,9 +2527,6 @@
     function openInfoModal() { infoModal.classList.add('show'); document.getElementById('modalCloseBtn').focus(); }
     function closeInfoModal() { infoModal.classList.remove('show'); document.getElementById('infoBtn').focus(); }
     document.getElementById('infoBtn').addEventListener('click', openInfoModal);
-    // Open in Schoology (2026-10-26): this class's materials on the school's own Schoology
-    // (the address picked on the sign-in page, else app.schoology.com). Signed-in Google
-    // Classroom: the class's own Classroom page. Hidden in the preview and the demo.
     (function openLms() {
       const btn = document.getElementById('openLmsBtn');
       if (!btn || !AV_LIVE) return;
@@ -2781,15 +2548,6 @@
     infoModal.addEventListener('click', e => { if (e.target === infoModal) closeInfoModal(); });
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && infoModal.classList.contains('show')) closeInfoModal(); });
 
-    // ------------------------------------------------------------------
-    // Course sub-nav (Home/Materials/Gradebook) — Materials has a real
-    // page (course-materials.html, 2026-08-26, built from Martin's own
-    // Finder-style draft), and Gradebook now does too (gradebook.html,
-    // 2026-08-31, built from Martin's Gradebook.pdf draft) — both use
-    // the same data-href="…"?course={id} pattern below. The Updates item
-    // that used to sit here was removed 2026-08-28 per Martin's request —
-    // see architecture-decisions.md.
-    // ------------------------------------------------------------------
     document.querySelectorAll('.course-nav-item').forEach(item => {
       item.addEventListener('click', () => {
         if (item.dataset.href) { window.location.href = `${item.dataset.href}?course=${course.id}`; return; }
@@ -2798,12 +2556,6 @@
       });
     });
 
-    // ------------------------------------------------------------------
-    // Bottom app nav — permanently visible (2026-08-26, per Martin's
-    // request; previously hidden by default and revealed by an
-    // up-arrow tab). Home/Courses are real links since both pages
-    // exist; the rest stay visual-only, matching home.html/courses.html.
-    // ------------------------------------------------------------------
     document.querySelectorAll('.nav-link').forEach(link => {
       link.addEventListener('click', () => {
         if (link.dataset.href) { window.location.href = link.dataset.href; return; }
@@ -2816,22 +2568,12 @@
     // Profile menu — same behavior as home.html/courses.html.
     // ------------------------------------------------------------------
     const profileBtn = document.getElementById('profileBtn');
-    // Shared profile photo/name (2026-09-07) — settings.html's Edit
-    // Profile modal is the only place this is ever set, but every other
-    // page's top-right profile button used to just show a fixed "M" no
-    // matter what was saved there: the button never read anything back,
-    // so a photo you set in Settings was invisible the moment you left
-    // it. schoolagy_profile is the same localStorage record
-    // settings.html writes on every save; this is read-only here.
     (function () {
       var profile = null;
       try {
         var raw = localStorage.getItem('schoolagy_profile');
         if (raw) profile = JSON.parse(raw);
       } catch (e) {}
-      // No name saved on this device (new device, or signed out with Sync
-      // off): the account's own name from the sign-in, never a sample name
-      // (2026-10-14; this used to fall back to "Martin" / "M").
       if (!profile || !profile.name || !String(profile.name).trim()) profile = Object.assign({}, profile, { name: window.__AVERAGES_NAME__ || '' });
       if (profile.photo) {
         profileBtn.style.backgroundImage = 'url("' + profile.photo + '")';
@@ -2840,7 +2582,7 @@
         profileBtn.textContent = '';
         profileBtn.classList.add('has-photo');
       } else if (profile.name) {
-        if (window.AveragesAvatar) window.AveragesAvatar.paint(profileBtn, profile.name);   // initials on their own color (2026-10-23, averages-avatar.js)
+        if (window.AveragesAvatar) window.AveragesAvatar.paint(profileBtn, profile.name);
         else profileBtn.textContent = (function (n) { var p = String(n).trim().split(/\s+/).filter(Boolean); var f = function (w) { return w ? Array.from(w)[0] : ''; }; return (f(p[0]) + (p.length > 1 ? f(p[p.length - 1]) : '')).toUpperCase(); })(profile.name);
       }
     })();
@@ -2858,11 +2600,6 @@
     });
   </script>
   <script>
-    // Back link (2026-10-01, per Martin: "where it returns to ... is always
-    // wrong"). Every page records itself in a short per-tab trail; a page's
-    // back link then says and goes to the page before it ("Back to AP
-    // Chemistry Hub", "Back to Grades"...). With no trail (the page was
-    // opened directly) the page's own default back link is left alone.
     (function () {
       const SELF = 'course-home.html';
       const KEY = 'averages_nav_trail';

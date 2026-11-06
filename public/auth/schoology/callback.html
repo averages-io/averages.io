@@ -6,13 +6,6 @@
 <meta name="robots" content="noindex">
 <meta name="referrer" content="no-referrer">
 <title>Signing in…</title>
-<!--
-  Where Schoology sends a student back after "Approve" (2026-11-03): https://app.averages.io/auth/schoology/callback
-  Schoology only returns to an address on the app's own site (the App URL in its app settings); anywhere else it
-  stops with "Unable to authenticate, there was no valid return URL found". This page hands Schoology's answer
-  (?oauth_token=...) straight to the API's /auth/schoology/callback, which finishes signing in and sends the student
-  on. Only oauth_token goes along; nothing is kept here or sent anywhere else.
--->
 <style>
   :root { color-scheme: light dark; --bg: #f6f7f9; --fg: #1d2330; --muted: #5d6677; }
   @media (prefers-color-scheme: dark) { :root { --bg: #14171d; --fg: #eef1f6; --muted: #a3acbb; } }

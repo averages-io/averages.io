@@ -94,7 +94,6 @@
   .quick-l { order: -1; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); line-height: 1; padding-right: 8px; border-right: 2px solid #c6c6cc; height: 24px; display: flex; align-items: center; }
   .top .me { width: 40px; height: 40px; border-radius: 50%; flex: none; margin-left: 8px; }
   .top .me { position: relative; }
-  /* two initials stay clear of the gear (2026-10-30) */
   .top .me .av { font-size: 14px; letter-spacing: -.02em; }
   .top .me .gear { position: absolute; right: -4px; bottom: -4px; width: 18px; height: 18px; border-radius: 50%; background: var(--field); box-shadow: 0 0 0 2px var(--frame); display: grid; place-items: center; color: #66757f; }
   .top .me .gear svg.i { width: 12px; height: 12px; display: block; }
@@ -143,7 +142,7 @@
   .nav .side-kbd { margin-left: auto; font-size: 11px; line-height: 20px; padding: 0 4px; background: var(--inner); color: var(--muted); }
   .nav a:hover .side-kbd { background: var(--field); }
   /* Search turns into a search bar once the sidebar opens (an icon on the closed rail) */
-  .nav #sideSearch { transition: background .12s ease, box-shadow .12s ease; margin-bottom: 8px; } /* a little room between Search and the pages under it (2026-10-30) */
+  .nav #sideSearch { transition: background .12s ease, box-shadow .12s ease; margin-bottom: 8px; }
   .side:is(:hover, .hold, :has(:focus-visible)) #sideSearch, .app.pinned .side #sideSearch { background: var(--field); box-shadow: inset 0 0 0 2px var(--inner); color: var(--muted); transition-delay: .12s; }
   .side:is(:hover, .hold, :has(:focus-visible)) #sideSearch:hover, .app.pinned .side #sideSearch:hover { background: color-mix(in srgb, var(--inner) 35%, var(--field)); color: var(--ink-2); }
   .side:is(:hover, .hold, :has(:focus-visible)) #sideSearch .side-kbd, .app.pinned .side #sideSearch .side-kbd { background: var(--panel); }
@@ -166,7 +165,6 @@
   .side > .nav, .side > .divider, .side > .side-h, .side > .foot { flex: none; }
   .side > .cls > * { flex: none; }
   /* no scrollbar here: it would take width and push the class icons off center. The fade at the bottom shows there's more. */
-  /* the whole sidebar scrolls (2026-10-30, Martin: "not just the tiny courses section"); the class list is as tall as it needs */
   .side > .cls { flex: none; min-height: 0; overflow: visible; }
   .side { overscroll-behavior: contain; scrollbar-width: none; }
   .side::-webkit-scrollbar { display: none; }
@@ -1135,7 +1133,6 @@
   .chip svg.i { color: var(--chip-c, var(--ink-2)); }
   .chip:nth-child(5n + 1) { --chip-c: var(--warm-a); } .chip:nth-child(5n + 2) { --chip-c: var(--sky); } .chip:nth-child(5n + 3) { --chip-c: var(--mint); } .chip:nth-child(5n + 4) { --chip-c: var(--grape); } .chip:nth-child(5n + 5) { --chip-c: #c98a00; }
   /* sticker tags: New pops off the page a little */
-  /* dark mode only (2026-10-30): dark letters on a deeper yellow (white on yellow was about 1.4:1), and the paper ring in the card's dark */
   html[data-theme="dark"] body .newtag { background: #e0aa2e !important; color: #1f1604 !important; box-shadow: 0 0 0 2px var(--field), 0 3px 8px -2px rgba(0, 0, 0, .55); }
   .newtag { background: var(--sun) !important; color: var(--ink) !important; border-radius: 8px; transform: translate(var(--tx, 0px), var(--ty, 0px)) rotate(var(--tilt, -4deg)); box-shadow: 0 0 0 2px var(--field), 0 3px 8px -2px rgba(20, 21, 31, .25); will-change: transform; backface-visibility: hidden; } /* always drawn on its own layer, so hovering a row never redraws the text thinner or bolder */
   .wrap { position: relative; isolation: isolate; }
@@ -1151,7 +1148,6 @@
     /* icon tiles wiggle when you point at their row */
     body:not(.potato-mode) :is(.arow, .mrow, .mp-row, .ag-row, .nt-row, .pin, .gr-row, .crow, tr, .item, .mi):hover :is(.ktile, .nt-tile, .badge, .emo) { animation: lifeWiggle .5s var(--spring); }
     body:not(.potato-mode) .newtag { animation: lifeSticker .5s var(--spring) backwards; }
-    /* hidden until it has landed in its spot (2026-11-06, Martin's video: stickers showed by the name, then jumped) */
     .newtag[data-tilted]:not([data-shown]) { visibility: hidden; animation: none !important; }
   }
   @keyframes lifeWiggle { 0% { transform: none; } 30% { transform: rotate(-9deg) scale(1.08); } 60% { transform: rotate(6deg) scale(1.08); } 100% { transform: none; } }
@@ -1580,7 +1576,6 @@
     :is(.ti-scrim, .ti-pop, .ti-row, .ti-drop, .ti-drop svg.i, .ti-add svg.i, .ti-pk, .ti-prog i, .ti-file, .ti-st, .ti-swap, .ti-foot .btn, .ti-yay, .ti-yay *, .ti-done svg, .ti-head .ktile, .ti-hl, .ti-x svg, .ti-close svg) { animation: none !important; transition: none !important; }
     .ti-foot .btn.primary.go::after { display: none; }
   }
-
 
   .ti-pk-add { display: inline-flex; align-items: center; gap: 4px; height: 28px; padding: 0 12px 0 8px; border-radius: 8px; background: var(--field); font-size: 12px; font-weight: 800; color: var(--ink); }
   .ti-pk-add:hover { background: var(--inner); }
@@ -3157,7 +3152,6 @@
    The popup uses the app's font (it inherits it) and its own copy of the Averages colors.
    Logos: /brand/canva-mark.svg and /brand/google-drive.png from your repo. */
 .avh-hp-scrim {
-    /* the page's own colors (light or dark, and the student's accent), not a fixed light copy (2026-10-30) */
         --ease: cubic-bezier(.2, .8, .2, 1);
     font-family: inherit; color: var(--ink); -webkit-font-smoothing: antialiased; text-align: left;
 }
@@ -3381,7 +3375,6 @@
   }
   @media (max-width: 680px) { .hub-t h1 { font-size: 34px; } }
   /* ===== end Life layer for the course page ===== */
-  /* real pictures (2026-10-29) */
   .fl-img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .fl-cimg { position: absolute; inset: 0; background: var(--panel); }
   .fl-pth { position: absolute; inset: 0; display: block; pointer-events: none; }
@@ -3392,11 +3385,15 @@
   .fl-bigimg { max-width: 100%; max-height: 100%; object-fit: contain; display: block; margin: auto; border-radius: 8px; background: #ffffff; box-shadow: 0 16px 40px -12px rgba(0, 0, 0, .45); }
   .fl-lb-fold { height: 36px; border-radius: 10px; border: 0; background: var(--field); color: var(--ink); font: inherit; font-weight: 700; padding: 0 12px; }
   .fl-nameit input { width: 100%; border: 0; background: transparent; font: inherit; color: var(--ink); outline: none; }
-  .g-na { color: var(--muted) !important; }   /* nothing graded yet (2026-11-06) */
-  /* the big emoji next to a page title: smooth even when the tile is tilted (2026-11-06, Martin: they looked jagged on
-     some pages, the tilted ones). Drawn upright on its own layer and then turned, so its edges and the emoji stay smooth. */
+  .g-na { color: var(--muted) !important; }
   .hub-logo { backface-visibility: hidden; -webkit-backface-visibility: hidden; outline: 1px solid transparent; }
   .hub-logo svg { shape-rendering: geometricPrecision; }
+  .me-pop .confirm { margin: 4px 4px 4px; padding: 12px; background: var(--panel); border-radius: 14px; }
+  .me-pop .confirm b { display: block; margin-bottom: 4px; font-weight: 800; }
+  .me-pop .confirm .note { display: block; color: var(--muted); font-size: 13px; font-weight: 600; line-height: 1.45; }
+  .me-pop .confirm .acts { display: flex; gap: 8px; justify-content: flex-end; padding: 8px 0 0; }
+  .me-pop .confirm .btn { background: var(--field); }
+  .me-pop .confirm .btn.primary { background: var(--accent); color: #fff; }
 </style>
 </head>
 <body>
@@ -3555,27 +3552,6 @@
 </svg>
 
 <script>
-/* Copied from averages.io public/js/averages-file-icons.js (2026-10-09). Fredoka Bold (OFL, see THIRD-PARTY-NOTICES.md) is inlined so the labels render here. */
-/*
- * File type icons (2026-10-09, Martin; design in the project doc claude/file-icons.md).
- *
- * A see-through page with a line in the type's color around it and a folded
- * corner. The label (PDF, DOC, ZIP…, Fredoka Bold, same color) runs across
- * the page and cuts through the outline; a small drawing for the type sits
- * above it, cut off by the fold along the crease's own curve.
- *   - At rest only the drawing shows; hovering the file's row or tile (or
- *     focusing it) slides the drawing up, opens the outline and fades the
- *     label in. Devices without hover always show the label.
- *   - The outline glows only in dark mode (body.dark-mode).
- *   - Below 34 px (list rows) there's no label: the drawing alone, outline whole.
- *
- * Loaded in <head> by app/layout.tsx. Pages call
- *   AveragesFileIcons.html(extOrName, { mime, size })  -> <span class="avfi">…</span>
- *   AveragesFileIcons.svg(extOrName, { mime, size, small }) -> <svg>…</svg> (fills its box when size is left out)
- *   AveragesFileIcons.key(extOrName, mime)            -> 'pdf' | 'doc' | … | 'file'
- *   AveragesFileIcons.color(extOrName, mime)          -> '#E5484D' …
- * Pages keep their old badge when this script isn't there, so nothing breaks.
- */
 (function () {
   'use strict';
   if (window.AveragesFileIcons) return;
@@ -4148,7 +4124,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       ${meItem('potato', 'bolt', 'Potato mode', 'System font, no animation', `<span class="sw${potato ? ' on' : ''}" aria-hidden="true"></span>`)}
       <div class="hr"></div>
       ${meItem('settings', 'gear', 'Settings', '')}
-      ${meItem('signout', 'out', 'Sign out', '', '', ' danger')}</div>`);
+      <div class="me-so">${meItem('signout', 'out', 'Sign out', '', '', ' danger')}</div></div>`);
     meMenu = document.body.lastElementChild;
     meMenu.querySelector('[data-me="potato"]').setAttribute('role', 'menuitemcheckbox');
     meMenu.querySelector('[data-me="potato"]').setAttribute('aria-checked', potato);
@@ -4172,8 +4148,13 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       }
       
       if (k === 'customize') { flCustomize(); return; }
+      if (k === 'signout') {
+        meMenu.querySelector('.me-so').innerHTML = `<div class="confirm"><b>Sign out of Averages.io?</b><span class="note">You can sign back in with Schoology any time.</span><div class="acts"><button class="btn" data-me="socancel">Cancel</button><button class="btn primary" data-me="soyes">Sign out</button></div></div>`;
+        meMenu.querySelector('[data-me="socancel"]').focus({ preventScroll: true }); return;
+      }
+      if (k === 'socancel') { meMenu.querySelector('.me-so').innerHTML = meItem('signout', 'out', 'Sign out', '', '', ' danger'); meMenu.querySelector('[data-me="signout"]').focus({ preventScroll: true }); return; }
       meClose(true);
-      ({ profile: () => FSX.go('settings', { section: 'account' }), customize: () => FSX.go('home', { customize: 1 }), settings: () => FSX.go('settings'), signout: () => FSX.confirmSignOut() }[k] || (() => {}))();
+      ({ profile: () => FSX.go('settings', { section: 'account' }), customize: () => FSX.go('home', { customize: 1 }), settings: () => FSX.go('settings'), soyes: () => FSX.signOut() }[k] || (() => {}))();
     });
   }
   function meClose(refocus) {
@@ -4195,7 +4176,6 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   });
   let toastT;
   function toast(text) { const t = $('toast'); t.textContent = text; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2600); }
-
 
   document.addEventListener('click', e => { const t = e.target.closest('[data-toast]'); if (t) { e.preventDefault(); if (!FSX.open(t.dataset.toast)) toast('That isn\'t ready yet.'); } });
   const IS_MAC = /mac|iphone|ipad|ipod/i.test(navigator.userAgentData?.platform || navigator.platform || '');
@@ -4237,7 +4217,6 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       const here = !m && typeof window.CMDK_HERE === 'function' ? window.CMDK_HERE(qq) : null;
       if (here && here.rows.length) html += `<div class="lbl">${esc(here.label)}</div>` + here.rows.slice(0, 5).map(r => crow(`data-cmdkgo="${esc(r.key)}"`, r.lead, r.t, r.sub)).join('');
       const cs = m ? [] : CLASSES.filter(c => chit(qq, c.name + ' ' + c.teacher)); if (cs.length) html += `<div class="lbl">Classes</div>` + cs.map(c => cclass(c, qq)).join('');
-      // people: your teachers and classmates (2026-11-06); one opens their card in Contacts
       const pp = m || !FSX.people ? [] : FSX.people().filter(x => chit(qq, x.name)).slice(0, 5); if (pp.length) html += `<div class="lbl">People</div>` + pp.map(x => crow(`data-go="${FSX.url('contacts', { person: x.id })}"`, FSX.personAv(x), cmark(x.name, qq), x.sub)).join('');
       const ps = m ? [] : GO_PAGES.filter(([p]) => chit(qq, p)); if (ps.length) html += `<div class="lbl">Go to</div>` + ps.map(page).join('');
       if (HERE && !m) html += crow(`data-cmdkhere="${esc(qq)}"`, ico('search'), `Search ${esc(HERE)} for "${esc(qq)}"`, 'Just this page', ' s-cmd');
@@ -4245,6 +4224,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     }
     res.innerHTML = html; const f = res.querySelector('.mi'); if (f) f.classList.add('sel');
   }
+  window.addEventListener('fs:people', () => { if (cmdk) cmdkRender(); });
   function cmdkOpen() {
     if (cmdk) { cmdk.querySelector('input').select(); return; }
     cmdkFrom = document.activeElement; $('app').classList.remove('menu');
@@ -4319,8 +4299,6 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const GKIND = { gdoc: 'doc', gsheet: 'sheet', gslides: 'slides', gdraw: 'image', design: 'design' };
   const APP_NAME = { gdoc: 'Google Docs', gsheet: 'Google Sheets', gslides: 'Google Slides', gdraw: 'Google Drawings', design: 'Canva design' };
   const APPLOAD = {};   // app -> 'loading' | 'ok' | 'connect' | 'failed'
-  // the classes' own folders (2026-11-06, Martin: folders didn't show up in Files): each class's top-level folders,
-  // [id, class, name, color], with the files that are in them
   const T_FOLDERS = ((FSD.raw.files && FSD.raw.files.folders) || []).filter(f => f && f.id && C[f.course]).map(f => [String(f.id), f.course, f.title || 'Folder', f.color || '']);
   // quiet: when the page opens, so a connected app's files are in All files (with their previews) right away.
   // No sign-in window and no error message; if it can't, opening the app's place asks as before.
@@ -4344,8 +4322,6 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   // your own folders (on this device): their names, and which file is in which
   const MY_FOLDERS = store.get('fsfiles_myfolders') || [];
   const IN_FOLDER = store.get('fsfiles_infolder') || {};
-  // Folder colors (2026-11-06, Martin: right-click a folder to change its color or delete it): the same colors and the
-  // same saved choices as a class's Materials tab (fshub_foldercolors; a class folder is 'f' + its id there, yours 'my:' + id)
   const FOLDER_COLORS = [['blue', 'Blue', '#226699', '#55ACEE'], ['red', 'Red', '#b8352f', '#ff6b5e'], ['orange', 'Orange', '#c2560c', '#ff9a3c'], ['yellow', 'Yellow', '#a87800', '#ffc933'],
     ['green', 'Green', '#1f7a4d', '#3fc380'], ['teal', 'Teal', '#0b737a', '#2fc4c9'], ['purple', 'Purple', '#5b3fb0', '#9b7bff'], ['pink', 'Pink', '#b0336f', '#ff7ab8'], ['gray', 'Gray', '#4a4d5e', '#9a9db0']];
   const FCOLOR = store.get('fshub_foldercolors') || {};
@@ -4379,9 +4355,6 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const sorted = l => l.slice().sort(FL.sort === 'name' ? (a, b) => a.name.localeCompare(b.name) : FL.sort === 'size' ? (a, b) => bytes(b.size) - bytes(a.size) : (a, b) => a.ago - b.ago);
   const hashOf = s => [...s].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 7);
 
-  // ---------- a picture of each file, drawn from what kind it is ----------
-  // a class PDF's real first page over the drawn one, once it's in view (2026-11-03, FSX.prev.thumbs)
-  // and your own turned-in PDFs and pictures too (2026-11-06, Martin: most files had no preview)
   const classPdf = f => (f.src === 'class' || f.src === 'turned') && f.raw && /\.pdf$/i.test(f.name);
   const viewHref = f => f.src === 'turned' ? `${FSX.apiBase}/data/submission-file?section=${encodeURIComponent(f.raw.course)}&assignment=${encodeURIComponent(f.raw.assignment)}&revision=${encodeURIComponent(f.raw.revision)}&file=${encodeURIComponent(f.raw.id)}&view=1` : FSX.fileUrl(f.raw, true);
   function thumb(f) {
@@ -4416,7 +4389,6 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   // the preview crops the picture to the page itself, so it sits dead center however wide the screen is
   const PAGE_BOX = { doc: '40 14 80 106', slides: '16 22 128 76', sheet: '18 16 124 100', image: '0 0 160 120', design: '46 8 68 104' };
   const drawn = f => { thumb.plain = true; try { return thumb(f); } finally { thumb.plain = false; } };
-  // Google's preview links end in a size (=s220, small): ask for one that fits where it's shown (2026-10-31)
   function thumbAt(u, px) { return /googleusercontent\.com\//i.test(u) ? u.replace(/=[sw]\d+[^/=]*$/i, '') + '=s' + px : u; }
   const bigPage = f => classPdf(f) ? `<span class="fl-bigpdf" data-pthumb="${esc(FSX.fileUrl(f.raw, true))}" data-pthumb-w="1100">${bigPage0(f)}</span>` : bigPage0(f);
   const bigPage0 = f => f.item && f.item.thumb ? `<img class="fl-bigimg" src="${esc(thumbAt(f.item.thumb, 1600))}" alt="${esc(f.name)}" referrerpolicy="no-referrer" data-thumb-fallback>` : f.kind === 'image' && f.raw && f.src === 'class' ? `<img class="fl-bigimg" src="${esc(FSX.fileUrl(f.raw, true))}" alt="${esc(f.name)}">` : drawn(f).replace('viewBox="0 0 160 120" preserveAspectRatio="xMidYMid slice"', `viewBox="${PAGE_BOX[f.kind]}" preserveAspectRatio="xMidYMid meet"`).replace('height="120" rx="4" fill="#ffffff"', 'height="106" rx="0" fill="#ffffff"').replace(/filter="drop-shadow[^"]*"/, '');
@@ -5047,13 +5019,9 @@ window.AveragesHelp = {
       ${MY_FOLDERS.length ? fold : ''}<button class="btn fl-lb-b" data-flopen>${ico('link')}${open}</button>${canDl ? `<button class="btn up-lb-dl" data-fldl>${ico('dl')}Download</button>` : ''}<button class="up-lb-x" data-fllbx aria-label="Close">${ico('x')}</button></div>
       <div class="up-lb-stage"><button class="up-lb-nav" data-fllbgo="-1" aria-label="Previous file"${lbAt ? '' : ' disabled'}>${ico('chev-l')}</button><figure class="up-lb-fig fl-big" role="link" tabindex="0" title="Open in a new tab" aria-label="Open ${esc(f.name)} in a new tab">${bigPage(f)}</figure><button class="up-lb-nav" data-fllbgo="1" aria-label="Next file"${lbAt < lbList.length - 1 ? '' : ' disabled'}>${ico('chev-r')}</button></div>`;
   }
-  // Opens the file itself in a new tab (2026-10-30, Martin): a teacher's PDF, picture, audio or video in the browser's
-  // own viewer; anything else in Schoology; a Drive, OneDrive or Canva file in that app.
   const VIEW_RE = /\.(pdf|png|jpe?g|gif|webp|txt|mp3|m4a|wav|mp4|webm|mov)$/i;
   function openReal(f) {
     if (f.src === 'class') { FSX.newTab(VIEW_RE.test(f.name) ? FSX.fileUrl(f.raw, true) : FSX.schoology(`/course/${encodeURIComponent(f.raw.course)}/materials`)); return; }
-    // your own turned-in files open in a new tab too, every kind (2026-11-06, Martin: some opened the assignment's
-    // page instead); one the browser can't show downloads from there
     if (f.src === 'turned') { FSX.newTab(VIEW_RE.test(f.name) ? viewHref(f) : fileHref(f)); return; }
     if (f.src === 'canva') {
       // the tab opens inside the click; Canva's address comes a moment later
@@ -5109,7 +5077,6 @@ window.AveragesHelp = {
       if (f.src === 'turned') { FSX.go('course-hub', { course: f.c }, 'materials/' + f.raw.assignment); return; }
       openReal(f); return;
     }
-    // the file itself opens it; anywhere else on the dark backdrop closes (2026-11-03, Martin's sketch)
     if (e.target.closest('.up-lb-fig svg, .up-lb-fig img, .up-lb-fig canvas')) { openReal(f); return; }
     if (!e.target.closest('button, a, select, input, label, [role="button"]')) lbClose();
   }
@@ -5147,8 +5114,6 @@ window.AveragesHelp = {
     $('flMeta').querySelectorAll('.gm').forEach((el, i) => el.animate && el.animate([{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: 480, delay: 40 + i * 60, easing: 'cubic-bezier(.16, 1, .3, 1)', fill: 'backwards' }));
     $('flMeta').querySelectorAll('[data-n]').forEach((el, k) => { const to = +el.dataset.n, t0 = performance.now() + 40 + k * 60; el.textContent = '0'; const step = now => { const p = Math.min(1, Math.max(0, (now - t0) / 560)), e = 1 - Math.pow(1 - p, 3); el.textContent = Math.round(to * e); if (p < 1) requestAnimationFrame(step); }; requestAnimationFrame(step); });
   }
-  // Sync (Martin's sync animation, 2026-10-30): each part lands when its own request comes back (FSX.sync), and
-  // syncRun(true) is the same animation when the page opens.
   let loading = false, spin = null;
   $('syncLabel').textContent = FSX.synced(); $('refresh').setAttribute('aria-label', 'Refresh your files. ' + FSX.synced() + '.');
   function syncRun(first) {
@@ -5336,9 +5301,6 @@ window.AveragesHelp = {
     el.style.top = (c.top - r.top - op.clientTop + op.scrollTop).toFixed(1) + 'px';
     return true;
   }
-  // Something around the sticker still sliding or popping in (its row landing, the class icon it sits by): measuring
-  // now puts it in the wrong place, even under the card (2026-10-31, Martin's screenshots). Wait for it to stop.
-  // only its own item and the few boxes around it are asked (asking the whole page was slow, 2026-11-01)
   const moving = el => { const host = el.closest(HOST) || el.parentElement; if (!host || !host.getAnimations) return false;
     const busy = list => list.some(a => { const t = a.effect && a.effect.target, tm = a.effect && a.effect.getTiming ? a.effect.getTiming() : null;
       return a.playState === 'running' && t && t !== el && !(t.classList && t.classList.contains('newtag')) && tm && tm.iterations !== Infinity; });

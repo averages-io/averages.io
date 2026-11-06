@@ -63,18 +63,6 @@
   *::-webkit-scrollbar-thumb:hover { background-color: rgba(20, 21, 31, 0.45); }
   *::-webkit-scrollbar-corner { background: transparent; }
 
-  /* Declared so the browser themes ITS OWN chrome — scrollbars, the
-
-     overscroll gutter, form controls — against this page rather than
-
-     guessing. Without it Firefox drew a light-theme scrollbar over the
-
-     dark canvas and tinted it (Martin saw it as pink on a blue
-
-     background). LegacyPage's applyStoredTheme() updates both of these
-
-     to match whatever background the user actually saved. */
-
   html {
 
     color-scheme: dark;
@@ -82,7 +70,6 @@
     background-color: #0c0c0e;
 
   }
-
 
   html, body {
     margin: 0;
@@ -96,16 +83,6 @@
     overflow: hidden; /* scrolling now happens inside .page (see below), so
       the scrollbar sits at the edge of the app's own window/card instead of
       out at the browser's outer edge, over the wallpaper margin */
-    /* Neutral black instead of a baked-in accent gradient here —
-       2026-09-11, per Martin. This is only ever visible for a split
-       second on reload/navigation, before applyStoredTheme() (or this
-       page's own appearance-reading script) sets the user's actual
-       saved background over it. The old default was the sample
-       red-orange gradient baked into this file, which read as a real
-       glitch flashing in between pages; a neutral black reads as
-       "still loading" instead, and matches the app's own Black
-       preset (#0c0c0e) so it's not a color that appears nowhere else
-       in the app. */
     background-color: #0c0c0e;
     background-image: none;
     background-size: cover;
@@ -156,9 +133,6 @@
   }
 
   .profile-menu-wrap { position: relative; flex-shrink: 0; }
-  /* No photo: an Apple-style monogram (2026-10-21, Martin: "make the default no pfp letters
-     look more like the apple ones"), the grey gradient and rounded white initials of a contact
-     with no picture. A photo replaces it (set inline as background-image). */
   .profile-btn {
     width: 42px;
     height: 42px;
@@ -177,8 +151,6 @@
     flex-shrink: 0;
   }
 
-  /* A photo has no ring (2026-10-23, Martin: "remove the ugly border if it is a custom upload");
-     the letter avatars keep theirs. Same size: the border goes clear and the photo fills it. */
   .profile-btn.has-photo { border-color: transparent; background-origin: border-box; background-repeat: no-repeat; }
   .profile-menu {
     position: absolute;
@@ -254,13 +226,6 @@
   #contactsSearch::placeholder { color: var(--text-faint); }
   #contactsSearch:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
 
-  /* ---------- Contact row — flat, alphabetical, no role/category
-     filters (2026-09-02, per Martin: real faculty records don't
-     consistently have a title/role filled in, so filtering or grouping
-     by it isn't reliable — a plain searchable list, same idea as
-     PowerSchool's own Faculty directory, works for everyone whether or
-     not their role happens to be on file). ---------- */
-  /* No lines between people (2026-10-23, Martin). */
   .contact-row { display: flex; align-items: center; gap: 10px; padding: 9px 6px; cursor: pointer; border-radius: var(--window-radius-sm); }
   .contact-row:hover { background: var(--panel-inner); }
   .contact-row:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring) inset; }
@@ -277,9 +242,6 @@
   .contact-name { font-weight: 800; font-style: italic; font-size: 0.86rem; color: var(--text-dark); margin: 0; letter-spacing: -0.005em; }
   .contact-role { font-weight: 500; font-size: 0.78rem; color: var(--text-muted); margin: 1px 0 0; }
   .contact-meta { font-size: 0.68rem; color: var(--text-faint); margin: 2px 0 0; text-transform: uppercase; letter-spacing: 0.03em; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  /* Row-level Email quick-action (2026-09-02, per Martin) — a mailto:
-     link, so it works without opening the contact card at all; clicking
-     it stops the row's own click (which opens the card) from firing. */
   .contact-email-btn {
     flex-shrink: 0;
     width: 30px; height: 30px;
@@ -345,9 +307,6 @@
   .modal-row .k { color: var(--text-faint); font-weight: 700; }
   .modal-row .v { color: var(--text-dark); font-weight: 700; text-align: right; }
   .modal-rows { margin-top: 14px; }
-  /* Message + Email actions — always both present now (2026-09-02, per
-     Martin: every contact's card should offer a working Send Message
-     button alongside their email, not just current teachers). */
   .contact-modal-actions { display: flex; gap: 8px; margin-top: 16px; }
   .contact-modal-btn {
     display: flex; align-items: center; justify-content: center; gap: 7px;
@@ -412,10 +371,6 @@
   .nav-link .dot { width: 4px; height: 4px; border-radius: 50%; background: transparent; }
   .nav-link.active .label { color: var(--text-dark); }
   .nav-link.active .dot { background: var(--accent); }
-  /* ---------- "More" overflow (2026-10-01, per Martin: "if the text has
-     to get ... we should add a more button on the far right side with a
-     list of the other options"). Labels never truncate: when they would,
-     the rightmost pages move into the More menu instead. ---------- */
   .nav-link[hidden], .nav-more[hidden], .nav-more-menu[hidden] { display: none; }
   /* While the More menu is open the whole bar sits above everything else on
      the page (sticky headers, pop-ups, the edit button go up to z-index 90),
@@ -478,8 +433,6 @@
   .nav-more-item.active { color: var(--text-dark); }
   .nav-more-item.active span { position: relative; display: inline-block; padding-bottom: 6px; margin-bottom: -6px; }
   .nav-more-item.active span::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; border-radius: 999px; background: var(--accent); }
-  /* Labels sit centered in the bar; the active page is underlined in the
-     accent color instead of marked with a dot (2026-10-01, per Martin). */
   .app-nav-inner .nav-link, .app-nav-inner .nav-more { justify-content: center; gap: 0; padding-top: 10px; padding-bottom: 10px; }
   .app-nav-inner .nav-link .dot, .app-nav-inner .nav-more .dot { display: none; }
   .app-nav-inner .nav-link .label, .app-nav-inner .nav-more .label { position: relative; padding: 6px 0; }
@@ -496,7 +449,6 @@
     .nav-link .label { font-size: 0.58rem; }
   }
 
-  /* ---------- Signed in: the student's teachers (2026-10-06) ---------- */
   .modal-row[hidden], .modal-rows[hidden], .contact-modal-btn[hidden], .contact-modal-actions[hidden], .contacts-search-wrap[hidden] { display: none; }
   .modal-row.is-last { border-bottom: none; }
   .contacts-state { padding: 24px 8px 12px; text-align: center; font-size: 0.82rem; font-weight: 600; color: var(--text-faint); line-height: 1.45; }
@@ -614,11 +566,6 @@
   </nav>
 
   <script>
-    // Potato PC Mode on every page (2026-10-04, per Martin). The saved
-    // setting turns off all CSS animations and transitions, makes animate()
-    // calls and smooth scrolling instant, and drops the slanted page title.
-    // Same code as app/lib/theme-boot.ts, which runs it before first paint in
-    // the app; this copy covers the preview and pages theme-boot skips.
     (function () {
     var POTATO_CSS = "body.potato-mode,body.potato-mode *,body.potato-mode *::before,body.potato-mode *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important;filter:none!important;text-shadow:none!important}html:has(body.potato-mode){scroll-behavior:auto!important}body.potato-mode,body.potato-mode *{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif!important}body.potato-mode h1.title{font-style:normal!important;transform:none!important}body.potato-mode .trend.has-popup:focus-visible{outline:2px solid currentColor;outline-offset:2px}";
     function potatoOn() { return !!(document.body && document.body.classList.contains("potato-mode")); }
@@ -739,17 +686,7 @@
     })();
   </script>
 
-
   <script>
-    // ------------------------------------------------------------------
-    // Shared appearance (accent + background) — 2026-09-08, per Martin:
-    // "wallpapers + accent colors don't save across pages." Settings'
-    // Appearance section (and onboarding's Theme step) are the only
-    // writers of schoolagy_appearance; every other real app page,
-    // including this one, applies whatever's saved there, read-only, on
-    // its own load — same shared-localStorage-record pattern already
-    // used for schoolagy_dark_mode/schoolagy_profile.
-    // ------------------------------------------------------------------
     (function () {
       function darken(hex, amount) {
         const n = parseInt(hex.slice(1), 16);
@@ -787,16 +724,6 @@
       });
     })();
 
-    // ------------------------------------------------------------------
-    // Signed in (2026-10-06): CONTACTS comes from the "people" extra, which
-    // is the student's own teachers (there's no district directory to read
-    // on Schoology or Google Classroom). When that extra didn't arrive, the
-    // const below falls back to the sample directory, which must never
-    // show as real people, so ctSetContacts empties it and the list offers
-    // Try again. Demo sessions keep the sample directory, like the preview.
-    // Google Classroom teachers can't be messaged, so their cards have no
-    // Message button.
-    // ------------------------------------------------------------------
     const CT_AV = window.__AVERAGES__;
     const CT_LIVE = !!(CT_AV && CT_AV.data && CT_AV.mode === 'live');
     const CT_DATA = CT_LIVE ? CT_AV.data : {};
@@ -895,27 +822,6 @@
         .then(() => { renderContactList(); ctRenderHeader(); });
     }
 
-    // ------------------------------------------------------------------
-    // Sample data — district directory (2026-09-02, per Martin: "I need
-    // to add a contact list of people in the district"). The six "My
-    // Teachers" entries intentionally reuse the exact same id/name/color
-    // keys as messages.html's TEACHERS object; everyone else's id is
-    // local to this page. Either way, every contact's Message button
-    // deep-links straight into a real thread with that person
-    // (messages.html?compose=<id>, carrying name/dept/color along for
-    // anyone messages.html doesn't already know about — see the wiring
-    // at the bottom of messages.html's own script).
-    //
-    // No role/department-based filtering or grouping here (removed
-    // 2026-09-02, per Martin: "teachers don't have to put roles, some do
-    // some don't" — a real PowerSchool/Schoology faculty record's title
-    // field is often just blank, so filtering or sectioning by it is
-    // unreliable). `role` is shown when a contact happens to have one on
-    // file and simply omitted otherwise — see contactRowHTML below —
-    // same as the reference Faculty page, where plenty of rows show just
-    // a name and no title underneath it. `category` is kept on the data
-    // only as a lightweight internal label (not shown or filtered on).
-    // ------------------------------------------------------------------
     const CONTACTS = [
       // My Teachers — same ids as messages.html's TEACHERS.
       { id: 'cho', name: 'Mr. Cho', role: 'Teacher', dept: 'English Department', school: 'Lincoln High School', email: 'j.cho@lincolnusd.org', phone: '(555) 201-4471', color: '#6b8f5e', category: 'myTeachers' },
@@ -942,7 +848,6 @@
       { id: 'alvarado', name: 'Ms. Alvarado', role: 'IT Help Desk', dept: 'District Office', school: 'Lincoln Unified School District', email: 'helpdesk@lincolnusd.org', phone: '(555) 201-1002', color: '#4f7d8f', category: 'district' },
       { id: 'chen', name: 'Mr. Chen', role: 'Director of Special Education', dept: 'District Office', school: 'Lincoln Unified School District', email: 'w.chen@lincolnusd.org', phone: '(555) 201-1003', color: '#8f6b4f', category: 'district' },
     ];
-    // Signed in: real teachers only, never the sample directory (2026-10-06).
     if (CT_LIVE) ctSetContacts(CT_DATA.CONTACTS);
 
     /**
@@ -965,7 +870,7 @@
     }
 
     function initials(name) {
-      if (window.AveragesAvatar) return name === 'Your teacher' ? '?' : window.AveragesAvatar.initials(name);   // (2026-10-23)
+      if (window.AveragesAvatar) return name === 'Your teacher' ? '?' : window.AveragesAvatar.initials(name);
       const parts = name.replace(/^(Mr\.|Mrs\.|Ms\.|Mx\.|Dr\.|Sra\.|Sr\.|Coach|Nurse)\s+/i, '').split(' ');
       return parts.map(p => p[0]).join('').slice(0, 2).toUpperCase();
     }
@@ -979,7 +884,6 @@
       return parts[parts.length - 1].toLowerCase();
     }
     const CONTACTS_SORTED = [...CONTACTS].sort((a, b) => lastNameKey(a.name).localeCompare(lastNameKey(b.name)));
-    // After Try again brings the teachers in (2026-10-06).
     function ctResort() {
       const sorted = [...CONTACTS].sort((a, b) => lastNameKey(a.name).localeCompare(lastNameKey(b.name)));
       CONTACTS_SORTED.length = 0;
@@ -1010,8 +914,6 @@
     function renderContactList() {
       const q = contactsSearchInput.value.trim().toLowerCase();
       const body = document.getElementById('contactsListBody');
-      // Signed in (2026-10-06): loading, couldn't load, needs the rosters
-      // permission, or no teachers yet.
       if (CT_LIVE) {
         const state = ctStateHtml();
         document.getElementById('contactsSearchWrap').hidden = !!state;
@@ -1047,11 +949,6 @@
       document.getElementById('modalSchool').textContent = c.school;
       document.getElementById('modalEmail').textContent = c.email;
       document.getElementById('modalPhone').textContent = c.phone;
-      // Every contact gets a working Message button now (2026-09-02, per
-      // Martin) — it deep-links into messages.html?compose=<id>, passing
-      // name/dept/color along too so messages.html can build a thread
-      // header for anyone that isn't already one of its own TEACHERS
-      // (see the wiring at the bottom of messages.html's own script).
       modalMessageBtn.onclick = () => {
         const url = `messages.html?compose=${encodeURIComponent(c.id)}`
           + `&name=${encodeURIComponent(c.name)}`
@@ -1089,10 +986,6 @@
     contactModal.addEventListener('click', e => { if (e.target === contactModal) closeContactModal(); });
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && contactModal.classList.contains('show')) closeContactModal(); });
 
-    // Deep link: contacts.html?open=<id> opens straight to that person's
-    // card (2026-09-08, added so messages.html's "View full contact" link
-    // — from the To box's contact info popup — actually lands on the right
-    // record instead of just the general directory).
     (function openFromQueryParam() {
       const id = new URLSearchParams(location.search).get('open');
       if (!id) return;
@@ -1116,22 +1009,12 @@
     // Profile menu — same behavior as every other page.
     // ------------------------------------------------------------------
     const profileBtn = document.getElementById('profileBtn');
-    // Shared profile photo/name (2026-09-07) — settings.html's Edit
-    // Profile modal is the only place this is ever set, but every other
-    // page's top-right profile button used to just show a fixed "M" no
-    // matter what was saved there: the button never read anything back,
-    // so a photo you set in Settings was invisible the moment you left
-    // it. schoolagy_profile is the same localStorage record
-    // settings.html writes on every save; this is read-only here.
     (function () {
       var profile = null;
       try {
         var raw = localStorage.getItem('schoolagy_profile');
         if (raw) profile = JSON.parse(raw);
       } catch (e) {}
-      // No name saved on this device (new device, or signed out with Sync
-      // off): the account's own name from the sign-in, never a sample name
-      // (2026-10-14; this used to fall back to "Martin" / "M").
       if (!profile || !profile.name || !String(profile.name).trim()) profile = Object.assign({}, profile, { name: window.__AVERAGES_NAME__ || '' });
       if (profile.photo) {
         profileBtn.style.backgroundImage = 'url("' + profile.photo + '")';
@@ -1140,7 +1023,7 @@
         profileBtn.textContent = '';
         profileBtn.classList.add('has-photo');
       } else if (profile.name) {
-        if (window.AveragesAvatar) window.AveragesAvatar.paint(profileBtn, profile.name);   // initials on their own color (2026-10-23, averages-avatar.js)
+        if (window.AveragesAvatar) window.AveragesAvatar.paint(profileBtn, profile.name);
         else profileBtn.textContent = (function (n) { var p = String(n).trim().split(/\s+/).filter(Boolean); var f = function (w) { return w ? Array.from(w)[0] : ''; }; return (f(p[0]) + (p.length > 1 ? f(p[p.length - 1]) : '')).toUpperCase(); })(profile.name);
       }
     })();
@@ -1158,11 +1041,6 @@
     });
   </script>
   <script>
-    // Back link (2026-10-01, per Martin: "where it returns to ... is always
-    // wrong"). Every page records itself in a short per-tab trail; a page's
-    // back link then says and goes to the page before it ("Back to AP
-    // Chemistry Hub", "Back to Grades"...). With no trail (the page was
-    // opened directly) the page's own default back link is left alone.
     (function () {
       const SELF = 'contacts.html';
       const KEY = 'averages_nav_trail';

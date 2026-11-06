@@ -1,23 +1,4 @@
-/*
- * Notifications (2026-10-19, Martin): the bell next to the profile picture,
- * and the "read" memory behind every notification dot in the app.
- *
- * AveragesSeen — which notifications this student has opened, on this device
- * (localStorage averages_seen, the newest 300 ids per kind). Schoology can't
- * tell us: the API calls a course update "unread" for 24 hours after it's
- * posted and a grade "new" for 2 days, whether or not it was opened. So a dot
- * shows while the item is new AND it hasn't been opened here.
- *   AveragesSeen.has(kind, id)    kind: 'u' course update, 'g' grade, 'm' message thread
- *   AveragesSeen.mark(kind, id)   also markMany(kind, ids)
- * Marking fires an `averages:seen` event, so Home, the class page and the bell
- * all drop the dot at once.
- *
- * AveragesBell — LegacyPage calls mount({ mode }) once the page's own script
- * has run, and setData(data) when the background fetch of course updates
- * lands (pages other than Home and the class page don't load them). It reads
- * window.__AVERAGES__.data (COURSES, COURSE_UPDATES, RECENT_GRADES, MESSAGES).
- * Demo sessions get the same sample items Home and Messages show.
- */
+// Notifications: the bell next to the profile picture, and the "read" memory behind every notification dot in the app.
 (function () {
   'use strict';
   if (window.AveragesBell) return;
@@ -55,10 +36,6 @@
   };
   window.AveragesSeen = Seen;
 
-  // Seen on every device (2026-11-03, Martin: the "New" stickers came back in a private tab). With Sync Across
-  // Devices on (not Incognito), the account keeps the same lists (GET/POST /sync/seen, merged by the API, never
-  // replaced): this page adds the account's on load and sends its own when something is opened. Shared with
-  // Fullscreen (averages-fs-data.js), which keeps the same averages_seen.
   const SYNC_API = window.location.hostname.endsWith('averages.io') ? 'https://api.averages.io' : 'http://localhost:8787';
   function seenSyncOff() {
     try {
@@ -104,13 +81,6 @@
   const isId = (v) => /^\d{1,20}$/.test(String(v == null ? '' : v));
   const courseQ = (c) => (isId(c) ? 'id=' : 'course=') + encodeURIComponent(c == null ? '' : c);
   const initial = (n) => String(n || '').replace(/^(Mr\.|Mrs\.|Ms\.|Mx\.|Dr\.|Sra\.|Sr\.|Coach)\s*/i, '').trim().charAt(0).toUpperCase() || '?';
-  /*
-   * People get Apple-style monograms (2026-10-23, Martin: notifications from
-   * people were hard to tell apart): first and last initials, on each
-   * person's own color since 2026-10-23 (averages-avatar.js), the same as
-   * their profile picture everywhere else. No real name (a class
-   * announcement): Apple's plain person on grey instead.
-   */
   const monogram = (n) => {
     const words = String(n || '').replace(/^(Mr\.?|Mrs\.?|Ms\.?|Mx\.?|Dr\.?|Sra\.?|Sr\.?|Coach)\s+/i, '').split(/[\s,]+/).map((w) => w.replace(/[^\p{L}]/gu, '')).filter(Boolean);
     if (!words.length) return '';
@@ -213,9 +183,6 @@
       });
     }
 
-    // New work (2026-11-06, Martin: the background check should catch more than grades, updates and messages).
-    // Work has no "posted" time, so this device remembers the work it has seen (averages_known_work, shared with
-    // Fullscreen): anything that shows up after the first visit is new for a week.
     const work = [].concat(d.OVERDUE || [], d.TODAY || [], d.UPCOMING || []).filter((a) => a && a.id && course(a.courseId));
     const kw = knownWork(work.map((a) => String(a.id)));
     const fresh = [], had = new Set();
@@ -254,15 +221,6 @@
     return out;
   }
 
-  // ---------------------------------------------------------------- view
-  // Redesigned 2026-10-21 (Martin: the icon "looks really weird", it should swing "like a real
-  // bell" when something new comes in, and the dropdown "feels really cluttered"):
-  //   - a solid bell with a clapper that swings when a new notification arrives (once per item,
-  //     remembered in averages_bell_rung), a small nudge on hover, and a badge that pops in;
-  //   - the panel grows out of the bell instead of appearing;
-  //   - one list at a time: All (new first) / Updates / Grades / Messages, each with its count,
-  //     calmer rows (one bold weight, one muted body line, a single unread dot) and a footer link.
-  // Potato mode and reduced motion get no movement (the potato CSS also stops every animation).
   const CSS = `
 .avb-wrap { position: relative; flex-shrink: 0; margin-left: auto; margin-right: 4px; }
 .avb-btn { position: relative; width: 42px; height: 42px; border-radius: 50%; padding: 0; background: none; border: 0; color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; }
@@ -283,7 +241,6 @@
 @keyframes avb-in { from { opacity: 0; transform: translateY(-4px) scale(0.97); } to { opacity: 1; transform: none; } }
 .avb-badge { position: absolute; top: 2px; right: 1px; min-width: 18px; height: 18px; padding: 0 4px; box-sizing: border-box; border-radius: 999px; background: #E5484D; color: #fff; font-family: "puffin", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 0.66rem; font-weight: 800; font-variant-numeric: tabular-nums; display: inline-flex; align-items: center; justify-content: center; line-height: 1; box-shadow: 0 0 0 2px rgba(0,0,0,0.18); }
 .avb-badge > span { display: block; text-box: trim-both cap alphabetic; }
-/* The number is centered by its own height (2026-10-21): the inner span is trimmed to cap height and baseline (text-box), so flex centers the digits; browsers without text-box (Firefox) still get flex centering. */
 .avb-badge[hidden] { display: none; }
 
 .avb-panel { position: absolute; top: calc(100% + 12px); right: -46px; width: min(360px, calc(100vw - 32px)); max-height: min(520px, calc(100vh - 120px)); display: flex; flex-direction: column; background: var(--panel-bg, #eaeaec); color: var(--text-dark, #14151f); border-radius: var(--window-radius-md, 14px); box-shadow: 0 20px 45px -16px rgba(0,0,0,0.5); z-index: 30; text-align: left; overflow: hidden; transform-origin: calc(100% - 66px) 0; }
@@ -355,8 +312,6 @@
     btn.classList.add('ringing');
   }
 
-  // A popup at the top right for each new one (2026-11-03, Martin's notification-popup design, averages-note.js):
-  // once per item on this device, shared with Fullscreen.
   function popNew(unreadItems) {
     const N = window.AveragesNote;
     if (!N || mode !== 'live') return;
@@ -369,11 +324,8 @@
     })), { openAll: () => { if (panel && panel.hidden) open(); } });
   }
 
-  // New ones while the page stays open (2026-11-03): every 5 minutes while it's showing (and when it comes back after
-  // that long), the grades bundle (new grades, messages) and course updates again, like Fullscreen does. The fresh
-  // bundle also goes in this tab's cache, so the next page opens with it.
   const API = window.location.hostname.endsWith('averages.io') ? 'https://api.averages.io' : 'http://localhost:8787';
-  const CHECK_EVERY = 5 * 60 * 1000;
+  const CHECK_EVERY = 60 * 1000;
   let checkedAt = Date.now(), checking = false, checkTimer = 0;
   function getJSON(path) {
     return fetch(API + path, { credentials: 'include', cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
@@ -402,10 +354,8 @@
   function startChecks() {
     if (checkTimer || mode !== 'live') return;
     checkedAt = Date.now();
-    // A page that opened with this tab's saved copy (older than a minute) checks a few seconds in, not 5 minutes later
-    // (2026-11-06, Martin: "after the sync load, check in the background").
     try { const at = (JSON.parse(sessionStorage.getItem('schoolagy_bundle_cache') || 'null') || {}).at || 0; if (at && Date.now() - at > 60000) setTimeout(backgroundCheck, 4000); } catch { /* none */ }
-    checkTimer = setInterval(() => { if (Date.now() - checkedAt >= CHECK_EVERY) backgroundCheck(); }, 30000);
+    checkTimer = setInterval(() => { if (Date.now() - checkedAt >= CHECK_EVERY) backgroundCheck(); }, 15000);
     document.addEventListener('visibilitychange', () => { if (!document.hidden && Date.now() - checkedAt >= CHECK_EVERY) backgroundCheck(); });
   }
 

@@ -61,18 +61,6 @@
   *::-webkit-scrollbar-thumb:hover { background-color: rgba(20, 21, 31, 0.45); }
   *::-webkit-scrollbar-corner { background: transparent; }
 
-  /* Declared so the browser themes ITS OWN chrome — scrollbars, the
-
-     overscroll gutter, form controls — against this page rather than
-
-     guessing. Without it Firefox drew a light-theme scrollbar over the
-
-     dark canvas and tinted it (Martin saw it as pink on a blue
-
-     background). LegacyPage's applyStoredTheme() updates both of these
-
-     to match whatever background the user actually saved. */
-
   html {
 
     color-scheme: dark;
@@ -80,7 +68,6 @@
     background-color: #0c0c0e;
 
   }
-
 
   html, body {
     margin: 0;
@@ -94,16 +81,6 @@
     overflow: hidden; /* scrolling now happens inside .page (see below), so
       the scrollbar sits at the edge of the app's own window/card instead of
       out at the browser's outer edge, over the wallpaper margin */
-    /* Neutral black instead of a baked-in accent gradient here —
-       2026-09-11, per Martin. This is only ever visible for a split
-       second on reload/navigation, before applyStoredTheme() (or this
-       page's own appearance-reading script) sets the user's actual
-       saved background over it. The old default was the sample
-       red-orange gradient baked into this file, which read as a real
-       glitch flashing in between pages; a neutral black reads as
-       "still loading" instead, and matches the app's own Black
-       preset (#0c0c0e) so it's not a color that appears nowhere else
-       in the app. */
     background-color: #0c0c0e;
     background-image: none;
     background-size: cover;
@@ -122,15 +99,7 @@
       scroll within */
     min-height: 0; /* flexbox gotcha: without this, a flex item won't
       shrink below its content size, which breaks overflow scrolling */
-    overflow-y: auto; /* kept as a fallback; in practice .msgs-shell
-      below is height-capped and scrolls its own content internally
-      (see .msgs-thread-list / .msgs-bubbles / etc.), so this almost
-      never actually engages. Messages-specific (2026-09-04, per
-      Martin): unlike the other pages in this app, a chat UI's list
-      and conversation panes should behave like a real messaging app
-      -- fixed header/search/composer chrome, only the middle scrolls
-      -- so this page keeps the windowed pattern the rest of the app
-      moved away from. */
+    overflow-y: auto;
     overflow-x: hidden;
     display: flex;
     flex-direction: column;
@@ -161,9 +130,6 @@
     margin: 2px 0 0 2px;
   }
   .profile-menu-wrap { position: relative; flex-shrink: 0; }
-  /* No photo: an Apple-style monogram (2026-10-21, Martin: "make the default no pfp letters
-     look more like the apple ones"), the grey gradient and rounded white initials of a contact
-     with no picture. A photo replaces it (set inline as background-image). */
   .profile-btn {
     width: 42px;
     height: 42px;
@@ -182,8 +148,6 @@
     flex-shrink: 0;
   }
 
-  /* A photo has no ring (2026-10-23, Martin: "remove the ugly border if it is a custom upload");
-     the letter avatars keep theirs. Same size: the border goes clear and the photo fills it. */
   .profile-btn.has-photo { border-color: transparent; background-origin: border-box; background-repeat: no-repeat; }
   .profile-menu {
     position: absolute;
@@ -213,30 +177,6 @@
   .profile-menu-item:hover { background: var(--panel-inner); }
   .profile-menu-item.signout { color: #b6432f; }
 
-  /* ---------- Messages shell (new 2026-09-01) — built from Martin's
-     Messages.pdf rough wireframe: a "+" compose button and a filter
-     icon above a search bar, a scrollable thread list (each row an
-     avatar circle, the top one shown with a timestamp + sender name and
-     highlighted when unread), and a right-hand pane with a header block,
-     a right-aligned accent-colored sent bubble, and a rounded compose
-     pill at the bottom. Kept as a two-pane master/detail layout on
-     desktop; collapses to list-then-thread on narrow screens (see the
-     mobile media query) since the wireframe didn't specify mobile
-     behavior but every other page in this app supports it.
-     Per site-map.md/architecture-decisions.md: Messages is an opt-in
-     Social feature (off by default in Onboarding) and is meant to be
-     backed by the real Schoology Messages API (GET /v1/messages/inbox,
-     POST /v1/messages, etc.) — this static mock always shows the page
-     rather than checking that toggle (there's no persisted settings
-     state across these standalone pages yet), but a real build must
-     hide this nav item / block this route when the user hasn't opted
-     in. The compose recipient list below is deliberately sourced from
-     the same six teachers used elsewhere in the app's sample data
-     (grades.html's COURSES) rather than any broader directory — that
-     mirrors the real API's GET /v1/messages/recipients, which is
-     Schoology's own server-computed "who can I currently message" list
-     already filtered by district policy (teacher-only vs. peer-to-peer),
-     per the decision logged 2026-08-24. ---------- */
   /* Height-capped to whatever .page has left (flex: 1; min-height: 0)
      instead of growing to match content -- keeps both panels' frames
      (and their rounded corners) fixed on screen, matching login-style
@@ -330,19 +270,8 @@
   .msgs-search-clear:hover { color: var(--text-dark); }
   .msgs-search-clear:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); border-radius: 50%; }
 
-  /* Search results — replaces #threadList in the SAME slot (same
-     flex:1/overflow-y:auto box, see .msgs-thread-list) rather than
-     floating a dropdown over it, per Martin's request. Matches on message
-     BODY text (not
-     just conversation name/course), so a search for e.g. "Unit 2" can
-     surface a specific message buried in a thread; picking a row jumps
-     straight to that message (see jumpToMessage). */
   .msgs-search-results { flex: 1; min-height: 0; overflow-y: auto; padding: 4px 10px 10px; }
   .msgs-search-results[hidden] { display: none; }
-  /* Categorized results — Messages/Docs/Links/Video/Audio (2026-09-01):
-     the section headers always render, even for a category with zero
-     items, so the panel's shape stays stable as you type rather than
-     sections popping in/out. */
   .msgs-search-scope { margin: 2px 4px 8px; padding: 7px 10px; background: var(--panel-inner); border-radius: var(--window-radius-sm); font-size: 0.78rem; font-weight: 600; color: var(--text-dark); }
   .msgs-search-cat { padding: 2px 0 6px; }
   .msgs-search-cat + .msgs-search-cat { border-top: 1px solid var(--border); }
@@ -442,11 +371,6 @@
   .msgs-filter-item:hover { background: var(--panel-inner); }
   .msgs-filter-item.active { color: var(--accent); }
 
-  /* Right-click context menu on a left-side thread row -- Pin/Unpin +
-     Delete (2026-09-04, per Martin). position:fixed and anchored to the
-     click coordinates in JS (see openRowContextMenu), not to a wrapper
-     element like .profile-menu/.msgs-filter-menu above, since it can
-     open from any row anywhere in the scrollable list. */
   .msgs-row-context-menu {
     position: fixed;
     min-width: 150px;
@@ -517,16 +441,9 @@
   .msgs-thread-row-text { min-width: 0; flex: 1; }
   .msgs-thread-row-top { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; }
   .msgs-thread-row-name { font-weight: 700; font-size: 0.86rem; color: var(--text-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  /* Pin icon shown before a pinned conversation's name (2026-09-04, per
-     Martin). Lives inside .msgs-thread-row-name so it inherits that
-     span's color -- including the "color: #fff" override on .active
-     rows above -- automatically via currentColor, same reasoning as the
-     context-menu icons. */
   .msgs-pin-icon { display: inline-flex; vertical-align: -2px; margin-right: 3px; }
   .msgs-pin-icon svg { width: 11px; height: 11px; stroke: currentColor; fill: none; stroke-width: 3.25; stroke-linecap: butt; stroke-linejoin: miter; }
   .msgs-thread-row-time { font-size: 0.66rem; font-weight: 700; color: var(--text-faint); flex-shrink: 0; }
-  /* Thread subject — distinguishes multiple separate threads with the
-     same person (2026-09-01), the same way an email subject line does. */
   .msgs-thread-row-subject { font-size: 0.72rem; font-weight: 700; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
   .msgs-thread-row-preview { font-size: 0.76rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
   .msgs-unread-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
@@ -582,19 +499,12 @@
   .msgs-back-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: butt; stroke-linejoin: miter; }
   .msgs-back-btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); border-radius: 50%; }
   .msgs-thread-avatar { width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; font-size: 0.88rem; position: relative; overflow: hidden; }
-  /* Wraps the avatar + name/course block so it can be swapped out as one
-     unit for .msgs-to-bar below when composing a brand-new message (see
-     the 2026-09-04 comment above .msgs-shell's redesign notes). */
   .msgs-thread-identity { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
   .msgs-thread-identity[hidden] { display: none; }
   .msgs-thread-head-text { min-width: 0; }
   .msgs-thread-name { display: block; font-weight: 800; font-size: 0.94rem; color: var(--text-dark); }
   .msgs-thread-course { display: block; font-size: 0.72rem; font-weight: 700; color: var(--text-faint); }
 
-  /* Subject dropdown under the person's name (2026-09-04, per Martin) --
-     click the subject + chevron to see every subject you've messaged
-     this person under, plus an "All subjects" option that merges them
-     into one timeline (see renderSubjectDropdown/showAllSubjectsFor). */
   .msgs-thread-subject-row { position: relative; }
   .msgs-thread-subject-row[hidden] { display: none; }
   .msgs-thread-subject-trigger {
@@ -665,17 +575,6 @@
   .msgs-composer-hint { padding: 8px 18px 0; margin: 0; font-size: 0.74rem; font-weight: 700; color: var(--text-faint); text-align: center; }
   .msgs-composer-hint[hidden] { display: none; }
 
-  /* ---------- New Message redesign (2026-09-04, per Martin) — replaces
-     the old separate "swap the whole list panel to a people picker"
-     compose flow. Existing conversations now stay visible in the list at
-     all times ("the people that are alr there stay there"); starting a
-     new message instead pins a "New Message" row at the top of that same
-     list (see the JS render logic) and, on the right, swaps the
-     avatar/name header (.msgs-thread-identity above) for this To bar --
-     a label plus a native <select> listing every person from the
-     Contacts directory (not just current teachers) -- and reveals a
-     required Subject field beneath it (Schoology requires a subject on
-     every new thread). The send box at the bottom is untouched. ---------- */
   .msgs-to-bar { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; }
   .msgs-to-bar[hidden] { display: none; }
   .msgs-to-label { font-size: 0.78rem; font-weight: 800; color: var(--text-muted); flex-shrink: 0; }
@@ -692,9 +591,6 @@
   }
   .msgs-to-input::placeholder { color: var(--text-faint); }
   .msgs-to-input:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); border-color: var(--accent); }
-  /* Results dropdown for the To search (2026-09-05) -- capped to
-     MAX_TO_RESULTS items in JS so this box has a fixed, predictable
-     height no matter how many people match or how big the district is. */
   .msgs-to-results {
     position: absolute;
     top: calc(100% + 6px);
@@ -728,7 +624,6 @@
   .msgs-to-result-course { font-size: 0.72rem; font-weight: 600; color: var(--text-faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .msgs-to-no-results { padding: 8px 10px; font-size: 0.82rem; font-weight: 600; color: var(--text-faint); }
   .msgs-subject-bar { padding: 10px 18px; border-bottom: 1px solid var(--border); flex-shrink: 0; display: flex; align-items: center; gap: 8px; }
-  /* Start in Schoology (2026-11-03, Martin): some schools only let students start a conversation on Schoology itself. */
   .msgs-sgy-btn { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border: 0; border-radius: 10px; background: var(--panel-inner); color: var(--text-dark); font: inherit; font-size: 0.78rem; font-weight: 800; white-space: nowrap; cursor: pointer; }
   .msgs-sgy-btn:hover { background: var(--border); }
   .msgs-sgy-btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
@@ -793,12 +688,6 @@
   .msgs-bubble-attachment .msgs-media-chip svg { width: 13px; height: 13px; }
   .msgs-bubble-attachment-text { min-width: 0; }
   .msgs-bubble-attachment-name { display: block; max-width: 170px; font-size: 0.76rem; font-weight: 700; color: var(--text-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  /* Link attachments read as blue + underlined everywhere they appear
-     (2026-09-04, per Martin: "make all other link attachments blue and
-     underlined") -- both the pre-authored sample threads' links and any
-     newly auto-detected one (see extractLinkAttachment() further down)
-     render through the same renderBubbleAttachment(), which adds this
-     modifier class only when a.kind === 'link'. */
   .msgs-bubble-attachment-name-link { color: var(--accent); text-decoration: underline; }
   .msgs-bubble-attachment-meta { font-size: 0.66rem; font-weight: 600; color: var(--text-faint); }
   .msgs-bubble-attachment-time { display: block; font-size: 0.62rem; font-weight: 700; color: var(--text-faint); margin-top: -2px; }
@@ -809,13 +698,6 @@
   }
   .msgs-bubble-row.flash .msgs-bubble { animation: msgsBubbleFlash 1.4s ease; }
 
-  /* align-items:flex-end (not center) -- per Martin's 2026-09-04 request,
-     an attachment preview now lives INSIDE this box (see
-     .msgs-composer-box below) stacked above the text line, so the box
-     can grow taller than the attach/send buttons beside it. flex-end
-     keeps those buttons pinned to the bottom row instead of drifting to
-     the vertical middle of a taller box, matching where your thumb
-     expects Send to stay as the box grows. */
   .msgs-composer { display: flex; align-items: flex-end; gap: 10px; padding: 12px 16px; border-top: 1px solid var(--border); flex-shrink: 0; }
   /* The actual "message box" -- was just the bare <input> before; now a
      bordered/rounded container so a pending attachment (see
@@ -865,12 +747,10 @@
   .msgs-send-btn:hover { background: var(--accent-dark); }
   .msgs-send-btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
   .msgs-send-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2.25; stroke-linecap: butt; stroke-linejoin: miter; 
-    /* Optical centering (2026-10-28): the plane's weight sits up and right of its box, so it moves down-left a little. */
     transform: translate(-0.75px, 0.75px); }
   .msgs-send-btn:disabled { background: var(--text-faint); cursor: not-allowed; }
   .msgs-attach-btn:disabled { cursor: not-allowed; opacity: 0.5; }
   .msgs-attach-btn:disabled:hover { background: none; color: var(--text-muted); }
-  /* Sits between the input and the send button, per Martin's request. */
   .msgs-attach-btn {
     width: 36px; height: 36px;
     border-radius: 50%;
@@ -886,19 +766,6 @@
   .msgs-attach-btn:hover { background: var(--panel-inner); color: var(--text-dark); }
   .msgs-attach-btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
   .msgs-attach-btn svg { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 2.1; stroke-linecap: butt; stroke-linejoin: miter; }
-  /* Preview of files picked via the attach button, shown inside the
-     message box (.msgs-composer-box) above the text line until sent (or
-     removed individually). Lives inside the same bordered box as the
-     input rather than as its own separate bar floating above the whole
-     composer row; the box is fine extending upward to fit it.
-     2026-09-04 (per Martin, with a Claude-attachment-UI screenshot as
-     reference): now supports more than one pending attachment at once,
-     each shrunk into its own small square tile with an ×-remove button
-     sitting on its top-right corner, wrapping onto more rows as needed
-     rather than one long horizontal chip. Real document preview
-     (thumbnails) is explicitly out of scope per Martin ("will come out
-     in later version") — each tile is just the filename plus its
-     extension badge, same info the old single-chip version showed. */
   .msgs-pending-attachment {
     display: flex;
     flex-wrap: wrap;
@@ -964,16 +831,6 @@
   .msgs-pending-attachment-tile-remove:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
   .msgs-pending-attachment-tile-remove svg { width: 11px; height: 11px; stroke: currentColor; fill: none; stroke-width: 3.25; stroke-linecap: butt; stroke-linejoin: miter; }
 
-  /* Link detection while typing (2026-09-04, per Martin: "when you type
-     a link, make it have the blue color and the underline"). #composerInput
-     is a plain <input> (not contenteditable, to keep this simple and
-     robust rather than reimplementing caret handling), so this colors
-     the WHOLE typed line once it contains something URL-shaped, rather
-     than styling just the matched substring -- a reasonable stand-in for
-     a mock, and exactly matches the common case of a message that's
-     nothing but a pasted link. See the composerInput 'input' listener
-     (toggles this class) and URL_RE / extractLinkAttachment() further
-     down in the script. */
   /* #composerInput (ID selector, higher specificity) also sets its own
      color -- this needs the ID repeated here too, or that rule wins and
      the text never visibly turns blue despite the class being applied. */
@@ -1022,10 +879,6 @@
   .nav-link .dot { width: 4px; height: 4px; border-radius: 50%; background: transparent; }
   .nav-link.active .label { color: var(--text-dark); }
   .nav-link.active .dot { background: var(--accent); }
-  /* ---------- "More" overflow (2026-10-01, per Martin: "if the text has
-     to get ... we should add a more button on the far right side with a
-     list of the other options"). Labels never truncate: when they would,
-     the rightmost pages move into the More menu instead. ---------- */
   .nav-link[hidden], .nav-more[hidden], .nav-more-menu[hidden] { display: none; }
   /* While the More menu is open the whole bar sits above everything else on
      the page (sticky headers, pop-ups, the edit button go up to z-index 90),
@@ -1088,8 +941,6 @@
   .nav-more-item.active { color: var(--text-dark); }
   .nav-more-item.active span { position: relative; display: inline-block; padding-bottom: 6px; margin-bottom: -6px; }
   .nav-more-item.active span::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; border-radius: 999px; background: var(--accent); }
-  /* Labels sit centered in the bar; the active page is underlined in the
-     accent color instead of marked with a dot (2026-10-01, per Martin). */
   .app-nav-inner .nav-link, .app-nav-inner .nav-more { justify-content: center; gap: 0; padding-top: 10px; padding-bottom: 10px; }
   .app-nav-inner .nav-link .dot, .app-nav-inner .nav-more .dot { display: none; }
   .app-nav-inner .nav-link .label, .app-nav-inner .nav-more .label { position: relative; padding: 6px 0; }
@@ -1114,9 +965,6 @@
     .nav-link .label { font-size: 0.58rem; }
   }
 
-  /* ---------- Contact info popup (2026-09-08) — same .modal-overlay/
-     .modal-box/.contact-modal-* convention as contacts.html's own contact
-     detail modal, copied verbatim so the two look and behave identically. ---------- */
   .modal-overlay {
     position: fixed;
     inset: 0;
@@ -1201,8 +1049,6 @@
   /* The To box's selected-recipient state (see selectToPerson) — visually
      signals it's now clickable-for-info rather than free-typed text. */
   .msgs-to-input.msgs-to-selected { cursor: pointer; }
-  /* Emoji icons (2026-10-01, per Martin): icons that show a thing are emoji;
-     buttons and action icons stay line icons. */
   /* Each emoji is an inline SVG sized by font-size (1em box), so it is
      exactly as big as its box and sits dead center. The svg rule undoes
      the line-icon styles (stroke, fill:none, opacity) that the parent
@@ -1214,7 +1060,6 @@
   .msgs-pin-icon .emo { font-size: 11px; }
   .msgs-thread-empty .emo { font-size: 40px; margin-bottom: 4px; }
 
-  /* ---------- Signed in: real Schoology messages (2026-10-06) ---------- */
   /* Inbox states in the list: loading, couldn't load (Try again), empty. */
   .msgs-list-state { padding: 32px 16px; text-align: center; color: var(--text-faint); font-size: 0.8rem; font-weight: 600; line-height: 1.45; }
   .msgs-list-state p { margin: 0 0 8px; }
@@ -1284,12 +1129,6 @@
             <div class="msgs-filter-menu" id="filterMenu" role="menu" hidden>
               <button class="msgs-filter-item active" type="button" role="menuitem" data-filter="all">All</button>
               <button class="msgs-filter-item" type="button" role="menuitem" data-filter="unread">Unread</button>
-              <!-- 2026-09-05, per Martin -- combines every person's separate
-                   subject threads into one row each, reusing the "All
-                   subjects" merged view already built for the per-person
-                   subject dropdown (see showAllSubjectsFor/renderMergedBubbles
-                   above). A standalone filter choice, not a modifier on
-                   All/Unread -- see combinedRows()/combinedRowHtml() below. -->
               <button class="msgs-filter-item" type="button" role="menuitem" data-filter="combined">Combined</button>
             </div>
           </div>
@@ -1298,10 +1137,6 @@
         <div class="msgs-search-results" id="searchResults" hidden></div>
       </div>
 
-      <!-- Right-click menu for a left-side thread row (2026-09-04, per
-           Martin) -- Pin/Unpin + Delete. Never opens for the pinned "New
-           Message" draft row (see the contextmenu listener on threadList
-           further down). -->
       <div class="msgs-row-context-menu" id="rowContextMenu" role="menu" hidden>
         <button class="msgs-row-context-menu-item" type="button" role="menuitem" id="rowContextPinBtn">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
@@ -1328,15 +1163,6 @@
               <div class="msgs-thread-head-text">
                 <span class="msgs-thread-name" id="threadName"></span>
                 <span class="msgs-thread-course" id="threadCourse"></span>
-                <!-- Subject dropdown (2026-09-04, per Martin: "a down
-                     arrow on the subject... a dropdown with every
-                     subject you messaged under and at the top an all
-                     subjects option"). Shown only for a real opened
-                     thread or the merged All Subjects view (see
-                     renderSubjectDropdown/showThread/showAllSubjectsFor)
-                     -- stays hidden during the New Message compose flows,
-                     which use #subjectBar's text input instead since
-                     there's no existing subject to pick from yet. -->
                 <div class="msgs-thread-subject-row" id="threadSubjectRow" hidden>
                   <button type="button" class="msgs-thread-subject-trigger" id="threadSubjectTrigger" aria-haspopup="menu" aria-expanded="false">
                     <span id="threadSubjectTriggerLabel"></span>
@@ -1348,14 +1174,6 @@
             </div>
             <div class="msgs-to-bar" id="toBar" hidden>
               <label class="msgs-to-label" for="toInput">To</label>
-              <!-- Search-as-you-type recipient picker (2026-09-05, per
-                   Martin: a plain list of every person in the district
-                   doesn't scale -- a real district can have hundreds of
-                   people, so this needs to filter down as you type rather
-                   than dump the whole directory in a dropdown). See
-                   renderToResults()/directoryMatches() below: results are
-                   capped at MAX_TO_RESULTS so the list can never overflow
-                   the page regardless of district size. -->
               <div class="msgs-to-search" id="toSearchWrap">
                 <input type="text" id="toInput" class="msgs-to-input" placeholder="Type a name…" aria-label="Search for a person to message" autocomplete="off" role="combobox" aria-expanded="false" aria-haspopup="listbox" aria-controls="toResults">
                 <div class="msgs-to-results" id="toResults" role="listbox" hidden></div>
@@ -1367,25 +1185,7 @@
             <button type="button" class="msgs-sgy-btn" data-action="start-in-schoology" title="Start this conversation on Schoology's own site">Start in Schoology <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></button>
           </div>
           <div class="msgs-bubbles" id="threadBubbles"></div>
-          <!-- Plain div, not a <form> (changed 2026-09-04, per Martin's
-               report that sending didn't work for him): this page gets
-               opened inside a sandboxed preview iframe in some surfaces,
-               and a sandboxed iframe without the "allow-forms" permission
-               silently blocks real <form> submission at the browser
-               level -- before our JS even runs, so e.preventDefault()
-               never gets the chance to matter. Send now happens off a
-               plain button click + a keydown listener on the input (see
-               sendComposerMessage() in the script), which isn't form
-               submission at all and isn't affected by that restriction. -->
-          <!-- Shown instead of letting the composer just silently do
-               nothing while viewing the merged "All subjects" timeline
-               (2026-09-04, per Martin's subject-dropdown request) -- there's
-               no single thread to append a reply to, so the composer is
-               disabled (see setComposerEnabled) until a specific subject is
-               chosen from the dropdown above. -->
           <p class="msgs-composer-hint" id="composerHint" hidden>Select a specific subject above to reply.</p>
-          <!-- Signed in (2026-10-06): short notes such as "Attachments aren't
-               supported yet" (see showComposerNote). -->
           <p class="msgs-composer-hint" id="composerNote" role="status" hidden></p>
           <div class="msgs-composer" id="composerForm">
             <div class="msgs-composer-box" id="composerBox">
@@ -1405,15 +1205,6 @@
     </div>
   </div>
 
-  <!-- Contact info popup (2026-09-08, fixing Martin's report: "clicking on
-       people's name inside of the type a message box at the top won't open
-       their contact info popup" — before this fix, a selected recipient's
-       name just sat as plain text inside the To <input>, which can never be
-       "clicked" as a name — clicking an input only places a text cursor.
-       Same .modal-overlay/.modal-box convention as contacts.html's own
-       contact detail modal (deliberately trimmed here: no Message button,
-       since you're already composing to this person — just a link out to
-       the fuller contacts.html record). -->
   <div class="modal-overlay" id="toContactModal">
     <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="toContactModalName">
       <button class="modal-close" id="toContactModalCloseBtn" type="button" aria-label="Close contact info">✕</button>
@@ -1483,11 +1274,6 @@
   </nav>
 
   <script>
-    // Potato PC Mode on every page (2026-10-04, per Martin). The saved
-    // setting turns off all CSS animations and transitions, makes animate()
-    // calls and smooth scrolling instant, and drops the slanted page title.
-    // Same code as app/lib/theme-boot.ts, which runs it before first paint in
-    // the app; this copy covers the preview and pages theme-boot skips.
     (function () {
     var POTATO_CSS = "body.potato-mode,body.potato-mode *,body.potato-mode *::before,body.potato-mode *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important;filter:none!important;text-shadow:none!important}html:has(body.potato-mode){scroll-behavior:auto!important}body.potato-mode,body.potato-mode *{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif!important}body.potato-mode h1.title{font-style:normal!important;transform:none!important}body.potato-mode .trend.has-popup:focus-visible{outline:2px solid currentColor;outline-offset:2px}";
     function potatoOn() { return !!(document.body && document.body.classList.contains("potato-mode")); }
@@ -1608,17 +1394,7 @@
     })();
   </script>
 
-
   <script>
-    // ------------------------------------------------------------------
-    // Shared appearance (accent + background) — 2026-09-08, per Martin:
-    // "wallpapers + accent colors don't save across pages." Settings'
-    // Appearance section (and onboarding's Theme step) are the only
-    // writers of schoolagy_appearance; every other real app page,
-    // including this one, applies whatever's saved there, read-only, on
-    // its own load — same shared-localStorage-record pattern already
-    // used for schoolagy_dark_mode/schoolagy_profile.
-    // ------------------------------------------------------------------
     (function () {
       function darken(hex, amount) {
         const n = parseInt(hex.slice(1), 16);
@@ -1656,18 +1432,6 @@
       });
     })();
 
-    // ------------------------------------------------------------------
-    // Signed in: real Schoology messages (2026-10-06). TEACHERS and
-    // CONTACTS come from the "people" extra and CONVERSATIONS from the
-    // "messages" extra (LegacyPage merges both into window.__AVERAGES__.data
-    // before this runs; see scripts/port-pages.mjs). A thread arrives as a
-    // summary with an empty `messages` list and loads when it's opened
-    // (GET /messages/thread). When an extra didn't arrive, the consts below
-    // fall back to their sample literals, which must never pass for a real
-    // student's inbox, so liveSetupPeople/liveSetConversations empty them.
-    // Demo sessions have no live fields and keep the samples, like the
-    // preview. Google Classroom has no messaging at all (see liveInit).
-    // ------------------------------------------------------------------
     const MSG_AV = window.__AVERAGES__;
     const MSG_LIVE = !!(MSG_AV && MSG_AV.data && MSG_AV.mode === 'live');
     const MSG_DATA = MSG_LIVE ? MSG_AV.data : {};
@@ -1780,7 +1544,6 @@
       return new Set(c.messages.filter(m => m.from === 'them' && m.authorId).map(m => m.authorId)).size > 1;
     }
 
-    // The student's time zone (2026-10-28, Settings > Time Zone), so message times read in it.
     function msgZone() {
       let tz = '';
       try { tz = (window.averagesTimeZone ? window.averagesTimeZone() : Intl.DateTimeFormat().resolvedOptions().timeZone) || ''; } catch (e) {}
@@ -1892,8 +1655,6 @@
             text: liveText(m.text, 10000),
             time: liveText(m.time, 60),
             at: Number(m.at) || 0,
-            // Files and links sent with it (2026-11-03, Martin: links and files in messages didn't work): a file opens
-            // in a new tab (Schoology's copy, through the API), a link opens its page.
             attachments: [].concat(
               (Array.isArray(m.files) ? m.files : []).filter(f => f && /^\d{1,24}$/.test(String(f.id))).slice(0, 10).map(f => {
                 const q = '/messages/file?thread=' + encodeURIComponent(c.id) + '&file=' + encodeURIComponent(String(f.id));
@@ -1991,8 +1752,6 @@
       const known = () => (realId && TEACHERS[realId] ? realId : (name ? livePersonIdByName(name) : ''));
       const id = known();
       if (id) { startNewThreadWith(id); return; }
-      // Not known yet: only the recipients list can vouch for an id. The
-      // link's name/dept/color are never trusted as the recipient (2026-10-06 review).
       liveLoadRecipients().then(() => {
         if (pendingThread || activeConvoId) return; // they've moved on
         const found = known();
@@ -2092,9 +1851,6 @@
         renderThreadList();
       });
     }
-    // Start it in Schoology (2026-11-03, Martin): the button by the subject, and this popup when Schoology turns a new
-    // conversation down (some schools only let students start one on Schoology's own site). It copies what the
-    // student wrote and opens their Schoology messages; the answer shows up here, and replies work from here.
     function schoologyHome() {
       let host = '';
       try { const s = JSON.parse(localStorage.getItem('averages_login_school') || 'null'); host = String((s && s.schoology && s.schoology.domain) || '').toLowerCase(); } catch {}
@@ -2156,22 +1912,6 @@
       }
     }
 
-    // ------------------------------------------------------------------
-    // Sample data — same six teachers/course colors as grades.html's
-    // COURSES array, duplicated locally per this project's established
-    // cross-page convention (see architecture-decisions.md's
-    // shared-stylesheet note). Two conversations start unread to
-    // demonstrate that state; the rest are already read.
-    // ------------------------------------------------------------------
-    // Teachers a user can message, keyed by id — this is the source both
-    // the New Message people-list and every conversation's identity
-    // (avatar/name/course) read from. Separated from CONVERSATIONS below
-    // per Martin's 2026-09-01 question about supporting multiple separate
-    // message THREADS with the same person (a real Schoology behavior) —
-    // a person and a thread are no longer the same thing: TEACHERS is the
-    // person directory, CONVERSATIONS is a list of threads that each
-    // reference one person by id via `personId`, so the same person can
-    // have any number of threads (see the two Mr. Cho threads below).
     const TEACHERS = {
       cho: { name: 'Mr. Cho', course: 'English 10', color: '#6b8f5e' },
       alvarez: { name: 'Mr. Alvarez', course: 'AP Chemistry', color: '#a67a22' },
@@ -2181,19 +1921,6 @@
       reyes: { name: 'Coach Reyes', course: 'PE', color: '#4f8c8a' },
     };
 
-    // Full district directory — duplicated from contacts.html's own
-    // CONTACTS array (same ids/names/colors for the 6 people also in
-    // TEACHERS above), per this project's established cross-page
-    // sample-data convention. Added 2026-09-04 (per Martin) so the New
-    // Message "To" dropdown can offer every person from Contacts, not
-    // just current teachers -- previously only reachable one at a time
-    // via a deep link from contacts.html itself (see
-    // handleComposeDeepLink further down). Every entry not already a key
-    // in TEACHERS gets folded in right below (using `dept` as that
-    // person's `course` field, same fallback handleComposeDeepLink
-    // already used) so person()/avatarBg()/the To dropdown all keep
-    // reading from the one TEACHERS lookup regardless of where a
-    // recipient came from.
     const CONTACTS = [
       { id: 'cho', name: 'Mr. Cho', role: 'Teacher', dept: 'English Department', color: '#6b8f5e' },
       { id: 'alvarez', name: 'Mr. Alvarez', role: 'Teacher', dept: 'Science Department', color: '#a67a22' },
@@ -2215,43 +1942,17 @@
       { id: 'alvarado', name: 'Ms. Alvarado', role: 'IT Help Desk', dept: 'District Office', color: '#4f7d8f' },
       { id: 'chen', name: 'Mr. Chen', role: 'Director of Special Education', dept: 'District Office', color: '#8f6b4f' },
     ];
-    // Signed in: real people only, never the sample directory (2026-10-06).
     if (MSG_LIVE) liveSetupPeople();
     CONTACTS.forEach(c => {
       if (!TEACHERS[c.id]) TEACHERS[c.id] = { name: c.name, course: c.dept, color: c.color };
     });
 
-    // Each thread has a `subject` (shown in the thread list/header so two
-    // threads with the same person read as distinct, the same way email
-    // subjects do) and, new this round, `docs`/`links`/`video`/`audio`
-    // arrays alongside `messages` — sample "shared in this thread" content
-    // for the new categorized search panel below (see searchCategories).
-    // Docs/links/video/audio (2026-09-02): each thread's docs/links/video/
-    // audio arrays used to be hand-authored separately from its messages,
-    // which let them drift out of sync with what the messages actually
-    // say — e.g. a "Docs" entry for a file nobody ever sent in the chat,
-    // just a teacher mentioning an assignment that lives in Course
-    // Materials. Per Martin: "Docs" should mean something someone
-    // actually UPLOADED in the conversation, not an assignment merely
-    // mentioned in passing. So these arrays are no longer hand-authored
-    // here at all — they're derived from an `attachment` field on the
-    // specific message that shares that item (see deriveMedia() right
-    // after this array), and that message renders the attachment inline
-    // in the thread view too (see renderBubbleAttachment), so what
-    // search surfaces always matches something visibly shared in that
-    // chat. A message that just references an assignment living
-    // elsewhere (Alvarez's "nice work on the titration lab", Bennett's
-    // "posted in Course Materials") stays plain text with no attachment
-    // — those aren't chat uploads and don't belong in Docs.
     const CONVERSATIONS = [
       { id: 'cho-essay', personId: 'cho', subject: 'Essay Extension', unread: true, messages: [
         { from: 'me', text: "Could I get an extension on the rhetorical analysis essay? I was out sick Tuesday — here's my draft so far.", time: 'Yesterday · 4:12 PM', attachment: { kind: 'doc', name: 'Rhetorical_Analysis_Draft.docx' } },
         { from: 'them', text: 'Of course — Friday work for you?', time: 'Yesterday · 4:30 PM' },
         { from: 'me', text: 'That works, thank you so much!', time: 'Yesterday · 4:31 PM' },
       ] },
-      // Second thread with the SAME teacher (Mr. Cho), on an unrelated
-      // topic — demonstrates that a person can have more than one active
-      // conversation at once, per Martin's question about this.
       { id: 'cho-bookclub', personId: 'cho', subject: 'After-School Book Club', unread: false, messages: [
         { from: 'them', text: "Quick heads up — Book Club meets in room 214 today instead of the library. Here's the sign-up sheet if you haven't added your name yet:", time: 'Mon, Aug 24 · 8:10 AM', attachment: { kind: 'link', title: 'Book Club sign-up sheet', url: 'forms.gle/bookclub24' } },
         { from: 'me', text: 'Got it, see you there!', time: 'Mon, Aug 24 · 8:12 AM' },
@@ -2276,14 +1977,6 @@
       ] },
     ];
 
-    // A message carries its attachment(s) as either the older singular
-    // `attachment` field (every hand-authored CONVERSATIONS message
-    // above) or, since 2026-09-04 (per Martin: composer now supports
-    // picking more than one file at once), a plural `attachments` array
-    // (every message sent through the composer — see sendComposerMessage
-    // further down). This normalizes either shape to an array so
-    // everything downstream (deriveMedia, renderBubbles) only has to
-    // handle one case.
     function attachmentsOf(m) {
       if (Array.isArray(m.attachments)) return m.attachments;
       if (m.attachment) return [m.attachment];
@@ -2307,18 +2000,14 @@
       });
       return { docs, links, video, audio };
     }
-    // Signed in: the real inbox, or nothing (it failed, see
-    // liveInboxState), never the sample threads (2026-10-06).
     if (MSG_LIVE) liveSetConversations(Array.isArray(MSG_DATA.CONVERSATIONS) ? MSG_DATA.CONVERSATIONS : null);
     CONVERSATIONS.forEach(c => Object.assign(c, deriveMedia(c)));
 
     function person(c) { return TEACHERS[c.personId]; }
 
     function avatarInitial(name) {
-      // Initials like Apple's on each person's own color (2026-10-23, averages-avatar.js).
       if (window.AveragesAvatar) return (name !== 'Schoology user' && window.AveragesAvatar.initials(name)) || '?';
       const parts = String(name).trim().split(' ');
-      // A blank live name has no letter to show (2026-10-06).
       return (parts[parts.length - 1][0] || '?').toUpperCase();
     }
     /**
@@ -2347,21 +2036,6 @@
       ));
     }
 
-    // ------------------------------------------------------------------
-    // Live-updating relative timestamps (2026-09-04, per Martin: "update
-    // timestamps every min, also on page reload"). Only messages actually
-    // sent through the composer this session carry a real `sentAt` (epoch
-    // ms, set in sendComposerMessage) — every hand-authored CONVERSATIONS
-    // message above has a fixed historical-looking string instead (e.g.
-    // "Yesterday · 4:12 PM") and is left alone, since those are supposed
-    // to read as fixed points in the past, not drift. For a message that
-    // does have `sentAt`, relativeTime() computes the label fresh, and
-    // any span rendered via timeSpanHtml() carries a `data-sent-at`
-    // attribute so tickRelativeTimes() (below, run once immediately and
-    // then every 60s) can refresh just that span's text in place —
-    // deliberately NOT a full re-render of the thread/bubbles, so a tick
-    // never resets scroll position or disrupts anything else on screen.
-    // ------------------------------------------------------------------
     function relativeTime(ms) {
       const diffSec = Math.max(0, Math.floor((Date.now() - ms) / 1000));
       if (diffSec < 60) return 'Just now';
@@ -2381,20 +2055,6 @@
       });
     }
     setInterval(tickRelativeTimes, 60000);
-    // Teacher "profile photo" (2026-09-01 follow-up: Martin asked for this
-    // to come from the API/app auth rather than a stock image service). In
-    // the real app this is GET /v1/users/{id}/photo — an endpoint gated
-    // behind the signed-in session, same as every other Messages call this
-    // mock documents (see the CSS comment above .msgs-shell). A static,
-    // backend-less HTML file has no session to authenticate with, so it
-    // can't literally call that endpoint; the earlier version of this page
-    // used a public placeholder-photo service (pravatar.cc) as a stand-in,
-    // but that's an unauthenticated third-party API, not "the app's auth,"
-    // so it's gone. Instead every teacher gets a generated color-gradient
-    // "photo card" with their initial — this is the same fallback avatar
-    // real apps (Google, Outlook, Slack) show before a real photo has
-    // synced, so it's an honest placeholder rather than a fake photo, and
-    // it needs no network call at all (works instantly, even offline).
     function shadeColor(hex, percent) {
       const num = parseInt(hex.slice(1), 16);
       const clamp = v => Math.max(0, Math.min(255, v));
@@ -2421,8 +2081,6 @@
     let searchQuery = '';
 
     function convoTextMatches(c, q) {
-      // Signed in, a thread that hasn't been opened yet only has its
-      // preview to search (2026-10-06).
       return c.messages.some(m => m.text.toLowerCase().includes(q)) || (!!c.preview && c.preview.toLowerCase().includes(q));
     }
 
@@ -2437,31 +2095,9 @@
         }
         return true;
       });
-      // Pinned conversations float to the top (2026-09-04, per Martin,
-      // right-click a row > Pin). Array.prototype.sort is stable
-      // (ES2019+), so conversations keep their existing relative order
-      // within each of the two groups -- this never reshuffles anything
-      // beyond promoting pinned rows.
       return list.sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0));
     }
 
-    // "Combined" filter (2026-09-05, per Martin: picking this option from
-    // the filter dropdown next to search should automatically merge every
-    // person's separate subject threads into a single row, rather than
-    // listing each subject as its own row). One row per person instead of
-    // one row per thread -- reuses the exact same merged "All subjects"
-    // timeline already built for the per-person subject dropdown
-    // (showAllSubjectsFor/renderMergedBubbles), just reached from the
-    // thread list directly instead of via that dropdown.
-    //
-    // "Most recent" thread per person: this app's sample data has no
-    // reliable global timestamp to sort by (older messages only have a
-    // display string like "Yesterday · 4:12 PM", not a real Date) -- so,
-    // matching how filteredConversations() above already treats
-    // CONVERSATIONS' existing array order as newest-first (new threads are
-    // unshift()'d onto the front in sendComposerMessage()), this just
-    // takes each person's FIRST-encountered thread in that same order as
-    // their "most recent" for the row's time/preview text.
     function combinedRows() {
       const byPerson = new Map();
       for (const c of CONVERSATIONS) {
@@ -2514,8 +2150,6 @@
     }
 
     function updateSubtitle() {
-      // Nothing to count while the live inbox is loading or failed, or on
-      // Google Classroom (2026-10-06).
       if (MSG_LIVE && (MSG_CLASSROOM || liveInboxState !== 'ready')) {
         document.getElementById('msgsSubtitle').textContent = '';
         return;
@@ -2525,17 +2159,6 @@
     }
 
     const threadList = document.getElementById('threadList');
-    // The pinned "New Message" draft row (2026-09-04, per Martin: "the
-    // people that are alr there stay there, make a New Message line...
-    // name it New Message"). Rendered at the top of the SAME thread list
-    // -- existing conversations are never hidden or swapped out for a
-    // separate picker anymore -- whenever a compose draft is in
-    // progress (pendingThread set, see startComposeMode/
-    // startNewThreadWith/resumeComposeMode below). Formatted like a
-    // normal thread row (avatar + name line + optional subject line) so
-    // it reads as one of the list, just with "New Message" standing in
-    // for a person's name and a generic "+" avatar since no recipient
-    // may be chosen yet.
     function newMessageRowHtml() {
       if (!pendingThread) return '';
       return `
@@ -2551,16 +2174,11 @@
       `;
     }
     function renderThreadList() {
-      // Signed in, the inbox can still be loading, or have failed (2026-10-06).
       if (MSG_LIVE && liveInboxState !== 'ready') {
         threadList.innerHTML = newMessageRowHtml() + liveInboxStateHtml();
         updateSubtitle();
         return;
       }
-      // "Combined" (2026-09-05, per Martin) takes a completely different
-      // shape -- one row per person instead of one row per thread -- so it
-      // gets its own render path via combinedRows()/combinedRowHtml()
-      // rather than being squeezed into the per-thread list below.
       if (currentFilter === 'combined') {
         const rows = combinedRows();
         const body = rows.length ? rows.map(combinedRowHtml).join('') : emptyListHtml();
@@ -2624,32 +2242,6 @@
     const composerInput = document.getElementById('composerInput');
     const msgsShell = document.getElementById('msgsShell');
 
-    // ------------------------------------------------------------------
-    // Attach button (2026-09-02, per Martin) — sits next to Send in the
-    // composer. Opens the OS file picker (a native <input type="file">
-    // is the standard, reliable way to do this — unlike the native
-    // color picker swapped out elsewhere in the app, there's no
-    // cross-browser inconsistency to work around here); picked files are
-    // held in `pendingAttachments` and previewed above the composer
-    // until the message is actually sent (or a tile's × is clicked), at
-    // which point they're attached to that message the same way a
-    // message with real shared files works everywhere else (see
-    // `attachments`/`attachment` on CONVERSATIONS messages,
-    // attachmentsOf(), and renderBubbleAttachment) — so an attachment
-    // sent this way shows up in the thread and in search's Docs category
-    // exactly like the pre-authored ones do. Only each file's name is
-    // used (this is a front-end mock with nowhere to actually upload a
-    // file to); size/type aren't read.
-    // 2026-09-04 (per Martin, with a Claude-attachment-UI screenshot as
-    // reference): the file input now accepts multiple files at once
-    // (`multiple` attribute), and `pendingAttachments` is an array
-    // instead of a single object — each entry renders as its own small
-    // square tile with its own remove button (see the CSS above), rather
-    // than one attachment replacing the last. Real document preview
-    // (thumbnails) is intentionally not implemented per Martin ("will
-    // come out in later version") — each tile is just filename + a small
-    // extension badge.
-    // ------------------------------------------------------------------
     const attachBtn = document.getElementById('attachBtn');
     const attachFileInput = document.getElementById('attachFileInput');
     const pendingAttachmentBar = document.getElementById('pendingAttachmentBar');
@@ -2683,8 +2275,6 @@
       renderPendingAttachments();
     });
     attachBtn.addEventListener('click', () => {
-      // Signed in, messages are text only for now (2026-10-06): say so and
-      // add nothing.
       if (MSG_LIVE) { showComposerNote("Attachments aren't supported yet. Paste a link instead."); return; }
       attachFileInput.click();
     });
@@ -2696,27 +2286,6 @@
       renderPendingAttachments();
     });
 
-    // Renders the small attachment chip under a message that carries one
-    // (see attachmentsOf() above and the `attachment`/`attachments`
-    // fields on CONVERSATIONS messages) — reuses the same file/media
-    // chip look the search panel uses (fileExt/fileExtColor/ICON_* are
-    // defined further down but already initialized by the time any
-    // message actually renders). A message with several attachments
-    // (2026-09-04) renders one of these chips per attachment, stacked.
-    // standaloneLabel/standaloneSentAt: passed only for the LAST
-    // attachment of a message that has no text bubble (attachment(s)
-    // sent with an empty message box, via the composer's attach button)
-    // — the timestamp that would normally sit inside the bubble is shown
-    // as its own small caption under that last chip instead, so it isn't
-    // lost, and isn't repeated under every chip when there are several.
-    // Fixed 2026-09-08 (Martin: "links in messages... are not openable" /
-    // "files in messages... are not downloadable"): this chip used to be
-    // pure static HTML with no click behavior at all — a real click did
-    // nothing, regardless of what the attachment was. It's now a real
-    // button, keyed by the same data-kind/data-name/data-url/data-title it
-    // carries here, opened by the delegated handler on #threadBubbles
-    // below (attachmentClickHandler).
-    // A message's words with its web addresses as real links (2026-11-03), opening in a new tab.
     function linkedText(text) {
       let out = '', i = 0;
       String(text).replace(/https?:\/\/[^\s<>"]+/g, (u, at) => {
@@ -2780,7 +2349,6 @@
     // (both render into this same container) without needing to rewire
     // anything on every re-render.
     threadBubbles.addEventListener('click', e => {
-      // Signed in (2026-10-06): resend a message, or reload a thread.
       const retry = e.target.closest('.msgs-retry-btn');
       if (retry) { liveRetryMessage(retry.dataset.localId); return; }
       const sg = e.target.closest('[data-action="start-in-schoology"]');
@@ -2809,8 +2377,6 @@
         const isLast = ai === atts.length - 1;
         return renderBubbleAttachment(a, (!m.text && isLast) ? timeLabel : '', (!m.text && isLast) ? m.sentAt : undefined);
       }).join('');
-      // Signed in (2026-10-06): who wrote it in a group thread, and a
-      // message that didn't go through gets a Retry.
       const authorHtml = showAuthor && m.from === 'them' && m.authorId ? `<span class="msgs-bubble-author">${escapeHtml(personName(m.authorId))}</span>` : '';
       const failedHtml = m.status === 'failed' ? `<div class="msgs-bubble-failed" role="alert"><span>${escapeHtml(m.error || "Couldn't send.")}</span>${m.sgy ? `<button type="button" class="msgs-sgy-btn" data-action="start-in-schoology" data-local-id="${escapeHtml(m.localId)}">Start in Schoology</button>` : m.canRetry === false ? '' : `<button type="button" class="msgs-retry-btn" data-local-id="${escapeHtml(m.localId)}">Retry</button>`}</div>` : '';
       return `
@@ -2824,20 +2390,12 @@
     }
 
     function renderBubbles(c) {
-      // Signed in, a thread's messages load when it's opened (2026-10-06).
       if (MSG_LIVE && c.load !== 'ready') { threadBubbles.innerHTML = liveThreadStateHtml(c); return; }
       const showAuthors = MSG_LIVE && threadHasSeveralAuthors(c);
       threadBubbles.innerHTML = c.messages.map((m, i) => renderBubbleRowHtml(m, i, showAuthors)).join('');
       threadBubbles.scrollTop = threadBubbles.scrollHeight;
     }
 
-    // Merged "All subjects" timeline (2026-09-04, per Martin: the top
-    // option in the subject dropdown) -- every thread with one person,
-    // concatenated in CONVERSATIONS order, each group of messages headed
-    // by a small pill naming its subject (see .msgs-subject-divider) so
-    // it still reads clearly which conversation each message came from
-    // even though they're shown together. Read-only: see
-    // setComposerEnabled, called by showAllSubjectsFor right after this.
     function renderMergedBubbles(threads) {
       threadBubbles.innerHTML = threads.map(c => `
         <div class="msgs-subject-divider"><span>${escapeHtml(c.subject)}</span></div>
@@ -2863,21 +2421,11 @@
       threadCourse.textContent = p.course;
       viewingAllSubjectsFor = null;
       renderSubjectDropdown(c.personId, c.id);
-      // Signed in, replying waits until the thread has loaded (2026-10-06).
       setComposerEnabled(!MSG_LIVE || c.load === 'ready', false);
       if (MSG_LIVE) liveComposerPlaceholder(c);
       renderBubbles(c);
     }
 
-    // ------------------------------------------------------------------
-    // Subject dropdown + "All subjects" merged view (2026-09-04, per
-    // Martin: "under the persons name... a down arrow on the subject...
-    // when clicked... every subject you messaged under and at the top an
-    // all subjects option"). Lives entirely alongside showThread/
-    // openConversation above -- threadsForPerson/renderSubjectDropdown
-    // run every time a real thread opens, and showAllSubjectsFor is the
-    // merged view's own entry point, parallel to showThread.
-    // ------------------------------------------------------------------
     function threadsForPerson(personId) {
       return CONVERSATIONS.filter(c => c.personId === personId);
     }
@@ -2902,12 +2450,6 @@
       threadSubjectTrigger.setAttribute('aria-expanded', 'false');
     }
 
-    // Disables the composer while the merged "All subjects" view is open
-    // -- there's no single thread to append a reply to (sendComposerMessage
-    // already no-ops with activeConvoId left null, this just makes that
-    // visible instead of the composer silently doing nothing).
-    // showHint (2026-10-06): false keeps the All-subjects hint hidden while
-    // the composer waits for a live thread to load.
     function setComposerEnabled(enabled, showHint) {
       composerInput.disabled = !enabled;
       attachBtn.disabled = !enabled;
@@ -2970,7 +2512,6 @@
       pendingThread = null;
       activeConvoId = id;
       if (c.unread) c.unread = false;
-      // The bell's dot for this thread goes too (2026-10-19, public/js/averages-bell.js).
       if (window.AveragesSeen) window.AveragesSeen.mark('m', id);
       if (MSG_LIVE) liveLoadThread(c);
       showThread(c);
@@ -2979,38 +2520,6 @@
       composerInput.value = '';
     }
 
-    // ------------------------------------------------------------------
-    // New Message redesign (2026-09-04, per Martin) — replaces the old
-    // single startNewThread(personId), which required a person to
-    // already be chosen (from a separate people-picker panel) before the
-    // thread panel would even open. Three entry points now:
-    //
-    //  - startComposeMode(): the "+" button. No recipient yet -- opens
-    //    with the To dropdown empty, for the user to pick from (see
-    //    populateToSelect()).
-    //  - startNewThreadWith(personId): a specific person already known
-    //    up front (currently only the Contacts deep-link -- see
-    //    handleComposeDeepLink further down). Skips the To dropdown
-    //    entirely and shows their identity normally, since asking the
-    //    user to re-pick someone they just clicked "Message" on would be
-    //    redundant. Still shows the required Subject field.
-    //  - resumeComposeMode(): re-opens the thread panel on an
-    //    already-in-progress draft (pendingThread already set) without
-    //    resetting anything -- used when the pinned "New Message" row
-    //    (see newMessageRowHtml()) is clicked again, e.g. after using the
-    //    mobile back button.
-    //
-    // None of these add anything to CONVERSATIONS -- that only happens
-    // once the composer is actually submitted (see sendComposerMessage()).
-    // ------------------------------------------------------------------
-    // Search-as-you-type replacement for the old "every person in the
-    // district in one dropdown" picker (2026-09-05, per Martin: a real
-    // district's directory can run into the hundreds of people, so
-    // dumping the whole thing into one list doesn't scale and risks
-    // overflowing the page). Matches anywhere in the name, case-
-    // insensitive, and is capped to MAX_TO_RESULTS so the results box has
-    // a fixed, predictable size no matter how many people match or how
-    // big the district is.
     const MAX_TO_RESULTS = 6;
 
     function directoryMatches(query) {
@@ -3059,12 +2568,6 @@
       threadBubbles.innerHTML = draftBubblesPlaceholder();
     }
 
-    // Contact info popup, opened by clicking the To box once a recipient is
-    // selected (see the toInput click listener below) — fixes Martin's
-    // report that clicking a selected recipient's name did nothing (an
-    // <input>'s value is plain text; there was nothing to click). Same
-    // .modal-overlay convention as contacts.html's own contact detail
-    // modal — see that file's openContactModal() for the twin.
     const toContactModal = document.getElementById('toContactModal');
     function openToContactModal(id) {
       const c = CONTACTS.find(x => x.id === id);
@@ -3075,7 +2578,6 @@
       document.getElementById('toContactModalName').textContent = (c || t).name;
       document.getElementById('toContactModalRole').textContent = c ? (c.role || c.dept) : t.course;
       document.getElementById('toContactModalDept').textContent = c ? c.dept : t.course;
-      // Signed in, someone who isn't a teacher has no class to show (2026-10-06).
       if (MSG_LIVE) document.getElementById('toContactModalDept').parentElement.hidden = !(c ? c.dept : t.course);
       // Only someone in the full district directory has a real record on
       // contacts.html to deep-link to — a one-off recipient that arrived
@@ -3269,22 +2771,11 @@
       msgsShell.classList.remove('thread-open');
     });
 
-    // ------------------------------------------------------------------
-    // Pin / Delete context menu (2026-09-04, per Martin: right-click a
-    // conversation in the left-side list -- not the pinned "New Message"
-    // draft row -- add Pin/Unpin and Delete). Follows the same
-    // open/close + outside-click + Escape pattern as #filterMenu and
-    // #profileMenu further down, except this one is position:fixed and
-    // anchored to the click coordinates (it can be triggered from any
-    // row anywhere in the scrollable list, not a fixed wrapper).
-    // ------------------------------------------------------------------
     const rowContextMenu = document.getElementById('rowContextMenu');
     const rowContextPinBtn = document.getElementById('rowContextPinBtn');
     const rowContextPinLabel = document.getElementById('rowContextPinLabel');
     const rowContextDeleteBtn = document.getElementById('rowContextDeleteBtn');
     let contextMenuConvoId = null;
-    // Signed in, Delete would only hide the thread here (Schoology keeps it
-    // and it'd be back next time), so it's not offered (2026-10-06).
     if (MSG_LIVE) rowContextDeleteBtn.hidden = true;
 
     function closeRowContextMenu() {
@@ -3356,22 +2847,6 @@
     // from the row it was opened on.
     threadList.addEventListener('scroll', () => { if (!rowContextMenu.hidden) closeRowContextMenu(); });
 
-    // ------------------------------------------------------------------
-    // Link detection (2026-09-04, per Martin: "when you type a link, make
-    // it have the blue color and the underline and when sent turn it
-    // into a link attachment"). #composerInput stays a plain <input>
-    // (see the sandboxed-form comment above sendComposerMessage below)
-    // rather than becoming contenteditable, so this is a light heuristic
-    // rather than per-character styling: URL_RE matches ONE bare-ish URL
-    // (protocol optional, matching how every existing sample link
-    // attachment is already written -- e.g. "phet.colorado.edu/titration",
-    // no "https://"), and while typing, the whole input goes blue +
-    // underlined the moment its value looks like it contains one (see the
-    // 'input' listener right below composerInput's declaration further
-    // down). Only the FIRST match in a message is turned into an
-    // attachment; a message with more than one URL is a rarer case this
-    // mock doesn't handle specially.
-    // ------------------------------------------------------------------
     const URL_RE = /\b((?:https?:\/\/)?(?:www\.)?[a-z0-9-]+(?:\.[a-z0-9-]+)+(?:\/[^\s]*)?)\b/i;
     function extractLinkAttachment(text) {
       const m = text.match(URL_RE);
@@ -3384,27 +2859,8 @@
       composerInput.classList.toggle('msgs-composer-link-active', URL_RE.test(composerInput.value));
     });
 
-    // sendComposerMessage() used to be a <form> "submit" handler. Changed
-    // 2026-09-04 (per Martin: sending "doesn't work" for him) -- he was
-    // viewing the page in a sandboxed preview iframe, and a sandboxed
-    // iframe without "allow-forms" blocks real <form> submission at the
-    // browser level before any JS runs (confirmed via a Playwright repro:
-    // Chrome logs "Blocked form submission... sandboxed and the
-    // 'allow-forms' permission is not set" and the submit event never
-    // fires at all, so e.preventDefault() never got a chance to matter).
-    // The composer markup is a plain <div> now (see the HTML comment
-    // above #composerForm), and this same logic runs off a direct
-    // function call instead -- from the Send button's click listener and
-    // the Enter-key listener on #composerInput just below -- which isn't
-    // form submission and isn't subject to that sandbox restriction.
-    // sentAt (real epoch ms, 2026-09-04 per Martin) drives the live-
-    // updating relative label ("Just now" → "1 min ago" → ...) -- see the
-    // relativeTime()/tickRelativeTimes() comment above escapeHtml(). The
-    // static `time: 'Just now'` string is still set alongside it as a
-    // harmless fallback/label for anything that doesn't know about
-    // sentAt, but every render path here prefers sentAt when present.
     function sendComposerMessage() {
-      if (MSG_LIVE) { liveSendComposerMessage(); return; } // the real thing, 2026-10-06
+      if (MSG_LIVE) { liveSendComposerMessage(); return; }
       const raw = composerInput.value.trim();
       const { text, linkAttachment } = extractLinkAttachment(raw);
       if (!text && pendingAttachments.length === 0 && !linkAttachment) return; // attachment(s)/link alone are a valid send, same as most messaging apps
@@ -3413,12 +2869,6 @@
       if (linkAttachment) attachments.push(linkAttachment);
       if (attachments.length) msg.attachments = attachments;
       if (pendingThread) {
-        // A brand-new thread requires a recipient -- can't be sent until
-        // one's chosen from the To search (see startComposeMode/toInput
-        // above). Subject is required by the real Schoology API too
-        // (per Martin); this mock doesn't hard-block on a blank one, it
-        // just falls back to a generic label, same spirit as every other
-        // non-blocking validation choice in this app.
         if (!pendingThread.personId) { toInput.focus(); return; }
         const subject = (pendingThread.subject || '').trim() || 'New conversation';
         const c = {
@@ -3456,17 +2906,6 @@
       if (e.key === 'Enter') { e.preventDefault(); sendComposerMessage(); }
     });
 
-    // ------------------------------------------------------------------
-    // Search — clicking/focusing the search box opens a categorized panel
-    // (Messages / Docs / Links / Video / Audio, per Martin's 2026-09-01
-    // request) instead of a single flat list. With no query it's a browse
-    // view of recent items in each category; typing filters every category
-    // at once and highlights the matched text, but the category headers
-    // stay put even when a category has zero matches, rather than the
-    // layout jumping around. If the query matches a teacher's name, every
-    // category scopes down to just that person's thread(s) instead of
-    // everyone's — same idea as Spotlight narrowing to one contact.
-    // ------------------------------------------------------------------
     const msgsSearchInput = document.getElementById('msgsSearch');
     const searchResults = document.getElementById('searchResults');
 
@@ -3493,8 +2932,6 @@
 
     function matchedPersonId(q) {
       if (!q) return null;
-      // Signed in, only someone with a thread here (2026-10-06): the
-      // directory also holds everyone the student could message.
       const hit = Object.entries(TEACHERS).find(([id, t]) => t.name.toLowerCase().includes(q) && (!MSG_LIVE || CONVERSATIONS.some(c => c.personId === id)));
       return hit ? hit[0] : null;
     }
@@ -3615,20 +3052,6 @@
       searchResults.hidden = false;
     }
 
-    // ------------------------------------------------------------------
-    // Search mode (2026-09-01 rework): clicking/focusing the search field
-    // no longer opens a dropdown floating over the thread list — it
-    // swaps the categorized results panel in for the thread list, in the
-    // exact same slot (see .msgs-search-results next to #threadList in
-    // the HTML and CSS above). The search bar itself "morphs": the input
-    // is flex:1 inside .msgs-search-wrap, and the clear (X) button next
-    // to it animates its own width from 0 up — so as the X grows in, the
-    // input visibly shrinks to make room for it, while .msgs-search-wrap
-    // itself (sized by the header's flex row) never changes width. The X
-    // doubles as "cancel search": clicking it clears the query and
-    // restores the normal thread list, same as Escape or picking a
-    // result.
-    // ------------------------------------------------------------------
     const searchWrap = document.getElementById('searchWrap');
     const searchClearBtn = document.getElementById('searchClearBtn');
     let searchActive = false;
@@ -3696,34 +3119,10 @@
 
     renderThreadList();
 
-    // The "+" button starts a brand-new compose draft (see
-    // startComposeMode() above) — existing conversations stay visible in
-    // the list underneath it, per Martin's 2026-09-04 redesign (see the
-    // block comment above startComposeMode).
     document.getElementById('composeBtn').addEventListener('click', startComposeMode);
 
-    // Signed in (2026-10-06): limits, the inbox's Try again, and Google
-    // Classroom's no-messages note.
     if (MSG_LIVE) liveInit();
 
-    // ------------------------------------------------------------------
-    // Deep-link from contacts.html (2026-09-02, per Martin's district
-    // directory — every contact gets a working Message button, not just
-    // current teachers): a contact card's Message button links here as
-    // messages.html?compose=<id>, plus &name=/&dept=/&color= for anyone
-    // who isn't already one of this page's own TEACHERS. When <id> is a
-    // known teacher those extra params are ignored and the existing
-    // TEACHERS entry is used as-is; otherwise a TEACHERS entry is built
-    // from the URL params on the fly (same {name, course, color} shape
-    // every other entry has), so the rest of the app — avatarBg(),
-    // person(), the thread header, etc. — treats a district contact
-    // exactly like a current teacher without needing them hand-authored
-    // here. Either way this reuses startNewThreadWith(), so arriving via
-    // a deep link opens straight into that person's identity (no To
-    // dropdown needed — see the comment above startNewThreadWith).
-    // ------------------------------------------------------------------
-    // Opened from the bell (2026-10-19): messages.html?thread=<id> opens that
-    // conversation, the same as clicking it in the list.
     (function handleThreadDeepLink() {
       const id = new URLSearchParams(window.location.search).get('thread');
       if (id && CONVERSATIONS.some(c => c.id === id)) openConversation(id);
@@ -3733,7 +3132,6 @@
       const params = new URLSearchParams(window.location.search);
       const composeId = params.get('compose');
       if (!composeId) return;
-      // Signed in, ids are Schoology's (2026-10-06): see liveComposeDeepLink.
       if (MSG_LIVE) { liveComposeDeepLink(composeId, params); return; }
       if (!TEACHERS[composeId]) {
         const name = params.get('name');
@@ -3741,7 +3139,6 @@
         TEACHERS[composeId] = {
           name,
           course: params.get('dept') || '',
-          // Only a plain hex color from the address (2026-10-23): it lands in a style attribute.
           color: /^#[0-9a-f]{6}$/i.test(params.get('color') || '') ? params.get('color') : '#83849a',
         };
       }
@@ -3765,22 +3162,12 @@
     // Profile menu — same behavior as every other page.
     // ------------------------------------------------------------------
     const profileBtn = document.getElementById('profileBtn');
-    // Shared profile photo/name (2026-09-07) — settings.html's Edit
-    // Profile modal is the only place this is ever set, but every other
-    // page's top-right profile button used to just show a fixed "M" no
-    // matter what was saved there: the button never read anything back,
-    // so a photo you set in Settings was invisible the moment you left
-    // it. schoolagy_profile is the same localStorage record
-    // settings.html writes on every save; this is read-only here.
     (function () {
       var profile = null;
       try {
         var raw = localStorage.getItem('schoolagy_profile');
         if (raw) profile = JSON.parse(raw);
       } catch (e) {}
-      // No name saved on this device (new device, or signed out with Sync
-      // off): the account's own name from the sign-in, never a sample name
-      // (2026-10-14; this used to fall back to "Martin" / "M").
       if (!profile || !profile.name || !String(profile.name).trim()) profile = Object.assign({}, profile, { name: window.__AVERAGES_NAME__ || '' });
       if (profile.photo) {
         profileBtn.style.backgroundImage = 'url("' + profile.photo + '")';
@@ -3789,7 +3176,7 @@
         profileBtn.textContent = '';
         profileBtn.classList.add('has-photo');
       } else if (profile.name) {
-        if (window.AveragesAvatar) window.AveragesAvatar.paint(profileBtn, profile.name);   // initials on their own color (2026-10-23, averages-avatar.js)
+        if (window.AveragesAvatar) window.AveragesAvatar.paint(profileBtn, profile.name);
         else profileBtn.textContent = (function (n) { var p = String(n).trim().split(/\s+/).filter(Boolean); var f = function (w) { return w ? Array.from(w)[0] : ''; }; return (f(p[0]) + (p.length > 1 ? f(p[p.length - 1]) : '')).toUpperCase(); })(profile.name);
       }
     })();
@@ -3807,11 +3194,6 @@
     });
   </script>
   <script>
-    // Back link (2026-10-01, per Martin: "where it returns to ... is always
-    // wrong"). Every page records itself in a short per-tab trail; a page's
-    // back link then says and goes to the page before it ("Back to AP
-    // Chemistry Hub", "Back to Grades"...). With no trail (the page was
-    // opened directly) the page's own default back link is left alone.
     (function () {
       const SELF = 'messages.html';
       const KEY = 'averages_nav_trail';

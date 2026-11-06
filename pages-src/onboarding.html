@@ -41,16 +41,6 @@
     --radius-lg: 22px;
     --radius-md: 12px;
 
-    /* "Window type," set on the Theme step. Everything interactive inside
-       the app content area (buttons, swatches, inputs, toggles, cards)
-       should read from this variable rather than a hardcoded radius, so
-       the choice applies globally, not just to this one page.
-       --window-radius-lg/-md scale the same way for the big outer card
-       and the inner panel. **Square option removed (2026-09-02)** — only
-       "Windowed" (rounded corners) ships this release; a future
-       "Fullscreen" option is planned (themed, so background/accent won't
-       be user-choosable for it) but isn't built yet — see the Theme step
-       markup below and applyWindowShape() in the script. */
     --window-radius: 12px;
     --window-radius-lg: 22px;
     --window-radius-md: 12px;
@@ -445,14 +435,6 @@
   }
   .swatch.upload svg { width: 40%; height: 40%; }
 
-  /* ---------- Upload gate — NSFW-scan consent shown before the
-     background upload actually runs (2026-09-04, per Martin). Continue
-     hides this box but keeps the whole page dimmed behind the native OS
-     file picker; picking a file swaps to a non-dismissible "scanning"
-     pane, then the real upload logic (extractDominantColor, etc.) runs.
-     Cancelling the OS dialog or clicking the dimmed backdrop bails out
-     with nothing uploaded. Sits above every other overlay in the page
-     (z-index 90 vs. the swatch popup's 60). ---------- */
   .upload-gate-overlay {
     position: fixed;
     inset: 0;
@@ -540,16 +522,6 @@
   .upload-gate-scanning p { margin-top: 12px; text-align: center; }
   @keyframes upload-gate-spin { to { transform: rotate(360deg); } }
 
-  /* ---------- Background pan & zoom crop — 2026-09-11, per Martin.
-     Reuses the .upload-gate-box shell (same show/hide, same buttons) but
-     wider, since it needs room for the crop stage. No fixed frame — the
-     background fills the page behind everything via body's own
-     background-size: cover; background-position: center (unchanged by
-     this), so the stage previews roughly what cover+center will actually
-     show, at THIS window's aspect ratio, and the user just drags/zooms
-     until it looks right. Same engine as settings.html's own bg crop,
-     duplicated rather than shared per this app's no-shared-file
-     convention. ---------- */
   .bg-crop-box { max-width: 480px; }
   .bg-crop-stage {
     position: relative;
@@ -577,11 +549,6 @@
   .swatch.white { background: #ffffff; border-color: #cfcfd3; }
   .swatch.black { background: #111114; }
 
-  /* Upload / White / Black are the three "custom" slots — unlike the
-     preset swatches (which deliberately bundle one fixed accent with
-     their background, per Martin's spec), these don't have a single
-     obviously-right accent, so a manual picker shows up once one of
-     them is selected. Hidden by default; toggled via JS. */
   .accent-picker {
     display: none;
     align-items: center;
@@ -599,10 +566,6 @@
     color: var(--text-on-panel);
   }
 
-  /* Reusable color-swatch popup — replaces the native <input type="color">,
-     which per Martin doesn't work reliably everywhere it's used. A small
-     swatch button opens a flat grid of preset colors (own design, not a
-     copy of any OS color panel) instead of the browser's native picker. */
   .color-swatch-wrap { position: relative; display: inline-block; }
   .color-swatch-btn {
     width: 44px;
@@ -745,7 +708,6 @@
     box-shadow: 0 0 0 3px var(--accent-ring);
   }
 
-  /* ---------- Integrations (Features step, 2026-10-06) ---------- */
   .integ-row { align-items: center; }
   .integ-status { margin: 4px 0 0; font-size: 0.76rem; font-weight: 700; color: var(--text-muted); }
   .integ-status.on { color: #2f7d54; }
@@ -824,59 +786,28 @@
   /* Mock email verification, same "click stands in for opening the
      emailed link" convention as Settings > Account's Edit Profile
      modal — no real mail server behind this build either. */
-  .email-verify-row {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 10px;
-  }
-  /* Visibility is driven entirely by this class, not the "hidden"
-     content attribute — an author rule like the display:flex above
-     always beats the UA's default [hidden]{display:none} regardless
-     of selector specificity, so relying on the attribute here left
-     the row (and its red-X icon) visible even with an empty email
-     field. One mechanism, no fighting rules. */
-  .email-verify-row.is-hidden { display: none; }
-  .btn-verify {
-    background: transparent;
-    color: var(--text-on-panel);
-    border: 2px solid var(--text-on-panel);
-    font-weight: 700;
-    font-style: italic;
-    font-size: 0.85rem;
-    padding: 8px 18px;
-    border-radius: var(--window-radius);
-    cursor: pointer;
-    transition: background 0.15s ease, transform 0.08s ease;
-  }
-  .btn-verify:hover { background: var(--control-hover); }
-  .btn-verify:active { transform: scale(0.99); }
-  .btn-verify:disabled { opacity: 0.55; cursor: default; background: none; }
-  .btn-resend {
-    background: none;
-    border: none;
-    color: var(--text-on-panel);
-    opacity: 0.75;
-    font-weight: 700;
-    font-size: 0.8rem;
-    text-decoration: underline;
-    cursor: pointer;
-    padding: 4px 2px;
-  }
-  .btn-resend:hover { opacity: 1; }
-  .email-verify-status { display: inline-flex; align-items: center; }
-  .verify-icon {
-    width: 22px;
-    height: 22px;
-    fill: none;
-    stroke-width: 1.65;
-    stroke-linecap: butt;
-    stroke-linejoin: miter;
-  }
-  .verify-icon.verify-x { stroke: #d92626; }
-  .verify-icon.verify-check { stroke: #1f9d55; }
-  .verify-icon.is-hidden { display: none; }
+  .em-box { margin-top: 12px; max-width: 480px; padding: 14px 16px; border-radius: var(--window-radius); background: var(--control-bg); }
+  .em-box.is-hidden, .em-step.is-hidden { display: none; }
+  .em-step { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .em-t { flex: 1; min-width: 180px; display: flex; flex-direction: column; gap: 2px; }
+  .em-t b { font-size: 0.95rem; font-weight: 800; color: var(--text-on-panel); }
+  .em-t small { font-size: 0.82rem; font-weight: 600; color: var(--text-on-panel); opacity: 0.75; line-height: 1.35; }
+  .em-btn { flex: none; border: none; border-radius: 999px; padding: 9px 18px; background: var(--accent); color: #fff; font: inherit; font-size: 0.88rem; font-weight: 800; cursor: pointer; transition: filter 0.15s ease; }
+  .em-btn:hover { filter: brightness(1.08); }
+  .em-btn:disabled { opacity: 0.6; cursor: default; filter: none; }
+  .em-code-row { display: flex; align-items: center; gap: 12px; width: 100%; }
+  .em-code { width: 9.5ch; box-sizing: content-box; padding: 10px 14px; border: none; border-radius: 12px; background: transparent; color: var(--text-on-panel); font: inherit; font-size: 1.15rem; font-weight: 800; letter-spacing: 0.3em; font-variant-numeric: tabular-nums; outline: none; box-shadow: inset 0 0 0 2px var(--control-hover); }
+  .em-code:focus { box-shadow: inset 0 0 0 2px var(--accent); }
+  .em-code:disabled { opacity: 0.6; }
+  .em-link { border: none; background: none; padding: 4px 0; font: inherit; font-size: 0.85rem; font-weight: 700; color: var(--text-on-panel); opacity: 0.8; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+  .em-link:hover { opacity: 1; }
+  .em-link:disabled { opacity: 0.45; cursor: default; }
+  .em-done { gap: 10px; }
+  .em-done svg { width: 24px; height: 24px; fill: none; stroke: #1f9d55; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .em-done b { font-size: 0.95rem; font-weight: 800; color: #1f9d55; }
+  .btn-submit.wait { opacity: 0.5; cursor: not-allowed; filter: none; }
+  .submit-hint { margin: 10px 0 0; text-align: right; font-size: 0.85rem; font-weight: 700; color: #d92626; }
+  .submit-hint.is-hidden { display: none; }
 
   .submit-row {
     display: flex;
@@ -1099,8 +1030,6 @@
   body.potato-mode h1.title {
     transform: none !important;
   }
-  /* Emoji icons (2026-10-01, per Martin): icons that show a thing are emoji;
-     buttons and action icons stay line icons. */
   /* Each emoji is an inline SVG sized by font-size (1em box), so it is
      exactly as big as its box and sits dead center. The svg rule undoes
      the line-icon styles (stroke, fill:none, opacity) that the parent
@@ -1109,7 +1038,6 @@
   .emo svg { display: block; width: 100%; height: 100%; fill: initial; stroke: none; opacity: 1; }
   .theme-row .mode-toggle-icon .emo { font-size: 18px; }
 
-  /* ---------- Mode step (2026-10-04): Incognito / Classic ---------- */
   .mode-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 14px; }
   .mode-option { display: flex; flex-direction: column; gap: 8px; text-align: left; margin: 0; background: var(--control-bg); border: 2px solid transparent; border-radius: var(--window-radius); padding: 22px 20px; font-family: inherit; color: var(--text-dark); cursor: pointer; appearance: none; -webkit-appearance: none; transition: border-color 0.15s ease, transform 0.08s ease; }
   .mode-option:hover { transform: translateY(-1px); }
@@ -1118,7 +1046,6 @@
   .mode-option[hidden] { display: none; }
   .mode-name { font-weight: 800; font-size: 1.1rem; }
   .mode-desc { font-size: 0.82rem; font-weight: 600; color: var(--text-muted); line-height: 1.45; }
-  /* Plus stands out (2026-10-21, Martin: "a different color like to stand out", then "the color of the fruit punch logo"): Punch, the logo gradient #FF7A50 -> #E5484D, whatever the accent is. Dark text on it: white fails AA on both stops. */
   .mode-option[data-mode="plus"] { background: color-mix(in srgb, #FF7A50 18%, var(--control-bg)); }
   .mode-option[data-mode="plus"][aria-checked="true"] { border-color: #E5484D; box-shadow: 0 0 0 2px rgb(229 72 77 / 0.3); }
   .mode-option[data-mode="plus"]:focus-visible { box-shadow: 0 0 0 3px rgb(229 72 77 / 0.45); }
@@ -1128,27 +1055,12 @@
   .btn-next:disabled { opacity: 0.5; cursor: not-allowed; }
   body.potato-mode .mode-option { transition: none; }
 
-  /* Official app logos (2026-10-19): the files Martin added in public/brand/.
-     Only ever resized, never changed (Google's and Canva's brand rules). A
-     brand-slot is an empty space the same size, so names line up where an app
-     has no logo yet (OneDrive). */
   .canva-mark { width: 20px; height: 20px; flex: none; display: block; border-radius: 50%; background: center / contain no-repeat url("/brand/canva-mark.svg"); }
   .drive-mark { width: 20px; height: 20px; flex: none; display: block; background: center / contain no-repeat url("/brand/google-drive.png"); }
   .brand-slot { width: 20px; height: 20px; flex: none; display: block; }
-  /* Integrations rows (2026-10-21, Martin): no empty space before "OneDrive" until its logo is uploaded, so the name lines up with its description. Menus keep the slot so their names stay in a column. */
   .integ-name .brand-slot { display: none; }
   .feature-title.integ-name { display: flex; align-items: center; gap: 8px; }
 
-  /* ==========================================================================
-     Fullscreen onboarding (2026-10-28, Martin's design, behind the
-     fullscreen switch). Picking Fullscreen under Window type turns
-     this page into this view; picking Windowed turns it back. It's a second
-     face on the same steps: every choice goes through the controls above
-     (mode, dark mode, apps, Potato, name, email, Submit), so saving, Plus
-     checkout and the draft work the same. Everything here sits under .fs.
-     Design rules pass: no glow blob, neutral selection rings, rows instead of
-     three boxes in a row, no hover fades, AA contrast light and dark.
-     ========================================================================== */
   .fs { display: none; }
   body.fs-on { padding: 0 !important; display: block !important; background: var(--fs-sheet, #f5f5f7) !important; background-image: none !important; }
   body.fs-on > * .page, body.fs-on .page { display: none !important; }
@@ -1227,7 +1139,7 @@
   body.potato-mode .fs .pp-step-in { animation: none; }
   @media (prefers-reduced-motion: reduce) { .fs .pp-step-in { animation: none; } }
 
-  .fs .ob { flex: 1; width: min(948px, 100%); margin: 0 auto; padding: 16px 24px 0; } /* the card is 900px, like the Windowed onboarding card (2026-10-30) */
+  .fs .ob { flex: 1; width: min(948px, 100%); margin: 0 auto; padding: 16px 24px 0; }
   .fs .ob-card { padding: 28px; border-radius: 28px; background: var(--panel); display: flex; flex-direction: column; gap: 24px; }
   /* progress: one bar in four parts, filled up to the step you're on */
   .fs .ob-prog { display: flex; flex-direction: column; gap: 8px; }
@@ -1314,19 +1226,17 @@
   .fs .ob-thm.auto .ob-pv::after { content: ""; position: absolute; inset: 0; left: 50%; background: #1d1e27; }
   .fs .ob-thm.auto .ob-pv::before { content: ""; position: absolute; z-index: 1; left: 50%; top: 36px; right: 12px; height: 44px; border-radius: 0 8px 8px 0; background: #2a2b36; }
   .fs .ob-lays { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  /* 2026-10-30 (Martin's design): Window type is two plain buttons, Theme is the Fullscreen theme (IS for now, more later),
-     Mode is Light / Dark / System in one compact row. Picked = the ink ring, like everywhere on this page. */
   .fs .ob-opt { display: flex; flex-direction: column; justify-content: center; gap: 2px; min-height: 72px; padding: 12px 20px; border-radius: 16px; background: var(--field); text-align: left; color: var(--ink); transition: box-shadow 0.15s ease; }
   .fs .ob-opt b { font-size: 16px; font-weight: 800; }
   .fs .ob-opt small { font-size: 14px; font-weight: 500; color: var(--ink-2); }
-  .fs .ob-opt:hover, .fs .ob-mode:hover { box-shadow: inset 0 0 0 2px var(--inner); }
-  .fs .ob-opt[aria-pressed="true"], .fs .ob-opt[aria-pressed="true"]:hover, .fs .ob-mode[aria-pressed="true"], .fs .ob-mode[aria-pressed="true"]:hover { box-shadow: inset 0 0 0 2px var(--ink); }
+  .fs .ob-opt:hover, .fs .ob-modes .ob-mode:hover { box-shadow: inset 0 0 0 2px var(--inner); }
+  .fs .ob-opt[aria-pressed="true"], .fs .ob-opt[aria-pressed="true"]:hover, .fs .ob-modes .ob-mode[aria-pressed="true"], .fs .ob-modes .ob-mode[aria-pressed="true"]:hover { box-shadow: inset 0 0 0 2px var(--ink); }
   .fs .ob-skin .ob-pv { height: 104px; background: color-mix(in srgb, var(--inner) 70%, var(--fs-sheet)); box-shadow: none; }
   .fs .ob-skin .lb { align-items: baseline; }
   .fs .ob-skin .lb small { font-size: 13px; font-weight: 600; color: var(--muted); }
   .fs .ob-modes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-  .fs .ob-mode { display: flex; align-items: center; justify-content: center; gap: 8px; height: 48px; padding: 0 12px; border-radius: 14px; background: var(--field); color: var(--ink); font-size: 15px; font-weight: 800; transition: box-shadow 0.15s ease; }
-  .fs .ob-mode svg.i { width: 18px; height: 18px; color: var(--ink-2); }
+  .fs .ob-modes .ob-mode { display: flex; align-items: center; justify-content: center; gap: 8px; height: 48px; padding: 0 12px; border-radius: 14px; background: var(--field); color: var(--ink); font-size: 15px; font-weight: 800; transition: box-shadow 0.15s ease; }
+  .fs .ob-modes .ob-mode svg.i { width: 18px; height: 18px; color: var(--ink-2); }
   .fs .ob-lay .sub { padding: 0 4px; margin-top: -4px; font-size: 13px; font-weight: 600; color: var(--muted); }
   .fs .ob-lay .ob-pv { height: auto; aspect-ratio: 16 / 9; background: none; }
   .fs .ob-lay .ob-pv svg { display: block; width: 100%; height: 100%; }
@@ -1376,6 +1286,8 @@
   /* the buttons at the bottom */
   .fs .ob-nav { display: flex; align-items: center; gap: 12px; padding-top: 4px; }
   .fs .ob-nav .hint { flex: 1; text-align: right; font-size: 13px; font-weight: 700; color: var(--muted); }
+  .fs .ob-nav .hint.bad { color: #e5484d; }
+  .fs .ob-nav .pp-btn.wait { opacity: 0.5; cursor: not-allowed; }
   .fs .ob-nav .pp-btn { min-width: 132px; }
 
   /* all set */
@@ -1407,7 +1319,7 @@
     .fs .ob { padding: 8px 16px 0; }
     .fs .ob-card { padding: 24px 20px; border-radius: 24px; gap: 20px; }
     .fs .ob-thms, .fs .ob-lays { grid-template-columns: minmax(0, 1fr); }
-    .fs .ob-modes { gap: 8px; } .fs .ob-mode { padding: 0 8px; font-size: 14px; }
+    .fs .ob-modes { gap: 8px; } .fs .ob-modes .ob-mode { padding: 0 8px; font-size: 14px; }
     .fs .ob-lay { display: grid; grid-template-columns: 112px minmax(0, 1fr); grid-template-rows: auto auto; column-gap: 12px; row-gap: 2px; align-items: center; }
     .fs .ob-lay .ob-pv { grid-row: 1 / 3; }
     .fs .ob-lay .lb { align-self: end; }
@@ -1421,12 +1333,10 @@
     .fs #fsApps .ob-row > :is(.btn, .ob-st), .fs #fsExtras .ob-row > .btn { margin-left: 44px; }
     .fs .ob-form { grid-template-columns: minmax(0, 1fr); }
     .fs .ob-me { flex-wrap: wrap; }
-    .fs .ob-nav .hint { display: none; }
+    .fs .ob-nav .hint:not(.bad) { display: none; }
     .fs .ob-nav .pp-btn { flex: 1; min-width: 0; }
   }
   .bg-crop-stage.round { border-radius: 50%; }
-  /* the emailed code (2026-11-06) */
-  .email-code { width: 132px; letter-spacing: .25em; text-align: center; font-variant-numeric: tabular-nums; margin: 0; }
 </style>
 </head>
 <body>
@@ -1449,7 +1359,6 @@
 
       <div class="card-inner">
       <div class="panel">
-        <!-- MODE (2026-10-04): Incognito for everyone, Classic for 13+ -->
         <section class="step-section" data-section="mode">
           <h2 class="section-label">Choose how Averages works for you</h2>
           <div class="mode-options" id="modeOptions" role="radiogroup" aria-label="Mode">
@@ -1461,8 +1370,6 @@
               <span class="mode-name">Classic</span>
               <span class="mode-desc">Syncs your settings and connects Canva, Google Drive and OneDrive. Ages 13+.</span>
             </button>
-            <!-- Plus (2026-10-21): Classic with the Averages Plus subscription. Shown only when
-                 billing is on (GET /billing/status) and they're 13+; checkout opens when setup is done. -->
             <button type="button" class="mode-option" data-mode="plus" role="radio" aria-checked="false" data-feature="billing">
               <span class="mode-name">Plus <span class="mode-price">$2.99/mo</span></span>
               <span class="mode-desc">Everything in Classic, plus notifications, calendar sync and early features.</span>
@@ -1479,9 +1386,9 @@
         <section class="step-section" data-section="theme">
           <h2 class="section-label">Choose your window type</h2>
           <div class="window-options">
-            <button type="button" class="window-option" data-shape="windowed" aria-pressed="false">Windowed</button>
-            <!-- Fullscreen (2026-10-28): onboarding only, behind the fullscreen switch. -->
+            <!-- Fullscreen comes first and is the default while the fullscreen switch is on; hidden while it's off. -->
             <button type="button" class="window-option" data-shape="fullscreen" data-feature="fullscreen" aria-pressed="false">Fullscreen</button>
+            <button type="button" class="window-option" data-shape="windowed" aria-pressed="false">Windowed</button>
           </div>
 
           <h2 class="section-label">Choose your background &amp; color</h2>
@@ -1537,14 +1444,22 @@
             <label class="field-label" for="emailInput" style="margin-top: 22px;">Email <span class="optional">(optional)</span></label>
             <input type="email" id="emailInput" class="name-input" placeholder="you@example.com">
             <div class="error-text" id="emailError">Enter a valid email address.</div>
-            <div class="email-verify-row is-hidden" id="emailVerifyRow">
-              <button type="button" class="btn-verify" id="emailVerifyBtn">Verify</button>
-              <input type="text" id="emailCodeInput" class="name-input email-code is-hidden" inputmode="numeric" maxlength="6" placeholder="6-digit code" autocomplete="one-time-code" aria-label="The 6-digit code we emailed you">
-              <button type="button" class="btn-resend" id="emailResendBtn">Resend</button>
-              <span class="email-verify-status" id="emailVerifyStatus" aria-live="polite">
-                <svg class="verify-icon verify-x" id="verifyIconX" viewBox="0 0 24 24" aria-label="Not verified"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg>
-                <svg class="verify-icon verify-check is-hidden" id="verifyIconCheck" viewBox="0 0 24 24" aria-label="Verified"><circle cx="12" cy="12" r="10"/><path d="M8 12.5l2.5 2.5L16 9"/></svg>
-              </span>
+            <div class="em-box is-hidden" id="emailVerifyRow" aria-live="polite">
+              <div class="em-step" id="emStepSend">
+                <span class="em-t"><b>Verify your email</b><small>We'll send a 6-digit code to this address.</small></span>
+                <button type="button" class="em-btn" id="emailVerifyBtn">Send code</button>
+              </div>
+              <div class="em-step is-hidden" id="emStepCode">
+                <span class="em-t"><b>Enter the code</b><small id="emCodeSub">We sent it to your email. It works for 10 minutes.</small></span>
+                <div class="em-code-row">
+                  <input type="text" id="emailCodeInput" class="em-code" inputmode="numeric" maxlength="6" placeholder="000000" autocomplete="one-time-code" aria-label="The 6-digit code we emailed you">
+                  <button type="button" class="em-link" id="emailResendBtn">Send a new code</button>
+                </div>
+              </div>
+              <div class="em-step em-done is-hidden" id="emStepDone">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M7.5 12.5l3 3 6-6.5"/></svg>
+                <b>Email verified</b>
+              </div>
             </div>
             </div>
 
@@ -1552,6 +1467,7 @@
               <button class="btn-back" data-back="features">Back</button>
               <button class="btn-submit" id="submitBtn">Submit</button>
             </div>
+            <p class="submit-hint is-hidden" id="submitHint" role="status">Verify or delete your email to continue.</p>
           </div>
 
           <div class="complete-state" id="completeState">
@@ -1601,13 +1517,6 @@
     </div>
   </div>
 
-  <!-- ---------- Background pan & zoom — 2026-09-11, per Martin: uploaded
-       backgrounds should be croppable here too, same as Settings. Runs
-       right after the upload gate's scan clears. Styled off this page's
-       own .upload-gate-* shell (opacity/visibility show, not the
-       .editor-overlay one settings.html uses — that class doesn't exist
-       here) rather than sharing markup, per this app's own
-       no-shared-file convention. ---------- -->
   <div class="upload-gate-overlay bg-crop-overlay" id="bgCropOverlay">
     <div class="upload-gate-box bg-crop-box" id="bgCropBox" role="dialog" aria-modal="true" aria-labelledby="bgCropTitle">
       <h2 id="bgCropTitle">Position Background</h2>
@@ -1623,10 +1532,6 @@
     </div>
   </div>
 
-
-  <!-- ---------- Fullscreen onboarding (2026-10-28, Martin's design). Shown when
-       Fullscreen is picked under Window type (fullscreen switch on).
-       Every control here drives the ones above; see the script at the end. ---------- -->
   <div class="fs" id="fsView" aria-hidden="true">
     <svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="fs-i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 10.75v5.75"/><circle cx="12" cy="7.6" r="1.2" fill="currentColor" stroke="none"/></symbol>
 <symbol id="fs-i-eyeoff" viewBox="0 0 24 24"><path d="M3 3l18 18"/><path d="M10.6 6.1A9.6 9.6 0 0 1 12 6c5 0 8.5 4 9.5 6a13 13 0 0 1-2.6 3.4M6.2 7.6A13 13 0 0 0 2.5 12c1 2 4.5 6 9.5 6a9.3 9.3 0 0 0 4.2-1"/></symbol>
@@ -1654,7 +1559,7 @@
           <section class="ob-step" data-fs-step="mode" aria-labelledby="fsT1">
             <h1 id="fsT1">How should Averages work for you?</h1>
             <p class="lead">You can change this anytime in Settings.</p>
-            <p class="ob-note" id="fsKid" hidden><svg class="i" aria-hidden="true"><use href="#fs-i-info"/></svg><span>You said you're under 13, so you'll use Incognito. U.S. privacy law doesn't let apps keep information about kids under 13 without a parent's OK.</span></p>
+            <p class="ob-note" id="fsKid" hidden><svg class="i" aria-hidden="true"><use href="#fs-i-info"/></svg><span>To comply with U.S. privacy law, under 13s will not have any data stored and will be put in Incognito mode.</span></p>
             <div class="ob-grp" id="fsModes" role="radiogroup" aria-label="Mode"></div>
           </section>
 
@@ -1713,11 +1618,6 @@
   </div>
 
   <script>
-    // Potato PC Mode on every page (2026-10-04, per Martin). The saved
-    // setting turns off all CSS animations and transitions, makes animate()
-    // calls and smooth scrolling instant, and drops the slanted page title.
-    // Same code as app/lib/theme-boot.ts, which runs it before first paint in
-    // the app; this copy covers the preview and pages theme-boot skips.
     (function () {
     var POTATO_CSS = "body.potato-mode,body.potato-mode *,body.potato-mode *::before,body.potato-mode *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important;filter:none!important;text-shadow:none!important}html:has(body.potato-mode){scroll-behavior:auto!important}body.potato-mode,body.potato-mode *{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif!important}body.potato-mode h1.title{font-style:normal!important;transform:none!important}body.potato-mode .trend.has-popup:focus-visible{outline:2px solid currentColor;outline-offset:2px}";
     function potatoOn() { return !!(document.body && document.body.classList.contains("potato-mode")); }
@@ -1853,18 +1753,6 @@
       return { close: closePopup };
     }
 
-    // ------------------------------------------------------------------
-    // (No Sync toggle here since 2026-10-21: Classic and Plus always sync,
-    // Incognito never does. Kept below for history.)
-    // Sync & Privacy default (2026-09-02, per Martin's request — "remove
-    // the [Login sync checkbox] and just have them enable it in
-    // onboarding"). This used to be a hand-off value inherited from a
-    // consent checkbox on login.html; that checkbox is gone now, so
-    // Sync & Privacy is a single setting owned entirely by this page —
-    // off by default, same as every other opt-in toggle in FEATURES,
-    // until the user explicitly turns it on below.
-    // ------------------------------------------------------------------
-
     const SWATCHES = [
       { id: 's_r2c7', accent: '#923424', img: 'data:image/png;base64,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' },
       { id: 's_r3c2', accent: '#9e4e29', img: 'data:image/png;base64,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' },
@@ -1885,15 +1773,6 @@
       { id: 's_r3c1', accent: '#952a35', img: 'data:image/png;base64,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' },
     ];
 
-    // Trimmed to just Performance and Sync & Privacy (2026-09-02, per
-    // Martin): those two are core enough to belong on the onboarding
-    // screen itself. The other, more skippable feature toggles that used
-    // to live here (Predicted grade display, Classmates indicator) were
-    // removed from this step rather than defaulted on — they're the kind
-    // of thing better discovered in Settings later, not decided during
-    // first-run setup. Messages (merge-by-sender) was re-added on
-    // 2026-09-02 then removed for good on 2026-09-04 (per Martin) — the
-    // whole merge-messages concept was dropped everywhere in the app.
     const FEATURES = [
       {
         category: 'Performance',
@@ -1954,16 +1833,6 @@
 
     goToStep('mode');
 
-    // ---------- Window type (Windowed) ----------
-    // This drives --window-radius globally, so every interactive element
-    // in the app content area (swatches, toggles, buttons, inputs)
-    // reflects the choice immediately — not just this one control.
-    // **Square removed 2026-09-02** — "Windowed" (rounded corners) is the
-    // only option this release. The click handling below still supports
-    // any number of `.window-option` buttons, so a future "Fullscreen"
-    // option (planned, not built yet — see the CSS comment above) can be
-    // added as a second button + a branch in applyWindowShape() without
-    // restructuring this.
     const windowOptions = document.querySelectorAll('.window-option');
     function applyWindowShape(shape) {
       const root = document.documentElement.style;
@@ -2084,12 +1953,6 @@
     }
 
     if (darkModeToggle) {
-      // Shared preference (2026-09-07) — same schoolagy_dark_mode
-      // localStorage flag settings.html's real Dark Mode toggle reads
-      // and writes, so a choice made either there or here follows the
-      // user everywhere else in the app instead of each page asking the
-      // OS fresh and disagreeing with the others. Defaults to whatever
-      // the OS is already set to when nothing's been chosen yet.
       const AVERAGES_DARK_MODE_KEY = 'schoolagy_dark_mode';
       const averagesSavedDarkPref = () => {
         try {
@@ -2097,7 +1960,6 @@
           if (v === 'dark') return true;
           if (v === 'light') return false;
         } catch {}
-        // Under 13 (Incognito only): dark by default (2026-10-04).
         let under13 = true;
         try { under13 = localStorage.getItem('schoolagy_13plus') !== 'yes'; } catch {}
         if (under13) return true;
@@ -2148,20 +2010,8 @@
       el.setAttribute('aria-pressed', 'true');
     }
 
-    // Each swatch image is cropped directly from Martin's actual
-    // Illustrator export at a larger, less-tight crop than the original
-    // pass (so it holds up when stretched over the full page instead of
-    // looking zoomed/blown-up), preserving the real highlight shape
-    // (arc/vignette position) instead of a hand-approximated flat fade.
-    // --accent is derived by sampling each swatch's average color,
-    // darkened slightly so it still reads well as a UI accent.
     let defaultSwatchEl = null;
     const DEFAULT_SWATCH_ID = 's_r2c8'; // matches the deep blue used as the page background in the original PDF mockup
-    // Tracks whatever background this Theme step currently has applied
-    // (preset image URL, an uploaded data URL, or 'white'/'black') so the
-    // Profile step's submit handler can save it into schoolagy_appearance
-    // alongside the accent — see the 2026-09-08 note further down, near
-    // submitBtn's click handler, for why this exists at all.
     let selectedBackgroundValue = null;
     SWATCHES.forEach((s, i) => {
       const el = document.createElement('div');
@@ -2187,19 +2037,6 @@
     if (!defaultSwatchEl) defaultSwatchEl = swatchGrid.querySelector('.swatch');
     if (defaultSwatchEl) defaultSwatchEl.click();
 
-    // ------------------------------------------------------------------
-    // Upload gate — NSFW-scan consent shown before every custom-image
-    // upload on this page (2026-09-04, per Martin). Continue hides the
-    // popup but keeps the whole page dimmed while the native OS file
-    // picker is open; picking a file swaps to a non-dismissible
-    // "scanning" pane, then the real upload logic runs. Cancelling the
-    // OS dialog (the native `cancel` event, where the browser supports
-    // it) or clicking the dimmed backdrop bails out with nothing
-    // uploaded. Only one upload trigger exists on this page (the
-    // background swatch), but this is written generically in case a
-    // second one is ever added, same shared-controller shape as
-    // settings.html's copy of this same flow.
-    // ------------------------------------------------------------------
     const uploadGateOverlay = document.getElementById('uploadGateOverlay');
     const uploadGateBox = document.getElementById('uploadGateBox');
     const uploadGateConsent = document.getElementById('uploadGateConsent');
@@ -2264,15 +2101,6 @@
       closeUploadGate();
     });
 
-    // ------------------------------------------------------------------
-    // Background pan & zoom — 2026-09-11, per Martin, same request and
-    // same engine as settings.html's own bg crop (duplicated rather than
-    // shared, per this app's no-shared-file convention — see the HTML
-    // comment above #bgCropOverlay). Runs right after the upload gate's
-    // scan clears, before extractDominantColor/applyBackground ever see
-    // the image, so the accent color and the saved background both come
-    // from what the user actually framed, not the raw upload.
-    // ------------------------------------------------------------------
     const bgCropOverlay = document.getElementById('bgCropOverlay');
     const bgCropStage = document.getElementById('bgCropStage');
     const bgCropImg = document.getElementById('bgCropImg');
@@ -2283,7 +2111,6 @@
       const ratio = (window.innerWidth || 1600) / (window.innerHeight || 1000);
       return Math.min(2.4, Math.max(1.2, ratio || 1.6));
     }
-    // opts (2026-10-28, the Fullscreen profile photo): { aspect, round, outW, title, text, confirm }.
     const BG_CROP_TEXT = { title: 'Position Background', text: 'Drag to move it. Use the slider to zoom.', confirm: 'Use Background' };
     function openBgCrop(dataUrl, onConfirm, opts) {
       opts = opts || {};
@@ -2614,10 +2441,6 @@
       featuresList.appendChild(block);
     });
 
-    // ---------- Integrations (2026-10-06, per Martin) ----------
-    // Above Performance in the Features list. Same apps and wording as
-    // Settings > Integrations; see that page for the full story. Canva
-    // connects in a new tab so nothing picked here is lost.
     const integrations = (function () {
       const APPS = [
         { id: 'canva', name: 'Canva', desc: 'Edit files in Canva, then turn them in.' },
@@ -2655,7 +2478,6 @@
       const connectedHere = new Set();   // connected during onboarding (undone if they switch to Incognito)
       const C = () => window.AveragesCloud || null;
 
-      // Logos (2026-10-19): OneDrive keeps an empty slot until it has one, so the names line up.
       const INTEG_MARK = { canva: '<span class="canva-mark" aria-hidden="true"></span>', gdrive: '<span class="drive-mark" aria-hidden="true"></span>', onedrive: '<span class="brand-slot" aria-hidden="true"></span>' };
       function row(a, status, action) {
         return `<div class="feature-row integ-row" data-app="${a.id}">
@@ -2672,7 +2494,6 @@
 
       let incognitoNow = false;
       function rowFor(a) {
-        // Incognito (2026-10-14): Canva is off (its sign-in needs our server).
         if (incognitoNow && a.id === 'canva') return row(a, { text: 'Off in Incognito mode' }, '');
         if (PREVIEW) {
           const on = previewOn.has(a.id);
@@ -2703,7 +2524,6 @@
       function render() { list.innerHTML = APPS.map(rowFor).join(''); }
       function focusRow(app) { const b = list.querySelector(`[data-app="${app}"] .integ-btn`); if (b) b.focus(); }
 
-      // Back from Canva (2026-11-03): ?canva=connected|cancelled|failed, read once and taken out of the address.
       const canvaBack = (function () {
         try {
           const q = new URLSearchParams(location.search);
@@ -2761,8 +2581,6 @@
           cloud.state = 'ready';
           // Google's sign-in script loads now, so Connect can open its window straight away.
           if (cfg.google) K.prepareGoogle().catch(() => {});
-          // Back from connecting (2026-10-26): Google Drive and OneDrive connect by leaving this
-          // page and coming back to it, so say how it went (the steps come back from the draft below).
           const back = typeof K.connectResult === 'function' ? K.connectResult() : null;
           if (back) {
             const name = back.app === 'gdrive' ? 'Google Drive' : 'OneDrive';
@@ -2789,10 +2607,6 @@
         }
         if (act === 'canva-retry' || act === 'canva-check') { loadCanva().then(() => focusRow('canva')); return; }
         if (act === 'canva-connect') {
-          // This tab, back to this page (2026-11-03, Martin: connecting "sends you to settings and
-          // disregards all the options you chose"). It used to open a new tab that finished on
-          // Settings, where nothing picked here exists yet. Now it goes the way Google Drive and
-          // OneDrive do: off to Canva and back here, with the steps kept by the drafts below.
           flash.hidden = true;
           canva.going = true;
           render();
@@ -2837,12 +2651,6 @@
         window.addEventListener('averages-cloud-change', () => { if (cloud.state === 'ready') render(); });
       }
 
-      // Incognito (2026-10-14, Martin: integrations in the Features step with
-      // Incognito on). Google Drive and OneDrive stay, through this browser's
-      // own sign-in: the page's Incognito flag is what tells averages-cloud.js
-      // to keep our server out of it. Canva is off. Switching modes undoes
-      // whatever was connected here under the other mode, since the two kinds
-      // of connection differ (ours on the server vs this browser's).
       let modeSeen = null;
       function setIncognito(on) {
         const locked = !!(INCOG && INCOG.locked);
@@ -2878,7 +2686,6 @@
     // immediately see and feel change.
     const potatoToggle = document.querySelector('[data-key="potatoMode"]');
     if (potatoToggle) {
-      // Start from the saved setting (2026-10-04), so Potato mode stays on if it already was.
       try { if ((JSON.parse(localStorage.getItem('schoolagy_settings_options') || '{}') || {}).potatoMode === true) potatoToggle.checked = true; } catch {}
       document.body.classList.toggle('potato-mode', potatoToggle.checked);
       potatoToggle.addEventListener('change', () => {
@@ -2886,8 +2693,6 @@
       });
     }
 
-    // ---------- Profile step ----------
-    // The photo picked in Fullscreen onboarding (2026-10-28); Windowed has no photo step.
     let fsChosenPhoto = null;
     const nameInput = document.getElementById('nameInput');
     const nameError = document.getElementById('nameError');
@@ -2895,11 +2700,6 @@
     const emailError = document.getElementById('emailError');
     const submitBtn = document.getElementById('submitBtn');
 
-    // ---------- Mode step (2026-10-04): Incognito / Classic ----------
-    // Classic is 13+ (the login page's checkbox, saved as schoolagy_13plus).
-    // Anyone else, or anyone we can't tell about, only gets Incognito.
-    // Incognito stores nothing about the student on our servers, so it also
-    // hides Sync and the email field below.
     let IS_13_PLUS = false;
     try { IS_13_PLUS = localStorage.getItem('schoolagy_13plus') === 'yes'; } catch {}
     const modeButtons = document.querySelectorAll('.mode-option');
@@ -2920,7 +2720,6 @@
           if (incognito) block.querySelectorAll('input[type="checkbox"]').forEach(c => { c.checked = false; });
         }
       });
-      // Integrations: Google Drive and OneDrive in Incognito too, through the browser only (2026-10-14).
       integrations.setIncognito(incognito);
       // Email: not in Incognito.
       const emailBlock = document.getElementById('emailBlock');
@@ -2935,13 +2734,9 @@
     } else {
       setMode(null);
     }
-    // Plus (2026-10-21): only for 13+ live sign-ins while the API says billing
-    // is on and set up. Someone who already has Plus sees it picked.
     let billingStatus = null;
     (async function () {
       const plusCard = document.querySelector('.mode-option[data-mode="plus"]');
-      // Shown first, then checked (2026-10-26, Martin: "show plus then check"): the card is up
-      // straight away for anyone who could get Plus, and goes away if billing turns out to be off.
       const hidePlus = () => {
         plusCard.hidden = true;
         if (accountMode === 'plus') setMode(document.querySelector('.mode-option[data-mode="classic"]').hidden ? 'incognito' : 'classic');
@@ -2975,57 +2770,55 @@
       if (!accountMode && t.dataset.step !== 'mode') { e.stopImmediatePropagation(); goToStep('mode'); modeHint.hidden = false; }
     }, true));
 
-    // Same "good enough for a mock" validation as the Email field in
-    // Settings > Account — optional here, but if something's typed it
-    // has to look like an address before Submit will accept it.
+    // The email is optional; if one is typed it has to look like an address.
     function isValidEmail(email) {
       return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
     }
-    // ---------- Mock email verification ----------
-    // Same convention as Settings > Account's Edit Profile modal: no
-    // real mail server behind this, so clicking "Verify" stands in for
-    // "the user opened the emailed link." The row only appears once
-    // something's actually typed, and any further edit to the address
-    // resets it back to unverified — a changed email always needs
-    // re-confirming, it doesn't just inherit the old address's status.
+    // Verify your email: the box under the field goes Send code -> Enter the code -> Email verified.
+    // Codes are real (API: POST /email/code and /email/verify). A changed address needs verifying again.
+    // Submit stays greyed while a typed address isn't verified.
     const emailVerifyRow = document.getElementById('emailVerifyRow');
     const emailVerifyBtn = document.getElementById('emailVerifyBtn');
     const emailResendBtn = document.getElementById('emailResendBtn');
-    const verifyIconX = document.getElementById('verifyIconX');
-    const verifyIconCheck = document.getElementById('verifyIconCheck');
+    const emailCodeInput = document.getElementById('emailCodeInput');
+    const submitHint = document.getElementById('submitHint');
     let emailVerified = false;
+    function emailStep(which) {
+      ['Send', 'Code', 'Done'].forEach(k => document.getElementById('emStep' + k).classList.toggle('is-hidden', k !== which));
+    }
+    function emailBlocking() { return !!emailInput.value.trim() && !emailVerified; }
+    function gateDraw() {
+      submitBtn.classList.toggle('wait', emailBlocking());
+      submitBtn.setAttribute('aria-disabled', emailBlocking() ? 'true' : 'false');
+      if (!emailBlocking()) submitHint.classList.add('is-hidden');
+    }
     function setEmailVerified(verified) {
       emailVerified = verified;
-      // .hidden doesn't reliably reflect to the "hidden" content
-      // attribute on inline SVG elements in every browser (confirmed
-      // via a headless Chromium check: the property read back true but
-      // the attribute never actually landed on the element) — toggling
-      // a real CSS class sidesteps that instead of depending on it.
-      verifyIconX.classList.toggle('is-hidden', verified);
-      verifyIconCheck.classList.toggle('is-hidden', !verified);
-      emailVerifyBtn.disabled = verified;
-      emailVerifyBtn.textContent = verified ? 'Verified' : 'Verify';
+      if (verified) emailStep('Done');
+      gateDraw();
     }
+    window.__obSetEmailVerified = setEmailVerified;
     emailInput.addEventListener('input', () => {
       emailError.classList.remove('show');
       const hasValue = !!emailInput.value.trim();
       emailVerifyRow.classList.toggle('is-hidden', !hasValue);
-      if (hasValue) setEmailVerified(false); // any edit needs re-verifying
-      emailCodeInput.classList.add('is-hidden'); emailCodeInput.value = '';
+      emailVerified = false;
+      emailStep('Send');
+      emailVerifyBtn.disabled = false; emailVerifyBtn.textContent = 'Send code';
+      emailCodeInput.value = '';
+      gateDraw();
     });
-    // Real codes (2026-11-06, Martin: the code never arrived; it was a stand-in): Verify emails a 6-digit code
-    // (POST /email/code, Cloudflare Email Service) and typing it checks it (POST /email/verify). See the API's
-    // src/emailCode.ts. Both looks of this page use window.__obEmail.
     const OB_API = /(^|\.)averages\.io$/.test(location.hostname) ? 'https://api.averages.io' : 'http://localhost:8787';
     const EMAIL_SAY = {
       bad_email: "That doesn't look like an email address.",
       email_rejected: "That address can't get email from us. Check it, or try another.",
-      email_busy: 'We\'re sending a lot of codes right now. Try again in a few minutes.',
-      email_not_configured: 'Codes aren\'t working yet. You can add your email later in Settings.',
+      email_busy: "We're sending a lot of codes right now. Try again in a few minutes.",
+      email_not_configured: "Codes aren't working yet. Delete your email for now and add it later in Settings.",
       not_in_incognito: 'Not needed in Incognito.',
       wrong_code: "That code isn't right. Check the email and try again.",
       code_expired: 'That code ran out. Send a new one.',
       rate_limited: 'Too many tries. Wait a few minutes, then try again.',
+      network: "You're offline. Check your connection and try again.",
     };
     let emailToken = '', emailTokenFor = '';
     async function emailPost(path, body) {
@@ -3036,33 +2829,33 @@
       if (!r.ok) throw (j && j.error) || (r.status === 429 ? 'rate_limited' : 'email_failed');
       return j;
     }
+    // Shared by both looks of this page.
     window.__obEmail = {
       async send(email) { const j = await emailPost('/email/code', { email }); emailToken = j.token || ''; emailTokenFor = email.trim().toLowerCase(); },
       async check(email, code) { if (!emailToken || emailTokenFor !== email.trim().toLowerCase()) throw 'code_expired'; await emailPost('/email/verify', { email, code, token: emailToken }); },
-      say(e) { return EMAIL_SAY[e] || (e === 'network' ? 'You\'re offline. Check your connection and try again.' : "Couldn't send that. Try again in a moment."); },
+      say(e) { return EMAIL_SAY[e] || "Couldn't send that. Try again in a moment."; },
     };
-    const emailCodeInput = document.getElementById('emailCodeInput');
     const emailSay = (text) => { emailError.textContent = text; emailError.classList.add('show'); };
-    async function emailSend(btn, label) {
+    async function emailSend(btn, again) {
       const val = emailInput.value.trim();
       if (!val || !isValidEmail(val)) { emailSay('Enter a valid email address.'); emailInput.focus(); return; }
       emailError.classList.remove('show');
+      const label = btn.textContent;
       btn.disabled = true; btn.textContent = 'Sending…';
       try {
         await window.__obEmail.send(val);
-        emailCodeInput.classList.remove('is-hidden'); emailCodeInput.value = ''; emailCodeInput.focus();
-        btn.textContent = label === 'Verify' ? 'Sent' : 'Sent again';
-        setTimeout(() => { if (!emailVerified) btn.textContent = label; }, 2500);
-      } catch (e) { emailSay(window.__obEmail.say(e)); btn.textContent = label; }
-      finally { if (!emailVerified) btn.disabled = false; }
+        document.getElementById('emCodeSub').textContent = (again ? 'Sent a new code to ' : 'We sent it to ') + val + '. It works for 10 minutes.';
+        emailStep('Code'); emailCodeInput.value = ''; emailCodeInput.focus();
+      } catch (e) { emailSay(window.__obEmail.say(e)); }
+      finally { btn.disabled = false; btn.textContent = label; }
     }
-    emailVerifyBtn.addEventListener('click', () => emailSend(emailVerifyBtn, 'Verify'));
-    emailResendBtn.addEventListener('click', () => emailSend(emailResendBtn, 'Resend'));
+    emailVerifyBtn.addEventListener('click', () => emailSend(emailVerifyBtn, false));
+    emailResendBtn.addEventListener('click', () => emailSend(emailResendBtn, true));
     emailCodeInput.addEventListener('input', async () => {
       emailCodeInput.value = emailCodeInput.value.replace(/\D/g, '').slice(0, 6);
       if (emailCodeInput.value.length !== 6) return;
       emailCodeInput.disabled = true;
-      try { await window.__obEmail.check(emailInput.value.trim(), emailCodeInput.value); emailError.classList.remove('show'); setEmailVerified(true); emailCodeInput.classList.add('is-hidden'); }
+      try { await window.__obEmail.check(emailInput.value.trim(), emailCodeInput.value); emailError.classList.remove('show'); setEmailVerified(true); }
       catch (e) { emailSay(window.__obEmail.say(e)); emailCodeInput.select(); }
       finally { emailCodeInput.disabled = false; }
     });
@@ -3072,8 +2865,6 @@
     const profileForm = document.getElementById('profileForm');
     const completeState = document.getElementById('completeState');
 
-    // Spaces are allowed (2026-11-03, Martin: names like "Mary Ann" or "De La Cruz"). Only a run of
-    // spaces becomes one, and the ends are trimmed when it's saved.
     nameInput.addEventListener('input', () => {
       if (/\s\s|^\s/.test(nameInput.value)) {
         const caret = nameInput.selectionStart;
@@ -3095,16 +2886,6 @@
       }
     });
 
-    // Fills in the completion screen's "here's what you chose" recap:
-    // window shape (text, read straight off the selected button) and
-    // the accent color (a dot, not a name — swatches don't have
-    // human-friendly color names to show), plus how many optional
-    // features got turned on out of the total available.
-    // **2026-09-02**: dropped the trailing " window" from the template
-    // (used to read "Rounded window") since the remaining option's own
-    // label, "Windowed," already says so — "Windowed window" would have
-    // been redundant. Reads fine for a future second option too (e.g.
-    // "Fullscreen · 3 of 5 features enabled").
     function updateCompletionRecap() {
       const recap = document.getElementById('completeRecap');
       if (!recap) return;
@@ -3118,12 +2899,6 @@
       `;
     }
 
-    // ---------- Draft: keep the steps when the page is left and comes back (2026-10-26) ----------
-    // Martin: connecting an app here and signing in to it "resets your progress but keeps the
-    // app auth". Google Drive and OneDrive connect by leaving this page for Google or Microsoft
-    // and coming back, which reloaded onboarding at step 1 with every choice gone. Now the
-    // choices are kept in this tab (sessionStorage, cleared by sign-out and when onboarding is
-    // done) whenever the page is left, and put back when it loads again, on the same step.
     const ONBOARD_DRAFT = 'averages_onboard_draft';
     function saveDraft() {
       if (!accountMode) return;   // nothing picked yet
@@ -3195,37 +2970,17 @@
       nameError.classList.remove('show');
       const emailVal = emailInput.value.trim();
       if (emailVal && !isValidEmail(emailVal)) {
+        emailError.textContent = 'Enter a valid email address.';
         emailError.classList.add('show');
         emailInput.focus();
         return;
       }
       emailError.classList.remove('show');
+      if (emailBlocking()) { submitHint.classList.remove('is-hidden'); return; }
 
-      // Front-end only — real submit will create the Averages.io Profile
-      // server-side (tied to the Schoology user ID). A real request has
-      // network latency, so a brief loading state here (instead of an
-      // instant jump to "You're all set!") sets the right expectation
-      // rather than feeling like nothing happened.
-      //
-      // The name/email + Theme step's accent/background DO get saved for
-      // real, though (2026-09-08, per Martin: the demo always showed
-      // "Martin"/"M" no matter what name you actually entered here, and
-      // separately, "wallpapers + accent colors don't save across
-      // pages"). Both bugs had the same root cause on this page: this
-      // whole form used to be genuinely front-end only, discarding every
-      // choice the moment "You're all set!" showed — there was no write
-      // to localStorage anywhere in this file. schoolagy_profile and
-      // schoolagy_appearance are the exact same shared-localStorage
-      // records settings.html's Account/Appearance sections already
-      // read and write (every other page's profile button + accent/
-      // background already apply them read-only), so saving here just
-      // makes this page's choices join the ones the rest of the app
-      // already respects, instead of vanishing the instant onboarding
-      // ends.
       try {
-        // Plus is Classic with the subscription (2026-10-21).
         const savedMode = accountMode === 'plus' ? 'classic' : (accountMode || 'incognito');
-        localStorage.setItem('schoolagy_account_mode', savedMode);   // 2026-10-04
+        localStorage.setItem('schoolagy_account_mode', savedMode);
         try { sessionStorage.removeItem('averages_onboard_draft'); } catch (e) {}   // done: no draft to come back to
         {
           let opts = {};
@@ -3233,18 +2988,15 @@
           // Potato PC Mode chosen here now carries into the app (it was never saved before).
           const potatoPick = document.querySelector('[data-key="potatoMode"]');
           if (potatoPick) opts.potatoMode = potatoPick.checked;
-          // Sync is always on in Classic and Plus, never in Incognito (2026-10-21).
           opts.syncAcrossDevices = savedMode === 'classic';
-          // Fullscreen or Windowed (2026-10-28): which pages the app opens (app/lib/theme-boot.ts).
           opts.windowType = document.body.classList.contains('fs-on') ? 'fullscreen' : 'windowed';
-          // The Fullscreen theme (2026-10-30): 'is' (Industry Standard) is the only one so far.
           if (opts.windowType === 'fullscreen') opts.fsTheme = 'is';
           localStorage.setItem('schoolagy_settings_options', JSON.stringify(opts));
         }
         localStorage.setItem('schoolagy_profile', JSON.stringify({
           name: nameInput.value.trim(),
           email: emailVal,
-          emailVerified: false,
+          emailVerified: !!emailVal && emailVerified,
           photo: fsChosenPhoto,
         }));
         const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
@@ -3289,18 +3041,6 @@
       }, 650);
     });
 
-
-    // ==================================================================
-    // Fullscreen onboarding (2026-10-28, Martin's design; switch:
-    // fullscreen, off by default). Picking Fullscreen under
-    // Window type turns this page into the Fullscreen view (#fsView);
-    // picking Windowed turns it back. It's only a second face: every
-    // choice goes through the controls above (setMode, the dark mode
-    // switch, the integration rows, Potato, the name and email boxes,
-    // Submit), so saving, Plus checkout, the draft and the redirect to
-    // Home work exactly as they do Windowed. Finishing here saves
-    // windowType 'fullscreen', so the app opens the Fullscreen pages (/IS/).
-    // ==================================================================
     (function fullscreenOnboarding() {
       const view = document.getElementById('fsView');
       const fsBtn = document.querySelector('.window-option[data-shape="fullscreen"]');
@@ -3313,6 +3053,7 @@
       const calm = () => document.body.classList.contains('potato-mode') || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
       const allowed = () => !!(window.AveragesFeatures && window.AveragesFeatures.on('fullscreen'));
       const FS_DRAFT = 'averages_onboard_fs';
+      const WIN_PICKED = 'averages_onboard_win';   // they went back to Windowed: don't open Fullscreen for them again
       const STEPS = [['mode', 'Mode'], ['look', 'Look'], ['apps', 'Apps'], ['you', 'You']];
       const TO_LIVE = { mode: 'mode', look: 'theme', apps: 'features', you: 'profile' };
       const FROM_LIVE = { mode: 'mode', theme: 'look', features: 'apps', profile: 'you' };
@@ -3406,7 +3147,6 @@
       function lookDraw() {
         $('fsLays').innerHTML = [['windowed', 'Windowed', 'A window over your own background.'], ['fullscreen', 'Fullscreen', 'Uses the whole screen. Our new look.']].map(([v, t, sub]) =>
           `<button class="ob-opt" type="button" data-fs-lay="${v}" aria-pressed="${v === 'fullscreen'}"><b>${t}</b><small>${sub}</small></button>`).join('');
-        // The Fullscreen themes (2026-10-30): IS (Industry Standard) for now; more will join it here.
         $('fsSkins').innerHTML = FS_SKINS.map(([v, t, full]) =>
           `<button class="ob-thm ob-skin" type="button" data-fs-skin="${v}" aria-pressed="${fsSkin === v}"><span class="ob-pv ob-is" aria-hidden="true"><i class="isp-lg"></i><i class="isp-nm"></i><i class="isp-av"></i><i class="isp-rl"></i><i class="isp-sh"></i><i class="isp-h"></i><i class="isp-c1"></i><i class="isp-c2"></i><i class="isp-l1"></i><i class="isp-l2"></i><i class="isp-l3"></i></span><span class="lb">${t}<small>${full}</small></span></button>`).join('');
         const th = currentTheme();
@@ -3418,7 +3158,7 @@
       $('fsSkins').addEventListener('click', e => { const b = e.target.closest('[data-fs-skin]'); if (!b) return; fsSkin = b.dataset.fsSkin; lookDraw(); const again = $('fsSkins').querySelector(`[data-fs-skin="${fsSkin}"]`); if (again) again.focus({ preventScroll: true }); });
       $('fsLays').addEventListener('click', e => {
         const b = e.target.closest('[data-fs-lay]'); if (!b || b.dataset.fsLay !== 'windowed') return;
-        const logo = window.__averagesSplash; if (logo && logo.show) logo.show(1000); // both ways get the logo (2026-10-30)
+        const logo = window.__averagesSplash; if (logo && logo.show) logo.show(1000);
         leave();
       });
       $('fsThms').addEventListener('click', e => { const b = e.target.closest('[data-fs-thm]'); if (!b) return; setTheme(b.dataset.fsThm); lookDraw(); const again = $('fsThms').querySelector(`[data-fs-thm="${b.dataset.fsThm}"]`); if (again) again.focus({ preventScroll: true }); });
@@ -3531,9 +3271,8 @@
         avDraw();
       });
       $('fsName').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('fsNext').click(); } });
-      $('fsEmail').addEventListener('input', e => { emailInput.value = e.target.value.trim(); emailInput.dispatchEvent(new Event('input')); verified = false; codeSent = false; emailDraw(); });
+      $('fsEmail').addEventListener('input', e => { emailInput.value = e.target.value.trim(); emailInput.dispatchEvent(new Event('input')); verified = false; codeSent = false; emailDraw(); navDraw(); });
       $('fsEmail').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('fsNext').click(); } });
-      // Real codes (2026-11-06): window.__obEmail emails one and checks it (the API's src/emailCode.ts).
       const fsEmailBad = text => { const m = $('fsEmailMsg'); m.textContent = text; m.classList.add('bad'); };
       const fsSend = async (btn, again) => {
         const v = $('fsEmail').value.trim(); if (!emailOk(v)) return;
@@ -3547,7 +3286,7 @@
       $('fsCode').addEventListener('input', async e => {
         e.target.value = e.target.value.replace(/\D/g, '').slice(0, 6); if (e.target.value.length !== 6) return;
         e.target.disabled = true;
-        try { await window.__obEmail.check($('fsEmail').value.trim(), e.target.value); verified = true; emailDraw(); $('fsNext').focus({ preventScroll: true }); }
+        try { await window.__obEmail.check($('fsEmail').value.trim(), e.target.value); verified = true; window.__obSetEmailVerified(true); emailDraw(); navDraw(); $('fsNext').focus({ preventScroll: true }); }
         catch (err) { fsEmailBad(window.__obEmail.say(err)); }
         finally { e.target.disabled = false; if (!verified) e.target.select(); }
       });
@@ -3576,6 +3315,9 @@
         const need = step === 'mode' && !accountMode;
         const next = $('fsNext');
         if (!finishing) { next.innerHTML = last ? `Finish${ico('ok')}` : `Next${ico('chev-r')}`; next.disabled = need; }
+        const em = emailInput.value.trim(), waitEmail = last && !!em && !verified;
+        next.classList.toggle('wait', waitEmail && !finishing);
+        $('fsHint').classList.remove('bad');
         $('fsHint').textContent = need ? 'Pick one to continue.' : step === 'apps' ? 'You can skip these and connect later.' : '';
       }
       function draw(s) { if (s === 'mode') modesDraw(); else if (s === 'look') lookDraw(); else if (s === 'apps') appsDraw(); else if (s === 'you') youDraw(); else if (s === 'done') doneDraw(); }
@@ -3602,6 +3344,7 @@
         if (!nameInput.value.trim()) { $('fsName').classList.add('bad'); const m = $('fsNameMsg'); m.textContent = 'Add your first name.'; m.classList.add('bad'); $('fsName').focus(); return; }
         const em = emailInput.value.trim();
         if (em && !emailOk(em)) { $('fsEmail').classList.add('bad'); const m = $('fsEmailMsg'); m.textContent = "That doesn't look like an email address yet."; m.classList.add('bad'); $('fsEmail').focus(); return; }
+        if (em && !verified) { $('fsHint').textContent = 'Verify or delete your email to continue.'; $('fsHint').classList.add('bad'); return; }
         finishing = true;
         const next = $('fsNext'); next.disabled = true; next.textContent = 'Creating your profile…';
         $('fsBack').disabled = true;
@@ -3652,14 +3395,15 @@
         document.body.classList.remove('fs-on');
         view.setAttribute('aria-hidden', 'true');
         if (page) page.inert = false;
+        try { sessionStorage.setItem(WIN_PICKED, '1'); } catch (e) {}
         if (accentBefore) { applyAccent(accentBefore); accentBefore = null; }
         winBtn.click();
         goToStep(TO_LIVE[step] || 'theme');
         winBtn.focus({ preventScroll: true });
       }
-      // the logo for a second while the page turns into Fullscreen (2026-10-30, Martin), the same logo as the first open
       fsBtn.addEventListener('click', () => {
         if (on) return;
+        try { sessionStorage.removeItem(WIN_PICKED); } catch (e) {}
         const logo = window.__averagesSplash;
         if (logo && logo.show && allowed()) logo.show(1000);
         if (!enter()) { if (logo && logo.on) logo.hide(); winBtn.click(); }
@@ -3672,14 +3416,12 @@
       const integ = document.getElementById('integrationsCategory');
       if (integ) mo.observe(integ, { subtree: true, attributes: true, childList: true, characterData: true });
       // The switch can go off (or come in late): Fullscreen only while it's on.
-      if (window.AveragesFeatures && window.AveragesFeatures.ready) Promise.resolve(window.AveragesFeatures.ready).then(() => { if (on && !allowed()) leave(); else if (!on && pending) restore(); });
+      if (window.AveragesFeatures && window.AveragesFeatures.ready) Promise.resolve(window.AveragesFeatures.ready).then(() => { if (on && !allowed()) leave(); else start(); });
 
       // Left for Google or Microsoft sign-in and came back: same view, same step.
       window.addEventListener('pagehide', () => {
         if (finishing) return;
         try {
-          // The accent too (2026-11-03, Martin: coming back from connecting reset the choices).
-          // The Windowed draft can't put a Fullscreen accent back, so it came back as Punch.
           const d = { on, step, seen, theme, accent: on ? accentNow() : null, accentBefore, photo: photo && photo.length < 400000 ? photo : null };
           sessionStorage.setItem(FS_DRAFT, JSON.stringify(d));
         } catch (e) {}
@@ -3698,7 +3440,15 @@
           if (on && typeof d.accent === 'string' && ACCENTS.some(x => x[2] === d.accent.toLowerCase())) { applyAccent(d.accent.toLowerCase()); draw(step); }
         }
       }
-      if (pending && allowed()) restore();
+      // Fullscreen is the default while the switch is on: the page opens in it unless they picked Windowed.
+      function start() {
+        if (on || !allowed()) return;
+        if (pending) { restore(); return; }
+        let picked = false;
+        try { picked = sessionStorage.getItem(WIN_PICKED) === '1'; } catch (e) {}
+        if (!picked) enter({ focus: false });
+      }
+      start();
       window.__averagesFullscreen = { enter, leave, isOn: () => on };
     })();
   </script>

@@ -1,15 +1,4 @@
-/*
- * Turning in work from the Fullscreen pages (2026-10-28): what the Turn in
- * popup (Home, Assignments, the course hub) does for real. The pages keep
- * their own look; every step here is the Windowed app's own code:
- *   - files from this device: public/js/averages-submit.js (MD5, upload slot,
- *     bytes through our API, then the turn-in);
- *   - Google Drive and OneDrive: public/js/averages-cloud.js (the student's
- *     own sign-in, the file list, downloading or a view link);
- *   - Canva: our API's /canva/designs and averages-submit.js's export;
- *   - a written answer: averages-submit.js's submitText.
- * Loaded by build-fs only on pages that turn things in. window.FST.
- */
+// Turning in work from the Fullscreen pages: what the Turn in popup (Home, Assignments, the course hub) does for real.
 (function () {
   'use strict';
   if (window.FST) return;
@@ -72,7 +61,6 @@
     /** The assignment's description, points, attachments and the student's turn-ins (newest first). */
     load: function (section, id, disc) {
       var z = tz();
-      // a discussion (2026-11-06): its own read, and nothing turned in here (it's answered on Schoology)
       return Promise.all([
         get('/data/assignment?section=' + encodeURIComponent(section) + '&id=' + encodeURIComponent(id) + (disc ? '&type=discussion' : '') + (z ? '&tz=' + encodeURIComponent(z) : '')).catch(function () { return null; }),
         disc ? Promise.resolve([]) : S().then(function (s) { return s.history({ section: section, assignment: id }); }).catch(function () { return []; }),

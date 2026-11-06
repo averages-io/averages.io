@@ -7,18 +7,10 @@
 <link rel="stylesheet" href="https://use.typekit.net/gsk6off.css">
 <style>
   :root {
-    /* Same accent system as login.html / onboarding.html — whatever the
-       user picked in onboarding drives this. Defaulted here to the warm
-       red/orange from Martin's draft rather than the onboarding default
-       blue, since that's the swatch this mock is built around. */
     --accent: #d94a2b;
     --accent-dark: #a8331a;
     --accent-ring: rgb(from var(--accent) r g b / 0.35);
 
-    /* Sampled directly from Martin's Home.pdf background (pixel-picked
-       off the rendered PDF) rather than approximated — lighter salmon-
-       orange corner and a much darker, more saturated blood-red corner
-       than what was here before. */
     --page-bg-start: #f17b53;
     --page-bg-end: #930500;
 
@@ -83,18 +75,6 @@
   *::-webkit-scrollbar-thumb:hover { background-color: rgba(20, 21, 31, 0.45); }
   *::-webkit-scrollbar-corner { background: transparent; }
 
-  /* Declared so the browser themes ITS OWN chrome — scrollbars, the
-
-     overscroll gutter, form controls — against this page rather than
-
-     guessing. Without it Firefox drew a light-theme scrollbar over the
-
-     dark canvas and tinted it (Martin saw it as pink on a blue
-
-     background). LegacyPage's applyStoredTheme() updates both of these
-
-     to match whatever background the user actually saved. */
-
   html {
 
     color-scheme: dark;
@@ -102,7 +82,6 @@
     background-color: #0c0c0e;
 
   }
-
 
   html, body {
     margin: 0;
@@ -116,16 +95,6 @@
     overflow: hidden; /* scrolling now happens inside .page (see below), so
       the scrollbar sits at the edge of the app's own window/card instead of
       out at the browser's outer edge, over the wallpaper margin */
-    /* Neutral black instead of a baked-in accent gradient here —
-       2026-09-11, per Martin. This is only ever visible for a split
-       second on reload/navigation, before applyStoredTheme() (or this
-       page's own appearance-reading script) sets the user's actual
-       saved background over it. The old default was the sample
-       red-orange gradient baked into this file, which read as a real
-       glitch flashing in between pages; a neutral black reads as
-       "still loading" instead, and matches the app's own Black
-       preset (#0c0c0e) so it's not a color that appears nowhere else
-       in the app. */
     background-color: #0c0c0e;
     background-image: none;
     background-size: cover;
@@ -177,9 +146,6 @@
 
   .profile-menu-wrap { position: relative; flex-shrink: 0; }
 
-  /* No photo: an Apple-style monogram (2026-10-21, Martin: "make the default no pfp letters
-     look more like the apple ones"), the grey gradient and rounded white initials of a contact
-     with no picture. A photo replaces it (set inline as background-image). */
   .profile-btn {
     width: 42px;
     height: 42px;
@@ -198,8 +164,6 @@
     flex-shrink: 0;
   }
 
-  /* A photo has no ring (2026-10-23, Martin: "remove the ugly border if it is a custom upload");
-     the letter avatars keep theirs. Same size: the border goes clear and the photo fills it. */
   .profile-btn.has-photo { border-color: transparent; background-origin: border-box; background-repeat: no-repeat; }
 
   .profile-menu {
@@ -724,10 +688,6 @@
   }
   .nav-link.active .label { color: var(--text-dark); }
   .nav-link.active .dot { background: var(--accent); }
-  /* ---------- "More" overflow (2026-10-01, per Martin: "if the text has
-     to get ... we should add a more button on the far right side with a
-     list of the other options"). Labels never truncate: when they would,
-     the rightmost pages move into the More menu instead. ---------- */
   .nav-link[hidden], .nav-more[hidden], .nav-more-menu[hidden] { display: none; }
   /* While the More menu is open the whole bar sits above everything else on
      the page (sticky headers, pop-ups, the edit button go up to z-index 90),
@@ -790,8 +750,6 @@
   .nav-more-item.active { color: var(--text-dark); }
   .nav-more-item.active span { position: relative; display: inline-block; padding-bottom: 6px; margin-bottom: -6px; }
   .nav-more-item.active span::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; border-radius: 999px; background: var(--accent); }
-  /* Labels sit centered in the bar; the active page is underlined in the
-     accent color instead of marked with a dot (2026-10-01, per Martin). */
   .app-nav-inner .nav-link, .app-nav-inner .nav-more { justify-content: center; gap: 0; padding-top: 10px; padding-bottom: 10px; }
   .app-nav-inner .nav-link .dot, .app-nav-inner .nav-more .dot { display: none; }
   .app-nav-inner .nav-link .label, .app-nav-inner .nav-more .label { position: relative; padding: 6px 0; }
@@ -918,15 +876,6 @@
     border-bottom: 1px solid var(--border);
   }
   .editor-course-row:last-child { border-bottom: none; }
-  /* Swatch + popup replaces a bare native <input type="color">: the OS
-     color dialog it used to pop open on click behaved inconsistently
-     across browsers/platforms (Martin flagged it not working in every
-     place it showed up). Clicking the swatch now opens the SAME shared
-     color-swatch-popup component used for the course-color and
-     accent-color pickers elsewhere in the app (Martin asked for one
-     consistent picker everywhere) — one floating, viewport-clamped
-     48-color grid, reused across every course row via event delegation
-     (see bindColorPopovers) rather than one popup per row. */
   .color-swatch-wrap { position: relative; flex-shrink: 0; }
   .editor-course-swatch {
     display: block;
@@ -1100,7 +1049,6 @@
     cursor: pointer;
   }
   .editor-done:hover { background: var(--accent-dark); }
-  /* Phones (2026-10-03): nothing runs past the card's right edge */
   @media (max-width: 860px) {
     .card-grid { grid-template-columns: minmax(0, 1fr); }
     .col-left, .col-right { min-width: 0; }
@@ -1113,7 +1061,6 @@
   }
   .widget-block[hidden] { display: none !important; }   /* a widget turned off in Customize */
 
-  /* ---------- New Home widgets (2026-10-03) ---------- */
   .widget-empty { margin: 0; padding: 12px 0 4px; font-size: 0.8rem; font-weight: 700; color: var(--text-faint); }
   /* Recently graded */
   .rg-item { display: flex; align-items: center; gap: 11px; padding: 9px 0; border-bottom: 1px solid var(--border); }
@@ -1145,7 +1092,7 @@
   /* Summary card */
   .sum-card { position: relative; background: var(--panel-inner); border-radius: var(--window-radius-md); padding: 12px 16px 24px; margin-bottom: 16px; }
   .sum-card[hidden] { display: none; }
-  .sum-view { position: relative; overflow: hidden; transition: filter 260ms ease, opacity 260ms ease; }   /* category change: slower, 2026-10-04 (was 140ms) */
+  .sum-view { position: relative; overflow: hidden; transition: filter 260ms ease, opacity 260ms ease; }
   .sum-view.switching { filter: blur(6px); opacity: 0.35; }
   .sum-slide { display: flex; align-items: center; gap: 12px; }
   .sum-slide[data-href] { cursor: pointer; }
@@ -1228,7 +1175,6 @@
             <div id="todayList"></div>
           </div>
 
-          <!-- Recently graded (2026-10-03) -->
           <div class="widget-block" id="block-recent" data-widget="recent">
             <div class="section-head">
               <h2>Recently graded</h2>
@@ -1251,7 +1197,6 @@
             <div id="upcomingList"></div>
           </div>
 
-          <!-- Course updates (2026-10-03) -->
           <div class="today-block widget-block widget-messages" id="block-updates" data-widget="updates">
             <div class="today-head">
               <div class="today-date">Course updates</div>
@@ -1415,10 +1360,6 @@
   </nav>
 
   <script>
-    // ---- Links by id (2026-10-07, Martin) ----
-    // A real class (Schoology/Classroom ids are digits) links as
-    // assignment?id=<id> and course-home?id=<section id>; the sample classes
-    // (word ids like "apchem") keep ?course=&title=. Pages read both.
     function avgIsId(v) { return /^\d{1,24}$/.test(String(v == null ? '' : v)); }
     function avgCourseQ(course) { return (avgIsId(course) ? 'id=' : 'course=') + encodeURIComponent(course == null ? '' : course); }
     function avgAssignHref(course, title, id, extra) {
@@ -1427,11 +1368,6 @@
       return `assignment.html?course=${encodeURIComponent(course == null ? '' : course)}&title=${encodeURIComponent(title || '')}${avgIsId(id) ? `&id=${id}` : ''}${extra}`;
     }
 
-    // Potato PC Mode on every page (2026-10-04, per Martin). The saved
-    // setting turns off all CSS animations and transitions, makes animate()
-    // calls and smooth scrolling instant, and drops the slanted page title.
-    // Same code as app/lib/theme-boot.ts, which runs it before first paint in
-    // the app; this copy covers the preview and pages theme-boot skips.
     (function () {
     var POTATO_CSS = "body.potato-mode,body.potato-mode *,body.potato-mode *::before,body.potato-mode *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important;filter:none!important;text-shadow:none!important}html:has(body.potato-mode){scroll-behavior:auto!important}body.potato-mode,body.potato-mode *{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif!important}body.potato-mode h1.title{font-style:normal!important;transform:none!important}body.potato-mode .trend.has-popup:focus-visible{outline:2px solid currentColor;outline-offset:2px}";
     function potatoOn() { return !!(document.body && document.body.classList.contains("potato-mode")); }
@@ -1552,17 +1488,7 @@
     })();
   </script>
 
-
   <script>
-    // ------------------------------------------------------------------
-    // Shared appearance (accent + background) — 2026-09-08, per Martin:
-    // "wallpapers + accent colors don't save across pages." Settings'
-    // Appearance section (and onboarding's Theme step) are the only
-    // writers of schoolagy_appearance; every other real app page,
-    // including this one, applies whatever's saved there, read-only, on
-    // its own load — same shared-localStorage-record pattern already
-    // used for schoolagy_dark_mode/schoolagy_profile.
-    // ------------------------------------------------------------------
     (function () {
       function darken(hex, amount) {
         const n = parseInt(hex.slice(1), 16);
@@ -1600,44 +1526,6 @@
       });
     })();
 
-    // ------------------------------------------------------------------
-    // Sample data only — this page has no backend yet. Structured the way
-    // real Schoology API data will actually look (course name + hex color
-    // the student picked on that course's overview page, grade/predicted
-    // as letter grades, assignment "type" matching Schoology's real three
-    // gradable types: assignment / discussion / assessment) so swapping
-    // in live data later is just replacing these arrays.
-    //
-    // Course colors are a muted, curated palette (not a bright default
-    // chart-library rainbow) so the per-class color system reads as a
-    // deliberate design choice rather than an auto-generated one.
-    // ------------------------------------------------------------------
-    // Each course has a stable `id` separate from its (editable) display
-    // `name` — everything below (history, assignments, today, messages)
-    // references courses by id, so renaming a course in the editor never
-    // breaks those lookups the way keying off the name string would.
-    //
-    // ------------------------------------------------------------------
-    // Course customization persistence — added 2026-09-08. Renaming,
-    // recoloring, or reordering a course in the Customize editor below
-    // used to live only in this page's in-memory COURSES array, so it
-    // reset the instant you navigated anywhere (including just reloading
-    // Home) — "reordering/renaming/backgrounds don't save across pages".
-    // schoolagy_course_custom holds per-course name/color overrides
-    // (object keyed by course id, only actually-customized courses
-    // present) and schoolagy_course_order holds a full custom ordering of
-    // course ids (array), written only once the user has actually
-    // reordered. This page (via the editor below) and courses.html (via
-    // its own Reorder tool) are the two places that WRITE these; every
-    // other page only reads them. applyCourseCustomizationsInPlace() is
-    // called right here, right after COURSES is bound to the raw array,
-    // mutating it in place, so COURSES is already the customized/reordered
-    // version before anything below ever renders it — the rest of this
-    // file's rendering and in-place COURSES mutations (splice, index
-    // assignment, etc.) needs no other change. Same defensive
-    // try/catch-per-key style as
-    // AVERAGES_DARK_MODE_KEY/AVERAGES_PROFILE_KEY in settings.html.
-    // ------------------------------------------------------------------
     const AVERAGES_COURSE_CUSTOM_KEY = 'schoolagy_course_custom';
     const AVERAGES_COURSE_ORDER_KEY = 'schoolagy_course_order';
     function loadCourseCustom() {
@@ -1668,12 +1556,6 @@
         localStorage.removeItem(AVERAGES_COURSE_ORDER_KEY);
       } catch {}
     }
-    // Subject table (2026-10-01, per Martin): each course gets a color that
-    // fits its subject, picked from its name. First match wins, so specific
-    // subjects come before broad ones ("Computer Science" before "Science",
-    // "Physical Education" before "Physics"). A color the student picked in
-    // the course's info pop-up still wins over this. No match keeps the
-    // course's own color. All colors pass 4.5:1 with white text.
     const COURSE_SUBJECTS = [
       [/\bchem/, '🧪', '#1b7f67'],
       [/\bbio|anatom|physiolog/, '🧬', '#387f33'],
@@ -1802,24 +1684,11 @@
       { type: 'assessment', title: 'Chapter 7 Vocab Quiz', courseId: 'spanish3', due: 'Mon Aug 31' },
     ];
 
-    // ------------------------------------------------------------------
-    // New widgets' data (2026-10-03). Signed in, these come from the API
-    // (window.__AVERAGES__.data) and are empty until it sends them; the
-    // samples below are only for the demo, never shown as real grades.
-    // ------------------------------------------------------------------
-    // A demo sign-in has __AVERAGES__ too, with an empty bundle: it shows the
-    // samples, like the preview (2026-10-06).
     const HOME_LIVE = !!(window.__AVERAGES__ && window.__AVERAGES__.data) && window.__AVERAGES__.mode !== 'demo';
     const HOME_DATA = HOME_LIVE ? window.__AVERAGES__.data : {};
-    // Google Classroom has no messages, and its announcements come with the
-    // bundle. Schoology's teacher updates are a page extra (2026-10-06): when
-    // it's missing it failed, which the widget says rather than "none yet".
     const HOME_CLASSROOM = HOME_LIVE && (HOME_DATA.platform === 'classroom' || HOME_DATA.PEOPLE_PLATFORM === 'classroom');
     let UPDATES_FAILED = HOME_LIVE && !Array.isArray(HOME_DATA.COURSE_UPDATES);
-    // The wall clock in the student's time zone (2026-10-28, Settings > Time Zone; public/js/averages-tz.js).
     function avWall(x) { return window.averagesWallClock ? window.averagesWallClock(x) : (x == null ? new Date() : new Date(x)); }
-    // Today's date, signed in; the sample's own date in demo. The markup ships
-    // empty (2026-10-14) so no sample date shows while the page loads.
     if (HOME_LIVE) {
       const now = avWall();
       document.getElementById('homeDate').textContent = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
@@ -1981,15 +1850,6 @@
         </div>
       `).join('');
     }
-    // Delegated on each list's parent so re-renders never need rewiring
-    // — same convention as assignments.html's own assignListBody. Bails
-    // out during widget reorder/resize mode (see widgetDragModeOn below)
-    // so grabbing a row to drag its whole widget card doesn't also fire
-    // a navigation on release.
-    // Notification dots (2026-10-19, Martin): a dot shows while an update or a
-    // grade is new AND hasn't been opened on this device. AveragesSeen is in
-    // public/js/averages-bell.js (the bell uses the same memory); without it,
-    // as in a plain preview of this file, nothing is remembered.
     const SEEN = window.AveragesSeen || { has: () => false, mark() {}, markMany() {} };
     function openRow(row) {
       if (row.dataset.seenKind && row.dataset.seenId) SEEN.mark(row.dataset.seenKind, row.dataset.seenId);
@@ -2010,9 +1870,6 @@
         openRow(row);
       });
     }
-    // Google Assignments, Turnitin and other outside tools (2026-10-16): turned in on
-    // Schoology where we can't see it, so past due is "Pending" at the top of Upcoming,
-    // never Overdue.
     const OVERDUE_SHOWN = OVERDUE.filter(o => !o.outside);
     const PENDING_SHOWN = OVERDUE.filter(o => o.outside).map(o => ({ ...o, due: 'Pending' }));
     function renderAssignLists() {
@@ -2060,7 +1917,6 @@
     // nav tab already goes to).
     const messagesList = document.getElementById('messagesList');
     function renderMessagesWidget() {
-      // Signed in with nothing to show (2026-10-06): say so. Classroom has no messages at all.
       if (HOME_LIVE && !(Array.isArray(MESSAGES) && MESSAGES.length)) {
         messagesList.innerHTML = HOME_CLASSROOM
           ? '<p class="widget-empty">Google Classroom doesn’t have messages.</p>'
@@ -2083,9 +1939,6 @@
     wireRowNav(todayList);
     wireRowNav(messagesList);
 
-    // ------------------------------------------------------------------
-    // Recently graded + Course updates (2026-10-03)
-    // ------------------------------------------------------------------
     const recentList = document.getElementById('recentList');
     function renderRecentGrades() {
       recentList.innerHTML = RECENT_GRADES.length ? RECENT_GRADES.map(r => `
@@ -2104,8 +1957,6 @@
     const updatesList = document.getElementById('updatesList');
     function renderCourseUpdates() {
       const initial = n => String(n).replace(/^(Mr\.|Mrs\.|Ms\.|Mx\.|Dr\.|Sra\.|Sr\.|Coach)\s*/i, '').charAt(0).toUpperCase();
-      // Classroom sends "Announcement" (it doesn't say who posted): the class's
-      // teacher when there's exactly one, else as sent (2026-10-06).
       const poster = u => {
         const from = String(u.from || '');
         if (from && from !== 'Announcement') return from;
@@ -2130,9 +1981,6 @@
     }
     wireRowNav(recentList);
     wireRowNav(updatesList);
-    // Cards that load on their own (2026-10-20): the page draws before the
-    // teachers' updates are in; LegacyPage keeps this card's placeholders up
-    // and calls this when they land (or fail), then reveals the card.
     window.__averagesExtraLanded = function (name) {
       if (!HOME_LIVE) return;
       if (name === 'updates') {
@@ -2143,13 +1991,8 @@
       if (name === 'updates' || name === 'people') renderCourseUpdates();
     };
 
-    // ------------------------------------------------------------------
-    // Summary card at the top of Assignments (2026-10-03, per Martin).
-    // Next test / Next assignment / Today. Same category: slide. New
-    // category: the calendar's blur. Dots are the current category's items.
-    // ------------------------------------------------------------------
     const SUMMARY_KEY = 'schoolagy_home_summary';
-    const SUM_DWELL = 8000;   // each card shows for 8s (was 4s; slowed 2x on 2026-10-04, per Martin)
+    const SUM_DWELL = 8000;
     const SUM_REDUCE = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
     const SUM_CHEV = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
     const SUM_CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>';
@@ -2237,9 +2080,6 @@
       setTimeout(() => { sumPaint(); sumView.classList.remove('switching'); setTimeout(() => { sumBusy = false; }, 270); }, 270);
     }
     function sumStep() { if (sumCats[sumCat].items.length > sumItem + 1) sumSlideTo(sumItem + 1); else sumSwitchCat(sumCat + 1); }
-    // Progress (2026-10-04): the current dot fills darker from left to right
-    // like a video bar; when it's full, the next card comes in. Time only
-    // counts while nothing is paused, so pausing holds the bar where it is.
     let sumElapsed = 0, sumLastTs = 0, sumLoopOn = false;
     function sumFill() {
       const on = sumDots.querySelector('.sum-dot.on');
@@ -2332,9 +2172,6 @@
       return [lo, hi];
     }
 
-    // Grades given on the same day become one point: their average, with
-    // the date labeled "Aug 18 ×3" (2026-10-01). Otherwise three grades on
-    // one day drew as a zigzag across three fake "days".
     function groupSameDay(h) {
       const days = [];
       h.points.forEach((p, i) => {
@@ -2470,19 +2307,6 @@
       });
     }
 
-    // ------------------------------------------------------------------
-    // Customize editor — pencil FAB opens a small editor covering what
-    // this preview supports changing live: each course's display name,
-    // color, and order (used everywhere that course shows up — the
-    // Grades table, Today, Assignments, Messages); which optional
-    // widgets are on; and each widget's position/size within its column.
-    // Which widgets are on is saved in this browser (2026-10-03); order
-    // and size still don't persist past a page reload (see
-    // architecture-decisions.md for what real persistence needs, and
-    // for the note about course order needing to carry over to a future
-    // Courses page too).
-    // ------------------------------------------------------------------
-    // Widget on/off, saved per browser (2026-10-03) so turning one off sticks.
     const WIDGET_PREFS_KEY = 'schoolagy_home_widgets';
     function loadWidgetPrefs() {
       try { const v = JSON.parse(localStorage.getItem(WIDGET_PREFS_KEY) || '{}'); return v && typeof v === 'object' ? v : {}; } catch { return {}; }
@@ -2509,15 +2333,6 @@
     // on dragover would break the gesture it's trying to support.
     let draggedCourseIdx = null;
 
-    // Shared color-swatch popup — the SAME component (48-color grid,
-    // fixed-position, viewport-clamped) as onboarding.html's accent
-    // picker and course-home.html's course-color picker, per Martin's
-    // request for one consistent picker everywhere. Built ONCE here as a
-    // single floating popup reused across every course row (see
-    // #courseColorPopup in the HTML) — event delegation on
-    // editorCourseList below means it keeps working automatically after
-    // renderEditorCourseList() regenerates the row markup, no per-row
-    // re-binding needed the way the old per-row popover required.
     const SWATCH_PALETTE = [
       ['#e52e2e', '#e58a2e', '#e5e52e', '#8ae52e', '#2ee52e', '#2ee58a', '#2ee5e5', '#2e8ae5', '#2e2ee5', '#8a2ee5', '#e52ee5', '#e52e8a'],
       ['#f1b1b1', '#f1d1b1', '#f1f1b1', '#d1f1b1', '#b1f1b1', '#b1f1d1', '#b1f1f1', '#b1d1f1', '#b1b1f1', '#d1b1f1', '#f1b1f1', '#f1b1d1'],
@@ -2777,7 +2592,6 @@
       widgetRecentToggle.checked = widgetPrefs.recent;
       document.getElementById('block-updates').hidden = !widgetPrefs.updates;
       widgetUpdatesToggle.checked = widgetPrefs.updates;
-      // Potato mode (2026-10-20): no sliding Next test card at all; the lists below have the same items.
       document.getElementById('sumCard').hidden = !widgetPrefs.summary || document.body.classList.contains('potato-mode');   // the timer below stops while it's hidden
       widgetSummaryToggle.checked = widgetPrefs.summary;
     }
@@ -3165,29 +2979,12 @@
     // opens/closes the menu rather than performing either action.
     // ------------------------------------------------------------------
     const profileBtn = document.getElementById('profileBtn');
-    // Shared profile photo/name (2026-09-07) — settings.html's Edit
-    // Profile modal is the only place this is ever set, but every other
-    // page's top-right profile button used to just show a fixed "M" no
-    // matter what was saved there: the button never read anything back,
-    // so a photo you set in Settings was invisible the moment you left
-    // it. schoolagy_profile is the same localStorage record
-    // settings.html writes on every save; this is read-only here.
-    //
-    // Fixed 2026-09-09 (per Martin: "it still says Hey, Martin ... not
-    // the name i entered"): the greeting itself had the exact same gap
-    // the profile button already had fixed for it — "Hey, Martin" was
-    // just the page's own hardcoded sample text, never touched by
-    // whatever name onboarding/Settings actually saved. Same read here
-    // covers both now instead of just the avatar initial.
     (function () {
       var profile = null;
       try {
         var raw = localStorage.getItem('schoolagy_profile');
         if (raw) profile = JSON.parse(raw);
       } catch (e) {}
-      // No name saved on this device (new device, or signed out with Sync
-      // off): the account's own name from the sign-in, never a sample name
-      // (2026-10-14; this used to fall back to "Martin" / "M").
       if (!profile || !profile.name || !String(profile.name).trim()) profile = Object.assign({}, profile, { name: window.__AVERAGES_NAME__ || '' });
       if (profile.photo) {
         profileBtn.style.backgroundImage = 'url("' + profile.photo + '")';
@@ -3196,7 +2993,7 @@
         profileBtn.textContent = '';
         profileBtn.classList.add('has-photo');
       } else if (profile.name) {
-        if (window.AveragesAvatar) window.AveragesAvatar.paint(profileBtn, profile.name);   // initials on their own color (2026-10-23, averages-avatar.js)
+        if (window.AveragesAvatar) window.AveragesAvatar.paint(profileBtn, profile.name);
         else profileBtn.textContent = (function (n) { var p = String(n).trim().split(/\s+/).filter(Boolean); var f = function (w) { return w ? Array.from(w)[0] : ''; }; return (f(p[0]) + (p.length > 1 ? f(p[p.length - 1]) : '')).toUpperCase(); })(profile.name);
       }
       if (profile.name && profile.name.trim()) {
@@ -3245,9 +3042,6 @@
     renderSummary();
     sumSchedule();
     applyWidgetPrefs();
-    // Live grades (2026-10-27, public/js/averages-live.js): a grade moved while
-    // Home was open. COURSES and RECENT_GRADES are already updated in place;
-    // redraw what shows them and the changed numbers roll.
     window.__averagesLiveGrades = function () {
       renderGradesTable();
       renderRecentGrades();
@@ -3257,11 +3051,6 @@
     applyWidgetSizes();
   </script>
   <script>
-    // Back link (2026-10-01, per Martin: "where it returns to ... is always
-    // wrong"). Every page records itself in a short per-tab trail; a page's
-    // back link then says and goes to the page before it ("Back to AP
-    // Chemistry Hub", "Back to Grades"...). With no trail (the page was
-    // opened directly) the page's own default back link is left alone.
     (function () {
       const SELF = 'home.html';
       const KEY = 'averages_nav_trail';

@@ -6,17 +6,6 @@
 <title>Averages — Calendar</title>
 <link rel="stylesheet" href="https://use.typekit.net/gsk6off.css">
 <style>
-  /* ---------- Shared design system — copied verbatim from the other
-     top-level pages (home.html/courses.html/contacts.html) so this reads
-     as the same app. See architecture-decisions.md re: promoting this to
-     an actual shared stylesheet once there's a build step. ----------
-     --cal-grid-bg / --cal-cell-alt are new here: per Martin (2026-09-04,
-     "make the calendar white for non-dark mode and black and accsent
-     color for dark mode"), the calendar grid itself needs to be a real
-     theme-aware surface rather than the flat black the wireframe showed
-     — white in light mode, near-black in dark mode, with the app's
-     existing fixed --accent color (unchanged by dark mode, same as
-     everywhere else in the app) doing the highlighting in both. */
   :root {
     --accent: #d94a2b;
     --accent-dark: #a8331a;
@@ -58,18 +47,6 @@
   *::-webkit-scrollbar-thumb:hover { background-color: rgba(20, 21, 31, 0.45); }
   *::-webkit-scrollbar-corner { background: transparent; }
 
-  /* Declared so the browser themes ITS OWN chrome — scrollbars, the
-
-     overscroll gutter, form controls — against this page rather than
-
-     guessing. Without it Firefox drew a light-theme scrollbar over the
-
-     dark canvas and tinted it (Martin saw it as pink on a blue
-
-     background). LegacyPage's applyStoredTheme() updates both of these
-
-     to match whatever background the user actually saved. */
-
   html {
 
     color-scheme: dark;
@@ -77,7 +54,6 @@
     background-color: #0c0c0e;
 
   }
-
 
   html, body {
     margin: 0;
@@ -89,16 +65,6 @@
   body {
     height: 100vh;
     overflow: hidden;
-    /* Neutral black instead of a baked-in accent gradient here —
-       2026-09-11, per Martin. This is only ever visible for a split
-       second on reload/navigation, before applyStoredTheme() (or this
-       page's own appearance-reading script) sets the user's actual
-       saved background over it. The old default was the sample
-       red-orange gradient baked into this file, which read as a real
-       glitch flashing in between pages; a neutral black reads as
-       "still loading" instead, and matches the app's own Black
-       preset (#0c0c0e) so it's not a color that appears nowhere else
-       in the app. */
     background-color: #0c0c0e;
     background-image: none;
     background-size: cover;
@@ -147,9 +113,6 @@
   }
 
   .profile-menu-wrap { position: relative; flex-shrink: 0; }
-  /* No photo: an Apple-style monogram (2026-10-21, Martin: "make the default no pfp letters
-     look more like the apple ones"), the grey gradient and rounded white initials of a contact
-     with no picture. A photo replaces it (set inline as background-image). */
   .profile-btn {
     width: 42px;
     height: 42px;
@@ -168,8 +131,6 @@
     flex-shrink: 0;
   }
 
-  /* A photo has no ring (2026-10-23, Martin: "remove the ugly border if it is a custom upload");
-     the letter avatars keep theirs. Same size: the border goes clear and the photo fills it. */
   .profile-btn.has-photo { border-color: transparent; background-origin: border-box; background-repeat: no-repeat; }
   .profile-menu {
     position: absolute;
@@ -199,17 +160,6 @@
   .profile-menu-item:hover { background: var(--panel-inner); }
   .profile-menu-item.signout { color: var(--grade-bad); }
 
-  /* ---------- One card, mostly same as every other page — EXCEPT
-     height. Every other page's card force-stretches to fill the
-     viewport (flex: 1) because their content is naturally tall/variable.
-     Calendar's grid rows are now capped (see .cal-month-grid /
-     .cal-week-grid below), so forcing the card to full height left a
-     large empty panel below the grid on Month/Week view. Fix
-     (2026-09-08): let the card size to its own content instead
-     (flex: 0 1 auto) — it still can't overflow the viewport, because
-     .page above it keeps its own fixed, scrollable height, so a
-     genuinely tall view (Year) just scrolls the page rather than
-     stretching the card into blank space. ---------- */
   .card {
     background: var(--panel-bg);
     border-radius: var(--window-radius-lg);
@@ -229,22 +179,6 @@
     flex-direction: column;
   }
 
-  /* ---------- Calendar layout: sidebar (search/filters/selected event)
-     + main (toolbar + grid). Stacks to a single column on narrow
-     viewports — see the media query near the bottom.
-
-     Fix (2026-09-07): the grid used to be a small fixed-height block
-     sitting at the top of a card that's always stretched to fill the
-     viewport (same "one card, same as every other page" convention as
-     everywhere else) — on Week view, or any Month with a light events
-     week, that left a large dead grey rectangle below the grid with
-     nothing in it, which read as the page "stretching" oddly rather
-     than the calendar just being short. Now cal-layout/cal-main/calBody
-     all flex to fill the card's real height, so the grid itself grows
-     to fill the available space (see #calBody, .cal-grid-wrap,
-     .cal-month-grid, .cal-week-grid below) instead of floating above a
-     blank area. The sidebar stays top-aligned on purpose (its content
-     — search/selected-event — has no reason to stretch). ---------- */
   .cal-layout { display: flex; gap: 18px; align-items: stretch; flex: 1; min-height: 0; }
   .cal-sidebar { width: 240px; flex-shrink: 0; display: flex; flex-direction: column; gap: 16px; align-self: flex-start; }
   .cal-main { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; gap: 12px; }
@@ -320,13 +254,6 @@
     display: inline-block; font-size: 0.66rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.03em;
     color: var(--accent); border: 1px solid var(--accent); border-radius: 999px; padding: 2px 8px; margin-bottom: 10px;
   }
-  /* Teacher-created events carry a "who created it" tooltip on the badge
-     (2026-09-08, per Martin). position:relative on the badge anchors the
-     absolutely-positioned .cal-tooltip; cursor:help + tabindex="0" on the
-     badge signal it's interactive and keep it reachable by keyboard, and
-     the tooltip shows on :hover/:focus-visible so it works for mouse and
-     keyboard alike. It floats above the badge (bottom: 100%) since the
-     badge sits near the top of a fairly cramped sidebar panel. */
   .cal-selected-badge.has-tooltip { position: relative; cursor: help; }
   .cal-tooltip {
     position: absolute;
@@ -377,17 +304,6 @@
   .cal-selected-view-btn:hover { background: var(--accent-dark); }
 
   /* ---------- Main toolbar ---------- */
-  /* Fixed in place (2026-09-08, per Martin: "make it so the week month
-     year is fixed in one place") — .card-inner is the actual scrolling
-     container (see below), and this toolbar used to just be a normal
-     child of it, so it scrolled away with the grid on any view whose
-     content runs taller than the visible card (Year view especially, and
-     a tall Month). Sticking it to the top of that scroll container means
-     the Week/Month/Year switch — and Prev/Next/Today/Filters next to it —
-     stay in one place no matter how far you scroll the grid underneath.
-     Needs its own background since .card-inner has none of its own (it
-     shows .card's background through) — otherwise scrolled-past content
-     would show through behind it. */
   .cal-toolbar {
     display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
     position: sticky; top: 0; z-index: 5;
@@ -411,10 +327,6 @@
   }
   .cal-today-btn:hover { background: var(--border); }
 
-  /* ---------- Filter dropdown — Source + Created By chips, moved here
-     from the sidebar (2026-09-04, per Martin) and consolidated into one
-     popover next to the Today button, same absolute-positioned-panel
-     pattern as the profile menu. ---------- */
   .cal-filter-dropdown-wrap { position: relative; flex-shrink: 0; }
   .cal-filter-btn {
     display: flex; align-items: center; gap: 7px;
@@ -437,9 +349,6 @@
   }
   .cal-filter-panel.is-hidden { display: none; }
 
-  /* ---------- The grid surface itself — this is what Martin asked to be
-     theme-aware: white in light mode, near-black with the app's fixed
-     accent color for structure/highlights in dark mode. ---------- */
   .cal-grid-wrap {
     background: var(--cal-grid-bg);
     border: 1px solid var(--border);
@@ -453,14 +362,6 @@
   .cal-dow-row { display: grid; grid-template-columns: repeat(7, 1fr); border-bottom: 1px solid var(--border); flex-shrink: 0; }
   .cal-dow-cell { text-align: center; font-size: 0.66rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; color: var(--accent); padding: 8px 2px; }
 
-  /* flex:1 + min-height:0 so the grid fills whatever's left of
-     .cal-grid-wrap instead of leaving a big blank margin below the last
-     row. Capped at 120px per row (2026-09-08, was an unbounded 1fr —
-     on a tall viewport that stretched every day cell absurdly tall;
-     120px is enough to comfortably hold 3-4 event chips without
-     ballooning). align-content:start means any space left over once
-     rows hit that cap just sits as blank surface below the grid,
-     inside the card, instead of stretching cells further. */
   .cal-month-grid { display: grid; grid-template-columns: repeat(7, 1fr); grid-auto-rows: minmax(84px, 120px); flex: 1; min-height: 0; overflow-y: auto; align-content: start; }
   .cal-day-cell {
     min-height: 84px;
@@ -486,10 +387,6 @@
     display: flex; align-items: center; justify-content: center;
   }
   .cal-day-cell.is-today .cal-day-num { background: var(--accent); color: #fff; }
-  /* Selected-event location highlight (2026-09-04, per Martin: "make it
-     more apparent where it is"). The whole day/week cell gets an accent
-     ring — not just the chip — so the selection still reads clearly even
-     when the matching chip itself is folded into a "+N more" popover. */
   .cal-day-cell.has-selected { box-shadow: inset 0 0 0 2px var(--accent); position: relative; z-index: 1; }
   .cal-day-events { display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
   .cal-event-chip {
@@ -516,14 +413,6 @@
   .cal-day-more:hover { color: var(--text-dark); }
 
   /* ---------- Week view ---------- */
-  /* flex:1 lets this single-row grid grow to fill .cal-grid-wrap instead
-     of stopping at min-height and leaving the rest of the card empty
-     below it — but capped at 320px (2026-09-08; was unbounded, which on
-     a tall viewport stretched the single week-row to 500px+). Explicit
-     grid-template-rows (not grid-auto-rows — there's only ever one row
-     here) plus align-content:start means growth stops at the cap and any
-     further leftover height is blank surface below the row, not more
-     row-stretching. */
   .cal-week-grid { display: grid; grid-template-columns: repeat(7, 1fr); grid-template-rows: minmax(220px, 260px); flex: 1; min-height: 0; align-content: start; }
   .cal-week-cell {
     min-height: 220px;
@@ -563,7 +452,6 @@
   .cal-mini-day.has-selected { box-shadow: 0 0 0 1.5px var(--accent); border-radius: 50%; }
 
   .cal-empty-note { font-size: 0.8rem; color: var(--text-faint); font-style: italic; padding: 18px; text-align: center; }
-  /* Signed in, when the events didn't (all) load (2026-10-06). */
   .cal-live-note { margin: 0; font-size: 0.78rem; font-weight: 700; color: var(--text-faint); }
   .cal-live-note[hidden] { display: none; }
   .cal-week-empty { font-size: 0.66rem; color: var(--text-faint); font-style: italic; padding: 6px 0 0; text-align: center; overflow-wrap: break-word; }
@@ -664,10 +552,6 @@
   .nav-link .dot { width: 4px; height: 4px; border-radius: 50%; background: transparent; }
   .nav-link.active .label { color: var(--text-dark); }
   .nav-link.active .dot { background: var(--accent); }
-  /* ---------- "More" overflow (2026-10-01, per Martin: "if the text has
-     to get ... we should add a more button on the far right side with a
-     list of the other options"). Labels never truncate: when they would,
-     the rightmost pages move into the More menu instead. ---------- */
   .nav-link[hidden], .nav-more[hidden], .nav-more-menu[hidden] { display: none; }
   /* While the More menu is open the whole bar sits above everything else on
      the page (sticky headers, pop-ups, the edit button go up to z-index 90),
@@ -730,8 +614,6 @@
   .nav-more-item.active { color: var(--text-dark); }
   .nav-more-item.active span { position: relative; display: inline-block; padding-bottom: 6px; margin-bottom: -6px; }
   .nav-more-item.active span::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; border-radius: 999px; background: var(--accent); }
-  /* Labels sit centered in the bar; the active page is underlined in the
-     accent color instead of marked with a dot (2026-10-01, per Martin). */
   .app-nav-inner .nav-link, .app-nav-inner .nav-more { justify-content: center; gap: 0; padding-top: 10px; padding-bottom: 10px; }
   .app-nav-inner .nav-link .dot, .app-nav-inner .nav-more .dot { display: none; }
   .app-nav-inner .nav-link .label, .app-nav-inner .nav-more .label { position: relative; padding: 6px 0; }
@@ -901,10 +783,6 @@
   </nav>
 
   <script>
-    // ---- Links by id (2026-10-07, Martin) ----
-    // A real class (Schoology/Classroom ids are digits) links as
-    // assignment?id=<id> and course-home?id=<section id>; the sample classes
-    // (word ids like "apchem") keep ?course=&title=. Pages read both.
     function avgIsId(v) { return /^\d{1,24}$/.test(String(v == null ? '' : v)); }
     function avgCourseQ(course) { return (avgIsId(course) ? 'id=' : 'course=') + encodeURIComponent(course == null ? '' : course); }
     function avgAssignHref(course, title, id, extra) {
@@ -913,11 +791,6 @@
       return `assignment.html?course=${encodeURIComponent(course == null ? '' : course)}&title=${encodeURIComponent(title || '')}${avgIsId(id) ? `&id=${id}` : ''}${extra}`;
     }
 
-    // Potato PC Mode on every page (2026-10-04, per Martin). The saved
-    // setting turns off all CSS animations and transitions, makes animate()
-    // calls and smooth scrolling instant, and drops the slanted page title.
-    // Same code as app/lib/theme-boot.ts, which runs it before first paint in
-    // the app; this copy covers the preview and pages theme-boot skips.
     (function () {
     var POTATO_CSS = "body.potato-mode,body.potato-mode *,body.potato-mode *::before,body.potato-mode *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important;filter:none!important;text-shadow:none!important}html:has(body.potato-mode){scroll-behavior:auto!important}body.potato-mode,body.potato-mode *{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif!important}body.potato-mode h1.title{font-style:normal!important;transform:none!important}body.potato-mode .trend.has-popup:focus-visible{outline:2px solid currentColor;outline-offset:2px}";
     function potatoOn() { return !!(document.body && document.body.classList.contains("potato-mode")); }
@@ -1038,17 +911,7 @@
     })();
   </script>
 
-
   <script>
-    // ------------------------------------------------------------------
-    // Shared appearance (accent + background) — 2026-09-08, per Martin:
-    // "wallpapers + accent colors don't save across pages." Settings'
-    // Appearance section (and onboarding's Theme step) are the only
-    // writers of schoolagy_appearance; every other real app page,
-    // including this one, applies whatever's saved there, read-only, on
-    // its own load — same shared-localStorage-record pattern already
-    // used for schoolagy_dark_mode/schoolagy_profile.
-    // ------------------------------------------------------------------
     (function () {
       function darken(hex, amount) {
         const n = parseInt(hex.slice(1), 16);
@@ -1086,33 +949,6 @@
       });
     })();
 
-    // ------------------------------------------------------------------
-    // Sample data (2026-09-04, per Martin's Calendar.pdf wireframe: "add
-    // anything you want"). Courses/colors reused verbatim from
-    // home.html/contacts.html so this reads as the same six classes
-    // everywhere in the app. EVENTS spans late Aug through early Oct
-    // 2026 — the seven items flagged with `assignmentTitle` are the
-    // exact same entries assignments.html already lists, so their
-    // "View Assignment" button deep-links into a real assignment.html
-    // record instead of a generic fallback.
-    // ------------------------------------------------------------------
-
-    // ------------------------------------------------------------------
-    // Course customization persistence — added 2026-09-08. Renaming,
-    // recoloring, or reordering a course (in home.html's Customize editor
-    // or courses.html's Reorder tool — the only places that WRITE these)
-    // used to be invisible everywhere else, since every page just
-    // re-generated its own hardcoded COURSES array from scratch on load.
-    // schoolagy_course_custom holds per-course name/color overrides
-    // (object keyed by course id, only actually-customized courses
-    // present); schoolagy_course_order holds a full custom ordering of
-    // course ids (array), written only once the user has actually
-    // reordered. This page only READS both — applyCourseCustomizationsInPlace()
-    // is called right after the raw array literal below, mutating COURSES
-    // in place, so it's already the customized/reordered version before
-    // anything on this page ever renders it. Same defensive
-    // try/catch-per-key style as AVERAGES_DARK_MODE_KEY in settings.html.
-    // ------------------------------------------------------------------
     const AVERAGES_COURSE_CUSTOM_KEY = 'schoolagy_course_custom';
     const AVERAGES_COURSE_ORDER_KEY = 'schoolagy_course_order';
     function loadCourseCustom() {
@@ -1129,12 +965,6 @@
       } catch {}
       return null;
     }
-    // Subject table (2026-10-01, per Martin): each course gets a color that
-    // fits its subject, picked from its name. First match wins, so specific
-    // subjects come before broad ones ("Computer Science" before "Science",
-    // "Physical Education" before "Physics"). A color the student picked in
-    // the course's info pop-up still wins over this. No match keeps the
-    // course's own color. All colors pass 4.5:1 with white text.
     const COURSE_SUBJECTS = [
       [/\bchem/, '🧪', '#1b7f67'],
       [/\bbio|anatom|physiolog/, '🧬', '#387f33'],
@@ -1205,14 +1035,6 @@
     const SCHOOL_SOURCE = { id: 'school', name: 'School & District', color: '#5c6370' };
     const ALL_SOURCES = [...COURSES, SCHOOL_SOURCE];
 
-    // TYPE_LABEL stays granular (assignment/discussion/assessment/teacher)
-    // for anywhere a single event's specific type is displayed — the
-    // Selected Event badge, search rows, the day popover. The Created By
-    // *filter* is coarser: per Martin (2026-09-04), the three
-    // automatically-Schoology-created types (assignment/discussion/
-    // assessment) merge into one "Assignment" filter option, leaving just
-    // two filter chips (Assignment / Teacher-Created) — see
-    // FILTER_CATEGORIES/categoryOf below.
     const TYPE_LABEL = { assignment: 'Assignment', discussion: 'Discussion', assessment: 'Quiz', teacher: 'Teacher-Created' };
     const TYPES = ['assignment', 'discussion', 'assessment', 'teacher'];
     const FILTER_CATEGORY_LABEL = { assignment: 'Assignment', teacher: 'Teacher-Created' };
@@ -1273,8 +1095,6 @@
       { id: 'e29', title: 'Skills Assessment', date: '2026-09-25', source: 'pe', type: 'assessment', points: 20, desc: 'Practical skills check for this unit.' },
       { id: 'e30', title: 'Reading Journal 2', date: '2026-09-28', source: 'english10', type: 'assignment', points: 15, desc: 'Second reading journal entry for the current novel.' },
       { id: 'e31', title: 'Titration Lab', date: '2026-09-29', source: 'apchem', type: 'assignment', points: 35, desc: 'In-class titration lab — bring your pre-lab questions.' },
-      // The course hub's own events (2026-10-04), so an event opened from a
-      // hub lands on a real entry here. Teacher-made, like the school ones.
       { id: 'e33', title: 'Lab Safety Demo', date: '2026-08-25', time: '10:00 AM', source: 'apchem', type: 'teacher', createdBy: 'Mr. Alvarez', desc: 'Goggles, aprons and the eyewash station, before the titration lab.' },
       { id: 'e34', title: 'Library Day', date: '2026-08-26', time: '9:00 AM', source: 'english10', type: 'teacher', createdBy: 'Mr. Cho', desc: 'Class meets in the library. Bring your reading journal.' },
       { id: 'e35', title: 'Mile Run', date: '2026-08-26', time: '7:45 AM', source: 'pe', type: 'teacher', createdBy: 'Coach Reyes', desc: 'Timed mile on the track. Wear running shoes.' },
@@ -1284,19 +1104,6 @@
       { id: 'e32', title: 'Quarter 1 Ends', date: '2026-10-02', source: 'school', type: 'teacher', allDay: true, createdBy: 'District Office', desc: 'Last day of Quarter 1. Grades finalize at 11:59 PM.' },
     ];
 
-    // ------------------------------------------------------------------
-    // Date helpers — events are stored as plain 'YYYY-MM-DD' strings and
-    // matched against a local-time Date's own y/m/d, so nothing here
-    // ever round-trips through a UTC-parsed Date (that's the usual
-    // source of off-by-one-day calendar bugs).
-    // ------------------------------------------------------------------
-    // ------------------------------------------------------------------
-    // Signed in (2026-10-06): EVENTS is the events extra's answer, never the
-    // samples above. A demo sign-in (which also has __AVERAGES__, with an
-    // empty bundle) shows the samples, like the preview. Each event is
-    // tidied once here; one from a class that isn't the student's (or the
-    // school's) shows as School & District rather than being filtered away.
-    // ------------------------------------------------------------------
     const AV_LIVE = !!(window.__AVERAGES__ && window.__AVERAGES__.data) && window.__AVERAGES__.mode !== 'demo';
     const AV_DATA = AV_LIVE ? window.__AVERAGES__.data : {};
     if (AV_LIVE) {
@@ -1324,7 +1131,6 @@
       else if (AV_DATA.EVENTS_PARTIAL) { note.textContent = 'Some classes’ events didn’t load this time.'; note.hidden = false; }
     }
 
-    // The wall clock in the student's time zone (2026-10-28, Settings > Time Zone; public/js/averages-tz.js).
     function avWall(x) { return window.averagesWallClock ? window.averagesWallClock(x) : (x == null ? new Date() : new Date(x)); }
     function ymd(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
     function isSameDay(a, b) { return ymd(a) === ymd(b); }
@@ -1410,18 +1216,8 @@
       const src = sourceById(event.source);
       const d = new Date(event.date + 'T00:00:00');
       const dateLabel = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
-      // Any event created by Schoology itself (assignment/discussion/quiz —
-      // the "Assignment" Created By category, i.e. anything but
-      // teacher-created) gets an Open Assignment button, per Martin
-      // (2026-09-04) — not just the 10 events pre-linked to a real
-      // assignment.html record via assignmentTitle. assignment.html's own
-      // ?course=&title= routing already has a graceful fallback for a
-      // title/course pair it doesn't recognize (shows the real title with
-      // generic content instead of erroring), so this is safe to link
-      // for every Assignment-category event, not just the flagged ones.
       let actionHTML = '';
       if (AV_LIVE && event.assignmentId) {
-        // Signed in: the exact assignment (2026-10-06).
         const linkTitle = event.assignmentTitle || event.title;
         actionHTML = `<div class="cal-selected-actions"><a class="cal-selected-view-btn" href="${avgAssignHref(event.source, linkTitle, event.assignmentId)}">Open Assignment</a></div>`;
       } else if (AV_LIVE) {
@@ -1446,11 +1242,6 @@
         ${actionHTML}
       `;
     }
-    // renderCalendar() re-runs on every selection change so the grid
-    // itself can show *where* the selected event is (2026-09-04, per
-    // Martin) — not just the sidebar panel. Cheap at this data scale, and
-    // consistent with how renderFilterChips()/renderCalendar() already
-    // do a full re-render on every other state change in this file.
     function selectEvent(id) { selectedEventId = id; renderSelectedEvent(); closeDayModal(); renderCalendar(); }
     selectedCloseBtn.addEventListener('click', () => { selectedEventId = null; renderSelectedEvent(); renderCalendar(); });
 
@@ -1529,9 +1320,6 @@
           </div>`;
       }).join('');
       document.getElementById('calBody').innerHTML = `<div class="cal-grid-wrap">${dowRow}<div class="cal-month-grid">${cellsHTML}</div></div>`;
-      // Header just names the month (e.g. "September") — the year has its
-      // own dedicated view (below) rather than being repeated here, per
-      // Martin's spec for the toolbar header (2026-09-04).
       document.getElementById('calHeaderLabel').textContent = focusDate.toLocaleDateString('en-US', { month: 'long' });
       wireGridClicks();
     }
@@ -1562,10 +1350,6 @@
           </div>`;
       }).join('');
       document.getElementById('calBody').innerHTML = `<div class="cal-grid-wrap">${dowRow}<div class="cal-week-grid">${cellsHTML}</div></div>`;
-      // Header reads "Week of {the Monday of this week}" per Martin's spec
-      // (2026-09-04) — the grid itself still starts on Sunday (unchanged),
-      // this just always names the Monday two days in, regardless of
-      // which day of the week is actually the anchor.
       const monday = new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate() + 1);
       const mondayLabel = monday.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
       document.getElementById('calHeaderLabel').textContent = `Week of ${mondayLabel}`;
@@ -1680,11 +1464,6 @@
     }
     document.getElementById('calTodayBtn').addEventListener('click', () => { focusDate = new Date(TODAY); renderCalendar(); });
 
-    // ------------------------------------------------------------------
-    // Filter dropdown — Source + Created By chips, moved off the sidebar
-    // and into one popover next to Today (2026-09-04, per Martin). Same
-    // open/close-on-outside-click/Escape pattern as the profile menu.
-    // ------------------------------------------------------------------
     const filterBtn = document.getElementById('filterBtn');
     const filterPanel = document.getElementById('filterPanel');
     function openFilterPanel() { filterPanel.classList.remove('is-hidden'); filterBtn.setAttribute('aria-expanded', 'true'); }
@@ -1719,25 +1498,6 @@
       searchInput.focus();
     });
 
-    // ------------------------------------------------------------------
-    // Dark mode — same token-swap convention as settings.html/
-    // onboarding.html, extended with --cal-grid-bg/--cal-cell-alt so the
-    // calendar surface itself flips from white to near-black (per
-    // Martin, 2026-09-04) while --accent stays fixed and does the
-    // highlighting in both modes. No manual page-local toggle (removed
-    // 2026-09-04, per Martin) — this page only ever follows a setting
-    // decided elsewhere.
-    //
-    // Fixed 2026-09-07: "elsewhere" used to mean the OS's own
-    // prefers-color-scheme, checked fresh on every load with no memory
-    // of anything — so Calendar could be dark while every other page
-    // stayed light (or the reverse), independent of whatever Settings'
-    // real Dark Mode toggle was set to. Now it reads the same
-    // schoolagy_dark_mode localStorage flag Settings writes, falling
-    // back to the OS only when nothing's been explicitly chosen yet —
-    // so this page agrees with the rest of the app instead of running
-    // its own separate check.
-    // ------------------------------------------------------------------
     const AVERAGES_DARK_MODE_KEY = 'schoolagy_dark_mode';
     function averagesSavedDarkPref() {
       try {
@@ -1795,22 +1555,12 @@
     // Profile menu — same behavior as every other page.
     // ------------------------------------------------------------------
     const profileBtn = document.getElementById('profileBtn');
-    // Shared profile photo/name (2026-09-07) — settings.html's Edit
-    // Profile modal is the only place this is ever set, but every other
-    // page's top-right profile button used to just show a fixed "M" no
-    // matter what was saved there: the button never read anything back,
-    // so a photo you set in Settings was invisible the moment you left
-    // it. schoolagy_profile is the same localStorage record
-    // settings.html writes on every save; this is read-only here.
     (function () {
       var profile = null;
       try {
         var raw = localStorage.getItem('schoolagy_profile');
         if (raw) profile = JSON.parse(raw);
       } catch (e) {}
-      // No name saved on this device (new device, or signed out with Sync
-      // off): the account's own name from the sign-in, never a sample name
-      // (2026-10-14; this used to fall back to "Martin" / "M").
       if (!profile || !profile.name || !String(profile.name).trim()) profile = Object.assign({}, profile, { name: window.__AVERAGES_NAME__ || '' });
       if (profile.photo) {
         profileBtn.style.backgroundImage = 'url("' + profile.photo + '")';
@@ -1819,7 +1569,7 @@
         profileBtn.textContent = '';
         profileBtn.classList.add('has-photo');
       } else if (profile.name) {
-        if (window.AveragesAvatar) window.AveragesAvatar.paint(profileBtn, profile.name);   // initials on their own color (2026-10-23, averages-avatar.js)
+        if (window.AveragesAvatar) window.AveragesAvatar.paint(profileBtn, profile.name);
         else profileBtn.textContent = (function (n) { var p = String(n).trim().split(/\s+/).filter(Boolean); var f = function (w) { return w ? Array.from(w)[0] : ''; }; return (f(p[0]) + (p.length > 1 ? f(p[p.length - 1]) : '')).toUpperCase(); })(profile.name);
       }
     })();
@@ -1842,9 +1592,6 @@
     renderFilterChips();
     renderSelectedEvent();
     renderCalendar();
-    // Opened from a course hub (2026-10-04): ?date=YYYY-MM-DD jumps to that
-    // date, and ?event=&course= selects the matching event. Its course and
-    // type are switched back on in the filters so it can't be hidden.
     (function () {
       const q = new URLSearchParams(location.search);
       const date = q.get('date');
@@ -1854,7 +1601,6 @@
       if (isNaN(when)) return;
       focusDate = when;
       const title = q.get('event'), src = q.get('course'), id = q.get('id');
-      // The exact event when the hub sent its id (2026-10-06), else by title.
       const ev = (id && EVENTS.find(e => e.id === id && e.date === date)) || (title && EVENTS.find(e => e.date === date && e.title === title && (!src || e.source === src)));
       if (ev) {
         activeSources.add(ev.source);
@@ -1871,11 +1617,6 @@
     })();
   </script>
   <script>
-    // Back link (2026-10-01, per Martin: "where it returns to ... is always
-    // wrong"). Every page records itself in a short per-tab trail; a page's
-    // back link then says and goes to the page before it ("Back to AP
-    // Chemistry Hub", "Back to Grades"...). With no trail (the page was
-    // opened directly) the page's own default back link is left alone.
     (function () {
       const SELF = 'calendar.html';
       const KEY = 'averages_nav_trail';

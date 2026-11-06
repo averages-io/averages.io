@@ -83,18 +83,6 @@
   *::-webkit-scrollbar-thumb:hover { background-color: rgba(20, 21, 31, 0.45); }
   *::-webkit-scrollbar-corner { background: transparent; }
 
-  /* Declared so the browser themes ITS OWN chrome — scrollbars, the
-
-     overscroll gutter, form controls — against this page rather than
-
-     guessing. Without it Firefox drew a light-theme scrollbar over the
-
-     dark canvas and tinted it (Martin saw it as pink on a blue
-
-     background). LegacyPage's applyStoredTheme() updates both of these
-
-     to match whatever background the user actually saved. */
-
   html {
 
     color-scheme: dark;
@@ -102,7 +90,6 @@
     background-color: #0c0c0e;
 
   }
-
 
   html, body {
     margin: 0;
@@ -114,16 +101,6 @@
   body {
     height: 100vh;
     overflow: hidden;
-    /* Neutral black instead of a baked-in accent gradient here —
-       2026-09-11, per Martin. This is only ever visible for a split
-       second on reload/navigation, before applyStoredTheme() (or this
-       page's own appearance-reading script) sets the user's actual
-       saved background over it. The old default was the sample
-       red-orange gradient baked into this file, which read as a real
-       glitch flashing in between pages; a neutral black reads as
-       "still loading" instead, and matches the app's own Black
-       preset (#0c0c0e) so it's not a color that appears nowhere else
-       in the app. */
     background-color: #0c0c0e;
     background-image: none;
     background-size: cover;
@@ -131,12 +108,6 @@
     background-repeat: no-repeat;
     display: flex;
     justify-content: center;
-    /* Fluid, not one fixed compact number for every screen — generous on
-       a big window, tightens only as space actually runs out. Martin
-       flagged home.html's compacting as looking "funky" once it used
-       the same tight spacing on every screen size; clamp() here means a
-       wide desktop window keeps the old, roomier feel while a small
-       phone still gets a page that fits without scrolling. */
     padding: clamp(12px, 3vh, 32px) clamp(14px, 3vw, 24px) clamp(64px, 10vh, 84px);
   }
 
@@ -177,9 +148,6 @@
     margin: 2px 0 0 2px;
   }
   .profile-menu-wrap { position: relative; flex-shrink: 0; }
-  /* No photo: an Apple-style monogram (2026-10-21, Martin: "make the default no pfp letters
-     look more like the apple ones"), the grey gradient and rounded white initials of a contact
-     with no picture. A photo replaces it (set inline as background-image). */
   .profile-btn {
     width: 42px;
     height: 42px;
@@ -198,8 +166,6 @@
     flex-shrink: 0;
   }
 
-  /* A photo has no ring (2026-10-23, Martin: "remove the ugly border if it is a custom upload");
-     the letter avatars keep theirs. Same size: the border goes clear and the photo fills it. */
   .profile-btn.has-photo { border-color: transparent; background-origin: border-box; background-repeat: no-repeat; }
   .profile-menu {
     position: absolute;
@@ -261,7 +227,7 @@
   .settings-search input {
     width: 100%;
     font: inherit;
-    font-style: normal;   /* what you type is upright; only the "Search" placeholder is italic (2026-10-26, Martin) */
+    font-style: normal;
     font-size: 0.86rem;
     color: var(--text-dark);
     background: var(--panel-inner);
@@ -316,8 +282,6 @@
     flex-shrink: 0;
   }
   .settings-nav-item[hidden] { display: none; }
-  /* Search results (2026-10-26, Martin: search should find settings, not just sections).
-     One row per matching setting, with where it lives underneath. */
   .settings-nav-list[hidden], .settings-results[hidden] { display: none; }
   .settings-results { display: flex; flex-direction: column; gap: 4px; }
   .settings-result {
@@ -339,13 +303,6 @@
   .settings-result-label { font-weight: 800; font-size: 0.88rem; line-height: 1.25; }
   .settings-result-label mark { background: none; color: var(--accent); }
   .settings-result-path { font-weight: 700; font-size: 0.72rem; color: var(--text-muted); }
-  /* The setting a result opened, marked for a moment so the eye lands on it (redone 2026-10-26,
-     Martin: the ring "doesn't go all the way around and looks funky"; an inset ring on a row never
-     matched its group's rounded corners, and focusing the switch inside added a second ring).
-     - A row in a group gets an accent tint across the whole row; the group's rounded corners clip it.
-     - A heading turns the accent color.
-     - A button or card gets a ring outside it, which follows its own rounded shape.
-     Each shows at once, then fades after a moment (the delay is only on the way out). */
   .search-hit-row { background-color: color-mix(in srgb, var(--accent) 16%, transparent); }
   .search-hit-row.search-hit-fade { background-color: transparent; transition: background-color 0.6s ease 1.2s; }
   .settings-subhead.search-hit-text { color: var(--accent); }
@@ -408,8 +365,6 @@
     color: var(--text-faint);
     margin: 20px 0 8px;
   }
-  /* Only a section's own first heading loses its top space: a heading that starts a wrapper
-     (Calendar, Averages Plus) still needs the gap above it (2026-10-21, Martin: "fix the padding"). */
   .settings-section > .settings-subhead:first-child { margin-top: 0; }
 
   .settings-group {
@@ -428,17 +383,14 @@
   .settings-row-text { min-width: 0; }
   .settings-row-label { font-weight: 700; font-size: 0.88rem; color: var(--text-dark); margin: 0; }
   .settings-row-desc { font-size: 0.76rem; color: var(--text-muted); margin: 2px 0 0; line-height: 1.4; }
-  /* A switch another setting decides (File Previews in Potato PC Mode, 2026-10-16) */
   .settings-row.is-disabled .settings-row-label { color: var(--text-faint); }
   .settings-row.is-disabled .toggle { cursor: not-allowed; filter: grayscale(1); }
   .settings-row.is-disabled .toggle input { pointer-events: none; }
   .settings-row-value { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; flex-shrink: 0; }
-  /* Their Schoology address (2026-10-23): a link, underlined on hover. */
   .settings-row-value .school-link { color: inherit; text-decoration: none; text-underline-offset: 2px; overflow-wrap: anywhere; }
   .settings-row-value .school-link:hover, .settings-row-value .school-link:focus-visible { text-decoration: underline; outline: none; }
   #schoolHead[hidden], #schoolGroup[hidden], #schoolGroup .settings-row[hidden] { display: none; }
 
-  /* ---------- Integrations (2026-10-04) ---------- */
   .integ-status { display: inline-flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 0.72rem; font-weight: 800; color: var(--text-faint); }
   .integ-status::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--border); flex: none; }
   .integ-status.on { color: var(--grade-good, #2f7d54); }
@@ -449,7 +401,6 @@
   .integ-btn.disconnect { color: var(--grade-bad, #b6432f); }
   .integ-soon { font-size: 0.72rem; font-weight: 800; color: var(--text-faint); white-space: nowrap; flex-shrink: 0; }
   .integ-note { margin: 8px 0 0; }
-  /* Canva, signed in (2026-10-05) */
   .integ-btn[disabled] { opacity: 0.55; cursor: default; }
   .integ-flash { margin: 0 2px 10px; padding: 10px 12px; border-radius: 10px; background: var(--panel-inner); font-size: 0.82rem; font-weight: 700; color: var(--text-dark); }
   .integ-flash.bad { color: var(--grade-bad, #b6432f); }
@@ -458,12 +409,10 @@
   .editor-done.integ-danger:hover { background: var(--grade-bad, #b6432f); filter: brightness(0.92); }
   .integ-note + .settings-subhead, .integ-note + div > .settings-subhead:first-child { margin-top: 24px; }
   .integ-hint { color: var(--text-faint); font-weight: 700; }
-  /* Rounded dropdown (2026-10-04): pill button + rounded menu */
   .pick { flex-shrink: 0; }
   .pick-btn { display: inline-flex; align-items: center; gap: 8px; font: inherit; font-weight: 700; font-size: 0.83rem; color: var(--text-dark); background: var(--panel-bg); border: 1px solid var(--border); border-radius: 999px; padding: 8px 12px 8px 16px; cursor: pointer; white-space: nowrap; }
   .pick-btn.locked, .pick-btn:disabled { cursor: default; opacity: .75; }
   .pick-btn.locked .pick-chev { display: none; }
-  /* Nothing to pick (no editing app connected, or Incognito), 2026-10-14. */
   .pick-btn.empty { opacity: .5; }
   .pick-btn:hover { background: var(--panel-inner); }
   .pick-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring); }
@@ -615,17 +564,13 @@
   .toggle input:checked ~ .track .thumb { transform: translateX(16px); }
   .toggle input:focus-visible ~ .track { box-shadow: 0 0 0 3px var(--accent-ring); }
 
-  /* Browser notifications (2026-10-04) */
   #notifTypesWrap[hidden], .notif-blocked[hidden] { display: none; }
   .notif-blocked { margin: 8px 0 0; color: var(--grade-bad); font-weight: 700; }
   .notif-test { margin-top: 12px; }
   #notifTypesWrap > .settings-subhead { margin-top: 24px; }
-  /* Live (2026-10-05): one short line saying what just happened (turning on,
-     a failed change, the test). Plain text, red only when it's a problem. */
   .notif-msg[hidden] { display: none; }
   .notif-msg { margin: 8px 0 0; font-weight: 700; }
   .notif-msg.bad { color: var(--grade-bad); }
-  /* Mode picker with Averages Plus (2026-10-21) */
   .mode-row[hidden], #plusManageBtn[hidden], #plusMsg[hidden] { display: none; }
   .mode-pick { flex: 1; min-width: 0; display: flex; align-items: flex-start; gap: 12px; margin: -4px; padding: 4px; border: none; border-radius: 8px; background: none; font: inherit; color: inherit; text-align: left; cursor: pointer; }
   .mode-pick:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring); }
@@ -637,14 +582,10 @@
   .mode-pick:hover:not([aria-disabled="true"]) .mode-radio { border-color: var(--text-muted); }
   .mode-pick[aria-checked="true"] .mode-radio { border-color: var(--accent); background: radial-gradient(circle, var(--accent) 0 4px, transparent 4.5px); }
   .mode-row.is-past-due .settings-row-desc { color: var(--grade-bad); }
-  /* Plus stands out in Punch, the logo gradient (2026-10-21), whatever the accent color is. Dark text: white fails AA on it. */
   .mode-row[data-mode="plus"] { background: color-mix(in srgb, #FF7A50 16%, var(--panel-inner)); }
   .mode-row[data-mode="plus"] .mode-pick .settings-row-label { display: inline-block; padding: 0 10px; border-radius: 999px; background: linear-gradient(135deg, #FF7A50, #E5484D); color: #2A0A05; line-height: 22px; }
   .mode-row[data-mode="plus"] .mode-pick[aria-checked="true"] .mode-radio { border-color: #E5484D; background: radial-gradient(circle, #E5484D 0 4px, transparent 4.5px); }
   .plus-msg { margin: 8px 0 0; font-weight: 700; }
-  /* ---------- Plus section (2026-10-26) ----------
-     The nav label in the Plus colors. Darker stops than the badge gradient so
-     the letters keep 4.5:1 on the sidebar (light: 4.5 to 5.4, dark: 6.8 to 8.7). */
   .plus-word { background: linear-gradient(90deg, #AE3A10, #B02A38); -webkit-background-clip: text; background-clip: text; color: transparent; }
   body.dark-mode .plus-word { background-image: linear-gradient(90deg, #FF9A72, #FF7E84); }
   .settings-nav-item.plus-nav.active { background: linear-gradient(135deg, #FF7A50, #E5484D); color: #2A0A05; }
@@ -664,9 +605,6 @@
   .plus-hero-btn:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
   .plus-hero-btn[hidden], #plusNotifBtn[hidden], #plusCalBtn[hidden], #plusPayBlock[hidden], .plus-perk-state[hidden] { display: none; }
   .plus-hero-btn[aria-disabled="true"] { opacity: 0.6; cursor: default; transform: none; }
-  /* ---------- Plus feature cards (2026-10-26) ----------
-     Two per row where there's room, one on phones. The stage on top holds a small drawing of the
-     feature; the body has the name, one line, and Set up / a status for members. */
   .plus-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
   .plus-card { display: flex; flex-direction: column; border-radius: var(--window-radius-md); background: var(--panel-inner); overflow: hidden; }
   .plus-card-stage { position: relative; height: 128px; display: grid; place-items: center; overflow: hidden; background: radial-gradient(circle at 50% 120%, color-mix(in srgb, #FF7A50 30%, transparent), transparent 70%), color-mix(in srgb, #FF7A50 10%, var(--panel-inner)); }
@@ -699,7 +637,6 @@
   .pv-early-tag { padding: 2px 8px; border-radius: 999px; background: linear-gradient(135deg, #FF7A50, #E5484D); color: #2A0A05; font-size: 0.62rem; }
   .pv-early-when { font-size: 0.62rem; }
   .pv-phone { position: absolute; top: 20px; display: flex; flex-direction: column; gap: 8px; width: 96px; height: 140px; padding: 24px 8px 8px; border-radius: 20px; background: #fff; box-shadow: 0 0 0 4px #14151f, 0 8px 20px rgba(20, 21, 31, 0.2); }
-  /* No notch or island (2026-10-28): Apple asks apps not to draw replicas of its hardware, so this is a generic phone. */
   .pv-phone-row { display: flex; align-items: center; gap: 4px; padding: 4px; border-radius: 6px; background: #f1f1f4; }
   .pv-phone-row i { flex: none; width: 8px; height: 8px; border-radius: 50%; }
   .pv-phone-row b { flex: 1; height: 4px; border-radius: 2px; background: #c7c7cd; }
@@ -735,7 +672,6 @@
     cursor: pointer;
   }
   select.settings-select:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring); }
-  /* Time Zone (2026-10-28) */
   #tzPickRow[hidden] { display: none; }
   .tz-select { flex: 0 1 auto; max-width: 240px; min-width: 0; }
   @media (max-width: 520px) {
@@ -757,7 +693,6 @@
     width: 54px;
     height: 54px;
     border-radius: 50%;
-    /* Apple-style monogram, same as the top-right button (2026-10-21). */
     background: linear-gradient(180deg, #A5ABB8, #858994);
     color: #fff;
     font-family: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -885,14 +820,6 @@
   .editor-done-danger { background: var(--grade-bad); }
   .editor-done-danger:hover { background: #8f3423; }
 
-  /* ---------- Photo/background crop — 2026-09-09, per Martin: uploaded
-     images should be croppable, not just used as-is at whatever framing
-     the original file happened to have. Two different shapes on
-     purpose: the photo is always a fixed circle (every place it renders
-     draws it that way), the background has no one correct shape (see
-     the HTML comment above #bgCropOverlay), so it's pan/zoom against a
-     stage sized to the current window's aspect ratio instead of a fixed
-     crop box. ---------- */
   .photo-crop-overlay, .bg-crop-overlay { z-index: 90; }
   .photo-crop-stage {
     position: relative;
@@ -938,16 +865,6 @@
   }
   .bg-crop-zoom { width: 100%; display: block; margin-top: 12px; }
 
-  /* ---------- Upload gate — NSFW-scan consent shown before every
-     custom-image upload on this page (background swatch + profile
-     photo), 2026-09-04, per Martin. Reuses the .editor-overlay/
-     .editor-modal shell but sits above every other overlay — a profile-
-     photo upload happens while the Edit Profile modal is already open,
-     so the whole page including that modal stays dimmed underneath.
-     Continue hides the box but keeps the dim behind the native OS file
-     picker; picking a file swaps to a non-dismissible "scanning" pane,
-     then the real upload logic runs. Cancelling the OS dialog or
-     clicking the dimmed backdrop bails out with nothing uploaded. ---------- */
   .upload-gate-overlay { z-index: 90; }
   .upload-gate-box.is-hidden { display: none; }
   .upload-gate-pane.is-hidden { display: none; }
@@ -1012,7 +929,6 @@
   .about-block a.about-name:hover,
   .about-block a[aria-label="Averages on GitHub"]:hover .about-logo { opacity: 0.85; }
   .about-version { font-size: 0.76rem; color: var(--text-faint); margin: 4px 0 0; }
-  /* The build, linked to the code on GitHub (2026-10-23): underlined only on hover. */
   .about-version .build-link { color: inherit; text-decoration: none; text-underline-offset: 2px; }
   .about-version .build-link:hover, .about-version .build-link:focus-visible { text-decoration: underline; outline: none; }
 
@@ -1035,7 +951,6 @@
   }
   .list-row:hover { background: var(--panel-bg); }
   .list-row svg { width: 14px; height: 14px; stroke: var(--text-faint); fill: none; stroke-width: 2.55; stroke-linecap: butt; stroke-linejoin: miter; flex-shrink: 0; }
-
 
   /* ---------- Bottom nav — identical component to every other page ---------- */
   .app-nav {
@@ -1090,10 +1005,6 @@
   .nav-link .dot { width: 4px; height: 4px; border-radius: 50%; background: transparent; }
   .nav-link.active .label { color: var(--text-dark); }
   .nav-link.active .dot { background: var(--accent); }
-  /* ---------- "More" overflow (2026-10-01, per Martin: "if the text has
-     to get ... we should add a more button on the far right side with a
-     list of the other options"). Labels never truncate: when they would,
-     the rightmost pages move into the More menu instead. ---------- */
   .nav-link[hidden], .nav-more[hidden], .nav-more-menu[hidden] { display: none; }
   /* While the More menu is open the whole bar sits above everything else on
      the page (sticky headers, pop-ups, the edit button go up to z-index 90),
@@ -1156,8 +1067,6 @@
   .nav-more-item.active { color: var(--text-dark); }
   .nav-more-item.active span { position: relative; display: inline-block; padding-bottom: 6px; margin-bottom: -6px; }
   .nav-more-item.active span::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; border-radius: 999px; background: var(--accent); }
-  /* Labels sit centered in the bar; the active page is underlined in the
-     accent color instead of marked with a dot (2026-10-01, per Martin). */
   .app-nav-inner .nav-link, .app-nav-inner .nav-more { justify-content: center; gap: 0; padding-top: 10px; padding-bottom: 10px; }
   .app-nav-inner .nav-link .dot, .app-nav-inner .nav-more .dot { display: none; }
   .app-nav-inner .nav-link .label, .app-nav-inner .nav-more .label { position: relative; padding: 6px 0; }
@@ -1193,20 +1102,29 @@
     .settings-sidebar { border-right: none; }
   }
 
-  /* Official app logos (2026-10-19): the files Martin added in public/brand/.
-     Only ever resized, never changed (Google's and Canva's brand rules). A
-     brand-slot is an empty space the same size, so names line up where an app
-     has no logo yet (OneDrive). */
   .canva-mark { width: 20px; height: 20px; flex: none; display: block; border-radius: 50%; background: center / contain no-repeat url("/brand/canva-mark.svg"); }
   .drive-mark { width: 20px; height: 20px; flex: none; display: block; background: center / contain no-repeat url("/brand/google-drive.png"); }
   .brand-slot { width: 20px; height: 20px; flex: none; display: block; }
-  /* Integrations rows (2026-10-21, Martin): no empty space before "OneDrive" until its logo is uploaded, so the name lines up with its description. Menus keep the slot so their names stay in a column. */
-  /* OneDrive: a plain cloud, like Fullscreen's (2026-11-06, Martin: the icon was missing); no Microsoft logo */
   .integ-name .brand-slot { display: block; background: center / 18px no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230a62c9' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 18h10.5a4 4 0 0 0 .6-7.96A6 6 0 0 0 6.6 9.6 4.2 4.2 0 0 0 7 18z'/%3E%3C/svg%3E"); }
   .integ-name { display: flex; align-items: center; gap: 8px; }
   .integ-tm { margin-top: 4px; }
   .pick-name, #defaultEditorLabel { display: inline-flex; align-items: center; gap: 8px; }
   .pick-name .canva-mark, .pick-name .drive-mark, #defaultEditorLabel .canva-mark, #defaultEditorLabel .drive-mark { width: 18px; height: 18px; }
+  .ev-code { display: block; width: 9.5ch; box-sizing: content-box; margin: 14px auto 0; padding: 10px 14px; border: none; border-radius: 12px; background: var(--control-bg); color: var(--text-dark); font: inherit; font-size: 1.25rem; font-weight: 800; letter-spacing: 0.3em; text-align: center; font-variant-numeric: tabular-nums; outline: none; box-shadow: inset 0 0 0 2px var(--control-hover); }
+  .ev-code:focus { box-shadow: inset 0 0 0 2px var(--accent); }
+  .ev-msg { min-height: 1.2em; margin: 8px 0 0; text-align: center; font-size: 0.82rem; font-weight: 700; color: var(--text-dark); opacity: 0.75; }
+  .ev-msg.bad { color: #d92626; opacity: 1; }
+  /* NEW stickers stuck all over the Fullscreen option (they're inside it, so they hide with it) */
+  .window-option.win-new { position: relative; overflow: visible; }
+  .win-new .nw { position: absolute; z-index: 1; pointer-events: none; padding: 2px 7px; border-radius: 6px; font-size: 0.62rem; font-weight: 900; letter-spacing: 0.06em; font-style: normal; line-height: 1.3; color: #fff; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25); border: 2px solid #fff; }
+  .win-new .nw1 { top: -10px; left: -8px; background: #e5484d; transform: rotate(-14deg); }
+  .win-new .nw2 { top: -12px; right: 14px; background: #2f5fb3; transform: rotate(9deg); }
+  .win-new .nw3 { bottom: -10px; right: -10px; background: #2e7d4f; transform: rotate(-8deg); }
+  .win-new .nw4 { bottom: -11px; left: 22%; background: #7a3fa0; transform: rotate(6deg); }
+  .win-new .nw5 { top: 30%; right: -16px; background: #b25600; transform: rotate(18deg); }
+  body.potato-mode .win-new .nw { box-shadow: none; }
+  .visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+  .window-options { padding-top: 6px; }
 </style>
 </head>
 <body>
@@ -1236,9 +1154,6 @@
               Account
               <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
             </button>
-            <!-- Averages Plus (2026-10-26, Martin: a Plus section "that has the letters colored", with
-                 every Plus feature and the payment settings, like Discord's Nitro page). Shown once
-                 /billing/status says Plus is on offer or they have it (see the Mode script). -->
             <button class="settings-nav-item plus-nav" type="button" data-section="plus">
               <span class="plus-word">Plus</span>
               <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
@@ -1288,9 +1203,6 @@
               <button class="btn-secondary" type="button" id="profileEditBtn">Edit</button>
             </div>
 
-            <!-- School (2026-10-23): signed in, the school picked on the sign-in page and a link to
-                 their own Schoology (like nmusd.schoology.com); see schoolSection() below. The
-                 sample values are only for the preview and the demo. -->
             <p class="settings-subhead" id="schoolHead">School</p>
             <div class="settings-group" id="schoolGroup">
               <div class="settings-row" id="schoolNameRow">
@@ -1312,8 +1224,6 @@
             </div>
 
             <p class="settings-subhead">Mode</p>
-            <!-- Mode (2026-10-21): Classic, Plus or Incognito (that order since 2026-10-26), picked here. Plus is Classic with the
-                 Averages Plus subscription; its row only shows when billing is on (see the script). -->
             <div class="settings-group" id="modeGroup" role="radiogroup" aria-label="Mode">
               <div class="settings-row mode-row" data-mode="classic">
                 <button type="button" class="mode-pick" role="radio" aria-checked="false" data-mode="classic">
@@ -1340,10 +1250,7 @@
             <button class="btn-danger" type="button" data-action="signout">Sign Out</button>
           </div>
 
-          <!-- ---------- Plus (2026-10-26) ---------- -->
           <div class="settings-section" data-section="plus">
-            <!-- Hero (redone 2026-10-26, Martin: "make the plus section look better"): the brand's dark
-                 card with the logo in Punch and the loading screen's warm glow in the corner. -->
             <div class="plus-hero">
               <svg class="plus-hero-mark" aria-hidden="true" focusable="false" viewBox="-8 -8 470 470"><defs><linearGradient id="plusMarkGrad" x1="0" y1="0" x2="0" y2="454" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FF7A50"/><stop offset="1" stop-color="#E5484D"/></linearGradient></defs><path id="plusLogoPath" fill="url(#plusMarkGrad)" fill-rule="evenodd" d="M0.02 452.75C0.15 442.97 5.78 407.10 10.02 389.00C11.63 382.12 15.00 367.50 17.51 356.50C28.03 310.27 40.89 265.53 58.60 213.50C77.33 158.47 85.57 136.89 103.25 96.50C118.88 60.79 129.55 39.21 141.04 20.00C144.17 14.78 147.92 8.14 149.38 5.25L152.03 0.00L226.00 0.00L299.97 0.00L302.62 5.25C304.08 8.14 307.83 14.78 310.96 20.00C322.28 38.92 336.94 68.63 348.06 95.18C350.75 101.61 354.55 110.26 356.49 114.41C367.49 137.90 397.74 222.92 410.96 267.50C419.09 294.91 429.04 332.52 434.49 356.50C437.00 367.50 440.37 382.12 441.98 389.00C446.22 407.10 451.85 442.97 451.98 452.75C452.00 453.74 436.27 454.00 376.64 454.00L301.28 454.00L299.60 442.75C296.88 424.51 291.11 392.27 288.63 381.50L286.34 371.50L223.34 371.24L160.34 370.99L158.19 380.33C155.44 392.33 149.65 424.19 147.53 439.00C146.63 445.32 145.66 451.29 145.38 452.25C144.90 453.90 140.55 454.00 72.43 454.00C15.14 454.00 0.00 453.74 0.02 452.75ZM184.00 348.25C189.69 345.41 191.44 335.66 187.41 329.29C184.35 324.47 172.42 324.01 167.19 328.51C164.78 330.58 164.50 331.51 164.50 337.31C164.50 344.14 166.09 347.25 170.50 349.05C173.93 350.46 180.35 350.07 184.00 348.25ZM274.28 347.02C284.17 342.33 288.64 332.80 287.74 318.33C286.79 303.07 279.66 295.00 265.16 292.75C256.25 291.37 245.93 293.01 240.22 296.71C232.38 301.79 228.36 311.77 229.23 323.96C230.09 335.93 235.58 344.50 244.50 347.78C249.77 349.72 251.32 349.90 260.50 349.59C267.31 349.35 270.66 348.73 274.28 347.02ZM220.00 325.25L220.00 301.50L209.50 301.50L199.00 301.50L199.00 325.25L199.00 349.00L209.50 349.00L220.00 349.00L220.00 325.25ZM252.40 330.90C250.89 329.22 250.50 327.26 250.50 321.31C250.50 314.35 250.70 313.66 253.31 311.41C256.89 308.33 260.44 308.35 263.55 311.45C265.70 313.61 266.00 314.79 266.00 321.23C266.00 330.70 264.56 333.00 258.60 333.00C255.51 333.00 253.78 332.41 252.40 330.90ZM218.38 292.67C221.03 290.93 222.25 286.49 221.33 281.90C220.47 277.58 215.94 275.01 209.18 275.00C200.42 275.00 197.08 277.76 197.03 285.08C197.01 288.68 197.53 290.15 199.48 291.98C203.75 295.99 212.81 296.32 218.38 292.67ZM258.58 254.35C258.23 253.44 256.13 245.45 253.90 236.60C244.34 198.58 227.57 140.97 224.09 134.18L222.37 130.84L216.22 150.67C207.52 178.73 204.15 190.56 195.49 223.50C191.29 239.45 187.63 253.29 187.36 254.25C186.90 255.89 189.07 256.00 223.04 256.00C256.26 256.00 259.16 255.87 258.58 254.35Z"/></svg>
               <div class="plus-hero-text">
@@ -1354,13 +1261,8 @@
             </div>
             <p class="settings-row-desc plus-msg" id="plusPageMsg" role="status" hidden></p>
 
-            <!-- Members see their plan and payment instead of the feature cards (2026-10-27, Martin:
-                 "when you subscribe to Plus, can the plus page just show payment details"). -->
             <div id="plusFeatures">
             <p class="settings-subhead">Plus features</p>
-            <!-- Feature cards (2026-10-26, Martin picked "mini previews"; the icons were "the most
-                 funky part"): each card shows a small drawing of the feature itself instead of an
-                 icon, like Discord's Nitro page. The drawings are plain HTML, decorative only. -->
             <div class="plus-cards">
               <div class="plus-card">
                 <div class="plus-card-stage" aria-hidden="true">
@@ -1425,9 +1327,6 @@
             </div>
             </div>
 
-            <!-- Your plan (2026-10-27): what they pay and when, for members (and anyone with a Stripe
-                 customer, so receipts and cancelling are always one click away). Never card details:
-                 those stay on Stripe's page, behind Manage. -->
             <div id="plusPayBlock" hidden>
               <p class="settings-subhead" id="plusPayTitle">Payment</p>
               <div class="settings-group">
@@ -1460,8 +1359,6 @@
               </div>
             </div>
 
-            <!-- Calendar sync (2026-10-21), an Averages Plus perk: a private link calendar apps
-                 subscribe to. Filled in by the script below from GET /calendar/status. -->
             <div id="calendarBlock" data-feature="calendar-sync" hidden>
               <p class="settings-subhead">Calendar link</p>
               <div class="settings-group">
@@ -1491,9 +1388,9 @@
           <div class="settings-section" data-section="general">
             <p class="settings-subhead">Window Type</p>
             <div class="window-options">
+              <!-- Fullscreen: the new pages (/IS/). First while the fullscreen switch is on; it and its stickers hide while it's off. -->
+              <button type="button" class="window-option win-new" id="windowOptionFullscreen" data-shape="fullscreen" data-feature="fullscreen" aria-pressed="false">Fullscreen<span class="nw nw1" aria-hidden="true">NEW</span><span class="nw nw2" aria-hidden="true">NEW</span><span class="nw nw3" aria-hidden="true">NEW</span><span class="nw nw4" aria-hidden="true">NEW</span><span class="nw nw5" aria-hidden="true">NEW</span><span class="visually-hidden"> (new)</span></button>
               <button type="button" class="window-option" id="windowOptionWindowed" data-shape="windowed" aria-pressed="false">Windowed</button>
-              <!-- Fullscreen (2026-10-28): the new pages (/IS/), behind the fullscreen switch. -->
-              <button type="button" class="window-option" id="windowOptionFullscreen" data-shape="fullscreen" data-feature="fullscreen" aria-pressed="false">Fullscreen</button>
             </div>
 
             <p class="settings-subhead">Appearance</p>
@@ -1576,27 +1473,7 @@
 
           <!-- ---------- Notifications ---------- -->
           <div class="settings-section" data-section="notifications">
-            <!-- Browser push notifications were removed 2026-09-16, per
-                 Martin: notifications are becoming an iOS-only feature,
-                 built alongside the native app. What used to sit here was
-                 five category toggles (Grade Updates, New Assignments, Due
-                 Date Reminders, Messages, Announcements) plus a permission
-                 modal that called Notification.requestPermission() for
-                 real. The permission half worked; delivery never existed —
-                 there was no service worker, no stored push subscription
-                 and nothing on api.averages.io to trigger a send — so the
-                 toggles promised something the web app could not do.
-                 The section keeps its "Notifications" name deliberately,
-                 so iOS push can move back in here later without the
-                 navigation shifting around under returning users. -->
 
-            <!-- Browser notifications are back (2026-10-04, per Martin), now
-                 requiring Sync Across Devices, and the Weekly Grade Summary
-                 email is gone. Live for signed-in students since 2026-10-05:
-                 public/sw.js shows them, public/js/averages-push.js subscribes
-                 this browser, and averages-api's /push routes check for
-                 changes (see the script's Browser notifications block). Signed
-                 in, the row says Coming soon until the API has its push keys. -->
             <p class="settings-subhead">This browser</p>
             <div class="settings-group">
               <div class="settings-row">
@@ -1605,7 +1482,6 @@
                   <p class="settings-row-desc" id="browserNotifDesc">Get notified when something changes, even with Averages closed.</p>
                 </div>
                 <label class="toggle" id="browserNotifToggleWrap"><input type="checkbox" id="browserNotifToggle" aria-label="Browser notifications"><span class="track"><span class="thumb"></span></span></label>
-                <!-- Averages Plus (2026-10-21): shown instead of the switch when notifications need Plus. -->
                 <button class="btn-secondary" type="button" id="notifPlusBtn" hidden>Get Plus</button>
               </div>
             </div>
@@ -1655,7 +1531,6 @@
             </div>
           </div>
 
-          <!-- ---------- Integrations (2026-10-04) ---------- -->
           <div class="settings-section" data-section="integrations">
             <p class="settings-subhead">Connected apps</p>
             <div class="settings-group" id="integrationList">
@@ -1708,8 +1583,6 @@
               <svg class="about-logo" aria-hidden="true" focusable="false" viewBox="-8 -8 470 470"><defs><linearGradient id="aboutLogoGrad" x1="0" y1="0" x2="0" y2="454" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FF7A50"/><stop offset="1" stop-color="#E5484D"/></linearGradient></defs><path fill="url(#aboutLogoGrad)" fill-rule="evenodd" d="M0.02 452.75C0.15 442.97 5.78 407.10 10.02 389.00C11.63 382.12 15.00 367.50 17.51 356.50C28.03 310.27 40.89 265.53 58.60 213.50C77.33 158.47 85.57 136.89 103.25 96.50C118.88 60.79 129.55 39.21 141.04 20.00C144.17 14.78 147.92 8.14 149.38 5.25L152.03 0.00L226.00 0.00L299.97 0.00L302.62 5.25C304.08 8.14 307.83 14.78 310.96 20.00C322.28 38.92 336.94 68.63 348.06 95.18C350.75 101.61 354.55 110.26 356.49 114.41C367.49 137.90 397.74 222.92 410.96 267.50C419.09 294.91 429.04 332.52 434.49 356.50C437.00 367.50 440.37 382.12 441.98 389.00C446.22 407.10 451.85 442.97 451.98 452.75C452.00 453.74 436.27 454.00 376.64 454.00L301.28 454.00L299.60 442.75C296.88 424.51 291.11 392.27 288.63 381.50L286.34 371.50L223.34 371.24L160.34 370.99L158.19 380.33C155.44 392.33 149.65 424.19 147.53 439.00C146.63 445.32 145.66 451.29 145.38 452.25C144.90 453.90 140.55 454.00 72.43 454.00C15.14 454.00 0.00 453.74 0.02 452.75ZM184.00 348.25C189.69 345.41 191.44 335.66 187.41 329.29C184.35 324.47 172.42 324.01 167.19 328.51C164.78 330.58 164.50 331.51 164.50 337.31C164.50 344.14 166.09 347.25 170.50 349.05C173.93 350.46 180.35 350.07 184.00 348.25ZM274.28 347.02C284.17 342.33 288.64 332.80 287.74 318.33C286.79 303.07 279.66 295.00 265.16 292.75C256.25 291.37 245.93 293.01 240.22 296.71C232.38 301.79 228.36 311.77 229.23 323.96C230.09 335.93 235.58 344.50 244.50 347.78C249.77 349.72 251.32 349.90 260.50 349.59C267.31 349.35 270.66 348.73 274.28 347.02ZM220.00 325.25L220.00 301.50L209.50 301.50L199.00 301.50L199.00 325.25L199.00 349.00L209.50 349.00L220.00 349.00L220.00 325.25ZM252.40 330.90C250.89 329.22 250.50 327.26 250.50 321.31C250.50 314.35 250.70 313.66 253.31 311.41C256.89 308.33 260.44 308.35 263.55 311.45C265.70 313.61 266.00 314.79 266.00 321.23C266.00 330.70 264.56 333.00 258.60 333.00C255.51 333.00 253.78 332.41 252.40 330.90ZM218.38 292.67C221.03 290.93 222.25 286.49 221.33 281.90C220.47 277.58 215.94 275.01 209.18 275.00C200.42 275.00 197.08 277.76 197.03 285.08C197.01 288.68 197.53 290.15 199.48 291.98C203.75 295.99 212.81 296.32 218.38 292.67ZM258.58 254.35C258.23 253.44 256.13 245.45 253.90 236.60C244.34 198.58 227.57 140.97 224.09 134.18L222.37 130.84L216.22 150.67C207.52 178.73 204.15 190.56 195.49 223.50C191.29 239.45 187.63 253.29 187.36 254.25C186.90 255.89 189.07 256.00 223.04 256.00C256.26 256.00 259.16 255.87 258.58 254.35Z"/></svg>
               </a>
               <a class="about-name" href="https://github.com/averages-io" target="_blank" rel="noopener" style="text-decoration:none;">Averages</a>
-              <!-- Filled in on every build (2026-10-23): scripts/port-pages.mjs, from package.json's
-                   version and the build's commit. Change the number in package.json. -->
               <p class="about-version">__AVERAGES_STAGE__ __AVERAGES_BASE__ (<a class="build-link" href="https://github.com/averages-io/averages.io/commits/main/" target="_blank" rel="noopener noreferrer" title="__AVERAGES_COMMIT__">Build __AVERAGES_BUILD__</a>)</p>
             </div>
             <div class="settings-group" style="margin-top: 18px;">
@@ -1757,21 +1630,6 @@
     </div>
   </div>
 
-  <!-- The "Turn on sync first" nudge and the turn-Sync-off confirm were removed on 2026-10-21: Sync is always on in Classic. -->
-
-
-  <!-- ---------- "What turning this on means" consent (2026-09-12; for
-       Browser Notifications since 2026-10-04, copy made exact 2026-10-05
-       when sending went live). The last step before notifications turn on,
-       once sync is on. It isn't unblocking anything, it's disclosure:
-       turning this on means the Averages server keeps a real, reusable
-       school sign-in (encrypted with a separate key, PUSH_SECRET in
-       averages-api) so it can check about every 20 minutes with Averages
-       closed. That's a bigger thing to store than anything else this app
-       keeps, so it gets its own confirmation. Every sentence here is what
-       averages-api's PushStore actually does: deleted when the last
-       browser turns it off (or on sign-out), notifications carry only the
-       kind of change. See openNotifConsent below. ---------- -->
   <div class="editor-overlay" id="notifConsentOverlay">
     <div class="editor-modal" role="dialog" aria-modal="true" aria-labelledby="notifConsentTitle" style="max-width: 380px;">
       <div class="editor-head">
@@ -1789,25 +1647,22 @@
     </div>
   </div>
 
-  <!-- ---------- Verify Email — mock verification step. No real backend
-       to send mail through, so "verifying" is simulated: clicking
-       "Verify Email" stands in for opening the emailed link, then the
-       button greys out and the app "polls" every 3 seconds — the same
-       automatic-detection UX a real verification flow would have —
-       before confirming. ---------- -->
+  <!-- Verify your email: enter the 6-digit code we email (public/js/averages-email.js). -->
   <div class="editor-overlay" id="emailVerifyOverlay">
-    <div class="editor-modal" role="dialog" aria-modal="true" aria-labelledby="emailVerifyTitle" style="max-width: 360px;">
+    <div class="editor-modal" role="dialog" aria-modal="true" aria-labelledby="emailVerifyTitle" style="max-width: 380px;">
       <div class="editor-head">
         <h2 id="emailVerifyTitle">Verify your email</h2>
         <button class="editor-close" id="emailVerifyClose" type="button" aria-label="Close">&times;</button>
       </div>
       <div class="editor-body" style="padding-bottom: 16px;">
-        <p class="settings-row-desc" style="font-size: 0.86rem;">We sent a verification link to <strong id="emailVerifyAddress" style="color: var(--text-dark);"></strong>. Click below to simulate opening it.</p>
-        <button class="danger-link" type="button" id="emailVerifyResend" style="margin: 10px auto 0; display: block;">Resend link</button>
+        <p class="settings-row-desc" id="emailVerifyText" style="font-size: 0.86rem;">Sending a 6-digit code to <strong id="emailVerifyAddress" style="color: var(--text-dark);"></strong>…</p>
+        <input type="text" id="emailVerifyCode" class="ev-code" inputmode="numeric" maxlength="6" placeholder="000000" autocomplete="one-time-code" aria-label="The 6-digit code we emailed you">
+        <p class="ev-msg" id="emailVerifyMsg" role="status"></p>
+        <button class="danger-link" type="button" id="emailVerifyResend" style="margin: 6px auto 0; display: block;">Send a new code</button>
       </div>
       <div class="editor-actions">
         <span></span>
-        <button class="editor-done" id="emailVerifyConfirm" type="button">Verify Email</button>
+        <button class="editor-done" id="emailVerifyConfirm" type="button">Verify</button>
       </div>
     </div>
   </div>
@@ -1922,9 +1777,6 @@
     </div>
   </div>
 
-
-
-
   <nav class="app-nav" aria-label="Main navigation">
     <div class="app-nav-inner" id="dock">
       <button class="nav-link" type="button" data-page="home" data-href="home.html">
@@ -1972,11 +1824,6 @@
   </nav>
 
   <script>
-    // Potato PC Mode on every page (2026-10-04, per Martin). The saved
-    // setting turns off all CSS animations and transitions, makes animate()
-    // calls and smooth scrolling instant, and drops the slanted page title.
-    // Same code as app/lib/theme-boot.ts, which runs it before first paint in
-    // the app; this copy covers the preview and pages theme-boot skips.
     (function () {
     var POTATO_CSS = "body.potato-mode,body.potato-mode *,body.potato-mode *::before,body.potato-mode *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important;filter:none!important;text-shadow:none!important}html:has(body.potato-mode){scroll-behavior:auto!important}body.potato-mode,body.potato-mode *{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif!important}body.potato-mode h1.title{font-style:normal!important;transform:none!important}body.potato-mode .trend.has-popup:focus-visible{outline:2px solid currentColor;outline-offset:2px}";
     function potatoOn() { return !!(document.body && document.body.classList.contains("potato-mode")); }
@@ -2097,7 +1944,6 @@
     })();
   </script>
 
-
   <script>
     // ------------------------------------------------------------------
     // Profile menu — identical component/behavior to every other page.
@@ -2179,42 +2025,20 @@
     }
     narrowQuery.addEventListener('change', syncResponsiveView);
 
-    // ------------------------------------------------------------------
-    // Search: see "Search (2026-10-26)" further down.
-
-    // ------------------------------------------------------------------
-    // Integrations (2026-10-04, per Martin). Canva's review requires both a
-    // "connected" indicator and a Disconnect button, so every row has them.
-    // In the preview, Connect/Disconnect just flips the state (in memory).
-    // Signed in (2026-10-05): Canva is real. Its row reads GET /canva/status,
-    // Connect navigates to the API's /canva/connect (which sends the student
-    // to Canva and back here with ?canva=connected|failed|cancelled), and
-    // Disconnect asks first, then calls DELETE /canva/connection.
-    // Google Drive and OneDrive (2026-10-05) connect from this browser, with
-    // public/js/averages-cloud.js: Connect opens Google's or Microsoft's own
-    // sign-in window, and what's connected is remembered on this device only
-    // (signing out forgets it). Each says Coming soon until the API's
-    // /config/cloud has its app ID. Demo sessions get Coming soon for all three.
-    // ------------------------------------------------------------------
     (function () {
       const list = document.getElementById('integrationList');
       if (!list) return;
-      // Logos (2026-10-19): OneDrive keeps an empty slot until it has one, so the names line up.
       const INTEG_MARK = { canva: '<span class="canva-mark" aria-hidden="true"></span>', gdrive: '<span class="drive-mark" aria-hidden="true"></span>', onedrive: '<span class="brand-slot" aria-hidden="true"></span>' };
       const PREVIEW = !window.__AVERAGES_MODE__;   // set by LegacyPage.tsx when signed in (live or demo); missing in the preview
       const APPS = [
-        // Short on purpose (2026-10-15, Martin: the text was "way too long").
         { id: 'canva', name: 'Canva', desc: 'Edit files and turn in designs.' },
         { id: 'gdrive', name: 'Google Drive', desc: 'Edit and add files.' },
-        { id: 'onedrive', name: 'OneDrive', desc: 'Save and add files.' },   // back 2026-10-05
+        { id: 'onedrive', name: 'OneDrive', desc: 'Save and add files.' },
       ];
-      // Feature switches (2026-10-09): a row hides while its integration is off (public/js/averages-features.js).
       const FEAT = { canva: 'canva-integration', gdrive: 'drive-integration', onedrive: 'onedrive-integration' };
       const connected = new Set();
       const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
       const LIVE = window.__AVERAGES_MODE__ === 'live';
-      // Incognito (2026-10-05; 2026-10-14): Canva is off; Google Drive and OneDrive
-      // connect through this browser only (see averages-cloud.js localOnly).
       const INCOG = window.__AVERAGES_INCOGNITO__ || null;
       const INCOGNITO = !!(INCOG && INCOG.on);
       // state: loading | ready | error | unconfigured (the API has no Canva app credentials)
@@ -2232,7 +2056,6 @@
           status = '<span class="integ-status">Couldn’t check right now</span>';
           action = '<button class="btn-secondary integ-btn" type="button" data-canva="retry">Try again</button>';
         } else if (s.connected && s.turnIn === 'reconnect') {
-          // Connected before turning in Canva designs was switched on (2026-10-06).
           status = `<span class="integ-status on">Connected${s.name ? ' as ' + esc(s.name) : ''}</span><span class="integ-status integ-reconnect">Reconnect to turn in designs.</span>`;
           action = `<button class="btn-secondary integ-btn" type="button" data-canva="connect" aria-label="Reconnect Canva"${s.busy ? ' disabled' : ''}>Reconnect</button>`;
         } else if (s.connected) {
@@ -2277,14 +2100,12 @@
           const who = acct.email || acct.username || acct.name || '';
           status = `<span class="integ-status on">Connected${who ? ' as ' + esc(who) : ''}</span>`;
           action = `<button class="btn-secondary integ-btn disconnect" type="button" data-cloud="disconnect" data-app="${a.id}" aria-label="Disconnect ${esc(a.name)}"${busy}>Disconnect</button>`;
-          // Connected before "Open with → Averages.io" existed (2026-10-09): Reconnect adds it.
           const K = window.AveragesCloud;
           if (a.id === 'gdrive' && K && typeof K.googleOpenWith === 'function' && K.googleOpenWith() === 'reconnect') {
             status += '<span class="integ-status integ-reconnect">Reconnect to finish setup.</span>';
             action = `<button class="btn-secondary integ-btn" type="button" data-cloud="connect" data-app="${a.id}" aria-label="Reconnect ${esc(a.name)}"${busy}>Reconnect</button>`;
           }
         } else if (cloudApi() && typeof cloudApi().lost === 'function' && cloudApi().lost(a.id)) {
-          // Google / Microsoft disconnected it (2026-10-09): say so, and Reconnect.
           const who = cloudApi().lost(a.id).email;
           status = `<span class="integ-status integ-reconnect">${cloud.busy[a.id] ? 'Connecting…' : `Disconnected${who ? ' (' + esc(who) + ')' : ''}. Reconnect to keep using it.`}</span>`;
           action = `<button class="btn-secondary integ-btn" type="button" data-cloud="connect" data-app="${a.id}" aria-label="Reconnect ${esc(a.name)}"${busy}>Reconnect</button>`;
@@ -2314,8 +2135,6 @@
       }
       function render() {
         list.innerHTML = APPS.map(a => {
-          // Incognito (2026-10-14): Google Drive and OneDrive connect in this
-          // tab only (nothing on our servers); Canva stays off.
           if (INCOGNITO && (a.id === 'canva' || !LIVE)) return incognitoRowHTML(a);
           if (LIVE && a.id === 'canva') return canvaRowHTML(a);
           if (LIVE) return cloudRowHTML(a);
@@ -2336,13 +2155,10 @@
         if (typeof syncEditorHint === 'function' && editorReady) syncEditorHint();
       }
       let editorReady = false;
-      // Default editor (2026-10-04): which app "Edit in …" uses for Word,
-      // PowerPoint and Excel files. Kept on this device.
       const EDITOR_KEY = 'schoolagy_default_editor';
       const editorBtn = document.getElementById('defaultEditorBtn');
       const editorMenu = document.getElementById('defaultEditorMenu');
       const editorLabel = document.getElementById('defaultEditorLabel');
-      // The button shows the picked app's logo with its name (2026-10-19).
       function setEditorLabel(opt) {
         const mark = opt.querySelector('.canva-mark, .drive-mark');
         editorLabel.replaceChildren(...(mark ? [mark.cloneNode(true)] : []), document.createTextNode(opt.textContent.trim()));
@@ -2350,14 +2166,6 @@
       const editorHint = document.getElementById('defaultEditorHint');
       const editorOpts = editorMenu ? [...editorMenu.querySelectorAll('.pick-opt')] : [];
       let editorValue = 'canva';
-      /*
-       * Only one editing app connected (2026-10-09, Martin): Open files in
-       * shows that one and can't be changed, since Edit can only use it.
-       * Neither connected (2026-10-14, Martin: "nothing connected / only
-       * OneDrive"), or Incognito, where they're off: 'none', greyed out too,
-       * since there's nothing to pick. OneDrive doesn't count: it can't edit.
-       * Null while either is unknown or both are connected.
-       */
       function lockedEditor() {
         // Incognito: Canva is off, so Google Drive or nothing.
         if (INCOGNITO) {
@@ -2507,10 +2315,7 @@
           </div>
         </div>`;
       document.body.appendChild(disc);
-      // The same confirm serves Google Drive and OneDrive (2026-10-05).
       const DISC_TEXT = {
-        // Canva and Google Drive are also removed on their side now (2026-10-26): the API revokes
-        // the connection. Not Drive for a Google sign-in, since that would sign them out too.
         canva: ['Disconnect Canva?', 'Averages.io is removed from your Canva account and forgets your Drafts. Designs stay in Canva. To connect again, you\'ll approve it in Canva again.'],
         gdrive: window.__AVERAGES_PROVIDER__ === 'google'
           ? ['Disconnect Google Drive?', 'Averages.io stops using your Google Drive and forgets your Google Drive drafts. Files it saved stay in your Drive, in the Averages.io folder. Averages.io stays in your Google Account because you sign in with Google.']
@@ -2628,7 +2433,6 @@
           if (cfg.failed) throw new Error('config');
           cloud.cfg = cfg;
           cloud.state = 'ready';
-          // Back from connecting through our server (2026-10-08): say how it went.
           const back = typeof C.connectResult === 'function' ? C.connectResult() : null;
           if (back) {
             const name = back.app === 'gdrive' ? 'Google Drive' : 'OneDrive';
@@ -2696,17 +2500,6 @@
       }
     })();
 
-    // ------------------------------------------------------------------
-    // Search (2026-10-26, Martin: "make the search function on the settings
-    // page search for settings/options as well"). Typing lists every
-    // matching setting (Dark Mode, Clear Cache, Sign Out...) with the section
-    // it lives in; picking one opens that section, scrolls to it and rings it
-    // for a moment. Sections whose name matches are listed too. Built fresh on
-    // every keystroke from what's on the page, so rows that are hidden right
-    // now (Plus while billing is off, an empty School section) never show up.
-    // Every word typed has to match; extra words people use for a setting
-    // (wallpaper, log out, theme...) are in SEARCH_ALSO.
-    // ------------------------------------------------------------------
     const searchInput = document.getElementById('settingsSearch');
     const noResults = document.getElementById('settingsNoResults');
     const resultsBox = document.getElementById('settingsResults');
@@ -2762,7 +2555,6 @@
           out.push({ label, extra: clean(extra), section: sec, path: sub && sub.toLowerCase() !== secLabel.toLowerCase() ? `${secLabel} › ${sub}` : secLabel, el });
         };
         secEl.querySelectorAll('.settings-subhead, .settings-row, .plus-card, .profile-card, [data-action="signout"], .notif-test, .list-row').forEach(el => {
-          // Not what's hidden right now (2026-10-27: a member's Plus page hides the feature cards).
           if (el.closest('[hidden]')) return;
           if (el.classList.contains('settings-subhead')) {
             sub = clean(el.textContent);
@@ -2872,24 +2664,6 @@
     // Kept for the call at the bottom of the page (the old section-text index); nothing to build now.
     function buildSearchIndex() {}
 
-    // ------------------------------------------------------------------
-    // Dark mode toggle — same re-theming approach as onboarding.html/
-    // calendar.html (applyDarkMode() sets the shared panel/text/border/
-    // toggle-track tokens, the same setProperty-on-documentElement
-    // pattern already used for --accent).
-    //
-    // Persistence added 2026-09-07. This used to be "page-local only" —
-    // asking the OS fresh on every load and forgetting whatever the
-    // toggle was set to — which is why turning Dark Mode on here and
-    // then navigating anywhere else (including back to Settings) lost
-    // it. AVERAGES_DARK_MODE_KEY below is a small shared localStorage
-    // flag: Settings is the one page with a real toggle, so it's the
-    // one place that WRITES a preference; every page (this one,
-    // onboarding.html, calendar.html) reads it the same way on load, so
-    // "dark mode is inconsistent" — the toggle not sticking, and
-    // Calendar disagreeing with what Settings says — has one shared
-    // answer instead of each page asking the OS independently.
-    // ------------------------------------------------------------------
     const AVERAGES_DARK_MODE_KEY = 'schoolagy_dark_mode';
     function averagesSavedDarkPref() {
       try {
@@ -2941,19 +2715,6 @@
       applyDarkMode(isDark);
     });
 
-    // ------------------------------------------------------------------
-    // Misc settings-page options — one small shared localStorage record
-    // (schoolagy_settings_options, a flat { optionId: value } object) for
-    // every other Settings control that isn't important enough for its
-    // own dedicated key like AVERAGES_DARK_MODE_KEY/AVERAGES_PROFILE_KEY
-    // above. Added 2026-09-08 — before this, Potato PC Mode, Weekly
-    // Grade Summary and Sync Across Devices all only mutated in-memory/DOM
-    // state, so every one of them silently reset the instant you left the
-    // page or reloaded ("no options save basically"). Same read/write
-    // shape as the other two keys: try/catch, and this page is the only
-    // writer. (The push-notification category toggles used this too until
-    // they were removed on 2026-09-16 — see the Notifications section.)
-    // ------------------------------------------------------------------
     const AVERAGES_SETTINGS_OPTIONS_KEY = 'schoolagy_settings_options';
     function loadSettingsOptions() {
       try {
@@ -2965,8 +2726,6 @@
     function saveSettingsOption(key, value) {
       try {
         const opts = loadSettingsOptions();
-        // Unchanged: nothing to save or sync (2026-10-26). Pages set some options again on
-        // every load, and each of those used to push this device's whole copy to the account.
         if (JSON.stringify(opts[key]) === JSON.stringify(value)) return;
         opts[key] = value;
         localStorage.setItem(AVERAGES_SETTINGS_OPTIONS_KEY, JSON.stringify(opts));
@@ -2974,40 +2733,11 @@
       schedulePushSyncSettings();
     }
 
-    // ------------------------------------------------------------------
-    // The signed-in mode ('live' or 'demo') — set by LegacyPage.tsx before
-    // this page's own script runs, from the server's own answer to
-    // /auth/me. Read once, here, near the top, because it gates two things
-    // below that both need to know it before they render: the Sync Across
-    // Devices toggle (2026-09-08, real server sync, and Browser Notifications,
-    // which needs it —
-    // see the block near the bottom of this script) can't work for a demo
-    // session, which has no real Schoology uid for the API to key a stored
-    // record on. This is the same server-verified signal every other
-    // server-gated feature already trusts (averages-api refuses these same
-    // two endpoints — /sync/settings and, indirectly, whatever eventually
-    // sends the email — with a 403 for a demo session regardless of what
-    // this page does), so disabling the toggles here is a UX courtesy on
-    // top of a real server-side gate, not the gate itself.
-    //
-    // Deliberately a separate global from the one the data-driven pages
-    // read (see LegacyPage.tsx's own comment next to where it's set) —
-    // this page only needs the mode flag, not a real data bundle.
-    // ------------------------------------------------------------------
     const AVERAGES_MODE = window.__AVERAGES_MODE__ || 'live';
     const AVERAGES_SYNC_UNAVAILABLE = AVERAGES_MODE === 'demo';
-    // Signed in and in Incognito mode (2026-10-05; set by LegacyPage.tsx).
     const AVERAGES_INCOGNITO = !!(window.__AVERAGES_INCOGNITO__ && window.__AVERAGES_INCOGNITO__.on);
     const settingsOptions = loadSettingsOptions();
 
-    // ------------------------------------------------------------------
-    // Potato PC Mode — same real, working toggle as onboarding.html
-    // (see the body.potato-mode CSS rules near the top of this file):
-    // strips the skewed/italic display styling and every CSS
-    // transition/animation on the page. Persisted via
-    // schoolagy_settings_options as of 2026-09-08 — previously this only
-    // toggled a class for the current page load and forgot it immediately.
-    // ------------------------------------------------------------------
     const potatoModeToggle = document.getElementById('potatoModeToggle');
     potatoModeToggle.checked = settingsOptions.potatoMode === true;
     document.body.classList.toggle('potato-mode', potatoModeToggle.checked);
@@ -3019,9 +2749,6 @@
       syncFilePreviewsToggle();
     });
 
-    // File Previews (2026-10-16): pictures of images and PDFs in Course
-    // Materials. On unless turned off here; Potato PC Mode turns them off too,
-    // so this switch shows off (and can't be changed) while that's on.
     const filePreviewsToggle = document.getElementById('filePreviewsToggle');
     function syncFilePreviewsToggle() {
       const potato = potatoModeToggle.checked;
@@ -3036,15 +2763,6 @@
       if (!filePreviewsToggle.checked) { try { sessionStorage.removeItem('averages_previews'); } catch {} }
     });
 
-    // ------------------------------------------------------------------
-    // Time Zone (2026-10-28, Martin): automatic (this device's zone) or one
-    // picked by hand, stored as settingsOptions.timeZone ('auto' or an IANA
-    // name) and synced with the other settings. Every API call that works
-    // out due times, Today and Overdue sends it as ?tz= (public/js/averages-tz.js).
-    // Schoology's due times are the school's wall-clock time, read in this
-    // zone, so a device set to the wrong zone (a Chromebook on UTC) showed
-    // work due at the wrong hour or overdue early. Picking a zone fixes that.
-    // ------------------------------------------------------------------
     (function timeZoneSetting() {
       const autoToggle = document.getElementById('tzAutoToggle');
       const pickRow = document.getElementById('tzPickRow');
@@ -3157,23 +2875,6 @@
       window.addEventListener('storage', (e) => { if (e.key === AVERAGES_SETTINGS_OPTIONS_KEY) render(); });
     })();
 
-    // ------------------------------------------------------------------
-    // Cache — 2026-09-08, per Martin: "why is the cache not accurate,
-    // it's always the same number." Because it was: "128 MB" was a
-    // hardcoded placeholder string that never reflected anything real.
-    // The one thing this app actually caches on-device "for faster
-    // loading" is the API response cache in averages.ts (schoolagy_
-    // bundle_cache — your grades/courses/assignments bundle — and the
-    // small schoolagy_session_state alongside it), both sessionStorage.
-    // Deliberately NOT included: the schoolagy_* localStorage keys
-    // (course customizations, dark mode, profile, appearance, settings
-    // options) — those are saved preferences, not re-fetchable cache,
-    // and per the 2026-09-08 fix that made them survive sign-out, they
-    // should just as much survive a "Clear Cache" tap. .length is UTF-16
-    // code units rather than exact bytes, close enough for a rough
-    // on-device size indicator like this.
-    // ------------------------------------------------------------------
-    // averages_previews (2026-10-16): Course Materials' small file pictures for this tab.
     const CACHE_STORAGE_KEYS = ['schoolagy_bundle_cache', 'schoolagy_session_state', 'averages_previews'];
     function computeCacheBytes() {
       let total = 0;
@@ -3231,22 +2932,6 @@
       return '#' + [r, g, b].map(v => Math.round(v).toString(16).padStart(2, '0')).join('');
     }
 
-    // ------------------------------------------------------------------
-    // Shared appearance (accent + background) — 2026-09-08, per Martin:
-    // "wallpapers + accent colors don't save across pages." Before this,
-    // picking a background or accent color here only ever restyled THIS
-    // page, in memory — document.documentElement.style.setProperty and
-    // document.body.style.backgroundImage are both purely live DOM
-    // state, never written anywhere, so navigating to any other page
-    // (or just reloading this one) silently reverted to the hardcoded
-    // default look. schoolagy_appearance is the same shared-localStorage
-    // -record pattern as schoolagy_dark_mode/schoolagy_profile: this
-    // page (plus onboarding's own Theme step, see onboarding.html) is
-    // the only writer — persistAppearance() below, called from every
-    // accent/background control's own handler — and every other real
-    // app page applies whatever's saved here, read-only, on its own
-    // load.
-    // ------------------------------------------------------------------
     const AVERAGES_APPEARANCE_KEY = 'schoolagy_appearance';
     function loadAppearance() {
       try {
@@ -3349,16 +3034,6 @@
       });
     });
 
-    // ------------------------------------------------------------------
-    // Window type — same control as onboarding.html's Theme step.
-    // "Windowed" (rounded corners) is still the only shipped option, so
-    // this is a single selected button today; a future "Fullscreen"
-    // option can be added as a second .window-option without touching
-    // this handler.
-    // ------------------------------------------------------------------
-    // Fullscreen (2026-10-28, behind the fullscreen switch): saved as
-    // settingsOptions.windowType, and the app then opens the Fullscreen pages
-    // (/IS/, see app/lib/fs-boot.ts). Its own Settings page has the way back.
     const windowOptions = document.querySelectorAll('.window-option');
     windowOptions.forEach(opt => {
       opt.addEventListener('click', () => {
@@ -3368,21 +3043,14 @@
         const full = opt.dataset.shape === 'fullscreen';
         saveSettingsOption('windowType', full ? 'fullscreen' : 'windowed');
         if (full) {
-          // the logo for a second on the way (2026-10-30, Martin): up here at once, and the Fullscreen page keeps it up
-          // until a second has passed and it has its data (averages_fs_logo, see scripts/build-fs.mjs)
           try { sessionStorage.removeItem('averages_fs_off'); sessionStorage.setItem('averages_fs_logo', String(Date.now())); } catch (e) {}
           if (window.__averagesSplash && window.__averagesSplash.show) window.__averagesSplash.show(4000);
-          // the account's copy gets Fullscreen before the page goes (2026-11-02, Martin: signing out and back in opened
-          // Windowed; the push waited 800 ms and leaving the page cancelled it). Up to 1.5 s, then it goes anyway.
-          // replace, not href (2026-11-06): Back from Fullscreen Settings goes to the page before, not to this one
           const goFs = () => { window.location.replace('/IS/settings'); };
           if (isSyncOn() && syncPullSettled) { clearTimeout(syncPushTimer); Promise.race([pushSyncSettingsNow(), new Promise(r => setTimeout(r, 1500))]).then(goFs, goFs); }
           else goFs();
         }
       });
     });
-    // Fetched ahead the moment the pointer (or keyboard) reaches Fullscreen, so switching doesn't wait for the page
-    // itself to download (2026-11-01, Martin: turning Fullscreen on "takes some time")
     windowOptions.forEach(opt => {
       if (opt.dataset.shape !== 'fullscreen') return;
       const ahead = () => {
@@ -3393,8 +3061,10 @@
       opt.addEventListener('pointerenter', ahead, { once: true });
       opt.addEventListener('focus', ahead, { once: true });
     });
-    windowOptions[0].classList.add('selected');
-    windowOptions[0].setAttribute('aria-pressed', 'true');
+    // This is the Windowed look, so Windowed is the one that's on.
+    const windowedOpt = document.getElementById('windowOptionWindowed');
+    windowedOpt.classList.add('selected');
+    windowedOpt.setAttribute('aria-pressed', 'true');
 
     // ------------------------------------------------------------------
     // Background & Color — the exact same 17 preset swatches (plus
@@ -3528,27 +3198,6 @@
       closeUploadGate();
     });
 
-    // ------------------------------------------------------------------
-    // Photo crop — 2026-09-09, per Martin: uploaded profile photos
-    // should be croppable. Square/circular since every place this photo
-    // renders (profile card, topbar button) draws it as a circle via
-    // renderAvatarBubble's cover+center — a mis-framed face looks
-    // noticeably worse there than a slightly-off background does.
-    //
-    // Deliberately skipped for GIFs — see profileEditPhotoBtn's own
-    // handler further down, where the file's mime type is checked
-    // before ever calling this. A canvas-based crop only ever captures
-    // one still frame, and GIF is accepted here specifically so an
-    // animated photo can stay animated; cropping it would silently kill
-    // that. PNG/JPG are the only inputs a crop-then-flatten step makes
-    // sense for anyway.
-    //
-    // Pan (drag) + zoom (slider) against a fixed circular stage, baked
-    // into a real square image on confirm — not just a CSS crop, since
-    // the result has to be one flat image this page can save and every
-    // other page (which don't have this crop UI) can just drop straight
-    // into a background-image/cover.
-    // ------------------------------------------------------------------
     const photoCropOverlay = document.getElementById('photoCropOverlay');
     const photoCropStage = document.getElementById('photoCropStage');
     const photoCropImg = document.getElementById('photoCropImg');
@@ -3650,21 +3299,6 @@
       onConfirm(croppedDataUrl);
     });
 
-    // ------------------------------------------------------------------
-    // Background pan & zoom — 2026-09-09, per Martin, same request as the
-    // photo crop above but a background needs a different kind of tool:
-    // it fills the page behind everything else via body's own
-    // background-size: cover; background-position: center (unchanged by
-    // this), so there's no one "correct" rectangle to crop it to the way
-    // a circular photo has. Instead the stage previews roughly what
-    // cover+center will actually show, at THIS window's own aspect
-    // ratio, and the user just drags/zooms until that looks right.
-    // Baking the result into a new image at that same aspect ratio means
-    // cover+center on the saved image reproduces the same framing on
-    // this device, and stays a reasonable approximation on a
-    // differently-shaped one — the same trade-off any background-image
-    // cropper makes, not something a client-side tool can avoid.
-    // ------------------------------------------------------------------
     const bgCropOverlay = document.getElementById('bgCropOverlay');
     const bgCropStage = document.getElementById('bgCropStage');
     const bgCropImg = document.getElementById('bgCropImg');
@@ -3966,26 +3600,6 @@
       }
     }
 
-    // ------------------------------------------------------------------
-    // Account: profile state, Edit Profile modal, email validation +
-    // mock verification. (The Weekly Grade Summary gate that used to live
-    // here went with the email, 2026-10-05.)
-    // profileState.email starts empty and profileState.emailVerified
-    // starts false — Averages.io doesn't assume an address, and doesn't
-    // trust one until it's "verified"
-    // (simulated here, no real mail server behind this mockup).
-    //
-    // Persistence added 2026-09-07. This whole object used to live only
-    // in a page-local variable — reset to the hardcoded default the
-    // instant you navigated anywhere and back, which is why a photo
-    // "didn't save when you go to a diff page" and a verified email
-    // looked like it silently un-verified itself. AVERAGES_PROFILE_KEY
-    // is the one shared localStorage record; this page is the only place
-    // that writes it (see saveProfileState() below, called from
-    // renderProfileCard() so every place that already re-renders the
-    // card also persists it), and every other page's topbar profile
-    // button reads it read-only to show the same photo/initial.
-    // ------------------------------------------------------------------
     const AVERAGES_PROFILE_KEY = 'schoolagy_profile';
     function loadProfileState() {
       const defaults = { name: '', email: '', emailVerified: false, photo: null };
@@ -4022,16 +3636,14 @@
         el.style.backgroundSize = 'cover';
         el.style.backgroundPosition = 'center';
         el.textContent = '';
-        el.classList.add('has-photo');   // no ring around a photo (2026-10-23)
+        el.classList.add('has-photo');
       } else {
         // Back to the stylesheet's monogram gradient (not 'none', which would hide it).
         el.classList.remove('has-photo');
         el.style.backgroundImage = '';
         el.style.backgroundSize = '';
         el.style.backgroundPosition = '';
-        // Their own color and initials (2026-10-23, averages-avatar.js).
         if (window.AveragesAvatar) { window.AveragesAvatar.paint(el, name || window.__AVERAGES_NAME__ || ''); return; }
-        // Initials like Apple's (2026-10-21): first and last name, or one letter.
         const parts = (name || window.__AVERAGES_NAME__ || '').trim().split(/\s+/).filter(Boolean);
         const first = w => (w ? Array.from(w)[0] : '');
         el.textContent = (first(parts[0]) + (parts.length > 1 ? first(parts[parts.length - 1]) : '')).toUpperCase();
@@ -4125,26 +3737,6 @@
       if (email && !profileState.emailVerified) openEmailVerifyModal();
     });
 
-    // ------------------------------------------------------------------
-    // Browser notifications (2026-10-04, per Martin; replaces the Weekly
-    // Grade Summary email). Gate chain: Sync Across Devices on -> consent
-    // popup -> the browser's own permission prompt.
-    //
-    // Live for signed-in students since 2026-10-05. public/js/averages-push.js
-    // registers /sw.js and subscribes this browser; averages-api (/push/*)
-    // keeps the student's sign-in, encrypted with a separate key, only while
-    // notifications are on in at least one browser, checks about every 20
-    // minutes, and deletes it as soon as the last browser turns them off or
-    // the student signs out. Whether they're on comes from the API and this
-    // browser's own subscription, never from schoolagy_settings_options:
-    // that record syncs to other devices, which each have their own
-    // subscription. The kinds (notifyTypes) do live there: they're the
-    // student's, the same everywhere, and the API keeps a copy.
-    //   Demo: off, with a short reason. Incognito: off, and anything left on
-    //   from before is turned off. API without push keys: Coming soon.
-    // The preview (no __AVERAGES_MODE__) works as it did: the browser's
-    // permission only, remembered on this device, nothing sent anywhere.
-    // ------------------------------------------------------------------
     const browserNotifToggle = document.getElementById('browserNotifToggle');
     const notifTypesWrap = document.getElementById('notifTypesWrap');
     const notifBlockedNote = document.getElementById('notifBlockedNote');
@@ -4208,7 +3800,6 @@
       subscription_gone: 'This browser stopped accepting notifications. Turn them on again.',
       too_soon: 'Wait a few seconds, then try again.',
       push_failed: 'The test couldn’t be sent. Try again in a moment.',
-      // 2026-10-12: which kind of failure it was.
       push_rejected: 'The test was refused. Turn notifications off and on, then retry.',
       push_misconfigured: 'Notifications aren’t set up on our side yet. Try later.',
       feature_off: 'Notifications are switched off right now. Try again later.',
@@ -4218,7 +3809,6 @@
     };
     function notifError(code, status) {
       const text = NOTIF_ERRORS[code] || NOTIF_ERRORS.failed;
-      // The push service's own error number, for when Martin needs to look into it.
       return status && (code === 'push_failed' || code === 'push_rejected') ? `${text} (Error ${status}.)` : text;
     }
 
@@ -4296,8 +3886,6 @@
       return pushScriptPromise;
     }
 
-    // Notifications need Plus (2026-10-21): the switch is swapped for Get Plus,
-    // which opens the Plus section and starts checkout there (2026-10-26).
     function showNotifPlus(justTurnedOff) {
       setNotifUi(false);
       browserNotifToggle.disabled = true;
@@ -4326,7 +3914,6 @@
       if (c.failed) { showNotifMsg(notifMsg, 'Couldn’t check notifications right now. Reload the page to try again.', true); return; }
       if (!c.publicKey) { notifDesc.textContent = NOTIF_COMING_SOON; return; }
       const st = await P.status();
-      // Averages Plus (2026-10-21): notifications are a Plus perk while billing is on.
       if (st.plusRequired) { showNotifPlus(st.turnedOff === 'plus_required'); return; }
       notifLiveReady = true;
       browserNotifToggle.disabled = false;
@@ -4424,64 +4011,61 @@
     });
     renderNotifState();
 
-    // ---------- Mock email verification ----------
+    // ---------- Verify your email ----------
+    // Opening it emails a 6-digit code (public/js/averages-email.js -> API /email/code); typing it checks it.
     const emailVerifyOverlay = document.getElementById('emailVerifyOverlay');
     const emailVerifyAddress = document.getElementById('emailVerifyAddress');
+    const emailVerifyText = document.getElementById('emailVerifyText');
+    const emailVerifyCode = document.getElementById('emailVerifyCode');
+    const emailVerifyMsg = document.getElementById('emailVerifyMsg');
     const emailVerifyResend = document.getElementById('emailVerifyResend');
     const emailVerifyConfirm = document.getElementById('emailVerifyConfirm');
-    let emailVerifyPollTimer = null;
-    let emailVerifyPollCount = 0;
-    function stopEmailVerifyPoll() {
-      if (emailVerifyPollTimer) { clearInterval(emailVerifyPollTimer); emailVerifyPollTimer = null; }
-      emailVerifyPollCount = 0;
+    const evSay = (t, bad) => { emailVerifyMsg.textContent = t || ''; emailVerifyMsg.classList.toggle('bad', !!bad); };
+    async function emailVerifySend(again) {
+      const em = profileState.email;
+      if (!window.AveragesEmail) { evSay("Couldn't load. Refresh the page and try again.", true); return; }
+      emailVerifyResend.disabled = true;
+      evSay(again ? 'Sending a new code…' : '');
+      try {
+        await window.AveragesEmail.send(em);
+        emailVerifyText.innerHTML = 'Enter the 6-digit code we sent to <strong style="color: var(--text-dark);"></strong>. It works for 10 minutes.';
+        emailVerifyText.querySelector('strong').textContent = em;
+        evSay(again ? 'Sent a new code.' : '');
+        emailVerifyCode.value = ''; emailVerifyCode.focus();
+      } catch (e) { evSay(window.AveragesEmail.say(e), true); }
+      finally { emailVerifyResend.disabled = false; }
     }
-    function resetEmailVerifyButton() {
-      emailVerifyConfirm.disabled = false;
-      emailVerifyConfirm.textContent = 'Verify Email';
-    }
-    function finishEmailVerify() {
-      stopEmailVerifyPoll();
-      profileState.emailVerified = true;
-      renderProfileCard();
-      closeEmailVerifyModal();
+    async function emailVerifyCheck() {
+      const code = emailVerifyCode.value;
+      if (!/^\d{6}$/.test(code)) { evSay('Enter all 6 digits.', true); emailVerifyCode.focus(); return; }
+      emailVerifyConfirm.disabled = true; emailVerifyCode.disabled = true; emailVerifyConfirm.textContent = 'Checking…';
+      try {
+        await window.AveragesEmail.check(profileState.email, code);
+        profileState.emailVerified = true;
+        renderProfileCard();
+        closeEmailVerifyModal();
+      } catch (e) { evSay(window.AveragesEmail.say(e), true); emailVerifyCode.disabled = false; emailVerifyCode.select(); }
+      finally { emailVerifyConfirm.disabled = false; emailVerifyCode.disabled = false; emailVerifyConfirm.textContent = 'Verify'; }
     }
     function openEmailVerifyModal() {
-      emailVerifyAddress.textContent = profileState.email;
-      emailVerifyResend.textContent = 'Resend link';
-      resetEmailVerifyButton();
-      stopEmailVerifyPoll();
+      emailVerifyText.innerHTML = 'Sending a 6-digit code to <strong id="emailVerifyAddress" style="color: var(--text-dark);"></strong>…';
+      emailVerifyText.querySelector('strong').textContent = profileState.email;
+      emailVerifyCode.value = ''; evSay('');
       emailVerifyOverlay.classList.add('show');
+      emailVerifySend(false);
     }
     function closeEmailVerifyModal() {
       emailVerifyOverlay.classList.remove('show');
-      stopEmailVerifyPoll();
-      resetEmailVerifyButton();
     }
     document.getElementById('emailVerifyClose').addEventListener('click', closeEmailVerifyModal);
     emailVerifyOverlay.addEventListener('click', e => { if (e.target === emailVerifyOverlay) closeEmailVerifyModal(); });
-    emailVerifyResend.addEventListener('click', () => {
-      emailVerifyResend.textContent = 'Link sent!';
-      setTimeout(() => { emailVerifyResend.textContent = 'Resend link'; }, 2000);
+    emailVerifyResend.addEventListener('click', () => emailVerifySend(true));
+    emailVerifyCode.addEventListener('input', () => {
+      emailVerifyCode.value = emailVerifyCode.value.replace(/\D/g, '').slice(0, 6);
+      if (emailVerifyCode.value.length === 6) emailVerifyCheck();
     });
-    // Clicking "Verify Email" stands in for opening the mailed link.
-    // Rather than confirming instantly, it greys the button out and
-    // polls every 3 seconds — mirroring how a real flow would need to
-    // check back with the server to see whether the link's been
-    // clicked yet, instead of assuming success the moment the button
-    // is pressed.
-    emailVerifyConfirm.addEventListener('click', () => {
-      if (emailVerifyConfirm.disabled) return;
-      emailVerifyConfirm.disabled = true;
-      emailVerifyConfirm.textContent = 'Checking…';
-      emailVerifyPollCount = 0;
-      emailVerifyPollTimer = setInterval(() => {
-        emailVerifyPollCount++;
-        // No real server to ask, so the mock "detects" the click after
-        // a couple of polling cycles — long enough that the checking
-        // state is actually visible, not just a disguised instant pass.
-        if (emailVerifyPollCount >= 2) finishEmailVerify();
-      }, 3000);
-    });
+    emailVerifyCode.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); emailVerifyCheck(); } });
+    emailVerifyConfirm.addEventListener('click', emailVerifyCheck);
     profileCardVerifyBtn.addEventListener('click', openEmailVerifyModal);
 
     browserNotifToggle.addEventListener('change', () => {
@@ -4499,51 +4083,13 @@
       if (notifConsentOverlay.classList.contains('show')) closeNotifConsent();
     });
 
-
-    // ------------------------------------------------------------------
-    // Sync Across Devices — real server-backed sync, added 2026-09-08.
-    //
-    // Before this, the toggle only remembered its own on/off state
-    // locally (see the "no options save basically" comment up near
-    // saveSettingsOption) — nothing was actually kept anywhere a second
-    // device could read. Now, whenever this is on, every write this page
-    // makes through saveSettingsOption/averagesSetDarkPref/
-    // persistAppearance/saveProfileState also pushes a merged snapshot to
-    // averages-api's /sync/settings (see schedulePushSyncSettings, called
-    // from inside each of those four functions — one shared hook instead
-    // of hunting down every call site), and on load this page pulls
-    // whatever's stored there and adopts it if it differs from what's
-    // already on this device.
-    //
-    // Scope, deliberately: this syncs exactly what THIS page owns —
-    // schoolagy_settings_options, schoolagy_appearance, schoolagy_dark_mode,
-    // schoolagy_profile. Course customizations/reordering
-    // (schoolagy_course_custom/schoolagy_course_order) are written from
-    // Home/Courses, not here, and aren't part of this pass — a natural
-    // next increment (add their keys to collectSyncedSettings/
-    // applySyncedSettings below, and the same four-function push hook to
-    // wherever those two pages save), not a redesign.
-    //
-    // Since 2026-10-21 there's no toggle: Classic always syncs, Incognito
-    // never does (switching to Incognito deletes what was stored).
-    // ------------------------------------------------------------------
-    // Always on in Classic (2026-10-21, Martin: "faze out sync across devices
-    // and just have it on if the user is in classic mode"). There's no toggle
-    // any more: Classic (and Plus, which is Classic plus the subscription)
-    // syncs, Incognito never does, and the demo can't. The saved flag is kept
-    // (written straight to storage so nothing is pushed before the account's
-    // copy is pulled by pullSyncSettingsNow at the end of this page) because
-    // sign-out (app/lib/averages.ts syncWasOn) and older code read it.
     const syncStateValue = document.getElementById('syncStateValue');
     const syncStateDesc = document.getElementById('syncAcrossDevicesDesc');
     if (!AVERAGES_SYNC_UNAVAILABLE && AVERAGES_INCOGNITO) {
-      // Incognito (2026-10-05): nothing about the student is stored on our
-      // servers. If sync was on from before, what it stored is deleted (the
-      // API refuses new writes either way).
       if (settingsOptions.syncAcrossDevices === true) {
         deleteSyncSettingsNow();
         try { localStorage.removeItem('schoolagy_sync_meta'); } catch {}   // clearSyncMeta's key; that helper is defined further down
-        try { localStorage.removeItem('averages_sync_media'); } catch {}   // clearSyncMeta's other key (R2 pictures, 2026-10-13)
+        try { localStorage.removeItem('averages_sync_media'); } catch {}
         saveSettingsOption('syncAcrossDevices', false);
       }
       syncStateValue.textContent = 'Off';
@@ -4565,14 +4111,6 @@
       return AVERAGES_MODE === 'live' && !AVERAGES_INCOGNITO;
     }
 
-    /*
-     * Settings › Account › School (2026-10-23, Martin: "add a line … that has the schoology link like
-     * nmusd.schoology.com"). Signed in, it shows the school picked on the sign-in page (saved on this
-     * device, averages_login_school) and a link to their own Schoology, and leaves out the District and
-     * Student ID rows: no real values exist for those, and they used to show the sample school's to
-     * everyone. Nothing known about the school (signed in on another device): the section hides.
-     * The preview and the demo keep the sample school.
-     */
     (function schoolSection() {
       if (window.__AVERAGES_MODE__ !== 'live') return;
       const $ = id => document.getElementById(id);
@@ -4596,13 +4134,7 @@
     })();
 
     function averagesApiBase() {
-      // Mirrors app/lib/averages.ts's API_BASE — this app has no shared
-      // external JS file (see the single-file-per-page note elsewhere in
-      // this doc/repo), so it's duplicated here rather than imported.
-      // schoolagy.io only, as of 2026-09-08 (a brief sch00lagy.com
-      // second-domain fallback was removed — see API_BASE's own comment in
-      // averages.ts for why).
-      return window.location.hostname.endsWith('averages.io') ? 'https://api.averages.io' : 'http://localhost:8787';   // schoolagy.io until 2026-10-05
+      return window.location.hostname.endsWith('averages.io') ? 'https://api.averages.io' : 'http://localhost:8787';
     }
 
     // What actually gets synced — see the scope note above.
@@ -4616,9 +4148,6 @@
       };
       let darkMode = null;
       try { darkMode = localStorage.getItem(AVERAGES_DARK_MODE_KEY); } catch {}
-      // Whether notifications are on is this browser's own state (each browser
-      // subscribes itself), so it isn't synced (2026-10-26): two browsers with
-      // different answers kept overwriting each other's copy.
       const options = readJSON(AVERAGES_SETTINGS_OPTIONS_KEY);
       if (options && typeof options === 'object') delete options[DEVICE_ONLY_OPTION];
       return {
@@ -4630,8 +4159,6 @@
     }
     async function applySyncedSettings(remote) {
       if (!remote || typeof remote !== 'object') return;
-      // Pictures stored in R2 come down first (2026-10-13), so nothing below
-      // ever writes an "r2:..." reference where a page expects an image.
       const local = collectSyncedSettings();
       let appearance = remote.appearance;
       let profile = remote.profile;
@@ -4655,25 +4182,6 @@
       } catch {}
     }
 
-    // ------------------------------------------------------------------
-    // Sync conflict resolution — added 2026-09-09, per Martin: "the
-    // background is always turning red between pages." Root cause: pulling
-    // never checked WHEN the server's copy was last written, only whether
-    // its content differed from this device's own — so ANY older record
-    // already sitting in KV (from an earlier test session, or a version of
-    // this device that set something up before ever pushing) would get
-    // pulled down and silently overwrite this device's own current,
-    // legitimately newer choices the very next time Settings loaded.
-    //
-    // `schoolagy_sync_meta` remembers the `settingsUpdatedAt` timestamp
-    // this device last actually agreed with the server on. Pulling only
-    // adopts the server's copy when its timestamp has moved past that —
-    // meaning something genuinely changed elsewhere since this device
-    // last synced, not merely "differs from local right now." A server
-    // record with no timestamp of its own (any record written before this
-    // fix shipped) is never trusted over local at all — this device's
-    // current state gets pushed up to replace it instead of pulled down.
-    // ------------------------------------------------------------------
     const AVERAGES_SYNC_META_KEY = 'schoolagy_sync_meta';
     function loadSyncMeta() {
       try {
@@ -4692,26 +4200,6 @@
       try { localStorage.removeItem('averages_sync_media'); } catch {}   // AVERAGES_SYNC_MEDIA_KEY, below
     }
 
-    // ------------------------------------------------------------------
-    // Pictures in R2 (2026-10-13). The profile photo and an uploaded
-    // background used to ride inside the Sync record as data URLs: a few
-    // hundred KB each, sent again with every settings change, and together
-    // able to push the record past the API's 2 MB cap (a 413 nobody saw, so
-    // nothing synced). Now each picture is uploaded once to PUT /media/:kind
-    // and the record carries a short reference, "r2:<kind>:<version>".
-    //
-    // This device keeps its own copy in localStorage exactly as before, so
-    // every page still shows pictures instantly and only ANOTHER device ever
-    // downloads one. References never reach localStorage's profile or
-    // appearance records: other pages would try to show "r2:..." as a URL.
-    //
-    // If /media can't take a picture (no bucket yet, R2 down, too big), it
-    // simply goes inline as before. Nothing here can stop settings syncing.
-    //
-    // AVERAGES_SYNC_MEDIA_KEY remembers, per kind, the version on the server
-    // and a hash of the local copy it matches ({ photo: { v, h } }), so a
-    // picture is only uploaded when it actually changed.
-    // ------------------------------------------------------------------
     const AVERAGES_SYNC_MEDIA_KEY = 'averages_sync_media';
     const MEDIA_REF = /^r2:(photo|background):([A-Za-z0-9._-]{1,128})$/;
     const PHOTO_SIDE = 256;
@@ -4859,10 +4347,6 @@
         const kept = isDataImage(localValue) ? localValue : (kind === 'background' && typeof localValue === 'string' ? localValue : null);
         const all = loadSyncMedia();
         if (status === 404) {
-          // The server's picture is gone for good (2026-10-16): the record
-          // points at nothing, so waiting can't fix it. Forget it and push
-          // this device's own picture (uploaded fresh, or none), which
-          // replaces the dead reference for every device.
           delete all[kind];
           saveSyncMedia(all);
           try { schedulePushSyncSettings(); } catch {}
@@ -4894,8 +4378,6 @@
         try { localStorage.setItem(key, JSON.stringify({ ...(rec || {}), [field]: url })); } catch {}
       }
     }
-    // Old records (before 2026-10-13) still hold pictures inline. Pushing
-    // once moves them to R2; tried at most once a day if R2 says no.
     function hasInlinePictures(settings) {
       return !!settings && (isDataImage(settings.profile && settings.profile.photo) || isDataImage(settings.appearance && settings.appearance.background));
     }
@@ -4911,13 +4393,6 @@
     // Debounced so a burst of writes (dragging the accent-color picker,
     // say) becomes one PUT instead of one per pixel.
     let syncPushTimer = null;
-    // Background switching back and forth (2026-10-26, Martin: "my background and color are
-    // getting saved twice and are in conflict"). A push could go out while this page was still
-    // pulling (anything saved during load schedules one), sending this device's OLD copy over the
-    // account's newer one with a newer timestamp; the next load then adopted that old copy, and
-    // two devices or tabs kept flipping each other. Now pushes wait until the first pull is done,
-    // and are dropped if the pull adopts the account's copy (the page reloads with it).
-    // var: these can be read before this line runs.
     var syncPullSettled = false, syncPushQueued = false;
     function schedulePushSyncSettings() {
       if (!isSyncOn()) return;
@@ -4925,10 +4400,6 @@
       clearTimeout(syncPushTimer);
       syncPushTimer = setTimeout(pushSyncSettingsNow, 800);
     }
-    // One push at a time (2026-10-13): a picture upload makes a push take a
-    // moment, and two overlapping ones could upload the same picture twice.
-    // var, not let: deleteSyncSettingsNow can run during the page's first
-    // run (the Incognito check), before this line has.
     var syncPushChain = Promise.resolve();
     function pushSyncSettingsNow() {
       syncPushChain = syncPushChain.then(pushSyncSettingsOnce, pushSyncSettingsOnce);
@@ -4958,17 +4429,6 @@
         // the next load's pull-and-diff below) will catch it up.
       }
     }
-    // Turning sync off is a real "forget me," not just "stop asking" —
-    // added 2026-09-09 per Martin ("if they turn it off the data gets
-    // deleted"). Before this, turning the toggle off only ever flipped the
-    // local `syncAcrossDevices` flag — whatever had last been pushed (the
-    // settings blob AND the GPA-history snapshots piggybacked on
-    // /data/bundle) just sat in the server's KV record under this account
-    // indefinitely, and turning sync back on later would have silently
-    // pulled that stale record back down. Called from the turn-off
-    // confirm's click handler below, not gated on isSyncOn() the way
-    // push/pull are — it needs to run exactly when sync is BEING turned
-    // off, i.e. while it's still (about to stop being) on.
     async function deleteSyncSettingsNow() {
       // Let a push that's already uploading a picture finish first, so its
       // picture can't land in R2 after the delete and be left behind.
@@ -5053,11 +4513,6 @@
       }
     }
 
-    // ---------- "What turning this on means" consent (2026-09-12) ----------
-    // The last step before Browser Notifications turn on (the Weekly Grade
-    // Summary email's until 2026-10-04), reached from the toggle's own change
-    // handler, so there's exactly one place that turns this on, and it's the
-    // one place that's shown the student what that means.
     const notifConsentOverlay = document.getElementById('notifConsentOverlay');
     function openNotifConsent() { notifConsentOverlay.classList.add('show'); }
     function closeNotifConsent() { notifConsentOverlay.classList.remove('show'); }
@@ -5069,28 +4524,12 @@
       enableBrowserNotifAfterConsent();   // synchronously inside this click: the permission prompt needs it
     });
 
-    // ------------------------------------------------------------------
-    // Initial render
-    // ------------------------------------------------------------------
-    // ------------------------------------------------------------------
-    // Mode (2026-10-05; Plus added 2026-10-21), in Account: Incognito,
-    // Classic (13+) or Plus (Classic with the Averages Plus subscription).
-    //
-    // Plus: the API has the truth (Stripe's webhook keeps it current); this
-    // only shows it and opens Stripe's pages. Picking Plus -> POST
-    // /billing/checkout (Stripe Checkout, Managed Payments); Manage plan ->
-    // POST /billing/portal (cancel, change card, invoices). Live sign-ins
-    // only, and only while the "billing" switch is on. Never offered to
-    // under-13s (always Incognito). Anyone who has a subscription can always
-    // reach Manage plan, so nobody is stuck paying.
-    // ------------------------------------------------------------------
     (function () {
       const overlay = document.getElementById('modeConfirmOverlay');
       const confirmBody = document.getElementById('modeConfirmBody');
       const CONFIRM_DEFAULT = confirmBody.textContent;
       const msg = document.getElementById('plusMsg');
       const manageBtn = document.getElementById('plusManageBtn');
-      // The Plus section (2026-10-26): its nav item, hero, perks and payment.
       const plusNav = document.querySelector('.settings-nav-item[data-section="plus"]');
       const heroStatus = document.getElementById('plusHeroStatus');
       const getBtn = document.getElementById('plusGetBtn');
@@ -5125,8 +4564,6 @@
       const PRICE = '$2.99/month.';
       const OFFER = 'Notifications, calendar sync and early features. ' + PRICE;
       let billing = null;   // GET /billing/status, once it answers
-      // Signed in, nothing is picked until /billing/status answers (2026-10-23): a Plus member used to
-      // see Classic picked first, then the dot jump to Plus.
       let loaded = !LIVE;
       let busy = false;
 
@@ -5168,7 +4605,6 @@
         if (!unit) return money;
         return n === 1 ? money + ' a ' + unit : money + ' every ' + n + ' ' + unit + 's';
       }
-      // Your plan (2026-10-27): members see this instead of the feature cards.
       function renderPlan() {
         const member = hasPlus();
         const s = billing || {};
@@ -5187,11 +4623,6 @@
         nextVal.textContent = s.renewsAt ? day(s.renewsAt) + (!ending && price ? ' · ' + price.replace(/ (a|every) .*$/, '') : '') : '';
       }
       function render() {
-        // While someone has Plus, the other modes are locked until the subscription
-        // ends (2026-10-28, Martin). Switching to Classic or Incognito means dropping
-        // Plus, which has to go through Cancel in Manage payment; when it ends, hasPlus()
-        // turns false and these unlock on their own. (A cancelled-but-still-active plan
-        // still counts as Plus until its end date, so it stays locked until then.)
         const plusLock = hasPlus();
         descs.incognito.textContent = locked
           ? 'You’re under 13, so Averages.io stays in Incognito mode.'
@@ -5202,16 +4633,9 @@
           ? 'Part of Plus. To drop to plain Classic, cancel Plus in Manage payment.'
           : 'Settings sync across devices. Connect Canva, Google Drive and OneDrive.';
         descs.plus.textContent = plusDesc();
-        // Signed in, the API decides (2026-10-26, Martin: switching to Incognito "hides all the other
-        // options"): a session it didn't lock to Incognito is 13+, so Classic and Plus stay offered.
-        // The device's own 13+ note could be missing (sign-out clears it; a synced account skips
-        // onboarding), which hid both and left no way back. The preview and the demo still use the note.
         const canClassic = !locked && (LIVE || is13 || !incognito);
         rows.classic.hidden = !canClassic;
         const manageable = !!(billing && billing.manageable);
-        // Shown first, then checked (2026-10-26, Martin: "show plus then check"): until
-        // /billing/status answers, Plus is offered to anyone who could pick Classic, and it
-        // hides if billing turns out to be off.
         const offered = loaded ? billingOn() && canClassic : LIVE && canClassic;
         rows.plus.hidden = !(offered || manageable || hasPlus());
         rows.plus.classList.toggle('is-past-due', !!(billing && billing.status === 'past_due'));
@@ -5290,8 +4714,6 @@
         const now = current();
         if (busy || mode === now) return;
         if (picks[mode].getAttribute('aria-disabled') === 'true') {
-          // Locked to Plus (2026-10-28): a click on Classic/Incognito says how to leave,
-          // instead of doing nothing silently.
           if (hasPlus() && (mode === 'classic' || mode === 'incognito')) {
             say('You have Plus. Cancel it in Manage payment first; your mode options unlock when it ends.');
           }
@@ -5363,12 +4785,10 @@
         clearTimeout(syncPushTimer);
         if (isSyncOn()) { await deleteSyncSettingsNow(); clearSyncMeta(); }
         saveSettingsOption('syncAcrossDevices', false);
-        // Notifications off, this browser unsubscribed, the stored sign-in deleted (2026-10-05).
         await notifForget();
         if (window.__AVERAGES_MODE__ === 'live') {
           // Canva: tokens and Drafts list deleted on our server (designs stay in Canva).
           try { await fetch(averagesApiBase() + '/canva/connection', { method: 'DELETE', credentials: 'include' }); } catch {}
-          // The calendar link and its stored sign-in (2026-10-21).
           try { await fetch(averagesApiBase() + '/calendar', { method: 'DELETE', credentials: 'include' }); } catch {}
           try { localStorage.removeItem('averages_calendar_on'); localStorage.removeItem('averages_calendar_touched'); } catch {}
           // Google Drive / OneDrive: forgotten here (and Google's access withdrawn).
@@ -5395,7 +4815,7 @@
         if (back) {
           u.searchParams.delete('billing');
           window.history.replaceState(window.history.state, '', u.pathname + u.search + u.hash);
-          if (!settingsStartSection) settingsStartSection = 'plus';   // the Plus section (2026-10-26); render() falls back to Account
+          if (!settingsStartSection) settingsStartSection = 'plus';
         }
       } catch (e) {}
       render();
@@ -5414,12 +4834,6 @@
       })();
     })();
 
-    // ------------------------------------------------------------------
-    // Calendar sync (2026-10-21), an Averages Plus perk, in Integrations.
-    // The API keeps a private link (src/calendar.ts in the API); this shows
-    // it with Copy, Add to Google Calendar (by URL) and Add to Apple Calendar
-    // (webcal://). Live sign-ins only; never for under-13s.
-    // ------------------------------------------------------------------
     (function () {
       const block = document.getElementById('calendarBlock');
       const desc = document.getElementById('calDesc');
@@ -5441,7 +4855,6 @@
         block.hidden = false;
         linkRow.hidden = actions.hidden = true;
         action = null;
-        // Billing off (2026-10-21): calendar sync is free for everyone, so no Plus tag or Get Plus.
         const free = s.plusRequired === false;
         const tag = block.querySelector('.plus-tag');
         if (tag) tag.hidden = free;
@@ -5535,17 +4948,12 @@
     syncResponsiveView();
     // No initializer on purpose: the Integrations code above may already have set it.
     var settingsStartSection;
-    // Back from connecting Google Drive / OneDrive through our server (2026-10-08):
-    // open Integrations, where averages-cloud.js's message shows.
     (function () {
       try {
         const q = new URLSearchParams(window.location.search);
         if (q.get('cloud') && /^(gdrive|onedrive)$/.test(q.get('app') || '') && !settingsStartSection) settingsStartSection = 'integrations';
       } catch (e) {}
     })();
-    // ?section=<name>: ?section=account after switching modes (the page reloads
-    // to apply it everywhere), ?section=integrations from the assignment page's
-    // Reconnect Canva link (2026-10-06), and so on for any section.
     (function () {
       const u = new URL(window.location.href);
       const wanted = u.searchParams.get('section');
@@ -5558,15 +4966,10 @@
         try { window.history.replaceState(window.history.state, '', u.pathname + u.search + u.hash); } catch (e) {}
       }
     })();
-    showSection(settingsStartSection || 'account', { showDetail: !!settingsStartSection });   // Account opens first (2026-10-26 order)
+    showSection(settingsStartSection || 'account', { showDetail: !!settingsStartSection });
     pullSyncSettingsNow();
   </script>
   <script>
-    // Back link (2026-10-01, per Martin: "where it returns to ... is always
-    // wrong"). Every page records itself in a short per-tab trail; a page's
-    // back link then says and goes to the page before it ("Back to AP
-    // Chemistry Hub", "Back to Grades"...). With no trail (the page was
-    // opened directly) the page's own default back link is left alone.
     (function () {
       const SELF = 'settings.html';
       const KEY = 'averages_nav_trail';

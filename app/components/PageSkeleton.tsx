@@ -1,43 +1,7 @@
-/**
- * Loading placeholders, injected INTO the real page rather than replacing it.
- *
- * ── Why this was rewritten (2026-09-16) ──────────────────────────────────
- * The previous version rendered a hand-drawn stand-in for each whole page:
- * grey boxes where the header goes, grey boxes where the nav goes, grey boxes
- * where the table goes. It was explicitly "not a pixel-perfect replica … a
- * hand-authored approximation of its rough shape," which is exactly the
- * problem — the approximations drifted from the real pages and, in Martin's
- * words, were "not accurate at all."
- *
- * This version follows the pattern Martin sent (the Cloudflare dashboard):
- * the page's real chrome — sidebar, headers, column titles, nav, footer —
- * appears immediately and for real, and only the slots where DATA will land
- * get a shimmer. Nothing is redrawn, so nothing can drift out of shape.
- *
- * The thing that makes this safe: every data container in pages-src ships
- * EMPTY and is filled by the page's own script (`#gradesBody`, `#threadList`,
- * `#assignListBody`, …). So rendering the markup early shows real structure
- * with genuine holes in it — never somebody else's sample grades.
- *
- * ── How the specs work ───────────────────────────────────────────────────
- * Each row template reuses the page's OWN class names. That is deliberate,
- * and the opposite of the old file's reasoning. Borrowing the real classes
- * means the skeleton inherits the real padding, borders and row heights, so
- * the shimmer sits exactly where the content will and nothing jumps when the
- * data arrives. The old worry — that class names change and the skeleton
- * drifts silently — is handled two ways now: the failure mode is benign (an
- * unstyled bar, not a mis-drawn page), and `scripts/verify-pages.mjs` fails
- * the build if a selector below no longer exists in its page.
- */
+// Loading placeholders, injected INTO the real page rather than replacing it.
 
 import { calm, rise, skelBar } from "../lib/averages-loading";
 
-/**
- * What's left here after the 2026-10-19 switch to the new loading animation:
- * the shimmer bar, [data-skel], the rise/fade keyframes and the chart skeleton
- * all come from app/lib/averages-loading.css (loaded app-wide by
- * app/layout.tsx), Martin's file, unchanged.
- */
 export const SKELETON_CSS = `
   .skel-dot { border-radius: 50%; }
   /* The trend chart's placeholder (class page): its own frame, until
@@ -77,14 +41,6 @@ export interface SkeletonSpec {
   count: number;
   /** Row markup, given its index. Reuses the page's real class names. */
   row: (i: number) => string;
-  /**
-   * Whether this slot joins the top-to-bottom reveal. Default true.
-   *
-   * False for page furniture — the greeting, a course title, the big current/
-   * predicted grade numbers. Those are headings, not data, and animating them
-   * makes the whole page look like it's sliding in rather than the rows
-   * filling. Per Martin: only the data should do that.
-   */
   reveal?: boolean;
 }
 
@@ -103,9 +59,6 @@ const CHART_FRAME = (() => {
 
 const SPECS: Record<string, SkeletonSpec[]> = {
   home: [
-    // Ships as the literal text "Hey, Martin" and is rewritten from the saved
-    // profile once the script runs — so without this it greets every user by
-    // the sample name for the length of the fetch.
     { sel: "#greetingTitle", count: 1, reveal: false, row: () => `<span data-skel>${bar("190px", 26)}</span>` },
     {
       sel: "#gradesBody",
@@ -159,8 +112,6 @@ const SPECS: Record<string, SkeletonSpec[]> = {
       </div>`,
     },
     {
-      // renderRecentGrades() (added 2026-10-19 with the new loading animation):
-      // "Recently graded" sat empty while loading.
       sel: "#recentList",
       count: 3,
       row: (i) => `<div class="rg-item" data-skel>
@@ -170,7 +121,6 @@ const SPECS: Record<string, SkeletonSpec[]> = {
       </div>`,
     },
     {
-      // renderCourseUpdates() (2026-10-19): the Course updates box, same reason.
       sel: "#updatesList",
       count: 2,
       row: (i) => `<div class="tu-item" data-skel>
@@ -193,8 +143,6 @@ const SPECS: Record<string, SkeletonSpec[]> = {
    * Class column snapping wider when it does.
    */
   grades: [
-    // Stand-in text in the page's markup (2026-10-23, Martin: "why is it flashing a random class
-    // emoji then reverting or a random class name"): shimmer in its place while the data loads.
     { sel: "#courseCountSub", count: 1, reveal: false, row: () => `<span data-skel>${bar("64px", 10)}</span>` },
     {
       sel: "#gradesBody",
@@ -228,8 +176,6 @@ const SPECS: Record<string, SkeletonSpec[]> = {
    * shorter than the rows that replace it.
    */
   courses: [
-    // Stand-in text in the page's markup (2026-10-23, Martin: "why is it flashing a random class
-    // emoji then reverting or a random class name"): shimmer in its place while the data loads.
     { sel: "#courseCountSub", count: 1, reveal: false, row: () => `<span data-skel>${bar("64px", 10)}</span>` },
     {
       sel: "#coursesBody",
@@ -269,8 +215,6 @@ const SPECS: Record<string, SkeletonSpec[]> = {
    * `.gb-assign-row` list.
    */
   gradebook: [
-    // Stand-in text in the page's markup (2026-10-23, Martin: "why is it flashing a random class
-    // emoji then reverting or a random class name"): shimmer in its place while the data loads.
     { sel: "#gbTitle", count: 1, reveal: false, row: () => `<span data-skel>${bar("46%", 22)}</span>` },
     { sel: "#sheetEmoji", count: 1, reveal: false, row: () => "" },
     { sel: "#sheetTitle", count: 1, reveal: false, row: () => `<span data-skel>${bar("220px", 24)}</span>` },
@@ -334,8 +278,6 @@ const SPECS: Record<string, SkeletonSpec[]> = {
   ],
 
   assignment: [
-    // Stand-in text in the page's markup (2026-10-23, Martin: "why is it flashing a random class
-    // emoji then reverting or a random class name"): shimmer in its place while the data loads.
     { sel: "#classLink", count: 1, reveal: false, row: () => `<span data-skel>${bar("96px", 10)}</span>` },
     { sel: "#gradebookLink", count: 1, reveal: false, row: () => `<span data-skel>${bar("72px", 10)}</span>` },
     // `#assignTitle` is a plain <h1 class="title"> the page fills with
@@ -354,10 +296,8 @@ const SPECS: Record<string, SkeletonSpec[]> = {
     },
   ],
 
-  // Settings (2026-10-23): only the storage figure, which showed a made-up "128 MB" first.
   settings: [
     { sel: "#cacheSizeValue", count: 1, reveal: false, row: () => `<span data-skel>${bar("44px", 9)}</span>` },
-    // The School rows (2026-10-23): sample values in the markup, so shimmer until the page fills them.
     { sel: "#schoolNameValue", count: 1, reveal: false, row: () => `<span data-skel>${bar("132px", 9)}</span>` },
     { sel: "#schoolLmsValue", count: 1, reveal: false, row: () => `<span data-skel>${bar("120px", 9)}</span>` },
     { sel: "#schoolDistrictValue", count: 1, reveal: false, row: () => `<span data-skel>${bar("160px", 9)}</span>` },
@@ -386,8 +326,6 @@ const SPECS: Record<string, SkeletonSpec[]> = {
   ],
 
   contacts: [
-    // Stand-in text in the page's markup (2026-10-23, Martin: "why is it flashing a random class
-    // emoji then reverting or a random class name"): shimmer in its place while the data loads.
     { sel: "#contactsHeading", count: 1, reveal: false, row: () => `<span data-skel>${bar("128px", 14)}</span>` },
     {
       // contactRowHTML() in contacts.html. The row's Email quick-action is
@@ -426,19 +364,15 @@ const SPECS: Record<string, SkeletonSpec[]> = {
    * and guessing a color before the grade loads would be a claim, not a shape.
    */
   "course-home": [
-    // Stand-in text in the page's markup (2026-10-23, Martin: "why is it flashing a random class
-    // emoji then reverting or a random class name"): shimmer in its place while the data loads.
     { sel: "#bannerIcon", count: 1, reveal: false, row: () => "" },
     { sel: "#hubTitle", count: 1, reveal: false, row: () => `<span data-skel>${bar("220px", 24)}</span>` },
     {
-      // Current grade, under the projected grade in the course banner (2026-10-01).
       sel: "#curVal",
       reveal: false,
       count: 1,
       row: () => `<span class="sheet-letter" data-skel>${bar("56px", 44)}</span><span class="sheet-pct" data-skel>${bar("30px", 9)}</span>`,
     },
     {
-      // Projected grade, inside the course banner (2026-10-01).
       sel: "#predVal",
       reveal: false,
       count: 1,
@@ -460,17 +394,11 @@ const SPECS: Record<string, SkeletonSpec[]> = {
       </button>`,
     },
     {
-      // renderWeek(): the hub's "Coming up" ribbon (redo 2026-10-01). One
-      // placeholder row stands in for the grid while data loads.
       sel: "#upcomingBody",
       count: 3,
       row: (i) => `<div class="week-item" data-skel>${dot(18)}<span class="week-item-text"><span class="week-title">${bar(w(i), 10)}</span><span class="week-when">${bar("48px", 8)}</span></span></div>`,
     },
     {
-      // renderTrend(): the grade trend chart and the scores under it
-      // (2026-10-19). The frame is chartSkeleton()'s own grid at the chart's
-      // 240 x 108, so the first frame already looks like a chart loading;
-      // once the page is live, LegacyPage starts the line that keeps drawing.
       sel: "#trendBody",
       count: 1,
       row: () => `<div class="trend-chart" data-chart-skel data-skel>${CHART_FRAME}</div>
@@ -486,8 +414,6 @@ const SPECS: Record<string, SkeletonSpec[]> = {
    * reserving room for one on every tile would invent starred files.
    */
   "course-materials": [
-    // Stand-in text in the page's markup (2026-10-23, Martin: "why is it flashing a random class
-    // emoji then reverting or a random class name"): shimmer in its place while the data loads.
     { sel: "#sheetEmoji", count: 1, reveal: false, row: () => "" },
     { sel: "#sheetTitle", count: 1, reveal: false, row: () => `<span data-skel>${bar("220px", 24)}</span>` },
     {
@@ -561,24 +487,6 @@ function replaceInnerHtml(html: string, id: string, inner: string): string {
   return html;
 }
 
-/**
- * A page's body markup with the shimmer already sitting in its data slots.
- *
- * This is the whole point of the 2026-09-16 rework. The DOM version of this
- * (`injectSkeleton`, now gone) ran in a layout effect, which is before the
- * browser paints — but only once React has hydrated. The server-rendered HTML
- * reaches the screen well before that, so for about one tenth of a second the
- * page showed its real card, its real column headings and NOTHING in between:
- * correct structure, no placeholders. Exactly the gap Martin caught on video.
- *
- * Doing it as a string means the skeleton is in the HTML the server sends, so
- * the very first painted frame already has it — which is what the Cloudflare
- * dashboard does and what he asked for: the structure is there at its final
- * size, the data is not, and the holes are visibly loading.
- *
- * Every selector in SPECS is an id (verify-pages.mjs enforces that they all
- * still exist), so a targeted string replacement is enough; no HTML parser.
- */
 export function skeletonHtml(bodyHtml: string, pageId?: string): string {
   let out = bodyHtml;
   for (const [sel, inner] of skeletonMarkup(pageId)) {
@@ -645,20 +553,6 @@ function ghostOver(host: HTMLElement, markup: string, sweep: string[]): void {
   }, 420);
 }
 
-/**
- * Data landed (2026-10-19, Martin's new loading animation,
- * app/lib/averages-loading.js): in each data box the placeholders fade out on
- * top, the real rows rise in underneath 35ms apart (capped, so a long list
- * doesn't drag), and the box eases from its loading height to its real one.
- *
- * Unchanged from before: only the data moves. Furniture (the greeting, a
- * course title, the big grade numbers) is `reveal: false` in SPECS and just
- * appears. Every box starts at the same moment, so rows level with each other
- * in side-by-side boxes still arrive together.
- *
- * Replaces the 2026-09-16 opacity-only wave down the page. Potato mode and
- * reduced motion: the rows simply appear.
- */
 export function revealContent(root: HTMLElement, pageId?: string, snap: SkeletonSnapshot = {}, only?: readonly string[]): void {
   const all = pageId ? REVEAL_SELECTORS[pageId] : undefined;
   // `only`: just these cards (a card that loaded on its own, revealCards()).
@@ -686,13 +580,6 @@ export function revealContent(root: HTMLElement, pageId?: string, snap: Skeleton
   }
 }
 
-/**
- * Cards that load on their own (2026-10-20, app/lib/extras.ts LATE_EXTRAS).
- *
- * holdCards: right after the page's script has drawn (it drew these cards
- * without their data, as "didn't load"), put the placeholders back in them,
- * in the same frame, so what shows is a card still loading.
- */
 export function holdCards(root: HTMLElement | null, pageId: string | undefined, sels: readonly string[]): void {
   if (!root || !pageId || !sels.length) return;
   const markup = new Map(skeletonMarkup(pageId));

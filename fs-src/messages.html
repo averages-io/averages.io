@@ -94,7 +94,6 @@
   .quick-l { order: -1; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); line-height: 1; padding-right: 8px; border-right: 2px solid #c6c6cc; height: 24px; display: flex; align-items: center; }
   .top .me { width: 40px; height: 40px; border-radius: 50%; flex: none; margin-left: 8px; }
   .top .me { position: relative; }
-  /* two initials stay clear of the gear (2026-10-30) */
   .top .me .av { font-size: 14px; letter-spacing: -.02em; }
   .top .me .gear { position: absolute; right: -4px; bottom: -4px; width: 18px; height: 18px; border-radius: 50%; background: var(--field); box-shadow: 0 0 0 2px var(--frame); display: grid; place-items: center; color: #66757f; }
   .top .me .gear svg.i { width: 12px; height: 12px; display: block; }
@@ -143,7 +142,7 @@
   .nav .side-kbd { margin-left: auto; font-size: 11px; line-height: 20px; padding: 0 4px; background: var(--inner); color: var(--muted); }
   .nav a:hover .side-kbd { background: var(--field); }
   /* Search turns into a search bar once the sidebar opens (an icon on the closed rail) */
-  .nav #sideSearch { transition: background .12s ease, box-shadow .12s ease; margin-bottom: 8px; } /* a little room between Search and the pages under it (2026-10-30) */
+  .nav #sideSearch { transition: background .12s ease, box-shadow .12s ease; margin-bottom: 8px; }
   .side:is(:hover, .hold, :has(:focus-visible)) #sideSearch, .app.pinned .side #sideSearch { background: var(--field); box-shadow: inset 0 0 0 2px var(--inner); color: var(--muted); transition-delay: .12s; }
   .side:is(:hover, .hold, :has(:focus-visible)) #sideSearch:hover, .app.pinned .side #sideSearch:hover { background: color-mix(in srgb, var(--inner) 35%, var(--field)); color: var(--ink-2); }
   .side:is(:hover, .hold, :has(:focus-visible)) #sideSearch .side-kbd, .app.pinned .side #sideSearch .side-kbd { background: var(--panel); }
@@ -166,7 +165,6 @@
   .side > .nav, .side > .divider, .side > .side-h, .side > .foot { flex: none; }
   .side > .cls > * { flex: none; }
   /* no scrollbar here: it would take width and push the class icons off center. The fade at the bottom shows there's more. */
-  /* the whole sidebar scrolls (2026-10-30, Martin: "not just the tiny courses section"); the class list is as tall as it needs */
   .side > .cls { flex: none; min-height: 0; overflow: visible; }
   .side { overscroll-behavior: contain; scrollbar-width: none; }
   .side::-webkit-scrollbar { display: none; }
@@ -1135,7 +1133,6 @@
   .chip svg.i { color: var(--chip-c, var(--ink-2)); }
   .chip:nth-child(5n + 1) { --chip-c: var(--warm-a); } .chip:nth-child(5n + 2) { --chip-c: var(--sky); } .chip:nth-child(5n + 3) { --chip-c: var(--mint); } .chip:nth-child(5n + 4) { --chip-c: var(--grape); } .chip:nth-child(5n + 5) { --chip-c: #c98a00; }
   /* sticker tags: New pops off the page a little */
-  /* dark mode only (2026-10-30): dark letters on a deeper yellow (white on yellow was about 1.4:1), and the paper ring in the card's dark */
   html[data-theme="dark"] body .newtag { background: #e0aa2e !important; color: #1f1604 !important; box-shadow: 0 0 0 2px var(--field), 0 3px 8px -2px rgba(0, 0, 0, .55); }
   .newtag { background: var(--sun) !important; color: var(--ink) !important; border-radius: 8px; transform: translate(var(--tx, 0px), var(--ty, 0px)) rotate(var(--tilt, -4deg)); box-shadow: 0 0 0 2px var(--field), 0 3px 8px -2px rgba(20, 21, 31, .25); will-change: transform; backface-visibility: hidden; } /* always drawn on its own layer, so hovering a row never redraws the text thinner or bolder */
   .wrap { position: relative; isolation: isolate; }
@@ -1151,7 +1148,6 @@
     /* icon tiles wiggle when you point at their row */
     body:not(.potato-mode) :is(.arow, .mrow, .mp-row, .ag-row, .nt-row, .pin, .gr-row, .crow, tr, .item, .mi):hover :is(.ktile, .nt-tile, .badge, .emo) { animation: lifeWiggle .5s var(--spring); }
     body:not(.potato-mode) .newtag { animation: lifeSticker .5s var(--spring) backwards; }
-    /* hidden until it has landed in its spot (2026-11-06, Martin's video: stickers showed by the name, then jumped) */
     .newtag[data-tilted]:not([data-shown]) { visibility: hidden; animation: none !important; }
   }
   @keyframes lifeWiggle { 0% { transform: none; } 30% { transform: rotate(-9deg) scale(1.08); } 60% { transform: rotate(6deg) scale(1.08); } 100% { transform: none; } }
@@ -1580,7 +1576,6 @@
     :is(.ti-scrim, .ti-pop, .ti-row, .ti-drop, .ti-drop svg.i, .ti-add svg.i, .ti-pk, .ti-prog i, .ti-file, .ti-st, .ti-swap, .ti-foot .btn, .ti-yay, .ti-yay *, .ti-done svg, .ti-head .ktile, .ti-hl, .ti-x svg, .ti-close svg) { animation: none !important; transition: none !important; }
     .ti-foot .btn.primary.go::after { display: none; }
   }
-
 
   .ti-pk-add { display: inline-flex; align-items: center; gap: 4px; height: 28px; padding: 0 12px 0 8px; border-radius: 8px; background: var(--field); font-size: 12px; font-weight: 800; color: var(--ink); }
   .ti-pk-add:hover { background: var(--inner); }
@@ -3006,7 +3001,6 @@
   .ms-fc:hover { background: color-mix(in srgb, var(--inner) 60%, var(--field)); }
   .ms-fc .art { height: 140px; display: grid; place-items: center; background: color-mix(in srgb, var(--c) 12%, var(--field)); }
   .ms-fc .pf-stage { transform: scale(1.15); }
-  /* bigger pages on a file card (2026-11-03, Martin: "make the pages a bit bigger"); the "2 pages" label stays its size */
   .ms-fc .art { height: 178px; }
   .ms-fc .pf-stage { width: 150px; height: 128px; }
   .ms-fc .pf-doc.portrait  { --pw: 80px; --ph: 102px; --peel: 40px; --spread: 15px; }
@@ -3033,7 +3027,6 @@
   /* a link's preview: a picture area tinted by where it goes, then the page's title and site */
   .ms-lp { display: flex; flex-direction: column; width: 280px; max-width: 100%; border-radius: 18px; overflow: hidden; background: var(--field); text-align: left; color: var(--ink); box-shadow: 0 1px 1px rgba(20, 20, 40, .04); transition: background-color .15s ease; }
   a.ms-lp { text-decoration: none; }
-  /* Martin's file previewer (file-previewer.html): one page at a time, as big as fits */
   .up-lb-fig.fl-big { position: relative; display: flex; align-items: center; justify-content: center; min-height: 0; }
   .fl-big .fl-pg { display: block; flex: none; max-width: 100%; max-height: 100%; border-radius: 8px; box-shadow: 0 12px 40px rgba(0, 0, 0, .45); background: #ffffff; --keep-dark: 1; }
   .fl-big img.fl-pg, .fl-big video.fl-pg { width: auto; height: auto; object-fit: contain; background: transparent; }
@@ -3124,8 +3117,6 @@
   .ms-aw > .ms-av { position: absolute; left: -40px; top: 50%; margin-top: -16px; }
   .ms-col { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
   .ms-msg.me .ms-col { align-items: flex-end; }
-  /* a short message's bubble hugs its words (2026-11-03, Martin: "extra space in the message bubbles"): it was
-     stretched to the width of the time under it */
   .ms-msg:not(.me) .ms-col, .ms-aw { align-items: flex-start; }
   .ms-who { margin: 0 0 1px 12px; font-size: 12px; font-weight: 800; color: var(--muted); }
   .ms-bub { max-width: 54ch; padding: 8px 12px; border-radius: 18px; background: var(--field); color: var(--ink); font-size: 15px; font-weight: 600; line-height: 1.45; white-space: pre-wrap; overflow-wrap: break-word; box-shadow: 0 1px 1px rgba(20, 20, 40, .04); }
@@ -3211,7 +3202,6 @@
   .ms-achip button { width: 28px; height: 28px; flex: none; border-radius: 8px; display: grid; place-items: center; color: var(--muted); transition: background-color .15s ease; }
   .ms-achip button:hover { background: var(--inner); color: var(--ink); }
   .ms-achip button svg.i { width: 14px; height: 14px; }
-  /* the X shows when you point at a waiting file or link (2026-11-03, Martin); always on touch screens */
   .ms-achip { position: relative; height: auto; min-height: 44px; padding-top: 6px; padding-bottom: 6px; }
   .ms-achip small { white-space: normal; line-height: 1.3; }
   .ms-achip.failed { cursor: pointer; box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--bad) 40%, transparent); }
@@ -3455,14 +3445,18 @@
   }
   @media (max-width: 680px) { .hub-t h1 { font-size: 34px; } }
   /* ===== end Life layer for the course page ===== */
-  .g-na { color: var(--muted) !important; }   /* nothing graded yet (2026-11-06) */
+  .g-na { color: var(--muted) !important; }
   .ms-tbar button svg { width: 22px; height: 22px; display: block; }
   .ms-rx i svg { width: 15px; height: 15px; display: block; }
   .ms-rx i { display: inline-flex; }
-  /* the big emoji next to a page title: smooth even when the tile is tilted (2026-11-06, Martin: they looked jagged on
-     some pages, the tilted ones). Drawn upright on its own layer and then turned, so its edges and the emoji stay smooth. */
   .hub-logo { backface-visibility: hidden; -webkit-backface-visibility: hidden; outline: 1px solid transparent; }
   .hub-logo svg { shape-rendering: geometricPrecision; }
+  .me-pop .confirm { margin: 4px 4px 4px; padding: 12px; background: var(--panel); border-radius: 14px; }
+  .me-pop .confirm b { display: block; margin-bottom: 4px; font-weight: 800; }
+  .me-pop .confirm .note { display: block; color: var(--muted); font-size: 13px; font-weight: 600; line-height: 1.45; }
+  .me-pop .confirm .acts { display: flex; gap: 8px; justify-content: flex-end; padding: 8px 0 0; }
+  .me-pop .confirm .btn { background: var(--field); }
+  .me-pop .confirm .btn.primary { background: var(--accent); color: #fff; }
 </style>
 </head>
 <body>
@@ -3609,27 +3603,6 @@
 </svg>
 
 <script>
-/* Copied from averages.io public/js/averages-file-icons.js (2026-10-09). Fredoka Bold (OFL, see THIRD-PARTY-NOTICES.md) is inlined so the labels render here. */
-/*
- * File type icons (2026-10-09, Martin; design in the project doc claude/file-icons.md).
- *
- * A see-through page with a line in the type's color around it and a folded
- * corner. The label (PDF, DOC, ZIP…, Fredoka Bold, same color) runs across
- * the page and cuts through the outline; a small drawing for the type sits
- * above it, cut off by the fold along the crease's own curve.
- *   - At rest only the drawing shows; hovering the file's row or tile (or
- *     focusing it) slides the drawing up, opens the outline and fades the
- *     label in. Devices without hover always show the label.
- *   - The outline glows only in dark mode (body.dark-mode).
- *   - Below 34 px (list rows) there's no label: the drawing alone, outline whole.
- *
- * Loaded in <head> by app/layout.tsx. Pages call
- *   AveragesFileIcons.html(extOrName, { mime, size })  -> <span class="avfi">…</span>
- *   AveragesFileIcons.svg(extOrName, { mime, size, small }) -> <svg>…</svg> (fills its box when size is left out)
- *   AveragesFileIcons.key(extOrName, mime)            -> 'pdf' | 'doc' | … | 'file'
- *   AveragesFileIcons.color(extOrName, mime)          -> '#E5484D' …
- * Pages keep their old badge when this script isn't there, so nothing breaks.
- */
 (function () {
   'use strict';
   if (window.AveragesFileIcons) return;
@@ -4098,12 +4071,6 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     inkMemo.set(key, out);
     return out;
   }
-  // The number is painted on a canvas the size of the badge, so it moves with the circle as one piece. Text on the page
-  // snaps to whole pixels on its own, which could leave the digit up to half a pixel off from its circle.
-  // Spotify-style names: with animations on, a name that doesn't fit stays on one line and slides to show the end.
-  // With potato mode or reduced motion, names go back to wrapping normally.
-  // names, and the line under them; file and link names too (2026-11-03, Martin: "the spotify scrolling animation if
-  // the name of the file is too long"): file cards, files and links waiting above the box, link cards, the previewer
   const MQ_SEL = '.ms-th .tx > b, .ms-th .tx > small, .ms-fc .ft .tx > b, .ms-achip .tx > b, .ms-lp .tx > b, .fl-lb .up-lb-top .tx > b';
   function mqOff(el) { const inn = el.querySelector(':scope > .mq-in'); if (inn) el.innerHTML = inn.innerHTML; el.classList.remove('mq'); delete el.dataset.mq; }
   function mqFit(el) {
@@ -4206,7 +4173,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       ${meItem('potato', 'bolt', 'Potato mode', 'System font, no animation', `<span class="sw${potato ? ' on' : ''}" aria-hidden="true"></span>`)}
       <div class="hr"></div>
       ${meItem('settings', 'gear', 'Settings', '')}
-      ${meItem('signout', 'out', 'Sign out', '', '', ' danger')}</div>`);
+      <div class="me-so">${meItem('signout', 'out', 'Sign out', '', '', ' danger')}</div></div>`);
     meMenu = document.body.lastElementChild;
     meMenu.querySelector('[data-me="potato"]').setAttribute('role', 'menuitemcheckbox');
     meMenu.querySelector('[data-me="potato"]').setAttribute('aria-checked', potato);
@@ -4229,8 +4196,13 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
         toast(on ? 'Potato mode on' : 'Potato mode off'); return;
       }
       
+      if (k === 'signout') {
+        meMenu.querySelector('.me-so').innerHTML = `<div class="confirm"><b>Sign out of Averages.io?</b><span class="note">You can sign back in with Schoology any time.</span><div class="acts"><button class="btn" data-me="socancel">Cancel</button><button class="btn primary" data-me="soyes">Sign out</button></div></div>`;
+        meMenu.querySelector('[data-me="socancel"]').focus({ preventScroll: true }); return;
+      }
+      if (k === 'socancel') { meMenu.querySelector('.me-so').innerHTML = meItem('signout', 'out', 'Sign out', '', '', ' danger'); meMenu.querySelector('[data-me="signout"]').focus({ preventScroll: true }); return; }
       meClose(true);
-      ({ profile: () => FSX.go('settings', { section: 'account' }), customize: () => FSX.go('home', { customize: 1 }), settings: () => FSX.go('settings'), signout: () => FSX.confirmSignOut() }[k] || (() => {}))();
+      ({ profile: () => FSX.go('settings', { section: 'account' }), customize: () => FSX.go('home', { customize: 1 }), settings: () => FSX.go('settings'), soyes: () => FSX.signOut() }[k] || (() => {}))();
     });
   }
   function meClose(refocus) {
@@ -4252,7 +4224,6 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   });
   let toastT;
   function toast(text) { const t = $('toast'); t.textContent = text; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2600); }
-
 
   document.addEventListener('click', e => { const t = e.target.closest('[data-toast]'); if (t) { e.preventDefault(); if (!FSX.open(t.dataset.toast)) toast('That isn\'t ready yet.'); } });
   const IS_MAC = /mac|iphone|ipad|ipod/i.test(navigator.userAgentData?.platform || navigator.platform || '');
@@ -4294,7 +4265,6 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       const here = !m && typeof window.CMDK_HERE === 'function' ? window.CMDK_HERE(qq) : null;
       if (here && here.rows.length) html += `<div class="lbl">${esc(here.label)}</div>` + here.rows.slice(0, 5).map(r => crow(`data-cmdkgo="${esc(r.key)}"`, r.lead, r.t, r.sub)).join('');
       const cs = m ? [] : CLASSES.filter(c => chit(qq, c.name + ' ' + c.teacher)); if (cs.length) html += `<div class="lbl">Classes</div>` + cs.map(c => cclass(c, qq)).join('');
-      // people: your teachers and classmates (2026-11-06); one opens their card in Contacts
       const pp = m || !FSX.people ? [] : FSX.people().filter(x => chit(qq, x.name)).slice(0, 5); if (pp.length) html += `<div class="lbl">People</div>` + pp.map(x => crow(`data-go="${FSX.url('contacts', { person: x.id })}"`, FSX.personAv(x), cmark(x.name, qq), x.sub)).join('');
       const ps = m ? [] : GO_PAGES.filter(([p]) => chit(qq, p)); if (ps.length) html += `<div class="lbl">Go to</div>` + ps.map(page).join('');
       if (HERE && !m) html += crow(`data-cmdkhere="${esc(qq)}"`, ico('search'), `Search ${esc(HERE)} for "${esc(qq)}"`, 'Just this page', ' s-cmd');
@@ -4302,6 +4272,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     }
     res.innerHTML = html; const f = res.querySelector('.mi'); if (f) f.classList.add('sel');
   }
+  window.addEventListener('fs:people', () => { if (cmdk) cmdkRender(); });
   function cmdkOpen() {
     if (cmdk) { cmdk.querySelector('input').select(); return; }
     cmdkFrom = document.activeElement; $('app').classList.remove('menu');
@@ -4357,14 +4328,9 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   document.documentElement.style.setProperty('--me-photo', PROFILE.photo ? `url("${PROFILE.photo}")` : 'none');
   const hue = s => [...s].reduce((a, c) => a + c.charCodeAt(0) * 37, 0) % 360; // the same person gets the same color everywhere
   const ini = n => n.replace(/^(Dr|Mr|Ms|Mrs)\.\s+/, '').split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
-  // Teachers only for now (2026-10-28, Martin): you can message your teachers. Classmates are here only so a
-  // teacher's message to the whole class shows who replied; they can't be messaged, blocked or picked.
-  // Your teachers (GET /data/people), plus anyone else in your conversations (Schoology names them). Only teachers
-  // can be picked for a new message.
   const PEOPLE = {};
   ((FSD.people && FSD.people.CONTACTS) || []).forEach(x => { const c = (x.courses || []).find(id => C[id]); if (!c) return;
     PEOPLE[String(x.id)] = { id: String(x.id), name: x.name || 'Teacher', role: 'Teacher', c, room: '', email: x.email || '' }; });
-  // and your classmates (2026-11-06, Martin: they couldn't be found to write to), from your classes' member lists
   Object.entries(FSD.classmates || {}).forEach(([cid, list]) => { if (!C[cid]) return; (list || []).forEach(m => { const id = String(m.id || ''); if (!id || (PEOPLE[id] && PEOPLE[id].role === 'Teacher') || id === String((FSD.me || {}).uid || '')) return;
     if (PEOPLE[id]) { if (!PEOPLE[id].cls.includes(cid)) PEOPLE[id].cls.push(cid); return; } PEOPLE[id] = { id, name: m.name || 'Classmate', role: 'Student', cls: [cid], photo: m.photo || '' }; }); });
   const MSG = (FSD.raw.messages && Array.isArray(FSD.raw.messages.CONVERSATIONS)) ? FSD.raw.messages : { CONVERSATIONS: [], PEOPLE: {}, me: '' };
@@ -4386,8 +4352,6 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (!t || t.loaded || t.loading) return; t.loading = true;
     FSX.thread(t.id).then(r => {
       t.loaded = true; t.loading = false;
-      // Files and links sent with a message (2026-11-03, Martin: teachers' attachments and links didn't show).
-      // Links go under the words as link cards; the first file rides on the message, any others follow it.
       const fileOf = (f) => ({ name: f.name, size: f.size ? fmtSize(f.size) : 'File', url: `${FSX.API}/messages/file?thread=${encodeURIComponent(t.id)}&file=${encodeURIComponent(f.id)}&view=1`, dl: `${FSX.API}/messages/file?thread=${encodeURIComponent(t.id)}&file=${encodeURIComponent(f.id)}`, real: true });
       t.msgs = [];
       (r.messages || []).forEach(m => {
@@ -4546,9 +4510,6 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); e.stopImmediatePropagation(); lbGo(e.key === 'ArrowLeft' ? -1 : 1); return; }
     if (e.key === 'Tab') { const fs = [...lb.el.querySelectorAll('button:not([disabled])')]; if (e.shiftKey && document.activeElement === fs[0]) { e.preventDefault(); fs[fs.length - 1].focus(); } else if (!e.shiftKey && document.activeElement === fs[fs.length - 1]) { e.preventDefault(); fs[0].focus(); } }
   }, true);
-  // Real link previews (2026-11-03, Martin): the page's title, site and picture from the API (GET /links/preview),
-  // the picture through the API too (/links/image), so the student's browser never contacts the site. Kept for
-  // this tab; the drawn card shows until they're here, and stays if the page can't be read.
   const LP = (() => { try { return JSON.parse(sessionStorage.getItem('fsmsg_lp') || '{}') || {}; } catch (e) { return {}; } })(), LPQ = {};
   const lpImg = u => `${FSX.API}/links/image?url=${encodeURIComponent(u)}`;
   function lpGet(u) {
@@ -4580,7 +4541,6 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     const k = prettyUrl(u), L = LINKS[k] || { title: k.split('/').pop().replace(/[-_]+/g, ' ').replace(/^./, ch => ch.toUpperCase()) || hostOf(u), site: hostOf(u), icon: 'link' };
     const c = L.cls ? C[L.cls].color : L.c || 'var(--muted)';
     const art = L.cls ? `<span class="emo">${EMOJI_SVG[C[L.cls].emoji] || ''}</span>` : L.file && window.AveragesFileIcons ? AveragesFileIcons.html(L.file, { size: 44 }) : ico(L.icon || 'link');
-    // a real link (2026-11-03, Martin: "links and link previews don't work"): it opens the page in a new tab
     return `<a class="ms-lp avfi-host" style="--c:${c}" data-lp="${esc(u)}" href="${esc(u)}" target="_blank" rel="noopener noreferrer" aria-label="${esc(L.title)}, ${esc(L.site)}, opens in a new tab"><span class="art" aria-hidden="true">${art}</span><span class="tx"><b>${markQ(L.title)}</b><small>${markQ(L.site)}</small></span></a>`;
   }
   const CATS = [['all', 'All'], ['msgs', 'Messages'], ['people', 'People'], ['files', 'Files'], ['links', 'Links']];
@@ -4671,7 +4631,6 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   function msMeta() {
     const unread = TH.filter(t => t.unread).length, teachers = new Set(TH.flatMap(t => t.with).filter(id => P(id).role === 'Teacher')).size;
     const m = (icon, n, txt, cl = '') => `<span class="gm${cl}">${ico(icon)}<span class="t"><b data-n="${n}" data-dp="0">${n}</b> ${txt}</span></span>`;
-    // No messages yet (2026-11-03, Martin: the facts stayed loading): there's no "last one" to read, so say so.
     const lastOne = TH.length ? null : `<span class="gm">${ico('clock')}<span class="t">No messages yet</span></span>`;
     $('msMeta').innerHTML = m('mail', unread, 'unread') + m('msg', TH.length, TH.length === 1 ? 'conversation' : 'conversations') + m('user', teachers, teachers === 1 ? 'teacher' : 'teachers') + (lastOne || (() => { const w = last(TH.slice().sort((a, b) => last(b).when - last(a).when)[0]).when, a = ago(w); return `<span class="gm">${ico('clock')}<span class="t">${sameDay(w, NOW) ? 'Last one at' : /^\d/.test(a) || /^[A-Z][a-z]{2} \d/.test(a) ? 'Last one on' : 'Last one'} <b>${sameDay(w, NOW) ? esc(a) : /^\d/.test(a) || /^[A-Z][a-z]{2} \d/.test(a) ? esc(a) : esc(a.toLowerCase())}</b></span></span>`; })());
   }
@@ -4703,7 +4662,6 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const fmtSize = n => n >= 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB';
   MS.pend = {}; // files picked for the message you're writing, per conversation
   const pendOf = () => MS.pend[MS.open] || (MS.pend[MS.open] = []);
-  // links added with the link button wait above the box like a file (2026-11-03, Martin), and go under your words
   const linksOf = () => MS.links[MS.open] || (MS.links[MS.open] = []);
   const linkChips = () => linksOf().map((u, i) => { const L = LP[u]; return `<span class="ms-achip ms-lchip">${L && L.icon ? `<img class="ms-lfav" src="${esc(lpImg(L.icon))}" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'ms-lfav ms-lfav0'}))">` : `<span class="ms-lfav ms-lfav0">${ico('link')}</span>`}<span class="tx"><b>${esc(L && L.title || hostOf(u))}</b><small>${esc(prettyUrl(u))}</small></span><button data-msunlink="${i}" aria-label="Remove the link to ${esc(hostOf(u))}">${ico('x')}</button></span>`; }).join('');
   const attsHTML = () => linkChips() + pendOf().map((a, i) => `<span class="ms-achip avfi-host${a.state === 'failed' ? ' failed' : ''}"${a.state === 'failed' ? ` data-msretry="${i}" role="button" tabindex="0" title="Try again"` : ''}>${window.AveragesFileIcons ? AveragesFileIcons.html(a.name, { size: 24 }) : ico('doc')}<span class="tx"><b>${esc(a.name)}</b><small>${esc(a.state === 'failed' ? (a.err || 'Couldn\'t upload') + ' Click to try again.' : a.state === 'up' ? 'Uploading… ' + Math.round((a.frac || 0) * 100) + '%' : a.size)}</small></span><button data-msunatt="${i}" aria-label="Remove ${esc(a.name)}">${ico('x')}</button></span>`).join('');
@@ -4735,9 +4693,6 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     wireComposer();
     fcReal(); lpReal();
   }
-  // The real pages on a PDF's card (2026-11-03, Martin: "add a page preview on these previews when they become
-  // available"): the drawn placeholder until they're here (and if the file can't be read), then the first pages
-  // (up to the five the card fans out) and the real page count. Pictures already show themselves.
   function fcReal() {
     document.querySelectorAll('#msThread .ms-fc[data-msfile]:not([data-real])').forEach(card => {
       card.setAttribute('data-real', '');
@@ -4754,12 +4709,6 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     });
   }
 
-  // ---------- a file sent in a message, big: Martin's file previewer (file-previewer.html, 2026-11-03) ----------
-  // Across the top: the file's name, what it is, its size, who sent it and when; "2 of 5" when the conversation has
-  // more than one file; Open in a new tab, Download and X. One page at a time, as big as fits, keeping its shape.
-  // The arrows (or Left and Right) go through a PDF's pages, then on to the next file in the conversation (and back);
-  // the page slides in from the side you're going. Esc, X, or a click on the dark area closes it, and focus goes back
-  // to the file you opened. Tab stays inside while it's open. Potato mode and reduced motion: no fade, scale or slide.
   let fLb = null;
   const fKind = a => { const k = FSX.prev.kind(a.name); return k === 'pdf' ? 'PDF' : k === 'image' ? 'Image' : (a.name.split('.').pop() || 'File').toUpperCase(); };
   function fileLbOpen(mid) {
@@ -4854,7 +4803,6 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && !e.target.closest('video, audio')) { e.preventDefault(); e.stopImmediatePropagation(); fileLbGo(e.key === 'ArrowLeft' ? -1 : 1); return; }
     if (e.key === 'Tab') { const f = [...fLb.el.querySelectorAll('button:not([disabled]), video, audio')]; if (!f.length) return; if (e.shiftKey && document.activeElement === f[0]) { e.preventDefault(); f[f.length - 1].focus(); } else if (!e.shiftKey && document.activeElement === f[f.length - 1]) { e.preventDefault(); f[0].focus(); } }
   }, true);
-  // ---------- the paperclip's neighbors (2026-11-03, Martin): pointing at it shows Add a link and an emoji ----------
   const EMOJIS = '😀 😂 😊 😍 🥲 😅 😎 🤔 😮 😢 😭 😤 🙏 👍 👎 👏 🙌 💪 ✌️ 🤞 👋 ❤️ 🔥 ⭐ ✨ 🎉 ✅ ❌ ❓ ‼️ 💯 📚 📝 📎 📅 ⏰ 🧪 🧮 🌎 🎨'.split(' ');
   let tpop = null;
   function toolClose() { if (!tpop) return; tpop.el.remove(); tpop = null; document.querySelectorAll('.ms-ctools.open').forEach(x => x.classList.remove('open')); }
@@ -4894,14 +4842,6 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   document.addEventListener('pointerdown', e => { if (tpop && !e.target.closest('.ms-tpop, .ms-ctools')) toolClose(); }, true);
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && tpop) { e.preventDefault(); e.stopImmediatePropagation(); const t = document.querySelector('[data-mstool="' + tpop.kind + '"]'); toolClose(); if (t) t.focus({ preventScroll: true }); } }, true);
 
-  // ---------- reactions, like iMessage (2026-11-03, Martin) ----------
-  // Schoology has no reactions, so one goes as a reply, the way an iPhone sends one to an Android phone:
-  // "Martin liked “yes”". Any reply like that in a conversation, from you or a teacher (also iMessage's own
-  // "Loved “…”", "Removed a heart from “…”" and Android's "Reacted 👍 to “…”"), shows as a little badge on the
-  // message it quotes instead of as a message. One reaction per person per message; picking the same one again
-  // takes it back. If the quoted message isn't found, it stays a normal message.
-  // the reactions as Twemoji pictures (2026-11-06, Martin: use twemoji, like the rest of the app's emoji), not the
-  // device's own emoji font; any other emoji someone reacts with stays as text
   const RX_SVG = {"❤️": "<svg aria-hidden=\"true\" focusable=\"false\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 36 36\"><path fill=\"#DD2E44\" d=\"M35.885 11.833c0-5.45-4.418-9.868-9.867-9.868-3.308 0-6.227 1.633-8.018 4.129-1.791-2.496-4.71-4.129-8.017-4.129-5.45 0-9.868 4.417-9.868 9.868 0 .772.098 1.52.266 2.241C1.751 22.587 11.216 31.568 18 34.034c6.783-2.466 16.249-11.447 17.617-19.959.17-.721.268-1.469.268-2.242z\"/></svg>", "👍": "<svg aria-hidden=\"true\" focusable=\"false\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 36 36\"><path fill=\"#FFDB5E\" d=\"M34.956 17.916c0-.503-.12-.975-.321-1.404-1.341-4.326-7.619-4.01-16.549-4.221-1.493-.035-.639-1.798-.115-5.668.341-2.517-1.282-6.382-4.01-6.382-4.498 0-.171 3.548-4.148 12.322-2.125 4.688-6.875 2.062-6.875 6.771v10.719c0 1.833.18 3.595 2.758 3.885C8.195 34.219 7.633 36 11.238 36h18.044a3.337 3.337 0 0 0 3.333-3.334c0-.762-.267-1.456-.698-2.018 1.02-.571 1.72-1.649 1.72-2.899 0-.76-.266-1.454-.696-2.015 1.023-.57 1.725-1.649 1.725-2.901 0-.909-.368-1.733-.961-2.336a3.311 3.311 0 0 0 1.251-2.581z\"/><path fill=\"#EE9547\" d=\"M23.02 21.249h8.604c1.17 0 2.268-.626 2.866-1.633a.876.876 0 0 0-1.506-.892 1.588 1.588 0 0 1-1.361.775h-8.81c-.873 0-1.583-.71-1.583-1.583s.71-1.583 1.583-1.583H28.7a.875.875 0 0 0 0-1.75h-5.888a3.337 3.337 0 0 0-3.333 3.333c0 1.025.475 1.932 1.205 2.544a3.32 3.32 0 0 0-.998 2.373c0 1.028.478 1.938 1.212 2.549a3.318 3.318 0 0 0 .419 5.08 3.305 3.305 0 0 0-.852 2.204 3.337 3.337 0 0 0 3.333 3.333h5.484a3.35 3.35 0 0 0 2.867-1.632.875.875 0 0 0-1.504-.894 1.594 1.594 0 0 1-1.363.776h-5.484c-.873 0-1.583-.71-1.583-1.583s.71-1.583 1.583-1.583h6.506a3.35 3.35 0 0 0 2.867-1.633.875.875 0 1 0-1.504-.894 1.572 1.572 0 0 1-1.363.777h-7.063a1.585 1.585 0 0 1 0-3.167h8.091a3.35 3.35 0 0 0 2.867-1.632.875.875 0 0 0-1.504-.894 1.573 1.573 0 0 1-1.363.776H23.02a1.585 1.585 0 0 1 0-3.167z\"/></svg>", "👎": "<svg aria-hidden=\"true\" focusable=\"false\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 36 36\"><path fill=\"#FFDB5E\" d=\"M34.956 18.084c0 .503-.12.975-.321 1.404-1.341 4.326-7.619 4.01-16.549 4.221-1.493.035-.639 1.798-.115 5.668.341 2.517-1.282 6.382-4.01 6.382-4.498 0-.171-3.548-4.148-12.322-2.125-4.688-6.875-2.062-6.875-6.771V5.948c0-1.833.18-3.595 2.758-3.885C8.195 1.781 7.633 0 11.238 0h18.044a3.337 3.337 0 0 1 3.333 3.334c0 .762-.267 1.456-.698 2.018 1.02.571 1.72 1.649 1.72 2.899 0 .76-.266 1.454-.696 2.015 1.023.57 1.725 1.649 1.725 2.901 0 .909-.368 1.733-.961 2.336a3.311 3.311 0 0 1 1.251 2.581z\"/><path fill=\"#EE9547\" d=\"M23.02 14.751h8.604c1.17 0 2.268.626 2.866 1.633a.876.876 0 0 1-1.506.892 1.588 1.588 0 0 0-1.361-.775h-8.81c-.873 0-1.583.71-1.583 1.583s.71 1.583 1.583 1.583H28.7a.875.875 0 0 1 0 1.75h-5.888a3.337 3.337 0 0 1-3.333-3.333c0-1.025.475-1.932 1.205-2.544a3.32 3.32 0 0 1-.998-2.373c0-1.028.478-1.938 1.212-2.549a3.318 3.318 0 0 1 .419-5.08 3.305 3.305 0 0 1-.852-2.204A3.337 3.337 0 0 1 23.798.001h5.484a3.35 3.35 0 0 1 2.867 1.632.875.875 0 0 1-1.504.894 1.594 1.594 0 0 0-1.363-.776h-5.484c-.873 0-1.583.71-1.583 1.583s.71 1.583 1.583 1.583h6.506c1.17 0 2.27.626 2.867 1.633a.875.875 0 1 1-1.504.894 1.572 1.572 0 0 0-1.363-.777h-7.063a1.585 1.585 0 0 0 0 3.167h8.091a3.35 3.35 0 0 1 2.867 1.632.875.875 0 0 1-1.504.894 1.573 1.573 0 0 0-1.363-.776H23.02a1.585 1.585 0 0 0 0 3.167z\"/></svg>", "😂": "<svg aria-hidden=\"true\" focusable=\"false\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 36 36\"><path fill=\"#FFCC4D\" d=\"M36 18c0 9.941-8.059 18-18 18-9.94 0-18-8.059-18-18C0 8.06 8.06 0 18 0c9.941 0 18 8.06 18 18\"/><path fill=\"#664500\" d=\"M28.457 17.797c-.06-.135-1.499-3.297-4.457-3.297-2.957 0-4.397 3.162-4.457 3.297a.503.503 0 0 0 .755.605c.012-.009 1.262-.902 3.702-.902 2.426 0 3.674.881 3.702.901a.498.498 0 0 0 .755-.604zm-12 0c-.06-.135-1.499-3.297-4.457-3.297-2.957 0-4.397 3.162-4.457 3.297a.499.499 0 0 0 .754.605C8.31 18.393 9.559 17.5 12 17.5c2.426 0 3.674.881 3.702.901a.498.498 0 0 0 .755-.604zM31 16c-.396 0-.772-.238-.929-.629-1.778-4.445-6.223-5.381-6.268-5.391a1 1 0 1 1 .393-1.961c.226.045 5.556 1.168 7.732 6.608A1 1 0 0 1 31 16zM5 16a1 1 0 0 1-.928-1.372c2.176-5.44 7.506-6.563 7.732-6.608a1 1 0 0 1 .396 1.96c-.185.038-4.506.98-6.271 5.391A1.002 1.002 0 0 1 5 16zm13 6c-3.623 0-6.027-.422-9-1-.679-.131-2 0-2 2 0 4 4.595 9 11 9 6.404 0 11-5 11-9 0-2-1.321-2.132-2-2-2.973.578-5.377 1-9 1z\"/><path fill=\"#FFF\" d=\"M9 23s3 1 9 1 9-1 9-1-2 4-9 4-9-4-9-4z\"/><path fill=\"#5DADEC\" d=\"M10.847 28.229a5 5 0 0 1-9.693-2.461c.679-2.677 6.337-8.708 7.307-8.462.97.247 3.065 8.247 2.386 10.923zm14.286 0a5 5 0 0 0 6.077 3.615 4.998 4.998 0 0 0 3.616-6.076c-.68-2.677-6.338-8.708-7.308-8.462-.968.247-3.064 8.247-2.385 10.923z\"/></svg>", "‼️": "<svg aria-hidden=\"true\" focusable=\"false\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 36 36\"><circle cx=\"11\" cy=\"31\" r=\"3\" fill=\"#BE1931\"/><path fill=\"#BE1931\" d=\"M14 23a3 3 0 1 1-6 0V4a3 3 0 1 1 6 0v19z\"/><circle cx=\"25\" cy=\"31\" r=\"3\" fill=\"#BE1931\"/><path fill=\"#BE1931\" d=\"M28 23a3 3 0 0 1-6 0V4a3 3 0 0 1 6 0v19z\"/></svg>", "❓": "<svg aria-hidden=\"true\" focusable=\"false\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 36 36\"><path fill=\"#BE1931\" d=\"M17 27a3 3 0 0 1-3-3v-4a3 3 0 0 1 3-3c.603-.006 6-1 6-5 0-2-2-4-5-4-2.441 0-4 2-4 3a3 3 0 1 1-6 0c0-4.878 4.58-9 10-9 8 0 11 5.982 11 11 0 4.145-2.277 7.313-6.413 8.92-.9.351-1.79.587-2.587.747V24a3 3 0 0 1-3 3z\"/><circle cx=\"17\" cy=\"32\" r=\"3\" fill=\"#BE1931\"/></svg>"};
   const rxPic = e => RX_SVG[e] || esc(e);
   const RX = [['love', '❤️', 'loved', 'a heart'], ['like', '👍', 'liked', 'a like'], ['dislike', '👎', 'disliked', 'a dislike'], ['laugh', '😂', 'laughed at', 'a laugh'], ['emph', '‼️', 'emphasized', 'an exclamation mark'], ['ques', '❓', 'questioned', 'a question mark']];
@@ -4956,7 +4896,6 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     const f = el.querySelector('[aria-pressed="true"]') || el.querySelector('button'); f.focus({ preventScroll: true });
   }
   document.addEventListener('pointerdown', e => { if (tbar && !e.target.closest('.ms-tbar, [data-mstb]')) tbClose(); }, true);
-  // right-click a message for the reactions too (2026-11-03, Martin)
   document.addEventListener('contextmenu', e => {
     const row = e.target.closest('#msThread .ms-msg'); if (!row || e.target.closest('a, input, textarea')) return;
     const b = row.querySelector('[data-mstb]'); if (!b) return;
@@ -4975,8 +4914,6 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     t.msgs.push(rm); rxFold(t.msgs); msThread(true); msRows();
     FSX.reply(t.id, text, []).then(() => { rm.state = 'sent'; store.set('fsmsg_rx_sent', (store.get('fsmsg_rx_sent') || []).filter(x => Date.now() - x.at < 10 * 60e3).concat({ th: t.id, text, at: Date.now() }).slice(-40)); }, e => { t.msgs.splice(t.msgs.indexOf(rm), 1); rxFold(t.msgs); msThread(true); msRows(); toast(FSX.msgError(e)); });
   }
-  // One file up to Schoology for a message. A failure says why (2026-11-03, Martin: "nothing is uploading" showed only
-  // "Couldn't send it"): the upload's own reason, the same words turning in uses; click the file to try again.
   function upStart(a) {
     a.state = 'up'; a.frac = 0; a.err = ''; a.redraw();
     a.job = FSX.msgUpload(a.file, x => { a.frac = x; a.redraw(); }).then(id => { a.fileId = id; a.state = 'done'; a.redraw(); return id; }, e => {
@@ -4991,7 +4928,6 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     const ta = $('msText'), send = $('msSend'); if (!ta) return;
     const fit = () => { ta.style.height = 'auto'; ta.style.height = Math.min(160, ta.scrollHeight) + 'px'; send.disabled = !ta.value.trim() && !($('msClip') && pendOf().length) && !linksOf().length; };
     const fi = $('msFile');
-    // Files (2026-11-03): each goes up to Schoology as soon as it's picked, then rides along with the message.
     if (fi) fi.addEventListener('change', () => {
       const list = pendOf();
       [...fi.files].slice(0, Math.max(0, 10 - list.length)).forEach(f => {
@@ -5021,7 +4957,6 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
 
   // ---------- sending ----------
   function sendIn(t, text, extra = {}) {
-    // Files go with the words in one Schoology message (2026-11-03); each shows as its own card here.
     const files = extra.files || []; delete extra.files;
     const card = a => ({ name: a.name, size: a.size, pages: a.pages });
     const mine = [];
@@ -5060,8 +4995,6 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   function findShow() {
     const c = MS.compose, q = (c.q || '').trim().toLowerCase(), box = $('msTo'); findHide();
     if (!q) return; // nobody's suggested until you type a letter
-    // teachers and classmates (2026-11-06, Martin: classmates couldn't be found); a school that doesn't let students
-    // write to each other says so when it's sent, and Start in Schoology takes over
     const pool = Object.values(PEOPLE).filter(p => !c.to.includes(p.id) && !BLOCKED.some(b => b.id === p.id) && (!q || (p.name + ' ' + (p.role === 'Teacher' ? C[p.c].name : p.cls.map(id => C[id].name).join(' '))).toLowerCase().includes(q)));
     const t = pool.filter(p => p.role === 'Teacher'), s = pool.filter(p => p.role !== 'Teacher');
     const opt = (p, i) => `<button class="ms-opt${i === 0 ? ' on' : ''}" role="option" data-msto="${p.id}">${av(p)}<span class="tx"><b>${esc(p.name)}</b><small>${p.role === 'Teacher' ? esc(C[p.c].name) + ' teacher' : 'In ' + esc(p.cls.map(id => C[id].name).join(' and '))}</small></span></button>`;
@@ -5093,11 +5026,6 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     }, e => { if (btn) btn.disabled = false; if (e && e.message === 'school_blocks_new_messages') { FSX.lset('averages_msg_new_blocked', Date.now()); sgyOpen(true); return; } toast(FSX.msgError(e)); });
   }
 
-  // ---------- start it in Schoology (2026-11-03, Martin) ----------
-  // Some schools only let students start a new conversation on Schoology itself (the API says no: "Some or all of the
-  // recipients you entered are invalid"). The button in New message, and this popup when Schoology turns one down:
-  // it copies what the student wrote and opens their Schoology messages, where New Message starts it. The answer
-  // comes back here like any conversation, and replies work from Averages.io.
   const sgyBlocked = () => !!FSX.lget('averages_msg_new_blocked');
   let sgy = null;
   function sgyDraft() {
@@ -5145,9 +5073,6 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     });
   }
   $('msRows').addEventListener('contextmenu', e => { const r = e.target.closest('[data-msopen]'); if (!r || r.dataset.msopen === 'new') return; e.preventDefault(); menuOpen(r.dataset.msopen, e.clientX, e.clientY, r.querySelector('.ms-more')); });
-  // ---------- delete a conversation (2026-11-03, Martin: "are we able to delete convos in app") ----------
-  // From the student's own Schoology messages (Inbox and Sent). It can't be undone, and the teacher keeps their copy
-  // (Schoology doesn't un-send), so it asks first. "Hide here" stays for just this device.
   let del = null;
   function delOpen(ts) {
     if (del || !ts.length) return; const name = title(ts[0]), many = ts.length > 1;
@@ -5215,10 +5140,6 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     });
   }
 
-  // ---------- the conversation's details, like Messages' contact sheet (2026-11-03, Martin's screenshot) ----------
-  // The "i" button. Who it's with and quick actions at the top, then what's in the conversation, indexed: Info,
-  // Photos, Links, Files (each with its count). Info has the conversation's actions and switches: Pin to the top and
-  // Hide alerts (no bell or popups for it, on this device; shared with the bell through fsmsg_muted).
   let info = null;
   const MUTED = new Set(store.get('fsmsg_muted') || []);
   function infoItems(ts) {
@@ -5312,8 +5233,6 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (e.key === 'Tab') { const f = [...info.el.querySelectorAll('button, a[href]')]; if (!f.length) return; if (e.shiftKey && document.activeElement === f[0]) { e.preventDefault(); f[f.length - 1].focus(); } else if (!e.shiftKey && document.activeElement === f[f.length - 1]) { e.preventDefault(); f[0].focus(); } }
   }, true);
 
-  // ---------- your school's message settings: from the speech balloon logo ----------
-  // Teachers only for now (2026-10-28): no plan, messaging standard or blocking here.
   const BLOCKED = (store.get('fsmsg_blocked') || []).filter(b => b && b.id !== 'x-tr');
   const saveBlocked = () => store.set('fsmsg_blocked', BLOCKED);
   function blockP(id) {
@@ -5417,8 +5336,6 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
 
   // ---------- refresh: the list and the open conversation are their own requests ----------
   const bar = (w, h = 10, r) => `<span class="skel-bar" style="width:${w};height:${h}px${r ? ';border-radius:' + r : ''}"></span>`;
-  // Sync (Martin's sync animation, 2026-10-30): each part lands when its own request comes back (FSX.sync), and
-  // syncRun(true) is the same animation when the page opens.
   let loading = false, spin = null;
   $('syncLabel').textContent = FSX.synced(); $('refresh').setAttribute('aria-label', 'Refresh your messages. ' + FSX.synced() + '.');
   function syncRun(first) {
@@ -5561,9 +5478,6 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     el.style.top = (c.top - r.top - op.clientTop + op.scrollTop).toFixed(1) + 'px';
     return true;
   }
-  // Something around the sticker still sliding or popping in (its row landing, the class icon it sits by): measuring
-  // now puts it in the wrong place, even under the card (2026-10-31, Martin's screenshots). Wait for it to stop.
-  // only its own item and the few boxes around it are asked (asking the whole page was slow, 2026-11-01)
   const moving = el => { const host = el.closest(HOST) || el.parentElement; if (!host || !host.getAnimations) return false;
     const busy = list => list.some(a => { const t = a.effect && a.effect.target, tm = a.effect && a.effect.getTiming ? a.effect.getTiming() : null;
       return a.playState === 'running' && t && t !== el && !(t.classList && t.classList.contains('newtag')) && tm && tm.iterations !== Infinity; });

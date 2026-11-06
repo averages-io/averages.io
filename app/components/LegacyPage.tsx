@@ -8,8 +8,6 @@ import { installNsfwGlobal, preloadNsfwModel } from "../lib/nsfw";
 import { SKELETON_CSS, REVEAL_SELECTORS, holdCards, revealCards, skeletonHtml, revealContent, snapshotSkeleton, type SkeletonSnapshot } from "./PageSkeleton";
 import * as loading from "../lib/averages-loading";
 
-// The loading animations (2026-10-19) for the page scripts and the bell:
-// window.AveragesLoading.skelBar / revealRows / rise / chartSkeleton / calm.
 if (typeof window !== "undefined") (window as any).AveragesLoading = loading;
 import { THEME_BOOT_JS } from "../lib/theme-boot";
 import { SPLASH_CSS, SPLASH_JS, SPLASH_MIN_MS } from "../lib/splash";
@@ -28,13 +26,6 @@ function reapplyStoredTheme(): void {
   (window as unknown as { __averagesApplyTheme?: () => void }).__averagesApplyTheme?.();
 }
 
-/**
- * Keeps browser notifications' stored sign-in in step with this session
- * (2026-10-06). public/js/averages-push.js does the work, at most once a day
- * (touchIfDue); this only loads it when this device has notifications on, or
- * a turn-off the API hasn't heard about yet. Loaded on demand rather than on
- * every page: most students never turn notifications on.
- */
 const PUSH_SCRIPT = JS["averages-push.js"];
 type PushApi = { touchIfDue?: () => Promise<unknown> };
 
@@ -64,13 +55,6 @@ function touchPushIfOn(): void {
   script.addEventListener("load", run, { once: true });
 }
 
-/**
- * Calendar sync (2026-10-21, an Averages Plus perk): like notifications, the
- * calendar link keeps a stored sign-in so it can read due dates while the
- * student is away. At most once a day, while this device knows the link is
- * on, it's brought in step with this session (POST /calendar/touch). The API
- * saying it's off (turned off elsewhere, Plus ended) forgets it here.
- */
 const CALENDAR_ON_KEY = "averages_calendar_on";
 const CALENDAR_TOUCHED_KEY = "averages_calendar_touched";
 function touchCalendarIfOn(): void {
@@ -83,7 +67,6 @@ function touchCalendarIfOn(): void {
   } catch {
     return;
   }
-  // The student's zone rides along (2026-10-28), so the feed follows Settings > Time Zone.
   let tz = "";
   try {
     tz = studentTimeZone();
@@ -170,27 +153,6 @@ export default function LegacyPage({
   scriptJs: string;
   /** Login is the one page reachable while signed out. */
   requiresAuth?: boolean;
-  /**
-   * Whether this page wears the signed-in user's saved dark-mode, accent and
-   * background. True for every page but Login.
-   *
-   * Login has a fixed look of its own — the blue gradient, its own `--accent`
-   * — and is the page you land on *after signing out*, so wearing the theme of
-   * the account you just left is exactly wrong. Martin: "on the login screen
-   * when you log out can you reset the background back to the default one and
-   * not the last selected/uploaded one".
-   *
-   * This is a separate flag from `requiresAuth` and not a synonym for it. The
-   * 404 page is also reachable signed out, but it is a page *inside* the app's
-   * look — its own CSS comment says the neutral black it ships is only what
-   * shows "before … the user's actual saved background" lands over it. So it
-   * keeps the theme; only Login opts out.
-   *
-   * This flag erases nothing. What survives sign-out is decided in signOut()
-   * (app/lib/averages.ts): since 2026-10-13, with Sync Across Devices off
-   * everything on the device is deleted, wallpaper included; with Sync on
-   * the device keeps its copy because the account has it too.
-   */
   usesSavedTheme?: boolean;
   /**
    * Whether this page can upload images (onboarding and settings can).
@@ -221,7 +183,6 @@ export default function LegacyPage({
   const uidRef = useRef("");
   /** The skeleton as it was the moment before the swap (see snapshotSkeleton). */
   const snapRef = useRef<SkeletonSnapshot>({});
-  /** This page's extras, kept so the cards that load on their own can follow them (2026-10-20). */
   const extrasRef = useRef<ExtrasRun | null>(null);
   /** The extras still on their way when the page drew: their cards hold placeholders until they land. */
   const lateRef = useRef<ExtraName[]>([]);
@@ -279,9 +240,6 @@ export default function LegacyPage({
         return;
       }
 
-      // Back on a cleared device (2026-10-26): an account with a synced copy
-      // gets its settings back and goes to Home instead of onboarding. The
-      // first-open logo stays up through this and Home's load (splash.ts).
       if (pageId === "onboarding" && session.mode === "live" && !session.incognito) {
         let done = false;
         try {
@@ -300,21 +258,6 @@ export default function LegacyPage({
 
       installNsfwGlobal();
 
-      // Live mode returns the student's real data mapped into the shapes the
-      // page renders; demo mode returns an empty bundle so each page falls
-      // through to its own sample data.
-      //
-      // Page extras (2026-10-06): what this page shows beyond the bundle
-      // (teachers, updates, events...), asked for at the same time as the
-      // bundle, not after it. Live sessions only; see app/lib/extras.ts for
-      // which page gets what.
-      //
-      // Cards that load on their own (2026-10-20): the page waits only for the
-      // extras it can't draw without (up to 4 s, as before). The ones in
-      // LATE_EXTRAS don't hold it: their cards keep their placeholders and
-      // fill in when their own call lands (the effect after the page draws).
-      // A page without window.__averagesExtraLanded can't redraw a card later,
-      // so for safety its extras are all waited for, like before.
       uidRef.current = session.uid ?? "";
       const wantsExtras = requiresAuth && session.mode === "live" && !!pageId;
       const extras = wantsExtras ? startExtras(pageId!, window.location.search, session.uid ?? "") : null;
@@ -352,9 +295,6 @@ export default function LegacyPage({
         // COURSE_UPDATES...), so a page reads them like any bundle field. One
         // that failed or ran out of time is simply missing.
         data: extras ? mergeExtras(bundle ?? {}, extras.requests, extras.answers) : bundle ?? {},
-        // Extras still loading when the page drew (2026-10-20). A page can check
-        // this to tell "loading" from "didn't load"; most don't need to, since
-        // LegacyPage puts the placeholders back in those cards.
         pending: [...lateRef.current],
       };
       // Separate from __AVERAGES__ above on purpose: settings.html only
@@ -365,16 +305,8 @@ export default function LegacyPage({
       // supposed to be on that list. Set for every page (not just
       // requiresAuth ones) so a page can check it without special-casing.
       (window as any).__AVERAGES_MODE__ = session.mode;
-      // The account's own name (2026-10-14), for the profile button, the
-      // greeting and Settings' profile card when no name is saved on this
-      // device. Replaces the sample "Martin" / "M" those used to fall back to.
       (window as any).__AVERAGES_NAME__ = typeof session.name === "string" ? session.name : "";
-      // How they signed in (2026-10-23): "schoology" or "google" (Classroom). Settings' School section uses it.
       (window as any).__AVERAGES_PROVIDER__ = session.mode === "live" ? (session.provider === "google" ? "google" : "schoology") : "";
-      // Incognito (2026-10-05): nothing about the student is stored on our
-      // servers, so Sync, connected apps and notifications are off. It's on
-      // when the API says so (signed in as under 13, which can't be switched
-      // off) or when the student picked it (onboarding or Settings).
       let pickedIncognito = false;
       try {
         if (session.incognito) window.localStorage.setItem("schoolagy_account_mode", "incognito");
@@ -384,13 +316,7 @@ export default function LegacyPage({
       }
       const incognito = !!session.incognito || pickedIncognito;
       (window as any).__AVERAGES_INCOGNITO__ = { on: incognito, locked: !!session.incognito };
-      // Incognito keeps Google Drive / OneDrive (2026-10-14): they connect in
-      // this browser only (public/js/averages-cloud.js), and any connection our
-      // server held is forgotten there. Sign-out clears them like everything else.
 
-      // First-open logo splash (2026-10-24, app/lib/splash.ts): it stays at
-      // least SPLASH_MIN_MS so it never just flickers. The data waits for it,
-      // so the rows rise as the logo fades instead of underneath it.
       const splash = (window as any).__averagesSplash;
       if (splash?.on) {
         const left = SPLASH_MIN_MS - (performance.now() - splash.at);
@@ -440,31 +366,30 @@ export default function LegacyPage({
       try {
         await signOut();
       } finally {
-        window.location.href = "/?signedout=1";   // the browser wipes what's left (worker/index.js, 2026-11-06)
+        window.location.href = "/?signedout=1";
       }
     }
 
     (window as any).__averagesSignOut = runSignOut;
 
-    // "Are you sure?" first (2026-11-06, Martin: the profile menu signed out straight away), from the menu and Settings.
-    function confirmSignOut(): Promise<boolean> {
+    function confirmSignOut(target: HTMLElement): Promise<boolean> {
       return new Promise((resolve) => {
-        const from = document.activeElement as HTMLElement | null;
-        const scrim = document.createElement("div");
-        scrim.setAttribute("style", "position:fixed;inset:0;z-index:2147483000;background:rgba(10,11,18,.45);display:grid;place-items:center;padding:16px");
-        scrim.innerHTML = `<div role="alertdialog" aria-modal="true" aria-labelledby="avSoT" aria-describedby="avSoD" style="width:min(360px,100%);box-sizing:border-box;padding:24px;border-radius:var(--window-radius-lg,22px);background:var(--panel-bg,#eaeaec);color:var(--text-dark,#14151f);box-shadow:0 24px 60px -20px rgba(0,0,0,.55);font-family:inherit">
-          <h2 id="avSoT" style="margin:0 0 6px;font-size:1.15rem;font-weight:800">Sign out of Averages.io?</h2>
-          <p id="avSoD" style="margin:0 0 20px;font-size:.9rem;font-weight:600;color:var(--text-muted,#4b4d63);line-height:1.45">This clears everything Averages.io saved on this device. You can sign back in with Schoology any time.</p>
-          <div style="display:flex;gap:8px;justify-content:flex-end">
-            <button type="button" data-so="no" style="font:inherit;font-weight:700;padding:10px 16px;border:0;border-radius:12px;background:var(--panel-inner,#dcdce0);color:inherit;cursor:pointer">Cancel</button>
-            <button type="button" data-so="yes" style="font:inherit;font-weight:800;padding:10px 16px;border:0;border-radius:12px;background:#b6432f;color:#fff;cursor:pointer">Sign out</button>
-          </div></div>`;
-        const done = (yes: boolean) => { document.removeEventListener("keydown", onKey, true); scrim.remove(); if (!yes && from && from.isConnected) from.focus(); resolve(yes); };
-        const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); done(false); } };
-        scrim.addEventListener("click", (e) => { const b = (e.target as HTMLElement).closest("[data-so]") as HTMLElement | null; if (e.target === scrim || (b && b.dataset.so === "no")) done(false); else if (b) done(true); });
-        document.addEventListener("keydown", onKey, true);
-        document.body.appendChild(scrim);
-        (scrim.querySelector('[data-so="yes"]') as HTMLElement).focus();
+        const box = document.createElement("div");
+        box.setAttribute("role", "group");
+        box.setAttribute("aria-label", "Sign out");
+        box.setAttribute("style", "margin:4px;padding:12px;border-radius:12px;background:var(--panel-inner,#dcdce0);color:var(--text-dark,#14151f);text-align:left");
+        box.innerHTML = `<b style="display:block;font-weight:800;margin-bottom:4px">Sign out of Averages.io?</b>
+          <span style="display:block;font-size:.85rem;font-weight:600;line-height:1.4;color:var(--text-muted,#4b4d63)">You can sign back in with Schoology any time.</span>
+          <span style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">
+            <button type="button" data-so="no" style="font:inherit;font-size:.85rem;font-weight:700;padding:8px 12px;border:0;border-radius:10px;background:var(--panel-bg,#eaeaec);color:inherit;cursor:pointer">Cancel</button>
+            <button type="button" data-so="yes" style="font:inherit;font-size:.85rem;font-weight:800;padding:8px 12px;border:0;border-radius:10px;background:#b6432f;color:#fff;cursor:pointer">Sign out</button>
+          </span>`;
+        target.hidden = true;
+        target.insertAdjacentElement("afterend", box);
+        const done = (yes: boolean) => { box.remove(); target.hidden = false; if (!yes) target.focus(); resolve(yes); };
+        box.addEventListener("click", (e) => { e.stopPropagation(); const b = (e.target as HTMLElement).closest("[data-so]") as HTMLElement | null; if (b) done(b.dataset.so === "yes"); });
+        box.addEventListener("keydown", (e) => { if (e.key === "Escape") { e.stopPropagation(); done(false); } });
+        (box.querySelector('[data-so="no"]') as HTMLElement).focus();
       });
     }
 
@@ -475,7 +400,7 @@ export default function LegacyPage({
       if (!target) return;
       event.preventDefault();
       event.stopPropagation();
-      if (!(await confirmSignOut())) return;
+      if (!(await confirmSignOut(target as HTMLElement))) return;
       await runSignOut();
     }
     document.addEventListener("click", onClick, true);
@@ -499,13 +424,6 @@ export default function LegacyPage({
    * after the DOM update and before the browser paints, which closes that gap
    * by construction rather than by luck.
    */
-  /**
-   * While loading (2026-10-19): every chart placeholder ([data-chart-skel],
-   * the class page's grade trend) gets chartSkeleton(), a line that keeps
-   * drawing itself. The markup already shows its grid from the first frame;
-   * this starts the motion once React is live. The swap to the real page
-   * removes it, and the cleanup stops its timer.
-   */
   useLayoutEffect(() => {
     if (phase !== "checking" || !containerRef.current) return;
     const stops = Array.from(containerRef.current.querySelectorAll<HTMLElement>("[data-chart-skel]")).map((el) =>
@@ -521,33 +439,16 @@ export default function LegacyPage({
     script.text = scriptJs;
     document.body.appendChild(script);
 
-    // Cards still waiting on their own extra (2026-10-20): the script drew them
-    // as "didn't load"; put their placeholders back before this frame paints.
-    // A page that can't redraw a card later (no __averagesExtraLanded) keeps
-    // what it drew; LegacyPage waited for its extras anyway.
     const canRedraw = typeof (window as any).__averagesExtraLanded === "function";
     if (!canRedraw) lateRef.current = [];
     const lateMap = (pageId && LATE_EXTRAS[pageId]) || {};
     const held = Array.from(new Set(lateRef.current.flatMap((name) => lateMap[name] ?? [])));
     holdCards(containerRef.current, pageId, held);
 
-    /**
-     * Hand-off from skeleton to content (2026-09-16).
-     *
-     * Appending the script above runs it synchronously, so by this line every
-     * container the skeleton was holding is already full of real rows — they
-     * just haven't been painted yet. Tagging them here, in the same frame,
-     * means the browser paints them already mid-animation; a frame later and
-     * you'd see them pop in at full opacity first and then fade, which is
-     * worse than no animation at all.
-     */
     revealContent(containerRef.current, pageId, snapRef.current, (pageId ? REVEAL_SELECTORS[pageId] ?? [] : []).filter((sel) => !held.includes(sel)));
     // The first-open splash (if it's up) fades as the rows rise.
     (window as any).__averagesSplash?.hide();
 
-    // Notifications bell (2026-10-19, public/js/averages-bell.js): next to the
-    // profile picture on every signed-in page, drawn from the data this page
-    // already has. Course updates it doesn't have come in the background below.
     if (requiresAuth) (window as any).AveragesBell?.mount({ mode });
 
     // Warm the model only where an upload is possible, and only after the page
@@ -566,13 +467,6 @@ export default function LegacyPage({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, scriptJs, hasUploads, pageId, requiresAuth, mode]);
 
-  /**
-   * Cards that load on their own (2026-10-20). For each extra still coming
-   * when the page drew: when it lands (or fails, or takes longer than
-   * EXTRAS_LATE_GIVE_UP_MS), merge it into the data the page holds, let the
-   * page redraw what it feeds (window.__averagesExtraLanded), and reveal those
-   * cards. A 401 means the session died: back to sign-in, like the bundle.
-   */
   useEffect(() => {
     if (phase !== "ready") return;
     const run = extrasRef.current;
@@ -621,7 +515,6 @@ export default function LegacyPage({
     if (!bell || Array.isArray(have) || lateRef.current.includes("updates")) return;
     let cancelled = false;
     bell.expectUpdates();
-    // Less often (2026-10-20): a cached answer up to 15 minutes old will do here.
     loadExtras("bell", "", uidRef.current, { maxAgeMs: BELL_UPDATES_MAX_AGE_MS })
       .then((r) => {
         if (cancelled) return;
@@ -632,14 +525,6 @@ export default function LegacyPage({
     return () => { cancelled = true; };
   }, [phase, requiresAuth, mode]);
 
-  /**
-   * Sync pull on every page (2026-10-26, app/lib/averages.ts pullSyncedSettings):
-   * a moment after the page has drawn, and when the tab comes back into view,
-   * signed-in Classic pages pick up settings changed on another device. What
-   * changed is repainted in place: the theme and each page's own background
-   * through the same storage events another tab's change would fire, and the
-   * profile button. Settings pulls for itself; onboarding restores instead.
-   */
   useEffect(() => {
     if (phase !== "ready" || !requiresAuth || mode !== "live" || pageId === "settings" || pageId === "onboarding") return;
     if ((window as any).__AVERAGES_INCOGNITO__?.on) return;
@@ -665,34 +550,6 @@ export default function LegacyPage({
     };
   }, [phase, requiresAuth, mode, pageId]);
 
-  /**
-   * Loading state, reworked 2026-09-16.
-   *
-   * Two earlier versions, and why neither was right:
-   *
-   *   1. A hand-drawn stand-in for the whole page, mounted instead of the real
-   *      markup. Every heading, column title and nav item was a grey box, and
-   *      the drawings drifted from the pages they were imitating.
-   *   2. The real markup mounted immediately with shimmer rows pushed into its
-   *      data containers by a layout effect. Right shape, wrong timing: a
-   *      layout effect only runs once React hydrates, and the server-rendered
-   *      HTML is on screen before that — so the first frame was the real card
-   *      with real column headings and nothing at all inside it.
-   *
-   * Now the skeleton is part of the HTML itself. `skeletonHtml` puts the
-   * shimmer rows into the markup as a string, so what the server sends already
-   * contains them and the very first painted frame is structure-plus-
-   * placeholders, with no JavaScript needed to get there. When the fetch
-   * resolves this flips to the untouched markup and the page's own script
-   * fills it in the same frame (the layout effect above).
-   *
-   * Nothing moves across that swap: the placeholders sit in the real
-   * containers using the real class names, so they already occupy the size and
-   * position the data will.
-   *
-   * Safe because every data container in pages-src ships empty — so this shows
-   * genuine structure with holes, never a stranger's sample grades.
-   */
   const mountedHtml = useMemo(
     () => (phase === "ready" ? bodyHtml : skeletonHtml(bodyHtml, pageId)),
     [phase, bodyHtml, pageId]
@@ -700,20 +557,6 @@ export default function LegacyPage({
 
   return (
     <>
-      {/*
-        The saved dark-mode/accent/background, applied before the browser
-        paints. Must stay FIRST in this output and must stay synchronous: an
-        inline script blocks parsing where it sits, so everything below it —
-        the page CSS, the markup — is parsed and painted with the theme
-        already in place. See app/lib/theme-boot.ts.
-
-        It lives here rather than in app/layout.tsx (where it was first put,
-        on 2026-09-16) for one reason: the root layout is the same for every
-        route and cannot tell which page it is wrapping, so from there it also
-        themed Login — which meant signing out dropped you on a login screen
-        still wearing the wallpaper of the account you had just left. This
-        component knows, because the page tells it.
-      */}
       {usesSavedTheme && <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_JS }} />}
       {/* First-open logo splash: signed-in pages, only when this tab has no saved grades yet (app/lib/splash.ts). */}
       {requiresAuth && <style dangerouslySetInnerHTML={{ __html: SPLASH_CSS }} />}

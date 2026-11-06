@@ -1,36 +1,4 @@
-/**
- * First-open logo splash (2026-10-24, Martin: "on first log in/tab open can we
- * show the logo loading ... then open the page", "but only when there is no
- * cache").
- *
- * When a signed-in page opens in a tab that has no saved grades yet (a fresh
- * tab, or right after signing in), the logo loader from the sign-in screen
- * covers the page instead of the shimmer placeholders. It fades away once the
- * page has its data, so the page appears already filled in.
- *
- * - Onboarding (2026-10-26): also while it hasn't been finished on this
- *   device, so the check for the account's synced setup (LegacyPage,
- *   restoreSyncedSetup) happens under the logo, not over the first step.
- * - Only when this tab has no saved bundle (`schoolagy_bundle_cache`) and
- *   hasn't shown the splash yet (`averages_splash_shown`). Every later page in
- *   the tab skips it. Sign-out clears the flag (app/lib/averages.ts), so the
- *   next sign-in in the same tab gets it again.
- * - Stays at least 1 s (LegacyPage waits that long before drawing the data) so
- *   it never just flickers, and at most 5 s: past that it fades by itself and
- *   the shimmer page carries on.
- * - Same look as the sign-in "checking" screen (CHECKING_CSS / CHECKING_JS in
- *   scripts/port-pages.mjs): #17181c, the logo in #E5484D, the #FF7A50 glow on
- *   a random path. LOGO_MASK is the same SVG.
- * - Potato mode: no glow motion and no fade. Reduced motion: no glow motion.
- *
- * Has to run before the first paint, like THEME_BOOT_JS, so it's a synchronous
- * inline script that LegacyPage renders for signed-in pages. It's drawn with
- * html::before (logo) and html::after (backdrop), so nothing goes into <body>,
- * which React owns. LegacyPage uses window.__averagesSplash: { on, at, hide() }.
- * show(ms) puts it up on demand for ms (2026-10-30: switching from Windowed to
- * Fullscreen in Settings or onboarding shows the logo for a second; the
- * Fullscreen pages reuse SPLASH_CSS, see scripts/build-fs.mjs).
- */
+// First-open logo splash.
 
 export const SPLASH_KEY = "averages_splash_shown";
 export const SPLASH_MIN_MS = 1000;
@@ -53,7 +21,6 @@ export const SPLASH_JS =
   "try{calm=potato||matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){}" +
   "function dr(lo,hi,ms){var f=lo+Math.random()*(hi-lo),t=lo+Math.random()*(hi-lo),t0=performance.now(),l=ms;return function(n){if(n-t0>l){f=t;t=lo+Math.random()*(hi-lo);t0=n;l=ms*(0.6+Math.random()*0.8);}var k=Math.min(1,(n-t0)/l);return f+(t-f)*(1-Math.cos(Math.PI*k))/2;};}" +
   "function clear(){d.removeAttribute('data-av-splash');d.style.removeProperty('--av-dx');d.style.removeProperty('--av-dy');}" +
-  // start(ms): up now; with ms, it goes away by itself after that long (the Windowed-to-Fullscreen switch, 2026-10-30)
   "function start(ms){if(api.on)return;api.on=true;api.at=performance.now();d.setAttribute('data-av-splash','');var done=false;" +
   "api.hide=function(){if(done)return;done=true;api.on=false;if(potato){clear();return;}d.setAttribute('data-av-splash','out');setTimeout(clear,400);};" +
   "setTimeout(api.hide,ms||" + SPLASH_MAX_MS + ");" +
@@ -63,8 +30,6 @@ export const SPLASH_JS =
   "d.style.setProperty('--av-dx',(Math.cos(a)*rr).toFixed(1)+'px');d.style.setProperty('--av-dy',(Math.sin(a)*rr*sq(n)+6).toFixed(1)+'px');requestAnimationFrame(fr);}" +
   "requestAnimationFrame(fr);}" +
   "api.show=start;" +
-  // coming from Fullscreen (its Windowed button leaves averages_mode_logo in this tab): up from the first paint until the
-  // page is ready, like the first open (2026-10-30)
   "try{var m=+sessionStorage.getItem('averages_mode_logo')||0;if(m){sessionStorage.removeItem('averages_mode_logo');if(Date.now()-m<15000){start();return;}}}catch(e){}" +
   // the first open of a tab with nothing saved yet (and onboarding until it's finished): up until the page has its data
   "try{var s=window.sessionStorage,ob=location.pathname.replace(/\\/$/,'')==='/onboard'&&localStorage.getItem('schoolagy_onboarded')!=='1';if(s.getItem('schoolagy_bundle_cache')||(s.getItem('" + SPLASH_KEY + "')&&!ob))return;s.setItem('" + SPLASH_KEY + "','1');}catch(e){return;}" +

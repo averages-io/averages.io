@@ -28,10 +28,6 @@
     --grade-good: #2f7d54;
     --grade-mid: #a67a22;
     --grade-bad: #b6432f;
-    /* A/B/C/D/F letter-grade color scale (2026-08-31, per Martin's
-       request) — see gradeBand()/GRADE_COLOR below. A and C reuse the
-       existing good/mid tokens (already "green"/"amber"), F reuses bad
-       ("red"); B and D are new in-between stops. */
     --grade-b: #5c8a3f;
     --grade-d: #c1602f;
   }
@@ -69,18 +65,6 @@
   *::-webkit-scrollbar-thumb:hover { background-color: rgba(20, 21, 31, 0.45); }
   *::-webkit-scrollbar-corner { background: transparent; }
 
-  /* Declared so the browser themes ITS OWN chrome — scrollbars, the
-
-     overscroll gutter, form controls — against this page rather than
-
-     guessing. Without it Firefox drew a light-theme scrollbar over the
-
-     dark canvas and tinted it (Martin saw it as pink on a blue
-
-     background). LegacyPage's applyStoredTheme() updates both of these
-
-     to match whatever background the user actually saved. */
-
   html {
 
     color-scheme: dark;
@@ -88,7 +72,6 @@
     background-color: #0c0c0e;
 
   }
-
 
   html, body {
     margin: 0;
@@ -102,16 +85,6 @@
     overflow: hidden; /* scrolling now happens inside .page (see below), so
       the scrollbar sits at the edge of the app's own window/card instead of
       out at the browser's outer edge, over the wallpaper margin */
-    /* Neutral black instead of a baked-in accent gradient here —
-       2026-09-11, per Martin. This is only ever visible for a split
-       second on reload/navigation, before applyStoredTheme() (or this
-       page's own appearance-reading script) sets the user's actual
-       saved background over it. The old default was the sample
-       red-orange gradient baked into this file, which read as a real
-       glitch flashing in between pages; a neutral black reads as
-       "still loading" instead, and matches the app's own Black
-       preset (#0c0c0e) so it's not a color that appears nowhere else
-       in the app. */
     background-color: #0c0c0e;
     background-image: none;
     background-size: cover;
@@ -162,9 +135,6 @@
   }
 
   .profile-menu-wrap { position: relative; flex-shrink: 0; }
-  /* No photo: an Apple-style monogram (2026-10-21, Martin: "make the default no pfp letters
-     look more like the apple ones"), the grey gradient and rounded white initials of a contact
-     with no picture. A photo replaces it (set inline as background-image). */
   .profile-btn {
     width: 42px;
     height: 42px;
@@ -183,8 +153,6 @@
     flex-shrink: 0;
   }
 
-  /* A photo has no ring (2026-10-23, Martin: "remove the ugly border if it is a custom upload");
-     the letter avatars keep theirs. Same size: the border goes clear and the photo fills it. */
   .profile-btn.has-photo { border-color: transparent; background-origin: border-box; background-repeat: no-repeat; }
   .profile-menu {
     position: absolute;
@@ -243,16 +211,6 @@
     color: var(--text-faint);
   }
 
-  /* ---------- Estimated GPA strip (2026-09-01, per Martin) — a quick
-     unweighted 4.0-scale summary above the per-course table, using each
-     course's current letter grade (not predicted). Colored via the same
-     red-through-green idiom as everything else on this page rather than
-     a flat accent color, so a glance at the number alone hints at how
-     it's trending overall. The "what does this number mean" explanation
-     used to sit inline as permanent small text next to the value; per
-     Martin it's now a hover/focus tooltip on the "Estimated GPA" label
-     instead (.gpa-tooltip below), same lightweight idiom as a native
-     title attribute but styled to match the rest of the app. ---------- */
   .gpa-strip {
     display: flex;
     align-items: baseline;
@@ -425,8 +383,6 @@
      "open the gradebook" click; a calculator glyph makes its purpose
      legible without needing the word to compete with the Predicted
      column's own text at this width. */
-  /* The whole cell is a click target now (2026-09-03), not just the pill
-     itself — see the JS click-handler comment for why. */
   .calc-cell { cursor: pointer; }
 
   .calc-btn {
@@ -520,10 +476,6 @@
   .nav-link .dot { width: 4px; height: 4px; border-radius: 50%; background: transparent; }
   .nav-link.active .label { color: var(--text-dark); }
   .nav-link.active .dot { background: var(--accent); }
-  /* ---------- "More" overflow (2026-10-01, per Martin: "if the text has
-     to get ... we should add a more button on the far right side with a
-     list of the other options"). Labels never truncate: when they would,
-     the rightmost pages move into the More menu instead. ---------- */
   .nav-link[hidden], .nav-more[hidden], .nav-more-menu[hidden] { display: none; }
   /* While the More menu is open the whole bar sits above everything else on
      the page (sticky headers, pop-ups, the edit button go up to z-index 90),
@@ -586,8 +538,6 @@
   .nav-more-item.active { color: var(--text-dark); }
   .nav-more-item.active span { position: relative; display: inline-block; padding-bottom: 6px; margin-bottom: -6px; }
   .nav-more-item.active span::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; border-radius: 999px; background: var(--accent); }
-  /* Labels sit centered in the bar; the active page is underlined in the
-     accent color instead of marked with a dot (2026-10-01, per Martin). */
   .app-nav-inner .nav-link, .app-nav-inner .nav-more { justify-content: center; gap: 0; padding-top: 10px; padding-bottom: 10px; }
   .app-nav-inner .nav-link .dot, .app-nav-inner .nav-more .dot { display: none; }
   .app-nav-inner .nav-link .label, .app-nav-inner .nav-more .label { position: relative; padding: 6px 0; }
@@ -604,12 +554,6 @@
     .nav-link .label { font-size: 0.58rem; }
   }
 
-  /* ---------- Modal shell — copied from course-home.html's course-info
-     pop-out (fade + slide-up show/hide, X close button), widened for the
-     Grade Calculator content this page needs. (Used to also back a
-     read-only Gradebook pop-out here — removed 2026-08-31, see the
-     Grade Calculator note further down: clicking a course row now
-     navigates straight to the real gradebook.html instead.) ---------- */
   .modal-overlay {
     position: fixed; inset: 0; background: rgba(10, 8, 6, 0.55);
     display: flex; align-items: center; justify-content: center;
@@ -627,15 +571,6 @@
     transition: transform 0.15s ease;
   }
   .modal-overlay.show .modal-box { transform: translateY(0); }
-  /* .wide (the Grade Calculator) scrolls internally — the scrolling has
-     to happen on an inner wrapper (.modal-box-scroll), not this element
-     itself, or the browser's native scrollbar renders at this box's flat
-     edge and pokes out past its own rounded corners (reported 2026-09-01
-     by Martin — a screenshot showed the scrollbar thumb sticking out
-     above/below the modal). This element now just clips (overflow:
-     hidden + the border-radius it already had) and un-pads itself so all
-     padding — and the actual overflow-y: auto — moves to the inner div,
-     whose content therefore never draws past the rounded corner. */
   .modal-box.wide { max-width: 520px; max-height: 85vh; overflow: hidden; padding: 0; }
   .modal-box-scroll { max-height: 85vh; overflow-y: auto; padding: 22px 24px; }
   .modal-close {
@@ -673,7 +608,6 @@
   }
   .calc-category-name { font-weight: 800; font-size: 0.82rem; color: var(--text-dark); }
   .calc-category-weight { font-size: 0.7rem; font-weight: 700; color: var(--text-faint); }
-  /* Signed in with nothing to list (2026-10-06). */
   .calc-empty { margin: 14px 0 4px; font-size: 0.8rem; font-weight: 700; color: var(--text-faint); }
   .calc-assign-row {
     display: flex;
@@ -696,28 +630,12 @@
     font-weight: 700;
     font-size: 0.78rem;
     text-align: right;
-    /* Extra breathing room before the "/ out-of-points" text next to it
-       (2026-09-01, per Martin) — the input and its label used to sit
-       flush against each other. */
     margin-right: 6px;
   }
   .calc-input:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
   .calc-input.hyp { background: rgba(217, 74, 43, 0.08); border-color: var(--accent); }
-  /* Fixed width (2026-09-01, per Martin: the score boxes didn't line up
-     into a clean column) — without this, "/ 5" vs "/ 50" are different
-     text widths, and since .calc-assign-score is pinned to the row's
-     right edge, that difference pushed the input box itself left or
-     right row to row. A fixed-width label keeps every input's left edge
-     in the same column regardless of how many digits the point value has. */
   .calc-out-of { display: inline-block; width: 30px; text-align: left; color: var(--text-muted); font-weight: 700; }
   .calc-divider { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
-  /* Final Exam mini-calculator (reworked 2026-09-01, per Martin, to match
-     a reference "Final Grade Calculator" tool he shared) — used to be
-     gated behind an "Include a hypothetical final assessment" checkbox
-     with an explanatory paragraph; both are gone. The three fields are
-     always visible and always live: Current grade / Grade you want /
-     Final exam weight, solving for the score still needed rather than
-     projecting a score forward like the category inputs above do. */
   .calc-final-heading { font-weight: 800; font-size: 0.82rem; color: var(--text-dark); margin: 0 0 8px; }
   .calc-final-inputs { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
   .calc-final-field { flex: 1 1 100px; min-width: 90px; }
@@ -856,10 +774,6 @@
   </nav>
 
   <script>
-    // ---- Links by id (2026-10-07, Martin) ----
-    // A real class (Schoology/Classroom ids are digits) links as
-    // assignment?id=<id> and course-home?id=<section id>; the sample classes
-    // (word ids like "apchem") keep ?course=&title=. Pages read both.
     function avgIsId(v) { return /^\d{1,24}$/.test(String(v == null ? '' : v)); }
     function avgCourseQ(course) { return (avgIsId(course) ? 'id=' : 'course=') + encodeURIComponent(course == null ? '' : course); }
     function avgAssignHref(course, title, id, extra) {
@@ -868,11 +782,6 @@
       return `assignment.html?course=${encodeURIComponent(course == null ? '' : course)}&title=${encodeURIComponent(title || '')}${avgIsId(id) ? `&id=${id}` : ''}${extra}`;
     }
 
-    // Potato PC Mode on every page (2026-10-04, per Martin). The saved
-    // setting turns off all CSS animations and transitions, makes animate()
-    // calls and smooth scrolling instant, and drops the slanted page title.
-    // Same code as app/lib/theme-boot.ts, which runs it before first paint in
-    // the app; this copy covers the preview and pages theme-boot skips.
     (function () {
     var POTATO_CSS = "body.potato-mode,body.potato-mode *,body.potato-mode *::before,body.potato-mode *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important;filter:none!important;text-shadow:none!important}html:has(body.potato-mode){scroll-behavior:auto!important}body.potato-mode,body.potato-mode *{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif!important}body.potato-mode h1.title{font-style:normal!important;transform:none!important}body.potato-mode .trend.has-popup:focus-visible{outline:2px solid currentColor;outline-offset:2px}";
     function potatoOn() { return !!(document.body && document.body.classList.contains("potato-mode")); }
@@ -993,13 +902,6 @@
     })();
   </script>
 
-
-  <!-- Final Grade Calculator — site-map.md's Final Grade Calculator spec:
-       imports the course's real gradebook, lets the user edit any
-       assignment's score (real or extra credit) to see the effect live,
-       plus a standalone Final Exam mini-calculator (2026-09-01 rework,
-       replacing an earlier checkbox-gated "hypothetical final" section)
-       that solves for the final exam score needed to hit a target grade. -->
   <div class="modal-overlay" id="calcModal">
     <div class="modal-box wide" role="dialog" aria-modal="true" aria-labelledby="calcCourseName">
       <div class="modal-box-scroll">
@@ -1036,15 +938,6 @@
   </div>
 
   <script>
-    // ------------------------------------------------------------------
-    // Shared appearance (accent + background) — 2026-09-08, per Martin:
-    // "wallpapers + accent colors don't save across pages." Settings'
-    // Appearance section (and onboarding's Theme step) are the only
-    // writers of schoolagy_appearance; every other real app page,
-    // including this one, applies whatever's saved there, read-only, on
-    // its own load — same shared-localStorage-record pattern already
-    // used for schoolagy_dark_mode/schoolagy_profile.
-    // ------------------------------------------------------------------
     (function () {
       function darken(hex, amount) {
         const n = parseInt(hex.slice(1), 16);
@@ -1090,22 +983,6 @@
     // those belong to the All Courses list, not the Grades overview.
     // ------------------------------------------------------------------
 
-    // ------------------------------------------------------------------
-    // Course customization persistence — added 2026-09-08. Renaming,
-    // recoloring, or reordering a course (in home.html's Customize editor
-    // or courses.html's Reorder tool — the only places that WRITE these)
-    // used to be invisible everywhere else, since every page just
-    // re-generated its own hardcoded COURSES array from scratch on load.
-    // schoolagy_course_custom holds per-course name/color overrides
-    // (object keyed by course id, only actually-customized courses
-    // present); schoolagy_course_order holds a full custom ordering of
-    // course ids (array), written only once the user has actually
-    // reordered. This page only READS both — applyCourseCustomizationsInPlace()
-    // is called right after the raw array literal below, mutating COURSES
-    // in place, so it's already the customized/reordered version before
-    // anything on this page ever renders it. Same defensive
-    // try/catch-per-key style as AVERAGES_DARK_MODE_KEY in settings.html.
-    // ------------------------------------------------------------------
     const AVERAGES_COURSE_CUSTOM_KEY = 'schoolagy_course_custom';
     const AVERAGES_COURSE_ORDER_KEY = 'schoolagy_course_order';
     function loadCourseCustom() {
@@ -1122,12 +999,6 @@
       } catch {}
       return null;
     }
-    // Subject table (2026-10-01, per Martin): each course gets a color that
-    // fits its subject, picked from its name. First match wins, so specific
-    // subjects come before broad ones ("Computer Science" before "Science",
-    // "Physical Education" before "Physics"). A color the student picked in
-    // the course's info pop-up still wins over this. No match keeps the
-    // course's own color. All colors pass 4.5:1 with white text.
     const COURSE_SUBJECTS = [
       [/\bchem/, '🧪', '#1b7f67'],
       [/\bbio|anatom|physiolog/, '🧬', '#387f33'],
@@ -1195,8 +1066,6 @@
       { id: 'pe', name: 'PE', code: '76_P0300', period: 6, teacher: 'Reyes', section: '1125', color: '#4f8c8a', grade: 'A', pct: 97, predicted: 'A', predictedPct: 97, trend: 'flat' },
     ];
     applyCourseCustomizationsInPlace(COURSES);
-    // Signed in (2026-10-05): what the API doesn't know about a class yet
-    // (code, period, teacher, section) is empty, never "undefined".
     COURSES.forEach(c => { ['code', 'period', 'teacher', 'section'].forEach(k => { if (c[k] === undefined || c[k] === null) c[k] = ''; }); });
     function courseMetaLine(c) {
       const left = [c.period !== '' ? `Pd:${c.period}` : '', c.teacher].filter(Boolean).join(' ');
@@ -1332,22 +1201,6 @@
           { title: 'Wellness Log', score: 10, points: 10, graded: true },
           { title: 'Reflection', score: 9, points: 10, graded: true },
         ]},
-        // Demonstrated Skills — kept in sync with gradebook.html's own
-        // GRADEBOOK.pe (see that file for the full rationale comment):
-        // per Martin's correction (2026-08-31) this is a normal weighted
-        // category, not a separate track, so it flows straight into this
-        // page's own Grade Calculator for PE like any other category.
-        // The other three PE categories' weights were scaled down from
-        // 50/30/20 to make room for this one at 20%. Scored out of 5, not
-        // 10 (corrected 2026-09-01 per Martin's real Schoology screenshot
-        // showing skill items as normal small-point scored assignments).
-        // The qualitative Demonstrated/Developing/Not Yet rubric label
-        // (the `status` field, and the SKILL_LABEL lookup that rendered
-        // it) was removed the same day — per Martin, real Schoology
-        // doesn't expose that wording, only the score. The teacher `note`
-        // field these rows used to also carry (rendered as a sub-line in
-        // gradebook.html's read-only view) was removed 2026-09-01 too,
-        // also per Martin — kept in sync with gradebook.html's own data.
         { name: 'Demonstrated Skills', weight: 20, assignments: [
           { title: 'Teamwork & Communication', score: 5, points: 5, graded: true },
           { title: 'Sportsmanship', score: 5, points: 5, graded: true },
@@ -1358,13 +1211,6 @@
       ]},
     };
 
-    // A/B/C/D/F color coding (2026-08-31, per Martin's request) — each
-    // letter tier gets its own distinct color instead of the old 3-way
-    // good/mid/bad grouping. GRADE_COLOR is the single source of truth
-    // for both the CSS class (gradeBand) and the Calculator hero
-    // letter's inline-style color.
-    // Signed in with real data (2026-10-06). A demo sign-in also has
-    // __AVERAGES__ (with an empty bundle) and shows the samples, like the preview.
     const AV_LIVE = !!(window.__AVERAGES__ && window.__AVERAGES__.data) && window.__AVERAGES__.mode !== 'demo';
     const AV_DATA = AV_LIVE ? window.__AVERAGES__.data : {};
     // GRADEBOOK signed in is the bundle's, never the samples; each entry is
@@ -1385,8 +1231,6 @@
         })) };
       });
     }
-    // A weighted class leaves 0-weight categories out ("No category", say);
-    // a class with no weights at all counts every point (2026-10-06).
     function gbWeighted(gb) { return !!gb && Array.isArray(gb.categories) && gb.categories.some(c => Number(c.weight) > 0); }
     function gbWeightLabel(cat, weighted) {
       if (Number(cat.weight) > 0) return `${cat.weight}% of grade`;
@@ -1424,14 +1268,6 @@
     }
     const TREND_ARROW = { up: '↗', down: '↘', flat: '–' };
 
-    // ------------------------------------------------------------------
-    // Estimated GPA (2026-09-01, per Martin) — standard unweighted 4.0
-    // scale, averaged across every course's current letter grade
-    // (COURSES[].grade — not the predicted grade, since GPA reflects
-    // what's actually on the books). gpaColor uses roughly the same
-    // cutoffs as the A/B/C/D/F letter bands above so the number reads
-    // consistently with the rest of the page's red-through-green coloring.
-    // ------------------------------------------------------------------
     const GPA_SCALE = {
       'A+': 4.0, 'A': 4.0, 'A-': 3.7,
       'B+': 3.3, 'B': 3.0, 'B-': 2.7,
@@ -1439,8 +1275,6 @@
       'D+': 1.3, 'D': 1.0, 'D-': 0.7,
       'F': 0.0,
     };
-    // Only classes with a letter grade count: a class with nothing graded
-    // ("—") isn't an F. None at all: no GPA (2026-10-06).
     function computeGPA() {
       const graded = COURSES.filter(c => GPA_SCALE[c.grade] !== undefined);
       if (!graded.length) return null;
@@ -1474,9 +1308,6 @@
       return [lo, hi];
     }
 
-    // Grades given on the same day become one point: their average, with
-    // the date labeled "Aug 18 ×3" (2026-10-01). Otherwise three grades on
-    // one day drew as a zigzag across three fake "days".
     function groupSameDay(h) {
       const days = [];
       h.points.forEach((p, i) => {
@@ -1633,14 +1464,10 @@
     }
     renderGradesTable();
     renderGPA();
-    // Live grades (2026-10-27, public/js/averages-live.js): COURSES is already
-    // updated in place; redraw the table and the GPA and the changed numbers roll.
     window.__averagesLiveGrades = function () {
       renderGradesTable();
       renderGPA();
     };
-    // Cards that load on their own (2026-10-20): teachers' names come in
-    // after the page draws; fill them into each row's meta line.
     window.__averagesExtraLanded = function (name) {
       if (name !== 'people') return;
       document.querySelectorAll('#gradesBody tr[data-id]').forEach(tr => {
@@ -1654,12 +1481,6 @@
       });
     };
 
-    // Row click/Enter → navigate straight to that course's real Gradebook
-    // page (2026-08-31, per Martin's request: this used to pop out a
-    // read-only preview modal here; now that gradebook.html is a real
-    // page, clicking a course goes there directly instead), unless the
-    // click actually landed on the Predicted popup trigger or the Grade
-    // Calculator button, which keep their own behavior instead.
     function gradesRowNavTarget(el) {
       if (el.closest('.trend') || el.closest('.calc-cell')) return null;
       const row = el.closest('tr[data-id]');
@@ -1667,13 +1488,6 @@
     }
     function goToGradebook(id) { window.location.href = `gradebook.html?${avgCourseQ(id)}`; }
     gradesBody.addEventListener('click', e => {
-      // The whole Grade Calculator cell opens the calculator, not just its
-      // small pill button — the button alone left a lot of dead space in
-      // that column that fell through to the row's own "open the
-      // gradebook" click, which read as the calculator randomly
-      // redirecting instead of opening its popup (2026-09-03 fix, per
-      // Martin: "it should bring up the pop up on that page, not
-      // redirect").
       const calcCell = e.target.closest('.calc-cell');
       if (calcCell) { openCalcModal(calcCell.dataset.course); return; }
       const id = gradesRowNavTarget(e.target);
@@ -1687,13 +1501,6 @@
       goToGradebook(id);
     });
 
-    // ------------------------------------------------------------------
-    // Modal open/close plumbing — same fade+slide pattern as
-    // course-home.html's course-info pop-out. (Used to also manage a
-    // read-only Gradebook pop-out modal alongside the Calculator — that
-    // modal is gone as of 2026-08-31, see the row-click handler above;
-    // the Calculator is the only modal left on this page.)
-    // ------------------------------------------------------------------
     const calcModal = document.getElementById('calcModal');
     function openModal(overlay) {
       overlay.classList.add('show');
@@ -1708,18 +1515,6 @@
     }
     calcModal.addEventListener('click', e => { if (e.target === calcModal) closeModal(calcModal); });
 
-    // ------------------------------------------------------------------
-    // Final Grade Calculator — site-map.md's Final Grade Calculator,
-    // scoped into a per-course modal rather than its own route for now.
-    // State resets fresh every time it's opened for a course: `calcEdits`
-    // holds what-if scores keyed by assignment title (every assignment
-    // gets an editable input as of 2026-08-31 — see renderCalcCategories
-    // below — pre-filled with the real score for a graded one, no upper
-    // clamp so extra credit above the assignment's point value is
-    // allowed). The standalone Final Exam fields below (see
-    // calcFinalCurrent/calcFinalWant/calcFinalWeight) are their own
-    // separate calculation and aren't part of `calcEdits`.
-    // ------------------------------------------------------------------
     const calcCloseBtn = document.getElementById('calcCloseBtn');
     const calcCategories = document.getElementById('calcCategories');
     const calcFinalCurrent = document.getElementById('calcFinalCurrent');
@@ -1741,23 +1536,11 @@
 
     function assignKey(catName, title) { return catName + '::' + title; }
 
-    // A short muted qualifier after an assignment's title: "(not yet
-    // graded)" for a real ungraded item. (The Demonstrated Skills rubric-
-    // label qualifier this used to also show was removed 2026-09-01 along
-    // with the `status` field it read — see the GRADEBOOK.pe comment.)
     function calcAssignQualifier(a) {
       if (!a.graded) return ` <span style="color:var(--text-faint); font-weight:600;">(not yet graded)</span>`;
       return '';
     }
 
-    // Every assignment gets an editable input now (2026-08-31, per
-    // Martin's request to be able to change any grade — not just fill in
-    // an ungraded one — to see the hypothetical effect on the overall
-    // grade). A graded assignment's input is pre-filled with its real
-    // score; an ungraded one starts blank, same as before. An untouched
-    // graded input still uses the real score in recomputeCalc() below,
-    // so opening the Calculator and not touching anything reproduces the
-    // real grade exactly.
     function renderCalcCategories() {
       const gb = GRADEBOOK[calcCourse.id];
       if (!gb || !Array.isArray(gb.categories) || !gb.categories.length) { calcCategories.innerHTML = '<p class="calc-empty">Nothing graded in this class yet.</p>'; return; }
@@ -1788,13 +1571,6 @@
       }).join('');
     }
 
-    // The category breakdown always reflects its own real weights now —
-    // the old "scale categories down to make room for a hypothetical
-    // final" behavior went away with the checkbox it was tied to
-    // (2026-09-01). The Final Exam section below is a separate, simpler
-    // calculation: given a current grade, a target grade, and how much
-    // the final is worth, solve for the score still needed — it doesn't
-    // feed back into the category list above.
     function recomputeCalc() {
       const gb = GRADEBOOK[calcCourse.id];
       const cats = gb && Array.isArray(gb.categories) ? gb.categories : [];
@@ -1815,17 +1591,12 @@
           // same as before (doesn't count as a zero).
           if (scoreToUse !== null) { earned += scoreToUse; possible += a.points; }
         });
-        // A category with nothing counted yet is left out and the other
-        // weights scale up (2026-10-05), as in Google Classroom.
         if (possible > 0) {
           const w = Number(cat.weight) > 0 ? Number(cat.weight) : 0;
           overall += (earned / possible) * 100 * w; weightUsed += w;
           allEarned += earned; allPossible += possible;
         }
       });
-      // Weighted: the categories with work, scaled. No weights at all (a
-      // total-points class): every point counts. Nothing counted yet: "—",
-      // not an F (2026-10-06).
       const raw = weighted ? (weightUsed > 0 ? overall / weightUsed : null) : (allPossible > 0 ? (allEarned / allPossible) * 100 : null);
       if (raw === null || !isFinite(raw)) {
         calcHeroLetter.textContent = '—';
@@ -1846,10 +1617,6 @@
       calcHeroLetter.textContent = letter;
       calcHeroLetter.style.color = GRADE_COLOR[gradeBand(letter)];
       calcHeroPct.textContent = `${pct.toFixed(1)}%`;
-      // "Current grade" until an assignment's real score is actually
-      // edited (calcEdits empty means every input is still showing its
-      // real value) — flips to "Projected grade" the moment there's a
-      // hypothetical in play, per Martin.
       calcHeroLabel.textContent = Object.keys(calcEdits).length > 0 ? 'Projected grade' : 'Current grade';
 
       calcCategories.querySelectorAll('.calc-category').forEach((box, i) => {
@@ -1864,11 +1631,6 @@
       updateFinalAnswer();
     }
 
-    // Final Exam mini-calculator (2026-09-01, per Martin's reference
-    // screenshot of a standalone "Final Grade Calculator" tool) — solves
-    // for the score needed on the final, the reverse of the category
-    // calculator above (which projects a grade forward from scores).
-    // overall = current*(1 - w) + needed*w  →  needed = (want - current*(1-w)) / w
     function updateFinalAnswer() {
       const current = Number(calcFinalCurrent.value);
       const wantRaw = calcFinalWant.value;
@@ -1910,9 +1672,6 @@
       const input = e.target.closest('.calc-input');
       if (!input) return;
       const key = input.dataset.key;
-      // No upper clamp (2026-09-01, per Martin: some teachers give extra
-      // credit, so a hypothetical score can legitimately exceed the
-      // assignment's own point value) — only floor at 0.
       let val = input.value;
       if (val !== '' && Number(val) < 0) { val = '0'; input.value = val; }
       calcEdits[key] = val;
@@ -1947,22 +1706,12 @@
     // Profile menu — same behavior as every other page.
     // ------------------------------------------------------------------
     const profileBtn = document.getElementById('profileBtn');
-    // Shared profile photo/name (2026-09-07) — settings.html's Edit
-    // Profile modal is the only place this is ever set, but every other
-    // page's top-right profile button used to just show a fixed "M" no
-    // matter what was saved there: the button never read anything back,
-    // so a photo you set in Settings was invisible the moment you left
-    // it. schoolagy_profile is the same localStorage record
-    // settings.html writes on every save; this is read-only here.
     (function () {
       var profile = null;
       try {
         var raw = localStorage.getItem('schoolagy_profile');
         if (raw) profile = JSON.parse(raw);
       } catch (e) {}
-      // No name saved on this device (new device, or signed out with Sync
-      // off): the account's own name from the sign-in, never a sample name
-      // (2026-10-14; this used to fall back to "Martin" / "M").
       if (!profile || !profile.name || !String(profile.name).trim()) profile = Object.assign({}, profile, { name: window.__AVERAGES_NAME__ || '' });
       if (profile.photo) {
         profileBtn.style.backgroundImage = 'url("' + profile.photo + '")';
@@ -1971,7 +1720,7 @@
         profileBtn.textContent = '';
         profileBtn.classList.add('has-photo');
       } else if (profile.name) {
-        if (window.AveragesAvatar) window.AveragesAvatar.paint(profileBtn, profile.name);   // initials on their own color (2026-10-23, averages-avatar.js)
+        if (window.AveragesAvatar) window.AveragesAvatar.paint(profileBtn, profile.name);
         else profileBtn.textContent = (function (n) { var p = String(n).trim().split(/\s+/).filter(Boolean); var f = function (w) { return w ? Array.from(w)[0] : ''; }; return (f(p[0]) + (p.length > 1 ? f(p[p.length - 1]) : '')).toUpperCase(); })(profile.name);
       }
     })();
@@ -1989,11 +1738,6 @@
     });
   </script>
   <script>
-    // Back link (2026-10-01, per Martin: "where it returns to ... is always
-    // wrong"). Every page records itself in a short per-tab trail; a page's
-    // back link then says and goes to the page before it ("Back to AP
-    // Chemistry Hub", "Back to Grades"...). With no trail (the page was
-    // opened directly) the page's own default back link is left alone.
     (function () {
       const SELF = 'grades.html';
       const KEY = 'averages_nav_trail';

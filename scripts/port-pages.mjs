@@ -28,18 +28,6 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const SRC_DIR = path.resolve(HERE, "../pages-src");
 const APP_DIR = path.resolve(HERE, "../app");
 
-/**
- * Our own scripts in public/js get a version in their address (2026-10-20):
- * "/js/averages-bell.js?v=<first 10 of its SHA-256>". public/_headers lets
- * browsers keep anything under /js/ for a year without asking again, which is
- * only safe because a changed file gets a new address. Before this, every page
- * load asked "has this changed?" for each of them before the page could show.
- *
- * Every reference goes through the versioned address: the page scripts are
- * rewritten here (versionJsRefs), and app/layout.tsx and LegacyPage.tsx read
- * app/lib/js-version.ts, written below on every port. A new /js file must be
- * referenced the same way.
- */
 const JS_DIR = path.resolve(HERE, "../public/js");
 const JS_VERSIONED = Object.fromEntries(
   fs.readdirSync(JS_DIR)
@@ -54,21 +42,6 @@ fs.writeFileSync(
     `export const JS = ${JSON.stringify(JS_VERSIONED, null, 2)} as const;\n`
 );
 
-/**
- * The version on the sign-in page and in Settings › About (2026-10-23, Martin):
- *
- *   Beta <package.json version> (Build <first 7 of the commit>)
- *
- * "Build 336051a" links to the commit list on GitHub and is underlined on
- * hover; hovering shows the whole commit and when it was built. The commit is
- * the one Cloudflare's Workers Builds is building (WORKERS_CI_COMMIT_SHA),
- * else git's own HEAD. Outside Cloudflare it says "Build local", so building
- * here doesn't change the ported pages each time. Pages write
- * __AVERAGES_BASE__, __AVERAGES_BUILD__ and __AVERAGES_COMMIT__; this fills
- * them in on every port. To move to 0.2.0 and so on, change "version" in
- * package.json. The word in front ("Beta") is "versionName" there (2026-11-06,
- * Martin): change it to anything, or "" for none. Pages write __AVERAGES_STAGE__.
- */
 function buildVersion() {
   const pkg = JSON.parse(fs.readFileSync(path.resolve(HERE, "../package.json"), "utf8"));
   const base = String(pkg.version || "0.0.0");
@@ -114,7 +87,6 @@ const ROUTES = {
   settings: "settings",
 };
 
-/** Pages anyone can open without signing in (2026-10-06). They also keep their own fixed look. */
 const PUBLIC_PAGES = new Set(["login"]);
 
 /**
@@ -136,7 +108,6 @@ const OVERRIDABLE = [
   "CONVERSATIONS",
   "TEACHERS",
   "CONTACTS",
-  // The calendar's events (2026-10-06): the events extra, see app/lib/extras.ts.
   "EVENTS",
 ];
 
@@ -285,9 +256,6 @@ function wireDataOverrides(script, file) {
       hits++;
     }
   }
-  // Home keeps its sample courses as RAW_COURSES (COURSES is the same array
-  // after customizations), so the plain pattern above never matched there and
-  // signed-in students saw the sample classes on Home. Fixed 2026-10-05.
   for (const [local, key] of Object.entries(OVERRIDABLE_ALIASES)) {
     const pattern = new RegExp(`(^\\s*)const ${local} = ([\\[{])`, "m");
     if (pattern.test(out)) {
@@ -306,17 +274,6 @@ function wireDataOverrides(script, file) {
   return out;
 }
 
-/**
- * Pages that legitimately carry no student sample data, and so are exempt from
- * the data-override transform:
- *   login/onboarding — pre-account screens
- *   settings         — its only data is theme swatch palettes (verified), not
- *                      courses or grades
- *   files            — sample files for the preview only; signed in it shows a
- *                      "coming soon" note until the API lists course files,
- *                      Drive files and Canva designs (2026-10-04)
- * Anything NOT listed here must have overridable data, or the build fails.
- */
 const NO_DATA_PAGES = new Set(["login", "onboarding", "settings", "files"]);
 
 /**
@@ -363,15 +320,6 @@ function wireLoginSubmit(script, file) {
   const script_ = out;
 
   const replacement = `
-      // Real sign-in. The key + secret go straight to api.averages.io, which
-      // verifies them against Schoology and seals them into an httpOnly
-      // session cookie — the secret is never kept in browser-readable storage.
-      //
-      // The logo loader covers the page as soon as Connect is pressed
-      // (Martin, 2026-10-27: "sometimes I see sign in, then the loading logo,
-      // then home"). It stays up through the trip to Home or Onboarding, whose
-      // first-open logo (app/lib/splash.ts) takes over, so it goes sign in,
-      // logo, page. If sign-in fails it fades away and the form shows why.
       const logo = window.__averagesLoginLogo;
       if (logo) logo.show();
       window.__averagesSignIn(key, secret).then((result) => {
@@ -434,10 +382,6 @@ function wireOnboardingComplete(script, file) {
           window.localStorage.setItem('schoolagy_profile_name', nameInput.value.trim());
         } catch (e) { /* private browsing — non-fatal, they just redo setup */ }
 
-        // Long enough to read "You're all set!", short enough not to strand
-        // them on a screen whose whole message is that it's about to move on.
-        // Picked Plus (2026-10-21): the page sets __averagesOnboardFinish to open
-        // Stripe checkout instead.
         setTimeout(() => {
           if (typeof window.__averagesOnboardFinish === 'function') window.__averagesOnboardFinish();
           else window.location.href = '/home';
@@ -455,26 +399,6 @@ function wireOnboardingComplete(script, file) {
 /** The only two pages with a file input, and so the only two that need the model. */
 const UPLOAD_PAGES = new Set(["onboarding", "settings"]);
 
-/**
- * Page-specific external <script src="…"> tags that must actually load in the
- * real app.
- *
- * The extract() step below only ever pulls <title>, <style> and inline
- * <script> (no src=) out of a source page — the same gap documented on
- * layout.tsx's Typekit <link>. A <link rel="stylesheet"> silently missing
- * just breaks a font; a <script src> silently missing breaks a FEATURE with
- * no visible error — course-materials.html's "Download Folder" checked
- * `typeof JSZip === 'undefined'` and, since the CDN tag never made it into
- * the built app at all, always showed its "you're offline" fallback message
- * regardless of the user's actual connection (found and fixed 2026-09-08).
- *
- * Unlike Typekit (every page, so it lives once in layout.tsx), each of these
- * is needed by exactly one page — loading a .zip library app-wide for pages
- * that never zip anything would be pure waste, so they're wired per-page via
- * LegacyPage's `externalScripts` prop instead.
- */
-// Served by the app itself since 2026-10-23 (public/vendor, the same files as npm's jszip 3.10.1):
-// nothing from another site runs inside the app.
 const EXTERNAL_SCRIPTS = {
   "course-materials": ["/vendor/jszip-3.10.1/jszip.min.js"],
 };
@@ -502,8 +426,6 @@ const ERROR_MESSAGES: Record<string, string> = {
   feature_off: "Signing in this way is turned off right now. Try again later.",
 };
 
-// Sign in with Schoology (2026-10-29): when the API sends the student back with
-// ?signin_error=<code>#schoology, the Schoology screen says what went wrong.
 const SCHOOLOGY_SIGNIN_ERRORS: Record<string, string> = {
   not_configured: "Signing in with Schoology isn't open yet. Check back soon.",
   feature_off: "Signing in with Schoology is turned off right now. Try again later.",
@@ -555,10 +477,6 @@ const SCHOOLOGY_SIGNIN_ERRORS: Record<string, string> = {
 
     let cancelled = false;
 
-    // Sign in with Schoology (2026-10-29). The login script's Schoology button
-    // calls window.__averagesLmsSignIn(lms, domain) when it exists; until the
-    // API says it's set up (consumer key and secret in place, switch on), the
-    // button keeps saying it's coming, exactly as before.
     fetch(\`\${API_BASE}/auth/schoology/status\`, { credentials: "omit" })
       .then((r) => (r.ok ? r.json() : null))
       .then((s) => {
@@ -589,10 +507,6 @@ const SCHOOLOGY_SIGNIN_ERRORS: Record<string, string> = {
       try {
         history.replaceState(history.state, "", window.location.pathname + (rest ? "?" + rest : "") + window.location.hash);
       } catch {}
-      // The login script resets the note while it draws the Schoology screen
-      // (and when it puts back the school picked last time), so it's said
-      // again over the first 2 s, until the student does anything.
-      // the code goes along in small print, so a report can say which step it was (2026-11-03)
       const text = (SCHOOLOGY_SIGNIN_ERRORS[signinError] ?? "Something went wrong signing in with Schoology. Please try again.") + \` (\${signinError.replace(/[^a-z_]/g, "").slice(0, 40)})\`;
       let touched = false;
       const stop = () => { touched = true; };
@@ -640,34 +554,6 @@ const SCHOOLOGY_SIGNIN_ERRORS: Record<string, string> = {
 `
     : "";
 
-  // Login: a loading screen until we know whether there's a session (Martin, 2026-10-13:
-  // signed in, app.averages.io still showed the sign-in buttons for ~3 s while
-  // /auth/me answered). The cookie is httpOnly, so nothing on the page can
-  // look for it; this goes by the hint getSession() leaves in localStorage.
-  // Runs inline before the browser paints. Not black when:
-  //   - the hint says signed out last time ("0"): the usual signed-out visit
-  //     shows the buttons at once, and the check still redirects if it's wrong;
-  //   - the hidden ?keys/?demo form is asked for, unless the hint says signed
-  //     in ("1"), when Home is the likely next stop (2026-10-27). (Google
-  //     sign-in, which came back here with ?google=, was removed 2026-10-19.)
-  // A missing hint (first visit since this shipped) counts as "maybe", so it's
-  // black once and right from then on. The 8 s cap means a slow or broken API
-  // can never leave the page black for good; the effect above reveals sooner.
-  //
-  // Loading animation (Martin, 2026-10-20): not plain black any more. A dark
-  // greyish black (#17181c) with the logo in the middle in its gradient's dark
-  // color (#E5484D) and a big soft glow of the light color (#FF7A50) circling
-  // inside it on a random path (speed and distance drift to new random values).
-  // It's html::before, so it needs nothing in <body> (React owns that); the
-  // script moves the glow through --av-dx/--av-dy and stops when the check
-  // ends. Potato mode / reduced motion: the glow stays put near the top.
-  //
-  // Signing in (Martin, 2026-10-27): window.__averagesLoginLogo.show() puts
-  // the same logo up over the page (data-av-signing, a #17181c cover drawn by
-  // html::after) the moment Connect is pressed, fading in over 0.2 s; hide()
-  // fades it out if sign-in fails. The effect above also calls show() when
-  // the session check finds a session after the sign-in options appeared.
-  // Potato mode: no fades.
   const loginChecking = isLogin
     ? `
 const CHECKING_CSS = "html[data-av-checking],html[data-av-checking] body{background:#17181c!important}html[data-av-checking] body>*{visibility:hidden!important}html[data-av-checking]::before,html[data-av-signing]::before{content:'';position:fixed;z-index:2147483647;left:50%;top:50%;width:168px;height:168px;margin:-84px 0 0 -84px;background:radial-gradient(circle 151px at calc(50% + var(--av-dx,0px)) calc(50% + var(--av-dy,-27px)),rgba(255,122,80,1) 0%,rgba(255,122,80,.85) 25%,rgba(255,122,80,.45) 55%,rgba(255,122,80,.12) 80%,rgba(255,122,80,0) 100%),#E5484D;-webkit-mask:url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%22-8%20-8%20470%20470%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M0.02%20452.75C0.15%20442.97%205.78%20407.10%2010.02%20389.00C11.63%20382.12%2015.00%20367.50%2017.51%20356.50C28.03%20310.27%2040.89%20265.53%2058.60%20213.50C77.33%20158.47%2085.57%20136.89%20103.25%2096.50C118.88%2060.79%20129.55%2039.21%20141.04%2020.00C144.17%2014.78%20147.92%208.14%20149.38%205.25L152.03%200.00L226.00%200.00L299.97%200.00L302.62%205.25C304.08%208.14%20307.83%2014.78%20310.96%2020.00C322.28%2038.92%20336.94%2068.63%20348.06%2095.18C350.75%20101.61%20354.55%20110.26%20356.49%20114.41C367.49%20137.90%20397.74%20222.92%20410.96%20267.50C419.09%20294.91%20429.04%20332.52%20434.49%20356.50C437.00%20367.50%20440.37%20382.12%20441.98%20389.00C446.22%20407.10%20451.85%20442.97%20451.98%20452.75C452.00%20453.74%20436.27%20454.00%20376.64%20454.00L301.28%20454.00L299.60%20442.75C296.88%20424.51%20291.11%20392.27%20288.63%20381.50L286.34%20371.50L223.34%20371.24L160.34%20370.99L158.19%20380.33C155.44%20392.33%20149.65%20424.19%20147.53%20439.00C146.63%20445.32%20145.66%20451.29%20145.38%20452.25C144.90%20453.90%20140.55%20454.00%2072.43%20454.00C15.14%20454.00%200.00%20453.74%200.02%20452.75ZM184.00%20348.25C189.69%20345.41%20191.44%20335.66%20187.41%20329.29C184.35%20324.47%20172.42%20324.01%20167.19%20328.51C164.78%20330.58%20164.50%20331.51%20164.50%20337.31C164.50%20344.14%20166.09%20347.25%20170.50%20349.05C173.93%20350.46%20180.35%20350.07%20184.00%20348.25ZM274.28%20347.02C284.17%20342.33%20288.64%20332.80%20287.74%20318.33C286.79%20303.07%20279.66%20295.00%20265.16%20292.75C256.25%20291.37%20245.93%20293.01%20240.22%20296.71C232.38%20301.79%20228.36%20311.77%20229.23%20323.96C230.09%20335.93%20235.58%20344.50%20244.50%20347.78C249.77%20349.72%20251.32%20349.90%20260.50%20349.59C267.31%20349.35%20270.66%20348.73%20274.28%20347.02ZM220.00%20325.25L220.00%20301.50L209.50%20301.50L199.00%20301.50L199.00%20325.25L199.00%20349.00L209.50%20349.00L220.00%20349.00L220.00%20325.25ZM252.40%20330.90C250.89%20329.22%20250.50%20327.26%20250.50%20321.31C250.50%20314.35%20250.70%20313.66%20253.31%20311.41C256.89%20308.33%20260.44%20308.35%20263.55%20311.45C265.70%20313.61%20266.00%20314.79%20266.00%20321.23C266.00%20330.70%20264.56%20333.00%20258.60%20333.00C255.51%20333.00%20253.78%20332.41%20252.40%20330.90ZM218.38%20292.67C221.03%20290.93%20222.25%20286.49%20221.33%20281.90C220.47%20277.58%20215.94%20275.01%20209.18%20275.00C200.42%20275.00%20197.08%20277.76%20197.03%20285.08C197.01%20288.68%20197.53%20290.15%20199.48%20291.98C203.75%20295.99%20212.81%20296.32%20218.38%20292.67ZM258.58%20254.35C258.23%20253.44%20256.13%20245.45%20253.90%20236.60C244.34%20198.58%20227.57%20140.97%20224.09%20134.18L222.37%20130.84L216.22%20150.67C207.52%20178.73%20204.15%20190.56%20195.49%20223.50C191.29%20239.45%20187.63%20253.29%20187.36%20254.25C186.90%20255.89%20189.07%20256.00%20223.04%20256.00C256.26%20256.00%20259.16%20255.87%20258.58%20254.35Z%22%2F%3E%3C%2Fsvg%3E') center/contain no-repeat;mask:url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%22-8%20-8%20470%20470%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M0.02%20452.75C0.15%20442.97%205.78%20407.10%2010.02%20389.00C11.63%20382.12%2015.00%20367.50%2017.51%20356.50C28.03%20310.27%2040.89%20265.53%2058.60%20213.50C77.33%20158.47%2085.57%20136.89%20103.25%2096.50C118.88%2060.79%20129.55%2039.21%20141.04%2020.00C144.17%2014.78%20147.92%208.14%20149.38%205.25L152.03%200.00L226.00%200.00L299.97%200.00L302.62%205.25C304.08%208.14%20307.83%2014.78%20310.96%2020.00C322.28%2038.92%20336.94%2068.63%20348.06%2095.18C350.75%20101.61%20354.55%20110.26%20356.49%20114.41C367.49%20137.90%20397.74%20222.92%20410.96%20267.50C419.09%20294.91%20429.04%20332.52%20434.49%20356.50C437.00%20367.50%20440.37%20382.12%20441.98%20389.00C446.22%20407.10%20451.85%20442.97%20451.98%20452.75C452.00%20453.74%20436.27%20454.00%20376.64%20454.00L301.28%20454.00L299.60%20442.75C296.88%20424.51%20291.11%20392.27%20288.63%20381.50L286.34%20371.50L223.34%20371.24L160.34%20370.99L158.19%20380.33C155.44%20392.33%20149.65%20424.19%20147.53%20439.00C146.63%20445.32%20145.66%20451.29%20145.38%20452.25C144.90%20453.90%20140.55%20454.00%2072.43%20454.00C15.14%20454.00%200.00%20453.74%200.02%20452.75ZM184.00%20348.25C189.69%20345.41%20191.44%20335.66%20187.41%20329.29C184.35%20324.47%20172.42%20324.01%20167.19%20328.51C164.78%20330.58%20164.50%20331.51%20164.50%20337.31C164.50%20344.14%20166.09%20347.25%20170.50%20349.05C173.93%20350.46%20180.35%20350.07%20184.00%20348.25ZM274.28%20347.02C284.17%20342.33%20288.64%20332.80%20287.74%20318.33C286.79%20303.07%20279.66%20295.00%20265.16%20292.75C256.25%20291.37%20245.93%20293.01%20240.22%20296.71C232.38%20301.79%20228.36%20311.77%20229.23%20323.96C230.09%20335.93%20235.58%20344.50%20244.50%20347.78C249.77%20349.72%20251.32%20349.90%20260.50%20349.59C267.31%20349.35%20270.66%20348.73%20274.28%20347.02ZM220.00%20325.25L220.00%20301.50L209.50%20301.50L199.00%20301.50L199.00%20325.25L199.00%20349.00L209.50%20349.00L220.00%20349.00L220.00%20325.25ZM252.40%20330.90C250.89%20329.22%20250.50%20327.26%20250.50%20321.31C250.50%20314.35%20250.70%20313.66%20253.31%20311.41C256.89%20308.33%20260.44%20308.35%20263.55%20311.45C265.70%20313.61%20266.00%20314.79%20266.00%20321.23C266.00%20330.70%20264.56%20333.00%20258.60%20333.00C255.51%20333.00%20253.78%20332.41%20252.40%20330.90ZM218.38%20292.67C221.03%20290.93%20222.25%20286.49%20221.33%20281.90C220.47%20277.58%20215.94%20275.01%20209.18%20275.00C200.42%20275.00%20197.08%20277.76%20197.03%20285.08C197.01%20288.68%20197.53%20290.15%20199.48%20291.98C203.75%20295.99%20212.81%20296.32%20218.38%20292.67ZM258.58%20254.35C258.23%20253.44%20256.13%20245.45%20253.90%20236.60C244.34%20198.58%20227.57%20140.97%20224.09%20134.18L222.37%20130.84L216.22%20150.67C207.52%20178.73%20204.15%20190.56%20195.49%20223.50C191.29%20239.45%20187.63%20253.29%20187.36%20254.25C186.90%20255.89%20189.07%20256.00%20223.04%20256.00C256.26%20256.00%20259.16%20255.87%20258.58%20254.35Z%22%2F%3E%3C%2Fsvg%3E') center/contain no-repeat;pointer-events:none}html[data-av-signing]::after{content:'';position:fixed;inset:0;z-index:2147483646;background:#17181c}html[data-av-signing]::before,html[data-av-signing]::after{animation:av-sign-in .2s ease both}html[data-av-signing=out]::before,html[data-av-signing=out]::after{animation:av-sign-out .24s ease both;pointer-events:none}html[data-av-signing=still]::before,html[data-av-signing=still]::after{animation:none}@keyframes av-sign-in{from{opacity:0}to{opacity:1}}@keyframes av-sign-out{from{opacity:1}to{opacity:0}}";
@@ -680,11 +566,6 @@ const CHECKING_JS = "(function(){var d=document.documentElement,running=false,po
       <script dangerouslySetInnerHTML={{ __html: CHECKING_JS }} />`
     : "";
 
-  // Home (2026-10-13): app.averages.io's front door (worker/index.js) now
-  // sends anyone with a session cookie straight here, before the login page
-  // could pick Onboarding for someone who hasn't finished it on this device
-  // (that's kept in this browser, out of the Worker's sight). So Home makes
-  // the same choice, before it paints. Storage blocked: stay on Home.
   const homeOnboard = name === "home"
     ? `
 const ONBOARD_JS = "try{if(localStorage.getItem('schoolagy_onboarded')!=='1')location.replace('/onboard');}catch(e){}";

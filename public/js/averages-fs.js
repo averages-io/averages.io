@@ -1,25 +1,4 @@
-/*
- * The Fullscreen pages' link to the real app (2026-10-28, Martin; behind the
- * `fullscreen` switch). The pages in /IS/ are Martin's Fullscreen designs,
- * built from fs-src/ by scripts/build-fs.mjs. They still run on their own
- * sample data (for testing with the tester account); this file joins them to
- * the app around that:
- *
- *   - checks the switch and the sign-in; switch off (or Windowed picked
- *     somewhere else) goes back to the Windowed page, signed out to sign-in;
- *   - light, dark or the device's choice (schoolagy_dark_mode, the same key
- *     as Windowed), before anything paints;
- *   - the accent color, if it's one of Fullscreen's (else Punch);
- *   - the student's own name and photo, and Potato mode, in place of the
- *     sample ones;
- *   - what's changed on the Fullscreen Settings page (theme, accent, Potato,
- *     name, photo) is saved where the rest of the app reads it;
- *   - the pages' "In the app, this opens ..." messages become real moves:
- *     between the Fullscreen pages, back to Windowed, signing out, Help and
- *     legal pages, Schoology in a new tab.
- *
- * Loaded in <head>, before the page's own script.
- */
+// The Fullscreen pages' link to the real app.
 (function () {
   'use strict';
   var API = window.location.hostname.endsWith('averages.io') ? 'https://api.averages.io' : 'http://localhost:8787';
@@ -51,10 +30,6 @@
     window.location.replace(page === 'settings' && save ? '/settings?section=general' : windowedPath());
   }
   var opts = json('schoolagy_settings_options') || {};
-  // Back after switching looks (2026-11-06, Martin: going back a page after switching modes broke the site): the
-  // browser can bring a page back from its memory (back/forward cache) without running anything. A Fullscreen page
-  // brought back after Windowed was picked goes to its Windowed page; one brought back in Fullscreen drops the logo
-  // it was still showing when it was left.
   window.addEventListener('pageshow', function (e) {
     if (!e.persisted) return;
     var o = json('schoolagy_settings_options') || {};
@@ -176,7 +151,6 @@
 
   // ---------- the switch and the sign-in ----------
   function off() { try { sessionStorage.setItem('averages_fs_off', '1'); } catch (e) { /* storage off */ } goWindowed(false); }
-  // asked once every 5 minutes per tab, not on every page (2026-11-03, Martin: "nothing is being cached")
   var fchk = 0; try { fchk = +sessionStorage.getItem('averages_fs_featchk') || 0; } catch (e) {}
   if (!(Date.now() - fchk < 300000 && Date.now() >= fchk)) fetch(API + '/config/features', { credentials: 'omit', cache: 'no-store' })
     .then(function (r) { return r.ok ? r.json() : null; })
@@ -184,10 +158,6 @@
     .catch(function () { /* API unreachable: stay */ });
   // Sign-in is checked by averages-fs-data.js, which loads the page's data.
 
-  // ---------- your picture without a photo: the same colors and initials as Windowed (2026-10-30) ----------
-  // The pages drew one letter on a plain dark circle, so the color changed when switching from Windowed. Every
-  // [data-av] without a photo gets AveragesAvatar's gradient and initials (/js/averages-avatar.js, the same file and the
-  // same name as Windowed's profile button). Pages redraw these often, so it's repainted whenever one changes.
   function avName() { var p = json('fsmock_profile2') || {}; return (typeof p.name === 'string' && p.name.trim()) || (window.FSD && window.FSD.me && window.FSD.me.name) || ''; }
   function paintAvs() {
     var A = window.AveragesAvatar; if (!A) return;

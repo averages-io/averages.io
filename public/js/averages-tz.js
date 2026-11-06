@@ -1,26 +1,4 @@
-/*
- * Time zone (2026-10-28, Martin): Settings > General > Time Zone.
- *
- * Schoology sends due dates as the school's wall-clock time ("2026-10-30
- * 23:59:00", no zone), and the API reads them in the student's zone, which
- * the app sends as ?tz=. Normally that's this device's zone ("Set
- * Automatically"). A student whose device is set wrong (a school Chromebook
- * on UTC, a laptop that came back from a trip) can pick their zone by hand,
- * stored as schoolagy_settings_options.timeZone ('auto' or an IANA name like
- * 'America/Los_Angeles').
- *
- *   averagesTimeZone()   the zone to send the API: the manual pick if it's a
- *                        real zone, else this device's zone ('' if unknown).
- *   averagesDeviceTimeZone()  this device's own zone.
- *   averagesManualTimeZone()  the manual pick, or '' in automatic mode.
- *   averagesWallClock(x) a Date whose local fields (getDate, getHours...)
- *                        read the wall clock in the chosen zone, for pages
- *                        that work out "today" or a due day in the browser.
- *                        In automatic mode it's just new Date(x).
- *
- * Loaded first in app/layout.tsx so every other script can use it. Each call
- * site still falls back to the device zone if this file didn't load.
- */
+// Time zone: Settings > General > Time Zone.
 (function () {
   'use strict';
 
