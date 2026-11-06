@@ -3261,6 +3261,10 @@
   .avh-tab .avh-mk.avh-av, .avh-menu .avh-mk.avh-av { background-size: 66%; background-position: 50% 50%; }
   .avh-hp-st kbd.avh-dots3 { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 18px; padding: 0; vertical-align: -3px; }
   .avh-hp-st kbd.avh-dots3 svg { width: 12px; height: 12px; display: block; }
+  /* the big emoji next to a page title: smooth even when the tile is tilted (2026-11-06, Martin: they looked jagged on
+     some pages, the tilted ones). Drawn upright on its own layer and then turned, so its edges and the emoji stay smooth. */
+  .hub-logo { backface-visibility: hidden; -webkit-backface-visibility: hidden; outline: 1px solid transparent; }
+  .hub-logo svg { shape-rendering: geometricPrecision; }
 </style>
 </head>
 <body>

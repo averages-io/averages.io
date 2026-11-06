@@ -1425,6 +1425,8 @@
     .fs .ob-nav .pp-btn { flex: 1; min-width: 0; }
   }
   .bg-crop-stage.round { border-radius: 50%; }
+  /* the emailed code (2026-11-06) */
+  .email-code { width: 132px; letter-spacing: .25em; text-align: center; font-variant-numeric: tabular-nums; margin: 0; }
 </style>
 </head>
 <body>
@@ -1537,6 +1539,7 @@
             <div class="error-text" id="emailError">Enter a valid email address.</div>
             <div class="email-verify-row is-hidden" id="emailVerifyRow">
               <button type="button" class="btn-verify" id="emailVerifyBtn">Verify</button>
+              <input type="text" id="emailCodeInput" class="name-input email-code is-hidden" inputmode="numeric" maxlength="6" placeholder="6-digit code" autocomplete="one-time-code" aria-label="The 6-digit code we emailed you">
               <button type="button" class="btn-resend" id="emailResendBtn">Resend</button>
               <span class="email-verify-status" id="emailVerifyStatus" aria-live="polite">
                 <svg class="verify-icon verify-x" id="verifyIconX" viewBox="0 0 24 24" aria-label="Not verified"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg>
@@ -3008,23 +3011,60 @@
       const hasValue = !!emailInput.value.trim();
       emailVerifyRow.classList.toggle('is-hidden', !hasValue);
       if (hasValue) setEmailVerified(false); // any edit needs re-verifying
+      emailCodeInput.classList.add('is-hidden'); emailCodeInput.value = '';
     });
-    emailVerifyBtn.addEventListener('click', () => {
+    // Real codes (2026-11-06, Martin: the code never arrived; it was a stand-in): Verify emails a 6-digit code
+    // (POST /email/code, Cloudflare Email Service) and typing it checks it (POST /email/verify). See the API's
+    // src/emailCode.ts. Both looks of this page use window.__obEmail.
+    const OB_API = /(^|\.)averages\.io$/.test(location.hostname) ? 'https://api.averages.io' : 'http://localhost:8787';
+    const EMAIL_SAY = {
+      bad_email: "That doesn't look like an email address.",
+      email_rejected: "That address can't get email from us. Check it, or try another.",
+      email_busy: 'We\'re sending a lot of codes right now. Try again in a few minutes.',
+      email_not_configured: 'Codes aren\'t working yet. You can add your email later in Settings.',
+      not_in_incognito: 'Not needed in Incognito.',
+      wrong_code: "That code isn't right. Check the email and try again.",
+      code_expired: 'That code ran out. Send a new one.',
+      rate_limited: 'Too many tries. Wait a few minutes, then try again.',
+    };
+    let emailToken = '', emailTokenFor = '';
+    async function emailPost(path, body) {
+      let r;
+      try { r = await fetch(OB_API + path, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); }
+      catch { throw 'network'; }
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw (j && j.error) || (r.status === 429 ? 'rate_limited' : 'email_failed');
+      return j;
+    }
+    window.__obEmail = {
+      async send(email) { const j = await emailPost('/email/code', { email }); emailToken = j.token || ''; emailTokenFor = email.trim().toLowerCase(); },
+      async check(email, code) { if (!emailToken || emailTokenFor !== email.trim().toLowerCase()) throw 'code_expired'; await emailPost('/email/verify', { email, code, token: emailToken }); },
+      say(e) { return EMAIL_SAY[e] || (e === 'network' ? 'You\'re offline. Check your connection and try again.' : "Couldn't send that. Try again in a moment."); },
+    };
+    const emailCodeInput = document.getElementById('emailCodeInput');
+    const emailSay = (text) => { emailError.textContent = text; emailError.classList.add('show'); };
+    async function emailSend(btn, label) {
       const val = emailInput.value.trim();
-      if (!val || !isValidEmail(val)) {
-        emailError.classList.add('show');
-        emailInput.focus();
-        return;
-      }
+      if (!val || !isValidEmail(val)) { emailSay('Enter a valid email address.'); emailInput.focus(); return; }
       emailError.classList.remove('show');
-      setEmailVerified(true);
-    });
-    // Same "Resend link" convention as Settings > Account's verify
-    // modal — no real mail server, so this just gives visible
-    // feedback that a new link "went out" before reverting the label.
-    emailResendBtn.addEventListener('click', () => {
-      emailResendBtn.textContent = 'Email sent!';
-      setTimeout(() => { emailResendBtn.textContent = 'Resend'; }, 2000);
+      btn.disabled = true; btn.textContent = 'Sending…';
+      try {
+        await window.__obEmail.send(val);
+        emailCodeInput.classList.remove('is-hidden'); emailCodeInput.value = ''; emailCodeInput.focus();
+        btn.textContent = label === 'Verify' ? 'Sent' : 'Sent again';
+        setTimeout(() => { if (!emailVerified) btn.textContent = label; }, 2500);
+      } catch (e) { emailSay(window.__obEmail.say(e)); btn.textContent = label; }
+      finally { if (!emailVerified) btn.disabled = false; }
+    }
+    emailVerifyBtn.addEventListener('click', () => emailSend(emailVerifyBtn, 'Verify'));
+    emailResendBtn.addEventListener('click', () => emailSend(emailResendBtn, 'Resend'));
+    emailCodeInput.addEventListener('input', async () => {
+      emailCodeInput.value = emailCodeInput.value.replace(/\D/g, '').slice(0, 6);
+      if (emailCodeInput.value.length !== 6) return;
+      emailCodeInput.disabled = true;
+      try { await window.__obEmail.check(emailInput.value.trim(), emailCodeInput.value); emailError.classList.remove('show'); setEmailVerified(true); emailCodeInput.classList.add('is-hidden'); }
+      catch (e) { emailSay(window.__obEmail.say(e)); emailCodeInput.select(); }
+      finally { emailCodeInput.disabled = false; }
     });
     emailInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') { e.preventDefault(); submitBtn.click(); }
@@ -3493,10 +3533,24 @@
       $('fsName').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('fsNext').click(); } });
       $('fsEmail').addEventListener('input', e => { emailInput.value = e.target.value.trim(); emailInput.dispatchEvent(new Event('input')); verified = false; codeSent = false; emailDraw(); });
       $('fsEmail').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('fsNext').click(); } });
-      // Pretend code (same as Windowed's Verify): any 6 digits work until there's a real code email.
-      $('fsVerify').addEventListener('click', () => { codeSent = true; emailDraw(); $('fsCode').value = ''; $('fsCode').focus(); });
-      $('fsResend').addEventListener('click', () => toast('Sent a new code.'));
-      $('fsCode').addEventListener('input', e => { e.target.value = e.target.value.replace(/\D/g, '').slice(0, 6); if (e.target.value.length === 6) { verified = true; emailDraw(); $('fsNext').focus({ preventScroll: true }); } });
+      // Real codes (2026-11-06): window.__obEmail emails one and checks it (the API's src/emailCode.ts).
+      const fsEmailBad = text => { const m = $('fsEmailMsg'); m.textContent = text; m.classList.add('bad'); };
+      const fsSend = async (btn, again) => {
+        const v = $('fsEmail').value.trim(); if (!emailOk(v)) return;
+        btn.disabled = true;
+        try { await window.__obEmail.send(v); codeSent = true; emailDraw(); $('fsCode').value = ''; $('fsCode').focus(); if (again) toast('Sent a new code.'); }
+        catch (e) { fsEmailBad(window.__obEmail.say(e)); }
+        finally { btn.disabled = false; }
+      };
+      $('fsVerify').addEventListener('click', () => fsSend($('fsVerify'), false));
+      $('fsResend').addEventListener('click', () => fsSend($('fsResend'), true));
+      $('fsCode').addEventListener('input', async e => {
+        e.target.value = e.target.value.replace(/\D/g, '').slice(0, 6); if (e.target.value.length !== 6) return;
+        e.target.disabled = true;
+        try { await window.__obEmail.check($('fsEmail').value.trim(), e.target.value); verified = true; emailDraw(); $('fsNext').focus({ preventScroll: true }); }
+        catch (err) { fsEmailBad(window.__obEmail.say(err)); }
+        finally { e.target.disabled = false; if (!verified) e.target.select(); }
+      });
 
       // Profile picture: the same scan as backgrounds, then a round crop.
       const photoInput = document.createElement('input');

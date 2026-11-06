@@ -3060,6 +3060,10 @@
   @media (max-width: 680px) { .hub-t h1 { font-size: 34px; } }
   /* ===== end Life layer for the course page ===== */
   .g-na { color: var(--muted) !important; }   /* nothing graded yet (2026-11-06) */
+  /* the big emoji next to a page title: smooth even when the tile is tilted (2026-11-06, Martin: they looked jagged on
+     some pages, the tilted ones). Drawn upright on its own layer and then turned, so its edges and the emoji stay smooth. */
+  .hub-logo { backface-visibility: hidden; -webkit-backface-visibility: hidden; outline: 1px solid transparent; }
+  .hub-logo svg { shape-rendering: geometricPrecision; }
 </style>
 </head>
 <body>
