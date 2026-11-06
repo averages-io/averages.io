@@ -12,7 +12,8 @@ export default function SignOutPage() {
   useEffect(() => {
     signOut()
       .catch(() => {})
-      .finally(() => window.location.replace("/"));
+      // ?signedout: the front door (worker/index.js) answers with Clear-Site-Data, wiping what's left (2026-11-06)
+      .finally(() => window.location.replace("/?signedout=1"));
   }, []);
   return null;
 }

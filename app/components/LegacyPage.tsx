@@ -440,11 +440,33 @@ export default function LegacyPage({
       try {
         await signOut();
       } finally {
-        window.location.href = "/";
+        window.location.href = "/?signedout=1";   // the browser wipes what's left (worker/index.js, 2026-11-06)
       }
     }
 
     (window as any).__averagesSignOut = runSignOut;
+
+    // "Are you sure?" first (2026-11-06, Martin: the profile menu signed out straight away), from the menu and Settings.
+    function confirmSignOut(): Promise<boolean> {
+      return new Promise((resolve) => {
+        const from = document.activeElement as HTMLElement | null;
+        const scrim = document.createElement("div");
+        scrim.setAttribute("style", "position:fixed;inset:0;z-index:2147483000;background:rgba(10,11,18,.45);display:grid;place-items:center;padding:16px");
+        scrim.innerHTML = `<div role="alertdialog" aria-modal="true" aria-labelledby="avSoT" aria-describedby="avSoD" style="width:min(360px,100%);box-sizing:border-box;padding:24px;border-radius:var(--window-radius-lg,22px);background:var(--panel-bg,#eaeaec);color:var(--text-dark,#14151f);box-shadow:0 24px 60px -20px rgba(0,0,0,.55);font-family:inherit">
+          <h2 id="avSoT" style="margin:0 0 6px;font-size:1.15rem;font-weight:800">Sign out of Averages.io?</h2>
+          <p id="avSoD" style="margin:0 0 20px;font-size:.9rem;font-weight:600;color:var(--text-muted,#4b4d63);line-height:1.45">This clears everything Averages.io saved on this device. You can sign back in with Schoology any time.</p>
+          <div style="display:flex;gap:8px;justify-content:flex-end">
+            <button type="button" data-so="no" style="font:inherit;font-weight:700;padding:10px 16px;border:0;border-radius:12px;background:var(--panel-inner,#dcdce0);color:inherit;cursor:pointer">Cancel</button>
+            <button type="button" data-so="yes" style="font:inherit;font-weight:800;padding:10px 16px;border:0;border-radius:12px;background:#b6432f;color:#fff;cursor:pointer">Sign out</button>
+          </div></div>`;
+        const done = (yes: boolean) => { document.removeEventListener("keydown", onKey, true); scrim.remove(); if (!yes && from && from.isConnected) from.focus(); resolve(yes); };
+        const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); done(false); } };
+        scrim.addEventListener("click", (e) => { const b = (e.target as HTMLElement).closest("[data-so]") as HTMLElement | null; if (e.target === scrim || (b && b.dataset.so === "no")) done(false); else if (b) done(true); });
+        document.addEventListener("keydown", onKey, true);
+        document.body.appendChild(scrim);
+        (scrim.querySelector('[data-so="yes"]') as HTMLElement).focus();
+      });
+    }
 
     async function onClick(event: MouseEvent) {
       const target = (event.target as HTMLElement | null)?.closest?.(
@@ -453,6 +475,7 @@ export default function LegacyPage({
       if (!target) return;
       event.preventDefault();
       event.stopPropagation();
+      if (!(await confirmSignOut())) return;
       await runSignOut();
     }
     document.addEventListener("click", onClick, true);
@@ -774,7 +797,7 @@ export default function LegacyPage({
             onClick={async () => {
               setBannerDismissed(true);
               await signOut();
-              window.location.href = "/";
+              window.location.href = "/?signedout=1";
             }}
             aria-label="Leave demo and return to sign in"
             style={{

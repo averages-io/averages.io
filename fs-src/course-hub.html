@@ -4414,7 +4414,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       }
       if (k === 'customize') { meCustomize(); return; }
       meClose(true);
-      ({ profile: () => FSX.go('settings', { section: 'account' }), customize: () => FSX.go('home', { customize: 1 }), settings: () => FSX.go('settings'), signout: () => FSX.signOut() }[k] || (() => {}))();
+      ({ profile: () => FSX.go('settings', { section: 'account' }), customize: () => FSX.go('home', { customize: 1 }), settings: () => FSX.go('settings'), signout: () => FSX.confirmSignOut() }[k] || (() => {}))();
     });
   }
   // ---------- Customize this page: each column's cards, dragged into order and switched on or off ----------

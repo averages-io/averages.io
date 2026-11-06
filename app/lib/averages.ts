@@ -353,14 +353,12 @@ const OUR_STORAGE_KEY = /^(schoolagy_|averages_|fs|wi_|av_help_)/;
  * which the API's sign-out answer deletes (session, Google access, profile).
  */
 function forgetEverythingOnThisDevice(): void {
+  // Every key now, not only ones that look like ours (2026-11-06, Martin: signing out left things behind). This
+  // origin only holds Averages.io's; the front door's Clear-Site-Data then wipes the rest (worker/index.js).
+  void OUR_STORAGE_KEY;
   for (const store of [window.localStorage, window.sessionStorage]) {
     try {
-      const keys: string[] = [];
-      for (let i = 0; i < store.length; i++) {
-        const key = store.key(i);
-        if (key && OUR_STORAGE_KEY.test(key)) keys.push(key);
-      }
-      keys.forEach((key) => store.removeItem(key));
+      store.clear();
     } catch {
       /* storage blocked: nothing was saved there either */
     }
@@ -369,6 +367,18 @@ function forgetEverythingOnThisDevice(): void {
 
 /** The app's own cookie (worker/index.js's loop guard), the only one page code can reach. */
 function clearAppCookies(): void {
+  // every cookie a page can see on this site (2026-11-06), on this host and on .averages.io
+  try {
+    const host = window.location.hostname, parent = host.split(".").slice(-2).join(".");
+    document.cookie.split(";").map((c) => c.split("=")[0].trim()).filter(Boolean).forEach((name) => {
+      for (const domain of ["", `; Domain=${host}`, `; Domain=.${parent}`]) {
+        document.cookie = `${name}=; Path=/; Max-Age=0${domain}; SameSite=Lax`;
+        document.cookie = `${name}=; Path=/; Max-Age=0${domain}; Secure; SameSite=Lax`;
+      }
+    });
+  } catch {
+    /* nothing to clear */
+  }
   try {
     // With and without Secure: a page on plain http (local testing) can't set
     // a Secure cookie, even an expired one.

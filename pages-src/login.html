@@ -578,6 +578,21 @@
     box-shadow: 0 1px 2px rgba(20, 21, 31, 0.06), inset 0 0 0 1px var(--line);
   }
   .school-results:empty { display: none; }
+  /* The results and the "no match" line drop down over the page instead of pushing it (2026-11-06, Martin: clicking
+     the search box shifted the whole page; the card is centered, so anything that grew it moved everything). */
+  .school-results, .school-hint { position: absolute; left: 0; right: 0; top: 100%; z-index: 5; }
+  .school-results { box-shadow: 0 18px 40px -12px rgba(20, 21, 31, 0.35), inset 0 0 0 1px var(--line); }
+  .school-hint { margin: 8px 0 0; padding: 12px 16px; border-radius: 14px; background: #ffffff; box-shadow: 0 18px 40px -12px rgba(20, 21, 31, 0.3), inset 0 0 0 1px var(--line); }
+  /* A school picked: it's shown as the choice, with Change; the search box comes back only to change it (2026-11-06,
+     Martin: with a school selected, an empty search box and a card under it was confusing). */
+  .lms-body.has-pick:not(.changing) .school-search { display: none; }
+  .lms-body.has-pick:not(.changing) .school-pick { margin-top: 0; }
+  .school-pick .pick-change { margin-left: auto; flex: none; border: 0; padding: 8px 14px; border-radius: 12px; background: #eef0f8; color: var(--blue); font: inherit; font-size: 0.92rem; font-weight: 800; cursor: pointer; }
+  .school-pick .pick-change:hover { background: #e2e5f3; }
+  .school-pick .pick-change:focus-visible { outline: none; box-shadow: 0 0 0 4px var(--ring); }
+  .school-pick.empty .pick-change, .lms-body.changing .pick-change { display: none; }
+  .pick-label { margin: 0 4px 8px; font-size: 0.85rem; font-weight: 800; color: var(--ink-muted); }
+  .lms-body:not(.has-pick) .pick-label, .lms-body.changing .pick-label { display: none; }
   .school-option {
     position: relative;
     display: flex;
@@ -821,9 +836,11 @@
               <ul class="school-results" id="schoolResults" role="listbox" aria-label="Schools"></ul>
               <p class="school-hint" id="schoolHint" role="status"></p>
             </div>
+            <p class="pick-label" id="pickLabel">Your school</p>
             <div class="school-pick empty" id="schoolPick">
               <span class="pin" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none"><path d="M2.5 8.5L10 3.5l7.5 5M4.5 8v8.5h11V8M8.5 16.5v-4h3v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="butt" stroke-linejoin="miter"/></svg></span>
               <span class="t"><span class="pick-name" id="pickName">Pick your school</span><span class="pick-domain" id="pickDomain">Search for it to get started.</span></span>
+              <button class="pick-change" type="button" id="pickChange">Change</button>
             </div>
             <div class="lms-finish">
               <div class="age-row"><label class="age-check"><input type="checkbox" data-age> I am 13+</label><button class="age-why" type="button" aria-expanded="false" data-age-why>Why?</button></div>
@@ -956,7 +973,7 @@
       currentRoute = SCREENS[route] ? route : 'choose';
       updateSteps();
       if (focus) {
-        const target = route === 'schoology' ? document.getElementById('schoolSearch')
+        const target = route === 'schoology' ? (picked ? document.getElementById('ssoBtn') : document.getElementById('schoolSearch'))
           : document.querySelector('#' + id + ' .lms-title');
         target && target.focus({ preventScroll: true });
       }
@@ -1058,8 +1075,11 @@
       const el = document.getElementById('schoolOpt' + active);
       el && el.scrollIntoView({ block: 'nearest' });
     }
+    const lmsBody = pickEl.closest('.lms-body');
     function pick(school, remember) {
       picked = school;
+      lmsBody.classList.toggle('has-pick', !!school);
+      if (school) lmsBody.classList.remove('changing');
       pickEl.classList.toggle('empty', !school);
       pickName.textContent = school ? (school.custom ? 'Your school' : school.name) : 'Pick your school';
       pickEl.setAttribute('aria-label', school ? `Signing in to ${school.domain}` : 'No school picked yet');
@@ -1079,6 +1099,16 @@
       }
       resultsEl.querySelectorAll('.school-option').forEach((el, i) => el.setAttribute('aria-selected', school && options[i] && options[i].domain === school.domain ? 'true' : 'false'));
     }
+    // Change: the search box again, the current school still shown under it until another is picked
+    document.getElementById('pickChange').addEventListener('click', () => {
+      lmsBody.classList.add('changing'); searchInput.value = ''; renderResults(); searchInput.focus();
+    });
+    // the dropdown closes when you click elsewhere (it sits over the page now); the school you had stays
+    document.addEventListener('pointerdown', e => {
+      if (e.target.closest && e.target.closest('.school-search')) return;
+      if (resultsEl.innerHTML || hintEl.textContent) { resultsEl.innerHTML = ''; hintEl.textContent = ''; options = []; active = -1; searchInput.setAttribute('aria-expanded', 'false'); }
+      if (picked && lmsBody.classList.contains('changing') && !(e.target.closest && e.target.closest('.school-pick'))) lmsBody.classList.remove('changing');
+    });
     searchInput.addEventListener('input', renderResults);
     searchInput.addEventListener('focus', () => { if (!options.length) renderResults(); });
     searchInput.addEventListener('keydown', e => {
@@ -1086,6 +1116,7 @@
       else if (e.key === 'ArrowUp') { e.preventDefault(); moveActive(-1); }
       else if (e.key === 'Enter' && active >= 0) { e.preventDefault(); pick(options[active], true); ssoBtn.focus(); }
       else if (e.key === 'Escape' && searchInput.value) { e.preventDefault(); searchInput.value = ''; renderResults(); }
+      else if (e.key === 'Escape' && picked) { e.preventDefault(); lmsBody.classList.remove('changing'); document.getElementById('pickChange').focus(); }
     });
     resultsEl.addEventListener('click', e => {
       const li = e.target.closest('.school-option');

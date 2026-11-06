@@ -439,9 +439,9 @@ await test("signOut: extras, cloud (incl. OneDrive picks) and push notes gone; p
   await signOut();
   assert.deepEqual(extrasKeys(), []);
   for (const k of ["averages_push_endpoint", "averages_push_touched", "averages_push_pending_delete", "averages_onedrive_picked", "averages_cloud_accounts"]) assert.equal(local.getItem(k), null, k);
-  assert.equal(local.getItem("schoolagy_dark_mode"), "1", "the theme stays");
+  assert.equal(local.getItem("schoolagy_dark_mode"), null, "everything goes, the theme too (2026-11-06)");
   assert.equal(unsubscribed, 1);
-  assert.ok(calls.some((c) => c.path === "/auth/session" && c.init.method === "DELETE"));
+  assert.ok(calls.some((c) => /^\/auth\/session(\?|$)/.test(c.path) && c.init.method === "DELETE"));   // ?forget=1 since 2026-10-26
 });
 
 await test("signOut uses AveragesPush.forgetLocal() when it's loaded", async () => {

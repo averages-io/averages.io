@@ -579,6 +579,8 @@ const SCHOOLOGY_SIGNIN_ERRORS: Record<string, string> = {
     // Back from Schoology with a problem: say what it was on the Schoology
     // screen, and drop it from the address so a reload doesn't repeat it.
     const params = new URLSearchParams(window.location.search);
+    // just signed out (the wipe already happened, worker/index.js): drop it from the address
+    if (params.has("signedout")) { params.delete("signedout"); const rest = params.toString(); try { history.replaceState(history.state, "", window.location.pathname + (rest ? "?" + rest : "") + window.location.hash); } catch {} }
     const signinError = params.get("signin_error");
     const backFromSchoology = params.get("signin") === "schoology";
     if (signinError) {

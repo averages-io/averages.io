@@ -35,7 +35,7 @@ const BOUNCE_COOKIE = "averages_bounced";
 const BOUNCE_SECONDS = 15;
 
 /** Login-page addresses that carry something to show (a Google outcome, the hidden key form): never skipped. */
-const KEEP_PARAMS = ["google", "keys", "demo"];
+const KEEP_PARAMS = ["google", "keys", "demo", "signedout"];
 
 /** @param {string | null} header @param {string} name */
 export function hasCookie(header, name) {
@@ -65,6 +65,18 @@ export function frontDoor(request) {
 export default {
   /** @param {Request} request @param {{ ASSETS: { fetch: (r: Request) => Promise<Response> } }} env */
   async fetch(request, env) {
+    // Just signed out (2026-11-06, Martin: signing out left session storage, local storage and cookies behind):
+    // /signout comes here as "/?signedout=1", and the login page is sent with Clear-Site-Data, so the browser
+    // itself wipes everything app.averages.io kept (both storages, IndexedDB, the service worker) and every
+    // averages.io cookie, the API's sign-in included. Nothing a page script could miss.
+    const url = new URL(request.url);
+    if (request.method === "GET" && url.pathname === "/" && url.searchParams.has("signedout")) {
+      const page = await env.ASSETS.fetch(new Request(new URL("/", url).toString(), { headers: request.headers }));
+      const res = new Response(page.body, page);
+      res.headers.set("Clear-Site-Data", '"cookies", "storage"');
+      res.headers.set("Cache-Control", "no-store");
+      return res;
+    }
     const to = frontDoor(request);
     if (to) {
       return new Response(null, {

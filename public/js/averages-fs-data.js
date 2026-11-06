@@ -830,6 +830,22 @@
       return m < 1 ? 'Synced just now' : m < 60 ? 'Synced ' + m + ' min ago' : 'Synced ' + Math.round(m / 60) + ' h ago';
     },
     signOut: function () { window.location.href = '/signout'; },
+    /** "Are you sure?" first (2026-11-06, Martin: the profile menu signed out straight away). */
+    confirmSignOut: function () {
+      if (document.getElementById('fsSignOut')) return;
+      var from = document.activeElement, w = document.createElement('div');
+      w.id = 'fsSignOut';
+      w.setAttribute('style', 'position:fixed;inset:0;z-index:2147483000;background:var(--scrim,rgba(10,11,18,.45));display:grid;place-items:center;padding:16px');
+      w.innerHTML = '<div role="alertdialog" aria-modal="true" aria-labelledby="fsSoT" aria-describedby="fsSoD" style="width:min(380px,100%);box-sizing:border-box;padding:24px;border-radius:20px;background:var(--field,#fff);color:var(--ink,#14151f);box-shadow:0 24px 60px -20px rgba(0,0,0,.5)">'
+        + '<h2 id="fsSoT" style="margin:0 0 6px;font-size:20px;font-weight:800">Sign out of Averages.io?</h2>'
+        + '<p id="fsSoD" style="margin:0 0 20px;font-size:14px;font-weight:600;line-height:1.45;color:var(--muted,#5a5c70)">This clears everything Averages.io saved on this device. You can sign back in with Schoology any time.</p>'
+        + '<div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" data-so="no">Cancel</button><button class="btn primary" data-so="yes">Sign out</button></div></div>';
+      var done = function (yes) { document.removeEventListener('keydown', key, true); w.remove(); if (yes) FSX.signOut(); else if (from && from.isConnected) from.focus({ preventScroll: true }); };
+      var key = function (e) { if (e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); done(false); } };
+      w.addEventListener('click', function (e) { var b = e.target.closest('[data-so]'); if (e.target === w || (b && b.dataset.so === 'no')) done(false); else if (b) done(true); });
+      document.addEventListener('keydown', key, true);
+      document.body.appendChild(w); w.querySelector('[data-so="yes"]').focus();
+    },
     /** Notifications already opened (the Windowed bell's list, averages_seen). kind: 'u' update, 'g' grade, 'm' message. */
     /** The student's course order (shared with Windowed): ids, or [] for the school's. set() saves it for both looks. */
     courseOrder: {
