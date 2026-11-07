@@ -3079,6 +3079,9 @@
   .fl-folders { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; }
   .fl-fold { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 12px 12px; border-radius: 14px; background: var(--panel); text-align: left; color: var(--ink); transition: background-color .15s ease; }
   .fl-fold:hover { background: var(--inner); }
+  .fl-crumb { border: 0; padding: 0; background: none; color: inherit; font: inherit; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+  .fl-fold[data-cvfat] .fl-ftile svg { transform: scaleX(-1); width: 18px; height: 18px; }
+  .fl-fold[data-cvfat] .fl-ftile { display: grid; place-items: center; background: var(--inner); }
   .fl-fold .badge, .fl-fold .fl-ftile { width: 36px; height: 36px; border-radius: 11px; flex: none; }
   .fl-fold .badge svg { width: 22px; height: 22px; }
   .fl-ftile { display: grid; place-items: center; background: color-mix(in srgb, #e9a019 18%, var(--field)); }
@@ -4435,15 +4438,39 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     $('flSide').innerHTML = SB.order.filter(k => !SB.hidden.has(k)).map(k => `<div class="fl-sg" data-sg="${k}" aria-label="${SB_NAME[k]}">${G[k]}</div>`).join('');
     $('flSideLbl').textContent = placeName(FL.place) + (FL.type ? ' · ' + TYPES.find(t => t[0] === FL.type)[1] : '') + (FL.when ? ' · ' + WHENS.find(w => w[0] === FL.when)[1] : '');
   }
+  // ---------- Canva folders (GET /canva/folders/:id/items, "root" is the top of Projects), as in Windowed ----------
+  // Picking Canva shows its folders above the designs; opening one shows what's in it. Read-only here.
+  const CVF = { on: false, path: [{ id: 'root', name: 'Canva' }], items: [], st: '', n: 0 };
+  const cvfHere = () => CVF.path[CVF.path.length - 1];
+  function cvfLoad() {
+    const here = cvfHere(), my = ++CVF.n; CVF.st = 'loading'; CVF.items = [];
+    const page = (cont, got) => FSX.api(`/canva/folders/${encodeURIComponent(here.id)}/items${cont ? '?continuation=' + encodeURIComponent(cont) : ''}`).then(j => {
+      const all = got.concat((j && Array.isArray(j.items) ? j.items : []).filter(x => x && (x.type === 'folder' || x.type === 'design') && /^[A-Za-z0-9_-]{1,50}$/.test(String(x.id))));
+      return j && typeof j.continuation === 'string' && all.length < 500 ? page(j.continuation, all) : all;
+    });
+    page('', []).then(items => {
+      if (my !== CVF.n) return;
+      // designs in a folder that aren't in the designs list yet go in, like the rest of your Canva designs
+      items.filter(x => x.type === 'design' && !FILES.some(f => f.id === 'canva:' + x.id)).forEach(x => FILES.push(FF('canva:' + x.id, String(x.name || 'Untitled design').slice(0, 200), APP_CLASS, 'design', 'canva', 'You', '', x.updatedAt ? (NOW - x.updatedAt) / 6e4 : 1e9, 'Design', { app: APP_NAME.design, item: { id: x.id, designId: x.id, name: x.name, kind: 'design', at: x.updatedAt || 0, thumb: '' } })));
+      CVF.items = items; CVF.st = 'ok'; flRender(true);
+    }, e => { if (my !== CVF.n) return; CVF.st = 'failed'; if (e && /reconnect/.test(String(e.code || e.error || ''))) CVF.on = false; flRender(false); });
+  }
+  const cvfOn = () => FL.place === 'canva' && CVF.on && LINKED.has('canva');
+  const cvfInside = () => cvfOn() && CVF.path.length > 1 && !FL.q;
+  function cvfGo(i, folder) {
+    if (folder) CVF.path.push({ id: folder.id, name: folder.name || 'Untitled folder' }); else CVF.path = CVF.path.slice(0, i + 1);
+    cvfLoad(); flRender(true);
+  }
   function flAll(anim) {
-    const list = sorted(FILES.filter(f => matches(f)));
-    $('flAllT').textContent = FL.q && FL.place === 'all' ? 'Results' : placeName(FL.place);
+    let list = sorted(FILES.filter(f => matches(f)));
+    if (cvfInside()) { const ids = new Set(CVF.items.filter(x => x.type === 'design').map(x => 'canva:' + x.id)); list = list.filter(f => ids.has(f.id)); }
+    $('flAllT').textContent = FL.q && FL.place === 'all' ? 'Results' : cvfInside() ? cvfHere().name : placeName(FL.place);
     const extra = [FL.place.startsWith('t:') && `${C[tFolder(FL.place.slice(2))[1]].name} · ${C[tFolder(FL.place.slice(2))[1]].teacher}`, FL.type && TYPES.find(t => t[0] === FL.type)[1], FL.when && WHENS.find(w => w[0] === FL.when)[1]].filter(Boolean);
     $('flCount').innerHTML = `${list.length} ${list.length === 1 ? 'file' : 'files'}${extra.length ? ' · ' + esc(extra.join(' · ')) : ''}`;
     const app = SOURCES[FL.place] ? FL.place : '', st = app && APPLOAD[app];
     $('flAll').innerHTML = st === 'loading' ? `<div class="fl-none"><b>Loading your ${esc(SOURCES[app].name)}…</b>From your own sign-in. Nothing is copied.</div>`
       : st === 'connect' || st === 'failed' ? `<div class="fl-none"><b>${st === 'connect' ? `Connect ${esc(SOURCES[app].name)}` : `Couldn't load ${esc(SOURCES[app].name)}`}</b><button class="btn sm primary" data-flapp="${app}">${st === 'connect' ? 'Connect' : 'Try again'}</button></div>`
-      : !list.length ? `<div class="fl-none"><b>${FL.q ? `Nothing matches "${esc(FL.q)}"` : 'No files here'}</b>${FL.q ? `Try a different word.<br><button class="btn sm" data-flclear>Clear search</button>` : FL.place.startsWith('f:') ? 'Open a file and pick this folder to put it here.' : 'Files show up here as they\'re posted.'}</div>`
+      : !list.length ? `<div class="fl-none"><b>${FL.q ? `Nothing matches "${esc(FL.q)}"` : 'No files here'}</b>${FL.q ? `Try a different word.<br><button class="btn sm" data-flclear>Clear search</button>` : FL.place.startsWith('f:') ? 'Open a file and pick this folder to put it here.' : cvfInside() ? (CVF.st === 'loading' ? 'Getting this folder from Canva…' : 'No designs in this folder.') : 'Files show up here as they\'re posted.'}</div>`
       : FL.view === 'list' ? `<div class="fl-list"><div class="fl-lh"><span>Name</span><span>Class</span><span>From</span><span>Size</span></div>${list.map(rowHTML).join('')}</div>` : `<div class="fl-grid">${list.map(cardHTML).join('')}</div>`;
     if (anim && !calm()) $('flAll').querySelectorAll('.fl-card, .fl-row, .fl-none').forEach((el, i) => el.animate && el.animate([{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: 320, delay: Math.min(i * 22, 300), easing: 'cubic-bezier(.2, .8, .2, 1)', fill: 'backwards' }));
   }
@@ -4461,6 +4488,16 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     next.forEach(c => { const a = was.get(c), b = c.getBoundingClientRect(), dx = a.left - b.left, dy = a.top - b.top; if (dx || dy) c.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'none' }], { duration: 360, easing: 'cubic-bezier(.2, .8, .2, 1)' }); });
   }
   function flFolders() {
+    if (cvfOn()) {
+      if (!CVF.st) cvfLoad();
+      const fs = CVF.items.filter(x => x.type === 'folder');
+      $('flFoldSub').innerHTML = CVF.path.map((p, i) => i === CVF.path.length - 1 ? `<b>${esc(p.name)}</b>` : `<button class="fl-crumb" data-cvfat="${i}">${esc(p.name)}</button>`).join(' › ');
+      $('flFolders').innerHTML = (CVF.path.length > 1 ? `<div class="fl-fold" role="button" tabindex="0" data-cvfat="${CVF.path.length - 2}"><span class="fl-ftile" aria-hidden="true">${ico('chev-r')}</span><span class="tx"><b>Back</b><small>To ${esc(CVF.path[CVF.path.length - 2].name)}</small></span></div>` : '')
+        + (CVF.st === 'loading' && !fs.length ? `<div class="fl-fold" aria-busy="true"><span class="tx"><b>Getting your Canva folders…</b></span></div>` : '')
+        + (CVF.st === 'failed' ? `<div class="fl-fold" role="button" tabindex="0" data-cvfretry><span class="tx"><b>Couldn't get your Canva folders</b><small>Try again</small></span></div>` : '')
+        + fs.map(x => `<div class="fl-fold" role="button" tabindex="0" data-cvf="${esc(x.id)}"><span class="fl-ftile" aria-hidden="true">${folderIcon('cv:' + x.id)}</span><span class="tx"><b>${esc(x.name || 'Untitled folder')}</b><small>Canva folder</small></span></div>`).join('');
+      return $('flFolders').children.length;
+    }
     const cls = FL.place.startsWith('c:') ? FL.place.slice(2) : '', n = fn => FILES.filter(fn).length;
     const tf = T_FOLDERS.filter(([, c]) => !cls || c === cls).sort((a, b) => CLASSES.findIndex(c => c.id === a[1]) - CLASSES.findIndex(c => c.id === b[1]));
     const mine = cls ? [] : MY_FOLDERS, nf = k => `${k} ${k === 1 ? 'file' : 'files'}`;
@@ -4471,7 +4508,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     return tf.length + mine.length;
   }
   function flSections(anim) {
-    const f = filtering(), showF = !FL.q && (FL.place === 'all' || FL.place.startsWith('c:')) && flFolders() > 0;
+    const f = filtering(), showF = !FL.q && (FL.place === 'all' || FL.place.startsWith('c:') || cvfOn()) && flFolders() > 0;
     [[$('flFoldSec'), !showF]].forEach(([s, hide]) => { if (s.hidden === hide) return; s.hidden = hide; if (!hide && anim && !calm() && s.animate) s.animate([{ opacity: 0, transform: 'translateY(-6px)' }, { opacity: 1, transform: 'none' }], { duration: 280, easing: 'cubic-bezier(.2, .8, .2, 1)' }); });
     [$('flRecentSec')].forEach(s => { if (s.hidden === f) return; s.hidden = f; if (!f && anim && !calm() && s.animate) s.animate([{ opacity: 0, transform: 'translateY(-6px)' }, { opacity: 1, transform: 'none' }], { duration: 280, easing: 'cubic-bezier(.2, .8, .2, 1)' }); });
   }
@@ -4516,6 +4553,9 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       const name = placeName(p); st.setAttribute('aria-pressed', on); st.setAttribute('aria-label', `${on ? 'Unstar' : 'Star'} ${name}`); st.title = on ? 'Unstar' : 'Star';
       if (on && !calm()) { st.classList.remove('pop'); void st.offsetWidth; st.classList.add('pop'); }
       flSide(); flFoldOrder(); toast(on ? `Starred ${name}. It's in the sidebar now.` : `Took the star off ${name}.`); return; }
+    const cf = e.target.closest('[data-cvf]'); if (cf) { const x = CVF.items.find(i => i.type === 'folder' && i.id === cf.dataset.cvf); if (x) cvfGo(0, x); return; }
+    const ca = e.target.closest('[data-cvfat]'); if (ca) { cvfGo(+ca.dataset.cvfat); return; }
+    if (e.target.closest('[data-cvfretry]')) { cvfLoad(); flRender(false); return; }
     const pl = e.target.closest('[data-flplace]');
     if (pl) { if (FL.place === pl.dataset.flplace) return; FL.place = pl.dataset.flplace; if (SOURCES[FL.place] && !APPLOAD[FL.place]) appLoad(FL.place); flPicked(); return; }
     const ap = e.target.closest('[data-flapp]'); if (ap) { const k = ap.dataset.flapp; if (APPLOAD[k] === 'connect') { FST.connect(k).then(() => { APPLOAD[k] = ''; appLoad(k); }, er => toast(FST.message(er))); } else { APPLOAD[k] = ''; appLoad(k); } return; }
@@ -4538,7 +4578,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     }
     if (e.key === 'ArrowDown' && e.target.closest('.fl-ddb')) { e.preventDefault(); ddShow(e.target.closest('.fl-dd')); return; }
     const g = e.target.closest && e.target.closest('[data-flgo]'); if (g && e.target === g && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); flOpen(g.dataset.flgo); }
-    const fo = e.target.closest && e.target.closest('.fl-fold[data-flplace]'); if (fo && e.target === fo && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); fo.click(); }
+    const fo = e.target.closest && e.target.closest('.fl-fold[data-flplace], .fl-fold[data-cvf], .fl-fold[data-cvfat], .fl-fold[data-cvfretry]'); if (fo && e.target === fo && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); fo.click(); }
   }, true);
   document.addEventListener('pointerdown', e => { if (ddOpen && !ddOpen.contains(e.target)) ddHide(false); });
   document.addEventListener('submit', e => {
@@ -5211,7 +5251,7 @@ window.AveragesHelp = {
   flMeta(); flRecent(); flViewSync(); flRender(false); ntInit();
   // which apps are connected: Google Drive and OneDrive from this browser's sign-ins, Canva from our API
   FST.ready().then(() => { ['drive', 'onedrive'].forEach(k => { if (FST.connected(k)) { LINKED.add(k); appLoad(k, true); } }); flMeta(); flSide(); }).catch(() => {});
-  FSX.api('/canva/status').then(j => { if (j && j.connected) { LINKED.add('canva'); appLoad('canva', true); flMeta(); flSide(); } }).catch(() => {});
+  FSX.api('/canva/status').then(j => { if (j && j.connected) { CVF.on = j.folders === 'ready'; LINKED.add('canva'); appLoad('canva', true); flMeta(); flSide(); if (FL.place === 'canva') flRender(false); } }).catch(() => {});
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { inkMemo.clear(); shCenter(); });
 
   // search anything: this page's files
