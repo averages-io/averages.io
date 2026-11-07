@@ -4461,7 +4461,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   function pkLoad(k) {
     if (!pk || pk.k !== k) return;
     pk.state = 'loading'; pkDraw();
-    FST.list(k).then(items => { if (!pk || pk.k !== k) return; TREES[k].items = items; pk.trail = [TREES[k]]; pk.state = 'ok'; pkDraw(); })
+    FST.list(k, { folders: true }).then(items => { if (!pk || pk.k !== k) return; TREES[k].items = items; pk.trail = [TREES[k]]; pk.state = 'ok'; pkDraw(); })
       .catch(err => { if (!pk || pk.k !== k) return; pk.state = err && err.code === 'not_connected' ? 'connect' : 'error'; pk.msg = FST.message(err); pkDraw(); });
   }
   // the picker is on top: Escape and Tab belong to it while it's open

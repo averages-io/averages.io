@@ -3079,6 +3079,9 @@
   .fl-folders { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; }
   .fl-fold { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 12px 12px; border-radius: 14px; background: var(--panel); text-align: left; color: var(--ink); transition: background-color .15s ease; }
   .fl-fold:hover { background: var(--inner); }
+  .fl-ftile.cv { background: color-mix(in srgb, #7d2ae8 16%, var(--field)); }
+  .fl-ftile.cv .badge { display: grid; place-items: center; background: var(--panel); border-radius: 50%; }
+  .fl-ftile.cv .badge .ti-mark { width: 18px; height: 18px; box-shadow: none; }
   .fl-crumb { border: 0; padding: 0; background: none; color: inherit; font: inherit; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
   .fl-fold[data-cvfat] .fl-ftile svg { transform: scaleX(-1); width: 18px; height: 18px; }
   .fl-fold[data-cvfat] .fl-ftile { display: grid; place-items: center; background: var(--inner); }
@@ -4440,7 +4443,15 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   }
   // ---------- Canva folders (GET /canva/folders/:id/items, "root" is the top of Projects), as in Windowed ----------
   // Picking Canva shows its folders above the designs; opening one shows what's in it. Read-only here.
-  const CVF = { on: false, path: [{ id: 'root', name: 'Canva' }], items: [], st: '', n: 0 };
+  const CVF = { on: false, path: [{ id: 'root', name: 'Canva' }], items: [], st: '', n: 0, root: [], rootSt: '' };
+  // All files' Folders section shows your top Canva folders too: loaded once, on their own
+  function cvfRoot() {
+    if (CVF.rootSt) return; CVF.rootSt = 'loading';
+    FSX.api('/canva/folders/root/items').then(j => {
+      CVF.root = (j && Array.isArray(j.items) ? j.items : []).filter(x => x && x.type === 'folder' && /^[A-Za-z0-9_-]{1,50}$/.test(String(x.id))); CVF.rootSt = 'ok';
+      if (FL.place === 'all' && CVF.root.length) flRender(false);
+    }, () => { CVF.rootSt = 'failed'; });
+  }
   const cvfHere = () => CVF.path[CVF.path.length - 1];
   function cvfLoad() {
     const here = cvfHere(), my = ++CVF.n; CVF.st = 'loading'; CVF.items = [];
@@ -4452,7 +4463,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       if (my !== CVF.n) return;
       // designs in a folder that aren't in the designs list yet go in, like the rest of your Canva designs
       items.filter(x => x.type === 'design' && !FILES.some(f => f.id === 'canva:' + x.id)).forEach(x => FILES.push(FF('canva:' + x.id, String(x.name || 'Untitled design').slice(0, 200), APP_CLASS, 'design', 'canva', 'You', '', x.updatedAt ? (NOW - x.updatedAt) / 6e4 : 1e9, 'Design', { app: APP_NAME.design, item: { id: x.id, designId: x.id, name: x.name, kind: 'design', at: x.updatedAt || 0, thumb: '' } })));
-      CVF.items = items; CVF.st = 'ok'; flRender(true);
+      CVF.items = items; CVF.st = 'ok'; if (here.id === 'root') { CVF.root = items.filter(x => x.type === 'folder'); CVF.rootSt = 'ok'; } flRender(true);
     }, e => { if (my !== CVF.n) return; CVF.st = 'failed'; if (e && /reconnect/.test(String(e.code || e.error || ''))) CVF.on = false; flRender(false); });
   }
   const cvfOn = () => FL.place === 'canva' && CVF.on && LINKED.has('canva');
@@ -4501,11 +4512,16 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     const cls = FL.place.startsWith('c:') ? FL.place.slice(2) : '', n = fn => FILES.filter(fn).length;
     const tf = T_FOLDERS.filter(([, c]) => !cls || c === cls).sort((a, b) => CLASSES.findIndex(c => c.id === a[1]) - CLASSES.findIndex(c => c.id === b[1]));
     const mine = cls ? [] : MY_FOLDERS, nf = k => `${k} ${k === 1 ? 'file' : 'files'}`;
-    $('flFoldSub').textContent = tf.length && mine.length ? 'Your classes\' folders, and yours on this device' : tf.length ? 'Your classes\' folders' : 'Yours, on this device';
+    if (!cls && CVF.on && LINKED.has('canva')) cvfRoot();
+    const cv = !cls && CVF.on && LINKED.has('canva') ? CVF.root : [];
+    { const parts = [tf.length && 'your classes\'', cv.length && 'your Canva'].filter(Boolean), t = parts.join(' and ');
+      $('flFoldSub').textContent = parts.length ? t.charAt(0).toUpperCase() + t.slice(1) + ' folders' + (mine.length ? ', and yours on this device' : '') : 'Yours, on this device'; }
     $('flFolders').innerHTML = flFoldSort([...tf.map(([id, c, name]) => `<div class="fl-fold" role="button" tabindex="0" data-flplace="t:${id}" style="--c:${C[c].color}"><span class="fl-ftile tcls" aria-hidden="true">${folderIcon('t:' + id)}${badge(C[c])}</span><span class="tx"><b>${esc(name)}</b><small>${nf(n(f => f.tf === id))} · ${esc(cls ? C[c].teacher : C[c].name)}</small></span>${starBtn('t:' + id, name)}</div>`),
+      ...cv.map(x => `<div class="fl-fold" role="button" tabindex="0" data-cvfroot="${esc(x.id)}"><span class="fl-ftile cv" aria-hidden="true">${folderIcon('cv:' + x.id)}<span class="badge">${srcMark('canva')}</span></span><span class="tx"><b>${esc(x.name || 'Untitled folder')}</b><small>Canva</small></span></div>`),
       ...mine.map(([id, name]) => `<div class="fl-fold" role="button" tabindex="0" data-flplace="f:${id}"><span class="fl-ftile" aria-hidden="true">${folderIcon('f:' + id)}</span><span class="tx"><b>${esc(name)}</b><small>${nf(n(f => f.folder === id))} · Yours</small></span>${starBtn('f:' + id, name)}</div>`)]).join('');
-    [...$('flFolders').children].forEach(c => { const p = c.dataset.flplace, k = tf.findIndex(t => 't:' + t[0] === p); c.dataset.fo = k >= 0 ? k : tf.length + mine.findIndex(m => 'f:' + m[0] === p); });
-    return tf.length + mine.length;
+    [...$('flFolders').children].forEach(c => { const p = c.dataset.flplace, k = tf.findIndex(t => 't:' + t[0] === p), v = cv.findIndex(x => x.id === c.dataset.cvfroot);
+      c.dataset.fo = k >= 0 ? k : v >= 0 ? tf.length + v : tf.length + cv.length + mine.findIndex(m => 'f:' + m[0] === p); });
+    return tf.length + cv.length + mine.length;
   }
   function flSections(anim) {
     const f = filtering(), showF = !FL.q && (FL.place === 'all' || FL.place.startsWith('c:') || cvfOn()) && flFolders() > 0;
@@ -4553,6 +4569,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       const name = placeName(p); st.setAttribute('aria-pressed', on); st.setAttribute('aria-label', `${on ? 'Unstar' : 'Star'} ${name}`); st.title = on ? 'Unstar' : 'Star';
       if (on && !calm()) { st.classList.remove('pop'); void st.offsetWidth; st.classList.add('pop'); }
       flSide(); flFoldOrder(); toast(on ? `Starred ${name}. It's in the sidebar now.` : `Took the star off ${name}.`); return; }
+    const cr = e.target.closest('[data-cvfroot]'); if (cr) { const x = CVF.root.find(i => i.id === cr.dataset.cvfroot); if (x) { FL.place = 'canva'; CVF.path = [CVF.path[0], { id: x.id, name: x.name || 'Untitled folder' }]; if (!APPLOAD.canva) appLoad('canva'); cvfLoad(); flPicked(); } return; }
     const cf = e.target.closest('[data-cvf]'); if (cf) { const x = CVF.items.find(i => i.type === 'folder' && i.id === cf.dataset.cvf); if (x) cvfGo(0, x); return; }
     const ca = e.target.closest('[data-cvfat]'); if (ca) { cvfGo(+ca.dataset.cvfat); return; }
     if (e.target.closest('[data-cvfretry]')) { cvfLoad(); flRender(false); return; }
@@ -4578,7 +4595,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     }
     if (e.key === 'ArrowDown' && e.target.closest('.fl-ddb')) { e.preventDefault(); ddShow(e.target.closest('.fl-dd')); return; }
     const g = e.target.closest && e.target.closest('[data-flgo]'); if (g && e.target === g && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); flOpen(g.dataset.flgo); }
-    const fo = e.target.closest && e.target.closest('.fl-fold[data-flplace], .fl-fold[data-cvf], .fl-fold[data-cvfat], .fl-fold[data-cvfretry]'); if (fo && e.target === fo && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); fo.click(); }
+    const fo = e.target.closest && e.target.closest('.fl-fold[data-flplace], .fl-fold[data-cvf], .fl-fold[data-cvfat], .fl-fold[data-cvfretry], .fl-fold[data-cvfroot]'); if (fo && e.target === fo && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); fo.click(); }
   }, true);
   document.addEventListener('pointerdown', e => { if (ddOpen && !ddOpen.contains(e.target)) ddHide(false); });
   document.addEventListener('submit', e => {

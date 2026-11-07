@@ -3717,6 +3717,22 @@
         if (el) { el.innerHTML = html; el.hidden = !html; }
       }
       let canvaPickItems = [], canvaPickNext = null;
+      // Canva folders (GET /canva/folders/:id/items): the top ones above your designs; open one to pick from inside it
+      let canvaPickFolders = [], canvaPickPath = [], canvaPickInside = null, canvaPickN = 0;
+      const PICK_FOLDER_ICON = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="#7d2ae8" d="M3 7.5A1.5 1.5 0 0 1 4.5 6h4.6l2 2.4h8.4A1.5 1.5 0 0 1 21 9.9v7.6a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5z"/></svg>';
+      const okFolderItem = x => x && (x.type === 'folder' || x.type === 'design') && /^[A-Za-z0-9_-]{1,50}$/.test(String(x.id || ''));
+      async function canvaFolderItems(id) {
+        const res = await fetch(`${averagesApiBase()}/canva/folders/${encodeURIComponent(id)}/items`, { credentials: 'include' });
+        const j = await res.json().catch(() => ({}));
+        if (!res.ok || !Array.isArray(j.items)) throw new Error(j.error || 'status ' + res.status);
+        return j.items.filter(okFolderItem);
+      }
+      async function openCanvaFolder(path) {
+        const my = ++canvaPickN; canvaPickPath = path; canvaPickInside = path.length ? 'loading' : null; renderCanvaPick();
+        if (!path.length) return;
+        try { const items = await canvaFolderItems(path[path.length - 1].id); if (my === canvaPickN) { canvaPickInside = items; renderCanvaPick(); } }
+        catch { if (my === canvaPickN) { canvaPickInside = 'failed'; renderCanvaPick(); } }
+      }
       const httpsUrl = u => /^https:\/\//i.test(String(u || ''));
       const canvaPickHead = `<div class="canva-pick-head"><span>Pick a design. It’s turned in as a PDF, or as a link.</span><button class="material-icon-btn" type="button" data-canva-close aria-label="Close Canva designs">${REMOVE_ICON}</button></div>`;
       function renderCanvaPick() {
@@ -3725,11 +3741,27 @@
         const row = (id, title, meta, thumb) => `<button class="canva-pick-item" type="button" data-pick-design="${escapeHtml(id)}" data-pick-title="${escapeHtml(title)}">`
           + `<span class="canva-pick-thumb">${httpsUrl(thumb) ? `<img src="${escapeHtml(thumb)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : '<span class="canva-mark" aria-hidden="true"></span>'}</span>`
           + `<span class="canva-pick-name">${escapeHtml(title)}</span><span class="canva-pick-meta">${escapeHtml(meta)}</span></button>`;
+        const folderRow = (id, name, meta) => `<button class="canva-pick-item" type="button" data-pick-folder="${escapeHtml(id)}" data-pick-fname="${escapeHtml(name)}"><span class="canva-pick-thumb">${PICK_FOLDER_ICON}</span><span class="canva-pick-name">${escapeHtml(name)}</span><span class="canva-pick-meta">${escapeHtml(meta)}</span></button>`;
+        if (canvaPickPath.length) {
+          const here = canvaPickPath[canvaPickPath.length - 1], up = canvaPickPath.length > 1 ? canvaPickPath[canvaPickPath.length - 2].name : 'Your designs';
+          const items = Array.isArray(canvaPickInside) ? canvaPickInside : [];
+          box.innerHTML = canvaPickHead + '<div class="canva-pick-list">'
+            + `<button class="canva-pick-item" type="button" data-pick-up><span class="canva-pick-thumb" aria-hidden="true">‹</span><span class="canva-pick-name">Back</span><span class="canva-pick-meta">To ${escapeHtml(up)}</span></button>`
+            + `<div class="canva-pick-label">${escapeHtml(here.name)}</div>`
+            + (canvaPickInside === 'loading' ? '<p class="canva-pick-empty">Loading this folder…</p>'
+              : canvaPickInside === 'failed' ? '<p class="canva-pick-empty">Couldn’t load this folder.</p>'
+              : items.length ? items.map(x => x.type === 'folder' ? folderRow(String(x.id), String(x.name || 'Untitled folder'), 'Folder') : row(String(x.id), String(x.name || 'Untitled design'), x.updatedAt ? editedLabel(x.updatedAt) : '', x.thumbnailUrl)).join('')
+              : '<p class="canva-pick-empty">This folder is empty.</p>')
+            + '</div>';
+          return;
+        }
+        const folders = canvaPickFolders.map(x => folderRow(String(x.id), String(x.name || 'Untitled folder'), 'Folder'));
         const draftIds = new Set(canvaDrafts.map(d => d.designId));
         const drafts = canvaDrafts.map(d => row(d.designId, d.name, `Edited ${d.edited}`, ''));
         const designs = canvaPickItems.filter(d => !draftIds.has(String(d.id))).map(d => row(String(d.id), String(d.title || 'Untitled design'), d.updatedAt ? editedLabel(d.updatedAt) : '', d.thumbnailUrl));
         box.innerHTML = canvaPickHead + '<div class="canva-pick-list">'
           + (drafts.length ? '<div class="canva-pick-label">Drafts for this assignment</div>' + drafts.join('') : '')
+          + (folders.length ? '<div class="canva-pick-label">Folders</div>' + folders.join('') : '')
           + (designs.length ? '<div class="canva-pick-label">Your designs</div>' + designs.join('') : '')
           + (!drafts.length && !designs.length ? '<p class="canva-pick-empty">No Canva designs yet.</p>' : '')
           + (canvaPickNext ? '<button class="assign-retry" type="button" data-canva-more>Show more</button>' : '')
@@ -3740,8 +3772,10 @@
         if (!box) return;
         box.hidden = false;
         if (!more) {
-          canvaPickItems = []; canvaPickNext = null;
+          canvaPickItems = []; canvaPickNext = null; canvaPickPath = []; canvaPickInside = null; canvaPickN++;
           box.innerHTML = canvaPickHead + '<p class="canva-pick-empty">Loading your Canva designs…</p>';
+          // the top folders, alongside (no folder permission, or Canva says no: just the designs)
+          canvaFolderItems('root').then(items => { canvaPickFolders = items.filter(x => x.type === 'folder'); if (!canvaPickPath.length && canvaPickItems.length) renderCanvaPick(); }, () => { canvaPickFolders = []; });
         }
         try {
           const res = await fetch(`${averagesApiBase()}/canva/designs${more && canvaPickNext ? '?continuation=' + encodeURIComponent(canvaPickNext) : ''}`, { credentials: 'include' });
@@ -3973,6 +4007,9 @@
         if (t.closest('[data-canva-close]')) { document.getElementById('canvaPick').hidden = true; return; }
         if (t.closest('[data-canva-more]')) { loadCanvaPick(true); return; }
         if (t.closest('[data-canva-retry]')) { loadCanvaPick(false); return; }
+        const pf = t.closest('[data-pick-folder]');
+        if (pf) { openCanvaFolder(canvaPickPath.concat([{ id: pf.dataset.pickFolder, name: pf.dataset.pickFname || 'Untitled folder' }])); return; }
+        if (t.closest('[data-pick-up]')) { openCanvaFolder(canvaPickPath.slice(0, -1)); return; }
         const d = t.closest('[data-pick-design]');
         if (d) {
           const title = (d.dataset.pickTitle || 'Canva design').replace(/\.pdf$/i, '').slice(0, 190) || 'Canva design';

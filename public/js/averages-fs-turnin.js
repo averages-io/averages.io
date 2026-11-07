@@ -32,6 +32,28 @@
   }
   function size(b) { return !b ? '' : b < 1048576 ? Math.max(1, Math.round(b / 1024)) + ' KB' : (b / 1048576).toFixed(1) + ' MB'; }
   function tz() { try { return (window.averagesTimeZone && window.averagesTimeZone()) || Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) { return ''; } }
+  function canvaDesign(id, title, at, thumb) {
+    return { id: String(id), designId: String(id), name: String(title || 'Untitled design').slice(0, 200), kind: 'design', sub: ago(Number(at) || 0) || 'Canva design', at: Number(at) || 0, bytes: 0, url: '', thumb: /^https:\/\//i.test(String(thumb || '')) ? String(thumb) : '' };
+  }
+  // Canva's folders, down to 3 levels and at most 25 folders (Canva lets each student list 100 a minute):
+  // [{ folder: true, id, name, items: [...] }, design, ...] for the folder that id names ("root": the top of Projects).
+  function canvaTree() {
+    var budget = 25;
+    function load(id, depth) {
+      budget--;
+      return get('/canva/folders/' + encodeURIComponent(id) + '/items').then(function (j) {
+        if (!j || j.connected === false || !Array.isArray(j.items)) throw { code: 'canva_folders_off' };
+        var items = j.items.filter(function (x) { return x && /^[A-Za-z0-9_-]{1,50}$/.test(String(x.id || '')) && (x.type === 'folder' || x.type === 'design'); });
+        return Promise.all(items.map(function (x) {
+          if (x.type === 'design') return canvaDesign(x.id, x.name, x.updatedAt, x.thumbnailUrl);
+          var node = { folder: true, id: String(x.id), name: String(x.name || 'Untitled folder').slice(0, 200), items: [] };
+          if (depth >= 3 || budget <= 0) return node;
+          return load(x.id, depth + 1).then(function (sub) { node.items = sub; return node; }, function () { return node; });
+        }));
+      });
+    }
+    return load('root', 1);
+  }
   function get(path) {
     return fetch(API + path, { credentials: 'include', cache: 'no-store' }).then(function (r) {
       if (r.status === 401) { window.location.replace('/'); throw { code: 'signed_out' }; }
@@ -88,11 +110,22 @@
     list: function (src, opts) {
       var quiet = !!(opts && opts.quiet);
       if (src === 'canva') {
-        return get('/canva/designs').then(function (j) {
+        var flat = get('/canva/designs').then(function (j) {
           if (j.connected === false) throw { code: 'canva_not_connected' };
           return (Array.isArray(j.items) ? j.items : []).filter(function (d) { return d && /^[A-Za-z0-9_-]{1,64}$/.test(String(d.id || '')); })
-            .map(function (d) { return { id: String(d.id), designId: String(d.id), name: String(d.title || 'Untitled design').slice(0, 200), kind: 'design', sub: ago(Number(d.updatedAt) || 0) || 'Canva design', at: Number(d.updatedAt) || 0, bytes: 0, url: '', thumb: /^https:\/\//i.test(String(d.thumbnailUrl || '')) ? String(d.thumbnailUrl) : '' }; });
+            .map(function (d) { return canvaDesign(d.id, d.title, d.updatedAt, d.thumbnailUrl); });
         }).catch(function (e) { if (e && (e.code === 'canva_not_connected' || e.code === 'canva_reconnect_needed')) throw { code: 'not_connected' }; throw e; });
+        if (!(opts && opts.folders)) return flat;
+        // For the pickers: Canva's folders as a tree ({ folder: true, name, items }), then every design that isn't in one.
+        // Without folder permission (or if Canva says no) it's the flat list, as before.
+        return flat.then(function (designs) {
+          return canvaTree().then(function (tree) {
+            var inFolders = {};
+            var folders = tree.filter(function (x) { return x.folder; });
+            (function mark(items) { items.forEach(function (x) { if (x.folder) mark(x.items); else inFolders[x.id] = 1; }); })(folders);
+            return folders.concat(designs.filter(function (d) { return !inFolders[d.id]; }));
+          }, function () { return designs; });
+        });
       }
       if (!FST.connected(src)) return Promise.reject({ code: 'not_connected' });
       var c = C();
