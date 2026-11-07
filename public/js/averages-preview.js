@@ -47,6 +47,7 @@
     + '.avp-txt{margin:0;width:min(960px,100%);max-height:100%;overflow:auto;padding:32px;border-radius:8px;background:#fff;color:#14151f;white-space:pre-wrap;overflow-wrap:anywhere;font:13px/1.5 ui-monospace,Menlo,Consolas,monospace}'
     + '.avp-none{display:flex;flex-direction:column;align-items:center;gap:10px;max-width:360px;text-align:center}.avp-none b{font-size:16px;font-weight:900}.avp-none p{margin:0;font-size:14px;font-weight:600;color:rgba(255,255,255,.72)}'
     + '@media (max-width:640px){.avp-top{flex-wrap:wrap;padding:12px}.avp-tx{flex:1 1 calc(100% - 56px)}.avp-lbl{display:none}.avp-stage{padding:0 4px 12px;gap:4px}}'
+    + 'canvas.avp-pg,img.avp-pg{cursor:pointer}'
     + '.potato-mode .avp.in{animation:none}';
   var L = null;
   function top() {
@@ -66,9 +67,9 @@
   function draw(d) {
     var f = L.list[L.at], k = kind(f.name), my = ++L.n;
     var had = document.activeElement && document.activeElement.dataset && document.activeElement.dataset.go;
-    var fig = k === 'image' ? '<img class="avp-pg" src="' + esc(f.url) + '" alt="' + esc(f.name) + '">' : k === 'video' ? '<video class="avp-pg" controls src="' + esc(f.url) + '"></video>'
+    var fig = k === 'image' ? '<img class="avp-pg" src="' + esc(f.url) + '" alt="' + esc(f.name) + '" title="Open in a new tab">' : k === 'video' ? '<video class="avp-pg" controls src="' + esc(f.url) + '"></video>'
       : k === 'audio' ? '<div class="avp-none"><b>' + esc(f.name) + '</b><audio controls src="' + esc(f.url) + '"></audio></div>'
-      : k === 'text' ? '<pre class="avp-txt">Loading…</pre>' : k === 'pdf' ? '<canvas class="avp-pg" role="img"></canvas>'
+      : k === 'text' ? '<pre class="avp-txt">Loading…</pre>' : k === 'pdf' ? '<canvas class="avp-pg" role="img" title="Open in a new tab"></canvas>'
       : '<div class="avp-none"><b>' + esc(f.name) + '</b><p>There\'s no preview for this kind of file. Open it in a new tab, or download it.</p></div>';
     L.el.innerHTML = '<div class="avp-top">' + top() + '</div><div class="avp-stage"><button class="avp-nav" type="button" data-go="-1">' + ico('l') + '</button><figure class="avp-fig" aria-label="Preview of ' + esc(f.name) + '">' + fig
       + '<p class="avp-wait" hidden><span class="avp-spin" aria-hidden="true"></span><span>Getting this file…</span></p></figure><button class="avp-nav" type="button" data-go="1">' + ico('r') + '</button></div>';
@@ -144,7 +145,10 @@
     L = { el: el, from: document.activeElement, list: list, at: Math.max(0, Math.min(list.length - 1, at || 0)), page: 0, pages: {}, n: 0 };
     el.addEventListener('click', function (e) {
       if (e.target.closest('[data-avp="x"]') || e.target === el || e.target.classList.contains('avp-stage') || e.target.classList.contains('avp-fig')) { close(); return; }
-      var g = e.target.closest('[data-go]'); if (g && !g.disabled) go(+g.dataset.go);
+      var g = e.target.closest('[data-go]'); if (g && !g.disabled) { go(+g.dataset.go); return; }
+      // clicking the page itself (a PDF page, a picture, a text file) opens the file in a new browser tab
+      var pg = e.target.closest('canvas.avp-pg, img.avp-pg, .avp-txt');
+      if (pg && L) { var f = L.list[L.at]; if (f && f.url) window.open(f.url, '_blank', 'noopener'); }
     });
     document.addEventListener('keydown', key, true); window.addEventListener('resize', resize);
     draw(0);
