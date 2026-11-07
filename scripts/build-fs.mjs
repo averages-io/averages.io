@@ -1,4 +1,5 @@
 // Builds the Fullscreen pages.
+import * as SHARED from "./signin-shared.mjs";
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
@@ -12,6 +13,9 @@ const JS_FILE = path.resolve(HERE, "../public/js/averages-fs.js");
 const DATA_FILE = path.resolve(HERE, "../public/js/averages-fs-data.js");
 const TURNIN_FILE = path.resolve(HERE, "../public/js/averages-fs-turnin.js");
 const EMAIL_FILE = path.resolve(HERE, "../public/js/averages-email.js");
+const LIVE_FILE = path.resolve(HERE, "../public/js/averages-live.js");
+const GPA_FILE = path.resolve(HERE, "../public/js/averages-gpa.js");
+const PREVIEW_FILE = path.resolve(HERE, "../public/js/averages-preview.js");
 const NOTE_FILE = path.resolve(HERE, "../public/js/averages-note.js");
 const AVATAR_FILE = path.resolve(HERE, "../public/js/averages-avatar.js");
 const SPLASH_FILE = path.resolve(HERE, "../app/lib/splash.ts");
@@ -21,7 +25,9 @@ function splashTag() {
   const js = SPLASH_JS.replace(/try\{var m=\+sessionStorage[\s\S]*?start\(\);\}\)\(\);$/, "})();");
   if (js === SPLASH_JS) throw new Error("splash.ts changed: couldn't take out its first-open start");
   const handoff = "(function(){var t=0;try{t=+sessionStorage.getItem('averages_fs_logo')||0;sessionStorage.removeItem('averages_fs_logo');}catch(e){}" +
-    "if(!t||Date.now()-t>15000||!window.__averagesSplash)return;var S=window.__averagesSplash,ready=false,up=false;S.show(8000);" +
+    // a clean start (nothing loaded in this tab yet): the logo stays up until the page has its data, not a skeleton
+    "if(!window.__averagesSplash)return;if(!t||Date.now()-t>15000){var fresh=false;try{fresh=!sessionStorage.getItem('schoolagy_bundle_cache');}catch(e){}if(!fresh)return;t=Date.now();}" +
+    "var S=window.__averagesSplash,ready=false,up=false;S.show(12000);" +
     "function go(){if(ready&&up)S.hide();}setTimeout(function(){up=true;go();},Math.max(0,1000-(Date.now()-t)));" +
     "window.addEventListener('fs:ready',function(){ready=true;go();});})();";
   return `<style id="avSplash">${SPLASH_CSS}</style>\n<script>${js}${handoff}</script>`;
@@ -255,7 +261,7 @@ function build() {
   fs.rmSync(OLD, { recursive: true, force: true });
   fs.mkdirSync(OLD, { recursive: true });
   const ver = (f) => crypto.createHash("sha256").update(fs.readFileSync(f)).digest("hex").slice(0, 10);
-  const tag = `${SPLASH_TAG}\n<script src="/js/averages-avatar.js?v=${ver(AVATAR_FILE)}"></script>\n<script src="/js/averages-note.js?v=${ver(NOTE_FILE)}"></script>\n<script src="/js/averages-fs.js?v=${ver(JS_FILE)}"></script>\n<script src="/js/averages-fs-data.js?v=${ver(DATA_FILE)}"></script>`;
+  const tag = `${SPLASH_TAG}\n<script src="/js/averages-avatar.js?v=${ver(AVATAR_FILE)}"></script>\n<script src="/js/averages-note.js?v=${ver(NOTE_FILE)}"></script>\n<script src="/js/averages-fs.js?v=${ver(JS_FILE)}"></script>\n<script src="/js/averages-fs-data.js?v=${ver(DATA_FILE)}"></script>\n<script src="/js/averages-live.js?v=${ver(LIVE_FILE)}" defer></script>\n<script src="/js/averages-gpa.js?v=${ver(GPA_FILE)}" defer></script>\n<script src="/js/averages-preview.js?v=${ver(PREVIEW_FILE)}" defer></script>`;
   let n = 0;
   const LIGHT_CSS = [
     ".sum-view{transition:opacity 150ms ease!important}.sum-view.switching{filter:none!important}",
@@ -323,6 +329,7 @@ for(var k in j.ct){var e=d.getElementById(k);if(e){e.textContent=j.ct[k].n;e.hid
 if(j.st>0){var st=j.st,sc=d.getElementById('sideScroll')||s;sc.scrollTop=st;requestAnimationFrame(function(){sc.scrollTop=st})}if(j.hold&&!pin){s.classList.add('hold');var drop=function(ev){var q=s.getBoundingClientRect();if(ev.clientX>q.right||ev.clientX<q.left||ev.clientY<q.top||ev.clientY>q.bottom){s.classList.remove('hold');d.removeEventListener('pointermove',drop)}};d.addEventListener('pointermove',drop)}}}catch(e){}
 requestAnimationFrame(function(){requestAnimationFrame(function(){r.classList.remove('fs-boot')})})})();`;
   for (const file of fs.readdirSync(SRC).filter((f) => f.endsWith(".html")).sort()) {
+    if (file === "signin.html") { buildSignin(); continue; }
     let s = fs.readFileSync(path.join(SRC, file), "utf8");
     const styles = [...s.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/g)].map((m) => m[1]).join("\n");
     // 1. the link to the app, first thing in <head>
@@ -357,6 +364,23 @@ requestAnimationFrame(function(){requestAnimationFrame(function(){r.classList.re
     n++;
   }
   console.log(`  ok  ${n} Fullscreen pages -> public/IS/ (old /fs/ addresses move there)`);
+}
+
+
+// The new sign-in page (/IS/signin, shown at "/" while the app's NEW_SIGNIN_PAGE switch is 1). Signed out, so none of
+// the app's data scripts: just its version line, the theme, the checking logo and the error messages.
+function buildSignin() {
+  let s = fs.readFileSync(path.join(SRC, "signin.html"), "utf8");
+  const styles = [...s.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/g)].map((m) => m[1]).join("\n");
+  const esc = (v) => String(v).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  s = s.replaceAll("__AVERAGES_STAGE__ ", VERSION.stage ? esc(VERSION.stage) + " " : "").replaceAll("__AVERAGES_BASE__", esc(VERSION.base))
+    .replaceAll("__AVERAGES_COMMIT__", esc(VERSION.when)).replaceAll("__AVERAGES_BUILD__", esc(VERSION.sha.slice(0, 7)));
+  s = s.replace("__SIGNIN_ERRORS__", JSON.stringify(SHARED.ERROR_MESSAGES)).replace("__SCHOOLOGY_ERRORS__", JSON.stringify(SHARED.SCHOOLOGY_SIGNIN_ERRORS));
+  const theme = "(function(){try{var v=localStorage.getItem('schoolagy_dark_mode'),d=v==='dark'||(v!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches),r=document.documentElement;r.setAttribute('data-theme',d?'dark':'light');r.style.colorScheme=d?'dark':'light'}catch(e){}})();";
+  s = s.replace(/<head>/, `<head>\n<script>${theme}</script>\n<style>${SHARED.CHECKING_CSS}</style>\n<script>${SHARED.CHECKING_JS}</script>`);
+  s = s.replace(/<\/head>/, `<style id="fsDark">\n${darkCss(styles)}</style>\n</head>`);
+  if (/__AVERAGES_|__SIGNIN_ERRORS__|__SCHOOLOGY_ERRORS__/.test(s)) throw new Error("signin.html: a placeholder was left");
+  fs.writeFileSync(path.join(OUT, "signin.html"), s);
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) build();

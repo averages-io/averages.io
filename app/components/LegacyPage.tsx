@@ -306,6 +306,7 @@ export default function LegacyPage({
       // requiresAuth ones) so a page can check it without special-casing.
       (window as any).__AVERAGES_MODE__ = session.mode;
       (window as any).__AVERAGES_NAME__ = typeof session.name === "string" ? session.name : "";
+      (window as any).__AVERAGES_SCHOOL_EMAIL__ = typeof session.email === "string" ? session.email : "";
       (window as any).__AVERAGES_PROVIDER__ = session.mode === "live" ? (session.provider === "google" ? "google" : "schoology") : "";
       let pickedIncognito = false;
       try {

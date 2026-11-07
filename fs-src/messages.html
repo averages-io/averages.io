@@ -1134,7 +1134,7 @@
   .chip:nth-child(5n + 1) { --chip-c: var(--warm-a); } .chip:nth-child(5n + 2) { --chip-c: var(--sky); } .chip:nth-child(5n + 3) { --chip-c: var(--mint); } .chip:nth-child(5n + 4) { --chip-c: var(--grape); } .chip:nth-child(5n + 5) { --chip-c: #c98a00; }
   /* sticker tags: New pops off the page a little */
   html[data-theme="dark"] body .newtag { background: #e0aa2e !important; color: #1f1604 !important; box-shadow: 0 0 0 2px var(--field), 0 3px 8px -2px rgba(0, 0, 0, .55); }
-  .newtag { background: var(--sun) !important; color: var(--ink) !important; border-radius: 8px; transform: translate(var(--tx, 0px), var(--ty, 0px)) rotate(var(--tilt, -4deg)); box-shadow: 0 0 0 2px var(--field), 0 3px 8px -2px rgba(20, 21, 31, .25); will-change: transform; backface-visibility: hidden; } /* always drawn on its own layer, so hovering a row never redraws the text thinner or bolder */
+  .newtag { background: var(--sun) !important; color: #2b1d00 !important; border-radius: 8px; transform: translate(var(--tx, 0px), var(--ty, 0px)) rotate(var(--tilt, -4deg)); box-shadow: 0 0 0 2px var(--field), 0 3px 8px -2px rgba(20, 21, 31, .25); will-change: transform; backface-visibility: hidden; } /* always drawn on its own layer, so hovering a row never redraws the text thinner or bolder */
   .wrap { position: relative; isolation: isolate; }
   /* empty states get a doodle */
   :is(.nt-empty, .ag-none, .mp-none, .mdet-empty, .list-empty, .sv-empty)::before { content: ""; display: block; width: 120px; height: 72px; margin: 0 auto 12px; background: var(--life-doodle) center / contain no-repeat; }
@@ -1195,7 +1195,7 @@
   .wi-d.up { color: var(--good); background: color-mix(in srgb, var(--good) 13%, var(--field)); }
   .wi-d.down { color: var(--bad); background: color-mix(in srgb, var(--bad) 12%, var(--field)); }
   .wi-d.flat { color: var(--muted); background: var(--inner); }
-  .wi-new { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 8px; background: var(--sun); color: var(--ink); font-size: 11px; font-weight: 900; transform: rotate(-4deg); margin-left: 8px; }
+  .wi-new { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 8px; background: var(--sun); color: #2b1d00; font-size: 11px; font-weight: 900; transform: rotate(-4deg); margin-left: 8px; }
   .wi-acts { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
   .wi-note { font-size: 12px; font-weight: 700; color: var(--muted); }
   .wi-acts .btn { flex: none; }
@@ -2332,7 +2332,7 @@
   .up-res span, .up-res b { position: relative; display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
   .up-res.mine span { font-weight: 900; }
   /* the same sticker as New: sun yellow, a ring of the card color, a soft drop shadow and its own tilt */
-  .up-res em { flex: none; display: inline-flex; align-items: center; height: 18px; padding: 0 8px; border-radius: 8px; background: var(--sun); color: var(--ink); font-style: normal; font-size: 11px; font-weight: 900; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; transform: translateY(var(--ty, -1px)) rotate(var(--tilt, -4deg)); box-shadow: 0 0 0 2px var(--field), 0 3px 8px -2px rgba(20, 21, 31, .25); backface-visibility: hidden; }
+  .up-res em { flex: none; display: inline-flex; align-items: center; height: 18px; padding: 0 8px; border-radius: 8px; background: var(--sun); color: #2b1d00; font-style: normal; font-size: 11px; font-weight: 900; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; transform: translateY(var(--ty, -1px)) rotate(var(--tilt, -4deg)); box-shadow: 0 0 0 2px var(--field), 0 3px 8px -2px rgba(20, 21, 31, .25); backface-visibility: hidden; }
   @media (prefers-reduced-motion: no-preference) { body:not(.potato-mode) .up-res em { animation: lifeSticker .5s var(--spring) backwards; } }
   .up-res b { font-weight: 900; font-variant-numeric: tabular-nums; }
   .up-poll small { font-size: 13px; font-weight: 700; color: var(--muted); }
@@ -3345,6 +3345,7 @@
   .ms-inone small { font-size: 13px; font-weight: 700; color: var(--muted); }
   .ms-sscrim { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 16px; background: rgba(20, 21, 31, .32); }
   .ms-sscrim.in { animation: msSFade .16s ease backwards; }
+  html[data-theme="dark"] .ms-sscrim { background: rgba(0, 0, 0, .55) !important; }
   .ms-sscrim.in .ms-sbox { animation: msSIn .22s cubic-bezier(.2, .8, .2, 1) backwards; }
   @keyframes msSFade { from { opacity: 0; } }
   @keyframes msSIn { from { opacity: 0; transform: translateY(8px) scale(.98); } }

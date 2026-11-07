@@ -33,12 +33,23 @@ export function frontDoor(request) {
   return "/home";
 }
 
+/**
+ * The sign-in page to show at "/": the new one (/IS/signin) while NEW_SIGNIN_PAGE is "1", otherwise the current one.
+ * The address stays "/", so nothing flashes and links to "/" keep working.
+ * @param {Request} request @param {{ ASSETS: { fetch: (r: Request) => Promise<Response> }, NEW_SIGNIN_PAGE?: string }} env
+ */
+function signinPage(request, env) {
+  if (String(env.NEW_SIGNIN_PAGE || "0") !== "1") return env.ASSETS.fetch(request);
+  const url = new URL(request.url);
+  return env.ASSETS.fetch(new Request(new URL("/IS/signin", url).toString(), { method: request.method, headers: request.headers }));
+}
+
 export default {
-  /** @param {Request} request @param {{ ASSETS: { fetch: (r: Request) => Promise<Response> } }} env */
+  /** @param {Request} request @param {{ ASSETS: { fetch: (r: Request) => Promise<Response> }, NEW_SIGNIN_PAGE?: string }} env */
   async fetch(request, env) {
     const url = new URL(request.url);
     if (request.method === "GET" && url.pathname === "/" && url.searchParams.has("signedout")) {
-      const page = await env.ASSETS.fetch(new Request(new URL("/", url).toString(), { headers: request.headers }));
+      const page = await signinPage(new Request(new URL("/", url).toString(), { headers: request.headers }), env);
       const res = new Response(page.body, page);
       res.headers.set("Clear-Site-Data", '"cookies", "storage"');
       res.headers.set("Cache-Control", "no-store");
@@ -58,6 +69,6 @@ export default {
     // The login page as usual. Its asset headers already make the browser
     // check back every time (max-age=0, must-revalidate), and that check comes
     // through here too, so a cached login page never skips the redirect.
-    return env.ASSETS.fetch(request);
+    return url.pathname === "/" ? signinPage(request, env) : env.ASSETS.fetch(request);
   },
 };

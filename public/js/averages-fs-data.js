@@ -249,6 +249,7 @@
       if (fl && Array.isArray(fl.files)) { filesAt = Date.now(); sset('averages_extras_fs_files', JSON.stringify({ at: Date.now(), who: me.uid, data: fl })); }
       var raw = Object.assign({}, window.FSD.raw, { bundle: b }); if (u) raw.updates = u; if (fl && Array.isArray(fl.files)) raw.files = fl;
       var fresh = window.FSA.adapt(raw), have = {};
+      try { gradesMoved(window.FSD, fresh); } catch (e) { /* the numbers stay as they were */ }
       window.FSD.NT.forEach(function (it) { have[it.id] = true; });
       var added = fresh.NT.filter(function (it) { return !have[it.id]; });
       if (!added.length) return;
@@ -256,6 +257,56 @@
       window.dispatchEvent(new CustomEvent('fs:notis', { detail: { added: added } }));
     }).catch(function () { /* try again next time */ }).then(function () { notisBusy = false; });
   }
+  // ---------- grades that moved since the page drew, rolled to their new values ----------
+  // Each class's numbers on the page sit inside something that names the class (data-go="class:<id>", data-c="<id>"
+  // and so on); on the course hub, the whole page is that class. A changed percentage there rolls up or down like the
+  // Windowed pages' live grades (averages-live.js), with its letter beside it, and the class keeps its new numbers.
+  var CUTS = [[97, 'A+'], [93, 'A'], [90, 'A-'], [87, 'B+'], [83, 'B'], [80, 'B-'], [77, 'C+'], [73, 'C'], [70, 'C-'], [67, 'D+'], [63, 'D'], [60, 'D-'], [0, 'F']];
+  function letterOf(p) { for (var i = 0; i < CUTS.length; i++) if (p >= CUTS[i][0]) return CUTS[i][1]; return 'F'; }
+  function rollText(node, to, up) {
+    var from = node.nodeValue, span = document.createElement('span');
+    node.parentNode.replaceChild(span, node);
+    if (window.AveragesLive && window.AveragesLive.roll) { span.textContent = from; window.AveragesLive.roll(span, from.trim(), to, up); if (span.textContent === from) span.textContent = to; }
+    else span.textContent = to;
+  }
+  function scopesFor(id) {
+    var root = document.getElementById('scroller') || document.body, out = [];
+    var hub = /\/course-hub/.test(location.pathname) && String(new URLSearchParams(location.search).get('id') || '') === String(id);
+    if (hub) out.push(root);
+    root.querySelectorAll('*').forEach(function (el) {
+      for (var i = 0; i < el.attributes.length; i++) {
+        var a = el.attributes[i];
+        if (a.name.indexOf('data-') === 0 && (a.value === String(id) || a.value === 'class:' + id)) { out.push(el); return; }
+      }
+    });
+    return out;
+  }
+  function gradesMoved(D, fresh) {
+    if (!D || !D.C || !fresh || !fresh.C) return;
+    Object.keys(fresh.C).forEach(function (id) {
+      var was = D.C[id], now = fresh.C[id];
+      if (!was || !now || was.none || now.none || Math.abs((was.pct || 0) - (now.pct || 0)) < 0.05) return;
+      var fromP = was.pct.toFixed(1) + '%', toP = now.pct.toFixed(1) + '%', fromL = letterOf(was.pct), toL = letterOf(now.pct), up = now.pct > was.pct;
+      scopesFor(id).forEach(function (scope) {
+        var walk = document.createTreeWalker(scope, NodeFilter.SHOW_TEXT), hits = [];
+        for (var n = walk.nextNode(); n; n = walk.nextNode()) if (n.nodeValue.trim() === fromP) hits.push(n);
+        hits.forEach(function (n) {
+          // the letter goes with it when it's right beside the percentage
+          if (fromL !== toL) {
+            var near = [n.previousSibling, n.parentNode && n.parentNode.previousSibling, n.parentNode && n.parentNode.parentNode && n.parentNode.parentNode.firstChild];
+            for (var k = 0; k < near.length; k++) {
+              var x = near[k]; if (!x) continue;
+              var t = x.nodeType === 3 ? x : (x.childNodes.length === 1 && x.firstChild.nodeType === 3 ? x.firstChild : null);
+              if (t && t.nodeValue.trim() === fromL) { rollText(t, toL, up); break; }
+            }
+          }
+          rollText(n, toP, up);
+        });
+      });
+      Object.assign(was, { pct: now.pct, grade: now.grade, predicted: now.predicted, predictedPct: now.predictedPct, dir: now.dir, updated: now.updated });
+    });
+  }
+
   function notePop(items) {
     var N = window.AveragesNote, D = window.FSD; if (!N || !D || !window.FSX) return;
     var cname = function (id) { var c = D.C && D.C[id]; return c ? c.name : ''; };
@@ -279,8 +330,9 @@
     if (window.FSX) window.FSX.notisCheck = notisCheck;   // also: check now
     // after the page's first sync has had its turn (it asks Schoology for everything once)
     var cacheAt = 0; try { cacheAt = (JSON.parse(sessionStorage.getItem('schoolagy_bundle_cache') || 'null') || {}).at || 0; } catch (e) { /* none */ }
-    var stale = cacheAt && Date.now() - cacheAt > 60000;
-    setTimeout(function () { notisAt = Date.now(); if (stale) setTimeout(notisCheck, 4000); setInterval(function () { if (Date.now() - notisAt >= NOTIS_EVERY) notisCheck(); }, 15000); }, 1000);
+    // a page that opened from this tab's copy (from a page before) checks for anything new right after it shows
+    var stale = cacheAt && Date.now() - cacheAt > 10000;
+    setTimeout(function () { notisAt = Date.now(); if (stale) setTimeout(notisCheck, 800); setInterval(function () { if (Date.now() - notisAt >= NOTIS_EVERY) notisCheck(); }, 15000); }, 1000);
     document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible' && Date.now() - notisAt >= NOTIS_EVERY) notisCheck(); });
   });
   (function () { var st = document.createElement('style'); st.textContent = '.fs-pav{width:28px;height:28px;flex:none;display:grid;place-items:center;border-radius:50%;color:#fff;font-size:11px;font-weight:800;letter-spacing:.01em;background:#8a8d99}.fs-pav.sq{border-radius:8px}'; (document.head || document.documentElement).appendChild(st); })();

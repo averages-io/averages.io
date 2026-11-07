@@ -2223,6 +2223,14 @@
     }
     function openFile(f) {
       if (f.url) { openLink(f); return; }
+      if (opensInBrowser(f) && window.AveragesPreview) {
+        // the previewer: page by page, then the next file in this folder
+        const node = typeof currentNode === 'function' ? currentNode() : null;
+        const here = ((node && Array.isArray(node.files)) ? node.files : []).filter(x => x && opensInBrowser(x));
+        if (!here.includes(f)) here.unshift(f);
+        window.AveragesPreview.open(here.map(x => ({ name: x.name + (x.ext && !new RegExp('\\.' + x.ext + '$', 'i').test(x.name) ? '.' + x.ext : ''), url: liveFileUrl(x) + '&view=1', download: liveFileUrl(x) })), here.indexOf(f));
+        return;
+      }
       if (opensInBrowser(f)) { window.open(liveFileUrl(f) + '&view=1', '_blank', 'noopener'); return; }
       openQuickLook(f, false);
     }

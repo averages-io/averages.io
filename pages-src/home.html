@@ -1128,6 +1128,13 @@
   .sum-opt small { display: block; font-size: 0.68rem; font-weight: 700; color: var(--text-faint); margin-top: 1px; }
   .sum-card:not([hidden]) + .assign-section-label { margin-top: 0; }   /* turned off: label keeps its normal space */
   @media (prefers-reduced-motion: reduce) { .sum-view, .sum-view.sliding .sum-slide, .sum-dot { transition: none; } .sum-view.switching { filter: none; opacity: 1; } }
+  .sum-pause { position: absolute; left: 10px; bottom: 6px; width: 26px; height: 26px; display: grid; place-items: center; padding: 0; border: none; border-radius: 8px; background: none; color: var(--text-muted); cursor: pointer; opacity: 0; visibility: hidden; transition: opacity 0.15s ease, visibility 0s linear 0.15s; }
+  .sum-pause svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+  .sum-pause .pl { display: none; fill: currentColor; stroke: none; }
+  .sum-card.held .sum-pause .ps { display: none; } .sum-card.held .sum-pause .pl { display: block; }
+  .sum-card:hover .sum-pause, .sum-card:focus-within .sum-pause, .sum-card.held .sum-pause { opacity: 1; visibility: visible; transition: opacity 0.15s ease; }
+  .sum-pause:hover { background: var(--control-hover); color: var(--text-dark); }
+  .sum-pause:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring); }
 </style>
 </head>
 <body>
@@ -2037,7 +2044,8 @@
     const sumCard = document.getElementById('sumCard');
     let sumCats = [], sumCat = 0, sumItem = 0, sumTimer = null, sumPaused = false, sumBusy = false;
     let sumFirst = (() => { try { return localStorage.getItem(SUMMARY_KEY) || 'test'; } catch { return 'test'; } })();
-    sumCard.innerHTML = `<div class="sum-view" aria-live="polite"></div><div class="sum-dots" role="group" aria-label="Choose an item"></div><div class="sum-menu" role="menu" aria-label="Show first" hidden></div>`;
+    sumCard.innerHTML = `<div class="sum-view" aria-live="polite"></div><div class="sum-dots" role="group" aria-label="Choose an item"></div><button class="sum-pause" type="button" aria-label="Pause" title="Pause"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="ps" d="M9 6v12M15 6v12"/><path class="pl" d="M8 5.5v13l11-6.5z"/></svg></button><div class="sum-menu" role="menu" aria-label="Show first" hidden></div>`;
+    let sumUserPaused = false;   // the pause button: stays paused until pressed again
     const sumView = sumCard.querySelector('.sum-view'), sumDots = sumCard.querySelector('.sum-dots'), sumMenu = sumCard.querySelector('.sum-menu');
     function sumSlideEl(c, i) {
       const C = sumCats[c], it = C.items[i];
@@ -2095,7 +2103,7 @@
         if (document.body.classList.contains('potato-mode')) { sumLoopOn = false; sumLastTs = 0; sumElapsed = 0; sumFill(); return; }
         const dt = sumLastTs ? Math.min(ts - sumLastTs, 100) : 0;   // no jump after a hidden tab
         sumLastTs = ts;
-        if (!sumCard.hidden && !sumPaused && sumMenu.hidden && !sumBusy && !widgetDragModeOn && !document.hidden && !document.body.classList.contains('potato-mode')) {   // Potato mode: no auto-advance
+        if (!sumCard.hidden && !sumPaused && !sumUserPaused && sumMenu.hidden && !sumBusy && !widgetDragModeOn && !document.hidden && !document.body.classList.contains('potato-mode')) {   // Potato mode: no auto-advance
           sumElapsed += dt;
           if (sumElapsed >= SUM_DWELL) { sumElapsed = 0; sumStep(); }
         }
@@ -2120,6 +2128,13 @@
     sumCard.addEventListener('focusout', () => { sumPaused = false; });
     sumCard.addEventListener('click', e => {
       if (widgetDragModeOn) return;
+      const pb = e.target.closest('.sum-pause');
+      if (pb) {
+        e.stopPropagation(); sumUserPaused = !sumUserPaused;
+        sumCard.classList.toggle('held', sumUserPaused);
+        pb.setAttribute('aria-label', sumUserPaused ? 'Play' : 'Pause'); pb.title = sumUserPaused ? 'Play' : 'Pause';
+        return;
+      }
       const dot = e.target.closest('.sum-dot');
       if (dot) { if (!sumBusy) { const k = Number(dot.dataset.i); if (k !== sumItem) sumSlideTo(k); sumSchedule(); } return; }
       if (e.target.closest('.sum-pick')) {

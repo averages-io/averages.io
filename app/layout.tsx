@@ -87,6 +87,8 @@ export default function RootLayout({
         <script src={JS["averages-note.js"]} />
         <script src={JS["averages-bell.js"]} />
         <script src={JS["averages-email.js"]} defer />
+        <script src={JS["averages-gpa.js"]} defer />
+        <script src={JS["averages-preview.js"]} defer />
         <script src={JS["averages-help.js"]} />
         <script src={JS["averages-live.js"]} />
       </head>

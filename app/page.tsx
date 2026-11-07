@@ -4,30 +4,32 @@ import LegacyPage from "./components/LegacyPage";
 import { API_BASE, getSession, signIn } from "./lib/averages";
 
 const ERROR_MESSAGES: Record<string, string> = {
-  invalid_credentials: "That API key and secret didn't work. Double-check you copied both from your school's Schoology /api page.",
-  schoology_forbidden: "Schoology knows that key, but won't let it read your account. API access may be turned off for you or your school.",
-  missing_credentials: "Please enter both your API key and secret.",
-  network_error: "Couldn't reach Averages. Check your connection and try again.",
-  schoology_error: "Schoology isn't responding right now. Try again in a moment.",
-  server_misconfigured: "The Averages server isn't set up correctly yet. Please let us know.",
-  feature_off: "Signing in this way is turned off right now. Try again later.",
+  "teacher_account": "Averages.io is for students. That's a teacher or admin Schoology account, so it can't sign in here. (teacher_account)",
+  "invalid_credentials": "That API key and secret didn't work. Double-check you copied both from your school's Schoology /api page.",
+  "schoology_forbidden": "Schoology knows that key, but won't let it read your account. API access may be turned off for you or your school.",
+  "missing_credentials": "Please enter both your API key and secret.",
+  "network_error": "Couldn't reach Averages. Check your connection and try again.",
+  "schoology_error": "Schoology isn't responding right now. Try again in a moment.",
+  "server_misconfigured": "The Averages server isn't set up correctly yet. Please let us know.",
+  "feature_off": "Signing in this way is turned off right now. Try again later."
 };
 
 const SCHOOLOGY_SIGNIN_ERRORS: Record<string, string> = {
-  not_configured: "Signing in with Schoology isn't open yet. Check back soon.",
-  feature_off: "Signing in with Schoology is turned off right now. Try again later.",
-  unknown_school: "We couldn't find that school's Schoology. Pick your school from the list and try again.",
-  denied: "Schoology didn't let Averages.io in. Try again, and choose Approve or Allow on Schoology's page.",
-  expired: "That sign-in took too long or was opened in a different browser. Try again.",
-  schoology_refused: "Schoology turned down the sign-in. Try again in a moment.",
-  schoology_refused_token: "Schoology didn't finish the sign-in after you approved it. Make sure Averages.io is installed for your school, then try again.",
-  schoology_refused_profile: "Schoology signed you in but wouldn't share your account. Make sure Averages.io is installed for your school, then try again.",
-  not_kept: "Schoology signed you in, but this browser didn't keep it. Allow cookies for averages.io, then try again.",
-  schoology_error: "Schoology isn't responding right now. Try again in a moment.",
-  schoology_unreachable: "Couldn't reach Schoology. Check your connection and try again.",
-  schoology_bad_answer: "Schoology sent back something unexpected. Try again in a moment.",
-  no_user_id: "Schoology didn't say which account you signed in with. Try again.",
-  server_misconfigured: "The Averages server isn't set up correctly yet. Please let us know.",
+  "teacher_account": "Averages.io is for students. You signed in with a teacher or admin Schoology account, so it can't be used here. Sign out of Schoology and log in with a student account.",
+  "not_configured": "Signing in with Schoology isn't open yet. Check back soon.",
+  "feature_off": "Signing in with Schoology is turned off right now. Try again later.",
+  "unknown_school": "We couldn't find that school's Schoology. Pick your school from the list and try again.",
+  "denied": "Schoology didn't let Averages.io in. Try again, and choose Approve or Allow on Schoology's page.",
+  "expired": "That sign-in took too long or was opened in a different browser. Try again.",
+  "schoology_refused": "Schoology turned down the sign-in. Try again in a moment.",
+  "schoology_refused_token": "Schoology didn't finish the sign-in after you approved it. Make sure Averages.io is installed for your school, then try again.",
+  "schoology_refused_profile": "Schoology signed you in but wouldn't share your account. Make sure Averages.io is installed for your school, then try again.",
+  "not_kept": "Schoology signed you in, but this browser didn't keep it. Allow cookies for averages.io, then try again.",
+  "schoology_error": "Schoology isn't responding right now. Try again in a moment.",
+  "schoology_unreachable": "Couldn't reach Schoology. Check your connection and try again.",
+  "schoology_bad_answer": "Schoology sent back something unexpected. Try again in a moment.",
+  "no_user_id": "Schoology didn't say which account you signed in with. Try again.",
+  "server_misconfigured": "The Averages server isn't set up correctly yet. Please let us know."
 };
 
 

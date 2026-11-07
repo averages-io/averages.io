@@ -152,7 +152,7 @@
   // ---------- the switch and the sign-in ----------
   function off() { try { sessionStorage.setItem('averages_fs_off', '1'); } catch (e) { /* storage off */ } goWindowed(false); }
   var fchk = 0; try { fchk = +sessionStorage.getItem('averages_fs_featchk') || 0; } catch (e) {}
-  if (!(Date.now() - fchk < 300000 && Date.now() >= fchk)) fetch(API + '/config/features', { credentials: 'omit', cache: 'no-store' })
+  if (!(Date.now() - fchk < 300000 && Date.now() >= fchk)) fetch(API + '/config/features', { credentials: 'include', cache: 'no-store' })
     .then(function (r) { return r.ok ? r.json() : null; })
     .then(function (j) { if (j && j.features) { try { sessionStorage.setItem('averages_fs_featchk', String(Date.now())); } catch (e) {} } if (j && j.features && j.features.fullscreen === false) off(); })
     .catch(function () { /* API unreachable: stay */ });
@@ -184,6 +184,43 @@
     if (window.MutationObserver) new MutationObserver(function (ms) { for (var i = 0; i < ms.length; i++) if (touches(ms[i])) { avSoon(); return; } }).observe(document.body, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['style', 'class'] });
   });
   window.addEventListener('storage', function (e) { if (e.key === 'fsmock_profile2' || e.key === 'schoolagy_profile') avSoon(); });
+
+
+  // ---------- keyboard shortcuts the student changed (Settings > About) ----------
+  // averages_shortcuts: { search: combo, find: combo }, combo = { k: 'j', mod: true, shift: false, alt: false }.
+  // A changed one replaces the default: its keys are passed to the page as the default's, and the default's do nothing.
+  var IS_MAC = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
+  var KB_DEFAULT = { search: { k: 'k', mod: true, shift: false, alt: false }, find: { k: '/', mod: false, shift: false, alt: false } };
+  function kbAll() { var s = json('averages_shortcuts') || {}, out = {}; for (var a in KB_DEFAULT) out[a] = s[a] && typeof s[a].k === 'string' && s[a].k ? s[a] : null; return out; }
+  function kbMatch(e, c) {
+    var k = (e.key || '').toLowerCase(), mod = IS_MAC ? e.metaKey || e.ctrlKey : e.ctrlKey;
+    return k === c.k && !!mod === !!c.mod && !!e.shiftKey === !!c.shift && !!e.altKey === !!c.alt;
+  }
+  var kbSynth = false;
+  document.addEventListener('keydown', function (e) {
+    if (kbSynth || e.defaultPrevented) return;
+    var mine = kbAll(), typing = /^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement || {}).tagName || '') || (document.activeElement && document.activeElement.isContentEditable);
+    for (var a in mine) {
+      var c = mine[a]; if (!c) continue;
+      if (kbMatch(e, c)) {
+        if (typing && !c.mod) return;   // a plain key while typing is just typing
+        e.preventDefault(); e.stopImmediatePropagation();
+        var d = KB_DEFAULT[a];
+        kbSynth = true;
+        try { document.dispatchEvent(new KeyboardEvent('keydown', { key: d.k, code: d.k === '/' ? 'Slash' : 'Key' + d.k.toUpperCase(), ctrlKey: d.mod && !IS_MAC, metaKey: d.mod && IS_MAC, bubbles: true, cancelable: true })); }
+        finally { kbSynth = false; }
+        return;
+      }
+      if (kbMatch(e, KB_DEFAULT[a])) { e.stopImmediatePropagation(); return; }   // the old keys are off while changed
+    }
+  }, true);
+  window.AveragesShortcuts = {
+    defaults: KB_DEFAULT,
+    get: function (a) { return kbAll()[a] || KB_DEFAULT[a]; },
+    changed: function (a) { return !!kbAll()[a]; },
+    set: function (a, c) { var s = json('averages_shortcuts') || {}; if (c) s[a] = c; else delete s[a]; try { localStorage.setItem('averages_shortcuts', JSON.stringify(s)); } catch (e) { /* storage off */ } },
+    label: function (c) { var out = []; if (c.mod) out.push(IS_MAC ? '⌘' : 'Ctrl'); if (c.alt) out.push(IS_MAC ? '⌥' : 'Alt'); if (c.shift) out.push('Shift'); out.push(c.k === ' ' ? 'Space' : c.k.length === 1 ? c.k.toUpperCase() : c.k); return out; },
+  };
 
   // The address of a page that wasn't found, so the 404 page shows the real one.
   if (FROM && FROM.charAt(0) === '/') { try { window.history.replaceState(null, '', FROM); } catch (e) { /* keep /IS/404 */ } }

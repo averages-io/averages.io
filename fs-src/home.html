@@ -1136,7 +1136,7 @@
   .chip:nth-child(5n + 1) { --chip-c: var(--warm-a); } .chip:nth-child(5n + 2) { --chip-c: var(--sky); } .chip:nth-child(5n + 3) { --chip-c: var(--mint); } .chip:nth-child(5n + 4) { --chip-c: var(--grape); } .chip:nth-child(5n + 5) { --chip-c: #c98a00; }
   /* sticker tags: New pops off the page a little */
   html[data-theme="dark"] body .newtag { background: #e0aa2e !important; color: #1f1604 !important; box-shadow: 0 0 0 2px var(--field), 0 3px 8px -2px rgba(0, 0, 0, .55); }
-  .newtag { background: var(--sun) !important; color: var(--ink) !important; border-radius: 8px; transform: translate(var(--tx, 0px), var(--ty, 0px)) rotate(var(--tilt, -4deg)); box-shadow: 0 0 0 2px var(--field), 0 3px 8px -2px rgba(20, 21, 31, .25); will-change: transform; backface-visibility: hidden; } /* always drawn on its own layer, so hovering a row never redraws the text thinner or bolder */
+  .newtag { background: var(--sun) !important; color: #2b1d00 !important; border-radius: 8px; transform: translate(var(--tx, 0px), var(--ty, 0px)) rotate(var(--tilt, -4deg)); box-shadow: 0 0 0 2px var(--field), 0 3px 8px -2px rgba(20, 21, 31, .25); will-change: transform; backface-visibility: hidden; } /* always drawn on its own layer, so hovering a row never redraws the text thinner or bolder */
   .wrap { position: relative; isolation: isolate; }
   /* empty states get a doodle */
   :is(.nt-empty, .ag-none, .mp-none, .mdet-empty, .list-empty, .sv-empty)::before { content: ""; display: block; width: 120px; height: 72px; margin: 0 auto 12px; background: var(--life-doodle) center / contain no-repeat; }
@@ -1197,7 +1197,7 @@
   .wi-d.up { color: var(--good); background: color-mix(in srgb, var(--good) 13%, var(--field)); }
   .wi-d.down { color: var(--bad); background: color-mix(in srgb, var(--bad) 12%, var(--field)); }
   .wi-d.flat { color: var(--muted); background: var(--inner); }
-  .wi-new { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 8px; background: var(--sun); color: var(--ink); font-size: 11px; font-weight: 900; transform: rotate(-4deg); margin-left: 8px; }
+  .wi-new { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 8px; background: var(--sun); color: #2b1d00; font-size: 11px; font-weight: 900; transform: rotate(-4deg); margin-left: 8px; }
   .wi-acts { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
   .wi-note { font-size: 12px; font-weight: 700; color: var(--muted); }
   .wi-acts .btn { flex: none; }
@@ -1250,6 +1250,7 @@
   .g-na { color: var(--muted) !important; }
   .arow > .btn.sm:not(.primary) { background: var(--field); box-shadow: inset 0 0 0 2px var(--inner); }
   .arow > .btn.sm:not(.primary):hover { background: var(--inner); }
+  svg .ax.nd { font-size: 14px; font-weight: 800; fill: var(--ink-2); }
 </style>
 <style id="tiHomeCss">/* ===== Turn in popup (from the course hub) ===== */
   /* ---------- Turn in popup ---------- */
@@ -2475,6 +2476,12 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   // Unweighted 4.0 scale, the same points as GPA_SCALE in averages.api adapt.ts and grades.html
   const GP = { 'A+': 4, A: 4, 'A-': 3.7, 'B+': 3.3, B: 3, 'B-': 2.7, 'C+': 2.3, C: 2, 'C-': 1.7, 'D+': 1.3, D: 1, 'D-': 0.7, F: 0 };
   const GPA = WEEKS.map((_, i) => { const cs = withGrades(i); return cs.length ? Math.round(cs.reduce((t, c) => t + GP[letter(c.trend[i])], 0) / cs.length * 100) / 100 : null; });
+  // This week is now: the charts end on the same numbers the cards show (classes with grades only)
+  const GRADED_NOW = FSD.CLASSES.filter(c => !c.none);
+  const AVG_NOW = GRADED_NOW.length ? Math.round(GRADED_NOW.reduce((t, c) => t + c.pct, 0) / GRADED_NOW.length * 10) / 10 : null;
+  const GPA_NOW = GRADED_NOW.length ? Math.round(GRADED_NOW.reduce((t, c) => t + GP[letter(c.pct)], 0) / GRADED_NOW.length * 100) / 100 : null;
+  if (AVG_NOW != null) AVG[AVG.length - 1] = AVG_NOW;
+  if (GPA_NOW != null) GPA[GPA.length - 1] = GPA_NOW;
   const TURNED_BY = Object.fromEntries(CLASSES.map(c => [c.id, WEEKS.map(() => 0)]));
   const LATE_BY = Object.fromEntries(CLASSES.map(c => [c.id, WEEKS.map(() => 0)]));
   const MISS_BY = Object.fromEntries(CLASSES.map(c => [c.id, WEEKS.map(() => 0)]));
@@ -3023,6 +3030,13 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   }
   function lineChart(el, W, V0, o = {}) {
     const { svg, w, h } = frame(el);
+    // one week isn't a trend: say so instead of drawing a lone dot on a made-up scale
+    if (V0.filter(v => v != null).length < 2) {
+      svg.setAttribute('aria-label', 'Not enough data yet');
+      add(svg, 'text', { class: 'ax nd', x: w / 2, y: h / 2 - 4, 'text-anchor': 'middle' }).textContent = 'Not enough data yet';
+      add(svg, 'text', { class: 'ax', x: w / 2, y: h / 2 + 14, 'text-anchor': 'middle' }).textContent = 'The line starts once two weeks have grades.';
+      return;
+    }
     const V = V0.filter(v => v != null).length ? V0.filter(v => v != null) : [0], first = Math.max(0, V0.findIndex(v => v != null));
     svg.setAttribute('aria-label', o.label || `Overall average by week, from ${V[0]}% to ${V[V.length - 1]}%`);
     const L = 34, R = 6, T = 8, B = 22;
@@ -3070,20 +3084,24 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   function drawCharts() {
     const s = series();
     const ago = state.range === 8 ? '8 weeks' : '4 weeks';
-    const dAvg = lastV(s.lv) - firstV(s.lv);
+    const dAvg = lastV(s.lv) - firstV(s.lv), pts = a => a.filter(v => v != null).length;
+    // a change needs two weeks with grades; until then the card says so instead of "0.0%"
+    const since = a => { const i = a.findIndex(v => v != null); return i < 0 ? '' : s.lw[i]; };
     $('avgDelta').className = 'delta ' + (dAvg >= 0 ? 'up' : 'down');
-    $('avgDelta').innerHTML = `${ico(dAvg >= 0 ? 'up' : 'downr')}${Math.abs(dAvg).toFixed(1)}%`; $('avgNote').textContent = `vs. ${ago} ago`;
-    $('avgNow').textContent = (CLASSES.length ? CLASSES.reduce((a, c) => a + c.pct, 0) / CLASSES.length : 0).toFixed(1) + '%';
+    $('avgDelta').innerHTML = `${ico(dAvg >= 0 ? 'up' : 'downr')}${Math.abs(dAvg).toFixed(1)}%`; $('avgDelta').style.display = pts(s.lv) < 2 ? 'none' : '';
+    $('avgNote').textContent = pts(s.lv) < 2 ? 'Not enough weeks yet' : firstV(s.lv) === s.lv[0] ? `vs. ${ago} ago` : `since ${since(s.lv)}`;
+    $('avgNow').textContent = AVG_NOW == null ? '—' : AVG_NOW.toFixed(1) + '%';
     $('turnTotal').textContent = s.bv.reduce((a, b) => a + b, 0);
     $('turnNote').textContent = state.range === 8 ? 'last 8 weeks' : 'last 4 weeks';
     $('statAvg').hidden = !state.charts.avg;
     $('statTurn').hidden = !state.charts.turn;
     $('statGpa').hidden = !state.charts.gpa;
     $('statRate').hidden = !state.charts.rate;
-    const gNow = (CLASSES.filter(c => !c.none).reduce((a, c) => a + GP[letter(c.pct)], 0) / Math.max(1, CLASSES.filter(c => !c.none).length)), dG = lastV(s.gv) - firstV(s.gv);
-    $('gpaNow').textContent = gNow.toFixed(2);
+    const dG = lastV(s.gv) - firstV(s.gv);
+    $('gpaNow').textContent = GPA_NOW == null ? '—' : GPA_NOW.toFixed(2);
     $('gpaDelta').className = 'delta ' + (dG >= 0 ? 'up' : 'down');
-    $('gpaDelta').innerHTML = `${ico(dG >= 0 ? 'up' : 'downr')}${Math.abs(dG).toFixed(2)}`; $('gpaNote').textContent = `vs. ${ago} ago`;
+    $('gpaDelta').innerHTML = `${ico(dG >= 0 ? 'up' : 'downr')}${Math.abs(dG).toFixed(2)}`; $('gpaDelta').style.display = pts(s.gv) < 2 ? 'none' : '';
+    $('gpaNote').textContent = pts(s.gv) < 2 ? 'Not enough weeks yet' : firstV(s.gv) === s.gv[0] ? `vs. ${ago} ago` : `since ${since(s.gv)}`;
     const ri = WEEKS.length - state.range, rOn = tot(ONTIME_W, ri), rDue = tot(DUE_W, ri), rMiss = tot(i => MISS_W[i], ri);
     $('rateNow').textContent = Math.round(rOn / rDue * 100) + '%';
     $('rateNote').textContent = `${rOn} of ${rDue} turned in on time`;
@@ -3600,7 +3618,8 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     // right-click on a card
     cardmenu(k) {
       const chart = k.startsWith('chart:');
-      return { label: 'Card options', narrow: true, html: mi({ attrs: chart ? `data-act="chart" data-arg="${k.slice(6)}"` : `data-act="hide" data-arg="${k}"`, t: 'Hide this card' }) };
+      return { label: 'Card options', narrow: true, html: mi({ attrs: chart ? `data-act="chart" data-arg="${k.slice(6)}"` : `data-act="hide" data-arg="${k}"`, lead: ico('eyeoff'), t: 'Hide this card' })
+        + mi({ attrs: 'data-act="customizepage"', lead: ico('sliders'), t: 'Customize this page' }) };
     },
     sumfirst() {
       return { label: 'Show first', narrow: true, html: `<div class="lbl">Show first</div>` + sum.cats.map(c => mi({ attrs: `data-act="sumfirst" data-arg="${c.key}"`, lead: check(c.key === sum.first), t: c.label, sub: c.desc })).join('') };
@@ -4238,6 +4257,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     srecent(q) { big.value = q; runSearch(); big.focus(); big.setSelectionRange(q.length, q.length); },
     srecentx(q) { store.set('fsmock_srecent', srecent().filter(x => x !== q)); render('search', big.value); big.focus(); },
     showall() { state.hidden.clear(); applySections(); swap('customize'); },
+    customizepage() { closePop(); const me = document.querySelector('#meBtn'); if (me) openPop(me, 'customize'); },
     sctoggle(id) {
       const r = state.scRows.find(x => x.includes(id));
       if (r) r.splice(r.indexOf(id), 1);
@@ -4655,7 +4675,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     return h.replace(/<button class="btn"[^>]*>(Cancel|Close)<\/button>/g, ''); };
   function tiFootAll() {
     const m = MATERIALS.find(x => x.id === tiSel); if (!m) return '';
-    if (tiDone(m)) return `<span class="note">${m.got != null ? 'This one is graded, so it can\'t be turned in again.' : `You can turn in a new version until it's graded. ${TEACH()} sees the newest one.`}</span>${m.got == null ? `<button class="btn${tiInline ? ' primary' : ''}" ${tiInline ? 'data-tiagain="1"' : 'data-tiagainpage'}>${ico('upload')}Turn in again</button>` : ''}<button class="btn" data-ticlose>Close</button>`;
+    if (tiDone(m)) return `<span class="note">${m.got != null ? `It's graded, but you can still turn in a new version while Schoology takes them. ${TEACH()} sees the newest one and may grade it again.` : `You can turn in a new version. ${TEACH()} sees the newest one.`}</span>${true ? `<button class="btn${tiInline ? ' primary' : ''}" ${tiInline ? 'data-tiagain="1"' : 'data-tiagainpage'}>${ico('upload')}Turn in again</button>` : ''}<button class="btn" data-ticlose>Close</button>`;
     if (tiSending) return `<span class="note ti-stepnote" data-stepnote>${esc(tiSending.steps[0].label)}…</span>${stepsHTML(tiSending)}<button class="btn" disabled title="Can't cancel while it's being turned in">Cancel</button><button class="btn primary sending" disabled><span class="ti-spin" aria-hidden="true"></span>Turning in…</button>`;
     if (m.writing) { const w = wordCount(m.answer); return `<span class="note">${w ? `${w} ${w === 1 ? 'word' : 'words'} · turned in as a written answer` : 'Write something to turn it in'}</span><button class="btn" data-ticlose>Cancel</button><button class="btn primary" data-tisend${w ? '' : ' disabled'}>${ico('upload')}Turn in</button>`; }
     const fs = DRAFT[m.id] || [], n = fs.length, wait = fs.filter(busy).length, bad = fs.filter(f => f.state === 'failed').length;

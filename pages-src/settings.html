@@ -1125,6 +1125,24 @@
   body.potato-mode .win-new .nw { box-shadow: none; }
   .visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
   .window-options { padding-top: 6px; }
+  /* Mode: cards side by side instead of a radio list */
+  .mode-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; background: none; overflow: visible; }
+  .mode-cards .settings-row { flex-direction: column; align-items: stretch; gap: 10px; padding: 16px; border-radius: var(--window-radius-md); background: var(--panel-inner); box-shadow: inset 0 0 0 2px transparent; transition: box-shadow 0.15s ease; }
+  .mode-cards .settings-row + .settings-row { border-top: none; }
+  .mode-cards .settings-row:has(.mode-pick[aria-checked="true"]) { box-shadow: inset 0 0 0 2px var(--accent); }
+  .mode-cards .mode-row[data-mode="plus"]:has(.mode-pick[aria-checked="true"]) { box-shadow: inset 0 0 0 2px #E5484D; }
+  .mode-cards .mode-pick { flex-direction: row-reverse; justify-content: space-between; margin: 0; padding: 0; }
+  .mode-cards .mode-pick .settings-row-label { font-size: 0.95rem; }
+  .mode-cards .mode-pick .settings-row-desc { margin-top: 6px; }
+  .mode-cards #plusManageBtn { align-self: flex-start; }
+  .btn-danger.btn-danger-sm { width: auto; margin-top: 0; padding: 8px 16px; flex: none; }
+  .data-msg { margin: 8px 2px 0; }
+  .data-msg.bad { color: var(--grade-bad); }
+  #yourDataBlock[hidden], #schoolEmailRow[hidden] { display: none; }
+  .copy-word { display: inline-flex; align-items: center; margin: 0 4px; padding: 0 8px; border: 1px dashed var(--text-faint); border-radius: 6px; background: none; font: inherit; font-weight: 800; color: var(--text-dark); cursor: pointer; }
+  .copy-word:hover { background: var(--control-hover); }
+  .editor-done.editor-danger { background: var(--grade-bad); }
+  .editor-done:disabled { opacity: 0.5; cursor: default; }
 </style>
 </head>
 <body>
@@ -1213,6 +1231,10 @@
                 <div class="settings-row-text"><p class="settings-row-label">Schoology</p></div>
                 <span class="settings-row-value" id="schoolLmsValue"><a class="school-link" id="schoolLmsLink" href="https://app.schoology.com" target="_blank" rel="noopener noreferrer">app.schoology.com</a></span>
               </div>
+              <div class="settings-row" id="schoolEmailRow" hidden>
+                <div class="settings-row-text"><p class="settings-row-label">School email</p><p class="settings-row-desc">From Schoology. To change it, talk to your school.</p></div>
+                <span class="settings-row-value" id="schoolEmailValue"></span>
+              </div>
               <div class="settings-row" id="schoolDistrictRow">
                 <div class="settings-row-text"><p class="settings-row-label">District</p></div>
                 <span class="settings-row-value" id="schoolDistrictValue">Hill Valley Unified School District</span>
@@ -1224,7 +1246,7 @@
             </div>
 
             <p class="settings-subhead">Mode</p>
-            <div class="settings-group" id="modeGroup" role="radiogroup" aria-label="Mode">
+            <div class="settings-group mode-group mode-cards" id="modeGroup" role="radiogroup" aria-label="Mode">
               <div class="settings-row mode-row" data-mode="classic">
                 <button type="button" class="mode-pick" role="radio" aria-checked="false" data-mode="classic">
                   <span class="mode-radio" aria-hidden="true"></span>
@@ -1237,12 +1259,6 @@
                   <span class="settings-row-text"><span class="settings-row-label">Plus</span><span class="settings-row-desc" data-mode-desc></span></span>
                 </button>
                 <button class="btn-secondary" type="button" id="plusManageBtn" hidden>Manage plan</button>
-              </div>
-              <div class="settings-row mode-row" data-mode="incognito">
-                <button type="button" class="mode-pick" role="radio" aria-checked="false" data-mode="incognito">
-                  <span class="mode-radio" aria-hidden="true"></span>
-                  <span class="settings-row-text"><span class="settings-row-label">Incognito</span><span class="settings-row-desc" data-mode-desc></span></span>
-                </button>
               </div>
             </div>
             <p class="settings-row-desc plus-msg" id="plusMsg" role="status" hidden></p>
@@ -1564,6 +1580,21 @@
 
           <!-- ---------- Privacy ---------- -->
           <div class="settings-section" data-section="privacy">
+            <p class="settings-subhead">What we keep</p>
+            <div class="settings-group mode-group mode-cards" id="modeGroup2" role="radiogroup" aria-label="What we keep">
+              <div class="settings-row mode-row" data-mode="classic">
+                <button type="button" class="mode-pick" role="radio" aria-checked="false" data-mode="classic">
+                  <span class="mode-radio" aria-hidden="true"></span>
+                  <span class="settings-row-text"><span class="settings-row-label">Classic</span><span class="settings-row-desc" data-mode-desc></span></span>
+                </button>
+              </div>
+              <div class="settings-row mode-row" data-mode="incognito">
+                <button type="button" class="mode-pick" role="radio" aria-checked="false" data-mode="incognito">
+                  <span class="mode-radio" aria-hidden="true"></span>
+                  <span class="settings-row-text"><span class="settings-row-label">Incognito</span><span class="settings-row-desc" data-mode-desc></span></span>
+                </button>
+              </div>
+            </div>
             <p class="settings-subhead">Privacy</p>
             <div class="settings-group">
               <div class="settings-row">
@@ -1573,6 +1604,26 @@
                 </div>
                 <span class="settings-row-value" id="syncStateValue">On</span>
               </div>
+            </div>
+            <div id="yourDataBlock">
+            <p class="settings-subhead">Your data</p>
+            <div class="settings-group">
+              <div class="settings-row">
+                <div class="settings-row-text">
+                  <p class="settings-row-label">Download my data</p>
+                  <p class="settings-row-desc">A copy of everything Averages.io stored about you. Your grades and files stay in Schoology.</p>
+                </div>
+                <button class="btn-secondary" type="button" id="dataDownloadBtn">Download</button>
+              </div>
+              <div class="settings-row">
+                <div class="settings-row-text">
+                  <p class="settings-row-label">Delete my data</p>
+                  <p class="settings-row-desc">Deletes your Averages.io account and everything stored with it, then signs you out. Schoology isn't changed.</p>
+                </div>
+                <button class="btn-danger btn-danger-sm" type="button" id="dataDeleteBtn">Delete</button>
+              </div>
+            </div>
+            <p class="settings-row-desc data-msg" id="dataMsg" role="status" hidden></p>
             </div>
           </div>
 
@@ -1663,6 +1714,22 @@
       <div class="editor-actions">
         <span></span>
         <button class="editor-done" id="emailVerifyConfirm" type="button">Verify</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="editor-overlay" id="dataDeleteOverlay">
+    <div class="editor-modal" role="alertdialog" aria-modal="true" aria-labelledby="dataDeleteTitle" style="max-width: 400px;">
+      <div class="editor-head"><h2 id="dataDeleteTitle">Delete your Averages.io account?</h2></div>
+      <div class="editor-body" style="padding-bottom: 16px;">
+        <p class="settings-row-desc" style="font-size: 0.86rem;">This deletes everything Averages.io stored about you: synced settings, your profile picture and background, notifications, your calendar link and your connected apps. Then you're signed out. Schoology isn't changed.</p>
+        <label class="settings-row-desc" for="dataDeleteInput" style="display:block; font-size: 0.86rem; margin-top: 12px; font-weight: 700; color: var(--text-dark);">Type <button type="button" class="copy-word" id="dataDeleteCopy" title="Copy">DELETE</button> to confirm.</label>
+        <input id="dataDeleteInput" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="DELETE" style="margin-top: 8px; width: 100%; box-sizing: border-box; font: inherit; font-size: 0.9rem; color: var(--text-dark); background: var(--panel-inner); border: 1px solid var(--border); border-radius: var(--window-radius-sm); padding: 10px 12px;">
+        <p class="settings-row-desc data-msg bad" id="dataDeleteErr" role="alert" hidden></p>
+      </div>
+      <div class="editor-actions">
+        <button class="editor-reset" id="dataDeleteCancel" type="button">Cancel</button>
+        <button class="editor-done editor-danger" id="dataDeleteConfirm" type="button" disabled>Delete everything</button>
       </div>
     </div>
   </div>
@@ -4128,9 +4195,48 @@
       const link = $('schoolLmsLink');
       $('schoolLmsRow').hidden = !(lms === 'schoology' && domain);
       if (lms === 'schoology' && domain) { link.href = 'https://' + domain; link.textContent = domain; }
-      const any = !$('schoolNameRow').hidden || !$('schoolLmsRow').hidden;
+      const em = typeof window.__AVERAGES_SCHOOL_EMAIL__ === 'string' ? window.__AVERAGES_SCHOOL_EMAIL__.trim() : '';
+      $('schoolEmailRow').hidden = !em;
+      if (em) $('schoolEmailValue').textContent = em;
+      const any = !$('schoolNameRow').hidden || !$('schoolLmsRow').hidden || !!em;
       $('schoolHead').hidden = !any;
       $('schoolGroup').hidden = !any;
+    })();
+
+    // Privacy > Your data: download a copy, or delete the account (signed in, not Incognito, not demo)
+    (function yourData() {
+      const $ = id => document.getElementById(id);
+      const block = $('yourDataBlock'), msg = $('dataMsg');
+      const live = window.__AVERAGES_MODE__ === 'live' && !(window.__AVERAGES_INCOGNITO__ && window.__AVERAGES_INCOGNITO__.on);
+      block.hidden = !live;
+      if (!live) return;
+      const say = (t, bad) => { msg.textContent = t || ''; msg.hidden = !t; msg.classList.toggle('bad', !!bad); };
+      $('dataDownloadBtn').addEventListener('click', () => {
+        const a = document.createElement('a'); a.href = averagesApiBase() + '/account/export'; a.rel = 'noopener';
+        document.body.appendChild(a); a.click(); a.remove(); say('Downloading your data.');
+      });
+      $('dataDeleteBtn').addEventListener('click', () => {
+        const ov = $('dataDeleteOverlay'), inp = $('dataDeleteInput'), ok = $('dataDeleteConfirm');
+        inp.value = ''; ok.disabled = true; $('dataDeleteErr').hidden = true; ov.classList.add('show'); inp.focus();
+      });
+      $('dataDeleteInput').addEventListener('input', e => { $('dataDeleteConfirm').disabled = e.target.value.trim() !== 'DELETE'; });
+      $('dataDeleteCopy').addEventListener('click', () => { if (navigator.clipboard) navigator.clipboard.writeText('DELETE').catch(() => {}); $('dataDeleteInput').focus(); });
+      const close = () => $('dataDeleteOverlay').classList.remove('show');
+      $('dataDeleteCancel').addEventListener('click', close);
+      $('dataDeleteOverlay').addEventListener('click', e => { if (e.target.id === 'dataDeleteOverlay') close(); });
+      document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('dataDeleteOverlay').classList.contains('show')) close(); });
+      $('dataDeleteConfirm').addEventListener('click', async () => {
+        const ok = $('dataDeleteConfirm'), err = $('dataDeleteErr');
+        if ($('dataDeleteInput').value.trim() !== 'DELETE') return;
+        ok.disabled = true; ok.textContent = 'Deleting…'; err.hidden = true;
+        try {
+          const r = await fetch(averagesApiBase() + '/account', { method: 'DELETE', credentials: 'include' });
+          const j = await r.json().catch(() => ({}));
+          if (r.ok) { try { localStorage.clear(); sessionStorage.clear(); } catch (e) {} window.location.replace('/?signedout=1'); return; }
+          err.textContent = j && j.error === 'plus_active' ? 'You have Averages Plus. Cancel it first, then delete your account when it ends.' : 'Couldn\u2019t delete your account. Try again in a moment.';
+        } catch (e) { err.textContent = 'Couldn\u2019t reach Averages.io. Check your connection and try again.'; }
+        err.hidden = false; ok.textContent = 'Delete everything'; ok.disabled = false;
+      });
     })();
 
     function averagesApiBase() {
@@ -4549,12 +4655,25 @@
       const nextLabel = document.getElementById('plusNextLabel');
       const nextVal = document.getElementById('plusNextVal');
       const rows = {}, picks = {}, descs = {};
-      document.querySelectorAll('#modeGroup .mode-row').forEach(r => {
+      // Classic and Plus in Account; Classic again and Incognito in Privacy. The first of each is the one the code
+      // reads; the copies follow it (mirrorModes).
+      const copies = [];
+      document.querySelectorAll('.mode-group .mode-row').forEach(r => {
         const m = r.dataset.mode;
+        if (rows[m]) { copies.push([m, r]); return; }
         rows[m] = r;
         picks[m] = r.querySelector('.mode-pick');
         descs[m] = r.querySelector('[data-mode-desc]');
       });
+      function mirrorModes() {
+        copies.forEach(([m, r]) => {
+          r.hidden = rows[m].hidden;
+          r.querySelector('[data-mode-desc]').textContent = descs[m].textContent;
+          const p = r.querySelector('.mode-pick');
+          p.setAttribute('aria-checked', picks[m].getAttribute('aria-checked'));
+          p.setAttribute('aria-disabled', picks[m].getAttribute('aria-disabled'));
+        });
+      }
       const INC = window.__AVERAGES_INCOGNITO__ || null;   // signed in only
       const LIVE = window.__AVERAGES_MODE__ === 'live';
       const read = k => { try { return localStorage.getItem(k); } catch { return null; } };
@@ -4665,6 +4784,7 @@
             || (plusLock && m !== 'plus');
           picks[m].setAttribute('aria-disabled', String(off));
         });
+        mirrorModes();
       }
       async function load() {
         if (!LIVE) { billing = null; render(); return null; }
@@ -4708,7 +4828,7 @@
         u.searchParams.set('section', 'account');
         window.location.replace(u.pathname + u.search);
       }
-      function close() { overlay.classList.remove('show'); picks.incognito.focus(); }
+      function close() { overlay.classList.remove('show'); (picks.incognito.offsetParent ? picks.incognito : picks.classic).focus(); }
       function pick(mode) {
         if (!loaded) return;   // still finding out whether they have Plus
         const now = current();
@@ -4744,16 +4864,17 @@
         openStripe('checkout');
       }
       Object.keys(picks).forEach(m => picks[m].addEventListener('click', () => pick(m)));
+      copies.forEach(([m, r]) => r.querySelector('.mode-pick').addEventListener('click', () => pick(m)));
       // Arrow keys move between the options (picking still needs Enter or Space:
       // picking can mean leaving for Stripe).
-      document.getElementById('modeGroup').addEventListener('keydown', e => {
+      document.querySelectorAll('.mode-group').forEach(g => g.addEventListener('keydown', e => {
         if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) return;
-        const shown = Object.keys(picks).filter(m => !rows[m].hidden).map(m => picks[m]);
+        const shown = [...g.querySelectorAll('.mode-row')].filter(r => !r.hidden).map(r => r.querySelector('.mode-pick'));
         const i = shown.indexOf(document.activeElement);
         if (i === -1) return;
         e.preventDefault();
         shown[(i + (e.key === 'ArrowUp' || e.key === 'ArrowLeft' ? -1 : 1) + shown.length) % shown.length].focus();
-      });
+      }));
       manageBtn.addEventListener('click', () => { say(''); openStripe('portal'); });
       getBtn.addEventListener('click', () => { if (getBtn.getAttribute('aria-disabled') !== 'true') pick('plus'); });
       payBtn.addEventListener('click', () => {

@@ -193,7 +193,7 @@
   cameBackFromOff();
 
   // 2. The fresh answer.
-  const ready = fetch(API + '/config/features', { credentials: 'omit' })
+  const ready = fetch(API + '/config/features', { credentials: 'include' })
     .then((r) => (r.ok ? r.json() : null))
     .then((j) => {
       const c = clean(j);

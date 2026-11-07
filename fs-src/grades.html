@@ -1134,7 +1134,7 @@
   .chip:nth-child(5n + 1) { --chip-c: var(--warm-a); } .chip:nth-child(5n + 2) { --chip-c: var(--sky); } .chip:nth-child(5n + 3) { --chip-c: var(--mint); } .chip:nth-child(5n + 4) { --chip-c: var(--grape); } .chip:nth-child(5n + 5) { --chip-c: #c98a00; }
   /* sticker tags: New pops off the page a little */
   html[data-theme="dark"] body .newtag { background: #e0aa2e !important; color: #1f1604 !important; box-shadow: 0 0 0 2px var(--field), 0 3px 8px -2px rgba(0, 0, 0, .55); }
-  .newtag { background: var(--sun) !important; color: var(--ink) !important; border-radius: 8px; transform: translate(var(--tx, 0px), var(--ty, 0px)) rotate(var(--tilt, -4deg)); box-shadow: 0 0 0 2px var(--field), 0 3px 8px -2px rgba(20, 21, 31, .25); will-change: transform; backface-visibility: hidden; } /* always drawn on its own layer, so hovering a row never redraws the text thinner or bolder */
+  .newtag { background: var(--sun) !important; color: #2b1d00 !important; border-radius: 8px; transform: translate(var(--tx, 0px), var(--ty, 0px)) rotate(var(--tilt, -4deg)); box-shadow: 0 0 0 2px var(--field), 0 3px 8px -2px rgba(20, 21, 31, .25); will-change: transform; backface-visibility: hidden; } /* always drawn on its own layer, so hovering a row never redraws the text thinner or bolder */
   .wrap { position: relative; isolation: isolate; }
   /* empty states get a doodle */
   :is(.nt-empty, .ag-none, .mp-none, .mdet-empty, .list-empty, .sv-empty)::before { content: ""; display: block; width: 120px; height: 72px; margin: 0 auto 12px; background: var(--life-doodle) center / contain no-repeat; }
@@ -1195,7 +1195,7 @@
   .wi-d.up { color: var(--good); background: color-mix(in srgb, var(--good) 13%, var(--field)); }
   .wi-d.down { color: var(--bad); background: color-mix(in srgb, var(--bad) 12%, var(--field)); }
   .wi-d.flat { color: var(--muted); background: var(--inner); }
-  .wi-new { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 8px; background: var(--sun); color: var(--ink); font-size: 11px; font-weight: 900; transform: rotate(-4deg); margin-left: 8px; }
+  .wi-new { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 8px; background: var(--sun); color: #2b1d00; font-size: 11px; font-weight: 900; transform: rotate(-4deg); margin-left: 8px; }
   .wi-acts { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
   .wi-note { font-size: 12px; font-weight: 700; color: var(--muted); }
   .wi-acts .btn { flex: none; }
@@ -2332,7 +2332,7 @@
   .up-res span, .up-res b { position: relative; display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
   .up-res.mine span { font-weight: 900; }
   /* the same sticker as New: sun yellow, a ring of the card color, a soft drop shadow and its own tilt */
-  .up-res em { flex: none; display: inline-flex; align-items: center; height: 18px; padding: 0 8px; border-radius: 8px; background: var(--sun); color: var(--ink); font-style: normal; font-size: 11px; font-weight: 900; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; transform: translateY(var(--ty, -1px)) rotate(var(--tilt, -4deg)); box-shadow: 0 0 0 2px var(--field), 0 3px 8px -2px rgba(20, 21, 31, .25); backface-visibility: hidden; }
+  .up-res em { flex: none; display: inline-flex; align-items: center; height: 18px; padding: 0 8px; border-radius: 8px; background: var(--sun); color: #2b1d00; font-style: normal; font-size: 11px; font-weight: 900; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; transform: translateY(var(--ty, -1px)) rotate(var(--tilt, -4deg)); box-shadow: 0 0 0 2px var(--field), 0 3px 8px -2px rgba(20, 21, 31, .25); backface-visibility: hidden; }
   @media (prefers-reduced-motion: no-preference) { body:not(.potato-mode) .up-res em { animation: lifeSticker .5s var(--spring) backwards; } }
   .up-res b { font-weight: 900; font-variant-numeric: tabular-nums; }
   .up-poll small { font-size: 13px; font-weight: 700; color: var(--muted); }
@@ -3063,6 +3063,15 @@
   .me-pop .confirm .acts { display: flex; gap: 8px; justify-content: flex-end; padding: 8px 0 0; }
   .me-pop .confirm .btn { background: var(--field); }
   .me-pop .confirm .btn.primary { background: var(--accent); color: #fff; }
+  .gs-scale { border: 0; font: inherit; color: inherit; cursor: pointer; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 4px; }
+  .gs-scale svg.i { width: 18px; height: 18px; color: var(--muted); }
+  .gs-scale:hover { background: var(--inner); }
+  /* bigger class rows */
+  .gc-row { grid-template-columns: 48px minmax(0, 1fr) 130px 100px 116px 24px; padding: 18px 20px; gap: 14px; }
+  .gc-row .gr-ct b { font-size: 17px; }
+  .gc-row .gr-ct small { font-size: 14px; }
+  .gc-row .gc-g b { font-size: 23px; }
+  @media (max-width: 760px) { .gc-row { padding: 14px 14px; } }
 </style>
 </head>
 <body>
@@ -3727,7 +3736,10 @@
   const clTrend = c => c.trend.map((v, i) => hasAt(c, i) ? v : null);
   const avg = CLASSES.length ? CLASSES.reduce((t, c) => t + c.pct, 0) / CLASSES.length : 0;
   const GPTS = { 'A+': 4, A: 4, 'A-': 3.7, 'B+': 3.3, B: 3, 'B-': 2.7, 'C+': 2.3, C: 2, 'C-': 1.7, 'D+': 1.3, D: 1, 'D-': .7, F: 0 };
-  const gpa = w => { const L = CLASSES.filter(c => !c.none); return L.length ? L.reduce((t, c) => t + GPTS[letter(c.pct)] + (w && /^(AP|IB)\b|\bhonors\b/i.test(c.name) ? (/^(AP|IB)\b/.test(c.name) ? 1 : .5) : 0), 0) / L.length : 0; };
+  // the student's GPA scale and class levels (Edit scale, public/js/averages-gpa.js), the usual 4.0 scale without it
+  const gpaList = () => CLASSES.filter(c => !c.none).map(c => ({ id: String(c.id), name: c.name, grade: letter(c.pct) }));
+  const gpa = w => { const G = window.AveragesGPA; if (G) { const r = G.compute(gpaList()); return (w ? r.weighted : r.unweighted) || 0; }
+    const L = CLASSES.filter(c => !c.none); return L.length ? L.reduce((t, c) => t + GPTS[letter(c.pct)] + (w && /^(AP|IB)\b|\bhonors\b/i.test(c.name) ? (/^(AP|IB)\b/.test(c.name) ? 1 : .5) : 0), 0) / L.length : 0; };
   const change = c => c.trend[c.trend.length - 1] - c.trend[c.trend.length - 3];
   const deltaChip = (d, long) => { const k = Math.abs(d) < .15 ? 'flat' : d > 0 ? 'up' : 'down'; return `<span class="gr-d ${k}" title="Change in the last two weeks">${k === 'flat' ? 'Steady' : (d > 0 ? '+' : '-') + Math.abs(d).toFixed(1)}${long && k !== 'flat' ? ' in 2 weeks' : ''}</span>`; };
   const pctOf = w => w.got == null ? 0 : w.got / w.of * 100;
@@ -3736,6 +3748,7 @@
   $('grLogo').style.setProperty('--c', '#2f72a8'); $('grLogo').innerHTML = EMOJI_SVG['📊'] || '';
   document.querySelector('.hub-h').style.setProperty('--class-c', 'var(--sky)');
 
+  document.addEventListener('click', e => { if (e.target.closest('[data-gpascale]') && window.AveragesGPA) window.AveragesGPA.edit(gpaList(), () => { grMeta(); grSum(false); }); });
   function grMeta() {
     const graded = WORK.filter(w => !w.missing).length, miss = WORK.filter(w => w.missing).length, fresh = WORK.filter(isNew).length;
     const m = (icon, html, cls = '') => `<span class="gm${cls}">${ico(icon)}<span class="t">${html}</span></span>`;
@@ -3771,7 +3784,7 @@
   function grSum(enter) {
     const L = OVERALL.length - 1, d = OVERALL[L] == null ? 0 : OVERALL[L] - (OVERALL[L - 2] ?? OVERALL[L]);
     $('grSum').innerHTML = `<div class="gs-big"><div class="gs-gr"><span class="l ${gcls(avg)}">${letter(avg)}</span><span class="p">${avg.toFixed(1)}%<small>overall</small></span></div>${deltaChip(d, true)}
-        <div class="gs-tiles"><div class="gs-tile"><small>GPA</small><b>${gpa(false).toFixed(2)}</b></div><div class="gs-tile" title="AP classes count one point higher"><small>Weighted</small><b>${gpa(true).toFixed(2)}</b></div></div></div>
+        <div class="gs-tiles"><div class="gs-tile"><small>GPA</small><b>${gpa(false).toFixed(2)}</b></div><div class="gs-tile" title="Honors and AP classes count more"><small>Weighted</small><b>${gpa(true).toFixed(2)}</b></div><button class="gs-tile gs-scale" data-gpascale title="How many points each grade is worth">${ico('sliders')}<small>GPA scale</small></button></div></div>
       <div class="gs-chart"><div class="gs-ch"><b>${GR.each ? 'Each class, week by week' : 'Your overall grade, week by week'}</b><button class="gs-each" id="gsEach" aria-pressed="${GR.each}">${ico('chart')}Each class</button></div>
         <div class="gs-box" id="gsBox">${chartSVG(enter)}<div class="gs-tip" id="gsTip" role="status"></div></div>
         <div class="gs-leg" id="gsLeg"${GR.each ? '' : ' hidden'}><span class="gs-ov"><i></i>Overall</span>${CLASSES.map(c => `<button data-hl="${c.id}" style="--c:${c.color}"><i></i>${esc(c.name)}</button>`).join('')}</div></div>`;

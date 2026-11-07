@@ -1203,6 +1203,11 @@
   .emo { display: inline-block; width: 1em; height: 1em; line-height: 0; flex-shrink: 0; vertical-align: middle; }
   .emo svg { display: block; width: 100%; height: 100%; fill: initial; stroke: none; opacity: 1; }
   .emo.submission-comment-icon { width: 15px; height: 15px; }
+  .add-submission-btn.is-off { opacity: 0.45; cursor: not-allowed; filter: grayscale(1); }
+  .submit-closed-note { margin: 8px 2px 0; font-size: 0.78rem; font-weight: 600; color: var(--text-muted); line-height: 1.4; }
+  .rev-acts { display: inline-flex; gap: 6px; margin-left: auto; flex: none; }
+  .rev-act { padding: 5px 12px; border-radius: 999px; background: var(--panel-inner); color: var(--text-dark); font-size: 0.76rem; font-weight: 800; text-decoration: none; }
+  .rev-act:hover { background: var(--control-hover); }
 </style>
 </head>
 <body>
@@ -1929,6 +1934,8 @@
     }
     const LIVE_DETAIL = LIVE && ID_OK(item.id) && ID_OK(item.courseId);
     const SUBMIT_LIVE = LIVE_DETAIL && !CLASSROOM;
+    // Does Schoology take a submission now? 'open', 'closed' (the teacher closed it) or 'none' (no dropbox); '' until known.
+    let submissionsState = '';
     const SUBMIT_MAX_BYTES = 95 * 1024 * 1024;   // the API's limit per file
     const SUBMIT_MAX_FILES = 20;                  // and files per turn-in (Schoology's limit)
     let submitScript = null;
@@ -2036,6 +2043,7 @@
         const d = await res.json();
         desc.textContent = d.description || 'No description provided by your teacher yet.';
         if (typeof d.maxPoints === 'number' && d.maxPoints > 0) item.maxPoints = d.maxPoints;
+        if (!CLASSROOM && (d.submissions === 'open' || d.submissions === 'closed' || d.submissions === 'none') && d.submissions !== submissionsState) { submissionsState = d.submissions; renderSubmissionsPanel(); }
         if (!CLASSROOM && d.outside === true && !item.outside) {
           item.outside = true;
           if (currentStatus === 'overdue') currentStatus = 'pending';
@@ -2571,6 +2579,7 @@
       if (zone && !zone.contains(e.relatedTarget)) zone.classList.remove('dragging');
     });
     submissionBodyEl.addEventListener('drop', e => {
+      if (SUBMIT_LIVE && (submissionsState === 'closed' || submissionsState === 'none')) { e.preventDefault(); return; }
       const zone = dropZoneOf(e);
       if (!zone) return;
       e.preventDefault();
@@ -2591,7 +2600,7 @@
         .filter(f => f && (typeof f.name === 'string' || typeof f.name === 'number') && String(f.name).trim())
         .map(f => {
           const name = String(f.name).trim().slice(0, 300);
-          return { name, ext: ((name.match(/\.([a-z0-9]{1,5})$/i) || [])[1] || '').toLowerCase(), size: Number(f.size) > 0 ? Number(f.size) : 0 };
+          return { name, ext: ((name.match(/\.([a-z0-9]{1,5})$/i) || [])[1] || '').toLowerCase(), size: Number(f.size) > 0 ? Number(f.size) : 0, id: /^\d{1,20}$/.test(String(f.id || '')) ? String(f.id) : '' };
         });
     }
     function revisionRowHTML(r, idx) {
@@ -2639,6 +2648,7 @@
             ${fileIcon(f.ext, `<span class="material-badge" style="background:${EXT_COLOR[f.ext] || '#83849a'}">${escapeHtml((f.ext || 'file').toUpperCase().slice(0, 4))}</span>`)}
             <span class="material-name">${escapeHtml(f.name)}</span>
             ${f.size ? `<span class="rev-size">${escapeHtml(fmtSize(f.size))}</span>` : ''}
+            ${subFileUrl(r, f) ? `<span class="rev-acts"><a class="rev-act" href="${escapeHtml(subFileUrl(r, f, true))}" target="_blank" rel="noopener noreferrer">View</a><a class="rev-act" href="${escapeHtml(subFileUrl(r, f))}" download>Download</a></span>` : ''}
           </div>`).join('')}</div>` : ''}
         ${text ? `<div class="rev-text">${escapeHtml(text)}</div>` : ''}
         <div class="modal-actions">
@@ -2646,6 +2656,11 @@
         </div>`);
       document.getElementById('modalCloseBtn').addEventListener('click', closeModal);
       document.getElementById('modalCloseBtn').focus();
+    }
+    /** A turned-in file, from Schoology through the API (GET /data/submission-file); '' when it can't be opened. */
+    function subFileUrl(r, f, view) {
+      if (!SUBMIT_LIVE || r.draft === true || !f.id || !/^\d{1,20}$/.test(String(r.id || ''))) return '';
+      return `${averagesApiBase()}/data/submission-file?section=${encodeURIComponent(item.courseId)}&assignment=${encodeURIComponent(item.id)}&revision=${encodeURIComponent(r.id)}&file=${encodeURIComponent(f.id)}${view ? '&view=1' : ''}`;
     }
     async function loadLiveHistory() {
       const seq = ++liveHistory.seq;
@@ -2846,13 +2861,19 @@
       } else {
         html += `<h2 style="margin-top:0;">Submission History</h2>${submissionHistoryHTML()}`;
       }
+      // Closed or no dropbox: the button stays, greyed, and says why. Already turned in (or graded) and still open:
+      // it's Resubmit, a new version on Schoology.
+      const shut = SUBMIT_LIVE && (submissionsState === 'closed' || submissionsState === 'none');
+      const again = SUBMIT_LIVE && !shut && (currentStatus === 'graded' || currentStatus === 'submitted' || currentStatus === 'returned' || (liveHistory.revisions || []).some(r => r.draft !== true));
       html += `
-        <button class="add-submission-btn" type="button" id="addSubmissionBtn">
+        <button class="add-submission-btn${shut ? ' is-off' : ''}" type="button" id="addSubmissionBtn"${shut ? ' aria-disabled="true"' : ''}>
           ${PLUS_ICON}
-          Add Submission
-        </button>`;
+          ${again ? 'Resubmit' : 'Add Submission'}
+        </button>
+        ${shut ? `<p class="submit-closed-note" role="status">${submissionsState === 'closed' ? 'Your teacher closed submissions for this one. Ask them if you need to turn something in.' : 'This assignment doesn\u2019t take submissions on Schoology.'}</p>`
+          : again ? `<p class="submit-closed-note">Turns in a new version. Your teacher sees the newest one${currentStatus === 'graded' ? ', and may grade it again' : ''}.</p>` : ''}`;
       bodyEl.innerHTML = html;
-      document.getElementById('addSubmissionBtn').addEventListener('click', () => openAddSubmissionModal());
+      document.getElementById('addSubmissionBtn').addEventListener('click', () => { if (!shut) openAddSubmissionModal(); });
     }
 
     const SOURCE_NAME = { canva: 'Canva', gdrive: 'Google Drive', onedrive: 'OneDrive', course: 'Course files' };
@@ -3741,7 +3762,7 @@
       // Add from Google Drive: the files Averages.io can see (drive.file), newest first.
       let drivePickItems = [];
       const driveHead = `<div class="canva-pick-head"><span>Your Google Drive files in Averages.io</span><button class="material-icon-btn" type="button" data-drive-close aria-label="Close Google Drive files">${REMOVE_ICON}</button></div>`;
-      const driveFoot = '<p class="canva-pick-empty drive-pick-more">Not here? In Google Drive, right-click the file and choose <strong>Open with → Averages.io for Drive</strong>, then attach it to this assignment. <button class="as-linkbtn" type="button" data-drive-open>Open Google Drive</button></p>';
+      const driveFoot = '<p class="canva-pick-empty drive-pick-more"><button class="as-linkbtn" type="button" data-drive-open>Add from Google Drive</button></p>';
       const DRIVE_KIND = { 'application/vnd.google-apps.document': 'Google Doc', 'application/vnd.google-apps.spreadsheet': 'Google Sheet', 'application/vnd.google-apps.presentation': 'Google Slides', 'application/vnd.google-apps.drawing': 'Google Drawing', 'application/vnd.google-apps.form': 'Google Form' };
       const DRIVE_ICON_KEY = { 'application/vnd.google-apps.document': 'gdoc', 'application/vnd.google-apps.spreadsheet': 'gsheet', 'application/vnd.google-apps.presentation': 'gslide', 'application/vnd.google-apps.drawing': 'gdraw', 'application/vnd.google-apps.form': 'gform' };
       /** Files hidden on the Files page with "Remove from Averages.io" stay out of this list too. */

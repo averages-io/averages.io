@@ -1134,7 +1134,7 @@
   .chip:nth-child(5n + 1) { --chip-c: var(--warm-a); } .chip:nth-child(5n + 2) { --chip-c: var(--sky); } .chip:nth-child(5n + 3) { --chip-c: var(--mint); } .chip:nth-child(5n + 4) { --chip-c: var(--grape); } .chip:nth-child(5n + 5) { --chip-c: #c98a00; }
   /* sticker tags: New pops off the page a little */
   html[data-theme="dark"] body .newtag { background: #e0aa2e !important; color: #1f1604 !important; box-shadow: 0 0 0 2px var(--field), 0 3px 8px -2px rgba(0, 0, 0, .55); }
-  .newtag { background: var(--sun) !important; color: var(--ink) !important; border-radius: 8px; transform: translate(var(--tx, 0px), var(--ty, 0px)) rotate(var(--tilt, -4deg)); box-shadow: 0 0 0 2px var(--field), 0 3px 8px -2px rgba(20, 21, 31, .25); will-change: transform; backface-visibility: hidden; } /* always drawn on its own layer, so hovering a row never redraws the text thinner or bolder */
+  .newtag { background: var(--sun) !important; color: #2b1d00 !important; border-radius: 8px; transform: translate(var(--tx, 0px), var(--ty, 0px)) rotate(var(--tilt, -4deg)); box-shadow: 0 0 0 2px var(--field), 0 3px 8px -2px rgba(20, 21, 31, .25); will-change: transform; backface-visibility: hidden; } /* always drawn on its own layer, so hovering a row never redraws the text thinner or bolder */
   .wrap { position: relative; isolation: isolate; }
   /* empty states get a doodle */
   :is(.nt-empty, .ag-none, .mp-none, .mdet-empty, .list-empty, .sv-empty)::before { content: ""; display: block; width: 120px; height: 72px; margin: 0 auto 12px; background: var(--life-doodle) center / contain no-repeat; }
@@ -1195,7 +1195,7 @@
   .wi-d.up { color: var(--good); background: color-mix(in srgb, var(--good) 13%, var(--field)); }
   .wi-d.down { color: var(--bad); background: color-mix(in srgb, var(--bad) 12%, var(--field)); }
   .wi-d.flat { color: var(--muted); background: var(--inner); }
-  .wi-new { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 8px; background: var(--sun); color: var(--ink); font-size: 11px; font-weight: 900; transform: rotate(-4deg); margin-left: 8px; }
+  .wi-new { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 8px; background: var(--sun); color: #2b1d00; font-size: 11px; font-weight: 900; transform: rotate(-4deg); margin-left: 8px; }
   .wi-acts { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
   .wi-note { font-size: 12px; font-weight: 700; color: var(--muted); }
   .wi-acts .btn { flex: none; }
@@ -2332,7 +2332,7 @@
   .up-res span, .up-res b { position: relative; display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
   .up-res.mine span { font-weight: 900; }
   /* the same sticker as New: sun yellow, a ring of the card color, a soft drop shadow and its own tilt */
-  .up-res em { flex: none; display: inline-flex; align-items: center; height: 18px; padding: 0 8px; border-radius: 8px; background: var(--sun); color: var(--ink); font-style: normal; font-size: 11px; font-weight: 900; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; transform: translateY(var(--ty, -1px)) rotate(var(--tilt, -4deg)); box-shadow: 0 0 0 2px var(--field), 0 3px 8px -2px rgba(20, 21, 31, .25); backface-visibility: hidden; }
+  .up-res em { flex: none; display: inline-flex; align-items: center; height: 18px; padding: 0 8px; border-radius: 8px; background: var(--sun); color: #2b1d00; font-style: normal; font-size: 11px; font-weight: 900; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; transform: translateY(var(--ty, -1px)) rotate(var(--tilt, -4deg)); box-shadow: 0 0 0 2px var(--field), 0 3px 8px -2px rgba(20, 21, 31, .25); backface-visibility: hidden; }
   @media (prefers-reduced-motion: no-preference) { body:not(.potato-mode) .up-res em { animation: lifeSticker .5s var(--spring) backwards; } }
   .up-res b { font-weight: 900; font-variant-numeric: tabular-nums; }
   .up-poll small { font-size: 13px; font-weight: 700; color: var(--muted); }
@@ -3264,6 +3264,20 @@
   .sg-soc .t { flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 2px; }
   .sg-soc .t small { color: var(--muted); font-weight: 600; }
   .sg-soc .sg-soyes { background: var(--accent); color: #fff; }
+  .sg-ddb { display: inline-flex; align-items: center; gap: 8px; }
+  .sg-ddb svg.chev { width: 14px; height: 14px; color: var(--muted); }
+  .sg-ddm { max-height: min(420px, 70vh); overflow-y: auto; }
+  .sg-tz { position: relative; display: inline-flex; align-items: center; max-width: 100%; }
+  .sg-tz select { appearance: none; -webkit-appearance: none; height: 38px; max-width: min(320px, 100%); padding: 0 36px 0 14px; border: 0; border-radius: 12px; background: var(--field); color: var(--ink); font: inherit; font-size: 14px; font-weight: 800; cursor: pointer; box-shadow: inset 0 0 0 2px var(--inner); text-overflow: ellipsis; }
+  .sg-tz select:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--focus); }
+  .sg-tz svg.chev { position: absolute; right: 12px; width: 14px; height: 14px; color: var(--muted); pointer-events: none; }
+  .sg-kbrec { display: grid; place-items: center; min-height: 64px; margin: 12px 0 4px; border-radius: 14px; background: var(--field); box-shadow: inset 0 0 0 2px var(--inner); outline: none; }
+  .sg-kbrec:focus-visible, .sg-kbrec:focus { box-shadow: inset 0 0 0 2px var(--focus); }
+  .sg-kbmsg { min-height: 18px; margin: 4px 0 0; font-size: 13px; font-weight: 700; color: var(--muted); }
+  .sg-kbmsg.bad { color: #e5484d; }
+  .sg-scan { align-items: stretch; text-align: left; }
+  .sg-crop-btns { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
+  .sg-spin { width: 28px; height: 28px; border-radius: 50%; border: 3px solid var(--inner); border-top-color: var(--accent); animation: spin .8s linear infinite; }
 </style>
 </head>
 <body>
@@ -3394,6 +3408,7 @@
   <symbol id="i-dl" viewBox="0 0 24 24" data-adj><g transform="translate(12 11.25) scale(1) translate(-12 -12)" style="stroke-width:calc(var(--isw, 2.2) / 1)"><path d="M12 4v11"/><path d="M7 10.5 12 15.5l5-5"/><path d="M5 20h14"/></g></symbol>
   <symbol id="i-chev-l" viewBox="0 0 24 24" data-adj><g transform="translate(12.5 12) scale(1) translate(-12 -12)" style="stroke-width:calc(var(--isw, 2.2) / 1)"><path d="M14.5 6 8.5 12l6 6"/></g></symbol>
   <symbol id="i-chev-r" viewBox="0 0 24 24" data-adj><g transform="translate(11.5 12) scale(1) translate(-12 -12)" style="stroke-width:calc(var(--isw, 2.2) / 1)"><path d="m9.5 6 6 6-6 6"/></g></symbol>
+  <symbol id="i-chev-d" viewBox="0 0 24 24"><g transform="rotate(90 12 12)"><g transform="translate(11.5 12) scale(1) translate(-12 -12)" style="stroke-width:calc(var(--isw, 2.2) / 1)"><path d="m9.5 6 6 6-6 6"/></g></g></symbol>
   <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20.5 4.2 12.7a4.9 4.9 0 0 1 0-7 4.9 4.9 0 0 1 7 0l.8.8.8-.8a4.9 4.9 0 0 1 7 0 4.9 4.9 0 0 1 0 7z"/></symbol>
   <symbol id="i-pin" viewBox="0 0 24 24" data-adj><g transform="translate(12 12.6) scale(1) translate(-12 -12)" style="stroke-width:calc(var(--isw, 2.2) / 1)"><path d="M8 3h8l-1.5 6 3.5 4H6l3.5-4z"/><path d="M12 13v8"/></g></symbol>
   <symbol id="i-send" viewBox="0 0 24 24"><path d="M3 11 21 3l-8 18-2-8z"/><path d="m11 13 4-4"/></symbol>
@@ -4123,7 +4138,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     layout: 'full', skin: 'is', theme: darkPref(), accent: savedFs.accent || 'punch', previews: OPTS().filePreviews !== false,
     notif: false, nGrades: true, nAssign: true, nDue: true, nMsgs: true, nAnn: true,
     drive: false, canva: false, onedrive: false, openIn: (() => { try { const v = localStorage.getItem('schoolagy_default_editor'); return v === 'onedrive' ? 'onedrive' : v === 'gdrive' ? 'drive' : 'canva'; } catch (_) { return 'canva'; } })(), cal: false };
-  { const q = FSX.q.get('section'); if (q && ['account', 'plan', 'appearance', 'notifications', 'apps', 'privacy', 'about'].includes(q)) SG.sec = q; }
+  { const q = FSX.q.get('section'); if (q && ['account', 'plan', 'appearance', 'personal', 'notifications', 'apps', 'privacy', 'about'].includes(q)) SG.sec = q; }
   // what the API says (filled in as each answer comes back): Plus, the calendar link, Canva, notifications, early features
   const LIVE = { billing: null, cal: null, canva: null, push: null, pushCfg: null, early: [], busy: '' };
   const SGV = { q: '', open: innerWidth > 860 };
@@ -4137,7 +4152,8 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const SECS = [
     { id: 'account', t: 'Account', ic: 'user', c: '#3e64b0', d: 'You, your school and how you sign in' },
     { id: 'plan', t: 'Plan', ic: 'star', c: '#b77d00', d: 'Averages Plus and the other plans' },
-    { id: 'appearance', t: 'Appearance', ic: 'brush', c: '#7a3fa0', d: 'Window, theme, colors, course order and speed' },
+    { id: 'appearance', t: 'Appearance', ic: 'brush', c: '#7a3fa0', d: 'Window, theme, colors and speed' },
+    { id: 'personal', t: 'Personalization', ic: 'sliders', c: '#b25600', d: 'Course order and Home shortcuts' },
     { id: 'notifications', t: 'Notifications', ic: 'bell', c: '#d0393e', d: 'What your browser tells you about' },
     { id: 'apps', t: 'Connected apps', ic: 'link', c: '#2e7d4f', d: 'Google Drive, Canva, OneDrive and calendars' },
     { id: 'privacy', t: 'Privacy', ic: 'eyeoff', c: '#44465a', d: 'What we keep and where it syncs' },
@@ -4148,13 +4164,21 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
                    ['orange', 'Orange', '#b25600', '#964800'], ['teal', 'Teal', '#0f7470', '#0b5e5b'], ['graphite', 'Graphite', '#44465a', '#33354a']];
   const THEMES = { light: 'Light', dark: 'Dark', auto: 'System' };
   const FS_SKINS = [['is', 'IS', 'Industry Standard']];
-  const STARTS = [['home', 'Home', 'home'], ['courses', 'Courses', 'binder'], ['grades', 'Grades', 'chart'], ['assignments', 'Assignments', 'inbox'], ['calendar', 'Calendar', 'cal'], ['messages', 'Messages', 'msg']];
+  const STARTS = [['home', 'Home', 'home'], ['courses', 'Courses', 'binder'], ['calendar', 'Calendar', 'cal'], ['grades', 'Grades', 'chart'], ['messages', 'Messages', 'msg'], ['assignments', 'Assignments', 'inbox'], ['files', 'Files', 'folder'], ['contacts', 'Contacts', 'users']];
+  // settings that sync (schoolagy_settings_options, like Windowed's): where the app opens, the time zone
+  const optGet = () => store.get('schoolagy_settings_options') || {};
+  const optSet = (k, v) => { const o = optGet(); if (v == null) delete o[k]; else o[k] = v; store.set('schoolagy_settings_options', o); FSX.syncPush(); };
+  const ZONES = (() => { let z = []; try { z = Intl.supportedValuesOf('timeZone'); } catch (e) { /* older browser */ } return z.length ? z : ['America/New_York', 'America/Chicago', 'America/Denver', 'America/Phoenix', 'America/Los_Angeles', 'America/Anchorage', 'Pacific/Honolulu', 'Europe/London', 'Europe/Paris', 'Asia/Tokyo', 'Australia/Sydney', 'UTC']; })();
+  const deviceZone = () => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'; } catch (e) { return 'UTC'; } };
+  const zoneName = z => z.replace(/_/g, ' ').replace(/\//g, ' / ');
+  const zoneNow = z => { try { return new Intl.DateTimeFormat('en-US', { timeZone: z, hour: 'numeric', minute: '2-digit' }).format(new Date()); } catch (e) { return ''; } };
   // what's being tried out right now: each one can be turned on by itself once New features early is on
   const EXPS = [['planner', 'Study planner', 'Splits big assignments into small steps and spreads them across the days before they\'re due.'],
                 ['goals', 'Grade goals', 'Set the grade you want in a class and see what you need on what\'s left.'],
                 ['focus', 'Focus timer', 'A timer on each assignment for short study sessions, with breaks in between.'],
                 ['recap', 'Weekly recap', 'A Sunday summary on Home: what you turned in, new grades and what\'s due next week.']];
   const startOf = v => STARTS.find(x => x[0] === v) || STARTS[0];
+  const startNow = () => startOf(optGet().openTo)[0];
   const PLANS = { plus: { t: 'Averages Plus', pr: '$2.99 a month' }, free: { t: 'Free', pr: '' } };
   // What Plus costs, from GET /billing/status's price ({ amount in cents, currency, interval, intervalCount }),
   // in the student's own currency: "$2.99 a month", "€34.99 a year". Empty when Stripe hasn't said yet.
@@ -4172,17 +4196,17 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   // every setting, for the search box here and for Search anything
   const IDX = [
     ['account', 'profile', 'Name and photo', 'profile picture edit name avatar'], ['account', 'email', 'Email', 'address school'], ['account', 'school', 'School', 'lincoln high district student id'], ['account', 'sgy', 'Schoology website', 'schoology url address domain site link'],
-    ['account', 'avemail', 'Averages email', 'email address verify change add code'], ['account', 'signin', 'Signed in with Schoology', 'sign in password login account'], ['account', 'signout', 'Sign out', 'log out leave'],
+    ['account', 'avemail', 'Averages email', 'email address verify change add code'], ['account', 'start', 'Open to', 'start page open first home default landing'], ['account', 'tz', 'Time zone', 'timezone zone clock time due dates'], ['account', 'signin', 'Signed in with Schoology', 'sign in password login account'], ['account', 'signout', 'Sign out', 'log out leave'],
     ['plan', 'current', 'Your plan', 'averages plus subscription renew billing'], ['plan', 'other', 'Other plans', 'free classic switch cancel downgrade get plus upgrade'], ['plan', 'payment', 'Payment and receipts', 'card billing cancel receipt'], ['plan', 'early', 'New features early', 'beta preview try'], ['plan', 'experiments', 'Experiments', 'beta labs try new features study planner grade goals focus timer weekly recap'],
     ['appearance', 'layout', 'Window', 'layout fullscreen windowed full screen background'], ['appearance', 'fstheme', 'Theme', 'is industry standard look style fullscreen theme'], ['appearance', 'theme', 'Mode', 'dark mode light system auto colors night'], ['appearance', 'accent', 'Accent color', 'color highlight buttons'],
-    ['appearance', 'corder', 'Course order', 'courses order move up down reorder sort classes'], ['appearance', 'shortcuts', 'Home shortcuts', 'shortcuts home buttons chips quick actions customize add remove'], ['appearance', 'potato', 'Potato mode', 'performance animations chromebook slow fast font'], ['appearance', 'motion', 'Reduce motion', 'animation accessibility'], ['appearance', 'previews', 'File previews', 'thumbnails images pdf'], ['appearance', 'cache', 'Saved on this device', 'cache storage clear space'],
+    ['personal', 'corder', 'Course order', 'courses order move up down reorder sort classes'], ['personal', 'shortcuts', 'Home shortcuts', 'shortcuts home buttons chips quick actions customize add remove'], ['appearance', 'potato', 'Potato mode', 'performance animations chromebook slow fast font'], ['appearance', 'motion', 'Reduce motion', 'animation accessibility'], ['appearance', 'previews', 'File previews', 'thumbnails images pdf'], ['appearance', 'cache', 'Saved on this device', 'cache storage clear space'],
     ['notifications', 'notif', 'Browser notifications', 'alerts push notices'], ['notifications', 'nGrades', 'Grade updates', 'scores new grade'], ['notifications', 'nAssign', 'New assignments', 'work posted homework'],
     ['notifications', 'nDue', 'Due date reminders', 'due soon remind tomorrow'], ['notifications', 'nMsgs', 'Messages', 'inbox chat'], ['notifications', 'nAnn', 'Announcements', 'updates posts course'], ['notifications', 'quiet', 'Quiet during class', 'school hours do not disturb silence'], ['notifications', 'test', 'Send a test notification', 'try check'],
     ['apps', 'schoology', 'Schoology', 'classes grades connected'], ['apps', 'drive', 'Google Drive', 'docs files connect disconnect'], ['apps', 'canva', 'Canva', 'designs connect disconnect'], ['apps', 'onedrive', 'OneDrive', 'microsoft files connect'],
     ['apps', 'openIn', 'Open Office files in', 'word powerpoint excel editing'], ['apps', 'cal', 'Calendar sync', 'google calendar apple calendar ical due dates link subscribe'],
     ['privacy', 'mode', 'Classic or Incognito', 'incognito mode stored servers'], ['privacy', 'sync', 'Sync across devices', 'devices phone computer'],
     ['privacy', 'data', 'Download your data', 'export copy'], ['privacy', 'delete', 'Delete your account', 'remove erase'],
-    ['about', 'version', 'Version', 'build beta update commit github number'], ['about', 'shortcuts', 'Keyboard shortcuts', 'keys command ctrl'], ['about', 'help', 'Help Center', 'support how to'], ['about', 'feedback', 'Send feedback', 'bug idea report'], ['about', 'legal', 'Privacy Policy and Terms', 'legal terms of service'],
+    ['about', 'version', 'Version', 'build beta update commit github number'], ['about', 'kbd', 'Keyboard shortcuts', 'keys command ctrl change edit'], ['about', 'help', 'Help Center', 'support how to'], ['about', 'feedback', 'Send feedback', 'bug idea report'], ['about', 'legal', 'Privacy Policy and Terms', 'legal terms of service'],
   ].map(([s, id, t, k]) => ({ s, id, t, k }));
 
   const plus = () => SG.plan === 'plus', incog = () => SG.mode === 'incognito', peers = () => SG.plan !== 'free';
@@ -4244,6 +4268,10 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
         return grp('Averages email', row('avemail', em ? esc(em) : 'No email yet', em ? (ok ? 'For grade reports and signing in on new devices.' : 'Not verified yet. Verify it to use it.') : 'Add one for grade reports and to sign in on new devices.',
           (ok ? chip(ico('ok') + 'Verified', ' on') : '') + btn('avemail', !em ? 'Add email' : ok ? 'Change' : 'Verify', '', em ? '' : ' primary')),
           'Only you see this. We never share it.'); })()}
+      ${(() => { const z = optGet().timeZone, auto = !z || z === 'auto' || !ZONES.includes(z), zone = auto ? deviceZone() : z, st = startOf(startNow());
+        return grp('Using Averages',
+          `<div class="sg-row" data-set="start">${tx('Open to', 'The page you see first when you open Averages.')}<button class="btn sg-ddb" data-act="startdd" data-dd="start" aria-haspopup="listbox" aria-expanded="false">${ico(st[2])}<span>${st[1]}</span>${ico('chev-d', 'i chev')}</button></div>` +
+          `<div class="sg-row wrapr" data-set="tz">${tx('Time zone', auto ? `Set by this device: ${esc(zoneName(zone))}, ${esc(zoneNow(zone))} now.` : `${esc(zoneName(zone))}, ${esc(zoneNow(zone))} now. Due dates and the calendar use it.`)}<label class="sg-tz"><select data-sel="tz" aria-label="Time zone"><option value="auto"${auto ? ' selected' : ''}>Automatic (${esc(zoneName(deviceZone()))})</option>${ZONES.map(x => `<option value="${esc(x)}"${!auto && x === z ? ' selected' : ''}>${esc(zoneName(x))}</option>`).join('')}</select>${ico('chev-d', 'i chev')}</label></div>`); })()}
       ${grp('Sign-in', row('signin', 'Signed in with Schoology', 'Your classes and grades come straight from Schoology.', chip(ico('ok') + 'Connected', ' on')))}
       <button class="btn sg-out" data-act="signout" data-set="signout">Sign out</button>`,
 
@@ -4275,14 +4303,16 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       ${grp('Colors',
         `<div class="sg-row wrapr" data-set="theme">${tx('Mode', SG.theme === 'auto' ? 'Follows your device: light or dark to match it.' : 'Light, dark, or follow your device.')}<div class="sg-modes" role="group" aria-label="Mode">${[['light', 'Light', 'sun'], ['dark', 'Dark', 'moon'], ['auto', 'System', 'window']].map(([v, t, ic]) => `<button class="sg-mode" data-seg="theme" data-v="${v}" aria-pressed="${SG.theme === v}">${ico(ic)}${t}</button>`).join('')}</div></div>` +
         `<div class="sg-row wrapr" data-set="accent">${tx('Accent color', 'Buttons, highlights and the page you\'re on.')}<div class="sg-sws" role="group" aria-label="Accent color">${ACCENTS.map(([k, n, c]) => `<button class="sg-swb" style="--c:${c}" data-accent="${k}" aria-pressed="${SG.accent === k}" aria-label="${n}" title="${n}">${ico('ok')}</button>`).join('')}</div></div>`)}
-      ${grp('Course order', courseRows(), FSX.courseOrder.get().length ? 'Your order. Windowed and the sidebar use it too.' : 'In period order. Move a course to set your own; Windowed and the sidebar use it too.')}
-      ${grp('Home shortcuts', scRowsHTML(), `The buttons under the search bar on Home. Drag to reorder; up to ${SC_MAX}.`)}
       ${grp('Speed',
         tog('potato', 'Potato mode', 'Turns off animation and effects and uses the system font. Good for Chromebooks and older computers.', potato) +
         row('motion', 'Reduce motion', 'Follows your device\'s setting. Potato mode turns off motion too.', `<span class="val">${rm ? 'On' : 'Off'}</span>`) +
         tog('previews', 'File previews', 'Small previews of images and PDFs in Files and your courses.', SG.previews) +
         row('cache', 'Saved on this device', cacheKB() ? `${cacheTxt()}, so pages open faster.` : 'Nothing saved right now.', btn('cache', cacheKB() ? 'Clear' : 'Cleared', cacheKB() ? '' : ' disabled')))}`;
     },
+
+    personal: () => `
+      ${grp('Course order', courseRows(), FSX.courseOrder.get().length ? 'Your order. Windowed and the sidebar use it too.' : 'In period order. Move a course to set your own; Windowed and the sidebar use it too.')}
+      ${grp('Home shortcuts', scRowsHTML(), `The buttons under the search bar on Home. Drag to reorder; up to ${SC_MAX}.`)}`,
 
     notifications: () => {
       const P = LIVE.push, cfg = LIVE.pushCfg, can = window.AveragesPush ? window.AveragesPush.supported() : false;
@@ -4337,10 +4367,12 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       const link = (id, t, sub) => `<button class="sg-row" data-set="${id}" data-act="${id}">${tx(t, sub)}${ico('chev-r', 'i chev')}</button>`;
       return `
       ${grp('', `<div class="sg-row sg-ver" data-set="version"><img src="${LOGO_SRC}" alt="">${tx('Averages.io', `${STAGE}${VER} (<a class="sg-build" href="https://github.com/averages-io/averages.io/commits/main/" target="_blank" rel="noopener noreferrer" title="${esc(WHEN)}">Build ${esc(SHA.slice(0, 7))}</a>)`)}</div>`)}
-      ${grp('Keyboard shortcuts',
-        row('shortcuts', 'Search anything', 'From any page but Home', keys(mod, 'K')) +
-        row('', 'Search this page', '', keys('/')) +
-        row('', 'Close a popup', '', keys('Esc')))}
+      ${(() => { const KS = window.AveragesShortcuts, lab = a => KS ? KS.label(KS.get(a)) : (a === 'search' ? [mod, 'K'] : ['/']);
+        const kb = (a, t, sub) => `<div class="sg-row" data-set="kbd">${tx(t, sub)}${keys(...lab(a))}${btn('kbset', 'Change', ` data-arg="${a}"`)}${KS && KS.changed(a) ? btn('kbreset', 'Reset', ` data-arg="${a}"`) : ''}</div>`;
+        return grp('Keyboard shortcuts',
+          kb('search', 'Search anything', 'From any page. On Home it goes to the big search box.') +
+          kb('find', 'Search this page', 'Jumps to the page\'s own search box.') +
+          row('', 'Close a popup', '', keys('Esc')), 'Change one to use different keys. Its old keys stop working while it\'s changed.'); })()}
       ${grp('Help', link('help', 'Help Center', 'How things work, step by step') + link('feedback', 'Send feedback', 'Found a bug or have an idea? Tell us on GitHub.') + link('legal', 'Privacy Policy and Terms', ''))}`;
     },
   };
@@ -4492,16 +4524,20 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     }));
   }
   function photoPick(done) {
+    scanNotice().then(go => { if (go) photoPickNow(done); });
+  }
+  function photoPickNow(done) {
     const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/png,image/jpeg,image/webp'; inp.hidden = true; document.body.appendChild(inp);
     inp.addEventListener('change', () => {
       const f = inp.files && inp.files[0]; inp.remove(); if (!f) return;
       if (!/^image\/(png|jpeg|webp)$/.test(f.type)) { toast('Pick a PNG, JPG or WebP picture.'); return; }
       if (f.size > 15 * 1048576) { toast('That picture is too big. Pick one under 15 MB.'); return; }
-      toast('Checking your picture…');
+      scanning(true);
       scanPicture(f).then(v => {
+        scanning(false);
         if (!v.allowed) { toast(v.reason || 'That picture can\'t be used. Try a different one.'); return; }
         const r = new FileReader(); r.onload = () => photoCrop(String(r.result), done); r.onerror = () => toast('That picture couldn\'t be read.'); r.readAsDataURL(f);
-      }, () => toast('Couldn\'t check that picture right now. Try again in a moment.'));
+      }, () => { scanning(false); toast('Couldn\'t check that picture right now. Try again in a moment.'); });
     }, { once: true });
     inp.click();
   }
@@ -4717,15 +4753,75 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     dlgOpen({ title: `Disconnect ${APPS[k]}?`, ok: 'Disconnect', danger: true, body: `<p>${keep} Averages just can't open them anymore. You can connect again anytime.</p>`,
       onOk: () => { FST.disconnect(k).then(() => { SG[k] = false; if (SG.openIn === k) SG.openIn = ['canva', 'drive', 'onedrive'].find(a => SG[a]) || 'canva'; redraw(); toast(`Disconnected ${APPS[k]}.`); }, e => toast(FST.message(e))); } });
   }
+  // ---------- change a keyboard shortcut: press the new keys ----------
+  function kbRecord(a) {
+    const KS = window.AveragesShortcuts; if (!KS) return;
+    const name = a === 'search' ? 'Search anything' : 'Search this page';
+    let pick = null;
+    const d = dlgOpen({ title: `New keys for ${esc(name)}`, ok: 'Save', body: `<p>Press the keys you want to use.${a === 'search' ? ' Use Ctrl' + (/Mac|iPhone|iPad/.test(navigator.platform || '') ? ' or ⌘' : '') + ' with a letter, so it still works while you type.' : ''}</p><div class="sg-kbrec" tabindex="0" id="sgKbRec" aria-live="polite"><span class="sg-keys"><kbd>…</kbd></span></div><p class="sg-kbmsg" id="sgKbMsg"></p>`,
+      onOk: () => { if (!pick) { d.el.querySelector('#sgKbRec').focus(); return false; } KS.set(a, pick); sgPane(); toast(`${name} is now ${KS.label(pick).join(' ')}.`); } });
+    const rec = d.el.querySelector('#sgKbRec'), msg = d.el.querySelector('#sgKbMsg'), okb = d.el.querySelector('[data-dlg="ok"]');
+    okb.disabled = true; rec.focus();
+    const BROWSER = ['w', 't', 'n', 'q', 'r', 'l', 'p', 'tab'];
+    rec.addEventListener('keydown', e => {
+      if (['Shift', 'Control', 'Alt', 'Meta', 'Tab', 'Escape', 'Enter'].includes(e.key)) return;
+      e.preventDefault(); e.stopPropagation();
+      const mac = /Mac|iPhone|iPad/.test(navigator.platform || ''), c = { k: (e.key || '').toLowerCase(), mod: mac ? e.metaKey || e.ctrlKey : e.ctrlKey, shift: e.shiftKey, alt: e.altKey };
+      let bad = '';
+      if (!c.k || c.k.length > 1 && !/^f\d{1,2}$/.test(c.k)) bad = 'Pick a letter, number or symbol key.';
+      else if (a === 'search' && !c.mod && !/^f\d/.test(c.k)) bad = `Add ${mac ? '⌘' : 'Ctrl'} so it doesn't fire while you type.`;
+      else if (c.mod && !c.shift && !c.alt && BROWSER.includes(c.k)) bad = 'Your browser uses those keys. Try another.';
+      else { const other = a === 'search' ? 'find' : 'search', o = KS.get(other); if (o.k === c.k && !!o.mod === c.mod && !!o.shift === c.shift && !!o.alt === c.alt) bad = 'Those keys already do something else.'; }
+      rec.querySelector('.sg-keys').innerHTML = KS.label(c).map(x => `<kbd>${esc(x)}</kbd>`).join('');
+      msg.textContent = bad; msg.classList.toggle('bad', !!bad);
+      pick = bad ? null : c; okb.disabled = !pick;
+    });
+  }
+
+  // ---------- before a picture is picked: it's checked on this device (like Windowed's "Before you upload…") ----------
+  function scanNotice() {
+    return new Promise(res => {
+      const el = document.createElement('div');
+      el.className = 'sg-crop'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-labelledby', 'sgScanT');
+      el.innerHTML = `<div class="sg-crop-box sg-scan"><h3 id="sgScanT">Before you upload…</h3><p>Your photo is checked for inappropriate content on this device. It doesn't leave your computer for the check.</p><div class="sg-crop-btns"><button class="btn" data-x="no">Go back</button><button class="btn primary" data-x="yes">Continue</button></div></div>`;
+      document.body.appendChild(el);
+      const done = v => { el.remove(); document.removeEventListener('keydown', key, true); res(v); };
+      const key = e => { if (e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); done(false); } };
+      document.addEventListener('keydown', key, true);
+      el.addEventListener('click', e => { const b = e.target.closest('[data-x]'); if (b) done(b.dataset.x === 'yes'); else if (e.target === el) done(false); });
+      el.querySelector('[data-x="yes"]').focus();
+    });
+  }
+  function scanning(on) {
+    let el = document.getElementById('sgScanning');
+    if (!on) { if (el) el.remove(); return; }
+    if (el) return;
+    el = document.createElement('div'); el.id = 'sgScanning'; el.className = 'sg-crop';
+    el.innerHTML = '<div class="sg-crop-box"><span class="pp-spin sg-spin" aria-hidden="true"></span><p role="status">Your photo is being scanned…</p></div>';
+    document.body.appendChild(el);
+  }
+
   function deleteAccount() {
-    dlgOpen({ title: 'Delete your Averages account?', ok: 'Delete everything', danger: true, body: `<p>This deletes everything Averages stored about you: synced settings, your profile picture and background, notifications, your calendar link and your connected apps. Then you're signed out.</p><p>Schoology isn't changed. Your classes, grades and work stay there.</p>`,
-      onOk: () => {
+    const WORD = 'DELETE';
+    if (!EMOJI_SVG['📋']) EMOJI_SVG['📋'] = '';
+    const d = dlgOpen({ title: 'Delete your Averages account?', ok: 'Delete everything', danger: true, body: `<p>This deletes everything Averages stored about you: synced settings, your profile picture and background, notifications, your calendar link and your connected apps. Then you're signed out.</p><p>Schoology isn't changed. Your classes, grades and work stay there.</p>
+      <label class="sg-fl sg-typeto"><b>Type <button type="button" class="sg-copyw" data-dact="copy" title="Copy" aria-label="Copy the word ${WORD}">${WORD}<span class="sg-cpe" aria-hidden="true">${EMOJI_SVG['📋'] || ''}</span></button> to delete your account.</b><input id="sgDelTxt" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="${WORD}"></label>`,
+      onOk: el => {
+        if (el.querySelector('#sgDelTxt').value.trim() !== WORD) { el.querySelector('#sgDelTxt').focus(); return false; }
         toast('Deleting…');
         FSX.api('/account', { method: 'DELETE' }).then(() => {
           try { localStorage.clear(); sessionStorage.clear(); } catch (_) {}
           location.replace('/?deleted=1');
         }, e => toast(e && e.message === 'plus_active' ? 'You have Averages Plus. Cancel it in Plan first, then delete your account when it ends.' : 'Couldn\'t delete your account. Try again in a moment.'));
       } });
+    const inp = d.el.querySelector('#sgDelTxt'), okb = d.el.querySelector('[data-dlg="ok"]');
+    const check = () => { okb.disabled = inp.value.trim() !== WORD; };
+    inp.addEventListener('input', check); check();
+    d.onAct = k => {
+      if (k !== 'copy') return;
+      const done = () => { toast('Copied.'); inp.focus(); };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(WORD).then(done, () => inp.focus()); else inp.focus();
+    };
   }
   function calSet(on, fresh) {
     if (LIVE.busy) return; LIVE.busy = 'cal';
@@ -4803,6 +4899,8 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (k === 'back') { SGV.open = false; sgAll(); const r = $('sgNav').querySelector(`[data-sec="${SG.sec}"]`); if (r) r.focus({ preventScroll: true }); }
     else if (k === 'startdd') ddOpen(a);
     else if (k === 'profile') editProfile();
+    else if (k === 'kbset') kbRecord(a.dataset.arg);
+    else if (k === 'kbreset') { if (window.AveragesShortcuts) window.AveragesShortcuts.set(a.dataset.arg, null); sgPane(); toast('Back to the usual keys.'); }
     else if (k === 'avemail') editEmail();
     else if (k === 'signout') {
       a.outerHTML = `<div class="sg-soc" role="group" aria-label="Sign out"><span class="t"><b>Sign out of Averages.io?</b><small>You can sign back in with Schoology any time.</small></span><button class="btn" data-act="socancel">Cancel</button><button class="btn sg-soyes" data-act="soyes">Sign out</button></div>`;
@@ -4834,14 +4932,18 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     else if (k === 'legal') FSX.newTab('https://averages.io/privacy-policy');
   });
   $('sgPane').addEventListener('change', e => {
-    const s = e.target.closest('[data-sel]'); if (!s) return; SG[s.dataset.sel] = s.value; sgSave();
-    toast(`Averages opens to ${STARTS.find(x => x[0] === s.value)[1]} next time.`);
+    const s = e.target.closest('[data-sel]'); if (!s) return;
+    if (s.dataset.sel === 'tz') {
+      const v = s.value === 'auto' || !ZONES.includes(s.value) ? null : s.value;
+      optSet('timeZone', v); sgPane();
+      toast(v ? `Time zone set to ${zoneName(v)}.` : 'Time zone follows this device again.');
+    }
   });
   // the Open to menu: a list of pages under the button, with a check on the one you picked
   let dd = null;
   function ddOpen(b) {
     if (dd) { ddClose(true); return; }
-    document.body.insertAdjacentHTML('beforeend', `<div class="sg-ddm" role="listbox" aria-label="Start page">${STARTS.map(([v, t, ic]) => `<button class="sg-ddo" role="option" data-v="${v}" aria-selected="${SG.start === v}" tabindex="-1">${ico(ic)}<span>${t}</span>${ico('ok', 'i ck')}</button>`).join('')}</div>`);
+    document.body.insertAdjacentHTML('beforeend', `<div class="sg-ddm" role="listbox" aria-label="Start page">${STARTS.map(([v, t, ic]) => `<button class="sg-ddo" role="option" data-v="${v}" aria-selected="${startNow() === v}" tabindex="-1">${ico(ic)}<span>${t}</span>${ico('ok', 'i ck')}</button>`).join('')}</div>`);
     const m = document.body.lastElementChild, r = b.getBoundingClientRect(), w = Math.max(r.width, 220), h = m.offsetHeight;
     m.style.width = w + 'px'; m.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.right - w)) + 'px';
     const below = innerHeight - r.bottom - 8 >= h + 6; m.style.top = (below ? r.bottom + 6 : Math.max(8, r.top - h - 6)) + 'px';
@@ -4858,8 +4960,8 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   }
   function ddClose(refocus) { if (!dd) return; const { m, b } = dd; dd = null; m.remove(); if (b.isConnected) { b.setAttribute('aria-expanded', 'false'); if (refocus) b.focus({ preventScroll: true }); } }
   function ddPick(v) {
-    ddClose(true); if (SG.start === v) return;
-    SG.start = v; sgSave(); sgPane(); toast(`Averages opens to ${startOf(v)[1]} next time.`);
+    ddClose(true); if (startNow() === v) return;
+    optSet('openTo', v === 'home' ? null : v); sgPane(); toast(`Averages opens to ${startOf(v)[1]} next time.`);
   }
   document.addEventListener('pointerdown', e => { if (dd && !e.target.closest('.sg-ddm') && !e.target.closest('[data-act="startdd"]')) ddClose(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && dd) { e.preventDefault(); e.stopImmediatePropagation(); ddClose(true); } }, true);

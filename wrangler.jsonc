@@ -3,6 +3,8 @@
   "name": "averages-io",
   "compatibility_date": "2026-09-05",
   "main": "./worker/index.js",
+  // 1 = the new sign-in page at "/" (fs-src/signin.html), 0 = the current one.
+  "vars": { "NEW_SIGNIN_PAGE": "0" },
   "assets": {
     "directory": "./out",
     "binding": "ASSETS",

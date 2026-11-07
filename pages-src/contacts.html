@@ -457,6 +457,25 @@
   .contacts-state-btn { border: none; border-radius: 999px; background: var(--accent); color: #fff; font: inherit; font-weight: 800; font-size: 0.8rem; padding: 8px 16px; cursor: pointer; }
   .contacts-state-btn:hover { background: var(--accent-dark); }
   .contacts-state-btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
+  .contacts-head-end { display: inline-flex; align-items: center; gap: 12px; }
+  .contacts-add-btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border: none; border-radius: 999px; background: var(--accent); color: #fff; font: inherit; font-size: 0.8rem; font-weight: 800; cursor: pointer; }
+  .contacts-add-btn svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; }
+  .contacts-add-btn[hidden] { display: none; }
+  .contacts-add-btn:hover { filter: brightness(1.08); }
+  .contact-remove-btn { display: block; margin: 14px auto 0; border: none; background: none; font: inherit; font-size: 0.82rem; font-weight: 700; color: var(--grade-bad); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+  .contact-remove-btn[hidden] { display: none; }
+  .add-box { max-width: 440px; }
+  .add-box h3 { margin: 0; font-size: 1.1rem; font-weight: 800; font-style: italic; color: var(--text-dark); }
+  .add-sub { margin: 4px 0 0; font-size: 0.8rem; color: var(--text-muted); }
+  .add-list { max-height: 320px; overflow-y: auto; margin-top: 8px; }
+  .add-item { display: flex; align-items: center; gap: 12px; padding: 8px 4px; }
+  .add-item + .add-item { border-top: 1px solid var(--border); }
+  .add-item .contact-avatar { width: 34px; height: 34px; font-size: 0.8rem; }
+  .add-item b { flex: 1; min-width: 0; font-size: 0.88rem; color: var(--text-dark); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .add-item button { flex: none; padding: 6px 14px; border: none; border-radius: 999px; background: var(--panel-inner); color: var(--text-dark); font: inherit; font-size: 0.78rem; font-weight: 800; cursor: pointer; }
+  .add-item button:hover { background: var(--control-hover); }
+  .add-item button[disabled] { opacity: 0.6; cursor: default; }
+  .add-note { padding: 18px 4px; text-align: center; font-size: 0.82rem; color: var(--text-muted); }
 </style>
 </head>
 <body>
@@ -479,7 +498,7 @@
       <div class="card-inner">
         <div class="section-head">
           <h2 id="contactsHeading">District Directory</h2>
-          <span class="contacts-total" id="contactsTotal"></span>
+          <span class="contacts-head-end"><span class="contacts-total" id="contactsTotal"></span><button class="contacts-add-btn" id="contactsAddBtn" type="button" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add contacts</button></span>
         </div>
         <div class="contacts-search-wrap" id="contactsSearchWrap">
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
@@ -516,6 +535,20 @@
           Email
         </a>
       </div>
+      <button class="contact-remove-btn" id="modalRemoveBtn" type="button" hidden>Remove from contacts</button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="addContactsModal">
+    <div class="modal-box add-box" role="dialog" aria-modal="true" aria-labelledby="addContactsTitle">
+      <button class="modal-close" id="addContactsClose" type="button" aria-label="Close">✕</button>
+      <h3 id="addContactsTitle">Add contacts</h3>
+      <p class="add-sub">People in Schoology you can message: counselors, coaches, other teachers.</p>
+      <div class="contacts-search-wrap add-find">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="search" id="addContactsFind" placeholder="Find people in Schoology" autocomplete="off" aria-label="Find people in Schoology">
+      </div>
+      <div class="add-list" id="addContactsList" role="list"></div>
     </div>
   </div>
 
@@ -751,6 +784,12 @@
           category: 'myTeachers',
         };
       });
+      // people the student added themselves (Add contacts; the same list as Fullscreen's Contacts)
+      const store = k => { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch { return null; } };
+      const dir = store('fsct_dir') || {}, added = Array.isArray(store('fsct_added')) ? store('fsct_added') : [];
+      added.map(String).filter(id => dir[id] && !next.some(c => c.id === id)).forEach(id => next.push({
+        id, name: ctText(dir[id], 120), role: 'Added by you', dept: '', school: '', email: '', phone: '', color: '#83849a', category: 'added',
+      }));
       CONTACTS.length = 0;
       next.forEach(c => CONTACTS.push(c));
     }
@@ -783,7 +822,7 @@
       }
       document.getElementById('contactsHeading').textContent = 'Your teachers';
       document.getElementById('contactsTotal').textContent = ctState === 'ready' && CONTACTS.length
-        ? `${CONTACTS.length} ${CONTACTS.length === 1 ? 'teacher' : 'teachers'}` : '';
+        ? (CONTACTS.some(c => c.category === 'added') ? `${CONTACTS.length} ${CONTACTS.length === 1 ? 'contact' : 'contacts'}` : `${CONTACTS.length} ${CONTACTS.length === 1 ? 'teacher' : 'teachers'}`) : '';
       document.getElementById('contactsSub').textContent = ctClassroom ? 'From your Google Classroom classes' : 'From your Schoology classes';
       contactsSearchInput.placeholder = 'Search by name or class';
     }
@@ -957,11 +996,60 @@
         window.location.href = url;
       };
       modalEmailBtn.href = `mailto:${c.email}`;
+      modalEmailBtn.hidden = !c.email;
+      const rm = document.getElementById('modalRemoveBtn');
+      rm.hidden = c.category !== 'added';
+      rm.onclick = () => { ctAddedSet(c.id, null); closeContactModal(); };
       if (CT_LIVE) ctTidyModal(c);
       contactModal.classList.add('show');
       document.getElementById('modalCloseBtn').focus();
     }
     function closeContactModal() { contactModal.classList.remove('show'); }
+
+    // ---------- Add contacts: anyone Schoology lets them message (GET /messages/recipients) ----------
+    function ctAddedSet(id, name) {
+      const read = k => { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch { return null; } };
+      const dir = read('fsct_dir') || {}, added = (Array.isArray(read('fsct_added')) ? read('fsct_added') : []).map(String).filter(x => x !== id);
+      if (name) { added.push(id); dir[id] = name; }
+      try { localStorage.setItem('fsct_added', JSON.stringify(added)); localStorage.setItem('fsct_dir', JSON.stringify(dir)); } catch {}
+      const teachers = CONTACTS.filter(c => c.category !== 'added');
+      ctSetContacts(teachers.map(c => Object.assign({}, c)));
+      ctResort(); ctRenderHeader(); renderContactList();
+    }
+    let ctDirectory = null;
+    const addModal = document.getElementById('addContactsModal');
+    function addDraw() {
+      const list = document.getElementById('addContactsList'), q = document.getElementById('addContactsFind').value.trim().toLowerCase();
+      if (ctDirectory === null) { list.innerHTML = '<p class="add-note" role="status">Loading people…</p>'; return; }
+      if (ctDirectory === 'error') { list.innerHTML = '<p class="add-note" role="alert">Couldn\'t load people from Schoology. Try again in a moment.</p>'; return; }
+      const have = new Set(CONTACTS.map(c => c.id));
+      const hits = ctDirectory.filter(p => !q || p.name.toLowerCase().includes(q)).slice(0, 60);
+      list.innerHTML = hits.length ? hits.map(p => `<div class="add-item" role="listitem"><span class="contact-avatar" style="background:${escapeHtml(window.AveragesAvatar ? window.AveragesAvatar.background(p.name) : '#83849a')}">${escapeHtml(initials(p.name))}</span><b>${escapeHtml(p.name)}</b><button type="button" data-add="${escapeHtml(p.id)}"${have.has(p.id) ? ' disabled' : ''}>${have.has(p.id) ? 'Added' : 'Add'}</button></div>`).join('')
+        : `<p class="add-note">${ctDirectory.length ? 'Nobody matches that.' : 'Schoology isn\'t listing anyone else you can message.'}</p>`;
+    }
+    function addOpen() {
+      addModal.classList.add('show');
+      document.getElementById('addContactsFind').value = '';
+      addDraw(); document.getElementById('addContactsFind').focus();
+      if (ctDirectory === null || ctDirectory === 'error') {
+        ctDirectory = null; addDraw();
+        fetch(CT_API + '/messages/recipients', { credentials: 'include', cache: 'no-store' }).then(r => (r.ok ? r.json() : Promise.reject(r.status)))
+          .then(j => { ctDirectory = (Array.isArray(j.recipients) ? j.recipients : []).filter(p => p && p.id != null && p.name).map(p => ({ id: String(p.id), name: String(p.name).slice(0, 120) })); addDraw(); })
+          .catch(() => { ctDirectory = 'error'; addDraw(); });
+      }
+    }
+    const addClose = () => { addModal.classList.remove('show'); document.getElementById('contactsAddBtn').focus(); };
+    document.getElementById('contactsAddBtn').hidden = !CT_LIVE || ctClassroom;
+    document.getElementById('contactsAddBtn').addEventListener('click', addOpen);
+    document.getElementById('addContactsClose').addEventListener('click', addClose);
+    document.getElementById('addContactsFind').addEventListener('input', addDraw);
+    addModal.addEventListener('click', e => {
+      if (e.target === addModal) { addClose(); return; }
+      const b = e.target.closest('[data-add]'); if (!b || b.disabled) return;
+      const p = (ctDirectory || []).find(x => x.id === b.dataset.add); if (!p) return;
+      ctAddedSet(p.id, p.name); addDraw();
+    });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && addModal.classList.contains('show')) addClose(); });
 
     document.getElementById('contactsListBody').addEventListener('click', e => {
       const row = e.target.closest('.contact-row');

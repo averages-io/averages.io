@@ -102,6 +102,8 @@ export interface SessionState {
   incognito?: boolean;
   provider?: "schoology" | "google";
   uid?: string;
+  /** The school email Schoology has for them. */
+  email?: string;
 }
 
 /**
@@ -136,6 +138,7 @@ export async function getSession(opts?: { fresh?: boolean }): Promise<SessionSta
         incognito: data?.incognito === true,
         provider: data?.provider === "google" ? "google" : "schoology",
         uid: data?.uid != null ? String(data.uid) : undefined,
+        email: typeof data?.email === "string" ? data.email.slice(0, 200) : undefined,
       };
       if (!data?.demo && data?.uid != null) claimCloudConnections(String(data.uid));
     }

@@ -428,6 +428,12 @@
     .nav-link { min-width: 0; padding: 10px 3px 8px; }
     .nav-link .label { font-size: 0.58rem; }
   }
+  /* Filters: bigger and easier to hit, on one line */
+  .assign-filters { flex-wrap: nowrap; gap: 8px; margin: 16px 0 8px; }
+  .assign-filter, .assign-filter-select-btn { flex: none; padding: 9px 18px; font-size: 0.86rem; white-space: nowrap; }
+  .assign-filter-select-wrap { flex: none; }
+  .assign-filter-arrow { width: 10px; height: 10px; }
+  @media (max-width: 640px) { .assign-filters { gap: 4px; } .assign-filter, .assign-filter-select-btn { padding: 7px 10px; font-size: 0.74rem; } }
 </style>
 </head>
 <body>

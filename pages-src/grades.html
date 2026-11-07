@@ -679,6 +679,16 @@
   }
   .calc-reset-btn:hover { background: var(--border); }
   .calc-reset-btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
+  .gpa-w { margin-left: 14px; }
+  .gpa-value-w { font-size: 1.3rem; }
+  .gpa-edit { margin-left: auto; align-self: center; border: none; border-radius: 999px; padding: 7px 14px; background: var(--panel-inner); color: var(--text-dark); font: inherit; font-size: 0.78rem; font-weight: 800; cursor: pointer; }
+  .gpa-edit:hover { background: var(--control-hover); }
+  /* Bigger course rows */
+  table.grades-table tbody td { padding-top: 16px !important; padding-bottom: 16px !important; }
+  .course-row-name { font-size: 1rem; }
+  .course-row-code { font-size: 0.78rem; }
+  .course-row-meta { font-size: 0.8rem; }
+  .course-tick { min-height: 44px; }
 </style>
 </head>
 <body>
@@ -700,11 +710,17 @@
     <div class="card">
       <div class="card-inner">
         <div class="gpa-strip">
-          <span class="gpa-label-wrap" tabindex="0" role="button" aria-label="Estimated GPA — Unweighted, 4.0 scale, based on current grades">
+          <span class="gpa-label-wrap" tabindex="0" role="button" aria-label="Estimated GPA — Unweighted, based on current grades">
             <span class="gpa-label">Estimated GPA</span>
-            <span class="gpa-tooltip" role="tooltip">Unweighted, 4.0 scale, based on current grades</span>
+            <span class="gpa-tooltip" role="tooltip">Unweighted, based on current grades and your GPA scale</span>
           </span>
           <span class="gpa-value" id="gpaValue" data-live="gpa:value"></span>
+          <span class="gpa-label-wrap gpa-w" tabindex="0" role="button" aria-label="Weighted GPA — Honors and AP classes count more">
+            <span class="gpa-label">Weighted</span>
+            <span class="gpa-tooltip" role="tooltip">Honors and AP classes count more. Edit the scale to change how much.</span>
+          </span>
+          <span class="gpa-value gpa-value-w" id="gpaWeighted"></span>
+          <button class="gpa-edit" type="button" id="gpaEditBtn">Edit GPA scale</button>
         </div>
         <div class="section-head">
           <h2>All Courses</h2>
@@ -1275,11 +1291,14 @@
       'D+': 1.3, 'D': 1.0, 'D-': 0.7,
       'F': 0.0,
     };
-    function computeGPA() {
+    // The student's own scale (Edit GPA scale, public/js/averages-gpa.js) when it's there
+    function gpaPair() {
+      if (window.AveragesGPA) return window.AveragesGPA.compute(COURSES.map(c => ({ id: String(c.id), name: c.name, grade: c.grade })));
       const graded = COURSES.filter(c => GPA_SCALE[c.grade] !== undefined);
-      if (!graded.length) return null;
-      return graded.reduce((sum, c) => sum + GPA_SCALE[c.grade], 0) / graded.length;
+      const u = graded.length ? graded.reduce((sum, c) => sum + GPA_SCALE[c.grade], 0) / graded.length : null;
+      return { unweighted: u, weighted: u };
     }
+    function computeGPA() { return gpaPair().unweighted; }
     function gpaColor(gpa) {
       if (gpa >= 3.7) return 'var(--grade-good)';
       if (gpa >= 3.0) return 'var(--grade-b)';
@@ -1292,7 +1311,14 @@
       const gpaValueEl = document.getElementById('gpaValue');
       gpaValueEl.textContent = gpa === null ? '—' : gpa.toFixed(2);
       gpaValueEl.style.color = gpa === null ? '' : gpaColor(gpa);
+      const w = gpaPair().weighted, wEl = document.getElementById('gpaWeighted');
+      wEl.textContent = w === null ? '—' : w.toFixed(2);
+      wEl.style.color = w === null ? '' : gpaColor(Math.min(4, w));
     }
+    document.getElementById('gpaEditBtn').addEventListener('click', () => {
+      if (window.AveragesGPA) window.AveragesGPA.edit(COURSES.map(c => ({ id: String(c.id), name: c.name, grade: c.grade })), renderGPA);
+    });
+    window.addEventListener('storage', e => { if (e.key === 'schoolagy_settings_options') renderGPA(); });
 
     // ------------------------------------------------------------------
     // Predicted-grade reasoning popup — ported verbatim from

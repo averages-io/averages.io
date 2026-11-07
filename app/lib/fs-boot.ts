@@ -4,7 +4,22 @@ export const FS_BOOT_JS = `(function () {
     if (!e.persisted) return;
     if (!go() && window.__averagesSplash && window.__averagesSplash.hide) window.__averagesSplash.hide();
   });
+  if (openTo()) return;
   go();
+  // Settings > Account > Open to: the first page of a new visit (a new tab or window) is the one picked, not Home.
+  function openTo() {
+    try {
+      var p = location.pathname.replace(/\\/+$/, "") || "/";
+      if (p === "/" || p === "/onboard" || p === "/signout" || p === "/scan") return false;
+      if (sessionStorage.getItem("averages_opened") === "1") return false;
+      sessionStorage.setItem("averages_opened", "1");
+      if (p !== "/home" || location.search || location.hash) return false;
+      var to = (JSON.parse(localStorage.getItem("schoolagy_settings_options") || "{}") || {}).openTo;
+      if (!/^(courses|calendar|grades|messages|assignments|files|contacts)$/.test(to || "")) return false;
+      location.replace("/" + to);
+      return true;
+    } catch (e) { return false; }
+  }
   function go() {
   try {
     var o = JSON.parse(localStorage.getItem("schoolagy_settings_options") || "{}") || {};

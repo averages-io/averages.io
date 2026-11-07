@@ -1993,6 +1993,12 @@
         }
         if (['pdf', 'png', 'jpg', 'jpeg', 'gif', 'webp', 'txt', 'mp3', 'm4a', 'wav', 'mp4', 'webm', 'mov'].includes(String(f.ext || '').toLowerCase())) {
           items.unshift({ label: 'Open in New Tab', run: () => { window.open(cfDownloadUrl(f) + '&view=1', '_blank', 'noopener'); } });
+          // the previewer: page by page, then on to the other class files on screen
+          if (window.AveragesPreview) items.unshift({ label: 'Preview', run: () => {
+            const P = window.AveragesPreview, files = [...shownByKey.values()].filter(e => e && e.src === 'course' && e.raw && !e.raw.url && P.kind(e.raw.name)).map(e => e.raw);
+            if (!files.includes(f)) files.unshift(f);
+            P.open(files.map(x => ({ name: x.name, url: cfDownloadUrl(x) + '&view=1', download: cfDownloadUrl(x), sub: [x.courseName || '', x.parentTitle || ''].filter(Boolean).join(' · ') })), files.indexOf(f));
+          } });
         }
         items.push(show);
         if (!isClassroom() && f.kind !== 'assignment') items.push({ label: 'Attach to an assignment', next: true, run: () => openAttach({ src: 'course', id: f.id, name: f.name, kind: f.kind, parent: f.parent, course: f.course }, f.course) });
