@@ -141,8 +141,11 @@
     host = String(host).replace(/^https?:\/\//, '').replace(/\/.*$/, '');
     return 'https://' + (/^[a-z0-9.-]+\.schoology\.com$/i.test(host) ? host : 'app.schoology.com');
   }
+  // Only the sign-in page's "In the app, this opens …" notes move you somewhere. Every other toast is just a toast:
+  // words like "in Schoology" or "new message" in an ordinary message used to open Schoology or reload Messages.
   window.__fsNav = function (text) {
     var t = String(text || '');
+    if (!/^In the app\b/i.test(t)) return false;
     if (/every page switches to dark colors|pages follow your device/i.test(t)) return true;   // done by applyTheme
     if (/classic windowed look/i.test(t)) { goWindowed(true); return true; }
     if (/signs you out/i.test(t)) { window.location.href = '/signout'; return true; }

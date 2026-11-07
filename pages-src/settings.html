@@ -1144,7 +1144,8 @@
   .win-new .nw24 { left: calc(68% - 14px); top: 24px; transform: rotate(-16deg); z-index: 4; background: #e5484d; color: #fff; }
   .win-new .nw25 { left: calc(30% - 14px); top: -2px; transform: rotate(-3deg); z-index: 1; }
   .win-new .nw26 { left: calc(60% - 14px); top: -3px; transform: rotate(4deg); z-index: 3; }
-  .win-new .wtxt { position: relative; z-index: 9; padding: 2px 10px; border-radius: 8px; background: var(--panel-inner); box-shadow: 0 0 0 2px var(--panel-inner); }
+  /* the word itself sits under the stickers, with nothing behind it, so they look stuck on top of it */
+  .win-new .wtxt { position: relative; z-index: 0; }
   body.potato-mode .win-new .nw { box-shadow: none; }
   .visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
   .window-options { padding-top: 6px; }
@@ -1502,16 +1503,6 @@
               </div>
               <div class="settings-row">
                 <div class="settings-row-text">
-                  <p class="settings-row-label">Only Search My School</p>
-                  <p class="settings-row-desc">Add contacts finds people across Schoology. Turn this on to search just your school.</p>
-                </div>
-                <label class="toggle">
-                  <input type="checkbox" id="contactsSchoolToggle" aria-label="Only search my school in Add contacts">
-                  <span class="track"><span class="thumb"></span></span>
-                </label>
-              </div>
-              <div class="settings-row">
-                <div class="settings-row-text">
                   <p class="settings-row-label">Cache</p>
                   <p class="settings-row-desc">Saved on this device for faster loading. Using <strong id="cacheSizeValue">128 MB</strong>.</p>
                 </div>
@@ -1639,6 +1630,19 @@
               </div>
             </div>
             <div id="yourDataBlock">
+            <p class="settings-subhead">Contacts</p>
+            <div class="settings-group">
+              <div class="settings-row">
+                <div class="settings-row-text">
+                  <p class="settings-row-label">Only Search My School</p>
+                  <p class="settings-row-desc">Add contacts finds people across Schoology. Turn this on to search just your school.</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="contactsSchoolToggle" aria-label="Only search my school in Add contacts">
+                  <span class="track"><span class="thumb"></span></span>
+                </label>
+              </div>
+            </div>
             <p class="settings-subhead">Your data</p>
             <div class="settings-group">
               <div class="settings-row">

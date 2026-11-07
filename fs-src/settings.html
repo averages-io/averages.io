@@ -2983,8 +2983,11 @@
   .sg-row .seg svg.i { width: 15px; height: 15px; margin-right: 8px; vertical-align: -3px; }
   /* the switches: the knob slides over with a little overshoot, stretches while you press, and the track fades to the accent */
   .sg-row .sw { width: 40px; height: 24px; border-radius: 12px; transition: background-color .25s ease; }
-  .sg-row .sw::after { width: 20px; height: 20px; border-radius: 10px; box-shadow: 0 1px 3px rgba(20, 21, 31, .2); transition: transform .38s cubic-bezier(.34, 1.45, .5, 1), width .18s ease; }
+  /* a white knob in both themes: in dark mode the panel color made it darker than its track, a hole that looked off center */
+  .sg-row .sw::after { width: 20px; height: 20px; border-radius: 10px; box-shadow: 0 1px 2px rgba(20, 21, 31, .25); transition: transform .38s cubic-bezier(.34, 1.45, .5, 1), width .18s ease; }
   .sg-row .sw.on::after { transform: translateX(16px); }
+  .sg-row .sw::after { --keep-dark: 1; background: #ffffff; }
+  html[data-theme="dark"] body .sg-row .sw:not(.on) { background: #3d4052; }
   button.sg-row:not([aria-disabled="true"]):active .sw::after { width: 25px; }
   button.sg-row:not([aria-disabled="true"]):active .sw.on::after { transform: translateX(11px); }
   .potato-mode .sg-row .sw, .potato-mode .sg-row .sw::after { transition: none; }
@@ -3271,6 +3274,15 @@
   .sg-tz select { appearance: none; -webkit-appearance: none; height: 38px; max-width: min(320px, 100%); padding: 0 36px 0 14px; border: 0; border-radius: 12px; background: var(--field); color: var(--ink); font: inherit; font-size: 14px; font-weight: 800; cursor: pointer; box-shadow: inset 0 0 0 2px var(--inner); text-overflow: ellipsis; }
   .sg-tz select:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--focus); }
   .sg-tz svg.chev { position: absolute; right: 12px; width: 14px; height: 14px; color: var(--muted); pointer-events: none; }
+  .sg-tz input { height: 38px; width: min(300px, 100%); padding: 0 36px 0 38px; border: 0; border-radius: 12px; background: var(--field); color: var(--ink); font: inherit; font-size: 14px; font-weight: 800; text-overflow: ellipsis; }
+  .sg-tz input::placeholder { color: var(--muted); font-weight: 700; }
+  .sg-tz input:focus { outline: none; box-shadow: inset 0 0 0 2px var(--focus); }
+  .sg-tz svg.sic { position: absolute; left: 12px; width: 16px; height: 16px; color: var(--muted); pointer-events: none; }
+  .sg-tzm .sg-ddo { height: auto; min-height: 40px; padding: 6px 12px; }
+  .sg-tzm .sg-ddo .t { display: flex; flex-direction: column; min-width: 0; }
+  .sg-tzm .sg-ddo .t small { font-size: 12px; font-weight: 700; color: var(--muted); }
+  .sg-tzm .sg-ddo.act { background: var(--panel); }
+  .sg-tzm .sg-tzn { padding: 10px 12px; font-size: 13px; font-weight: 700; color: var(--muted); }
   .sg-kbrec { display: grid; place-items: center; min-height: 64px; margin: 12px 0 4px; border-radius: 14px; background: var(--field); box-shadow: inset 0 0 0 2px var(--inner); outline: none; }
   .sg-kbrec:focus-visible, .sg-kbrec:focus { box-shadow: inset 0 0 0 2px var(--focus); }
   .sg-kbmsg { min-height: 18px; margin: 4px 0 0; font-size: 13px; font-weight: 700; color: var(--muted); }
@@ -4175,6 +4187,13 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const ZONES = (() => { let z = []; try { z = Intl.supportedValuesOf('timeZone'); } catch (e) { /* older browser */ } return z.length ? z : ['America/New_York', 'America/Chicago', 'America/Denver', 'America/Phoenix', 'America/Los_Angeles', 'America/Anchorage', 'Pacific/Honolulu', 'Europe/London', 'Europe/Paris', 'Asia/Tokyo', 'Australia/Sydney', 'UTC']; })();
   const deviceZone = () => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'; } catch (e) { return 'UTC'; } };
   const zoneName = z => z.replace(/_/g, ' ').replace(/\//g, ' / ');
+  // The time zone box: type to search. The list shows the usual ones; a search also finds any other zone by its name.
+  const TZ_COMMON = [['Pacific/Honolulu', 'Hawaii'], ['America/Anchorage', 'Alaska'], ['America/Los_Angeles', 'Pacific Time'], ['America/Phoenix', 'Arizona'],
+    ['America/Denver', 'Mountain Time'], ['America/Chicago', 'Central Time'], ['America/New_York', 'Eastern Time'], ['America/Halifax', 'Atlantic Time'],
+    ['America/Mexico_City', 'Mexico City'], ['America/Sao_Paulo', 'São Paulo'], ['Europe/London', 'London'], ['Europe/Paris', 'Central Europe'],
+    ['Europe/Athens', 'Eastern Europe'], ['Asia/Dubai', 'Dubai'], ['Asia/Kolkata', 'India'], ['Asia/Shanghai', 'China'], ['Asia/Tokyo', 'Japan'],
+    ['Asia/Seoul', 'Korea'], ['Australia/Sydney', 'Sydney'], ['Pacific/Auckland', 'New Zealand'], ['UTC', 'UTC']];
+  const tzLabel = z => { const c = TZ_COMMON.find(x => x[0] === z); return c ? `${c[1]} (${zoneName(z.split('/').pop())})` : zoneName(z); };
   const zoneNow = z => { try { return new Intl.DateTimeFormat('en-US', { timeZone: z, hour: 'numeric', minute: '2-digit' }).format(new Date()); } catch (e) { return ''; } };
   // what's being tried out right now: each one can be turned on by itself once New features early is on
   const EXPS = [['planner', 'Study planner', 'Splits big assignments into small steps and spreads them across the days before they\'re due.'],
@@ -4203,7 +4222,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     ['account', 'avemail', 'Averages email', 'email address verify change add code'], ['account', 'start', 'Open to', 'start page open first home default landing'], ['account', 'tz', 'Time zone', 'timezone zone clock time due dates'], ['account', 'signin', 'Signed in with Schoology', 'sign in password login account'], ['account', 'signout', 'Sign out', 'log out leave'],
     ['plan', 'current', 'Your plan', 'averages plus subscription renew billing'], ['plan', 'other', 'Other plans', 'free classic switch cancel downgrade get plus upgrade'], ['plan', 'payment', 'Payment and receipts', 'card billing cancel receipt'], ['plan', 'early', 'New features early', 'beta preview try'], ['plan', 'experiments', 'Experiments', 'beta labs try new features study planner grade goals focus timer weekly recap'],
     ['appearance', 'layout', 'Window', 'layout fullscreen windowed full screen background'], ['appearance', 'fstheme', 'Theme', 'is industry standard look style fullscreen theme'], ['appearance', 'theme', 'Mode', 'dark mode light system auto colors night'], ['appearance', 'accent', 'Accent color', 'color highlight buttons'],
-    ['personal', 'corder', 'Course order', 'courses order move up down reorder sort classes'], ['personal', 'shortcuts', 'Home shortcuts', 'shortcuts home buttons chips quick actions customize add remove'], ['personal', 'ctSchool', 'Only search my school', 'add contacts people search school everyone schoology find'], ['appearance', 'potato', 'Potato mode', 'performance animations chromebook slow fast font'], ['appearance', 'motion', 'Reduce motion', 'animation accessibility'], ['appearance', 'previews', 'File previews', 'thumbnails images pdf'], ['appearance', 'cache', 'Saved on this device', 'cache storage clear space'],
+    ['personal', 'corder', 'Course order', 'courses order move up down reorder sort classes'], ['personal', 'shortcuts', 'Home shortcuts', 'shortcuts home buttons chips quick actions customize add remove'], ['privacy', 'ctSchool', 'Only search my school', 'add contacts people search school everyone schoology find'], ['appearance', 'potato', 'Potato mode', 'performance animations chromebook slow fast font'], ['appearance', 'motion', 'Reduce motion', 'animation accessibility'], ['appearance', 'previews', 'File previews', 'thumbnails images pdf'], ['appearance', 'cache', 'Saved on this device', 'cache storage clear space'],
     ['notifications', 'notif', 'Browser notifications', 'alerts push notices'], ['notifications', 'nGrades', 'Grade updates', 'scores new grade'], ['notifications', 'nAssign', 'New assignments', 'work posted homework'],
     ['notifications', 'nDue', 'Due date reminders', 'due soon remind tomorrow'], ['notifications', 'nMsgs', 'Messages', 'inbox chat'], ['notifications', 'nAnn', 'Announcements', 'updates posts course'], ['notifications', 'quiet', 'Quiet during class', 'school hours do not disturb silence'], ['notifications', 'test', 'Send a test notification', 'try check'],
     ['apps', 'schoology', 'Schoology', 'classes grades connected'], ['apps', 'drive', 'Google Drive', 'docs files connect disconnect'], ['apps', 'canva', 'Canva', 'designs connect disconnect'], ['apps', 'onedrive', 'OneDrive', 'microsoft files connect'],
@@ -4239,6 +4258,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (id === 'apps') { const a = appsOn().map(k => APPS[k]); return a.length ? a.join(', ') : 'Just Schoology'; }
     if (id === 'plan') return billingOn() ? PLANS[SG.plan].t : 'Everything is free right now';
     if (id === 'privacy') return (incog() ? 'Incognito' : 'Classic');
+    if (id === 'personal') { let n = 0; try { n = scList().length; } catch (_) {} return `${FSX.courseOrder.get().length ? 'Your course order' : 'Period order'}, ${n} Home ${n === 1 ? 'shortcut' : 'shortcuts'}`; }
     return `${STAGE}${VER} (Build ${SHA.slice(0, 7)})`;
   }
   // what this device keeps so pages open faster (the Windowed Settings' list, plus the Fullscreen pages' extras)
@@ -4275,7 +4295,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       ${(() => { const z = optGet().timeZone, auto = !z || z === 'auto' || !ZONES.includes(z), zone = auto ? deviceZone() : z, st = startOf(startNow());
         return grp('Using Averages',
           `<div class="sg-row" data-set="start">${tx('Open to', 'The page you see first when you open Averages.')}<button class="btn sg-ddb" data-act="startdd" data-dd="start" aria-haspopup="listbox" aria-expanded="false">${ico(st[2])}<span>${st[1]}</span>${ico('chev-d', 'i chev')}</button></div>` +
-          `<div class="sg-row wrapr" data-set="tz">${tx('Time zone', auto ? `Set by this device: ${esc(zoneName(zone))}, ${esc(zoneNow(zone))} now.` : `${esc(zoneName(zone))}, ${esc(zoneNow(zone))} now. Due dates and the calendar use it.`)}<label class="sg-tz"><select data-sel="tz" aria-label="Time zone"><option value="auto"${auto ? ' selected' : ''}>Automatic (${esc(zoneName(deviceZone()))})</option>${ZONES.map(x => `<option value="${esc(x)}"${!auto && x === z ? ' selected' : ''}>${esc(zoneName(x))}</option>`).join('')}</select>${ico('chev-d', 'i chev')}</label></div>`); })()}
+          `<div class="sg-row wrapr" data-set="tz">${tx('Time zone', auto ? `Set by this device: ${esc(zoneName(zone))}, ${esc(zoneNow(zone))} now.` : `${esc(zoneName(zone))}, ${esc(zoneNow(zone))} now. Due dates and the calendar use it.`)}<label class="sg-tz">${ico('search', 'i sic')}<input type="text" data-tzin role="combobox" aria-label="Time zone" aria-autocomplete="list" aria-expanded="false" aria-controls="sgTzList" autocomplete="off" spellcheck="false" placeholder="Search time zones" value="${esc(auto ? 'Automatic' : tzLabel(z))}">${ico('chev-d', 'i chev')}</label></div>`); })()}
       ${grp('Sign-in', row('signin', 'Signed in with Schoology', 'Your classes and grades come straight from Schoology.', chip(ico('ok') + 'Connected', ' on')))}
       <button class="btn sg-out" data-act="signout" data-set="signout">Sign out</button>`,
 
@@ -4316,8 +4336,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
 
     personal: () => `
       ${grp('Course order', courseRows(), FSX.courseOrder.get().length ? 'Your order. Windowed and the sidebar use it too.' : 'In period order. Move a course to set your own; Windowed and the sidebar use it too.')}
-      ${grp('Home shortcuts', scRowsHTML(), `The buttons under the search bar on Home. Drag to reorder; up to ${SC_MAX}.`)}
-      ${grp('Contacts', tog('ctSchool', 'Only search my school', 'Add contacts finds people across Schoology. Turn this on to search just your school.', SG.ctSchool))}`,
+      ${grp('Home shortcuts', scRowsHTML(), `The buttons under the search bar on Home. Drag to reorder; up to ${SC_MAX}.`)}`,
 
     notifications: () => {
       const P = LIVE.push, cfg = LIVE.pushCfg, can = window.AveragesPush ? window.AveragesPush.supported() : false;
@@ -4361,6 +4380,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       ${grp('What we keep',
         `<button class="sg-row" role="radio" aria-checked="${!incog()}" data-mode="classic" data-set="mode"${FSD.me.incognito ? ' aria-disabled="true"' : ''}><span class="sg-rd" aria-hidden="true"></span>${tx('Classic', FSD.me.incognito ? 'Not for accounts under 13. Incognito keeps everything on this device.' : SG.plan !== 'free' ? 'Subscribed to Plus' : 'Your settings, starred things and drafts are saved, so they follow you to every device.')}</button>` +
         `<button class="sg-row" role="radio" aria-checked="${incog()}" data-mode="incognito"${SG.plan !== 'free' || FSD.me.incognito ? ' aria-disabled="true"' : ''}><span class="sg-rd" aria-hidden="true"></span>${tx('Incognito', SG.plan !== 'free' ? 'Unavailable in Plus' : 'Nothing about you is stored on our servers. Everything stays in this browser.')}</button>`)}
+      ${grp('Contacts', tog('ctSchool', 'Only search my school', 'Add contacts finds people across Schoology. Turn this on to search just your school.', SG.ctSchool))}
       ${grp('', row('sync', 'Sync across devices', incog() ? 'Off in Incognito. Settings stay in this browser.' : 'Always on in Classic.', chip(incog() ? 'Off' : ico('ok') + 'On', incog() ? '' : ' on')))}
       ${grp('Your data',
         row('data', 'Download your data', 'A copy of everything Averages stored about you. Your grades and files stay in Schoology.', btn('download', 'Download')) +
@@ -4873,7 +4893,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       if (k === 'notif' && !SG.notif) { notifConsent(); return; }
       if (k === 'notif') { window.AveragesPush.disable().then(() => { SG.notif = false; SGV.flip = 'notif'; redraw(); toast('Browser notifications are off. We deleted your saved sign-in.'); }); return; }
       if (k === 'cal') { calSet(!(LIVE.cal && LIVE.cal.on)); return; }
-      if (k === 'ctSchool') { SG.ctSchool = !SG.ctSchool; saveOpt('contactsSearch', SG.ctSchool ? 'school' : null); t.setAttribute('aria-checked', SG.ctSchool); t.querySelector('.sw').classList.toggle('on', SG.ctSchool); sgNav(); toast(SG.ctSchool ? 'Add contacts searches just your school.' : 'Add contacts searches everyone on Schoology.'); return; }
+      if (k === 'ctSchool') { SG.ctSchool = !SG.ctSchool; saveOpt('contactsSearch', SG.ctSchool ? 'school' : null); t.setAttribute('aria-checked', SG.ctSchool); t.querySelector('.sw').classList.toggle('on', SG.ctSchool); sgNav(); toast(SG.ctSchool ? 'Add contacts searches just your school now.' : 'Add contacts searches all of Schoology now.'); return; }
       if (k === 'previews') { SG.previews = !SG.previews; saveOpt('filePreviews', SG.previews); if (!SG.previews) { try { sessionStorage.removeItem('averages_previews'); } catch (_) {} } t.setAttribute('aria-checked', SG.previews); t.querySelector('.sw').classList.toggle('on', SG.previews); toast(SG.previews ? 'File previews on.' : 'File previews off.'); return; }
       if (['nGrades', 'nAssign', 'nDue', 'nMsgs', 'nAnn'].includes(k)) { SG[k] = !SG[k]; t.setAttribute('aria-checked', SG[k]); t.querySelector('.sw').classList.toggle('on', SG[k]); sgNav(); window.AveragesPush.setTypes(pushTypes()).then(r => { if (!r.ok) toast('Couldn\'t save that. Try again in a moment.'); }); return; }
       SG[k] = !SG[k];
@@ -4937,14 +4957,73 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     else if (k === 'feedback') FSX.newTab('https://github.com/averages-io/averages.io/issues/new?template=feedback.yml&version=' + encodeURIComponent(`${STAGE}${VER} (Build ${SHA.slice(0, 7)})`) + '&page=' + encodeURIComponent('Fullscreen'));
     else if (k === 'legal') FSX.newTab('https://averages.io/privacy-policy');
   });
-  $('sgPane').addEventListener('change', e => {
-    const s = e.target.closest('[data-sel]'); if (!s) return;
-    if (s.dataset.sel === 'tz') {
-      const v = s.value === 'auto' || !ZONES.includes(s.value) ? null : s.value;
-      optSet('timeZone', v); sgPane();
-      toast(v ? `Time zone set to ${zoneName(v)}.` : 'Time zone follows this device again.');
-    }
+  // ---------- the time zone box ----------
+  let tz = null;   // { m: the list, inp, act: index of the highlighted option }
+  function tzOptions(q) {
+    q = q.trim().toLowerCase();
+    const auto = [['auto', `Automatic`, `This device: ${zoneName(deviceZone())}`]];
+    const common = TZ_COMMON.map(([z, n]) => [z, n, `${zoneName(z)} · ${zoneNow(z)}`]);
+    if (!q) return auto.concat(common);
+    const hit = x => x[1].toLowerCase().includes(q) || x[0].toLowerCase().replace(/_/g, ' ').includes(q);
+    const got = auto.concat(common).filter(hit), have = new Set(got.map(x => x[0]));
+    // anything else Schoology could be in, by its name (a few at most)
+    ZONES.filter(z => !have.has(z) && z.toLowerCase().replace(/_/g, ' ').includes(q)).slice(0, 8).forEach(z => got.push([z, zoneName(z.split('/').pop()), `${zoneName(z)} · ${zoneNow(z)}`]));
+    return got;
+  }
+  function tzDraw() {
+    if (!tz) return; const list = tzOptions(tz.q), cur = optGet().timeZone || 'auto';
+    tz.list = list; if (tz.act >= list.length) tz.act = list.length - 1;
+    tz.m.innerHTML = list.length ? list.map(([v, t, sub], i) => `<button class="sg-ddo${i === tz.act ? ' act' : ''}" role="option" id="sgTz${i}" data-tzv="${esc(v)}" aria-selected="${v === cur}" tabindex="-1"><span class="t"><span>${esc(t)}</span><small>${esc(sub)}</small></span>${ico('ok', 'i ck')}</button>`).join('')
+      : `<p class="sg-tzn">No time zone matches "${esc(tz.q)}".</p>`;
+    tz.inp.setAttribute('aria-activedescendant', tz.act >= 0 && list.length ? 'sgTz' + tz.act : '');
+    tzPlace();
+    const a = tz.m.querySelector('.act'); if (a) a.scrollIntoView({ block: 'nearest' });
+  }
+  function tzOpen(inp) {
+    if (tz && tz.inp === inp) return; tzClose();
+    document.body.insertAdjacentHTML('beforeend', `<div class="sg-ddm sg-tzm" role="listbox" id="sgTzList" aria-label="Time zones"></div>`);
+    const m = document.body.lastElementChild;
+    tz = { m, inp, q: '', act: -1, was: inp.value };
+    tzDraw(); tzPlace();
+    inp.setAttribute('aria-expanded', 'true'); inp.select();
+    m.addEventListener('pointerdown', e => e.preventDefault());   // the box keeps the focus
+    m.addEventListener('click', e => { const o = e.target.closest('[data-tzv]'); if (o) tzPick(o.dataset.tzv); });
+  }
+  // under the box (or over it, near the bottom of the window); it follows the box when the page scrolls
+  function tzPlace() {
+    if (!tz) return; const { m, inp } = tz, r = inp.getBoundingClientRect();
+    if (r.bottom < 0 || r.top > innerHeight) { tzClose(); return; }
+    const w = Math.max(r.width, 280), h = Math.min(m.scrollHeight, 420), below = innerHeight - r.bottom - 8 >= h + 6;
+    m.style.width = w + 'px'; m.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.left)) + 'px';
+    m.style.top = (below ? r.bottom + 6 : Math.max(8, r.top - h - 6)) + 'px';
+  }
+  function tzClose(keep) {
+    if (!tz) return; const { m, inp, was } = tz; tz = null; m.remove();
+    if (inp.isConnected) { inp.setAttribute('aria-expanded', 'false'); inp.removeAttribute('aria-activedescendant'); if (!keep) inp.value = was; }
+  }
+  function tzPick(v) {
+    const inp = tz && tz.inp; tzClose(true);
+    const next = v === 'auto' || !ZONES.includes(v) && v !== 'UTC' ? null : v;
+    if ((optGet().timeZone || null) === next) { if (inp) inp.value = next ? tzLabel(next) : 'Automatic'; return; }
+    optSet('timeZone', next); sgPane();
+    toast(next ? `Time zone set to ${tzLabel(next)}.` : 'Time zone follows this device again.');
+    const again = $('sgPane').querySelector('[data-tzin]'); if (again) again.focus({ preventScroll: true });
+  }
+  $('sgPane').addEventListener('focusin', e => { if (e.target.matches('[data-tzin]')) tzOpen(e.target); });
+  $('sgPane').addEventListener('click', e => { if (e.target.matches('[data-tzin]') && !tz) tzOpen(e.target); });
+  $('sgPane').addEventListener('input', e => { if (!e.target.matches('[data-tzin]')) return; if (!tz) tzOpen(e.target); tz.q = e.target.value; tz.act = tz.q.trim() ? 0 : -1; tzDraw(); });
+  $('sgPane').addEventListener('keydown', e => {
+    if (!e.target.matches('[data-tzin]')) return;
+    if (!tz) { if (e.key === 'ArrowDown' || e.key === 'Enter') { e.preventDefault(); tzOpen(e.target); } return; }
+    const n = tz.list.length;
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); if (n) { tz.act = (tz.act + (e.key === 'ArrowDown' ? 1 : -1) + n) % n; tzDraw(); } }
+    else if (e.key === 'Enter') { e.preventDefault(); const o = tz.list[tz.act >= 0 ? tz.act : 0]; if (o) tzPick(o[0]); }
+    else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); tzClose(); }
+    else if (e.key === 'Tab') tzClose();
   });
+  $('sgPane').addEventListener('focusout', e => { if (tz && e.target === tz.inp) setTimeout(() => { if (tz && document.activeElement !== tz.inp) tzClose(); }, 0); });
+  window.addEventListener('resize', tzPlace);
+  document.addEventListener('scroll', e => { if (tz && !tz.m.contains(e.target)) tzPlace(); }, true);
   // the Open to menu: a list of pages under the button, with a check on the one you picked
   let dd = null;
   function ddOpen(b) {
