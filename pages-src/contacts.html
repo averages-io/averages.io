@@ -839,9 +839,27 @@
       if (last) last.classList.add('is-last');
       document.querySelector('#contactModal .modal-rows').hidden = !last;
       document.getElementById('modalDeptLabel').textContent = c.dept.includes(',') ? 'Classes' : 'Class';
-      modalMessageBtn.hidden = ctClassroom;
+      modalMessageBtn.hidden = ctClassroom || (c.category === 'added' && ctCanOf(c.id) === false);
       modalEmailBtn.hidden = !c.email;
       modalMessageBtn.parentElement.hidden = modalMessageBtn.hidden && modalEmailBtn.hidden;
+    }
+    // Whether Schoology lets you message the people you added (GET /messages/can: its send_message), kept a day in
+    // fsct_can, shared with Fullscreen's Contacts. undefined: not asked yet; null: Schoology didn't say.
+    function ctCanOf(id) {
+      try { const v = (JSON.parse(localStorage.getItem('fsct_can') || '{}') || {})[id]; return v && Date.now() - (v.at || 0) < 864e5 ? v.s : undefined; } catch { return undefined; }
+    }
+    function ctCanCheck(ids, done) {
+      const need = [...new Set(ids.map(String))].filter(id => /^\d{1,20}$/.test(id) && ctCanOf(id) === undefined).slice(0, 25);
+      if (!need.length) return;
+      fetch(CT_API + '/messages/can?ids=' + need.join(','), { credentials: 'include', cache: 'no-store' })
+        .then(r => (r.ok ? r.json() : Promise.reject(r.status)))
+        .then(j => {
+          let all = {}; try { all = JSON.parse(localStorage.getItem('fsct_can') || '{}') || {}; } catch {}
+          const at = Date.now(); need.forEach(id => { all[id] = { s: null, at }; }); Object.entries((j && j.can) || {}).forEach(([id, v]) => { all[id] = { s: v === true ? true : v === false ? false : null, at }; });
+          try { localStorage.setItem('fsct_can', JSON.stringify(all)); } catch {}
+          if (done) done();
+        })
+        .catch(() => {});
     }
     function ctRetry() {
       ctState = 'loading';
@@ -983,7 +1001,10 @@
       document.getElementById('modalAvatar').textContent = initials(c.name);
       document.getElementById('modalAvatar').style.background = window.AveragesAvatar ? window.AveragesAvatar.background(c.name === 'Your teacher' ? '' : c.name) : c.color;
       document.getElementById('modalContactName').textContent = c.name;
-      document.getElementById('modalContactRole').textContent = c.role || c.dept;
+      document.getElementById('modalContactRole').textContent = c.category === 'added'
+        ? (ctCanOf(c.id) === false ? "Added by you · Schoology doesn't let you message them" : ctCanOf(c.id) === true ? 'Added by you · You can message them on Schoology' : 'Added by you')
+        : (c.role || c.dept);
+      if (c.category === 'added' && ctCanOf(c.id) === undefined) ctCanCheck([c.id], () => { if (document.getElementById('modalContactName').textContent === c.name) openContactModal(c); });
       document.getElementById('modalDept').textContent = c.dept;
       document.getElementById('modalSchool').textContent = c.school;
       document.getElementById('modalEmail').textContent = c.email;

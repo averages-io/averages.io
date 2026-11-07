@@ -2920,8 +2920,10 @@
   .cr-nt b { font-size: 15px; font-weight: 900; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .cr-nt small { font-size: 13px; font-weight: 700; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .cr-g { display: flex; align-items: baseline; gap: 8px; font-variant-numeric: tabular-nums; }
-  .cr-g b { font-size: 18px; font-weight: 900; }
-  .cr-g span { font-size: 13px; font-weight: 700; color: var(--muted); }
+  .cr-g b { font-size: 18px; font-weight: 900; white-space: nowrap; flex: none; }
+  .cr-g span { font-size: 13px; font-weight: 700; color: var(--muted); min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cr-g { min-width: 0; }
+  .cr-nodata { font-size: 12px; font-weight: 800; color: var(--muted); white-space: nowrap; }
   .cr-tr { display: flex; align-items: center; gap: 12px; min-width: 0; }
   .cr-tr svg { flex: 1 1 auto; min-width: 60px; max-width: 160px; height: 28px; overflow: visible; }
   .cr-d { font-size: 12px; font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
@@ -3676,7 +3678,9 @@
   const CR = { view: store.get('fscourses_view') === 'cards' ? 'cards' : 'list', q: '', star: new Set((store.get('fscourses_star') || []).filter(id => C[id])), starOnly: false, sort: 'period', dir: 1 };
   $('crLogo').style.setProperty('--c', '#f2a93b'); $('crLogo').innerHTML = EMOJI_SVG['📚'] || '';
   document.querySelector('.hub-h').style.setProperty('--class-c', 'var(--sun)');
-  const avg = CLASSES.length ? CLASSES.reduce((t, c) => t + c.pct, 0) / CLASSES.length : 0;
+  // classes with nothing graded yet stay out of the overall average (they'd count as 0%)
+  const AVG_OF = CLASSES.filter(c => !c.none);
+  const avg = AVG_OF.length ? AVG_OF.reduce((t, c) => t + c.pct, 0) / AVG_OF.length : 0;
   // teacher, period and the section's own name, whichever Schoology gives
   const crSub = c => [c.teacher, c.hasPeriod ? 'Period ' + c.period : '', c.section].filter(Boolean).join(' · ') || c.code || 'Schoology class';
   function crMeta() {
@@ -3713,7 +3717,8 @@
       <circle cx="${x(t.length - 1).toFixed(1)}" cy="${y(t[t.length - 1]).toFixed(1)}" r="3" fill="${c.color}" stroke="var(--panel)" stroke-width="1.5" vector-effect="non-scaling-stroke"/></svg>`;
   }
   const delta = c => { const d = c.trend[c.trend.length - 1] - c.trend[c.trend.length - 3]; const k = Math.abs(d) < .15 ? 'flat' : d > 0 ? 'up' : 'down'; return `<span class="cr-d ${k}" title="Change in the last two weeks">${k === 'flat' ? 'Steady' : (d > 0 ? '+' : '-') + Math.abs(d).toFixed(1)}</span>`; };
-  const grade = c => c.none ? '<span class="cr-g"><b class="g-na">N/A</b><span>No grades yet</span></span>' : `<span class="cr-g"><b class="${gcls(c.pct)}">${letter(c.pct)}</b><span>${c.pct.toFixed(1)}%</span></span>`;
+  // nothing graded: N/A on one line (the list's grade column is narrow: "None yet"), and no made-up trend line
+  const grade = (c, narrow) => c.none ? `<span class="cr-g"><b class="g-na">N/A</b><span>${narrow ? 'None yet' : 'No grades yet'}</span></span>` : `<span class="cr-g"><b class="${gcls(c.pct)}">${letter(c.pct)}</b><span>${c.pct.toFixed(1)}%</span></span>`;
   const tag = (c, go, cls, label) => `<button class="cr-chip${cls}" data-crgo="${go}" data-crc="${c.id}" title="${esc(label)} in ${esc(c.name)}">${label}</button>`;
   const dueChips = c => c.due || c.missing ? `<span class="cr-chips">${c.missing ? tag(c, 'missing', ' bad', `${c.missing} missing`) : ''}${c.due ? tag(c, 'todo', '', `${c.due} due`) : ''}</span>` : '<span class="cr-none" aria-label="Nothing due">None due</span>';
   const upChip = c => c.updates ? tag(c, 'updates', ' new', `${c.updates} new`) : '<span class="cr-none" aria-label="No new updates">None</span>';
@@ -3736,15 +3741,15 @@
   const sortBtn = (k, label) => `<button data-crsort="${k}"${CR.sort === k ? ` aria-sort="${CR.dir > 0 ? 'ascending' : 'descending'}"` : ''}>${label}${CR.sort === k ? `<span aria-hidden="true">${CR.dir > 0 ? '↑' : '↓'}</span>` : ''}</button>`;
   const row = c => `<div class="cr-row" role="row" tabindex="0" data-cropen="${c.id}">${starBtn(c)}
       <span class="cr-n" role="cell">${badge(c)}<span class="cr-nt"><b>${esc(c.name)}</b><small>${esc(crSub(c))}</small></span></span>
-      <span role="cell">${grade(c)}</span>
-      <span class="cr-tr" role="cell">${spark(c, 120, 28)}${delta(c)}</span>
+      <span role="cell">${grade(c, true)}</span>
+      <span class="cr-tr" role="cell">${c.none ? '<span class="cr-nodata">No trend yet</span>' : spark(c, 120, 28) + delta(c)}</span>
       <span class="cr-due" role="cell">${dueChips(c)}</span>
       <span class="cr-up" role="cell">${upChip(c)}</span>
       <button class="cr-more" data-crmore="${c.id}" aria-haspopup="menu" aria-label="More for ${esc(c.name)}">${ico('dots')}</button></div>`;
   const card = c => `<article class="cc" tabindex="0" data-cropen="${c.id}" aria-label="${esc(c.name)}">
       <div class="cc-top">${badge(c)}<div class="cc-t"><b>${esc(c.name)}</b><small>${esc(c.teacher || c.code || 'Schoology class')}</small></div>${c.hasPeriod ? `<span class="cc-per">Period ${c.period}</span>` : ''}</div>
       <div class="cc-next">${c.next ? `Next: <b>${esc(c.next[0])}</b> · ${esc(c.next[1])}` : 'Nothing coming up'}</div>
-      <div class="cc-mid">${grade(c)}${spark(c, 200, 36)}${delta(c)}</div>
+      <div class="cc-mid">${grade(c)}${c.none ? '<span class="cr-nodata">No trend yet</span>' : spark(c, 200, 36) + delta(c)}</div>
       <div class="cc-foot"><span class="cr-chips">${c.missing ? tag(c, 'missing', ' bad', `${c.missing} missing`) : ''}${c.due ? tag(c, 'todo', '', `${c.due} due`) : ''}${c.updates ? tag(c, 'updates', ' new', `${c.updates} new`) : ''}${!c.due && !c.missing && !c.updates ? '<span class="cr-none">All caught up</span>' : ''}</span>${starBtn(c)}<button class="cr-more" data-crmore="${c.id}" aria-haspopup="menu" aria-label="More for ${esc(c.name)}">${ico('dots')}</button></div></article>`;
   function crHTML() {
     const list = crList();

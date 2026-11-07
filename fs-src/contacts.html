@@ -4011,6 +4011,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   // ---------- the list ----------
   const CT = { view: 'all', q: '', open: store.get('fsct_open') || null, star: store.get('fsct_star') || [], notes: store.get('fsct_notes') || {}, added: (store.get('fsct_added') || []).filter(id => DIR_SAVED[id] || PEOPLE[id]) };
   const EXTRA = () => CT.added.map(id => DIRP[id]).filter(Boolean);
+  setTimeout(() => canCheck(CT.added), 0);   // whether Schoology lets you message the people you added
   const VIEWS = [['all', 'All'], ['teachers', 'Teachers'], ['mates', 'Classmates'], ['class', 'By class']];
   const textOf = p => [p.name, p.role, p.email || '', p.title || '', p.where || '', p.school || '', ...p.cls.map(id => C[id].name + (C[id].hasPeriod ? ' period ' + C[id].period : ''))].join(' ').toLowerCase();
   const markQ = s => { const t = esc(s); if (!CT.q) return t; const i = s.toLowerCase().indexOf(CT.q); return i < 0 ? t : esc(s.slice(0, i)) + '<mark>' + esc(s.slice(i, i + CT.q.length)) + '</mark>' + esc(s.slice(i + CT.q.length)); };
@@ -4065,7 +4066,27 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   // ---------- one person ----------
   const li = (tile, tx, right = '', tag = 'div', attrs = '') => `<${tag} class="ct-li${tile ? ' has-ic' : ''}"${attrs}>${tile}<span class="tx">${tx}</span>${right}</${tag}>`;
   const tileOf = c => `<span class="tile" style="--c:${c.color}" aria-hidden="true">${EMOJI_SVG[c.emoji] || EMOJI_SVG['📚']}</span>`;
-  const canMsg = p => p.role === 'Teacher' || p.role === 'Staff' || p.role === 'Person';
+  // People you added: Schoology says per person whether you may message them (GET /messages/can, its send_message).
+  // Kept a day in fsct_can { id: { s: true | false | null, at } }; Windowed's Contacts reads the same.
+  const CAN = (() => { const v = store.get('fsct_can'); return v && typeof v === 'object' && !Array.isArray(v) ? v : {}; })();
+  const canOf = id => { const v = CAN[id]; return v && Date.now() - (v.at || 0) < 864e5 ? v.s : undefined; };
+  let canBusy = false; const canLater = new Set();
+  function canCheck(ids) {
+    if (canBusy) { ids.forEach(id => canLater.add(String(id))); return; }
+    const need = [...new Set(ids.map(String))].filter(id => /^\d{1,20}$/.test(id) && canOf(id) === undefined).slice(0, 25);
+    if (!need.length) return; canBusy = true;
+    const next = () => { canBusy = false; if (canLater.size) { const l = [...canLater]; canLater.clear(); canCheck(l); } };
+    FSX.api('/messages/can?ids=' + need.join(',')).then(j => {
+      const at = Date.now(); need.forEach(id => { CAN[id] = { s: null, at }; }); Object.entries((j && j.can) || {}).forEach(([id, v]) => { CAN[id] = { s: v === true ? true : v === false ? false : null, at }; });
+      Object.keys(CAN).forEach(id => { if (at - (CAN[id].at || 0) > 7 * 864e5) delete CAN[id]; });
+      store.set('fsct_can', CAN);
+      if (CT.open && need.includes(String(CT.open))) ctCard(false);
+      next();
+    }).catch(next);
+  }
+  // how to name someone in a sentence: a first name, or "Ms. Alvarez" when the name starts with a title (no "(Librarian)")
+  const callName = n => { const w = String(n).replace(/\s*\(.*?\)\s*/g, ' ').trim().split(/\s+/); return /^(mr|ms|mrs|mx|dr|coach|sr|sra|srta|prof)\.?$/i.test(w[0]) && w[1] ? w[0] + ' ' + w[1] : w[0]; };
+  const canMsg = p => p.role === 'Teacher' || p.role === 'Staff' || (p.role === 'Person' && canOf(p.id) !== false);
   function ctCard(animate) {
     const box = $('ctCard'), p = CT.open && P(CT.open);
     $('ct').classList.toggle('open', !!p);
@@ -4082,11 +4103,13 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       html += `<div class="ct-sec"><h3>${p.cls.length > 1 ? 'Classes' : 'Class'}</h3><div class="ct-grp">${p.cls.map(id => { const k = C[id]; return li(tileOf(k), `<b>${esc(k.name)}</b><span>${[k.hasPeriod ? 'Period ' + k.period : '', k.students ? k.students + ' students' : ''].filter(Boolean).join(' · ') || 'Your class'}</span>`, `<svg class="i chev"><use href="#i-chev-r"/></svg>`, 'button', ` data-go="${FSX.hubUrl(k.id)}"`); }).join('')}</div></div>`;
       html += `<div class="ct-sec"><h3>Contact</h3><div class="ct-grp">${p.email ? li('', `<small>School email</small><b>${esc(p.email)}</b>`, `<button class="ct-copy" data-ctcopy="${esc(p.email)}">${ico('copy')}Copy</button>`) : li('', `<small>Message</small><b>Through Schoology</b>`)}${li('', `<small>School</small><b>${esc(SCHOOL)}</b>`)}</div><p class="ct-fine">From Schoology. ${p.email ? '' : 'Schoology doesn\'t share this teacher\'s email with students, so message them here.'}</p></div>`;
     } else if (p.kind) {
-      html += `<div class="ct-sec"><h3>Contact</h3><div class="ct-grp">${li('', `<small>Message</small><b>Through Schoology</b>`)}${li('', `<small>School</small><b>${esc(p.school)}</b>`)}</div><p class="ct-fine">Someone Schoology lets you message.</p></div>`;
+      const can = canOf(p.id), first = esc(callName(p.name));
+      if (can === undefined) canCheck([p.id]);
+      html += `<div class="ct-sec"><h3>Contact</h3><div class="ct-grp">${li('', `<small>Message</small><b>${can === false ? 'Not available' : can === true ? 'Through Schoology' : 'Checking…'}</b>`)}${li('', `<small>School</small><b>${esc(p.school)}</b>`)}</div><p class="ct-fine">${can === false ? `Schoology doesn't let you message ${first}. Students usually can't message other students.` : can === true ? `You can message ${first} on Schoology.` : 'On Schoology.'}</p></div>`;
     } else {
       html += `<div class="ct-sec"><h3>Classes together</h3><div class="ct-grp">${p.cls.map(id => { const k = C[id]; return li(tileOf(k), `<b>${esc(k.name)}</b><span>${esc([k.hasPeriod ? 'Period ' + k.period : '', k.teacher].filter(Boolean).join(' · '))}</span>`, `<svg class="i chev"><use href="#i-chev-r"/></svg>`, 'button', ` data-go="${FSX.hubUrl(k.id)}"`); }).join('')}</div><p class="ct-fine">Schoology doesn't share students' emails, so you can message classmates here but not email them.</p></div>`;
     }
-    html += `<div class="ct-sec"><h3>Conversations${convs.length ? ` <small>${convs.length}</small>` : ''}</h3>${convs.length ? `<div class="ct-grp">${convs.map(x => li(`<span class="tile" aria-hidden="true">${ico('msg')}</span>`, `<b>${esc(x.subject)}</b><span>${x.from === 'me' ? 'You: ' : x.with.length > 1 ? esc(P(x.from).role === 'Teacher' ? P(x.from).name : P(x.from).name.split(' ')[0]) + ': ' : ''}${esc(x.t)}</span>`, `<time>${ago(x.when)}</time>`, 'button', ` data-toast="your conversation about ${esc(x.subject)} on the Messages page"`)).join('')}</div>` : `<p class="ct-fine">No messages with ${esc(T ? p.name : p.name.split(' ')[0])} yet.</p>`}</div>`;
+    html += `<div class="ct-sec"><h3>Conversations${convs.length ? ` <small>${convs.length}</small>` : ''}</h3>${convs.length ? `<div class="ct-grp">${convs.map(x => li(`<span class="tile" aria-hidden="true">${ico('msg')}</span>`, `<b>${esc(x.subject)}</b><span>${x.from === 'me' ? 'You: ' : x.with.length > 1 ? esc(P(x.from).role === 'Teacher' ? P(x.from).name : P(x.from).name.split(' ')[0]) + ': ' : ''}${esc(x.t)}</span>`, `<time>${ago(x.when)}</time>`, 'button', ` data-toast="your conversation about ${esc(x.subject)} on the Messages page"`)).join('')}</div>` : `<p class="ct-fine">No messages with ${esc(T ? p.name : callName(p.name))} yet.</p>`}</div>`;
     html += `<div class="ct-sec"><h3>Notes <small id="ctSaved"></small></h3><textarea class="ct-note" id="ctNote" placeholder="Anything to remember, like when ${T ? 'they have office hours' : 'you have a project together'}. Only you can see this." aria-label="Notes about ${esc(p.name)}">${esc(CT.notes[p.id] || '')}</textarea></div>`;
     if (p.kind) html += `<div class="ct-sec"><div class="ct-grp"><button class="ct-li ct-rm" data-ctremove="${p.id}"><span class="tx"><b>Remove from contacts</b></span></button></div></div>`;
     box.innerHTML = `<button class="ibtn ct-back" data-ctback aria-label="Back to your contacts">${ico('chev-l')}</button><div class="ct-scroll"><div class="ct-in${animate && !calm() ? ' fresh' : ''}">${html}</div></div>`;
@@ -4138,7 +4161,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     $('acCount').textContent = ac.pick.length ? `${ac.pick.length} to add` : '';
     // who you're adding, under the field (like "People with access")
     $('acBody').innerHTML = ac.pick.length ? `<div class="ct-lbl">Adding</div>` + ac.pick.map(id => { const p = P(id); return `<div class="ac-row">${av(p)}<span class="tx"><b>${esc(p.name)}</b><small>${esc(acSub(p))}</small></span><button class="ibtn" data-acun="${id}" aria-label="Don't add ${esc(p.name)}">${ico('x')}</button></div>`; }).join('')
-      : `<div class="ac-hint">${ico('search')}<b>Start typing to find people</b><span>Find your counselor, the librarian or anyone else Schoology lets you message.</span></div>`;
+      : `<div class="ac-hint">${ico('search')}<b>Start typing to find people</b><span>Find your counselor, the librarian or anyone else on Schoology.</span></div>`;
   }
   // Schoology's own search by name (GET /messages/people), as you type: counselors, librarians, other teachers
   let acSeq = 0, acT = 0, acBusy = false;

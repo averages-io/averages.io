@@ -3738,7 +3738,9 @@
   const FIRST = OVERALL.findIndex(v => v != null);
   const POSTED = WEEKS.map((_, i) => OVERALL[i] != null && (i === WEEKS.length - 1 || CLASSES.some(c => hasAt(c, i) && postedAt(c, i))));
   const clTrend = c => c.trend.map((v, i) => hasAt(c, i) ? v : null);
-  const avg = CLASSES.length ? CLASSES.reduce((t, c) => t + c.pct, 0) / CLASSES.length : 0;
+  // classes with nothing graded yet stay out of the overall average (they'd count as 0%)
+  const AVG_OF = CLASSES.filter(c => !c.none);
+  const avg = AVG_OF.length ? AVG_OF.reduce((t, c) => t + c.pct, 0) / AVG_OF.length : 0;
   const GPTS = { 'A+': 4, A: 4, 'A-': 3.7, 'B+': 3.3, B: 3, 'B-': 2.7, 'C+': 2.3, C: 2, 'C-': 1.7, 'D+': 1.3, D: 1, 'D-': .7, F: 0 };
   // the student's GPA scale and class levels (Edit scale, public/js/averages-gpa.js), the usual 4.0 scale without it
   const gpaList = () => CLASSES.filter(c => !c.none).map(c => ({ id: String(c.id), name: c.name, grade: letter(c.pct) }));
