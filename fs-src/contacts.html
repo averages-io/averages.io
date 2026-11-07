@@ -4164,6 +4164,8 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       : `<div class="ac-hint">${ico('search')}<b>Start typing to find people</b><span>Find your counselor, the librarian or anyone else on Schoology.</span></div>`;
   }
   // Schoology's own search by name (GET /messages/people), as you type: counselors, librarians, other teachers
+  // (everyone on Schoology, or just your school with Settings → Only search my school: contactsSearch 'school')
+  const schoolOnly = () => { try { return (JSON.parse(localStorage.getItem('schoolagy_settings_options') || '{}') || {}).contactsSearch === 'school'; } catch (e) { return false; } };
   let acSeq = 0, acT = 0, acBusy = false;
   const acAsked = new Set();
   function acSearch(q) {
@@ -4172,7 +4174,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     acBusy = true;
     acT = setTimeout(() => {
       const my = ++acSeq; acAsked.add(q);
-      FSX.api('/messages/people?q=' + encodeURIComponent(q)).then(j => {
+      FSX.api('/messages/people?q=' + encodeURIComponent(q) + (schoolOnly() ? '&scope=school' : '')).then(j => {
         (j.people || []).forEach(r => { const id = String(r.id); if (PEOPLE[id] || DIRP[id]) return; const p = { id, name: r.name, role: 'Person', title: 'In Schoology', where: '', school: r.school || SCHOOL, email: '', hours: '', cls: [], kind: 'dir' }; DIR.push(p); DIRP[id] = p; });
       }).catch(() => {}).then(() => { if (my === acSeq) acBusy = false; if (ac) acDrop(); });
     }, 250);

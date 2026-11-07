@@ -4139,7 +4139,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const darkPref = () => { try { const v = localStorage.getItem('schoolagy_dark_mode'); return v === 'dark' || v === 'light' ? v : 'auto'; } catch (_) { return 'auto'; } };
   const savedFs = store.get('fsset') || {};
   const SG = { sec: (savedFs.sec && /^[a-z]+$/.test(savedFs.sec)) ? savedFs.sec : 'account', plan: 'free', mode: FSD.me.incognito || (() => { try { return localStorage.getItem('schoolagy_account_mode') === 'incognito'; } catch (_) { return false; } })() ? 'incognito' : 'classic',
-    layout: 'full', skin: 'is', theme: darkPref(), accent: savedFs.accent || 'punch', previews: OPTS().filePreviews !== false,
+    layout: 'full', skin: 'is', theme: darkPref(), accent: savedFs.accent || 'punch', previews: OPTS().filePreviews !== false, ctSchool: OPTS().contactsSearch === 'school',
     notif: false, nGrades: true, nAssign: true, nDue: true, nMsgs: true, nAnn: true,
     drive: false, canva: false, onedrive: false, openIn: (() => { try { const v = localStorage.getItem('schoolagy_default_editor'); return v === 'onedrive' ? 'onedrive' : v === 'gdrive' ? 'drive' : 'canva'; } catch (_) { return 'canva'; } })(), cal: false };
   { const q = FSX.q.get('section'); if (q && ['account', 'plan', 'appearance', 'personal', 'notifications', 'apps', 'privacy', 'about'].includes(q)) SG.sec = q; }
@@ -4203,7 +4203,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     ['account', 'avemail', 'Averages email', 'email address verify change add code'], ['account', 'start', 'Open to', 'start page open first home default landing'], ['account', 'tz', 'Time zone', 'timezone zone clock time due dates'], ['account', 'signin', 'Signed in with Schoology', 'sign in password login account'], ['account', 'signout', 'Sign out', 'log out leave'],
     ['plan', 'current', 'Your plan', 'averages plus subscription renew billing'], ['plan', 'other', 'Other plans', 'free classic switch cancel downgrade get plus upgrade'], ['plan', 'payment', 'Payment and receipts', 'card billing cancel receipt'], ['plan', 'early', 'New features early', 'beta preview try'], ['plan', 'experiments', 'Experiments', 'beta labs try new features study planner grade goals focus timer weekly recap'],
     ['appearance', 'layout', 'Window', 'layout fullscreen windowed full screen background'], ['appearance', 'fstheme', 'Theme', 'is industry standard look style fullscreen theme'], ['appearance', 'theme', 'Mode', 'dark mode light system auto colors night'], ['appearance', 'accent', 'Accent color', 'color highlight buttons'],
-    ['personal', 'corder', 'Course order', 'courses order move up down reorder sort classes'], ['personal', 'shortcuts', 'Home shortcuts', 'shortcuts home buttons chips quick actions customize add remove'], ['appearance', 'potato', 'Potato mode', 'performance animations chromebook slow fast font'], ['appearance', 'motion', 'Reduce motion', 'animation accessibility'], ['appearance', 'previews', 'File previews', 'thumbnails images pdf'], ['appearance', 'cache', 'Saved on this device', 'cache storage clear space'],
+    ['personal', 'corder', 'Course order', 'courses order move up down reorder sort classes'], ['personal', 'shortcuts', 'Home shortcuts', 'shortcuts home buttons chips quick actions customize add remove'], ['personal', 'ctSchool', 'Only search my school', 'add contacts people search school everyone schoology find'], ['appearance', 'potato', 'Potato mode', 'performance animations chromebook slow fast font'], ['appearance', 'motion', 'Reduce motion', 'animation accessibility'], ['appearance', 'previews', 'File previews', 'thumbnails images pdf'], ['appearance', 'cache', 'Saved on this device', 'cache storage clear space'],
     ['notifications', 'notif', 'Browser notifications', 'alerts push notices'], ['notifications', 'nGrades', 'Grade updates', 'scores new grade'], ['notifications', 'nAssign', 'New assignments', 'work posted homework'],
     ['notifications', 'nDue', 'Due date reminders', 'due soon remind tomorrow'], ['notifications', 'nMsgs', 'Messages', 'inbox chat'], ['notifications', 'nAnn', 'Announcements', 'updates posts course'], ['notifications', 'quiet', 'Quiet during class', 'school hours do not disturb silence'], ['notifications', 'test', 'Send a test notification', 'try check'],
     ['apps', 'schoology', 'Schoology', 'classes grades connected'], ['apps', 'drive', 'Google Drive', 'docs files connect disconnect'], ['apps', 'canva', 'Canva', 'designs connect disconnect'], ['apps', 'onedrive', 'OneDrive', 'microsoft files connect'],
@@ -4316,7 +4316,8 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
 
     personal: () => `
       ${grp('Course order', courseRows(), FSX.courseOrder.get().length ? 'Your order. Windowed and the sidebar use it too.' : 'In period order. Move a course to set your own; Windowed and the sidebar use it too.')}
-      ${grp('Home shortcuts', scRowsHTML(), `The buttons under the search bar on Home. Drag to reorder; up to ${SC_MAX}.`)}`,
+      ${grp('Home shortcuts', scRowsHTML(), `The buttons under the search bar on Home. Drag to reorder; up to ${SC_MAX}.`)}
+      ${grp('Contacts', tog('ctSchool', 'Only search my school', 'Add contacts finds people across Schoology. Turn this on to search just your school.', SG.ctSchool))}`,
 
     notifications: () => {
       const P = LIVE.push, cfg = LIVE.pushCfg, can = window.AveragesPush ? window.AveragesPush.supported() : false;
@@ -4872,6 +4873,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       if (k === 'notif' && !SG.notif) { notifConsent(); return; }
       if (k === 'notif') { window.AveragesPush.disable().then(() => { SG.notif = false; SGV.flip = 'notif'; redraw(); toast('Browser notifications are off. We deleted your saved sign-in.'); }); return; }
       if (k === 'cal') { calSet(!(LIVE.cal && LIVE.cal.on)); return; }
+      if (k === 'ctSchool') { SG.ctSchool = !SG.ctSchool; saveOpt('contactsSearch', SG.ctSchool ? 'school' : null); t.setAttribute('aria-checked', SG.ctSchool); t.querySelector('.sw').classList.toggle('on', SG.ctSchool); sgNav(); toast(SG.ctSchool ? 'Add contacts searches just your school.' : 'Add contacts searches everyone on Schoology.'); return; }
       if (k === 'previews') { SG.previews = !SG.previews; saveOpt('filePreviews', SG.previews); if (!SG.previews) { try { sessionStorage.removeItem('averages_previews'); } catch (_) {} } t.setAttribute('aria-checked', SG.previews); t.querySelector('.sw').classList.toggle('on', SG.previews); toast(SG.previews ? 'File previews on.' : 'File previews off.'); return; }
       if (['nGrades', 'nAssign', 'nDue', 'nMsgs', 'nAnn'].includes(k)) { SG[k] = !SG[k]; t.setAttribute('aria-checked', SG[k]); t.querySelector('.sw').classList.toggle('on', SG[k]); sgNav(); window.AveragesPush.setTypes(pushTypes()).then(r => { if (!r.ok) toast('Couldn\'t save that. Try again in a moment.'); }); return; }
       SG[k] = !SG[k];

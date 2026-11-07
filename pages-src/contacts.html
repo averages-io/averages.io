@@ -845,6 +845,8 @@
     }
     // Whether Schoology lets you message the people you added (GET /messages/can: its send_message), kept a day in
     // fsct_can, shared with Fullscreen's Contacts. undefined: not asked yet; null: Schoology didn't say.
+    // Settings → Only search my school (contactsSearch: 'school'); everyone on Schoology otherwise
+    function ctSchoolOnly() { try { return (JSON.parse(localStorage.getItem('schoolagy_settings_options') || '{}') || {}).contactsSearch === 'school'; } catch { return false; } }
     function ctCanOf(id) {
       try { const v = (JSON.parse(localStorage.getItem('fsct_can') || '{}') || {})[id]; return v && Date.now() - (v.at || 0) < 864e5 ? v.s : undefined; } catch { return undefined; }
     }
@@ -1074,7 +1076,7 @@
         addBusy = true;
         addT = setTimeout(() => {
           const my = ++addSeq; addAsked.add(q);
-          fetch(CT_API + '/messages/people?q=' + encodeURIComponent(q), { credentials: 'include', cache: 'no-store' }).then(r => (r.ok ? r.json() : { people: [] }))
+          fetch(CT_API + '/messages/people?q=' + encodeURIComponent(q) + (ctSchoolOnly() ? '&scope=school' : ''), { credentials: 'include', cache: 'no-store' }).then(r => (r.ok ? r.json() : { people: [] }))
             .then(j => { (Array.isArray(j.people) ? j.people : []).forEach(p => { const id = String(p.id); if (id && p.name && Array.isArray(ctDirectory) && !ctDirectory.some(x => x.id === id)) ctDirectory.push({ id, name: String(p.name).slice(0, 120) }); }); })
             .catch(() => {}).then(() => { if (my === addSeq) addBusy = false; addDraw(); });
         }, 250);
