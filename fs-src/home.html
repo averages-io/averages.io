@@ -2837,7 +2837,8 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       el.querySelector('.ink-sr').textContent = t;
       cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); cv.style.width = w + 'px'; cv.style.height = h + 'px';
       // the circle (or pill) is painted here too, so the digit and its circle are one picture
-      if (!el.dataset.bg) { el.dataset.bg = cs.backgroundColor; el.style.backgroundColor = 'transparent'; }
+      // the circle's color is read fresh each time (the accent can change after the page draws: synced settings, Settings)
+      el.style.backgroundColor = ''; el.dataset.bg = cs.backgroundColor; el.style.backgroundColor = 'transparent';
       const c = cv.getContext('2d');
       c.setTransform(dpr, 0, 0, dpr, 0, 0);
       c.fillStyle = el.dataset.bg; c.beginPath();
@@ -2850,6 +2851,9 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   let inkDpr = window.devicePixelRatio;
   addEventListener('resize', () => { if (window.devicePixelRatio !== inkDpr) { inkDpr = window.devicePixelRatio; centerInk(); } }); // zoom or another screen
   const reInk = () => { inkMemo.clear(); centerInk(); }; // a font finished loading: measure again
+  // a new accent color (or theme) repaints the count bubbles
+  { let was = ''; const accNow = () => getComputedStyle(document.documentElement).getPropertyValue('--accent') + '|' + document.documentElement.getAttribute('data-theme');
+    new MutationObserver(() => { const n = accNow(); if (n !== was) { was = n; centerInk(); } }).observe(document.documentElement, { attributes: true, attributeFilter: ['style', 'data-theme', 'class'] }); }
   if (document.fonts) { document.fonts.ready.then(reInk); document.fonts.addEventListener('loadingdone', reInk); }
   function takes(c) {
     const up = nextUp(c.pct);
