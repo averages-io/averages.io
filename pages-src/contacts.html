@@ -543,7 +543,7 @@
     <div class="modal-box add-box" role="dialog" aria-modal="true" aria-labelledby="addContactsTitle">
       <button class="modal-close" id="addContactsClose" type="button" aria-label="Close">✕</button>
       <h3 id="addContactsTitle">Add contacts</h3>
-      <p class="add-sub">People in Schoology you can message: counselors, coaches, other teachers.</p>
+      <p class="add-sub">Find anyone in Schoology by name: counselors, coaches, librarians, other teachers.</p>
       <div class="contacts-search-wrap add-find">
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
         <input type="search" id="addContactsFind" placeholder="Find people in Schoology" autocomplete="off" aria-label="Find people in Schoology">
@@ -1024,8 +1024,9 @@
       if (ctDirectory === 'error') { list.innerHTML = '<p class="add-note" role="alert">Couldn\'t load people from Schoology. Try again in a moment.</p>'; return; }
       const have = new Set(CONTACTS.map(c => c.id));
       const hits = ctDirectory.filter(p => !q || p.name.toLowerCase().includes(q)).slice(0, 60);
+      if (!hits.length) { list.innerHTML = `<p class="add-note"${addBusy ? ' role="status"' : ''}>${addBusy ? 'Searching Schoology…' : q.length < 2 ? 'Type a name to find people in Schoology.' : 'Nobody in Schoology matches that.'}</p>`; return; }
       list.innerHTML = hits.length ? hits.map(p => `<div class="add-item" role="listitem"><span class="contact-avatar" style="background:${escapeHtml(window.AveragesAvatar ? window.AveragesAvatar.background(p.name) : '#83849a')}">${escapeHtml(initials(p.name))}</span><b>${escapeHtml(p.name)}</b><button type="button" data-add="${escapeHtml(p.id)}"${have.has(p.id) ? ' disabled' : ''}>${have.has(p.id) ? 'Added' : 'Add'}</button></div>`).join('')
-        : `<p class="add-note">${ctDirectory.length ? 'Nobody matches that.' : 'Schoology isn\'t listing anyone else you can message.'}</p>`;
+        : '';
     }
     function addOpen() {
       addModal.classList.add('show');
@@ -1042,7 +1043,23 @@
     document.getElementById('contactsAddBtn').hidden = !CT_LIVE || ctClassroom;
     document.getElementById('contactsAddBtn').addEventListener('click', addOpen);
     document.getElementById('addContactsClose').addEventListener('click', addClose);
-    document.getElementById('addContactsFind').addEventListener('input', addDraw);
+    // Schoology's own search by name, as you type (GET /messages/people)
+    let addBusy = false, addT = 0, addSeq = 0;
+    const addAsked = new Set();
+    document.getElementById('addContactsFind').addEventListener('input', e => {
+      const q = e.target.value.trim().toLowerCase();
+      clearTimeout(addT);
+      if (q.length >= 2 && !addAsked.has(q) && Array.isArray(ctDirectory)) {
+        addBusy = true;
+        addT = setTimeout(() => {
+          const my = ++addSeq; addAsked.add(q);
+          fetch(CT_API + '/messages/people?q=' + encodeURIComponent(q), { credentials: 'include', cache: 'no-store' }).then(r => (r.ok ? r.json() : { people: [] }))
+            .then(j => { (Array.isArray(j.people) ? j.people : []).forEach(p => { const id = String(p.id); if (id && p.name && Array.isArray(ctDirectory) && !ctDirectory.some(x => x.id === id)) ctDirectory.push({ id, name: String(p.name).slice(0, 120) }); }); })
+            .catch(() => {}).then(() => { if (my === addSeq) addBusy = false; addDraw(); });
+        }, 250);
+      } else addBusy = false;
+      addDraw();
+    });
     addModal.addEventListener('click', e => {
       if (e.target === addModal) { addClose(); return; }
       const b = e.target.closest('[data-add]'); if (!b || b.disabled) return;

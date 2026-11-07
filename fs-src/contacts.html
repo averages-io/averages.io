@@ -4136,6 +4136,20 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     $('acBody').innerHTML = ac.pick.length ? `<div class="ct-lbl">Adding</div>` + ac.pick.map(id => { const p = P(id); return `<div class="ac-row">${av(p)}<span class="tx"><b>${esc(p.name)}</b><small>${esc(acSub(p))}</small></span><button class="ibtn" data-acun="${id}" aria-label="Don't add ${esc(p.name)}">${ico('x')}</button></div>`; }).join('')
       : `<div class="ac-hint">${ico('search')}<b>Start typing to find people</b><span>Find your counselor, the librarian or anyone else Schoology lets you message.</span></div>`;
   }
+  // Schoology's own search by name (GET /messages/people), as you type: counselors, librarians, other teachers
+  let acSeq = 0, acT = 0, acBusy = false;
+  const acAsked = new Set();
+  function acSearch(q) {
+    clearTimeout(acT);
+    if (q.length < 2 || acAsked.has(q)) { acBusy = false; return; }
+    acBusy = true;
+    acT = setTimeout(() => {
+      const my = ++acSeq; acAsked.add(q);
+      FSX.api('/messages/people?q=' + encodeURIComponent(q)).then(j => {
+        (j.people || []).forEach(r => { const id = String(r.id); if (PEOPLE[id] || DIRP[id]) return; const p = { id, name: r.name, role: 'Staff', title: 'In Schoology', where: '', school: r.school || SCHOOL, email: '', hours: '', cls: [], kind: 'dir' }; DIR.push(p); DIRP[id] = p; });
+      }).catch(() => {}).then(() => { if (my === acSeq) acBusy = false; if (ac) acDrop(); });
+    }, 250);
+  }
   function acDrop() {
     const q = ac.q, el = $('acDrop');
     if (!q) { el.hidden = true; $('acFind').setAttribute('aria-expanded', 'false'); return; }
@@ -4144,7 +4158,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     let k = 0;
     el.innerHTML = list.length ? list.map(p => { const h = have(p.id), on = !h && k++ === ac.sel; return `<button class="ms-opt${on ? ' on' : ''}" role="option" ${h ? 'aria-disabled="true"' : `data-acpick="${p.id}"`} aria-selected="${on}">${av(p)}<span class="tx"><b>${markIn(p.name, q)}</b><small>${markIn(acSub(p), p._s > 1 ? q : '')}${p.email && p.kind ? ' · ' + markIn(p.email, p._s > 1 ? q : '') : ''}</small></span>${h ? '<em>In contacts</em>' : ''}</button>`; }).join('')
       + (all.length > AC_MAX ? `<p class="ac-more">${all.length - AC_MAX} more. Keep typing to narrow it down.</p>` : '')
-      : `<p class="ac-more">${dirAsked && !DIR.length ? 'Loading who you can add…' : `Nobody matches "${esc(ac.q)}".`}</p>`;
+      : `<p class="ac-more">${acBusy ? 'Searching Schoology…' : q.length < 2 ? 'Keep typing a name…' : `Nobody in Schoology matches "${esc(ac.q)}".`}</p>`;
     el.hidden = false; $('acFind').setAttribute('aria-expanded', 'true');
   }
   function acPick(id) { if (!ac.pick.includes(id)) ac.pick.push(id); ac.q = ''; ac.sel = 0; $('acFind').value = ''; acChips(); acDrop(); $('acFind').focus(); }
@@ -4160,7 +4174,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     ac = { el: $('acScrim'), q: '', pick: [], sel: 0, from: document.activeElement }; dirLoad();
     acChips(); $('acFind').focus();
     const fi = $('acFind');
-    fi.addEventListener('input', e => { ac.q = e.target.value.trim().toLowerCase(); ac.sel = 0; acDrop(); });
+    fi.addEventListener('input', e => { ac.q = e.target.value.trim().toLowerCase(); ac.sel = 0; acSearch(ac.q); acDrop(); });
     fi.addEventListener('keydown', e => {
       const os = [...$('acDrop').querySelectorAll('[data-acpick]')];
       if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && os.length) { e.preventDefault(); ac.sel = (ac.sel + (e.key === 'ArrowDown' ? 1 : -1) + os.length) % os.length; acDrop(); }
