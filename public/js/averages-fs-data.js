@@ -637,6 +637,13 @@
         if (have[m.id]) { var x = out.filter(function (o) { return o.id === String(m.id); })[0]; if (x && !x.teacher && cname(cid) && x.sub.indexOf(cname(cid)) < 0) x.sub += ', ' + cname(cid); return; }
         have[m.id] = 1; out.push({ id: String(m.id), name: m.name || 'Classmate', teacher: false, sub: 'Classmate · ' + cname(cid), photo: m.photo || '' });
       }); });
+      // people you added on the Contacts page (Add contacts)
+      var dir = FSX.lget('fsct_dir') || {}, added = FSX.lget('fsct_added') || [];
+      (Array.isArray(added) ? added : []).forEach(function (id) {
+        id = String(id); var n = dir[id];
+        if (!n || have[id] || id === me) return; have[id] = 1;
+        out.push({ id: id, name: String(n).slice(0, 120), teacher: false, sub: 'Added by you · In Schoology', photo: '' });
+      });
       return out;
     },
     loadClassmates: function () {

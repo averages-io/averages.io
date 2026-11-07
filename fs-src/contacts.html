@@ -3986,11 +3986,11 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     const q = PEOPLE[id] || (PEOPLE[id] = { id, name: m.name, role: 'Classmate', cls: [], photo: m.photo || '' }); if (!q.cls.includes(cid)) q.cls.push(cid); }); });
   const SCHOOL = FSD.me.school || 'Your school';
   const DIR_SAVED = store.get('fsct_dir') || {};   // people you added: { id: name }, so they show before the list loads
-  const DIR = Object.entries(DIR_SAVED).filter(([id]) => !PEOPLE[id]).map(([id, name]) => ({ id, name, role: 'Staff', title: 'In Schoology', where: '', school: SCHOOL, email: '', hours: '', cls: [], kind: 'dir' }));
+  const DIR = Object.entries(DIR_SAVED).filter(([id]) => !PEOPLE[id]).map(([id, name]) => ({ id, name, role: 'Person', title: 'In Schoology', where: '', school: SCHOOL, email: '', hours: '', cls: [], kind: 'dir' }));
   let dirAsked = false;
   function dirLoad() {
     if (dirAsked) return; dirAsked = true;
-    FSX.api('/messages/recipients').then(j => { (j.recipients || []).forEach(r => { const id = String(r.id); if (PEOPLE[id] || DIR.some(x => x.id === id)) return; DIR.push({ id, name: r.name, role: 'Staff', title: 'In Schoology', where: '', school: SCHOOL, email: '', hours: '', cls: [], kind: 'dir' }); DIRP[id] = DIR[DIR.length - 1]; }); if (ac) acDrop(); }).catch(() => {});
+    FSX.api('/messages/recipients').then(j => { (j.recipients || []).forEach(r => { const id = String(r.id); if (PEOPLE[id] || DIR.some(x => x.id === id)) return; DIR.push({ id, name: r.name, role: 'Person', title: 'In Schoology', where: '', school: SCHOOL, email: '', hours: '', cls: [], kind: 'dir' }); DIRP[id] = DIR[DIR.length - 1]; }); if (ac) acDrop(); }).catch(() => {});
   }
   const DIRP = Object.fromEntries(DIR.map(p => [p.id, p]));
   const P = id => PEOPLE[id] || DIRP[id];
@@ -4035,12 +4035,12 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       });
     } else {
       const showT = CT.view !== 'mates', showM = CT.view !== 'teachers';
-      const st = [...ALL, ...EXTRA()].filter(p => starred(p.id) && hit(p) && (p.role === 'Teacher' || p.role === 'Staff' ? showT : showM));
+      const st = [...ALL, ...EXTRA()].filter(p => starred(p.id) && hit(p) && (p.role === 'Person' ? CT.view === 'all' : p.role === 'Teacher' || p.role === 'Staff' ? showT : showM));
       if (st.length && !CT.q) html += lbl('Starred') + st.map(p => rowHTML(p, 's:' + p.id)).join('');
       const ts = showT ? TEACH.filter(hit) : [];
       if (ts.length) html += lbl('Teachers', `<small>${ts.length}</small>`) + ts.map(p => rowHTML(p)).join('');
       // the people you added yourself, from the school directory
-      const ex = EXTRA().filter(p => hit(p) && (p.role === 'Staff' ? showT : showM));
+      const ex = EXTRA().filter(p => hit(p) && (p.role === 'Person' ? CT.view === 'all' : p.role === 'Staff' ? showT : showM));
       if (ex.length) html += lbl('Added by you', `<small>${ex.length}</small>`) + ex.map(p => rowHTML(p)).join('');
       if (showM) {
         const ms = MATES.filter(hit);
@@ -4065,7 +4065,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   // ---------- one person ----------
   const li = (tile, tx, right = '', tag = 'div', attrs = '') => `<${tag} class="ct-li${tile ? ' has-ic' : ''}"${attrs}>${tile}<span class="tx">${tx}</span>${right}</${tag}>`;
   const tileOf = c => `<span class="tile" style="--c:${c.color}" aria-hidden="true">${EMOJI_SVG[c.emoji] || EMOJI_SVG['📚']}</span>`;
-  const canMsg = p => p.role === 'Teacher' || p.role === 'Staff';
+  const canMsg = p => p.role === 'Teacher' || p.role === 'Staff' || p.role === 'Person';
   function ctCard(animate) {
     const box = $('ctCard'), p = CT.open && P(CT.open);
     $('ct').classList.toggle('open', !!p);
@@ -4150,7 +4150,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     acT = setTimeout(() => {
       const my = ++acSeq; acAsked.add(q);
       FSX.api('/messages/people?q=' + encodeURIComponent(q)).then(j => {
-        (j.people || []).forEach(r => { const id = String(r.id); if (PEOPLE[id] || DIRP[id]) return; const p = { id, name: r.name, role: 'Staff', title: 'In Schoology', where: '', school: r.school || SCHOOL, email: '', hours: '', cls: [], kind: 'dir' }; DIR.push(p); DIRP[id] = p; });
+        (j.people || []).forEach(r => { const id = String(r.id); if (PEOPLE[id] || DIRP[id]) return; const p = { id, name: r.name, role: 'Person', title: 'In Schoology', where: '', school: r.school || SCHOOL, email: '', hours: '', cls: [], kind: 'dir' }; DIR.push(p); DIRP[id] = p; });
       }).catch(() => {}).then(() => { if (my === acSeq) acBusy = false; if (ac) acDrop(); });
     }, 250);
   }
