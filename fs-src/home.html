@@ -2362,7 +2362,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     gb.forEach(k => (k.assignments || []).forEach(a => { if (a.graded && typeof a.score === 'number') pts += a.points || 0; else if (a.due && a.due > Date.now() && a.points > 0) { rem += a.points; left = true; } }));
     const recent = FSD.WORK.filter(w => w.c === x.id && !w.missing).slice(0, 3).map(w => [w.n, `${w.got} / ${w.of}`]);
     const points = x.points.length ? x.points : [x.pct];
-    return { id: x.id, short: x.short, name: x.name, teacher: x.teacher || 'Your teacher', teacherIds: x.teacherIds, pct: x.pct, c: i + 1, pts, rem: left && pts ? rem : null,
+    return { id: x.id, short: x.short, name: x.name, teacher: x.teacher || 'Your teacher', teacherIds: x.teacherIds, pct: x.pct, none: !!x.none, c: i + 1, pts, rem: left && pts ? rem : null,
       room: x.hasPeriod ? 'Period ' + x.period : (x.code || 'Schoology class'), recent, predictedPct: x.predictedPct, points, dates: x.dates.length ? x.dates : ['Now'], names: (x.titles || []).map(t => Array.isArray(t) ? t[0] : t), updated: x.updated || '' };
   });
   // The projection starts from the most recent graded assignment, so its direction is latest score to projected grade
@@ -2376,6 +2376,9 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const badge = c => `<span class="badge" style="--c:${c.color}" aria-hidden="true">${EMOJI_SVG[c.emoji] || EMOJI_SVG['📚']}</span>`;
   const gcls = p => p >= 90 ? 'ga' : p >= 80 ? 'gb' : 'gc';
   const grade = p => `<span class="gr ${gcls(p)}">${letter(p)}</span>`;
+  // a class with nothing graded yet reads N/A, never F 0.0%
+  const gtxt = c => c.none ? 'No grades yet' : `${letter(c.pct)} · ${c.pct.toFixed(1)}%`;
+  const WITH_GRADES = () => CLASSES.filter(c => !c.none);
   const dtile = d => d.k === 'late' ? `<span class="dtile late" aria-hidden="true"><small>${d.day}</small><b>${String(d.date).split(' ')[1] || ''}</b></span>`
     : `<span class="dtile ${d.date === TODAY ? 'today' : ''}" aria-hidden="true"><small>${d.date === TODAY ? 'Today' : d.day}</small><b>${d.date.split(' ')[1]}</b></span>`;
 
@@ -2591,7 +2594,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   }
   function renderSide() {
     $('sideClasses').innerHTML = sortedClasses().map(c =>
-      `<a href="#" title="${esc(c.name)} · ${letter(c.pct)} ${c.pct.toFixed(1)}%" data-open="class:${c.id}">${badge(c)}<span class="fade">${esc(c.name)}</span><span class="g fade ${gcls(c.pct)}">${letter(c.pct)}<small>${c.pct.toFixed(1)}%</small></span></a>`).join('');
+      `<a href="#" title="${esc(c.name)} · ${c.none ? 'No grades yet' : letter(c.pct) + ' ' + c.pct.toFixed(1) + '%'}" data-open="class:${c.id}">${badge(c)}<span class="fade">${esc(c.name)}</span>${c.none ? '<span class="g fade g-na">N/A</span>' : `<span class="g fade ${gcls(c.pct)}">${letter(c.pct)}<small>${c.pct.toFixed(1)}%</small></span>`}</a>`).join('');
   }
   const RG_MIN = 260, RG_GAP = 16;
   const rgCols = id => { const w = $(id).clientWidth; return w ? Math.max(1, Math.floor((w + RG_GAP) / (RG_MIN + RG_GAP))) : 3; };
@@ -2866,7 +2869,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   }
   function renderPromo() {
     // classes with points posted that can still go up, plus classes projected to go up when the points aren't posted
-    const n = CLASSES.filter(c => { const t = takes(c); return t.ok || (t.unknown && c.predictedPct >= t.cut); }).length;
+    const n = WITH_GRADES().filter(c => { const t = takes(c); return t.ok || (t.unknown && c.predictedPct >= t.cut); }).length;
     $('promoText').textContent = `${n === 0 ? 'No classes' : n === 1 ? '1 class' : n + ' classes'} could still go up a letter this term.`;
   }
   const secId = k => SECTIONS.find(x => x[0] === k)[2];
@@ -3146,7 +3149,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     return `<button class="mi ${o.cls || ''}" ${o.attrs || ''}>${o.lead || ''}<span class="tx"><b>${o.th != null ? o.th : esc(o.t)}</b>${o.sub ? `<small>${esc(o.sub)}</small>` : ''}</span>${o.end || ''}</button>`;
   }
   const check = on => ico('ok', 'i ck' + (on ? '' : ' off'));
-  const classRow = c => mi({ attrs: `data-go="class:${c.id}"`, lead: badge(c), t: c.name, sub: `${c.teacher} · ${c.pct.toFixed(1)}%`, end: grade(c.pct) });
+  const classRow = c => mi({ attrs: `data-go="class:${c.id}"`, lead: badge(c), t: c.name, sub: `${c.teacher} · ${c.none ? 'No grades yet' : c.pct.toFixed(1) + '%'}`, end: c.none ? '<span class="gr g-na">N/A</span>' : grade(c.pct) });
   const dueRow = d => mi({ attrs: `data-go="due:${d.id}"`, lead: badge(C[d.c]), t: d.t, sub: C[d.c].name, end: dueTag(d) });
   const fileRow = f => mi({ attrs: `data-go="file:${f.id}"`, lead: fileTile(f.name, 28), t: f.name, sub: `${f.from ? f.from + ' · ' : ''}${C[f.c].name} · ${f.when}` });
   const threadRow = t => mi({ attrs: `data-go="thread:${t.id}"`, lead: `<span class="unread${t.unread ? '' : ' off'}"></span>${badge(C[t.c])}`, t: t.subject, sub: `${t.who} · ${t.msgs[t.msgs.length - 1].t}`, end: `<span class="end">${esc(t.when)}</span>` });
@@ -3231,7 +3234,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
         if (!want.length) acts.push(genCmd('whatif'));
         else {
           const hits = best(CLASSES, want, classHay);
-          hits.forEach(c => acts.push({ attrs: `data-go="whatif:${c.id}"`, cls: c, t: `What-if grades in ${c.name}`, sub: `Now ${letter(c.pct)} · ${c.pct.toFixed(1)}%` }));
+          hits.forEach(c => acts.push({ attrs: `data-go="whatif:${c.id}"`, cls: c, t: `What-if grades in ${c.name}`, sub: c.none ? 'No grades yet' : `Now ${gtxt(c)}` }));
           if (!hits.length) none('whatif', 'class');
         }
       } else if (cmd.k === 'open') {
@@ -3352,7 +3355,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       // a short window of the update's text around the match
       const snip = t => { const i = t.toLowerCase().indexOf(s), a = Math.max(0, i - 24); return (a ? '…' : '') + t.slice(a, a + 72) + (a + 72 < t.length ? '…' : ''); };
       const G = {
-        classes: CLASSES.filter(c => hit(c.name) || hit(c.short) || hit(c.room)).map(c => mi({ attrs: `data-go="class:${c.id}"`, lead: badge(c), th: hl(c.name, s), sub: `${c.teacher} · ${c.room}`, end: grade(c.pct, c.pct.toFixed(1) + '%') })),
+        classes: CLASSES.filter(c => hit(c.name) || hit(c.short) || hit(c.room)).map(c => mi({ attrs: `data-go="class:${c.id}"`, lead: badge(c), th: hl(c.name, s), sub: `${c.teacher} · ${c.room}`, end: c.none ? '<span class="sr-g g-na">N/A</span>' : grade(c.pct, c.pct.toFixed(1) + '%') })),
         assignments: DUE.filter(d => hit(d.t)).map(d => mi({ attrs: `data-go="due:${d.id}"`, lead: badge(C[d.c]), th: hl(d.t, s), sub: `${C[d.c].name} · ${dueLong(d)}`, end: dueTag(d) }))
           .concat(GRADED.filter(g => hit(g.t)).map(g => { const p = g.got / g.of * 100; return mi({ attrs: `data-act="openpage" data-arg="graded:${g.id}"`, lead: badge(C[g.c]), th: hl(g.t, s), sub: `${C[g.c].name} · graded ${g.when}`, end: grade(p, `${g.got}/${g.of}`) }); })),
         files: FILES.filter(f => hit(f.name)).map(f => mi({ attrs: `data-go="file:${f.id}"`, lead: fileTile(f.name, 28), th: hl(f.name, s), sub: `${f.from ? f.from + ' · ' : ''}${C[f.c].name} · ${f.when}`, end: `<span class="end">${esc(f.size)}</span>` })),
@@ -3588,7 +3591,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       const c = C[id], t = takes(c);
       touchRecent('Course', c.name, 'class:' + id);
       return { label: c.name, html: head(c.name, `${c.teacher} · ${c.room}`, { lead: badge(c) }) +
-        `<div class="kv"><div><small>Current grade</small><b>${c.pct.toFixed(1)}% <span class="${gcls(c.pct)}">${letter(c.pct)}</span></b></div>${c.rem != null
+        `<div class="kv"><div><small>Current grade</small><b>${c.none ? '<span class="g-na">N/A</span> <small>No grades yet</small>' : `${c.pct.toFixed(1)}% <span class="${gcls(c.pct)}">${letter(c.pct)}</span>`}</b></div>${c.rem != null
           ? `<div><small>Points still to come</small><b>${c.rem}</b></div>`
           : `<div><small>Projected grade</small><b><span class="trend ${c.trend}" id="projChip" tabindex="0" role="button" aria-haspopup="true" aria-expanded="false" aria-label="Why is ${esc(c.name)} projected ${letter(c.predictedPct)}, ${c.predictedPct} percent? Show the trend."><span class="arrow" aria-hidden="true">${TREND_ARROW[c.trend]}</span>${letter(c.predictedPct)}<span class="tp">${c.predictedPct.toFixed(1)}%</span></span></b></div>`}</div>
         <div class="lbl">Recent scores</div>
@@ -3686,7 +3689,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     },
     takes() {
       return { label: 'What it takes', wide: true, html: head('What it takes', 'To go up a letter by Oct 30') +
-        CLASSES.map(c => {
+        WITH_GRADES().map(c => {
           const t = takes(c);
           const end = t.top ? `<span class="end need no">Top grade</span>` : t.unknown ? `<span class="end">Projected ${letter(c.predictedPct)}</span>` : `<span class="end need ${t.ok ? 'ok' : 'no'}">${t.ok ? t.need.toFixed(1) + '% avg' : 'Out of reach'}</span>`;
           const sub = t.top ? `${letter(c.pct)} · ${c.pct.toFixed(1)}%` : t.unknown ? `No points-left posted · projected ${c.predictedPct.toFixed(1)}%` : `${letter(c.pct)} to ${t.up} needs ${t.cut}% · ${c.rem} points left`;
@@ -3771,7 +3774,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     let body = '';
     if (k === 'gpa') {
       const s = series(), gNow = (CLASSES.filter(c => !c.none).reduce((a, c) => a + GP[letter(c.pct)], 0) / Math.max(1, CLASSES.filter(c => !c.none).length));
-      const cls = CLASSES.slice().sort((a, b) => GP[letter(b.pct)] - GP[letter(a.pct)]);
+      const cls = WITH_GRADES().sort((a, b) => GP[letter(b.pct)] - GP[letter(a.pct)]);
       body = `<section class="dpanel"><h3>GPA by week</h3>
           <div class="legend"><span><i style="background:var(--series)"></i>GPA now <b>${gNow.toFixed(2)}</b></span><span>on an unweighted 4.0 scale</span></div>
           <div class="bigchart" id="bigChart"></div><p class="dnote">Rebuilt from your graded assignments by their due dates, so if a teacher changes an old score, the earlier weeks change too.</p></section>
@@ -3795,7 +3798,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
           <tbody>${wk.map((w, i) => { const g = idx + i; return `<tr><td>${w}</td><td>${DUE_W(g)}</td><td>${ONTIME_W(g)}</td><td>${LATE_W[g] || '<span class="none">0</span>'}</td><td>${MISS_W[g] || '<span class="none">0</span>'}</td><td><b>${Math.round(RATE[g])}%</b></td></tr>`; }).join('')}</tbody>
           <tfoot><tr><td>Total</td><td>${due}</td><td>${on}</td><td>${late}</td><td>${miss}</td><td>${Math.round(on / due * 100)}%</td></tr></tfoot></table></div></section>`;
     } else if (k === 'takes') {
-      const rows = CLASSES.map(c => ({ c, t: takes(c) }));
+      const rows = WITH_GRADES().map(c => ({ c, t: takes(c) }));
       const ok = rows.filter(r => r.t.ok).length, no = rows.filter(r => !r.t.top && !r.t.unknown && !r.t.ok).length;
       // one row per class: a verdict, one bar for the average needed on what's left (tick = what you average now), one plain sentence
       const an = l => (/^[AEF]/.test(l) ? 'an' : 'a') + ' ' + l;
@@ -3873,7 +3876,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
           <tbody>${wk.map((w, i) => `<tr><td>${w}</td>${CLASSES.map(c => `<td>${TURNED_BY[c.id][idx + i]}</td>`).join('')}<td><b>${TURNED[idx + i]}</b></td></tr>`).join('')}</tbody>
           <tfoot><tr><td>Total</td>${CLASSES.map(c => `<td>${TURNED_BY[c.id].slice(idx).reduce((a, b) => a + b, 0)}</td>`).join('')}<td><b>${TURNED.slice(idx).reduce((a, b) => a + b, 0)}</b></td></tr></tfoot></table></div></section>`;
     } else {
-      const s = series(), cls = CLASSES.slice().sort((a, b) => b.pct - a.pct);
+      const s = series(), cls = WITH_GRADES().sort((a, b) => b.pct - a.pct);
       body = `<section class="dpanel"><h3>Overall average by week</h3>
           <div class="legend"><span><i style="background:var(--series)"></i>Overall average <b>${lastV(s.lv).toFixed(1)}%</b></span><span><i style="background:var(--good)"></i>Change <b>${(lastV(s.lv) - firstV(s.lv) >= 0 ? '+' : '')}${(lastV(s.lv) - firstV(s.lv)).toFixed(1)}%</b></span></div>
           <div class="bigchart" id="bigChart"></div><p class="dnote">Rebuilt from your graded assignments by their due dates, so if a teacher changes an old score, the earlier weeks change too.</p></section>
@@ -5161,7 +5164,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const cmark = (s, q) => { const w = cwords(q).sort((a, b) => b.length - a.length)[0], t = String(s); if (!w) return esc(t); const i = t.toLowerCase().indexOf(w); return i < 0 ? esc(t) : esc(t.slice(0, i)) + '<mark>' + esc(t.slice(i, i + w.length)) + '</mark>' + esc(t.slice(i + w.length)); };
   let cmdk = null, cmdkFrom = null;
   const crow = (attrs, lead, th, sub, cls = '') => `<button class="mi${cls}" ${attrs}>${lead}<span class="tx"><b>${th}</b>${sub ? `<small>${esc(sub)}</small>` : ''}</span></button>`;
-  const cclass = (c, q) => crow(`data-go="${FSX.hubUrl(c.id)}"`, badge(c), cmark(c.name, q), `${c.teacher} · ${letter(c.pct)} · ${c.pct.toFixed(1)}%`);
+  const cclass = (c, q) => crow(`data-go="${FSX.hubUrl(c.id)}"`, badge(c), cmark(c.name, q), `${c.teacher} · ${gtxt(c)}`);
   function cmdkRender() {
     const q = cmdk.querySelector('input').value.trim(), res = cmdk.querySelector('.cmdk-res'); let html = '';
     const page = ([p, ic]) => crow(p === HERE ? 'data-cmdkx' : `data-toast="the ${p} page"`, ico(ic), cmark(p, q), p === HERE ? "You're here" : '');
