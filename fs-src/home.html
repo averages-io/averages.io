@@ -2401,7 +2401,9 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   // opens on the Messages page; replying from Home goes straight to Schoology.
   const MSG = (FSD.raw.messages && Array.isArray(FSD.raw.messages.CONVERSATIONS)) ? FSD.raw.messages : null, PEOPLE_N = (MSG && MSG.PEOPLE) || {};
   const classOfPerson = pid => (CLASSES.find(c => (c.teacherIds || []).includes(String(pid))) || {}).id || '';
-  const THREADS = (MSG ? MSG.CONVERSATIONS.map(t => ({ id: String(t.id), who: (PEOPLE_N[t.personId] || {}).name || 'Schoology', pid: String(t.personId || ''), c: classOfPerson(t.personId), subject: t.subject || 'No subject', unread: !!t.unread && !FSX.seen.has('m', t.id), when: t.time || '', msgs: [{ me: false, t: t.preview || '', at: t.time || '' }] }))
+  // marked unread on Messages: unread here too, even if this device saw it once
+  const MSG_MU = (() => { try { const v = JSON.parse(localStorage.getItem('fsmsg_mu') || '[]'); return Array.isArray(v) ? v.map(String) : []; } catch (e) { return []; } })();
+  const THREADS = (MSG ? MSG.CONVERSATIONS.map(t => ({ id: String(t.id), who: (PEOPLE_N[t.personId] || {}).name || 'Schoology', pid: String(t.personId || ''), c: classOfPerson(t.personId), subject: t.subject || 'No subject', unread: !!t.unread && (MSG_MU.includes(String(t.id)) || !FSX.seen.has('m', t.id)), when: t.time || '', msgs: [{ me: false, t: t.preview || '', at: t.time || '' }] }))
     : FSD.messages.map(m => ({ id: String(m.id), who: m.from || 'Schoology', pid: '', c: m.courseId || classOfPerson(''), subject: m.subject || 'No subject', unread: !!m.unread && !FSX.seen.has('m', m.id), when: m.time || '', msgs: [{ me: false, t: m.preview || '', at: m.time || '' }] })))
     .map(t => Object.assign(t, { c: C[t.c] ? t.c : '' }));
   const T = id => THREADS.find(t => t.id === id);

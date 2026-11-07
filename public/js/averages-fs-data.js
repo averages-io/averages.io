@@ -808,6 +808,11 @@
         v[kind] = l.slice(-300); lset('averages_seen', v);
         seenPush();
       },
+      unmark: function (kind, ids) {
+        var v = FSX.seen.read(), drop = [].concat(ids).map(String), l = Array.isArray(v[kind]) ? v[kind].map(String) : [];
+        v[kind] = l.filter(function (id) { return drop.indexOf(id) < 0; }); lset('averages_seen', v);
+        seenPush();
+      },
     },
     lget: lget,
     lset: lset,

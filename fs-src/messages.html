@@ -3828,6 +3828,10 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const esc = s => String(s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
   const ico = (n, cls = 'i') => `<svg class="${cls}"><use href="#i-${n}"/></svg>`;
   const store = { get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
+  // Conversations the student marked unread themselves: the page doesn't open (and so read) them on its own,
+  // and they show unread even though this device saw them once (the synced seen list only grows)
+  const MU = new Set((store.get('fsmsg_mu') || []).map(String).slice(-200));
+  const muSet = (ts, on) => { ts.forEach(t => { if (on) MU.add(String(t.id)); else MU.delete(String(t.id)); }); store.set('fsmsg_mu', [...MU].slice(-200)); if (on && ts.some(t => String(t.id) === String(store.get('fsmsg_open')))) try { localStorage.removeItem('fsmsg_open'); } catch (e) { /* fine */ } };
   if (store.get('fsmock_potato') === true) document.body.classList.add('potato-mode');
   const calm = () => document.body.classList.contains('potato-mode') || matchMedia('(prefers-reduced-motion: reduce)').matches;
   const PROFILE = Object.assign({ name: FSD.me.name, photo: FSD.me.photo }, store.get('fsmock_profile2') || {});
@@ -4350,7 +4354,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const TH = MSG.CONVERSATIONS.filter(t => t && t.id && !HIDDEN.has(String(t.id))).map(t => {
     const me = String(MSG.me || ''), w2 = (t.participants || []).map(String).filter(x => x && x !== me);
     const withIds = (w2.length ? w2 : [String(t.personId || '')]).map(person);
-    return { id: String(t.id), with: withIds, subject: t.subject || 'No subject', unread: !!t.unread && !FSX.seen.has('m', t.id), pinned: PINS.has(String(t.id)), loaded: false,
+    return { id: String(t.id), with: withIds, subject: t.subject || 'No subject', unread: !!t.unread && (MU.has(String(t.id)) || !FSX.seen.has('m', t.id)), pinned: PINS.has(String(t.id)), loaded: false,
       msgs: [M(withIds.includes(String(t.personId)) ? String(t.personId) : withIds[0], t.preview || '', new Date(t.at || Date.now()))] };
   });
   const thLoad = t => {
@@ -4952,7 +4956,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     // already open: keep it as it is (your draft, where you'd scrolled to); on a phone just show it
     if (id && id === MS.open && id !== 'new' && $('msFeed')) { $('ms').classList.add('open'); if (focus !== false) { const f = $('msText'); if (f && innerWidth > 860) f.focus({ preventScroll: true }); } return; }
     const ta = $('msText'); if (ta && MS.open) MS.drafts[MS.open] = ta.value;
-    MS.open = id; if (id !== 'new') store.set('fsmsg_open', id);
+    MS.open = id; if (id !== 'new') { store.set('fsmsg_open', id); if (MU.size) muSet(tsOf(id), false); }
     // opening it marks it read (Schoology does the same)
     const ts = id && id.startsWith('p:') ? TH.filter(x => keyOf(x) === id.slice(2)) : TH.filter(x => x.id === id);
     const wasUnread = ts.some(t => t.unread); ts.forEach(t => { t.unread = false; FSX.seen.mark('m', t.id); thLoad(t); });
@@ -5032,6 +5036,10 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   }
 
   // Schoology turned down a new message in the last day (the school's messaging settings): say so. It's tried again either way.
+  // read / unread on Schoology too (POST /messages/status); the dot here changes at once either way
+  function msStatus(ts, unread) {
+    ts.filter(t => /^\d+$/.test(String(t.id))).forEach(t => FSX.api('/messages/status', { method: 'POST', json: { id: String(t.id), unread } }).catch(() => { /* still changed here */ }));
+  }
   const sgyBlocked = () => { const t = +FSX.lget('averages_msg_new_blocked') || 0; return !!t && Date.now() - t < 864e5; };
   let sgy = null;
   function sgyDraft() {
@@ -5072,7 +5080,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     el.addEventListener('click', e => {
       const a = e.target.closest('[data-msact]'); if (!a) return; const k = a.dataset.msact, mid = menu.id; menuClose(true);
       if (k === 'pin') { const on = !pinned; ts.forEach(t => { t.pinned = on; on ? PINS.add(t.id) : PINS.delete(t.id); }); store.set('fsmsg_pins', [...PINS]); MS.fresh = on ? mid : null; msRows(); toast(on ? `Pinned ${title(ts[0])} to the top.` : `Unpinned ${title(ts[0])}.`); }
-      else if (k === 'read') { ts.forEach(t => { t.unread = !unread; if (unread) FSX.seen.mark('m', t.id); }); if (!unread && MS.open === mid) { MS.open = null; msThread(); } msRows(); msView(); msMeta(); toast(unread ? 'Marked as read.' : 'Marked as unread.'); }
+      else if (k === 'read') { ts.forEach(t => { t.unread = !unread; if (unread) FSX.seen.mark('m', t.id); else FSX.seen.unmark('m', t.id); }); msStatus(ts, !unread); muSet(ts, !unread); if (!unread && MS.open === mid) { MS.open = null; msThread(); } msRows(); msView(); msMeta(); toast(unread ? 'Marked as read.' : 'Marked as unread.'); }
       else if (k === 'who') { if (MS.open !== mid) openThread(mid, false); cardOpen(); }
       else if (k === 'erase') delOpen(ts);
       else if (k === 'del') { ts.forEach(t => { HIDDEN.add(t.id); TH.splice(TH.indexOf(t), 1); }); store.set('fsmsg_hidden', [...HIDDEN]); if (MS.open === mid || (MS.open && tsOf(MS.open).length === 0)) { MS.open = null; } msRows(); msThread(); msView(); msMeta(); toast('Hidden here. It\'s still in Schoology.'); }
@@ -5227,7 +5235,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       if (k === 'sgy') { FSX.newTab(FSX.schoology('/messages')); return; }
       if (k === 'mute') { const on = !ts.some(x => MUTED.has(x.id)); ts.forEach(x => on ? MUTED.add(x.id) : MUTED.delete(x.id)); store.set('fsmsg_muted', [...MUTED]); infoDraw(true); toast(on ? 'Alerts hidden for this conversation.' : 'Alerts are back on for this conversation.'); return; }
       if (k === 'pin') { const on = !ts.some(x => x.pinned); ts.forEach(x => { x.pinned = on; on ? PINS.add(x.id) : PINS.delete(x.id); }); store.set('fsmsg_pins', [...PINS]); msRows(); infoDraw(true); return; }
-      if (k === 'unread') { ts.forEach(x => { x.unread = true; }); infoClose(true); MS.open = null; msRows(); msThread(); msView(); msMeta(); toast('Marked as unread.'); return; }
+      if (k === 'unread') { ts.forEach(x => { x.unread = true; FSX.seen.unmark('m', x.id); }); msStatus(ts, true); muSet(ts, true); infoClose(true); MS.open = null; msRows(); msThread(); msView(); msMeta(); toast('Marked as unread.'); return; }
       if (k === 'hide') { ts.forEach(x => { HIDDEN.add(x.id); const i = TH.indexOf(x); if (i >= 0) TH.splice(i, 1); }); store.set('fsmsg_hidden', [...HIDDEN]); infoClose(true); MS.open = null; msRows(); msThread(); msView(); msMeta(); toast('Hidden here. It\'s still in Schoology.'); return; }
       if (k === 'erase') { infoClose(true); delOpen(ts); }
     });
@@ -5373,7 +5381,8 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       setTimeout(() => { MS.compose = null; composeOpen(qto); }, 50); }
     if (qc) setTimeout(() => { const c = C[qc], tid = c && (c.teacherIds || []).find(id => PEOPLE[id]); MS.compose = null; composeOpen(tid || undefined); const sj = (FSX.q.get('subject') || '').slice(0, 120); if (sj && MS.compose) { MS.compose.subject = sj; if (typeof composeHTML === 'function') composeHTML(); } }, 50); }
   if (MS.open && !tsOf(MS.open).length) MS.open = null;
-  if (!MS.open && innerWidth > 860) MS.open = TH.slice().sort(sortT).find(t => t.unread) ? TH.slice().sort(sortT).find(t => t.unread).id : null;
+  if (MS.open && !FSX.q.get('thread') && tsOf(MS.open).some(t => MU.has(String(t.id)))) MS.open = null;
+  { const first = TH.slice().sort(sortT).find(t => t.unread && !MU.has(String(t.id))); if (!MS.open && innerWidth > 860) MS.open = first ? first.id : null; }
   if (MS.open) { tsOf(MS.open).forEach(t => { t.unread = false; FSX.seen.mark('m', t.id); thLoad(t); }); }
   msMeta(); msView(); msRows(); msThread(); ntInit();
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => mpPill($('msView'), false));
