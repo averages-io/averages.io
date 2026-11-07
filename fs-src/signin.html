@@ -4072,7 +4072,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     const custom = /^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(typed) && !SCHOOLS.some(s => s.domain === typed || (Array.isArray(s.aliases) && s.aliases.includes(typed))) ? { name: 'Use this address', domain: typed, custom: true } : null;
     const all = custom ? [...hits, custom] : hits;
     siRes.innerHTML = all.length ? all.map((s, i) => `<button class="si-opt" id="siO${i}" role="option" tabindex="-1" data-dom="${esc(s.domain)}" data-name="${esc(s.custom ? s.domain : s.name)}">${ico(s.custom ? 'link' : 'binder')}<span class="tx"><b>${s.custom ? 'Use this address' : cmark(s.name, q)}</b><small>${esc(s.domain)}</small></span></button>`).join('')
-      : `<div class="si-none">No schools match. You can also type your school's Schoology address, like nmusd.schoology.com.</div>`;
+      : `<div class="si-none">No schools match. You can also type your school's Schoology address, like yourdistrict.schoology.com.</div>`;
     siRes.hidden = false; siIn.setAttribute('aria-expanded', 'true'); siSel(0);
   }
   function schoolDraw() {
