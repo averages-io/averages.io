@@ -228,6 +228,7 @@ function emit(nodes) {
       const k = d.indexOf(":");
       if (k < 0) continue;
       const prop = d.slice(0, k), val = d.slice(k + 1);
+      if (/#2b1d00/i.test(val)) continue; // sticker ink on yellow: stays dark in dark mode too
       const dv = darkDecl(prop, val);
       if (dv) decls.push(`${prop.trim()}: ${dv.trim()}`);
     }
