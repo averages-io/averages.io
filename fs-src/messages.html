@@ -5027,11 +5027,12 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     Promise.all(files.map(a => a.job)).then(ids => FSX.send(c.to.slice(), c.subject.trim(), text, ids)).then(r => {
       pendOf().splice(0); linksOf().splice(0);
       const t = { id: String(r.id || 'h' + Date.now().toString(36)), with: c.to.slice(), subject: c.subject.trim(), loaded: !r.id, msgs: [M('me', text, new Date(), { state: 'sent', fresh: true })] };
-      t.msgs[0].id = t.id + '.0'; TH.unshift(t); MS.compose = null; MS.open = t.id; openThread(t.id); toast('Sent. It\'s in Schoology too.');
+      t.msgs[0].id = t.id + '.0'; TH.unshift(t); MS.compose = null; MS.open = t.id; openThread(t.id); toast('Sent. It\'s in Schoology too.'); try { localStorage.removeItem('averages_msg_new_blocked'); } catch (_) {}
     }, e => { if (btn) btn.disabled = false; if (e && e.message === 'school_blocks_new_messages') { FSX.lset('averages_msg_new_blocked', Date.now()); sgyOpen(true); return; } toast(FSX.msgError(e)); });
   }
 
-  const sgyBlocked = () => !!FSX.lget('averages_msg_new_blocked');
+  // Schoology turned down a new message in the last day (the school's messaging settings): say so. It's tried again either way.
+  const sgyBlocked = () => { const t = +FSX.lget('averages_msg_new_blocked') || 0; return !!t && Date.now() - t < 864e5; };
   let sgy = null;
   function sgyDraft() {
     const c = MS.compose || {}, ta = $('msText'), text = ((ta && ta.value) || c.text || '').trim(), subj = (c.subject || '').trim();

@@ -1839,6 +1839,7 @@
         }).then(res => { if (!res || res.ok === false) throw new Error('not sent'); });
       }
       request.then(() => {
+        if (msg.create) { try { localStorage.removeItem('averages_msg_new_blocked'); } catch {} }
         msg.status = 'sent';
         msg.sentAt = Date.now();
         msg.time = 'Just now';
@@ -2240,7 +2241,7 @@
     subjectBar.addEventListener('click', e => {
       if (!e.target.closest('[data-action="start-in-schoology"]')) return;
       const subj = (document.getElementById('subjectInput').value || '').trim(), text = (document.getElementById('composerInput').value || '').trim();
-      let blocked = false; try { blocked = !!localStorage.getItem('averages_msg_new_blocked'); } catch {}
+      let blocked = false; try { const t = +localStorage.getItem('averages_msg_new_blocked') || 0; blocked = !!t && Date.now() - t < 864e5; } catch {}
       sgyOpen(blocked, ((subj ? subj + '\n\n' : '') + text).trim());
     });
     const subjectInput = document.getElementById('subjectInput');
