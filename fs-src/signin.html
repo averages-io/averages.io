@@ -4168,7 +4168,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     let res = null, data = {};
     try { res = await fetch(API + '/auth/session', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key, secret, under13: !SI.age13 }) }); data = await res.json().catch(() => ({})); }
     catch (e) { res = null; }
-    if (res && res.ok) { freshStart(); setHint(true); location.href = data.demo || !onboarded() ? '/onboard' : '/home'; return; }
+    if (res && res.ok) { freshStart(); setHint(true); location.href = data.demo || !onboarded() ? '/onboard' : startPath(); return; }
     if (logo()) logo().hide();
     b.innerHTML = '<span>Connect</span>'; keySync();
     const code = res ? (data && data.error) || `http_${res.status}` : 'network_error';
@@ -4176,6 +4176,17 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   });
   [$('siKey'), $('siSecret')].forEach(i => i.addEventListener('keydown', e => { if (e.key === 'Enter' && !$('siConnect').disabled) $('siConnect').click(); }));
 
+  // Where to go once signed in: straight to Fullscreen when that's the look picked (and to the Open to page), not via /home
+  function startPath() {
+    try {
+      const o = JSON.parse(localStorage.getItem('schoolagy_settings_options') || '{}') || {};
+      const to = ['courses', 'calendar', 'grades', 'messages', 'assignments', 'files', 'contacts'].includes(o.openTo) ? o.openTo : 'home';
+      const c = JSON.parse(sessionStorage.getItem('averages_features') || 'null');
+      const fs = o.windowType === 'fullscreen' && sessionStorage.getItem('averages_fs_off') !== '1' && !(c && c.features && c.features.fullscreen === false);
+      if (to !== 'home') sessionStorage.setItem('averages_opened', '1');
+      return (fs ? '/IS/' : '/') + to;
+    } catch (e) { return '/home'; }
+  }
   // ---------- already signed in? straight on ----------
   (() => {
     const params = new URLSearchParams(location.search);
@@ -4188,7 +4199,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       if (r.ok) {
         setHint(true); freshStart();
         if (logo()) logo().show();
-        location.replace(onboarded() ? '/home' : '/onboard');
+        location.replace(onboarded() ? startPath() : '/onboard');
         return;
       }
       if (r.status === 401) setHint(false);

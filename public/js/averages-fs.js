@@ -21,12 +21,26 @@
     if (page === 'course-hub') { var h = (window.location.hash.match(/^#[a-z]+/) || [''])[0]; return (HUB[h] || '/course-home') + q; }
     return (WINDOWED[page] || '/home') + q;
   }
+  // Where app.averages.io opens next time (the app worker reads it at "/"): kept up to date on every page.
+  function avStart() {
+    try {
+      var o = JSON.parse(localStorage.getItem("schoolagy_settings_options") || "{}") || {};
+      var pages = ["courses", "calendar", "grades", "messages", "assignments", "files", "contacts"];
+      var to = pages.indexOf(o.openTo) >= 0 ? o.openTo : "home";
+      var fs = o.windowType === "fullscreen" && sessionStorage.getItem("averages_fs_off") !== "1";
+      var c = JSON.parse(sessionStorage.getItem("averages_features") || "null");
+      if (c && c.features && c.features.fullscreen === false) fs = false;
+      return (fs ? "/IS/" : "/") + to;
+    } catch (e) { return "/home"; }
+  }
+  try { document.cookie = "averages_start=" + avStart() + "; Path=/; Max-Age=31536000; SameSite=Lax" + (location.protocol === "https:" ? "; Secure" : ""); } catch (e) { /* cookies off */ }
   function goWindowed(save) {
     if (save) {
       var o = json('schoolagy_settings_options') || {};
       o.windowType = 'windowed';
       put('schoolagy_settings_options', JSON.stringify(o));
     }
+    try { document.cookie = 'averages_start=/home; Path=/; Max-Age=31536000; SameSite=Lax' + (location.protocol === 'https:' ? '; Secure' : ''); } catch (e) { /* cookies off */ }
     window.location.replace(page === 'settings' && save ? '/settings?section=general' : windowedPath());
   }
   var opts = json('schoolagy_settings_options') || {};

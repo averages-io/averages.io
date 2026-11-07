@@ -4,6 +4,19 @@ const SESSION_COOKIE = "averages_session";
 const LEGACY_SESSION_COOKIE = "schoolagy_session";
 const BOUNCE_COOKIE = "averages_bounced";
 const BOUNCE_SECONDS = 15;
+/** Where "/" sends a signed-in student: set by the app's pages from the look and Open to they picked. */
+const START_COOKIE = "averages_start";
+const START_RE = /^\/(IS\/)?(home|courses|calendar|grades|messages|assignments|files|contacts)$/;
+
+/** @param {string | null} header @param {string} name */
+export function cookieValue(header, name) {
+  if (!header) return "";
+  for (const part of header.split(";")) {
+    const eq = part.indexOf("=");
+    if (eq !== -1 && part.slice(0, eq).trim() === name) return part.slice(eq + 1).trim();
+  }
+  return "";
+}
 
 /** Login-page addresses that carry something to show (a Google outcome, the hidden key form): never skipped. */
 const KEEP_PARAMS = ["google", "keys", "demo", "signedout"];
@@ -20,7 +33,7 @@ export function hasCookie(header, name) {
 }
 
 /**
- * Where a request for "/" should go: "/home", or null for the login page.
+ * Where a request for "/" should go: the start page ("/home", "/IS/home", ...), or null for the login page.
  * @param {Request} request
  */
 export function frontDoor(request) {
@@ -30,7 +43,10 @@ export function frontDoor(request) {
   if (KEEP_PARAMS.some((p) => url.searchParams.has(p))) return null;
   const cookies = request.headers.get("Cookie");
   if (!(hasCookie(cookies, SESSION_COOKIE) || hasCookie(cookies, LEGACY_SESSION_COOKIE)) || hasCookie(cookies, BOUNCE_COOKIE)) return null;
-  return "/home";
+  // Straight to the page they open to (Fullscreen's own address when that's their look), skipping /home's redirect
+  let start = "";
+  try { start = decodeURIComponent(cookieValue(cookies, START_COOKIE)); } catch { start = ""; }
+  return START_RE.test(start) ? start : "/home";
 }
 
 /**

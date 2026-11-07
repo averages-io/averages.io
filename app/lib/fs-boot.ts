@@ -4,8 +4,22 @@ export const FS_BOOT_JS = `(function () {
     if (!e.persisted) return;
     if (!go() && window.__averagesSplash && window.__averagesSplash.hide) window.__averagesSplash.hide();
   });
+  // The first page app.averages.io opens to (the app worker reads this cookie at "/"), so a new visit goes straight
+  // there instead of through /home and a second redirect: Fullscreen or Windowed, and Settings > Open to.
+  try { document.cookie = "averages_start=" + avStart() + "; Path=/; Max-Age=31536000; SameSite=Lax" + (location.protocol === "https:" ? "; Secure" : ""); } catch (e) { /* cookies off */ }
   if (openTo()) return;
   go();
+  function avStart() {
+    try {
+      var o = JSON.parse(localStorage.getItem("schoolagy_settings_options") || "{}") || {};
+      var pages = ["courses", "calendar", "grades", "messages", "assignments", "files", "contacts"];
+      var to = pages.indexOf(o.openTo) >= 0 ? o.openTo : "home";
+      var fs = o.windowType === "fullscreen" && sessionStorage.getItem("averages_fs_off") !== "1";
+      var c = JSON.parse(sessionStorage.getItem("averages_features") || "null");
+      if (c && c.features && c.features.fullscreen === false) fs = false;
+      return (fs ? "/IS/" : "/") + to;
+    } catch (e) { return "/home"; }
+  }
   // Settings > Account > Open to: the first page of a new visit (a new tab or window) is the one picked, not Home.
   function openTo() {
     try {
