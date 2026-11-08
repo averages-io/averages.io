@@ -5380,6 +5380,9 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     const qto = FSX.q.get('to'); if (qto && /^[0-9]{1,20}$/.test(qto)) { if (!PEOPLE[qto]) PEOPLE[qto] = { id: qto, name: (FSX.q.get('name') || '').slice(0, 80) || (MSG_NAMES[qto] || {}).name || 'Someone in Schoology', role: 'Staff', cls: [] };
       setTimeout(() => { MS.compose = null; composeOpen(qto); }, 50); }
     if (qc) setTimeout(() => { const c = C[qc], tid = c && (c.teacherIds || []).find(id => PEOPLE[id]); MS.compose = null; composeOpen(tid || undefined); const sj = (FSX.q.get('subject') || '').slice(0, 120); if (sj && MS.compose) { MS.compose.subject = sj; if (typeof composeHTML === 'function') composeHTML(); } }, 50); }
+  // a link that starts a new message (?to=, ?compose=) is used once: off the address, so closing the message (or a
+  // reload, or Back) doesn't open it again
+  if (['to', 'name', 'compose', 'subject'].some(k => FSX.q.get(k) != null)) setTimeout(() => { try { const u = new URL(location.href); ['to', 'name', 'compose', 'subject'].forEach(k => u.searchParams.delete(k)); history.replaceState(history.state, '', u.pathname + (u.search || '') + u.hash); } catch (e) { /* stays */ } }, 80);
   if (MS.open && !tsOf(MS.open).length) MS.open = null;
   if (MS.open && !FSX.q.get('thread') && tsOf(MS.open).some(t => MU.has(String(t.id)))) MS.open = null;
   { const first = TH.slice().sort(sortT).find(t => t.unread && !MU.has(String(t.id))); if (!MS.open && innerWidth > 860) MS.open = first ? first.id : null; }

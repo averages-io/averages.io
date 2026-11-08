@@ -3140,6 +3140,8 @@
       const params = new URLSearchParams(window.location.search);
       const composeId = params.get('compose');
       if (!composeId) return;
+      // used once: off the address, so closing the new message (or a reload) doesn't open it again
+      setTimeout(() => { try { const u = new URL(window.location.href); ['compose', 'name', 'dept', 'color', 'subject'].forEach(k => u.searchParams.delete(k)); history.replaceState(history.state, '', u.pathname + u.search + u.hash); } catch {} }, 0);
       if (MSG_LIVE) { liveComposeDeepLink(composeId, params); return; }
       if (!TEACHERS[composeId]) {
         const name = params.get('name');
