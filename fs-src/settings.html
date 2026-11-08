@@ -2987,6 +2987,8 @@
   .sg-row .sw::after { width: 20px; height: 20px; border-radius: 10px; box-shadow: 0 1px 2px rgba(20, 21, 31, .25); transition: transform .38s cubic-bezier(.34, 1.45, .5, 1), width .18s ease; }
   .sg-row .sw.on::after { transform: translateX(16px); }
   .sg-row .sw::after { --keep-dark: 1; background: #ffffff; }
+  .sg-row[aria-busy="true"] { cursor: progress; }
+  .sg-row[aria-busy="true"] > .sw { opacity: .55; }
   html[data-theme="dark"] body .sg-row .sw:not(.on) { background: #3d4052; }
   button.sg-row:not([aria-disabled="true"]):active .sw::after { width: 25px; }
   button.sg-row:not([aria-disabled="true"]):active .sw.on::after { transform: translateX(11px); }
@@ -4850,13 +4852,30 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(WORD).then(done, () => inp.focus()); else inp.focus();
     };
   }
+  // The switch moves the moment it's pressed and waits there (a little faded) while the link is made or turned off;
+  // then the link slides in or out. If it can't, the switch goes back. Presses while it's waiting do nothing.
   function calSet(on, fresh) {
     if (LIVE.busy) return; LIVE.busy = 'cal';
+    const row = $('sgPane').querySelector('[data-tog="cal"]'), sw = row && row.querySelector('.sw');
+    const show = v => { if (!row) return; row.setAttribute('aria-checked', v); if (sw) sw.classList.toggle('on', v); };
+    if (row && !fresh) { show(on); row.setAttribute('aria-busy', 'true'); }
+    const was = $('sgPane').querySelector('[data-set="calLink"]'), drop = (el, done) => { if (!el || calm() || !el.animate) { done(); return; }
+      el.style.overflow = 'hidden'; el.animate([{ height: el.offsetHeight + 'px', opacity: 1 }, { height: '0px', opacity: 0, paddingTop: '0px', paddingBottom: '0px' }], { duration: 200, easing: 'cubic-bezier(.2, .8, .2, 1)' }).onfinish = done; };
     (on ? FSX.api('/calendar', { method: 'POST', json: {} }) : FSX.api('/calendar', { method: 'DELETE' })).then(j => {
-      LIVE.busy = ''; LIVE.cal = Object.assign({}, LIVE.cal, on ? { on: true, url: j.url } : { on: false, url: null });
+      LIVE.cal = Object.assign({}, LIVE.cal, on ? { on: true, url: j.url } : { on: false, url: null });
       try { on ? localStorage.setItem('averages_calendar_on', '1') : localStorage.removeItem('averages_calendar_on'); } catch (_) {}
-      SG.cal = on; SGV.flip = 'cal'; redraw(); toast(on ? (fresh ? 'Made a new link. The old one stopped working.' : 'Calendar sync is on. Add the link to your calendar app.') : 'Calendar sync is off. Your calendar link stopped working.');
-    }, e => { LIVE.busy = ''; toast(e && e.message === 'plus_required' ? 'Calendar sync comes with Plus.' : e && e.message === 'incognito_mode' ? 'Calendar sync is off in Incognito.' : 'Couldn\'t change calendar sync. Try again in a moment.'); });
+      SG.cal = on;
+      const finish = () => {
+        LIVE.busy = ''; redraw();
+        const link = on && !fresh && $('sgPane').querySelector('[data-set="calLink"]');
+        if (link && !calm() && link.animate) link.animate([{ opacity: 0, transform: 'translateY(-6px)' }, { opacity: 1, transform: 'none' }], { duration: 220, easing: 'cubic-bezier(.2, .8, .2, 1)' });
+        toast(on ? (fresh ? 'Made a new link. The old one stopped working.' : 'Calendar sync is on. Add the link to your calendar app.') : 'Calendar sync is off. Your calendar link stopped working.');
+      };
+      on ? finish() : drop(was, finish);
+    }, e => {
+      LIVE.busy = ''; if (row) { row.removeAttribute('aria-busy'); if (!fresh) show(!on); }
+      toast(e && e.message === 'plus_required' ? 'Calendar sync comes with Plus.' : e && e.message === 'incognito_mode' ? 'Calendar sync is off in Incognito.' : 'Couldn\'t change calendar sync. Try again in a moment.');
+    });
   }
   function applyAccent() { const [, , c, h] = accentOf(SG.accent); const r = document.documentElement.style; r.setProperty('--accent', c); r.setProperty('--accent-hover', h); }
 
@@ -5031,11 +5050,12 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   function ddOpen(b) {
     if (dd) { ddClose(true); return; }
     document.body.insertAdjacentHTML('beforeend', `<div class="sg-ddm" role="listbox" aria-label="Start page">${STARTS.map(([v, t, ic]) => `<button class="sg-ddo" role="option" data-v="${v}" aria-selected="${startNow() === v}" tabindex="-1">${ico(ic)}<span>${t}</span>${ico('ok', 'i ck')}</button>`).join('')}</div>`);
-    const m = document.body.lastElementChild, r = b.getBoundingClientRect(), w = Math.max(r.width, 220), h = m.offsetHeight;
-    m.style.width = w + 'px'; m.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.right - w)) + 'px';
-    const below = innerHeight - r.bottom - 8 >= h + 6; m.style.top = (below ? r.bottom + 6 : Math.max(8, r.top - h - 6)) + 'px';
-    if (!calm() && m.animate) m.animate([{ opacity: 0, transform: `translateY(${below ? -4 : 4}px) scale(.98)` }, { opacity: 1, transform: 'none' }], { duration: 160, easing: 'cubic-bezier(.2, .8, .2, 1)' });
-    dd = { m, b }; b.setAttribute('aria-expanded', 'true');
+    const m = document.body.lastElementChild;
+    dd = { m, b }; const below = ddPlace();
+    // grows out of the button's corner, like a menu unfolding from it (not sliding in from nowhere)
+    m.style.transformOrigin = `right ${below ? 'top' : 'bottom'}`;
+    if (!calm() && m.animate) m.animate([{ opacity: 0, transform: 'scale(.94)' }, { opacity: 1, transform: 'none' }], { duration: 170, easing: 'cubic-bezier(.2, .9, .3, 1)' });
+    b.setAttribute('aria-expanded', 'true');
     (m.querySelector('[aria-selected="true"]') || m.querySelector('.sg-ddo')).focus({ preventScroll: true });
     m.addEventListener('click', e => { const o = e.target.closest('.sg-ddo'); if (o) ddPick(o.dataset.v); });
     m.addEventListener('keydown', e => {
@@ -5045,6 +5065,16 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       else if (e.key === 'Tab') { e.preventDefault(); ddClose(true); }
     });
   }
+  // under the button when it fits, over it otherwise; it stays with the button when the page scrolls
+  function ddPlace() {
+    if (!dd) return true; const { m, b } = dd, r = b.getBoundingClientRect(), w = Math.max(r.width, 220), h = m.offsetHeight;
+    if (r.bottom < 0 || r.top > innerHeight) { ddClose(); return true; }
+    m.style.width = w + 'px'; m.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.right - w)) + 'px';
+    const below = innerHeight - r.bottom - 8 >= h + 6; m.style.top = (below ? r.bottom + 6 : Math.max(8, r.top - h - 6)) + 'px';
+    return below;
+  }
+  document.addEventListener('scroll', e => { if (dd && !dd.m.contains(e.target)) ddPlace(); }, true);
+  window.addEventListener('resize', () => { if (dd) ddPlace(); });
   function ddClose(refocus) { if (!dd) return; const { m, b } = dd; dd = null; m.remove(); if (b.isConnected) { b.setAttribute('aria-expanded', 'false'); if (refocus) b.focus({ preventScroll: true }); } }
   function ddPick(v) {
     ddClose(true); if (startNow() === v) return;
