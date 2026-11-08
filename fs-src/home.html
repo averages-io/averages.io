@@ -2406,7 +2406,11 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const classOfPerson = pid => (CLASSES.find(c => (c.teacherIds || []).includes(String(pid))) || {}).id || '';
   // marked unread on Messages: unread here too, even if this device saw it once
   const MSG_MU = (() => { try { const v = JSON.parse(localStorage.getItem('fsmsg_mu') || '[]'); return Array.isArray(v) ? v.map(String) : []; } catch (e) { return []; } })();
-  const THREADS = (MSG ? MSG.CONVERSATIONS.map(t => ({ id: String(t.id), who: (PEOPLE_N[t.personId] || {}).name || 'Schoology', pid: String(t.personId || ''), c: classOfPerson(t.personId), subject: t.subject || 'No subject', unread: !!t.unread && (MSG_MU.includes(String(t.id)) || !FSX.seen.has('m', t.id)), when: t.time || '', msgs: [{ me: false, t: t.preview || '', at: t.time || '' }] }))
+  // who wrote: your teachers' and classmates' real names first (the inbox only knows "Teacher" when Schoology gives no names)
+  const KNOWN_N = (() => { try { return Object.fromEntries((FSX.people ? FSX.people() : []).map(p => [String(p.id), p.name])); } catch (e) { return {}; } })();
+  const GENERIC_N = /^(Teacher|Classmate|Someone in Schoology)$/;
+  const nameOf = pid => KNOWN_N[String(pid)] || ((PEOPLE_N[pid] || {}).name && !GENERIC_N.test(PEOPLE_N[pid].name) ? PEOPLE_N[pid].name : '') || (PEOPLE_N[pid] || {}).name || 'Schoology';
+  const THREADS = (MSG ? MSG.CONVERSATIONS.map(t => ({ id: String(t.id), who: nameOf(t.personId), pid: String(t.personId || ''), c: classOfPerson(t.personId), subject: t.subject || 'No subject', unread: !!t.unread && (MSG_MU.includes(String(t.id)) || !FSX.seen.has('m', t.id)), when: t.time || '', msgs: [{ me: false, t: t.preview || '', at: t.time || '' }] }))
     : FSD.messages.map(m => ({ id: String(m.id), who: m.from || 'Schoology', pid: '', c: m.courseId || classOfPerson(''), subject: m.subject || 'No subject', unread: !!m.unread && !FSX.seen.has('m', m.id), when: m.time || '', msgs: [{ me: false, t: m.preview || '', at: m.time || '' }] })))
     .map(t => Object.assign(t, { c: C[t.c] ? t.c : '' }));
   const T = id => THREADS.find(t => t.id === id);
@@ -3152,7 +3156,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const classRow = c => mi({ attrs: `data-go="class:${c.id}"`, lead: badge(c), t: c.name, sub: `${c.teacher} · ${c.none ? 'No grades yet' : c.pct.toFixed(1) + '%'}`, end: c.none ? '<span class="gr g-na">N/A</span>' : grade(c.pct) });
   const dueRow = d => mi({ attrs: `data-go="due:${d.id}"`, lead: badge(C[d.c]), t: d.t, sub: C[d.c].name, end: dueTag(d) });
   const fileRow = f => mi({ attrs: `data-go="file:${f.id}"`, lead: fileTile(f.name, 28), t: f.name, sub: `${f.from ? f.from + ' · ' : ''}${C[f.c].name} · ${f.when}` });
-  const threadRow = t => mi({ attrs: `data-go="thread:${t.id}"`, lead: `<span class="unread${t.unread ? '' : ' off'}"></span>${badge(C[t.c])}`, t: t.subject, sub: `${t.who} · ${t.msgs[t.msgs.length - 1].t}`, end: `<span class="end">${esc(t.when)}</span>` });
+  const threadRow = t => mi({ attrs: `data-go="thread:${t.id}"`, lead: `<span class="unread${t.unread ? '' : ' off'}"></span>${badge(C[t.c])}`, t: t.subject, sub: [t.who, t.msgs[t.msgs.length - 1].t || (t.c && C[t.c] ? C[t.c].name : '')].filter(Boolean).join(' · '), end: `<span class="end">${esc(t.when)}</span>` });
   const convos = cid => THREADS.filter(x => x.c === cid);
   function hl(text, q) {
     const i = text.toLowerCase().indexOf(q);
