@@ -236,22 +236,37 @@
   }
   // background refresh: every 30 seconds while the page is showing (the API shares Schoology reads for 30 s, so no sooner)
   var NOTIS_EVERY = 30 * 1000, FILES_EVERY = 15 * 60 * 1000, notisAt = Date.now(), filesAt = Date.now(), notisBusy = false;
+  // Every minute instead of every 30 seconds when the device would rather save: Data Saver on, a slow (2G) connection,
+  // or a battery under 20% that isn't charging (browsers don't say whether battery saver is on; that's the closest).
+  var LOW = { battery: false };
+  try { if (navigator.getBattery) navigator.getBattery().then(function (bt) {
+    var set = function () { LOW.battery = !bt.charging && bt.level < 0.2; };
+    set(); bt.addEventListener('levelchange', set); bt.addEventListener('chargingchange', set);
+  }).catch(function () {}); } catch (e) { /* no battery info */ }
+  function saving() {
+    var c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    return !!(c && (c.saveData || /(^|-)2g$/.test(String(c.effectiveType || '')))) || LOW.battery;
+  }
+  function refreshEvery() { return saving() ? 2 * NOTIS_EVERY : NOTIS_EVERY; }
   function notifAllowed() { try { return 'Notification' in window && Notification.permission === 'granted'; } catch (e) { return false; } }
   function notisCheck() {
     if (notisBusy || !window.FSD || !window.FSA || (document.visibilityState !== 'visible' && !notifAllowed())) return;
     var me = window.FSD.me || {}; if (!me.uid) return;
     notisBusy = true; notisAt = Date.now();
     var tz = zone(), withFiles = Date.now() - filesAt >= FILES_EVERY || !(window.FSD.raw && window.FSD.raw.files);
-    Promise.all([getJSON('/data/bundle' + (tz ? '?tz=' + encodeURIComponent(tz) : '')), getJSON('/data/updates').catch(function () { return null; }),
+    Promise.all([getFresh('bundle', '/data/bundle' + (tz ? '?tz=' + encodeURIComponent(tz) : '')), getFresh('updates', '/data/updates').catch(function () { return null; }),
       withFiles ? getJSON('/data/files').catch(function () { return null; }) : null]).then(function (got) {
       var b = got[0], u = got[1], fl = got[2];
-      sset('schoolagy_bundle_cache', JSON.stringify({ at: Date.now(), bundle: b }));
+      // nothing new from Schoology (or only the files): no rebuilding, the page just says it checked
+      if (!b && !u && !(fl && Array.isArray(fl.files))) { window.FSD.generatedAt = new Date().toISOString(); syncShow(); return; }
+      b = b || window.FSD.raw.bundle;
+      if (got[0]) sset('schoolagy_bundle_cache', JSON.stringify({ at: Date.now(), bundle: b }));
       if (u) sset('averages_extras_updates', JSON.stringify({ at: Date.now(), who: me.uid, data: u }));
       if (fl && Array.isArray(fl.files)) { filesAt = Date.now(); sset('averages_extras_fs_files', JSON.stringify({ at: Date.now(), who: me.uid, data: fl })); }
       var raw = Object.assign({}, window.FSD.raw, { bundle: b }); if (u) raw.updates = u; if (fl && Array.isArray(fl.files)) raw.files = fl;
       var fresh = window.FSA.adapt(raw), have = {};
       try { gradesMoved(window.FSD, fresh); } catch (e) { /* the numbers stay as they were */ }
-      window.FSD.generatedAt = (b && b.generatedAt) || new Date().toISOString(); syncShow();
+      window.FSD.generatedAt = (got[0] && got[0].generatedAt) || new Date().toISOString(); syncShow();
       window.dispatchEvent(new CustomEvent('fs:synced'));
       window.FSD.NT.forEach(function (it) { have[it.id] = true; });
       var added = fresh.NT.filter(function (it) { return !have[it.id]; });
@@ -342,8 +357,8 @@
     var cacheAt = 0; try { cacheAt = (JSON.parse(sessionStorage.getItem('schoolagy_bundle_cache') || 'null') || {}).at || 0; } catch (e) { /* none */ }
     // a page that opened from this tab's copy (from a page before) checks for anything new right after it shows
     var stale = cacheAt && Date.now() - cacheAt > 10000;
-    setTimeout(function () { notisAt = Date.now(); if (stale) setTimeout(notisCheck, 800); setInterval(function () { if (Date.now() - notisAt >= NOTIS_EVERY) notisCheck(); }, 5000); setInterval(syncShow, 30000); }, 1000);
-    document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible' && Date.now() - notisAt >= NOTIS_EVERY) notisCheck(); });
+    setTimeout(function () { notisAt = Date.now(); if (stale) setTimeout(notisCheck, 800); setInterval(function () { if (Date.now() - notisAt >= refreshEvery()) notisCheck(); }, 5000); setInterval(syncShow, 30000); }, 1000);
+    document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible' && Date.now() - notisAt >= refreshEvery()) notisCheck(); });
   });
   (function () { var st = document.createElement('style'); st.textContent = '.fs-pav{width:28px;height:28px;flex:none;display:grid;place-items:center;border-radius:50%;color:#fff;font-size:11px;font-weight:800;letter-spacing:.01em;background:#8a8d99}.fs-pav.sq{border-radius:8px}'; (document.head || document.documentElement).appendChild(st); })();
   (function () {
@@ -435,6 +450,21 @@
       if (Date.now() - p.at < FIVE_MIN && p.at <= Date.now() && (who === undefined || p.who === who)) return p[field];
     } catch (e) { /* unreadable */ }
     sdel(key); return undefined;
+  }
+  // The background refresh's asks: each sends back the fingerprint of the last answer (?since=), and the API answers
+  // { unchanged: true } when nothing changed (X-Averages-Fp, the API's src/fingerprint.ts). null then.
+  var FP = {};
+  function getFresh(key, path) {
+    var q = FP[key] ? (path.indexOf('?') < 0 ? '?' : '&') + 'since=' + FP[key] : '';
+    return fetch(API + path + q, { credentials: 'include', cache: 'no-store' }).then(function (r) {
+      if (r.status === 401) { sdel('schoolagy_session_state'); throw { signedOut: true }; }
+      if (!r.ok) throw { status: r.status };
+      var fp = r.headers.get('X-Averages-Fp');
+      return r.json().then(function (j) {
+        if (fp && /^[a-f0-9]{16}$/.test(fp)) FP[key] = fp;
+        return j && j.unchanged === true ? null : j;
+      });
+    });
   }
   function getJSON(path) {
     return fetch(API + path, { credentials: 'include', cache: 'no-store' }).then(function (r) {
