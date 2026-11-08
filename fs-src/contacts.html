@@ -4069,7 +4069,8 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   // People you added: Schoology says per person whether you may message them (GET /messages/can, its send_message).
   // Kept a day in fsct_can { id: { s: true | false | null, at } }; Windowed's Contacts reads the same.
   const CAN = (() => { const v = store.get('fsct_can'); return v && typeof v === 'object' && !Array.isArray(v) ? v : {}; })();
-  const canOf = id => { const v = CAN[id]; return v && Date.now() - (v.at || 0) < 864e5 ? v.s : undefined; };
+  // a yes is kept a day; a no only 15 minutes, so a change at school (a new role, a permission) shows up soon
+  const canOf = id => { const v = CAN[id]; return v && Date.now() - (v.at || 0) < (v.s === true ? 864e5 : 9e5) ? v.s : undefined; };
   let canBusy = false; const canLater = new Set();
   function canCheck(ids) {
     if (canBusy) { ids.forEach(id => canLater.add(String(id))); return; }

@@ -848,7 +848,7 @@
     // Settings → Only search my school (contactsSearch: 'school'); everyone on Schoology otherwise
     function ctSchoolOnly() { try { return (JSON.parse(localStorage.getItem('schoolagy_settings_options') || '{}') || {}).contactsSearch === 'school'; } catch { return false; } }
     function ctCanOf(id) {
-      try { const v = (JSON.parse(localStorage.getItem('fsct_can') || '{}') || {})[id]; return v && Date.now() - (v.at || 0) < 864e5 ? v.s : undefined; } catch { return undefined; }
+      try { const v = (JSON.parse(localStorage.getItem('fsct_can') || '{}') || {})[id]; return v && Date.now() - (v.at || 0) < (v.s === true ? 864e5 : 9e5) ? v.s : undefined; } catch { return undefined; }
     }
     function ctCanCheck(ids, done) {
       const need = [...new Set(ids.map(String))].filter(id => /^\d{1,20}$/.test(id) && ctCanOf(id) === undefined).slice(0, 25);
