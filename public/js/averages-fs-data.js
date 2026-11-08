@@ -234,7 +234,8 @@
     lset(RECENT_KEY, l);
     var rl = document.getElementById('sideRecList'); if (rl && recOpen()) rl.innerHTML = recentsHTML();
   }
-  var NOTIS_EVERY = 60 * 1000, FILES_EVERY = 15 * 60 * 1000, notisAt = Date.now(), filesAt = Date.now(), notisBusy = false;
+  // background refresh: every 30 seconds while the page is showing (the API shares Schoology reads for 30 s, so no sooner)
+  var NOTIS_EVERY = 30 * 1000, FILES_EVERY = 15 * 60 * 1000, notisAt = Date.now(), filesAt = Date.now(), notisBusy = false;
   function notifAllowed() { try { return 'Notification' in window && Notification.permission === 'granted'; } catch (e) { return false; } }
   function notisCheck() {
     if (notisBusy || !window.FSD || !window.FSA || (document.visibilityState !== 'visible' && !notifAllowed())) return;
@@ -250,12 +251,21 @@
       var raw = Object.assign({}, window.FSD.raw, { bundle: b }); if (u) raw.updates = u; if (fl && Array.isArray(fl.files)) raw.files = fl;
       var fresh = window.FSA.adapt(raw), have = {};
       try { gradesMoved(window.FSD, fresh); } catch (e) { /* the numbers stay as they were */ }
+      window.FSD.generatedAt = (b && b.generatedAt) || new Date().toISOString(); syncShow();
+      window.dispatchEvent(new CustomEvent('fs:synced'));
       window.FSD.NT.forEach(function (it) { have[it.id] = true; });
       var added = fresh.NT.filter(function (it) { return !have[it.id]; });
       if (!added.length) return;
       added.forEach(function (it) { window.FSD.NT.push(it); });
       window.dispatchEvent(new CustomEvent('fs:notis', { detail: { added: added } }));
     }).catch(function () { /* try again next time */ }).then(function () { notisBusy = false; });
+  }
+  // the "Synced … ago" button on every page: after each refresh, and once a minute so its minutes count up
+  function syncShow() {
+    var l = document.getElementById('syncLabel'), b = document.getElementById('refresh'); if (!l || !window.FSX || !window.FSX.synced) return;
+    if (l.textContent === 'Syncing…' || (b && b.getAttribute('aria-busy') === 'true')) return;
+    var t = window.FSX.synced(); l.textContent = t;
+    if (b) b.setAttribute('aria-label', (b.getAttribute('aria-label') || 'Refresh').replace(/\. Synced.*$|\.?$/, '') + '. ' + t + '.');
   }
   // ---------- grades that moved since the page drew, rolled to their new values ----------
   // Each class's numbers on the page sit inside something that names the class (data-go="class:<id>", data-c="<id>"
@@ -332,7 +342,7 @@
     var cacheAt = 0; try { cacheAt = (JSON.parse(sessionStorage.getItem('schoolagy_bundle_cache') || 'null') || {}).at || 0; } catch (e) { /* none */ }
     // a page that opened from this tab's copy (from a page before) checks for anything new right after it shows
     var stale = cacheAt && Date.now() - cacheAt > 10000;
-    setTimeout(function () { notisAt = Date.now(); if (stale) setTimeout(notisCheck, 800); setInterval(function () { if (Date.now() - notisAt >= NOTIS_EVERY) notisCheck(); }, 15000); }, 1000);
+    setTimeout(function () { notisAt = Date.now(); if (stale) setTimeout(notisCheck, 800); setInterval(function () { if (Date.now() - notisAt >= NOTIS_EVERY) notisCheck(); }, 5000); setInterval(syncShow, 30000); }, 1000);
     document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible' && Date.now() - notisAt >= NOTIS_EVERY) notisCheck(); });
   });
   (function () { var st = document.createElement('style'); st.textContent = '.fs-pav{width:28px;height:28px;flex:none;display:grid;place-items:center;border-radius:50%;color:#fff;font-size:11px;font-weight:800;letter-spacing:.01em;background:#8a8d99}.fs-pav.sq{border-radius:8px}'; (document.head || document.documentElement).appendChild(st); })();
@@ -764,7 +774,7 @@
         P[key] = getJSON(path).then(function (d) { store(d); var same = norm(d) === norm(old[key]); if (!same) { S.changed = true; (S.which = S.which || []).push(key); try { sset('averages_fs_sync_changed', key); } catch (e) {} } return same; },
           function (err) { if (err && err.signedOut) { window.location.replace('/'); return new Promise(function () {}); } S.failed = true; return true; });
       };
-      ask('bundle', '/data/bundle' + (tz ? '?tz=' + encodeURIComponent(tz) : ''), function (b) { sset('schoolagy_bundle_cache', JSON.stringify({ at: Date.now(), bundle: b })); });
+      ask('bundle', '/data/bundle' + (tz ? '?tz=' + encodeURIComponent(tz) : ''), function (b) { sset('schoolagy_bundle_cache', JSON.stringify({ at: Date.now(), bundle: b })); if (window.FSD) window.FSD.generatedAt = (b && b.generatedAt) || new Date().toISOString(); notisAt = Date.now(); });
       Object.keys(plan).forEach(function (k) {
         var path = plan[k][0], key = plan[k][1];
         if (path === '@for') { var q = turnedInFor(old.bundle); if (!q) return; path = '/data/submissions?for=' + q; key = 'fs_subs_' + q.length + '_' + q.slice(-24); }
