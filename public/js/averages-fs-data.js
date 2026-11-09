@@ -384,11 +384,10 @@
   })();
   document.addEventListener('click', function (e) { var m = e.target.closest && e.target.closest('[data-mailto]'); if (!m) return; e.preventDefault(); FSX.mailTo(m.getAttribute('data-mailto')); }, true);
   window.addEventListener('fs:notis', function (e) { notePop((e.detail && e.detail.added) || []); });
-  // ---------- the sidebar's counts for what's new, like the bell: Grades (new grades) and Courses (new posts, files and
-  // announcements). Assignments and Messages keep their own counts.
+  // ---------- the sidebar's count for new grades (Grades). Assignments and Messages keep their own counts; Courses has
+  // none (its posts and files are in the bell).
   // Dots (the collapsed sidebar) are only for news that clears when you look: Messages (unread), Grades (cleared by
   // opening the Grades page) and Assignments only when something was assigned since you last opened that page.
-  // Courses has its number but no dot: its posts live in the bell.
   function sideCounts() {
     var D = window.FSD; if (!D || !Array.isArray(D.NT) || !window.FSX) return;
     var here = location.pathname.replace(/\/+$/, '');
@@ -404,16 +403,17 @@
     try { localStorage.setItem('averages_asg_dot', asgNew ? '1' : '0'); } catch (e) { /* the next page works it out */ }
     var live = D.NT.filter(function (it) { return !FSX.seen.has(it.kind, it.raw); });
     var g = live.filter(function (it) { return it.k === 'graded'; }).length;
-    var c = live.filter(function (it) { return it.k === 'new' || it.k === 'ann' || it.k === 'changed'; }).length;
     var nav = document.querySelector('.side .nav'); if (!nav) return;
-    [['Grades', g], ['Courses', c]].forEach(function (x) {
+    // Courses has no number or dot (2026-11-09, Martin): its posts and files are in the bell
+    var cl = nav.querySelector('a[data-title="Courses"]') || nav.querySelector('a[data-open="page:Courses"], a[title="Courses"]');
+    if (cl) [].forEach.call(cl.querySelectorAll('em.count, i.pip'), function (x) { x.remove(); });
+    [['Grades', g]].forEach(function (x) {
       // the page's own link (data-title), not a Recents entry that points at the same page
       var a = nav.querySelector('a[data-title="' + x[0] + '"]') || nav.querySelector('a[data-open="page:' + x[0] + '"], a[title="' + x[0] + '"]');
       if (!a) return;
       var em = a.querySelector('em.count'), pip = a.querySelector('i.pip');
       if (!em) { em = document.createElement('em'); em.className = 'count fade'; a.appendChild(em); }
-      if (x[0] === 'Courses') { if (pip) pip.remove(); pip = null; }
-      else if (!pip) { pip = document.createElement('i'); pip.className = 'pip'; a.appendChild(pip); }
+      if (!pip) { pip = document.createElement('i'); pip.className = 'pip'; a.appendChild(pip); }
       var t = x[1] ? String(x[1] > 99 ? '99+' : x[1]) : '';
       if ((em.dataset.n || em.textContent.trim()) !== t) { em.textContent = t; delete em.dataset.n; }
       em.hidden = !x[1]; if (pip) pip.hidden = !x[1];
@@ -423,6 +423,12 @@
   }
   ['fs:ready', 'fs:notis', 'fs:seen', 'fs:synced'].forEach(function (ev) { window.addEventListener(ev, function () { setTimeout(sideCounts, ev === 'fs:ready' ? 400 : 0); }); });
   window.addEventListener('storage', function (e) { if (e.key === 'averages_seen') sideCounts(); });
+  // the synced settings: on open, every 5 minutes, and when the tab comes back (FSX.syncPull)
+  window.addEventListener('fs:ready', function () {
+    setTimeout(function () { FSX.syncPull(); }, 1500);
+    setInterval(function () { if (document.visibilityState === 'visible') FSX.syncPull(); }, 60 * 1000);
+    document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') FSX.syncPull(); });
+  });
   window.addEventListener('fs:ready', function () { setTimeout(function () { if (window.FSD) notePop(window.FSD.NT || []); }, 600); });
   window.addEventListener('fs:ready', function () {
     if (window.FSX) window.FSX.notisCheck = notisCheck;   // also: check now
@@ -852,11 +858,84 @@
         if (ap && typeof ap === 'object') ap = Object.assign({}, ap, { background: ref('background', ap.background) });
         if (pr && typeof pr === 'object') pr = Object.assign({}, pr, { photo: ref('photo', pr.photo) });
         if (!ok) return;
-        var settings = { settingsOptions: opts, appearance: ap, darkMode: raw('schoolagy_dark_mode'), profile: pr };
+        var settings = { settingsOptions: opts, appearance: ap, darkMode: raw('schoolagy_dark_mode') || 'auto', profile: pr };   // 'auto' = System, so it syncs too
         FSX.api('/sync/settings', { method: 'PUT', json: { settings: settings } }).then(function (r) {
           if (r && typeof r.settingsUpdatedAt === 'string') FSX.lset('schoolagy_sync_meta', { settingsUpdatedAt: r.settingsUpdatedAt });
         }).catch(function () {});
       }, 800);
+    },
+    /**
+     * Sync across devices, the other way (2026-11-09, Martin: "i am switching between devices and it is not syncing"):
+     * the account's copy comes back to this device when it changed somewhere else (on open, every 5 minutes, and
+     * when the tab comes back). The same rules as Windowed's adoptSyncedRecord (app/lib/averages.ts): notifications
+     * on/off stays this browser's; pictures come from /media/<kind> only when theirs is newer. Theme and accent
+     * change on this page at once; the rest shows on the next page.
+     */
+    syncPull: function (force) {
+      var me = window.FSD && window.FSD.me;
+      var raw = function (k) { try { return LS.getItem(k); } catch (e) { return null; } };
+      if (!me || me.incognito || raw('schoolagy_account_mode') === 'incognito') return Promise.resolve(false);
+      if ((FSX.lget('schoolagy_settings_options') || {}).syncAcrossDevices === false) return Promise.resolve(false);
+      var SS = window.sessionStorage, last = 0;
+      try { last = Number(SS.getItem('averages_fs_sync_pulled') || 0); } catch (e) { /* none */ }
+      if (!force && Date.now() - last < 5 * 60 * 1000) return Promise.resolve(false);
+      try { SS.setItem('averages_fs_sync_pulled', String(Date.now())); } catch (e) { /* fine */ }
+      if (FSX._syncPulling) return FSX._syncPulling;
+      return (FSX._syncPulling = FSX.api('/sync/settings').then(function (rec) {
+        var st = rec && rec.settings, stamp = rec && rec.settingsUpdatedAt;
+        if (!st || typeof st !== 'object' || typeof stamp !== 'string' || !stamp) return false;
+        if ((FSX.lget('schoolagy_sync_meta') || {}).settingsUpdatedAt === stamp) return false;
+        var known = FSX.lget('averages_sync_media') || {}, media = Object.assign({}, known), REF = /^r2:(photo|background):([A-Za-z0-9._-]{1,128})$/;
+        var isImg = function (v) { return typeof v === 'string' && /^data:image\//.test(v); };
+        var hashOf = function (t) { return crypto.subtle.digest('SHA-256', new TextEncoder().encode(t)).then(function (d) { return Array.from(new Uint8Array(d).slice(0, 12), function (b) { return b.toString(16).padStart(2, '0'); }).join(''); }); };
+        // a picture: undefined = keep this device's
+        var picture = function (kind, ref, local) {
+          if (typeof ref !== 'string' || ref.indexOf('r2:') !== 0) return Promise.resolve(ref);
+          var m = REF.exec(ref); if (!m || m[1] !== kind) return Promise.resolve(undefined);
+          var have = known[kind];
+          if (have && have.v === m[2] && !have.pending && isImg(local)) return Promise.resolve(local);
+          return fetch(API + '/media/' + kind, { credentials: 'include' }).then(function (r) {
+            if (!r.ok) return undefined;
+            var v = (r.headers.get('X-Media-Version') || m[2]).replace(/"/g, '');
+            return r.blob().then(function (b) { return new Promise(function (res, rej) { var fr = new FileReader(); fr.onload = function () { res(String(fr.result)); }; fr.onerror = rej; fr.readAsDataURL(b); }); })
+              .then(function (url) { if (!isImg(url)) return undefined; return hashOf(url).then(function (h) { media[kind] = { v: v, h: h }; return url; }); });
+          }).catch(function () { return undefined; });
+        };
+        var localAp = FSX.lget('schoolagy_appearance'), localPr = FSX.lget('schoolagy_profile');
+        var apP = st.appearance && typeof st.appearance === 'object' ? picture('background', st.appearance.background, localAp && localAp.background) : Promise.resolve(null);
+        var prP = st.profile && typeof st.profile === 'object' ? picture('photo', st.profile.photo, localPr && localPr.photo) : Promise.resolve(null);
+        return Promise.all([apP, prP]).then(function (pics) {
+          var put = function (k, v) { try { if (LS.getItem(k) !== v) { LS.setItem(k, v); return true; } } catch (e) { /* storage off */ } return false; };
+          var changed = false;
+          if (st.settingsOptions && typeof st.settingsOptions === 'object') {
+            var o = Object.assign({}, st.settingsOptions), mine = (FSX.lget('schoolagy_settings_options') || {}).browserNotifications;
+            delete o.browserNotifications; if (mine !== undefined) o.browserNotifications = mine;
+            changed = put('schoolagy_settings_options', JSON.stringify(o)) || changed;
+          }
+          if (st.appearance && typeof st.appearance === 'object') {
+            var ap = Object.assign({}, st.appearance);
+            if (pics[0] === undefined) { if (localAp && localAp.background != null) ap.background = localAp.background; else delete ap.background; } else ap.background = pics[0];
+            changed = put('schoolagy_appearance', JSON.stringify(ap)) || changed;
+          }
+          if (st.profile && typeof st.profile === 'object') {
+            var pr = Object.assign({}, st.profile);
+            if (pics[1] === undefined) { if (localPr && localPr.photo) pr.photo = localPr.photo; else delete pr.photo; } else pr.photo = pics[1];
+            changed = put('schoolagy_profile', JSON.stringify(pr)) || changed;
+            if (typeof pr.name === 'string' && pr.name.trim()) put('schoolagy_profile_name', pr.name.trim());
+          }
+          // the theme and accent on this page now: averages-fs.js turns fsset into both (and back into schoolagy_*)
+          var dm = st.darkMode === 'dark' || st.darkMode === 'light' || st.darkMode === 'auto' ? st.darkMode : null;
+          var fsset = FSX.lget('fsset') || {}, before = JSON.stringify(fsset);
+          if (dm) fsset.theme = dm;
+          var acc = String((FSX.lget('schoolagy_appearance') || {}).accent || '').toLowerCase(), KEYS = { '#b8352f': 'punch', '#2f5fb3': 'blue', '#2e7d4f': 'green', '#7a3fa0': 'plum', '#b25600': 'orange', '#0f7470': 'teal', '#44465a': 'graphite' };
+          if (KEYS[acc]) fsset.accent = KEYS[acc];
+          if (JSON.stringify(fsset) !== before) { changed = true; try { LS.setItem('fsset', JSON.stringify(fsset)); } catch (e) { /* storage off */ } }
+          FSX.lset('averages_sync_media', media);
+          FSX.lset('schoolagy_sync_meta', { settingsUpdatedAt: stamp });
+          if (changed) try { window.dispatchEvent(new CustomEvent('fs:synced-settings')); } catch (e) { /* fine */ }
+          return changed;
+        });
+      }).catch(function () { return false; }).then(function (x) { FSX._syncPulling = null; return x; }));
     },
     schoology: function (path) { return 'https://' + schoologyHost() + (path || ''); },
     schoologyHost: schoologyHost,

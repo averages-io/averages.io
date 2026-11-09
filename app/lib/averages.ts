@@ -595,6 +595,8 @@ async function adoptSyncedRecord(remote: any, stamp: string, ask: (path: string)
     next.schoolagy_appearance = JSON.stringify(appearance);
   }
   if (remote.darkMode === "dark" || remote.darkMode === "light") next.schoolagy_dark_mode = remote.darkMode;
+  // System ("auto", 2026-11-09): this device follows its own light or dark setting
+  const followSystem = remote.darkMode === "auto";
   if (remote.profile && typeof remote.profile === "object") {
     const profile = { ...remote.profile };
     const photo = await picture("photo", profile.photo, localProfile && localProfile.photo);
@@ -606,6 +608,10 @@ async function adoptSyncedRecord(remote: any, stamp: string, ask: (path: string)
     if (typeof profile.name === "string" && profile.name.trim()) next.schoolagy_profile_name = profile.name.trim();
   }
   const changed: string[] = [];
+  if (followSystem && ls.getItem("schoolagy_dark_mode") !== null) {
+    ls.removeItem("schoolagy_dark_mode");
+    changed.push("schoolagy_dark_mode");
+  }
   for (const [k, v] of Object.entries(next)) {
     if (ls.getItem(k) !== v) {
       ls.setItem(k, v);

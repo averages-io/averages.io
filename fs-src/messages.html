@@ -4075,14 +4075,14 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     inkCv.width = W; inkCv.height = H; // resizing clears the canvas and its settings
     inkC2.font = font; inkC2.fillStyle = '#000'; inkC2.textBaseline = 'alphabetic'; inkC2.fillText(text, x0, y0);
     const d = inkC2.getImageData(0, 0, W, H).data;
-    let top = H, bot = -1, sx = 0, sw = 0;
+    let top = H, bot = -1, left = W, right = -1, sw = 0;
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
       const a = d[(y * W + x) * 4 + 3];
       if (!a) continue;
-      if (y < top) top = y; if (y > bot) bot = y;
-      sx += a * (x + .5); sw += a;
+      if (y < top) top = y; if (y > bot) bot = y; if (x < left) left = x; if (x > right) right = x;
+      sw += a;
     }
-    const out = sw ? { cx: (sx / sw - x0) / S, mid: ((top + bot + 1) / 2 - y0) / S, adv: adv / S } : null;
+    const out = sw ? { cx: ((left + right + 1) / 2 - x0) / S, mid: ((top + bot + 1) / 2 - y0) / S, adv: adv / S } : null;
     inkMemo.set(key, out);
     return out;
   }

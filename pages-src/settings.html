@@ -4296,7 +4296,7 @@
         } catch { return null; }
       };
       let darkMode = null;
-      try { darkMode = localStorage.getItem(AVERAGES_DARK_MODE_KEY); } catch {}
+      try { darkMode = localStorage.getItem(AVERAGES_DARK_MODE_KEY) || 'auto'; } catch {}   // 'auto' = System, so it syncs too
       const options = readJSON(AVERAGES_SETTINGS_OPTIONS_KEY);
       if (options && typeof options === 'object') delete options[DEVICE_ONLY_OPTION];
       return {
@@ -4326,7 +4326,8 @@
           localStorage.setItem(AVERAGES_SETTINGS_OPTIONS_KEY, JSON.stringify(next));
         }
         if (appearance) localStorage.setItem(AVERAGES_APPEARANCE_KEY, JSON.stringify(appearance));
-        if (remote.darkMode) localStorage.setItem(AVERAGES_DARK_MODE_KEY, remote.darkMode);
+        if (remote.darkMode === 'auto') localStorage.removeItem(AVERAGES_DARK_MODE_KEY);
+        else if (remote.darkMode === 'dark' || remote.darkMode === 'light') localStorage.setItem(AVERAGES_DARK_MODE_KEY, remote.darkMode);
         if (profile) localStorage.setItem(AVERAGES_PROFILE_KEY, JSON.stringify(profile));
       } catch {}
     }
