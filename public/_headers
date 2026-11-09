@@ -33,3 +33,17 @@
 # JSZip and pdf.js (2026-10-23): the version is in the folder name, so these never change in place.
 /vendor/*
   Cache-Control: public, max-age=31536000, immutable
+
+# The picture check (2026-11-09): Fullscreen Settings runs /scan in a hidden frame on our own pages, and
+# frame-ancestors 'none' above blocked it ("Photo scans are not working in fs"). Only this page may be framed,
+# and only by app.averages.io itself; every other site still can't.
+/scan
+  ! X-Frame-Options
+  ! Content-Security-Policy
+  X-Frame-Options: SAMEORIGIN
+  Content-Security-Policy: base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self'; upgrade-insecure-requests
+/scan.html
+  ! X-Frame-Options
+  ! Content-Security-Policy
+  X-Frame-Options: SAMEORIGIN
+  Content-Security-Policy: base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self'; upgrade-insecure-requests
