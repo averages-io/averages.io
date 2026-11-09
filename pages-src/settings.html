@@ -1635,7 +1635,7 @@
               <div class="settings-row">
                 <div class="settings-row-text">
                   <p class="settings-row-label">Only Search My School</p>
-                  <p class="settings-row-desc">Add contacts finds people across Schoology. Turn this on to see only people at your own school building, not your whole district.</p>
+                  <p class="settings-row-desc">Add contacts finds people at your school. Turn this off to find anyone on Schoology, at any school or district.</p>
                 </div>
                 <label class="toggle">
                   <input type="checkbox" id="contactsSchoolToggle" aria-label="Only search my school in Add contacts">
@@ -2861,11 +2861,11 @@
       filePreviewsToggle.closest('.settings-row').classList.toggle('is-disabled', potato);
     }
     syncFilePreviewsToggle();
-    // Add contacts: everyone on Schoology, or just your school (synced, shared with Fullscreen: contactsSearch)
+    // Add contacts: just your school (on by default), or everyone on Schoology ('everyone'; synced, shared with Fullscreen)
     const contactsSchoolToggle = document.getElementById('contactsSchoolToggle');
-    contactsSchoolToggle.checked = loadSettingsOptions().contactsSearch === 'school';
+    contactsSchoolToggle.checked = loadSettingsOptions().contactsSearch !== 'everyone';
     contactsSchoolToggle.addEventListener('change', () => {
-      saveSettingsOption('contactsSearch', contactsSchoolToggle.checked ? 'school' : null);
+      saveSettingsOption('contactsSearch', contactsSchoolToggle.checked ? 'school' : 'everyone');
     });
     filePreviewsToggle.addEventListener('change', () => {
       saveSettingsOption('filePreviews', filePreviewsToggle.checked);

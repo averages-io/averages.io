@@ -4173,7 +4173,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const darkPref = () => { try { const v = localStorage.getItem('schoolagy_dark_mode'); return v === 'dark' || v === 'light' ? v : 'auto'; } catch (_) { return 'auto'; } };
   const savedFs = store.get('fsset') || {};
   const SG = { sec: (savedFs.sec && /^[a-z]+$/.test(savedFs.sec)) ? savedFs.sec : 'account', plan: 'free', mode: FSD.me.incognito || (() => { try { return localStorage.getItem('schoolagy_account_mode') === 'incognito'; } catch (_) { return false; } })() ? 'incognito' : 'classic',
-    layout: 'full', skin: 'is', theme: darkPref(), accent: savedFs.accent || 'punch', previews: OPTS().filePreviews !== false, ctSchool: OPTS().contactsSearch === 'school',
+    layout: 'full', skin: 'is', theme: darkPref(), accent: savedFs.accent || 'punch', previews: OPTS().filePreviews !== false, ctSchool: OPTS().contactsSearch !== 'everyone',
     notif: false, nGrades: true, nAssign: true, nDue: true, nMsgs: true, nAnn: true,
     drive: false, canva: false, onedrive: false, openIn: (() => { try { const v = localStorage.getItem('schoolagy_default_editor'); return v === 'onedrive' ? 'onedrive' : v === 'gdrive' ? 'drive' : 'canva'; } catch (_) { return 'canva'; } })(), cal: false };
   { const q = FSX.q.get('section'); if (q && ['account', 'plan', 'appearance', 'personal', 'notifications', 'apps', 'privacy', 'about'].includes(q)) SG.sec = q; }
@@ -4409,7 +4409,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
         `<button class="sg-row" role="radio" aria-checked="${!incog()}" data-mode="classic" data-set="mode"${FSD.me.incognito ? ' aria-disabled="true"' : ''}><span class="sg-rd" aria-hidden="true"></span>${tx('Classic', FSD.me.incognito ? 'Not for accounts under 13. Incognito keeps everything on this device.' : SG.plan !== 'free' ? 'Subscribed to Plus' : 'Your settings, starred things and drafts are saved, so they follow you to every device.')}</button>` +
         `<button class="sg-row" role="radio" aria-checked="${incog()}" data-mode="incognito"${SG.plan !== 'free' || FSD.me.incognito ? ' aria-disabled="true"' : ''}><span class="sg-rd" aria-hidden="true"></span>${tx('Incognito', SG.plan !== 'free' ? 'Unavailable in Plus' : 'Nothing about you is stored on our servers. Everything stays in this browser.')}</button>`)}
       ${grp('', row('sync', 'Sync across devices', incog() ? 'Off in Incognito. Settings stay in this browser.' : 'Always on in Classic.', chip(incog() ? 'Off' : ico('ok') + 'On', incog() ? '' : ' on')))}
-      ${grp('Contacts', tog('ctSchool', 'Only search my school', 'Add contacts finds people across Schoology. Turn this on to see only people at your own school building, not your whole district.', SG.ctSchool))}
+      ${grp('Contacts', tog('ctSchool', 'Only search my school', 'Add contacts finds people at your school. Turn this off to find anyone on Schoology, at any school or district.', SG.ctSchool))}
       ${grp('Your data',
         row('data', 'Download your data', 'A copy of everything Averages stored about you. Your grades and files stay in Schoology.', btn('download', 'Download')) +
         row('delete', 'Delete your account', 'Deletes everything Averages stored about you. Schoology isn\'t changed.', btn('delete', 'Delete', '', ' sg-del')))}`,
@@ -4936,7 +4936,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       if (k === 'notif' && !SG.notif) { notifConsent(); return; }
       if (k === 'notif') { window.AveragesPush.disable().then(() => { SG.notif = false; SGV.flip = 'notif'; redraw(); toast('Browser notifications are off. We deleted your saved sign-in.'); }); return; }
       if (k === 'cal') { calSet(!(LIVE.cal && LIVE.cal.on)); return; }
-      if (k === 'ctSchool') { SG.ctSchool = !SG.ctSchool; saveOpt('contactsSearch', SG.ctSchool ? 'school' : null); t.setAttribute('aria-checked', SG.ctSchool); t.querySelector('.sw').classList.toggle('on', SG.ctSchool); sgNav(); toast(SG.ctSchool ? 'Add contacts searches just your school now.' : 'Add contacts searches all of Schoology now.'); return; }
+      if (k === 'ctSchool') { SG.ctSchool = !SG.ctSchool; saveOpt('contactsSearch', SG.ctSchool ? 'school' : 'everyone'); t.setAttribute('aria-checked', SG.ctSchool); t.querySelector('.sw').classList.toggle('on', SG.ctSchool); sgNav(); toast(SG.ctSchool ? 'Add contacts searches just your school now.' : 'Add contacts searches all of Schoology now.'); return; }
       if (k === 'previews') { SG.previews = !SG.previews; saveOpt('filePreviews', SG.previews); if (!SG.previews) { try { sessionStorage.removeItem('averages_previews'); } catch (_) {} } t.setAttribute('aria-checked', SG.previews); t.querySelector('.sw').classList.toggle('on', SG.previews); toast(SG.previews ? 'File previews on.' : 'File previews off.'); return; }
       if (['nGrades', 'nAssign', 'nDue', 'nMsgs', 'nAnn'].includes(k)) { SG[k] = !SG[k]; t.setAttribute('aria-checked', SG[k]); t.querySelector('.sw').classList.toggle('on', SG[k]); sgNav(); window.AveragesPush.setTypes(pushTypes()).then(r => { if (!r.ok) toast('Couldn\'t save that. Try again in a moment.'); }); return; }
       SG[k] = !SG[k];

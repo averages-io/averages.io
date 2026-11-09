@@ -846,8 +846,8 @@
     }
     // Whether Schoology lets you message the people you added (GET /messages/can: its send_message), kept a day in
     // fsct_can, shared with Fullscreen's Contacts. undefined: not asked yet; null: Schoology didn't say.
-    // Settings → Only search my school (contactsSearch: 'school'); everyone on Schoology otherwise
-    function ctSchoolOnly() { try { return (JSON.parse(localStorage.getItem('schoolagy_settings_options') || '{}') || {}).contactsSearch === 'school'; } catch { return false; } }
+    // Settings → Only search my school: on unless turned off (contactsSearch: 'everyone' = everyone on Schoology)
+    function ctSchoolOnly() { try { return (JSON.parse(localStorage.getItem('schoolagy_settings_options') || '{}') || {}).contactsSearch !== 'everyone'; } catch { return true; } }
     function ctCanOf(id) {
       try { const v = (JSON.parse(localStorage.getItem('fsct_can') || '{}') || {})[id]; return v && Date.now() - (v.at || 0) < (v.s === true ? 864e5 : 9e5) ? v.s : undefined; } catch { return undefined; }
     }

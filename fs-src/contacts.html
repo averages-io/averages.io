@@ -4183,8 +4183,9 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       : `<div class="ac-hint">${ico('search')}<b>Start typing to find people</b><span>Find your counselor, the librarian or anyone else on Schoology.</span></div>`;
   }
   // Schoology's own search by name (GET /messages/people), as you type: counselors, librarians, other teachers
-  // (everyone on Schoology, or just your school with Settings → Only search my school: contactsSearch 'school')
-  const schoolOnly = () => { try { return (JSON.parse(localStorage.getItem('schoolagy_settings_options') || '{}') || {}).contactsSearch === 'school'; } catch (e) { return false; } };
+  // (just your school with Settings → Only search my school, on unless turned off; everyone on Schoology when off:
+  // contactsSearch 'everyone')
+  const schoolOnly = () => { try { return (JSON.parse(localStorage.getItem('schoolagy_settings_options') || '{}') || {}).contactsSearch !== 'everyone'; } catch (e) { return true; } };
   let acSeq = 0, acT = 0, acBusy = false;
   const acAsked = new Set();
   function acSearch(q) {
