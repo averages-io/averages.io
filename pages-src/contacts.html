@@ -213,7 +213,8 @@
      app (messages.html's search, the color-swatch popups, etc.). ---------- */
   .contacts-search-wrap { position: relative; margin: 14px 0 4px; }
   .contacts-search-wrap svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 15px; height: 15px; stroke: var(--text-faint); fill: none; stroke-width: 2.4; stroke-linecap: butt; stroke-linejoin: miter; pointer-events: none; }
-  #contactsSearch {
+  /* the Add contacts box uses the same pill (2026-11-09: it was the browser's plain box, with the icon over the text) */
+  #contactsSearch, #addContactsFind {
     width: 100%;
     border: none;
     border-radius: 999px;
@@ -223,8 +224,8 @@
     font-size: 0.82rem;
     color: var(--text-dark);
   }
-  #contactsSearch::placeholder { color: var(--text-faint); }
-  #contactsSearch:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
+  #contactsSearch::placeholder, #addContactsFind::placeholder { color: var(--text-faint); }
+  #contactsSearch:focus-visible, #addContactsFind:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
 
   .contact-row { display: flex; align-items: center; gap: 10px; padding: 9px 6px; cursor: pointer; border-radius: var(--window-radius-sm); }
   .contact-row:hover { background: var(--panel-inner); }
