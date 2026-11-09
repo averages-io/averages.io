@@ -145,13 +145,15 @@ const SURFACE_PROPS = /^(background(-color|-image)?|border(-(top|right|bottom|le
 // tokens that are used as text get lighter in dark; as a solid background behind white text they keep the light-theme color
 const SOLID_KEEP = { "--good": "#2e7d4f", "--bad": "#b8352f", "--warn": "#8f6200", "--today": "#2f5fb3", "--focus": "#2f5fb3", "--series": "#3e64b0" };
 
-function darkDecl(prop, value) {
+function darkDecl(prop, value, sel = "") {
   const p = prop.trim().toLowerCase();
   if (p.startsWith("--")) return null;
   const v = value.trim();
   const imp = v.includes("!important") ? " !important" : "";
   if (TEXT_PROPS.has(p)) {
-    if (/^var\(--accent\)\s*(!important)?$/.test(v)) return "color-mix(in srgb, var(--accent) 50%, #ffffff)" + imp;
+    // the accent stays the color picked in Settings (Martin, 2026-11-09: the 50%-white tint read as pink, not his red).
+    // Icons get it exactly; text gets only a touch lighter so small words stay readable on the dark panels.
+    if (/^var\(--accent\)\s*(!important)?$/.test(v)) return (/\bsvg\b|\.i\b|\.ico\b/.test(sel) ? "var(--accent)" : "color-mix(in srgb, var(--accent) 88%, #ffffff)") + imp;
     // text in a surface color sits on an ink-colored fill (pills, toasts, avatars): white in dark
     if (/^var\(--(field|sheet|frame|panel)\)\s*(!important)?$/.test(v)) return "#ffffff" + imp;
     return mapColors(v, darkText);
@@ -229,7 +231,7 @@ function emit(nodes) {
       if (k < 0) continue;
       const prop = d.slice(0, k), val = d.slice(k + 1);
       if (/#2b1d00/i.test(val)) continue; // sticker ink on yellow: stays dark in dark mode too
-      const dv = darkDecl(prop, val);
+      const dv = darkDecl(prop, val, n.sel);
       if (dv) decls.push(`${prop.trim()}: ${dv.trim()}`);
     }
     if (decls.length) out += `${darkSelector(n.sel)} { ${decls.join("; ")}; }\n`;

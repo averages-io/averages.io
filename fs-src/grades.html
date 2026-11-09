@@ -18,7 +18,7 @@
     --muted: #5a5c70;
     --accent: #b8352f;     /* Punch, darkened for AA text */
     --accent-hover: #9c2b26;
-    --punch-a: #ff7a50; --punch-b: #e5484d;
+    --punch-a: #ff7a50; --punch-b: var(--accent); /* unread dots and your own messages: the accent picked in Settings */
     --today: #2f5fb3;
     --focus: #2f5fb3;
     --good: #22663f;
@@ -3543,6 +3543,7 @@
   new MutationObserver(recs => { if (recs.some(r => [...r.addedNodes].some(n => n.nodeType === 1 && !n.classList.contains('mq-in')))) mqSoon(false); }).observe(document.body, { childList: true, subtree: true });
   let mqW = innerWidth; addEventListener('resize', () => { if (innerWidth !== mqW) { mqW = innerWidth; clearTimeout(mqSoon.t); mqSoon.t = setTimeout(() => marquee(true), 150); } });
   setTimeout(() => marquee(true), 300);
+  window.FS_INK = () => centerInk();   // the sidebar's counts are redrawn from averages-fs-data.js too
   function centerInk() {
     const dpr = window.devicePixelRatio || 1;
     document.querySelectorAll('.nav .count, .grp em, .sv-ct').forEach(el => {

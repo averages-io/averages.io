@@ -384,6 +384,43 @@
   })();
   document.addEventListener('click', function (e) { var m = e.target.closest && e.target.closest('[data-mailto]'); if (!m) return; e.preventDefault(); FSX.mailTo(m.getAttribute('data-mailto')); }, true);
   window.addEventListener('fs:notis', function (e) { notePop((e.detail && e.detail.added) || []); });
+  // ---------- the sidebar's counts for what's new, like the bell: Grades (new grades), Courses (new posts, files and
+  // announcements), and a dot on each class that has something new. Assignments and Messages keep their own counts.
+  function sideCounts() {
+    var D = window.FSD; if (!D || !Array.isArray(D.NT) || !window.FSX) return;
+    var live = D.NT.filter(function (it) { return !FSX.seen.has(it.kind, it.raw); });
+    var g = live.filter(function (it) { return it.k === 'graded'; }).length;
+    var c = live.filter(function (it) { return it.k === 'new' || it.k === 'ann' || it.k === 'changed'; }).length;
+    var byClass = {}; live.forEach(function (it) { if (it.c && it.k !== 'msg') byClass[it.c] = (byClass[it.c] || 0) + 1; });
+    var nav = document.querySelector('.side .nav'); if (!nav) return;
+    [['Grades', g], ['Courses', c]].forEach(function (x) {
+      // the page's own link (data-title), not a Recents entry that points at the same page
+      var a = nav.querySelector('a[data-title="' + x[0] + '"]') || nav.querySelector('a[data-open="page:' + x[0] + '"], a[title="' + x[0] + '"]');
+      if (!a) return;
+      var em = a.querySelector('em.count'), pip = a.querySelector('i.pip');
+      if (!em) { em = document.createElement('em'); em.className = 'count fade'; a.appendChild(em); }
+      if (!pip) { pip = document.createElement('i'); pip.className = 'pip'; a.appendChild(pip); }
+      var t = x[1] ? String(x[1] > 99 ? '99+' : x[1]) : '';
+      if ((em.dataset.n || em.textContent.trim()) !== t) { em.textContent = t; delete em.dataset.n; }
+      em.hidden = !x[1]; pip.hidden = !x[1];
+    });
+    document.querySelectorAll('#sideClasses a').forEach(function (a) {
+      var m = [a.getAttribute('href'), a.getAttribute('data-go'), a.getAttribute('data-open')].join(' ').match(/(?:[?&](?:id|course)=|class:)(\d+)/);
+      var n = m ? byClass[m[1]] || 0 : 0, dot = a.querySelector('i.cdot');
+      if (n && !dot) { dot = document.createElement('i'); dot.className = 'cdot'; dot.setAttribute('aria-hidden', 'true'); a.appendChild(dot); }
+      if (dot) dot.hidden = !n;
+      var nm = (a.querySelector('.fade') || a).textContent.trim(); a.setAttribute('aria-label', nm + (n ? ', ' + n + ' new' : ''));
+    });
+    if (window.FS_INK) try { window.FS_INK(); } catch (e) { /* the numbers stay as text */ }
+  }
+  (function () { var st = document.createElement('style'); st.textContent = '#sideClasses a{position:relative}#sideClasses a .cdot{flex:none;margin-left:auto;width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 2px var(--frame,#16171d)}#sideClasses a .cdot[hidden]{display:none}'; (document.head || document.documentElement).appendChild(st); })();
+  ['fs:ready', 'fs:notis', 'fs:seen', 'fs:synced'].forEach(function (ev) { window.addEventListener(ev, function () { setTimeout(sideCounts, ev === 'fs:ready' ? 400 : 0); }); });
+  window.addEventListener('storage', function (e) { if (e.key === 'averages_seen') sideCounts(); });
+  // pages that redraw their class list later (Home) get the dots back
+  window.addEventListener('fs:ready', function () {
+    var box = document.getElementById('sideClasses'), t = 0; if (!box || !window.MutationObserver) return;
+    new MutationObserver(function () { clearTimeout(t); t = setTimeout(sideCounts, 60); }).observe(box, { childList: true });
+  });
   window.addEventListener('fs:ready', function () { setTimeout(function () { if (window.FSD) notePop(window.FSD.NT || []); }, 600); });
   window.addEventListener('fs:ready', function () {
     if (window.FSX) window.FSX.notisCheck = notisCheck;   // also: check now
@@ -896,12 +933,12 @@
         var v = FSX.seen.read(), l = Array.isArray(v[kind]) ? v[kind].map(String) : [];
         [].concat(ids).forEach(function (id) { var s = String(id == null ? '' : id); if (s && l.indexOf(s) < 0) l.push(s); });
         v[kind] = l.slice(-300); lset('averages_seen', v);
-        seenPush();
+        seenPush(); try { window.dispatchEvent(new CustomEvent('fs:seen')); } catch (e) { /* fine */ }
       },
       unmark: function (kind, ids) {
         var v = FSX.seen.read(), drop = [].concat(ids).map(String), l = Array.isArray(v[kind]) ? v[kind].map(String) : [];
         v[kind] = l.filter(function (id) { return drop.indexOf(id) < 0; }); lset('averages_seen', v);
-        seenPush();
+        seenPush(); try { window.dispatchEvent(new CustomEvent('fs:seen')); } catch (e) { /* fine */ }
       },
     },
     lget: lget,

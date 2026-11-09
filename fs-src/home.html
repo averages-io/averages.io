@@ -18,7 +18,7 @@
     --muted: #5a5c70;
     --accent: #b8352f;     /* Punch, darkened for AA text */
     --accent-hover: #9c2b26;
-    --punch-a: #ff7a50; --punch-b: #e5484d;
+    --punch-a: #ff7a50; --punch-b: var(--accent); /* unread dots and your own messages: the accent picked in Settings */
     --today: #2f5fb3;
     --focus: #2f5fb3;
     --good: #22663f;
@@ -2842,6 +2842,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   }
   // The number is painted on a canvas the size of the badge, so it moves with the circle as one piece. Text on the page
   // snaps to whole pixels on its own, which could leave the digit up to half a pixel off from its circle.
+  window.FS_INK = () => centerInk();   // the sidebar's counts are redrawn from averages-fs-data.js too
   function centerInk() {
     const dpr = window.devicePixelRatio || 1;
     document.querySelectorAll('.nav .count, .grp em, .sv-ct').forEach(el => {

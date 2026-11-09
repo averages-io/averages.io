@@ -18,7 +18,7 @@
     --muted: #5a5c70;
     --accent: #b8352f;     /* Punch, darkened for AA text */
     --accent-hover: #9c2b26;
-    --punch-a: #ff7a50; --punch-b: #e5484d;
+    --punch-a: #ff7a50; --punch-b: var(--accent); /* unread dots and your own messages: the accent picked in Settings */
     --today: #2f5fb3;
     --focus: #2f5fb3;
     --good: #22663f;
@@ -4134,6 +4134,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   setTimeout(() => marquee(true), 300);
   // new file cards, waiting files and the previewer come and go as you use the page: check them as they appear
   new MutationObserver(ms => { if (ms.some(m => m.addedNodes.length && !(m.target.classList && (m.target.classList.contains('mq') || m.target.classList.contains('mq-in'))))) mqSoon(false); }).observe(document.body, { childList: true, subtree: true });
+  window.FS_INK = () => centerInk();   // the sidebar's counts are redrawn from averages-fs-data.js too
   function centerInk() {
     const dpr = window.devicePixelRatio || 1;
     document.querySelectorAll('.nav .count, .grp em, .sv-ct').forEach(el => {
