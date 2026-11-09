@@ -4078,7 +4078,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (!need.length) return; canBusy = true;
     const next = () => { canBusy = false; if (canLater.size) { const l = [...canLater]; canLater.clear(); canCheck(l); } };
     FSX.api('/messages/can?ids=' + need.join(',')).then(j => {
-      const at = Date.now(); need.forEach(id => { CAN[id] = { s: null, at }; }); Object.entries((j && j.can) || {}).forEach(([id, v]) => { CAN[id] = { s: v === true ? true : v === false ? false : null, at }; });
+      const at = Date.now(), mails = (j && j.email) || {}; need.forEach(id => { CAN[id] = { s: null, at }; }); Object.entries((j && j.can) || {}).forEach(([id, v]) => { CAN[id] = { s: v === true ? true : v === false ? false : null, at, e: typeof mails[id] === 'string' ? mails[id].slice(0, 254) : '' }; });
       Object.keys(CAN).forEach(id => { if (at - (CAN[id].at || 0) > 7 * 864e5) delete CAN[id]; });
       store.set('fsct_can', CAN);
       if (CT.open && need.includes(String(CT.open))) ctCard(false);
@@ -4090,6 +4090,8 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const canMsg = p => p.role === 'Teacher' || p.role === 'Staff' || (p.role === 'Person' && canOf(p.id) !== false);
   function ctCard(animate) {
     const box = $('ctCard'), p = CT.open && P(CT.open);
+    // someone you added: their school email, when Schoology showed it in the can-message check
+    if (p && p.kind && !p.email && CAN[p.id] && CAN[p.id].e) p.email = CAN[p.id].e;
     $('ct').classList.toggle('open', !!p);
     if (!p) { box.innerHTML = `<div class="ct-empty"><span class="emo">${EMOJI_SVG['📒'] || ''}</span><b>${ALL.length ? 'Pick someone' : 'Nobody here yet'}</b><span>Your teachers and classmates, from your Schoology classes.</span></div>`; return; }
     const T = p.role === 'Teacher', c = T ? C[p.c] : null, on = starred(p.id);
@@ -4106,7 +4108,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     } else if (p.kind) {
       const can = canOf(p.id), first = esc(callName(p.name));
       if (can === undefined) canCheck([p.id]);
-      html += `<div class="ct-sec"><h3>Contact</h3><div class="ct-grp">${li('', `<small>Message</small><b>${can === false ? 'Not available' : can === true ? 'Through Schoology' : 'Checking…'}</b>`)}${li('', `<small>School</small><b>${esc(p.school)}</b>`)}</div><p class="ct-fine">${can === false ? `Schoology doesn't let you message ${first}. Students usually can't message other students.` : can === true ? `You can message ${first} on Schoology.` : 'On Schoology.'}</p></div>`;
+      html += `<div class="ct-sec"><h3>Contact</h3><div class="ct-grp">${p.email ? li('', `<small>School email</small><b>${esc(p.email)}</b>`, `<button class="ct-copy" data-ctcopy="${esc(p.email)}">${ico('copy')}Copy</button>`) : ''}${li('', `<small>Message</small><b>${can === false ? 'Not available' : can === true ? 'Through Schoology' : 'Checking…'}</b>`)}${li('', `<small>School</small><b>${esc(p.school)}</b>`)}</div><p class="ct-fine">${can === false ? `Schoology doesn't let you message ${first}. Students usually can't message other students.` : can === true ? `You can message ${first} on Schoology.` : 'On Schoology.'}</p></div>`;
     } else {
       html += `<div class="ct-sec"><h3>Classes together</h3><div class="ct-grp">${p.cls.map(id => { const k = C[id]; return li(tileOf(k), `<b>${esc(k.name)}</b><span>${esc([k.hasPeriod ? 'Period ' + k.period : '', k.teacher].filter(Boolean).join(' · '))}</span>`, `<svg class="i chev"><use href="#i-chev-r"/></svg>`, 'button', ` data-go="${FSX.hubUrl(k.id)}"`); }).join('')}</div><p class="ct-fine">Schoology doesn't share students' emails, so you can message classmates here but not email them.</p></div>`;
     }

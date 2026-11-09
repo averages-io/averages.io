@@ -7052,8 +7052,17 @@ window.AveragesHelp = {
   // ---------- Members tab ----------
   const MB = { sel: 'tch', q: '', shut: new Set(store.get('fshub_mb_shut') || []), anim: false };
   const mbMe = () => ({ id: 'me', name: PROFILE.name, first: PROFILE.name.split(' ')[0], last: PROFILE.name.split(' ').slice(1).join(' '), ini: PROFILE.name.split(' ').map(w => w[0]).slice(0, 2).join(''), me: true });
-  const MB_TEACH = { id: 'tch', name: ME.teacher || 'Your teacher', first: ME.teacher || 'your teacher', last: '', ini: FSD.fmt.initials(ME.teacher || 'T'), teacher: true };
-  const mbAll = () => [MB_TEACH, ...MB_MATES, mbMe()];
+  // each of the class's teachers is their own member (a class with two teachers shows two), from the people list;
+  // the first keeps the id 'tch' so old #members links still land on a teacher
+  const MB_TEACHS = (() => {
+    const named = Object.fromEntries(((FSD.people && FSD.people.CONTACTS) || []).map(x => [String(x.id), x.name]));
+    let list = (ME.teacherIds || []).map(uid => ({ uid: String(uid), name: named[String(uid)] || '' })).filter(t => t.name);
+    if (!list.length) list = String(ME.teacher || '').split(/,\s*/).filter(Boolean).map(name => ({ uid: '', name }));
+    if (!list.length) list = [{ uid: '', name: 'Your teacher' }];
+    return list.map((t, i) => ({ id: i ? 'tch' + i : 'tch', uid: t.uid, name: t.name, first: t.name, last: '', ini: FSD.fmt.initials(t.name || 'T'), teacher: true }));
+  })();
+  const MB_TEACH = MB_TEACHS[0];
+  const mbAll = () => [...MB_TEACHS, ...MB_MATES, mbMe()];
   const mbGet = id => mbAll().find(p => p.id === id);
   const mbWho = p => p.teacher ? 'P' : p.me ? 'ME' : p.ini; // how they show up in update comments
   const mbAva = (p, big) => p.teacher ? `<span class="mb-ava tch" style="--c:${ME.color}" aria-hidden="true">${esc(p.ini)}</span>`
@@ -7065,7 +7074,7 @@ window.AveragesHelp = {
   const mbHit = p => !MB.q || (p.name + ' ' + (p.teacher ? 'teacher' : '')).toLowerCase().includes(MB.q);
   function mbSections() {
     const mates = mbSort(MB_MATES);
-    return [['teacher', 'Teacher', [MB_TEACH]], ['with', 'In your other classes', mates.filter(p => p.with.length)], ['only', `Only in ${ME.name}`, mates.filter(p => !p.with.length)], ['you', 'You', [mbMe()]]]
+    return [['teacher', MB_TEACHS.length > 1 ? 'Teachers' : 'Teacher', MB_TEACHS], ['with', 'In your other classes', mates.filter(p => p.with.length)], ['only', `Only in ${ME.name}`, mates.filter(p => !p.with.length)], ['you', 'You', [mbMe()]]]
       .map(([k, t, l]) => [k, t, l.filter(mbHit)]).filter(([, , l]) => l.length);
   }
   const mbSub = p => p.teacher ? 'Teacher' : p.me ? 'Student · that\'s you' : p.with.length ? `Also in ${p.with.map(k => C[k].name).join(', ')}` : 'Student';
@@ -7080,10 +7089,10 @@ window.AveragesHelp = {
   function mbDet() {
     const p = mbGet(MB.sel) || MB_TEACH, who = mbWho(p);
     const said = [];
-    const first = p.teacher ? (ME.teacher || 'your teacher') : p.first;
+    const first = p.teacher ? (p.name || ME.teacher || 'your teacher') : p.first;
     const back = `<button class="btn sm mb-back" data-mbback>${ico('chev-l')}All members</button>`;
     const hero = `<div class="mb-hero">${mbAva(p, true)}<div class="tx"><h3>${esc(p.name)}</h3><small>${p.teacher ? '<span class="mb-role tch">Teacher</span>' : p.me ? '<span class="mb-role">You</span>' : '<span class="mb-role">Student</span>'}${esc(ME.name)}${ME.hasPeriod ? ' · Period ' + ME.period : ''}</small></div>
-      <div class="mb-acts">${p.me ? `<button class="btn" data-toast="your profile settings">${ico('user')}Edit profile</button>` : p.teacher && ME.teacher ? `<button class="btn" data-hubmsg>${ico('msg')}Message ${esc(first)}</button>` : ''}</div></div>`;
+      <div class="mb-acts">${p.me ? `<button class="btn" data-toast="your profile settings">${ico('user')}Edit profile</button>` : p.teacher && (p.uid || ME.teacher) ? `<button class="btn" ${p.uid ? `data-hubmsgto="${esc(p.uid)}" data-name="${esc(p.name)}"` : 'data-hubmsg'}>${ico('msg')}Message ${esc(first)}</button>` : ''}</div></div>`;
     const card = (k, note) => `<${k === ME.id ? 'div' : 'button'} class="mb-cl"${k === ME.id ? '' : ` data-go="${FSX.hubUrl(k)}"`}>${badge(C[k])}<span class="tx"><b>${esc(C[k].name)}</b><small>${esc(C[k].teacher || '')}</small></span>${note ? `<em>${note}</em>` : ''}</${k === ME.id ? 'div' : 'button'}>`;
     const upRow = (u, text, sub) => `<button class="mb-it" data-upgo="${u.id}"><span class="badge" style="--c:${ME.color}" aria-hidden="true">${EMOJI_SVG[UP_KIND[u.kind][0]] || ''}</span><span class="tx"><b>${text}</b><small>${sub}</small></span>${ico('chev-r')}</button>`;
     const upText = u => u.body || (u.poll ? u.poll.q : '');
@@ -7347,7 +7356,9 @@ window.AveragesHelp = {
     const tc = document.querySelector('.teacher'); if (tc) { if (ME.teacher) { tc.querySelector('.tav').textContent = FSD.fmt.initials(ME.teacher); tc.querySelector('.tx b').textContent = ME.teacher; const n = (FSD.messages || []).filter(m => m.from === ME.teacher).length; tc.querySelector('.tx small').textContent = n ? `${n === 1 ? '1 conversation' : n + ' conversations'}` : 'Message them here or on Schoology'; } else tc.closest('section').hidden = true; }
     const mt = document.querySelector('[data-hubtab="members"] .ct'); if (mt) mt.textContent = MB_MATES.length + 2;
     $('upFeed').setAttribute('aria-label', 'Updates from ' + (ME.teacher || 'your teacher'));
-    document.addEventListener('click', e => { if (e.target.closest('[data-hubmsg]')) { e.preventDefault(); FSX.go('messages', { compose: ME.id }); } });
+    document.addEventListener('click', e => {
+      const to = e.target.closest('[data-hubmsgto]'); if (to) { e.preventDefault(); FSX.go('messages', { to: to.dataset.hubmsgto, name: to.dataset.name || '' }); return; }
+      if (e.target.closest('[data-hubmsg]')) { e.preventDefault(); FSX.go('messages', { compose: ME.id }); } });
   }
   applyCourseLook(); upCounts(); renderPins(); renderGrade(); renderGradeNow(false); renderGradeSub(false); renderComing(); renderGraded(); renderUpdates(); setGView(GVIEW, true); ntInit(); mpStats(); agCounts();
   if (location.hash.startsWith('#materials') || location.hash.startsWith('#assignments') || location.hash.startsWith('#grades') || location.hash.startsWith('#updates') || location.hash.startsWith('#members')) mpFromHash();

@@ -857,7 +857,7 @@
         .then(r => (r.ok ? r.json() : Promise.reject(r.status)))
         .then(j => {
           let all = {}; try { all = JSON.parse(localStorage.getItem('fsct_can') || '{}') || {}; } catch {}
-          const at = Date.now(); need.forEach(id => { all[id] = { s: null, at }; }); Object.entries((j && j.can) || {}).forEach(([id, v]) => { all[id] = { s: v === true ? true : v === false ? false : null, at }; });
+          const at = Date.now(), mails = (j && j.email) || {}; need.forEach(id => { all[id] = { s: null, at }; }); Object.entries((j && j.can) || {}).forEach(([id, v]) => { all[id] = { s: v === true ? true : v === false ? false : null, at, e: typeof mails[id] === 'string' ? mails[id].slice(0, 254) : '' }; });
           try { localStorage.setItem('fsct_can', JSON.stringify(all)); } catch {}
           if (done) done();
         })
@@ -1000,6 +1000,8 @@
     const modalEmailBtn = document.getElementById('modalEmailBtn');
 
     function openContactModal(c) {
+      // someone you added: their school email, when Schoology showed it in the can-message check
+      if (c.category === 'added' && !c.email) { try { const v = (JSON.parse(localStorage.getItem('fsct_can') || '{}') || {})[c.id]; if (v && typeof v.e === 'string' && /@/.test(v.e)) c.email = ctText(v.e, 254); } catch {} }
       document.getElementById('modalAvatar').textContent = initials(c.name);
       document.getElementById('modalAvatar').style.background = window.AveragesAvatar ? window.AveragesAvatar.background(c.name === 'Your teacher' ? '' : c.name) : c.color;
       document.getElementById('modalContactName').textContent = c.name;
