@@ -1080,6 +1080,16 @@
   .nt-fan .nt-tile:nth-last-child(4) { transform: translate(12px, -5px) rotate(14deg); filter: saturate(.8) brightness(.96); }
   .nt-fan .nt-tile:nth-last-child(3) { transform: translate(6px, -2px) rotate(6deg); filter: brightness(.98); }
   .nt-fan .nt-tile:nth-last-child(2) { transform: translate(-1px, 1px) rotate(-5deg); background: var(--field); }
+  /* the stack of cards: the hover wiggle snapped every card to one spot mid-wiggle (the fan collapsed and popped back),
+     so the stack doesn't wiggle; it fans out a little further instead, and settles back when you move away */
+  body:not(.potato-mode) .nt-fan .nt-tile { animation: none !important; transition: transform .35s var(--spring); }
+  :is(.nt-row, .nt-gtop):hover .nt-fan .nt-tile:nth-last-child(4) { transform: translate(16px, -7px) rotate(20deg); }
+  :is(.nt-row, .nt-gtop):hover .nt-fan .nt-tile:nth-last-child(3) { transform: translate(9px, -4px) rotate(10deg); }
+  :is(.nt-row, .nt-gtop):hover .nt-fan .nt-tile:nth-last-child(2) { transform: translate(-2px, 0) rotate(-8deg) scale(1.05); }
+  /* the cards behind are plain cards in the class color (their icons only peeked out as white slivers) */
+  .nt-fan .nt-tile:not(:nth-last-child(2)) > * { visibility: hidden; }
+  .nt-fan .nt-tile:nth-last-child(3) { background: color-mix(in srgb, var(--c) 45%, var(--field)); }
+  .nt-fan .nt-tile:nth-last-child(4) { background: color-mix(in srgb, var(--c) 28%, var(--field)); }
   .nt-fct { position: absolute; right: -4px; bottom: -4px; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 9px; display: grid; place-items: center; background: var(--ink); color: #ffffff; font-size: 11px; font-weight: 900; font-variant-numeric: tabular-nums; box-shadow: 0 0 0 2px color-mix(in srgb, var(--c) 10%, var(--panel)); }
   .nt-gmore { flex: none; display: inline-flex; align-items: center; gap: 2px; height: 28px; padding: 0 8px 0 12px; border-radius: 14px; background: var(--field); color: var(--ink-2); font-size: 12px; font-weight: 900; white-space: nowrap; }
   .nt-gmore svg.i { width: 14px; height: 14px; transform: rotate(90deg); }
@@ -5540,20 +5550,32 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const COURSE_INFO = { section: [ME.hasPeriod ? 'Period ' + ME.period : '', ME.section].filter(Boolean).join(' · ') || 'Your class', code: ME.code || '' };
   let ci = null, ciFrom = null;
   // ---------- your own name and emoji for the course (kept on this device; Reset goes back to Schoology's) ----------
-  const COURSE_ORIG = { name: ME.name, emoji: ME.emoji };
+  // Schoology's look for this class (averages-fs-data.js keeps it as orig* when you've changed it)
+  const COURSE_ORIG = { name: ME.origName || ME.name, emoji: ME.origEmoji || ME.emoji, color: ME.origColor || ME.color };
   const COURSE_EMOJI = [...new Set(COURSE_SUBJECTS.map(x => x[1]).concat(['📚', '🔬', '🧬', '🎵', '🎭', '💻', '🌍']))].filter(k => EMOJI_SVG[k]);
-  const courseCustom = () => ME.name !== COURSE_ORIG.name || ME.emoji !== COURSE_ORIG.emoji;
+  const courseCustom = () => ME.name !== COURSE_ORIG.name || ME.emoji !== COURSE_ORIG.emoji || ME.color !== COURSE_ORIG.color;
+  // every class's own look, by class id (the old single setting applied to every class: dropped)
+  const looksAll = () => { const v = store.get('fshub_course_custom'); return v && typeof v === 'object' && !Array.isArray(v) && !('name' in v) && !('emoji' in v) ? v : {}; };
   function applyCourseLook() {
-    const cu = store.get('fshub_course_custom') || {};
+    const cu = looksAll()[ME.id] || {};
     ME.name = cu.name || COURSE_ORIG.name; ME.emoji = cu.emoji && EMOJI_SVG[cu.emoji] ? cu.emoji : COURSE_ORIG.emoji;
+    ME.color = cu.color && /^#[0-9a-f]{6}$/i.test(cu.color) ? cu.color : COURSE_ORIG.color;
     $('hubName').textContent = ME.name; $('hubLogo').innerHTML = EMOJI_SVG[ME.emoji]; renderSide();
+    // the class color follows: the page's tints, the big logo, and Course info's emoji button
+    ['matPage', 'grdPage', 'updPage', 'mbrPage'].forEach(id => { const el = $(id); if (el) el.style.setProperty('--class-c', ME.color); });
+    const hh = document.querySelector('.hub-h'); if (hh) hh.style.setProperty('--class-c', ME.color);
+    $('hubLogo').style.setProperty('--c', ME.color); if (ci) { const b = ci.querySelector('.ci-emo'); if (b) b.style.setProperty('--c', ME.color); }
     const st = document.querySelector('.top .crumb strong'), ln = document.querySelector('.top .crumb [data-hubtab="overview"]');
     if (ln) ln.textContent = ME.name; else if (st) st.textContent = ME.name;
   }
   function setCourseLook(ch) {
-    const cu = Object.assign({}, store.get('fshub_course_custom') || {}, ch);
+    const all = looksAll(), cu = Object.assign({}, all[ME.id] || {}, ch);
+    // a new emoji brings its own color (back to Schoology's emoji: back to Schoology's color too)
+    if (ch.emoji) { const col = ch.emoji === COURSE_ORIG.emoji ? '' : (FSX.emojiColor && FSX.emojiColor(ch.emoji)) || ''; if (col) cu.color = col; else delete cu.color; }
     if (!cu.name || cu.name === COURSE_ORIG.name) delete cu.name; if (!cu.emoji || cu.emoji === COURSE_ORIG.emoji) delete cu.emoji;
-    store.set('fshub_course_custom', Object.keys(cu).length ? cu : null);
+    if (!cu.color || cu.color === COURSE_ORIG.color) delete cu.color;
+    if (Object.keys(cu).length) all[ME.id] = cu; else delete all[ME.id];
+    store.set('fshub_course_custom', Object.keys(all).length ? all : null);
     if (ch.name === '') { const keep = ME.name; applyCourseLook(); $('hubName').textContent = keep; } else applyCourseLook(); // an empty box keeps the old name showing while you type
     ciSync(true);
   }
@@ -5595,7 +5617,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       if (e.target === ci || e.target.closest('[data-ciclose]')) { ciClose(); return; }
       const emoB = e.target.closest('[data-ciemo]'); if (emoB) { ciEmos(ci.querySelector('#ciEmos').hidden); return; }
       const pick = e.target.closest('[data-emo]'); if (pick) { setCourseLook({ emoji: pick.dataset.emo }); ciEmos(false, true); return; }
-      if (e.target.closest('[data-cireset]')) { store.set('fshub_course_custom', null); applyCourseLook(); ciSync(); toast(`Back to ${COURSE_ORIG.name}, the name and emoji from Schoology.`); ci.querySelector('.ci-name').focus(); return; }
+      if (e.target.closest('[data-cireset]')) { const all = looksAll(); delete all[ME.id]; store.set('fshub_course_custom', Object.keys(all).length ? all : null); applyCourseLook(); ciSync(); toast(`Back to ${COURSE_ORIG.name}, the name, emoji and color from Schoology.`); ci.querySelector('.ci-name').focus(); return; }
       if (e.target.closest('[data-toast], [data-matgo], [data-hubmsg]')) ciClose(true);
     });
     const nameIn = ci.querySelector('.ci-name');

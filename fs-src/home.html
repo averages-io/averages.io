@@ -1082,6 +1082,16 @@
   .nt-fan .nt-tile:nth-last-child(4) { transform: translate(12px, -5px) rotate(14deg); filter: saturate(.8) brightness(.96); }
   .nt-fan .nt-tile:nth-last-child(3) { transform: translate(6px, -2px) rotate(6deg); filter: brightness(.98); }
   .nt-fan .nt-tile:nth-last-child(2) { transform: translate(-1px, 1px) rotate(-5deg); background: var(--field); }
+  /* the stack of cards: the hover wiggle snapped every card to one spot mid-wiggle (the fan collapsed and popped back),
+     so the stack doesn't wiggle; it fans out a little further instead, and settles back when you move away */
+  body:not(.potato-mode) .nt-fan .nt-tile { animation: none !important; transition: transform .35s var(--spring); }
+  :is(.nt-row, .nt-gtop):hover .nt-fan .nt-tile:nth-last-child(4) { transform: translate(16px, -7px) rotate(20deg); }
+  :is(.nt-row, .nt-gtop):hover .nt-fan .nt-tile:nth-last-child(3) { transform: translate(9px, -4px) rotate(10deg); }
+  :is(.nt-row, .nt-gtop):hover .nt-fan .nt-tile:nth-last-child(2) { transform: translate(-2px, 0) rotate(-8deg) scale(1.05); }
+  /* the cards behind are plain cards in the class color (their icons only peeked out as white slivers) */
+  .nt-fan .nt-tile:not(:nth-last-child(2)) > * { visibility: hidden; }
+  .nt-fan .nt-tile:nth-last-child(3) { background: color-mix(in srgb, var(--c) 45%, var(--field)); }
+  .nt-fan .nt-tile:nth-last-child(4) { background: color-mix(in srgb, var(--c) 28%, var(--field)); }
   .nt-fct { position: absolute; right: -4px; bottom: -4px; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 9px; display: grid; place-items: center; background: var(--ink); color: #ffffff; font-size: 11px; font-weight: 900; font-variant-numeric: tabular-nums; box-shadow: 0 0 0 2px color-mix(in srgb, var(--c) 10%, var(--panel)); }
   .nt-gmore { flex: none; display: inline-flex; align-items: center; gap: 2px; height: 28px; padding: 0 8px 0 12px; border-radius: 14px; background: var(--field); color: var(--ink-2); font-size: 12px; font-weight: 900; white-space: nowrap; }
   .nt-gmore svg.i { width: 14px; height: 14px; transform: rotate(90deg); }

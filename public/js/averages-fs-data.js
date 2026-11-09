@@ -1037,6 +1037,10 @@
     [/theat|drama/, '\u{1F3AD}', '#a3364b'], [/music|band|choir|orchestra|chorus/, '\u{1F3B5}', '#6b48a8'], [/photo/, '\u{1F4F7}', '#4f5d6e'], [/culinary|cooking|\bfoods?\b|nutrition/, '\u{1F373}', '#b05a26'],
     [/\barts?\b|drawing|painting|ceramic|sculpt|design/, '\u{1F3A8}', '#b03f7a'], [/business|marketing|accounting|financ/, '\u{1F4BC}', '#3d5f6e'], [/journalism|yearbook|newspaper/, '\u{1F4F0}', '#5c5c6e'], [/science/, '\u{1F52C}', '#2b7b8c'],
   ];
+  /** The color that goes with a class emoji (the first subject using it), or ''. */
+  function emojiColor(e) { for (var i = 0; i < SUBJECTS.length; i++) if (SUBJECTS[i][1] === e) return SUBJECTS[i][2]; return EXTRA_COLORS[e] || ''; }
+  var EXTRA_COLORS = { '\u{1F4DA}': '#55697d', '\u{1F52C}': '#2f7f63', '\u{1F9EC}': '#387f33' };
+  if (window.FSX) window.FSX.emojiColor = emojiColor;   // for Course info's emoji picker
   function subject(name) { var n = String(name || '').toLowerCase(); for (var i = 0; i < SUBJECTS.length; i++) if (SUBJECTS[i][0].test(n)) return SUBJECTS[i]; return [null, '\u{1F4DA}', '#55697d']; }
   var arr = function (v) { return Array.isArray(v) ? v : []; };
   var obj = function (v) { return v && typeof v === 'object' && !Array.isArray(v) ? v : {}; };
@@ -1186,6 +1190,17 @@
     });
     var saved = arr(window.FSX.lget('schoolagy_course_order')).map(String);
     if (saved.length) CLASSES.sort(function (x, y) { var a = saved.indexOf(String(x.id)), b = saved.indexOf(String(y.id)); return (a < 0 ? 1e6 : a) - (b < 0 ? 1e6 : b); });
+    // your own name, emoji and color for a class (Course info on its page), kept on this device per class:
+    // fshub_course_custom = { <class id>: { name, emoji, color } }. Schoology's are kept as orig* for Reset.
+    var LOOKS = obj(window.FSX.lget('fshub_course_custom'));
+    if ('name' in LOOKS || 'emoji' in LOOKS) LOOKS = {};   // the old one-for-every-class setting: not anyone's in particular
+    CLASSES.forEach(function (c) {
+      c.origName = c.name; c.origEmoji = c.emoji; c.origColor = c.color;
+      var lk = obj(LOOKS[c.id]);
+      if (typeof lk.name === 'string' && lk.name.trim()) c.name = lk.name.trim().slice(0, 80);
+      if (typeof lk.emoji === 'string' && lk.emoji && lk.emoji.length <= 8) c.emoji = lk.emoji;
+      if (typeof lk.color === 'string' && /^#[0-9a-f]{6}$/i.test(lk.color)) c.color = lk.color;
+    });
     var C = {}; CLASSES.forEach(function (c) { C[c.id] = c; });
 
     // ---------- notifications (the bell): grades, course updates, messages ----------
