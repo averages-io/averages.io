@@ -3,6 +3,7 @@
   'use strict';
   if (window.FST) return;
   var API = window.location.hostname.endsWith('averages.io') ? 'https://api.averages.io' : 'http://localhost:8787';
+  function jsv(p) { var m = window.AVG_JSV || {}, f = p.split('/').pop(); return m[f] ? p + '?v=' + m[f] : p; }   // the cached-for-a-year address of a script (build-fs's AVG_JSV)
   function script(src, name) {
     return new Promise(function (resolve, reject) {
       if (window[name]) { resolve(window[name]); return; }
@@ -13,9 +14,9 @@
     });
   }
   var submitP = null, cloudP = null, cfg = null;
-  function S() { return submitP || (submitP = script('/js/averages-submit.js', 'AveragesSubmit')); }
+  function S() { return submitP || (submitP = script(jsv('/js/averages-submit.js'), 'AveragesSubmit')); }
   function Cl() {
-    return cloudP || (cloudP = script('/js/averages-cloud.js', 'AveragesCloud').then(function (C) {
+    return cloudP || (cloudP = script(jsv('/js/averages-cloud.js'), 'AveragesCloud').then(function (C) {
       return C.config().then(function (c) { cfg = c || {}; if (cfg.google) C.prepareGoogle().catch(function () {}); return C; });
     }));
   }

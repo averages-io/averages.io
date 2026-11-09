@@ -647,7 +647,7 @@
     if (!lget0('averages_push_endpoint') && !lget0('averages_push_pending_delete')) return;
     var go = function () { try { var r = window.AveragesPush && window.AveragesPush.touchIfDue && window.AveragesPush.touchIfDue(); if (r && r.catch) r.catch(function () {}); } catch (e) {} };
     if (window.AveragesPush) { go(); return; }
-    var sc = document.createElement('script'); sc.src = '/js/averages-push.js'; sc.onload = go; document.head.appendChild(sc);
+    var sc = document.createElement('script'); sc.src = (function (q) { var m = window.AVG_JSV || {}; return m['averages-push.js'] ? q + '?v=' + m['averages-push.js'] : q; })('/js/averages-push.js'); sc.onload = go; document.head.appendChild(sc);
   }
   function lget0(k) { try { return window.localStorage.getItem(k) || ''; } catch (e) { return ''; } }
   function fail(text) {
@@ -1008,7 +1008,7 @@
     send: function (recipientIds, subject, message, fileIds) { return FSX.api('/messages', { method: 'POST', json: { recipientIds: recipientIds, subject: subject, message: message, fileIds: fileIds || [] } }).then(function (r) { sdel('averages_extras_messages'); return r; }); },
     msgUpload: function (file, onProgress) {
       var load = window.AveragesSubmit ? Promise.resolve(window.AveragesSubmit) : new Promise(function (ok, no) {
-        var sc = document.createElement('script'); sc.src = '/js/averages-submit.js'; sc.onload = function () { window.AveragesSubmit ? ok(window.AveragesSubmit) : no({ code: 'not_configured' }); }; sc.onerror = function () { no({ code: 'network' }); }; document.head.appendChild(sc);
+        var sc = document.createElement('script'); sc.src = (function (q) { var m = window.AVG_JSV || {}; return m['averages-submit.js'] ? q + '?v=' + m['averages-submit.js'] : q; })('/js/averages-submit.js'); sc.onload = function () { window.AveragesSubmit ? ok(window.AveragesSubmit) : no({ code: 'not_configured' }); }; sc.onerror = function () { no({ code: 'network' }); }; document.head.appendChild(sc);
       });
       return load.then(function (S) { return S.uploadFile({ purpose: 'message', blob: file, name: file.name, onProgress: function (x) { if (onProgress) onProgress(x.phase === 'hashing' ? x.fraction * 0.15 : 0.15 + x.fraction * 0.85); } }); }).then(function (r) { return r.fileId; });
     },

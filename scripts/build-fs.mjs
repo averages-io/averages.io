@@ -264,7 +264,14 @@ function build() {
   fs.rmSync(OLD, { recursive: true, force: true });
   fs.mkdirSync(OLD, { recursive: true });
   const ver = (f) => crypto.createHash("sha256").update(fs.readFileSync(f)).digest("hex").slice(0, 10);
-  const tag = `${SPLASH_TAG}\n<script src="/js/averages-avatar.js?v=${ver(AVATAR_FILE)}"></script>\n<script src="/js/averages-note.js?v=${ver(NOTE_FILE)}"></script>\n<script src="/js/averages-fs.js?v=${ver(JS_FILE)}"></script>\n<script src="/js/averages-fs-data.js?v=${ver(DATA_FILE)}"></script>\n<script src="/js/averages-live.js?v=${ver(LIVE_FILE)}" defer></script>\n<script src="/js/averages-gpa.js?v=${ver(GPA_FILE)}" defer></script>\n<script src="/js/averages-preview.js?v=${ver(PREVIEW_FILE)}" defer></script>`;
+  // Every script in public/js by its version (2026-11-09): /js/* is cached for a year, so a script one of our
+  // scripts loads later (the turn-in's averages-submit.js and averages-cloud.js, push) has to be asked for by a
+  // versioned address too, or a browser keeps the first copy it ever got. The pages carry the list (AVG_JSV);
+  // '/js/averages-x.js' written in a page's own code is versioned here.
+  const JS_DIR = path.resolve(HERE, "../public/js");
+  const JSV = Object.fromEntries(fs.readdirSync(JS_DIR).filter((f) => /^averages-[a-z0-9-]+\.js$/.test(f)).sort().map((f) => [f, ver(path.join(JS_DIR, f))]));
+  const JSV_TAG = `<script>window.AVG_JSV=${JSON.stringify(JSV)};</script>`;
+  const tag = `${JSV_TAG}\n${SPLASH_TAG}\n<script src="/js/averages-avatar.js?v=${ver(AVATAR_FILE)}"></script>\n<script src="/js/averages-note.js?v=${ver(NOTE_FILE)}"></script>\n<script src="/js/averages-fs.js?v=${ver(JS_FILE)}"></script>\n<script src="/js/averages-fs-data.js?v=${ver(DATA_FILE)}"></script>\n<script src="/js/averages-live.js?v=${ver(LIVE_FILE)}" defer></script>\n<script src="/js/averages-gpa.js?v=${ver(GPA_FILE)}" defer></script>\n<script src="/js/averages-preview.js?v=${ver(PREVIEW_FILE)}" defer></script>`;
   let n = 0;
   const LIGHT_CSS = [
     ".sum-view{transition:opacity 150ms ease!important}.sum-view.switching{filter:none!important}",
@@ -339,6 +346,10 @@ requestAnimationFrame(function(){requestAnimationFrame(function(){r.classList.re
   for (const file of fs.readdirSync(SRC).filter((f) => f.endsWith(".html")).sort()) {
     if (file === "signin.html") { buildSignin(); continue; }
     let s = fs.readFileSync(path.join(SRC, file), "utf8");
+    s = s.replace(/(['"`])\/js\/(averages-[a-z0-9-]+\.js)\1/g, (m, q, f) => {
+      if (!JSV[f]) throw new Error(`${file} loads /js/${f}, which isn't in public/js`);
+      return `${q}/js/${f}?v=${JSV[f]}${q}`;
+    });
     const styles = [...s.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/g)].map((m) => m[1]).join("\n");
     // 1. the link to the app, first thing in <head>
     if (!/<head>/.test(s)) throw new Error(`${file}: no <head>`);
