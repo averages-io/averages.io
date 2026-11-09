@@ -820,7 +820,9 @@
         // Google only exports files up to 10 MB.
         const j = await r.json().catch(() => ({}));
         const reason = j && j.error && Array.isArray(j.error.errors) && j.error.errors[0] ? j.error.errors[0].reason : '';
-        throw fail(reason === 'exportSizeLimitExceeded' ? 'export_too_large' : 'download_blocked');
+        if (reason !== 'exportSizeLimitExceeded') throw fail('download_blocked');
+        // Over Drive's 10 MB export limit: our API gets it from the file's own export link instead (no limit there)
+        return bigGoogleExport(id, as, name.replace(/\.(pdf|docx|xlsx|csv|pptx|png)$/i, '') + '.' + as);
       }
       name = name.replace(/\.(pdf|docx|xlsx|csv|pptx|png)$/i, '') + '.' + as;
     } else if (mime.startsWith('application/vnd.google-apps.')) {
@@ -841,6 +843,31 @@
       throw fail('network');
     }
     if (blob.size > MAX_ATTACH_BYTES) throw fail('file_too_large');
+    return { blob: blob.type === type ? blob : new Blob([blob], { type }), name, mimeType: type };
+  }
+
+  /** A Google file over 10 MB, converted through our API (GET /cloud/gdrive/export/:id). */
+  async function bigGoogleExport(id, as, name) {
+    let r;
+    try {
+      r = await fetch(`${API}/cloud/gdrive/export/${encodeURIComponent(id)}?as=${encodeURIComponent(as)}`, { credentials: 'include' });
+    } catch {
+      throw fail('network');
+    }
+    if (!r.ok) {
+      const j = await r.json().catch(() => ({}));
+      const code = j && typeof j.error === 'string' ? j.error : '';
+      throw fail(code === 'file_gone' || code === 'download_blocked' || code === 'file_too_large' || code === 'cloud_reconnect_needed' ? code : r.status === 413 ? 'file_too_large' : 'export_too_large');
+    }
+    if (Number(r.headers.get('Content-Length') || 0) > MAX_ATTACH_BYTES) throw fail('file_too_large');
+    let blob;
+    try {
+      blob = await r.blob();
+    } catch {
+      throw fail('network');
+    }
+    if (blob.size > MAX_ATTACH_BYTES) throw fail('file_too_large');
+    const type = EXPORT_MIME[as];
     return { blob: blob.type === type ? blob : new Blob([blob], { type }), name, mimeType: type };
   }
 
@@ -1867,7 +1894,7 @@
     cloud_download_failed: 'Couldn’t download the file from your drive. Try again.',
     download_blocked: 'That file can’t be downloaded. Its owner may have turned downloading off.',
     not_downloadable: 'This file type can’t be attached. Try a document, PDF or picture.',
-    export_too_large: 'Google only makes PDFs from files up to 10 MB.',
+    export_too_large: 'Google couldn’t convert a file this big. Try PDF, or turn it in as a view link.',
     share_blocked: 'Google Drive wouldn’t share it by link. Turn in the file instead.',
     share_failed: 'Couldn’t make a Google Drive link. Try again or turn in the file.',
     onedrive_share_blocked: 'OneDrive wouldn’t make a link. Send it as a copy instead.',

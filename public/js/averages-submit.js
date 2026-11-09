@@ -538,6 +538,7 @@
     canva_not_configured: 'Turning in Canva designs isn’t switched on yet.',
     canva_design_gone: 'This design isn’t in your Canva account anymore.',
     canva_export_failed: 'Canva couldn’t make a file. Try again in a moment.',
+    canva_export_wrong_type: 'Canva can’t make that type from this design. Pick PDF instead.',
     canva_export_timeout: 'Canva is taking too long. Try again in a moment.',
     canva_export_not_ready: 'Canva is still making the file. Try again in a moment.',
     canva_export_not_found: 'Canva lost track of that file. Try again.',

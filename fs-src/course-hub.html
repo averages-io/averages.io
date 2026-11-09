@@ -4862,6 +4862,12 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   // Quick turn in is just files and a written answer. Adding from Google Drive, Canva or OneDrive happens on the
   // assignment's own page, whose Turn in opens the full version (tiFull) for that one assignment.
   const DRAFT = {}; let ti = null, tiSel = null, tiFrom = null, tiSrc = null, tiSending = false, tiFull = false, tiInline = false;
+  // Canva said which types a design can be: a pick on a type it can't be goes back to PDF, and the pill redraws
+  addEventListener('fst:formats', e => {
+    const d = e.detail || {}; let hit = false;
+    Object.values(DRAFT).forEach(l => (l || []).forEach(f => { if (f.src === 'canva' && String(f.designId || f.id) === d.designId) { hit = true; if (!(d.formats || []).includes(f.fmt)) f.fmt = 'pdf'; } }));
+    if (hit && ti && !tiSending) tiRender();
+  });
   // Add from another app: what each one lists in the mock, and what a copy can be saved as.
   // (Names only, no app logos.) kind picks the copy formats.
   const SOURCES = {

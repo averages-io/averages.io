@@ -3,13 +3,13 @@
 export const JS = {
   "averages-avatar.js": "/js/averages-avatar.js?v=c7dc87af07",
   "averages-bell.js": "/js/averages-bell.js?v=eb805a8918",
-  "averages-cloud.js": "/js/averages-cloud.js?v=83d0f67e44",
+  "averages-cloud.js": "/js/averages-cloud.js?v=4575632f66",
   "averages-drive-open.js": "/js/averages-drive-open.js?v=3986c1bfbe",
   "averages-email.js": "/js/averages-email.js?v=3d11948651",
   "averages-features.js": "/js/averages-features.js?v=65855f4618",
   "averages-file-icons.js": "/js/averages-file-icons.js?v=4090afa967",
   "averages-fs-data.js": "/js/averages-fs-data.js?v=3e48a73a72",
-  "averages-fs-turnin.js": "/js/averages-fs-turnin.js?v=b581638f25",
+  "averages-fs-turnin.js": "/js/averages-fs-turnin.js?v=623f2508f2",
   "averages-fs.js": "/js/averages-fs.js?v=9b859da8c1",
   "averages-gpa.js": "/js/averages-gpa.js?v=72461aa6f6",
   "averages-help.js": "/js/averages-help.js?v=19e87f9c0f",
@@ -17,6 +17,6 @@ export const JS = {
   "averages-note.js": "/js/averages-note.js?v=734bdc21de",
   "averages-preview.js": "/js/averages-preview.js?v=1fbf5d909e",
   "averages-push.js": "/js/averages-push.js?v=597a06bf6b",
-  "averages-submit.js": "/js/averages-submit.js?v=0c9b893fab",
+  "averages-submit.js": "/js/averages-submit.js?v=2a8b4da661",
   "averages-tz.js": "/js/averages-tz.js?v=c8e48dbd23"
 } as const;

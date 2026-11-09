@@ -77,6 +77,7 @@
   }
   function oneDriveToken(write, quiet) { var c = C(); if (!c) return Promise.reject({ code: 'not_ready' }); return c.oneDriveToken(write ? { interactive: true, write: true } : { interactive: !quiet, read: true }); }
 
+  var CANVA_FMT = {}, CANVA_ASKED = {};   // design id -> the types Canva can make of it
   var FST = window.FST = {
     ready: function () { return Promise.all([S(), Cl()]); },
     size: size,
@@ -159,7 +160,18 @@
     /** What a picked file can be sent as: [[ext, label]]. Google files convert; Canva exports; others go as they are. */
     formats: function (item) {
       var NAMES = { pdf: 'PDF', docx: 'Word', xlsx: 'Excel', pptx: 'PowerPoint', png: 'PNG', jpg: 'JPG', csv: 'CSV' };
-      if (item.src === 'canva' || item.kind === 'design') return [['pdf', 'PDF'], ['png', 'PNG'], ['jpg', 'JPG']];
+      if (item.src === 'canva' || item.kind === 'design') {
+        // what Canva says this design can be (a Canva Doc can't be a PNG); asked once, the pages redraw on fst:formats
+        var did = String(item.designId || item.id || ''), known = CANVA_FMT[did];
+        if (!known && did && !CANVA_ASKED[did]) {
+          CANVA_ASKED[did] = 1;
+          S().then(function (s) { return s.canvaFormats(did); }).then(function (l) {
+            CANVA_FMT[did] = l && l.length ? l : ['pdf'];
+            try { window.dispatchEvent(new CustomEvent('fst:formats', { detail: { designId: did, formats: CANVA_FMT[did] } })); } catch (e) { /* fine */ }
+          }, function () { delete CANVA_ASKED[did]; });
+        }
+        return (known || ['pdf', 'png', 'jpg']).map(function (t) { return [t, NAMES[t] || t.toUpperCase()]; });
+      }
       if (GDOC[item.mime]) {
         var c = C(), types = c && c.googleExportTypes ? c.googleExportTypes(item.mime) : ['pdf'];
         return (types && types.length ? types : ['pdf']).map(function (t) { return [t, NAMES[t] || t.toUpperCase()]; });
