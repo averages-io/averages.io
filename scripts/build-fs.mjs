@@ -323,9 +323,11 @@ function build() {
     "@media (max-width:1020px){#side .foot{display:none}}",
     // a sidebar dot only shows while its count does (no stray dot before the page has counted)
     "#side .nav a em.count[hidden]~.pip,#side .nav a em.count:empty~.pip{display:none}",
+    // Assignments' dot: only when something was assigned since you last opened Assignments (a due count isn't news)
+    "html:not(.asg-new) #pipAssign{display:none}",
     "body.potato-mode #side,body.potato-mode #side *{transition:none!important}@media (prefers-reduced-motion:reduce){#side,#side *{transition:none!important}}",
   ].join("");
-  const CHROME_JS = `(function(){var d=document,r=d.documentElement,a=d.getElementById('app'),s=d.getElementById('side');if(!a||!s)return;r.classList.add('fs-boot');try{window.__fsSide&&window.__fsSide()}catch(e){}
+  const CHROME_JS = `(function(){var d=document,r=d.documentElement,a=d.getElementById('app'),s=d.getElementById('side');if(!a||!s)return;r.classList.add('fs-boot');try{if(localStorage.getItem('averages_asg_dot')==='1')r.classList.add('asg-new')}catch(e){}try{window.__fsSide&&window.__fsSide()}catch(e){}
 try{var pin=false;try{pin=JSON.parse(localStorage.getItem('fsmock_pinned'))===true}catch(e){}if(pin)a.classList.add('pinned');
 var j=JSON.parse(sessionStorage.getItem('averages_fs_chrome')||'null');if(j&&Date.now()-j.at<15000&&Date.now()>=j.at){
 var c=d.getElementById('sideClasses');if(c&&!c.children.length&&j.cls){c.innerHTML=j.cls;[].forEach.call(c.querySelectorAll('.here,[aria-current]'),function(x){x.classList.remove('here');x.removeAttribute('aria-current')})}

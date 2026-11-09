@@ -384,10 +384,24 @@
   })();
   document.addEventListener('click', function (e) { var m = e.target.closest && e.target.closest('[data-mailto]'); if (!m) return; e.preventDefault(); FSX.mailTo(m.getAttribute('data-mailto')); }, true);
   window.addEventListener('fs:notis', function (e) { notePop((e.detail && e.detail.added) || []); });
-  // ---------- the sidebar's counts for what's new, like the bell: Grades (new grades), Courses (new posts, files and
-  // announcements), and a dot on each class that has something new. Assignments and Messages keep their own counts.
+  // ---------- the sidebar's counts for what's new, like the bell: Grades (new grades) and Courses (new posts, files and
+  // announcements). Assignments and Messages keep their own counts.
+  // Dots (the collapsed sidebar) are only for news that clears when you look: Messages (unread), Grades (cleared by
+  // opening the Grades page) and Assignments only when something was assigned since you last opened that page.
+  // Courses has its number but no dot: its posts live in the bell.
   function sideCounts() {
     var D = window.FSD; if (!D || !Array.isArray(D.NT) || !window.FSX) return;
+    var here = location.pathname.replace(/\/+$/, '');
+    if (here === '/IS/grades') {
+      var ng = D.NT.filter(function (it) { return it.k === 'graded' && !FSX.seen.has(it.kind, it.raw); }).map(function (it) { return it.raw; });
+      if (ng.length) { FSX.seen.mark('g', ng); return; }   // marking sends fs:seen, which counts again
+    }
+    var asg = D.NT.filter(function (it) { return it.kind === 'a' && it.k === 'new'; }).map(function (it) { return String(it.raw); });
+    var known = lget('averages_asg_known');
+    if (!Array.isArray(known) || here === '/IS/assignments') { known = (Array.isArray(known) ? known.map(String) : []).concat(asg.filter(function (id) { return !Array.isArray(known) || known.indexOf(id) < 0; })).slice(-300); lset('averages_asg_known', known); }
+    var asgNew = asg.some(function (id) { return known.indexOf(id) < 0 && !FSX.seen.has('a', id); });
+    document.documentElement.classList.toggle('asg-new', asgNew);
+    try { localStorage.setItem('averages_asg_dot', asgNew ? '1' : '0'); } catch (e) { /* the next page works it out */ }
     var live = D.NT.filter(function (it) { return !FSX.seen.has(it.kind, it.raw); });
     var g = live.filter(function (it) { return it.k === 'graded'; }).length;
     var c = live.filter(function (it) { return it.k === 'new' || it.k === 'ann' || it.k === 'changed'; }).length;
@@ -398,10 +412,11 @@
       if (!a) return;
       var em = a.querySelector('em.count'), pip = a.querySelector('i.pip');
       if (!em) { em = document.createElement('em'); em.className = 'count fade'; a.appendChild(em); }
-      if (!pip) { pip = document.createElement('i'); pip.className = 'pip'; a.appendChild(pip); }
+      if (x[0] === 'Courses') { if (pip) pip.remove(); pip = null; }
+      else if (!pip) { pip = document.createElement('i'); pip.className = 'pip'; a.appendChild(pip); }
       var t = x[1] ? String(x[1] > 99 ? '99+' : x[1]) : '';
       if ((em.dataset.n || em.textContent.trim()) !== t) { em.textContent = t; delete em.dataset.n; }
-      em.hidden = !x[1]; pip.hidden = !x[1];
+      em.hidden = !x[1]; if (pip) pip.hidden = !x[1];
     });
     [].forEach.call(document.querySelectorAll('#sideClasses .cdot'), function (x) { x.remove(); });   // no dots on the classes (an older page's copy may carry some)
     if (window.FS_INK) try { window.FS_INK(); } catch (e) { /* the numbers stay as text */ }
