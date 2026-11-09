@@ -391,7 +391,6 @@
     var live = D.NT.filter(function (it) { return !FSX.seen.has(it.kind, it.raw); });
     var g = live.filter(function (it) { return it.k === 'graded'; }).length;
     var c = live.filter(function (it) { return it.k === 'new' || it.k === 'ann' || it.k === 'changed'; }).length;
-    var byClass = {}; live.forEach(function (it) { if (it.c && it.k !== 'msg') byClass[it.c] = (byClass[it.c] || 0) + 1; });
     var nav = document.querySelector('.side .nav'); if (!nav) return;
     [['Grades', g], ['Courses', c]].forEach(function (x) {
       // the page's own link (data-title), not a Recents entry that points at the same page
@@ -404,23 +403,11 @@
       if ((em.dataset.n || em.textContent.trim()) !== t) { em.textContent = t; delete em.dataset.n; }
       em.hidden = !x[1]; pip.hidden = !x[1];
     });
-    document.querySelectorAll('#sideClasses a').forEach(function (a) {
-      var m = [a.getAttribute('href'), a.getAttribute('data-go'), a.getAttribute('data-open')].join(' ').match(/(?:[?&](?:id|course)=|class:)(\d+)/);
-      var n = m ? byClass[m[1]] || 0 : 0, dot = a.querySelector('i.cdot');
-      if (n && !dot) { dot = document.createElement('i'); dot.className = 'cdot'; dot.setAttribute('aria-hidden', 'true'); a.appendChild(dot); }
-      if (dot) dot.hidden = !n;
-      var nm = (a.querySelector('.fade') || a).textContent.trim(); a.setAttribute('aria-label', nm + (n ? ', ' + n + ' new' : ''));
-    });
+    [].forEach.call(document.querySelectorAll('#sideClasses .cdot'), function (x) { x.remove(); });   // no dots on the classes (an older page's copy may carry some)
     if (window.FS_INK) try { window.FS_INK(); } catch (e) { /* the numbers stay as text */ }
   }
-  (function () { var st = document.createElement('style'); st.textContent = '#sideClasses a{position:relative}#sideClasses a .cdot{flex:none;margin-left:auto;width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 2px var(--frame,#16171d)}#sideClasses a .cdot[hidden]{display:none}'; (document.head || document.documentElement).appendChild(st); })();
   ['fs:ready', 'fs:notis', 'fs:seen', 'fs:synced'].forEach(function (ev) { window.addEventListener(ev, function () { setTimeout(sideCounts, ev === 'fs:ready' ? 400 : 0); }); });
   window.addEventListener('storage', function (e) { if (e.key === 'averages_seen') sideCounts(); });
-  // pages that redraw their class list later (Home) get the dots back
-  window.addEventListener('fs:ready', function () {
-    var box = document.getElementById('sideClasses'), t = 0; if (!box || !window.MutationObserver) return;
-    new MutationObserver(function () { clearTimeout(t); t = setTimeout(sideCounts, 60); }).observe(box, { childList: true });
-  });
   window.addEventListener('fs:ready', function () { setTimeout(function () { if (window.FSD) notePop(window.FSD.NT || []); }, 600); });
   window.addEventListener('fs:ready', function () {
     if (window.FSX) window.FSX.notisCheck = notisCheck;   // also: check now
@@ -495,8 +482,14 @@
         var el = document.getElementById(id); if (!el) return;
         ct[id] = { n: el.querySelector('canvas.ink') ? (el.dataset.n || '') : el.textContent.trim(), h: !!el.hidden };
       });
+      // every sidebar link's count and dot by its name (Grades and Courses are added after the page draws)
+      var nv = {};
+      [].forEach.call(document.querySelectorAll('.side .nav a'), function (a) {
+        var lb = a.querySelector('span.fade'), em = a.querySelector('em.count'), pip = a.querySelector('i.pip'); if (!lb || (!em && !pip)) return;
+        nv[lb.textContent.trim()] = { n: em ? (em.querySelector('canvas.ink') ? (em.dataset.n || '') : em.textContent.trim()) : '', h: !em || !!em.hidden, p: !pip || !!pip.hidden };
+      });
       sessionStorage.setItem('averages_fs_chrome', JSON.stringify({
-        at: Date.now(), cls: cls ? cls.innerHTML : '', ct: ct, st: (document.getElementById('sideScroll') || side).scrollTop || 0,
+        at: Date.now(), cls: cls ? cls.innerHTML : '', ct: ct, nv: nv, st: (document.getElementById('sideScroll') || side).scrollTop || 0,
         hold: !app.classList.contains('pinned') && (side.matches(':hover') || side.dataset.in === '1' || Date.now() - (+side.dataset.hit || 0) < 4000 || side.classList.contains('hold')),
         av: av ? { c: av.className, s: av.getAttribute('style') || '', t: av.textContent } : null,
       }));
