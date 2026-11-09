@@ -502,7 +502,8 @@
   .msgs-thread-identity { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
   .msgs-thread-identity[hidden] { display: none; }
   .msgs-thread-head-text { min-width: 0; }
-  .msgs-thread-name { display: block; font-weight: 800; font-size: 0.94rem; color: var(--text-dark); }
+  /* the conversation pane is always light (#fdfdfe), so its name is always dark: in dark mode --text-dark is near white (2026-11-09) */
+  .msgs-thread-name { display: block; font-weight: 800; font-size: 0.94rem; color: #14151f; }
   .msgs-thread-course { display: block; font-size: 0.72rem; font-weight: 700; color: var(--text-faint); }
 
   .msgs-thread-subject-row { position: relative; }
