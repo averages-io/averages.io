@@ -349,6 +349,39 @@
       };
     }), { openAll: function () { var b = document.getElementById('ntBtn'); if (b) b.click(); } });
   }
+  // ---------- every Copy button (the two-boxes icon): the front box slides onto the back one, then a check ----------
+  (function () {
+    var NS = 'http://www.w3.org/2000/svg';
+    function calmNow() { try { return document.body.classList.contains('potato-mode') || matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } }
+    document.addEventListener('click', function (e) {
+      var b = e.target.closest && e.target.closest('button, a, [role="button"]'); if (!b || b.disabled || b.getAttribute('aria-disabled') === 'true') return;
+      var use = b.querySelector('use[href="#i-copy"]'), svg = use && use.closest('svg'); if (!svg || svg.getAttribute('data-copying')) return;
+      svg.setAttribute('data-copying', '1');
+      var hadBox = svg.hasAttribute('viewBox'); if (!hadBox) svg.setAttribute('viewBox', '0 0 24 24');
+      var g = document.createElementNS(NS, 'g');
+      g.innerHTML = '<path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/><rect x="8" y="8" width="12" height="12" rx="2"/><path d="m5 12.5 4.5 4.5L19 7.5" pathLength="1" style="stroke-dasharray:1;stroke-dashoffset:1;opacity:0"/>';
+      svg.replaceChild(g, use);
+      var back = g.children[0], front = g.children[1], check = g.children[2], boxes = [back, front];
+      boxes.concat(check).forEach(function (el) { el.style.transformBox = 'fill-box'; el.style.transformOrigin = 'center'; });
+      // its label says Copied while the check shows ("Copy", "Copy email", "Copy link" …)
+      var label = null; for (var n = b.lastChild; n; n = n.previousSibling) { if ((n.nodeType === 3 || (n.nodeType === 1 && !n.querySelector('svg') && n.tagName !== 'svg')) && /^Copy\b/.test((n.textContent || '').trim())) { label = n; break; } }
+      var said = label ? label.textContent : null; if (label) label.textContent = said.replace(/Copy\b/, 'Copied');
+      var done = function () { if (!g.parentNode) return; svg.replaceChild(use, g); if (!hadBox) svg.removeAttribute('viewBox'); svg.removeAttribute('data-copying'); if (label && label.isConnected) label.textContent = said; };
+      if (calmNow() || !front.animate) {   // no motion: just the check for a moment
+        boxes.forEach(function (el) { el.style.opacity = '0'; }); check.style.opacity = '1'; check.style.strokeDashoffset = '0';
+        setTimeout(done, 1100); return;
+      }
+      var ease = 'cubic-bezier(.2, .8, .2, 1)';
+      front.animate([{ transform: 'none' }, { transform: 'translate(-4px, -4px)' }, { transform: 'translate(-4px, -4px) scale(.55)', opacity: 0 }], { duration: 420, easing: ease, fill: 'forwards' });
+      back.animate([{ opacity: 1 }, { opacity: 1, offset: .45 }, { opacity: 0, transform: 'scale(.55)' }], { duration: 420, easing: ease, fill: 'forwards' });
+      check.animate([{ opacity: 0, strokeDashoffset: 1 }, { opacity: 1, strokeDashoffset: 1, offset: .2 }, { opacity: 1, strokeDashoffset: 0 }], { duration: 320, delay: 330, easing: ease, fill: 'forwards' });
+      setTimeout(function () {   // back to the two boxes, quietly
+        check.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 160, fill: 'forwards' });
+        front.animate([{ opacity: 0, transform: 'scale(.7)' }, { opacity: 1, transform: 'none' }], { duration: 220, delay: 120, easing: ease, fill: 'forwards' });
+        back.animate([{ opacity: 0, transform: 'scale(.7)' }, { opacity: 1, transform: 'none' }], { duration: 220, delay: 120, easing: ease, fill: 'forwards' }).onfinish = done;
+      }, 1500);
+    }, true);
+  })();
   document.addEventListener('click', function (e) { var m = e.target.closest && e.target.closest('[data-mailto]'); if (!m) return; e.preventDefault(); FSX.mailTo(m.getAttribute('data-mailto')); }, true);
   window.addEventListener('fs:notis', function (e) { notePop((e.detail && e.detail.added) || []); });
   window.addEventListener('fs:ready', function () { setTimeout(function () { if (window.FSD) notePop(window.FSD.NT || []); }, 600); });
