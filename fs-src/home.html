@@ -1490,6 +1490,9 @@
   .ti-yay > i:nth-of-type(5) { --x: -28px; --y: 20px; } .ti-yay > i:nth-of-type(6) { --x: -30px; --y: -14px; } .ti-yay > i:nth-of-type(7) { --x: -4px; --y: -34px; } .ti-yay > i:nth-of-type(8) { --x: 18px; --y: -38px; }
   @keyframes tiBurst { 0% { opacity: 1; transform: translate(-50%, -50%) scale(.4); } 100% { opacity: 0; transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) scale(1) rotate(160deg); } }
   .ti-file.sent { animation: tiIn2 .32s cubic-bezier(.2, .8, .2, 1) backwards; animation-delay: calc(.25s + var(--i, 0) * 70ms); }
+  /* a turned-in file is plain until you point at it */
+  .ti-file.sent { background: transparent; transition: background-color .15s ease; }
+  .ti-file.sent:hover, .ti-file.sent:focus-within { background: var(--panel); }
   .ti-done > svg.i { animation: tiPop .4s cubic-bezier(.34, 1.4, .64, 1) .2s backwards; }
   .ti-yay ~ .ti-done { display: none; }  /* the big check already says it */
   .potato-mode :is(.ti-scrim, .ti-pop, .ti-row, .ti-drop, .ti-drop svg.i, .ti-add svg.i, .ti-pk, .ti-prog i, .ti-file, .ti-st, .ti-swap, .ti-foot .btn, .ti-yay, .ti-yay *, .ti-done svg, .ti-head .ktile, .ti-hl, .ti-x svg, .ti-close svg) { animation: none !important; transition: none !important; }
