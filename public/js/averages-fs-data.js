@@ -349,6 +349,7 @@
       };
     }), { openAll: function () { var b = document.getElementById('ntBtn'); if (b) b.click(); } });
   }
+  document.addEventListener('click', function (e) { var m = e.target.closest && e.target.closest('[data-mailto]'); if (!m) return; e.preventDefault(); FSX.mailTo(m.getAttribute('data-mailto')); }, true);
   window.addEventListener('fs:notis', function (e) { notePop((e.detail && e.detail.added) || []); });
   window.addEventListener('fs:ready', function () { setTimeout(function () { if (window.FSD) notePop(window.FSD.NT || []); }, 600); });
   window.addEventListener('fs:ready', function () {
@@ -662,6 +663,22 @@
       return u + (qs.length ? '?' + qs.join('&') : '') + (hash ? '#' + String(hash).replace(/^#/, '') : '');
     },
     go: function (p, params, hash) { window.location.href = FSX.url(p, params, hash); },
+    /** Everyone whose school email we know: your teachers (from Schoology's profiles) and people you added (from the
+     *  can-message check). [{ id, name, email }], each once. For "email <name>" in search. */
+    emails: function () {
+      var out = [], have = {}, D = window.FSD || {};
+      var add = function (id, name, email) { id = String(id); if (!email || have[id] || !/^[^\s@<>]+@[^\s@<>]+\.[A-Za-z]{2,}$/.test(email)) return; have[id] = 1; out.push({ id: id, name: String(name || email).slice(0, 120), email: String(email).slice(0, 254), photo: '' }); };
+      ((D.people && D.people.CONTACTS) || []).forEach(function (c) { add(c.id, c.name, c.email); });
+      var dir = FSX.lget('fsct_dir') || {}, added = FSX.lget('fsct_added') || [], can = FSX.lget('fsct_can') || {};
+      (Array.isArray(added) ? added : []).forEach(function (id) { var v = can[String(id)]; if (v && v.e) add(id, dir[String(id)], v.e); });
+      return out;
+    },
+    /** Opens a new email to them in the student's mail app (Gmail in a new tab when Gmail handles mailto links). */
+    mailTo: function (email) {
+      if (!/^[^\s@<>]+@[^\s@<>]+\.[A-Za-z]{2,}$/.test(String(email || ''))) return;
+      var w = window.open('mailto:' + encodeURIComponent(email).replace(/%40/g, '@'), '_blank', 'noopener');
+      if (!w) window.location.href = 'mailto:' + encodeURIComponent(email).replace(/%40/g, '@');
+    },
     people: function () {
       var D = window.FSD || {}, out = [], have = {}, cname = function (id) { return D.C && D.C[id] ? D.C[id].name : ''; };
       ((D.people && D.people.CONTACTS) || []).forEach(function (p) {

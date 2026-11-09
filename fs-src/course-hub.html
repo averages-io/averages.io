@@ -4661,7 +4661,8 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const fit = (want, hay) => { const have = words(hay); let n = 0; for (const w of want) { if (!have.some(h => h.startsWith(w))) return 0; n += have.includes(w) ? 2 : 1; } return n; };
   const best = (list, want, hay, n = 3) => list.map(x => [x, fit(want, hay(x))]).filter(p => p[1]).sort((a, b) => b[1] - a[1]).slice(0, n).map(p => p[0]);
   const HCMD = [
-    { k: 'msg',    re: /^(message|msg|email|e mail|text|contact|write to|write|ask|talk to)\b/, alias: ['message', 'email', 'contact'] },
+    { k: 'email',  re: /^(email|e-mail|e mail|mail)\b/, alias: ['email'] },
+    { k: 'msg',    re: /^(message|msg|text|contact|write to|write|ask|talk to)\b/, alias: ['message', 'contact'] },
     { k: 'turnin', re: /^(turn in|turnin|submit|upload|hand in)\b/, alias: ['turn in', 'submit', 'upload', 'hand in'] },
     { k: 'whatif', re: /^(what if|whatif)\b/, alias: ['what if'] },
     { k: 'proj',   re: /^(projected|projection|predicted|prediction)\b/, alias: ['projected grade', 'predicted grade'] },
@@ -4671,6 +4672,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   ];
   const todo = () => MATERIALS.filter(m => FSD.canTurnIn(m) && !m.turned && m.got == null);
   const GEN = {
+    email:  () => ({ attrs: 'data-cmd="emailpick"', lead: ico('mail'), t: 'Email someone', sub: 'Teachers whose school email Schoology shares' }),
     msg:    () => ({ attrs: `data-cmd="msg:${ME.id}:"`, lead: ico('msg'), t: `Message ${TNAME}`, sub: `${ME.name} · New message` }),
     turnin: () => { const n = todo().length; return { attrs: 'data-cmd="turnin:"', lead: ico('upload'), t: 'Turn in an assignment', sub: n ? `${n} to turn in` : 'Nothing left to turn in' }; },
     whatif: () => ({ attrs: `data-whatif="${ME.id}"`, lead: ico('calc'), t: 'What-if grades', sub: `Try a score in ${ME.name} before you get it back` }),
@@ -4692,7 +4694,12 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       }
       target = rest;
       const want = words(rest), miss = (k, what) => acts.push(Object.assign(GEN[k](), { miss: true, sub: `No ${what} matches "${rest}". Pick from the list` }));
-      if (cmd.k === 'msg') {
+      if (cmd.k === 'email') {
+        // "email ..." opens a new email to someone whose school email Schoology shares (FSX.emails)
+        const list = FSX.emails ? FSX.emails() : [], hits = want.length ? best(list, want, x => `${x.name} ${x.email}`, 5) : list.slice(0, 5);
+        hits.forEach(x => acts.push({ attrs: `data-mailto="${esc(x.email)}"`, lead: FSX.personAv(x), t: `Email ${x.name}`, sub: x.email }));
+        if (!hits.length) acts.push(Object.assign(GEN.email(), { miss: true, sub: want.length ? `No school email for "${rest}". Schoology only shares some people's emails` : 'No school emails yet. Schoology only shares some people\'s emails' }));
+      } else if (cmd.k === 'msg') {
         if (!want.length) acts.push(Object.assign(GEN.msg(), about ? { attrs: `data-cmd="msg:${ME.id}:${esc(encodeURIComponent(about))}"`, sub: `${ME.name} · Subject: ${about}` } : {}));
         else { const hits = best(CLASSES.filter(c => c.teacher), want, c => `${c.teacher} ${c.name}`);
           hits.forEach(c => acts.push({ attrs: `data-cmd="msg:${c.id}:${esc(encodeURIComponent(about))}"`, lead: badge(c), t: `Message ${c.teacher}`, sub: about ? `${c.name} · Subject: ${about}` : `${c.name} · New message` }));
@@ -7092,7 +7099,7 @@ window.AveragesHelp = {
     const first = p.teacher ? (p.name || ME.teacher || 'your teacher') : p.first;
     const back = `<button class="btn sm mb-back" data-mbback>${ico('chev-l')}All members</button>`;
     const hero = `<div class="mb-hero">${mbAva(p, true)}<div class="tx"><h3>${esc(p.name)}</h3><small>${p.teacher ? '<span class="mb-role tch">Teacher</span>' : p.me ? '<span class="mb-role">You</span>' : '<span class="mb-role">Student</span>'}${esc(ME.name)}${ME.hasPeriod ? ' · Period ' + ME.period : ''}</small></div>
-      <div class="mb-acts">${p.me ? `<button class="btn" data-toast="your profile settings">${ico('user')}Edit profile</button>` : p.teacher && (p.uid || ME.teacher) ? `<button class="btn" ${p.uid ? `data-hubmsgto="${esc(p.uid)}" data-name="${esc(p.name)}"` : 'data-hubmsg'}>${ico('msg')}Message ${esc(first)}</button>` : ''}</div></div>`;
+      <div class="mb-acts">${p.me ? `<button class="btn" data-toast="your profile settings">${ico('user')}Edit profile</button>` : (p.teacher && (p.uid || ME.teacher) ? `<button class="btn" ${p.uid ? `data-hubmsgto="${esc(p.uid)}" data-name="${esc(p.name)}"` : 'data-hubmsg'}>${ico('msg')}Message ${esc(first)}</button>` : '') + (p.uid ? `<button class="btn" data-go="${FSX.url('contacts', { person: p.uid })}">${ico('user')}Open contact</button>` : '')}</div></div>`;
     const card = (k, note) => `<${k === ME.id ? 'div' : 'button'} class="mb-cl"${k === ME.id ? '' : ` data-go="${FSX.hubUrl(k)}"`}>${badge(C[k])}<span class="tx"><b>${esc(C[k].name)}</b><small>${esc(C[k].teacher || '')}</small></span>${note ? `<em>${note}</em>` : ''}</${k === ME.id ? 'div' : 'button'}>`;
     const upRow = (u, text, sub) => `<button class="mb-it" data-upgo="${u.id}"><span class="badge" style="--c:${ME.color}" aria-hidden="true">${EMOJI_SVG[UP_KIND[u.kind][0]] || ''}</span><span class="tx"><b>${text}</b><small>${sub}</small></span>${ico('chev-r')}</button>`;
     const upText = u => u.body || (u.poll ? u.poll.q : '');

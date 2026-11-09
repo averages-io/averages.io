@@ -3181,7 +3181,8 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const dueHay = d => `${d.t} ${C[d.c].name} ${C[d.c].short}`;
   const PAGES = () => SC.filter(x => x.g === 'pages').concat([{ label: 'Notifications', icon: 'bell', where: 'your notifications', kw: 'alerts', pop: 'notifs' }]);
   const CMD = [
-    { k: 'msg',     re: /^(message|msg|email|e mail|text|dm|contact|write to|write|ask|talk to)\b/, alias: ['message', 'email', 'contact'] },
+    { k: 'email',   re: /^(email|e-mail|e mail|mail)\b/, alias: ['email'] },
+    { k: 'msg',     re: /^(message|msg|text|dm|contact|write to|write|ask|talk to)\b/, alias: ['message', 'contact'] },
     { k: 'turnin',  re: /^(turn in|turnin|submit|upload|hand in)\b/, alias: ['turn in', 'submit', 'upload', 'hand in'] },
     { k: 'takes',   re: /^(what it takes|what does it take|what do i need|points needed)\b/, alias: ['what it takes', 'points needed'] },
     { k: 'whatif',  re: /^(what if|whatif)\b/, alias: ['what if'] },
@@ -3194,6 +3195,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     const late = DUE.filter(d => d.k === 'late').length;
     return {
       msg:     { attrs: 'data-go="teachers"', icon: 'msg', t: 'Message a teacher', sub: 'Pick who to write to' },
+      email:   { attrs: 'data-act="openpage" data-arg="page:Contacts"', icon: 'mail', t: 'Email someone', sub: 'Teachers whose school email Schoology shares' },
       turnin:  { attrs: 'data-go="turnin"', icon: 'upload', t: 'Turn in an assignment', sub: 'Pick one to open its assignment page' },
       whatif:  { attrs: 'data-go="whatif"', icon: 'calc', t: 'What-if grades', sub: 'Try a score before you get it back' },
       takes:   { attrs: 'data-act="details" data-arg="takes"', icon: 'chart', t: 'What it takes', sub: 'Points needed for each grade' },
@@ -3220,7 +3222,12 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       target = rest;
       const want = words(rest);
       const none = (k, what) => { const g = genCmd(k); acts.push(Object.assign({}, g, { miss: true, sub: `No ${what} matches "${rest}". Pick from the list` })); };
-      if (cmd.k === 'msg') {
+      if (cmd.k === 'email') {
+        // "email ..." opens a new email to someone whose school email Schoology shares (FSX.emails)
+        const list = FSX.emails ? FSX.emails() : [], hits = want.length ? best(list, want, x => `${x.name} ${x.email}`) : list.slice(0, 5);
+        hits.forEach(x => acts.push({ attrs: `data-mailto="${esc(x.email)}"`, icon: 'mail', t: `Email ${x.name}`, sub: x.email }));
+        if (!hits.length) acts.push(Object.assign({}, genCmd('email'), { miss: true, sub: want.length ? `No school email for "${rest}". Schoology only shares some people's emails` : 'No school emails yet' }));
+      } else if (cmd.k === 'msg') {
         if (!want.length) acts.push(genCmd('msg'));
         else {
           const hits = best(CLASSES, want, classHay);
@@ -5179,14 +5186,19 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       html += `<div class="s-tip">${ico('bolt')}<span>Or type a command, like <b>message ${esc(FSD.exampleTeacher)}</b> or <b>open grades</b></span></div>`;
     } else {
       // "message ..." picks a teacher; "open ..." or "go to ..." is the same as typing the name
-      const m = q.match(/^(message|msg|email|text|write to|ask)\b\s*(.*)$/i), o = q.match(/^(open|go to|goto|show)\b\s*(.*)$/i), qq = o ? o[2] : q;
+      const em = q.match(/^(email|e-mail|e mail|mail)\b\s*(.*)$/i);
+      // "email ..." picks someone whose school email Schoology shares, and opens a new email to them
+      if (em) { const hits = (FSX.emails ? FSX.emails() : []).filter(x => !em[2].trim() || chit(em[2], x.name + ' ' + x.email)).slice(0, 5);
+        html += `<div class="lbl">Email</div>` + (hits.length ? hits.map(x => crow(`data-mailto="${esc(x.email)}"`, FSX.personAv(x), `Email ${cmark(x.name, em[2])}`, x.email, ' s-cmd')).join('')
+          : `<div class="cmdk-empty">No school email for "${esc(em[2])}". Schoology only shares some people's emails.</div>`); }
+      const m = !em && q.match(/^(message|msg|text|write to|ask)\b\s*(.*)$/i), o = q.match(/^(open|go to|goto|show)\b\s*(.*)$/i), qq = o ? o[2] : q;
       if (m) { const ts = CLASSES.filter(c => !m[2].trim() || chit(m[2], c.teacher + ' ' + c.name)); html += `<div class="lbl">Actions</div>` + (ts.length ? ts : CLASSES).slice(0, 3).map(c => crow(`data-cmdkmsg="${c.id}"`, badge(c), `Message ${esc(c.teacher)}`, `${c.name} · New message`, ' s-cmd')).join(''); }
-      const here = !m && typeof window.CMDK_HERE === 'function' ? window.CMDK_HERE(qq) : null;
+      const here = !m && !em && typeof window.CMDK_HERE === 'function' ? window.CMDK_HERE(qq) : null;
       if (here && here.rows.length) html += `<div class="lbl">${esc(here.label)}</div>` + here.rows.slice(0, 5).map(r => crow(`data-cmdkgo="${esc(r.key)}"`, r.lead, r.t, r.sub)).join('');
-      const cs = m ? [] : CLASSES.filter(c => chit(qq, c.name + ' ' + c.teacher)); if (cs.length) html += `<div class="lbl">Classes</div>` + cs.map(c => cclass(c, qq)).join('');
-      const pp = m || !FSX.people ? [] : FSX.people().filter(x => chit(qq, x.name)).slice(0, 5); if (pp.length) html += `<div class="lbl">People</div>` + pp.map(x => crow(`data-go="${FSX.url('contacts', { person: x.id })}"`, FSX.personAv(x), cmark(x.name, qq), x.sub)).join('');
-      const ps = m ? [] : GO_PAGES.filter(([p]) => chit(qq, p)); if (ps.length) html += `<div class="lbl">Go to</div>` + ps.map(page).join('');
-      if (HERE && !m) html += crow(`data-cmdkhere="${esc(qq)}"`, ico('search'), `Search ${esc(HERE)} for "${esc(qq)}"`, 'Just this page', ' s-cmd');
+      const cs = m || em ? [] : CLASSES.filter(c => chit(qq, c.name + ' ' + c.teacher)); if (cs.length) html += `<div class="lbl">Classes</div>` + cs.map(c => cclass(c, qq)).join('');
+      const pp = m || em || !FSX.people ? [] : FSX.people().filter(x => chit(qq, x.name)).slice(0, 5); if (pp.length) html += `<div class="lbl">People</div>` + pp.map(x => crow(`data-go="${FSX.url('contacts', { person: x.id })}"`, FSX.personAv(x), cmark(x.name, qq), x.sub)).join('');
+      const ps = m || em ? [] : GO_PAGES.filter(([p]) => chit(qq, p)); if (ps.length) html += `<div class="lbl">Go to</div>` + ps.map(page).join('');
+      if (HERE && !m && !em) html += crow(`data-cmdkhere="${esc(qq)}"`, ico('search'), `Search ${esc(HERE)} for "${esc(qq)}"`, 'Just this page', ' s-cmd');
       if (!html) html = `<div class="cmdk-empty">Nothing for "${esc(q)}". Try a class, a page, or a command like "message ${esc(FSD.exampleTeacher)}".</div>`;
     }
     res.innerHTML = html; const f = res.querySelector('.mi'); if (f) f.classList.add('sel');
