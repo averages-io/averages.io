@@ -192,7 +192,7 @@
     .catch(function () { /* API unreachable: stay */ });
 
   // ---------- the maintenance banner (Martin's design, 2026-11-09): along the bottom of every page while the
-  // maintenance-banner switch is on, with the API's message and a link to api.averages.io/status. × hides it for this
+  // maintenance-banner switch is on (forced), or while the API's 15-minute check finds something down (automatic), with the API's message and a link to api.averages.io/status. × hides it for this
   // tab (until the message changes); the same choice as Windowed's banner (averages_banner_x:<message>).
   function maintBanner(msg) {
     var run = function () {
@@ -207,7 +207,7 @@
         st.textContent = '#fsMaint{position:fixed;left:0;right:0;bottom:0;z-index:2147483000;display:flex;align-items:center;gap:18px;min-height:76px;padding:14px 20px 14px 112px;background:rgba(176,121,24,.9);color:#fff;font:600 15px/1.35 var(--font,system-ui),system-ui,sans-serif;box-shadow:0 -10px 30px rgba(0,0,0,.25);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);animation:fsMaintIn .35s cubic-bezier(.2,.8,.2,1) both}'
           + '#fsMaint .fm-ic{position:absolute;left:16px;bottom:10px;width:82px;height:74px;filter:drop-shadow(0 4px 10px rgba(0,0,0,.25))}'
           + '#fsMaint .fm-tx{flex:1;min-width:0}#fsMaint .fm-tx b{display:block;font-weight:700}#fsMaint .fm-tx a{color:#fff;text-decoration:underline;text-underline-offset:2px}'
-          + '#fsMaint button{flex:none;width:40px;height:40px;border:0;border-radius:10px;background:rgba(255,255,255,.14);color:#fff;font:700 20px/1 system-ui,sans-serif;cursor:pointer}#fsMaint button:hover{background:rgba(255,255,255,.24)}'
+          + '#fsMaint button{flex:none;display:grid;place-items:center;padding:0;width:40px;height:40px;border:0;border-radius:10px;background:rgba(255,255,255,.14);color:#fff;font:700 20px/1 system-ui,sans-serif;cursor:pointer}#fsMaint button:hover{background:rgba(255,255,255,.24)}'
           + '#fsMaint button:focus-visible,#fsMaint a:focus-visible{outline:2px solid #fff;outline-offset:2px}'
           + '@keyframes fsMaintIn{from{transform:translateY(100%)}}'
           + '@media (max-width:640px){#fsMaint{padding-left:76px;font-size:14px}#fsMaint .fm-ic{width:52px;height:47px;left:12px;bottom:14px}}'
@@ -218,7 +218,7 @@
       el.id = 'fsMaint'; el.setAttribute('role', 'status'); el.dataset.text = msg;
       el.innerHTML = '<svg class="fm-ic" viewBox="0 0 88 80" aria-hidden="true"><path d="M38.3 6.6a6.6 6.6 0 0 1 11.4 0l35.6 61.6A6.6 6.6 0 0 1 79.6 78H8.4a6.6 6.6 0 0 1-5.7-9.8z" fill="#ffc21a"/><rect x="39.5" y="24" width="9" height="30" rx="4.5" fill="#14151f"/><circle cx="44" cy="64" r="5.2" fill="#14151f"/></svg>'
         + '<div class="fm-tx"><b></b>See <a href="https://api.averages.io/status" target="_blank" rel="noopener">api.averages.io/status</a> for more info.</div>'
-        + '<button type="button" aria-label="Hide this message">×</button>';
+        + '<button type="button" aria-label="Hide this message"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" style="display:block"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/></svg></button>';   // a drawn X: the × character sat off-center
       el.querySelector('b').textContent = msg;
       el.querySelector('button').addEventListener('click', function () {
         try { sessionStorage.setItem('averages_banner_x:' + msg, '1'); } catch (e) { /* storage off */ }

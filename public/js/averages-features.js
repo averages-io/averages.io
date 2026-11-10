@@ -73,7 +73,7 @@
     return out.join(' { display: none !important; }\n') + ' { display: none !important; }\n'
       + '.avf-banner{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:2147483000;display:flex;align-items:center;gap:12px;max-width:min(640px,calc(100vw - 32px));padding:10px 10px 10px 16px;border-radius:14px;background:#14151f;color:#fff;font:700 13px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.3)}'
       + '.avf-banner svg{flex:none;width:18px;height:18px}'
-      + '.avf-banner button{flex:none;width:28px;height:28px;border:0;border-radius:8px;background:rgba(255,255,255,.12);color:#fff;font:700 16px/1 sans-serif;cursor:pointer}'
+      + '.avf-banner button{flex:none;display:grid;place-items:center;padding:0;width:28px;height:28px;border:0;border-radius:8px;background:rgba(255,255,255,.12);color:#fff;font:700 16px/1 sans-serif;cursor:pointer}'
       + '.avf-banner.toast{bottom:auto;top:16px}'
       + '.avf-page{position:fixed;inset:0;z-index:2147482000;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(20,21,31,.55);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}'
       + '.avf-card{max-width:420px;width:100%;padding:28px 24px;border-radius:20px;background:#fff;color:#14151f;text-align:center;font:600 14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;box-shadow:0 20px 50px rgba(0,0,0,.3)}'
@@ -108,7 +108,9 @@
   function dismissedKey(text) { return 'averages_banner_x:' + text; }
   function banner() {
     const old = document.getElementById('avfBanner');
-    const msg = state.maintenance && on('maintenance-banner') ? String(state.maintenance.message || '') : '';
+    // The API sends a message while the maintenance-banner switch is on (forced, its own message) or, with it off,
+    // while its 15-minute check finds something down (automatic, 2026-11-10). Either way it shows.
+    const msg = state.maintenance ? String(state.maintenance.message || '') : '';
     let gone = false;
     try { gone = !!msg && sessionStorage.getItem(dismissedKey(msg)) === '1'; } catch { /* storage off */ }
     if (!msg || gone) { if (old) old.remove(); return; }
@@ -119,7 +121,7 @@
     el.className = 'avf-banner';
     el.setAttribute('role', 'status');
     el.dataset.text = msg;
-    el.innerHTML = WARN + '<span></span><button type="button" aria-label="Dismiss">×</button>';
+    el.innerHTML = WARN + '<span></span><button type="button" aria-label="Dismiss"><svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true" style="display:block"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/></svg></button>';
     el.querySelector('span').textContent = msg;
     el.querySelector('button').addEventListener('click', () => {
       try { sessionStorage.setItem(dismissedKey(msg), '1'); } catch { /* storage off */ }
@@ -163,7 +165,7 @@
       const el = document.createElement('div');
       el.className = 'avf-banner toast';
       el.setAttribute('role', 'status');
-      el.innerHTML = WARN + '<span></span><button type="button" aria-label="Dismiss">×</button>';
+      el.innerHTML = WARN + '<span></span><button type="button" aria-label="Dismiss"><svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true" style="display:block"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/></svg></button>';
       el.querySelector('span').textContent = NAMES[key] + ' turned off right now.';
       el.querySelector('button').addEventListener('click', () => el.remove());
       document.body.appendChild(el);
