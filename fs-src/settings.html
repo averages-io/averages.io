@@ -4230,9 +4230,9 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
                 ['recap', 'Weekly recap', 'A Sunday summary on Home: what you turned in, new grades and what\'s due next week.']];
   const startOf = v => STARTS.find(x => x[0] === v) || STARTS[0];
   const startNow = () => startOf(optGet().openTo)[0];
-  const PLANS = { plus: { t: 'Averages Plus', pr: '$2.99 a month' }, free: { t: 'Free', pr: '' } };
+  const PLANS = { plus: { t: 'Averages Plus', pr: '$1.99 a month plus tax' }, free: { t: 'Free', pr: '' } };   // $1.99 + tax (2026-11-10, Martin)
   // What Plus costs, from GET /billing/status's price ({ amount in cents, currency, interval, intervalCount }),
-  // in the student's own currency: "$2.99 a month", "€34.99 a year". Empty when Stripe hasn't said yet.
+  // in the student's own currency: "$1.99 a month", "€34.99 a year". Empty when Stripe hasn't said yet.
   function priceText(p) {
     if (typeof p === 'string') return p;
     if (!p || typeof p.amount !== 'number' || !p.currency) return '';
