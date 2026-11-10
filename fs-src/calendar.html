@@ -3932,7 +3932,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       if (c.roundRect) c.roundRect(0, 0, w, h, h / 2); else { c.arc(h / 2, h / 2, h / 2, Math.PI / 2, Math.PI * 1.5); c.arc(w - h / 2, h / 2, h / 2, -Math.PI / 2, Math.PI / 2); c.closePath(); }
       c.fill();
       c.font = `${cs.fontStyle} ${cs.fontWeight} ${size}px ${cs.fontFamily}`; c.fillStyle = cs.color; c.textBaseline = 'alphabetic';
-      c.fillText(t, w / 2 - ink.cx * size, h / 2 - ink.mid * size);
+      { const tx = w / 2 - ink.cx * size, ty = h / 2 - ink.mid * size, nd = window.FSX && FSX.inkNudge ? FSX.inkNudge(t, c.font, tx, ty, w, h, dpr) : [0, 0]; c.fillText(t, tx + nd[0], ty + nd[1]); }
     });
   }
   let inkDpr = window.devicePixelRatio;
@@ -4118,7 +4118,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       const cv = el.querySelector('canvas.ink'), w = el.clientWidth, h = el.clientHeight, size = parseFloat(cs.fontSize);
       cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); cv.style.width = w + 'px'; cv.style.height = h + 'px';
       const c = cv.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0); c.font = `${cs.fontStyle} ${cs.fontWeight} ${size}px ${cs.fontFamily}`; c.fillStyle = cs.color; c.textBaseline = 'alphabetic';
-      c.fillText(t, w / 2 - ink.cx * size, h / 2 - ink.mid * size);
+      { const tx = w / 2 - ink.cx * size, ty = h / 2 - ink.mid * size, nd = window.FSX && FSX.inkNudge ? FSX.inkNudge(t, c.font, tx, ty, w, h, dpr) : [0, 0]; c.fillText(t, tx + nd[0], ty + nd[1]); }
     });
   }
   function mpPill(group, animate) {

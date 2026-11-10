@@ -3987,7 +3987,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       if (c.roundRect) c.roundRect(0, 0, w, h, h / 2); else { c.arc(h / 2, h / 2, h / 2, Math.PI / 2, Math.PI * 1.5); c.arc(w - h / 2, h / 2, h / 2, -Math.PI / 2, Math.PI / 2); c.closePath(); }
       c.fill();
       c.font = `${cs.fontStyle} ${cs.fontWeight} ${size}px ${cs.fontFamily}`; c.fillStyle = cs.color; c.textBaseline = 'alphabetic';
-      c.fillText(t, w / 2 - ink.cx * size, h / 2 - ink.mid * size);
+      { const tx = w / 2 - ink.cx * size, ty = h / 2 - ink.mid * size, nd = window.FSX && FSX.inkNudge ? FSX.inkNudge(t, c.font, tx, ty, w, h, dpr) : [0, 0]; c.fillText(t, tx + nd[0], ty + nd[1]); }
     });
   }
   let inkDpr = window.devicePixelRatio;
@@ -4357,7 +4357,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
         `<div class="sg-row wrapr" data-set="accent">${tx('Accent color', 'Buttons, highlights and the page you\'re on.')}<div class="sg-sws" role="group" aria-label="Accent color">${ACCENTS.map(([k, n, c]) => `<button class="sg-swb" style="--c:${c}" data-accent="${k}" aria-pressed="${SG.accent === k}" aria-label="${n}" title="${n}">${ico('ok')}</button>`).join('')}</div></div>`)}
       ${grp('Speed',
         tog('potato', 'Potato mode', 'Turns off animation and effects and uses the system font. Good for Chromebooks and older computers.', potato) +
-        row('motion', 'Reduce motion', 'Follows your device\'s setting. Potato mode turns off motion too.', `<span class="val">${rm ? 'On' : 'Off'}</span>`) +
+        row('motion', 'Reduce motion', potato ? 'On because Potato mode is on. Otherwise it follows your device\'s setting.' : 'Follows your device\'s setting. Potato mode turns off motion too.', `<span class="val">${rm || potato ? 'On' : 'Off'}</span>`) +
         tog('previews', 'File previews', 'Small previews of images and PDFs in Files and your courses.', SG.previews) +
         row('cache', 'Saved on this device', cacheKB() ? `${cacheTxt()}, so pages open faster.` : 'Nothing saved right now.', btn('cache', cacheKB() ? 'Clear' : 'Cleared', cacheKB() ? '' : ' disabled')))}`;
     },
@@ -4931,7 +4931,11 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
         const on = document.body.classList.toggle('potato-mode'); store.set('fsmock_potato', on);
         if (typeof inkMemo !== 'undefined' && typeof centerInk === 'function') { inkMemo.clear(); centerInk(); }
         if (typeof marquee === 'function') marquee(true);
-        t.setAttribute('aria-checked', on); t.querySelector('.sw').classList.toggle('on', on); sgNav(); toast(on ? 'Potato mode on' : 'Potato mode off'); return;
+        t.setAttribute('aria-checked', on); t.querySelector('.sw').classList.toggle('on', on); sgNav(); toast(on ? 'Potato mode on' : 'Potato mode off');
+        // Reduce motion says On while Potato mode is on (it turns motion off too)
+        const mr = $('sgPane').querySelector('[data-set="motion"]');
+        if (mr) { const v = mr.querySelector('.val'), d = mr.querySelector('small, p, .sg-sub'); if (v) v.textContent = on || matchMedia('(prefers-reduced-motion: reduce)').matches ? 'On' : 'Off'; if (d) d.textContent = on ? 'On because Potato mode is on. Otherwise it follows your device\'s setting.' : 'Follows your device\'s setting. Potato mode turns off motion too.'; }
+        return;
       }
       if (k === 'notif' && !SG.notif) { notifConsent(); return; }
       if (k === 'notif') { window.AveragesPush.disable().then(() => { SG.notif = false; SGV.flip = 'notif'; redraw(); toast('Browser notifications are off. We deleted your saved sign-in.'); }); return; }

@@ -3153,6 +3153,16 @@
         const full = opt.dataset.shape === 'fullscreen';
         saveSettingsOption('windowType', full ? 'fullscreen' : 'windowed');
         if (full) {
+          // Fullscreen starts on its default red (2026-11-09, Martin): a Windowed color isn't one of Fullscreen's seven,
+          // and some pages showed it while others showed red. The student can pick another in Fullscreen's Settings.
+          try {
+            const ap = JSON.parse(localStorage.getItem(AVERAGES_APPEARANCE_KEY) || '{}') || {};
+            ap.accent = '#b8352f';
+            localStorage.setItem(AVERAGES_APPEARANCE_KEY, JSON.stringify(ap));
+            const fs = JSON.parse(localStorage.getItem('fsset') || '{}') || {};
+            fs.accent = 'punch';
+            localStorage.setItem('fsset', JSON.stringify(fs));
+          } catch (e) {}
           try { sessionStorage.removeItem('averages_fs_off'); sessionStorage.setItem('averages_fs_logo', String(Date.now())); } catch (e) {}
           if (window.__averagesSplash && window.__averagesSplash.show) window.__averagesSplash.show(4000);
           const goFs = () => { window.location.replace('/IS/settings'); };

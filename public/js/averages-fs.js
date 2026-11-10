@@ -82,6 +82,15 @@
     root.style.setProperty('--accent', c[0]);
     root.style.setProperty('--accent-hover', c[1]);
   }
+  // One of Fullscreen's seven colors, or its default red: a Windowed color (from a background, say) showed on some
+  // pages and not others (2026-11-09, Martin: "force choose the default red"). Saved, so every page agrees.
+  if (accentKey() === 'custom') {
+    var apx = json('schoolagy_appearance') || {};
+    apx.accent = ACCENTS.punch[0];
+    put('schoolagy_appearance', JSON.stringify(apx));
+    var fsx = json('fsset') || {}; fsx.accent = 'punch'; put('fsset', JSON.stringify(fsx));
+    window.__fsAccentReset = true;   // averages-fs-data.js sends it to Sync once the page is ready
+  }
   applyAccent(accentKey());
 
   // ---------- the student's own choices, in the keys the pages read ----------
@@ -171,8 +180,67 @@
   var fchk = 0; try { fchk = +sessionStorage.getItem('averages_fs_featchk') || 0; } catch (e) {}
   if (!(Date.now() - fchk < 300000 && Date.now() >= fchk)) fetch(API + '/config/features', { credentials: 'include', cache: 'no-store' })
     .then(function (r) { return r.ok ? r.json() : null; })
-    .then(function (j) { if (j && j.features) { try { sessionStorage.setItem('averages_fs_featchk', String(Date.now())); } catch (e) {} } if (j && j.features && j.features.fullscreen === false) off(); })
+    .then(function (j) {
+      if (j && j.features) {
+        try { sessionStorage.setItem('averages_fs_featchk', String(Date.now())); } catch (e) {}
+        var msg = j.maintenance && typeof j.maintenance.message === 'string' ? j.maintenance.message.trim().slice(0, 300) : '';
+        try { sessionStorage.setItem('averages_fs_maint', msg); } catch (e) {}
+        maintBanner(msg);
+      }
+      if (j && j.features && j.features.fullscreen === false) off();
+    })
     .catch(function () { /* API unreachable: stay */ });
+
+  // ---------- the maintenance banner (Martin's design, 2026-11-09): along the bottom of every page while the
+  // maintenance-banner switch is on, with the API's message and a link to api.averages.io/status. × hides it for this
+  // tab (until the message changes); the same choice as Windowed's banner (averages_banner_x:<message>).
+  function maintBanner(msg) {
+    var run = function () {
+      if (msg !== maintWant) return;   // a newer answer came in while this one waited for the page
+      var old = document.getElementById('fsMaint'), gone = false;
+      try { gone = !!msg && sessionStorage.getItem('averages_banner_x:' + msg) === '1'; } catch (e) { /* storage off */ }
+      if (!msg || gone) { maintWant = ''; if (old) old.remove(); return; }
+      if (old && old.dataset.text === msg) return;
+      if (old) old.remove();
+      if (!document.getElementById('fsMaintCss')) {
+        var st = document.createElement('style'); st.id = 'fsMaintCss';
+        st.textContent = '#fsMaint{position:fixed;left:0;right:0;bottom:0;z-index:2147483000;display:flex;align-items:center;gap:18px;min-height:76px;padding:14px 20px 14px 112px;background:rgba(176,121,24,.9);color:#fff;font:600 15px/1.35 var(--font,system-ui),system-ui,sans-serif;box-shadow:0 -10px 30px rgba(0,0,0,.25);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);animation:fsMaintIn .35s cubic-bezier(.2,.8,.2,1) both}'
+          + '#fsMaint .fm-ic{position:absolute;left:16px;bottom:10px;width:82px;height:74px;filter:drop-shadow(0 4px 10px rgba(0,0,0,.25))}'
+          + '#fsMaint .fm-tx{flex:1;min-width:0}#fsMaint .fm-tx b{display:block;font-weight:700}#fsMaint .fm-tx a{color:#fff;text-decoration:underline;text-underline-offset:2px}'
+          + '#fsMaint button{flex:none;width:40px;height:40px;border:0;border-radius:10px;background:rgba(255,255,255,.14);color:#fff;font:700 20px/1 system-ui,sans-serif;cursor:pointer}#fsMaint button:hover{background:rgba(255,255,255,.24)}'
+          + '#fsMaint button:focus-visible,#fsMaint a:focus-visible{outline:2px solid #fff;outline-offset:2px}'
+          + '@keyframes fsMaintIn{from{transform:translateY(100%)}}'
+          + '@media (max-width:640px){#fsMaint{padding-left:76px;font-size:14px}#fsMaint .fm-ic{width:52px;height:47px;left:12px;bottom:14px}}'
+          + 'body.potato-mode #fsMaint{animation:none;-webkit-backdrop-filter:none;backdrop-filter:none;background:rgb(176,121,24)}@media (prefers-reduced-motion:reduce){#fsMaint{animation:none}}';
+        document.head.appendChild(st);
+      }
+      var el = document.createElement('div');
+      el.id = 'fsMaint'; el.setAttribute('role', 'status'); el.dataset.text = msg;
+      el.innerHTML = '<svg class="fm-ic" viewBox="0 0 88 80" aria-hidden="true"><path d="M38.3 6.6a6.6 6.6 0 0 1 11.4 0l35.6 61.6A6.6 6.6 0 0 1 79.6 78H8.4a6.6 6.6 0 0 1-5.7-9.8z" fill="#ffc21a"/><rect x="39.5" y="24" width="9" height="30" rx="4.5" fill="#14151f"/><circle cx="44" cy="64" r="5.2" fill="#14151f"/></svg>'
+        + '<div class="fm-tx"><b></b>See <a href="https://api.averages.io/status" target="_blank" rel="noopener">api.averages.io/status</a> for more info.</div>'
+        + '<button type="button" aria-label="Hide this message">×</button>';
+      el.querySelector('b').textContent = msg;
+      el.querySelector('button').addEventListener('click', function () {
+        try { sessionStorage.setItem('averages_banner_x:' + msg, '1'); } catch (e) { /* storage off */ }
+        maintWant = '';
+        el.remove();
+      });
+      document.body.appendChild(el);
+    };
+    maintWant = msg;
+    if (document.body) run(); else document.addEventListener('DOMContentLoaded', run, { once: true });
+    // a page that redraws its body as it starts took the banner with it: put it back (cheap: one lookup per change)
+    if (!maintMo && window.MutationObserver) {
+      var t = 0;
+      maintMo = new MutationObserver(function () {
+        if (!maintWant || t || document.getElementById('fsMaint')) return;
+        t = requestAnimationFrame(function () { t = 0; if (maintWant && !document.getElementById('fsMaint')) maintBanner(maintWant); });
+      });
+      maintMo.observe(document.documentElement, { childList: true, subtree: true });
+    }
+  }
+  var maintWant = '', maintMo = null;
+  try { maintBanner(sessionStorage.getItem('averages_fs_maint') || ''); } catch (e) { /* storage off */ }
   // Sign-in is checked by averages-fs-data.js, which loads the page's data.
 
   function avName() { var p = json('fsmock_profile2') || {}; return (typeof p.name === 'string' && p.name.trim()) || (window.FSD && window.FSD.me && window.FSD.me.name) || ''; }

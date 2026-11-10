@@ -2380,7 +2380,9 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   });
   // The projection starts from the most recent graded assignment, so its direction is latest score to projected grade
   // (a point or more either way), not the oldest score on the chart to the newest.
-  CLASSES.forEach(c => { const d = c.predictedPct - c.points[c.points.length - 1]; c.trend = d >= 1 ? 'up' : d <= -1 ? 'down' : 'flat'; });
+  // the arrow compares the prediction with the grade now (it used to compare with the last single score, so a higher
+  // prediction could show a down arrow, 2026-11-09)
+  CLASSES.forEach(c => { const d = c.predictedPct - c.pct; c.trend = d >= 0.5 ? 'up' : d <= -0.5 ? 'down' : 'flat'; });
   // Each class's grading categories, from its gradebook: name, weight %, your % (null: nothing graded yet), points so far.
   const CATS = FSD.CATS;
   CLASSES.forEach(c => { const s = courseSubject(c.name); c.emoji = s[1]; c.color = s[2]; });
@@ -2868,7 +2870,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       if (c.roundRect) c.roundRect(0, 0, w, h, h / 2); else { c.arc(h / 2, h / 2, h / 2, Math.PI / 2, Math.PI * 1.5); c.arc(w - h / 2, h / 2, h / 2, -Math.PI / 2, Math.PI / 2); c.closePath(); }
       c.fill();
       c.font = `${cs.fontStyle} ${cs.fontWeight} ${size}px ${cs.fontFamily}`; c.fillStyle = cs.color; c.textBaseline = 'alphabetic';
-      c.fillText(t, w / 2 - ink.cx * size, h / 2 - ink.mid * size);
+      { const tx = w / 2 - ink.cx * size, ty = h / 2 - ink.mid * size, nd = window.FSX && FSX.inkNudge ? FSX.inkNudge(t, c.font, tx, ty, w, h, dpr) : [0, 0]; c.fillText(t, tx + nd[0], ty + nd[1]); }
     });
   }
   let inkDpr = window.devicePixelRatio;
@@ -2898,7 +2900,11 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     store.set('fsmock_order', state.order);
   }
   function applySections() {
-    SECTIONS.forEach(([k, , id]) => { $(id).hidden = state.hidden.has(k); });
+    const shown = [];
+    SECTIONS.forEach(([k, , id]) => { const was = $(id).hidden; $(id).hidden = state.hidden.has(k); if (was && !$(id).hidden) shown.push(k); });
+    // a section drawn while hidden measured 0 tall (Course updates came back empty until a reload, 2026-11-09): draw again
+    const REDRAW = { updates: () => renderFeed(), due: () => renderDue(), messages: () => renderMessages(), drafts: () => renderDrafts() };
+    shown.forEach(k => { try { if (REDRAW[k]) REDRAW[k](); } catch (_) { /* drawn on the next refresh */ } });
     $('rail').dataset.n = ['due', 'drafts', 'quarter', 'updates', 'messages'].filter(k => !state.hidden.has(k)).length;
     $('rail').hidden = $('rail').dataset.n === '0';
     store.set('fsmock_hidden2', [...state.hidden]);
@@ -3761,11 +3767,10 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     clearTimeout(gpopT);
     if (!gpop) { gpop = document.createElement('div'); gpop.className = 'gpop'; gpop.setAttribute('role', 'tooltip'); gpop.id = 'gpop';
       gpop.addEventListener('mouseenter', () => clearTimeout(gpopT)); gpop.addEventListener('mouseleave', hideTrendSoon); document.body.appendChild(gpop); }
-    const lastPt = c.points[c.points.length - 1], lastDate = c.dates[c.dates.length - 1];
     gpop.innerHTML = `<h3>${esc(c.name)}</h3>
-      <p class="gsub">${TREND_WORD[c.trend]}: from your latest score, <strong>${lastPt}%</strong> on ${esc(lastDate)} ${arrowR} projected <strong>${c.predictedPct}%</strong> (${letter(c.predictedPct)}). Based on the pace of your last ${c.points.length} graded assignments.</p>
+      <p class="gsub">${TREND_WORD[c.trend]}: from your grade now, <strong>${c.pct.toFixed(1)}%</strong> ${arrowR} projected <strong>${c.predictedPct}%</strong> (${letter(c.predictedPct)}) after your next few assignments.</p>
       <div class="pbub" style="--c:${c.color}"><div class="pbub-h">${ico('chart')}If your recent scores hold</div>${gradeChart(c)}</div>
-      <p class="gfoot">The projection picks up from your most recent graded assignment. It is not a copy of the current grade.</p>`;
+      <p class="gfoot">Counts each score by its points and your class's category weights, and expects your next work at the level of your recent work. Your latest scores are below.</p>`;
     chip.setAttribute('aria-expanded', 'true'); chip.setAttribute('aria-describedby', 'gpop');
     gpop.classList.add('show');
     const r = chip.getBoundingClientRect(), g = gpop.getBoundingClientRect();

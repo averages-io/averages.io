@@ -423,6 +423,8 @@
   }
   ['fs:ready', 'fs:notis', 'fs:seen', 'fs:synced'].forEach(function (ev) { window.addEventListener(ev, function () { setTimeout(sideCounts, ev === 'fs:ready' ? 400 : 0); }); });
   window.addEventListener('storage', function (e) { if (e.key === 'averages_seen') sideCounts(); });
+  // a Windowed color was swapped for Fullscreen's red (averages-fs.js): the account's copy gets it too
+  window.addEventListener('fs:ready', function () { if (window.__fsAccentReset) { window.__fsAccentReset = false; setTimeout(function () { FSX.syncPush(); }, 2500); } });
   // the synced settings: on open, every 5 minutes, and when the tab comes back (FSX.syncPull)
   window.addEventListener('fs:ready', function () {
     setTimeout(function () { FSX.syncPull(); }, 1500);
@@ -912,8 +914,12 @@
             delete o.browserNotifications; if (mine !== undefined) o.browserNotifications = mine;
             changed = put('schoolagy_settings_options', JSON.stringify(o)) || changed;
           }
+          var redAgain = false;
           if (st.appearance && typeof st.appearance === 'object') {
             var ap = Object.assign({}, st.appearance);
+            // Fullscreen has seven colors: anything else (a Windowed one) comes in as its default red, and goes back up so
+            // every device agrees (same rule as averages-fs.js)
+            if (ap.accent && ['#b8352f', '#2f5fb3', '#2e7d4f', '#7a3fa0', '#b25600', '#0f7470', '#44465a'].indexOf(String(ap.accent).toLowerCase()) < 0) { ap.accent = '#b8352f'; redAgain = true; }
             if (pics[0] === undefined) { if (localAp && localAp.background != null) ap.background = localAp.background; else delete ap.background; } else ap.background = pics[0];
             changed = put('schoolagy_appearance', JSON.stringify(ap)) || changed;
           }
@@ -932,10 +938,37 @@
           if (JSON.stringify(fsset) !== before) { changed = true; try { LS.setItem('fsset', JSON.stringify(fsset)); } catch (e) { /* storage off */ } }
           FSX.lset('averages_sync_media', media);
           FSX.lset('schoolagy_sync_meta', { settingsUpdatedAt: stamp });
+          if (redAgain) FSX.syncPush();
           if (changed) try { window.dispatchEvent(new CustomEvent('fs:synced-settings')); } catch (e) { /* fine */ }
           return changed;
         });
       }).catch(function () { return false; }).then(function (x) { FSX._syncPulling = null; return x; }));
+    },
+    /**
+     * The last step of centering a count's number in its bubble (the pages' centerInk): draws it once where the
+     * measurement says, at this screen's own pixel size, looks where its ink really landed, and returns how far to
+     * move it [x, y] (CSS px) so its outline sits in the middle. The measurement alone came out a pixel right on
+     * some screens (2026-11-09: "none of the numbers in the bubbles seem to be centered").
+     */
+    inkNudge: function (text, font, x, y, w, h, dpr) {
+      var key = [text, font, x, y, w, h, dpr].join('|'), memo = FSX._inkNudge || (FSX._inkNudge = new Map());
+      if (memo.has(key)) return memo.get(key);
+      var out = [0, 0];
+      try {
+        var cv = FSX._inkCv || (FSX._inkCv = document.createElement('canvas')), W = Math.round(w * dpr), H = Math.round(h * dpr);
+        cv.width = W; cv.height = H;
+        var c = cv.getContext('2d', { willReadFrequently: true });
+        c.setTransform(dpr, 0, 0, dpr, 0, 0); c.font = font; c.fillStyle = '#000'; c.textBaseline = 'alphabetic'; c.fillText(text, x, y);
+        var d = c.getImageData(0, 0, W, H).data, L = W, R = -1, T = H, B = -1;
+        for (var yy = 0; yy < H; yy++) for (var xx = 0; xx < W; xx++) {
+          if (d[(yy * W + xx) * 4 + 3] < 128) continue;   // the solid part of the ink, not its soft edge
+          if (xx < L) L = xx; if (xx > R) R = xx; if (yy < T) T = yy; if (yy > B) B = yy;
+        }
+        if (R >= 0) out = [Math.round(W / 2 - (L + R + 1) / 2) / dpr, Math.round(H / 2 - (T + B + 1) / 2) / dpr];
+      } catch (e) { /* drawn where measured */ }
+      if (memo.size > 200) memo.clear();
+      memo.set(key, out);
+      return out;
     },
     schoology: function (path) { return 'https://' + schoologyHost() + (path || ''); },
     schoologyHost: schoologyHost,
