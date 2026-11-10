@@ -4,16 +4,15 @@
   const KEYS = [
     'canva-integration', 'onedrive-integration', 'drive-integration',
     'schoology-signin', 'test-signin',
-    'maintenance-banner', 'coursematerialpreview-feature',
+    'maintenance-banner',
     'turnin-feature', 'messaging-features', 'notifications-features',
     'billing', 'calendar-sync', 'live-grades', 'fullscreen',
   ];
-  const DEFAULTS = { 'maintenance-banner': false, 'coursematerialpreview-feature': false, billing: true, fullscreen: false };
+  const DEFAULTS = { 'maintenance-banner': false, billing: true, fullscreen: false };
   const NAMES = {
     'canva-integration': 'Canva is', 'onedrive-integration': 'OneDrive is', 'drive-integration': 'Google Drive is',
     'schoology-signin': 'Signing in with Schoology is',
     'test-signin': 'The reviewer account is',
-    'coursematerialpreview-feature': 'Previews are',
     'turnin-feature': 'Turning in work is', 'messaging-features': 'Messages is', 'notifications-features': 'Notifications are',
     billing: 'Averages Plus is',
     'calendar-sync': 'Calendar sync is',
