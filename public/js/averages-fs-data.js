@@ -959,12 +959,17 @@
         cv.width = W; cv.height = H;
         var c = cv.getContext('2d', { willReadFrequently: true });
         c.setTransform(dpr, 0, 0, dpr, 0, 0); c.font = font; c.fillStyle = '#000'; c.textBaseline = 'alphabetic'; c.fillText(text, x, y);
-        var d = c.getImageData(0, 0, W, H).data, L = W, R = -1, T = H, B = -1;
+        var d = c.getImageData(0, 0, W, H).data, L = W, R = -1, T = H, B = -1, sx = 0, sw = 0;
         for (var yy = 0; yy < H; yy++) for (var xx = 0; xx < W; xx++) {
-          if (d[(yy * W + xx) * 4 + 3] < 128) continue;   // the solid part of the ink, not its soft edge
+          var a = d[(yy * W + xx) * 4 + 3];
+          if (a) { sx += a * (xx + 0.5); sw += a; }
+          if (a < 128) continue;   // the solid part of the ink, not its soft edge
           if (xx < L) L = xx; if (xx > R) R = xx; if (yy < T) T = yy; if (yy > B) B = yy;
         }
-        if (R >= 0) out = [Math.round(W / 2 - (L + R + 1) / 2) / dpr, Math.round(H / 2 - (T + B + 1) / 2) / dpr];
+        // Across: halfway between the outline's middle and where the ink's weight is. The outline alone looked off for
+        // "11": a 1's thin flag widens its outline to the left, so its heavy stem sat right of center (2026-11-10).
+        // The weight alone pushed "17" the other way. Up and down: the outline (digits are all one height).
+        if (R >= 0) out = [Math.round(W / 2 - ((L + R + 1) / 2 + sx / sw) / 2) / dpr, Math.round(H / 2 - (T + B + 1) / 2) / dpr];
       } catch (e) { /* drawn where measured */ }
       if (memo.size > 200) memo.clear();
       memo.set(key, out);
