@@ -32,7 +32,7 @@ customize.
 
 ## Averages Plus
 
-Everything above is free. Averages Plus is optional, $2.99 a month, and adds:
+Everything above is free. Averages Plus is optional, $1.99 a month, and adds:
 
 - browser notifications for new grades, assignments, due dates, messages and
   announcements;
