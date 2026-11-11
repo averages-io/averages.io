@@ -4383,7 +4383,9 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
 
   const classPdf = f => (f.src === 'class' || f.src === 'turned') && f.raw && /\.pdf$/i.test(f.name);
   // a Word, PowerPoint or Excel file Schoology made a PDF copy of (the API says preview: true): drawn and shown from that copy
-  const officePdf = f => (f.src === 'class' || f.src === 'turned') && f.raw && f.raw.preview === true && !/\.pdf$/i.test(f.name);
+  // Settings › Appearance › Office files as PDFs (officePdfPreviews, on unless turned off): off keeps the drawn stand-in, and opening one goes to the original
+  const OFFICE_PDF = (() => { try { return (JSON.parse(localStorage.getItem('schoolagy_settings_options') || '{}') || {}).officePdfPreviews !== false; } catch (_) { return true; } })();
+  const officePdf = f => OFFICE_PDF && (f.src === 'class' || f.src === 'turned') && f.raw && f.raw.preview === true && !/\.pdf$/i.test(f.name);
   const viewHref = f => f.src === 'turned' ? `${FSX.apiBase}/data/submission-file?section=${encodeURIComponent(f.raw.course)}&assignment=${encodeURIComponent(f.raw.assignment)}&revision=${encodeURIComponent(f.raw.revision)}&file=${encodeURIComponent(f.raw.id)}&view=1` : FSX.fileUrl(f.raw, true);
   const pdfCopyHref = f => viewHref(f).replace(/&view=1$/, '') + '&as=pdf';
   function thumb(f) {
