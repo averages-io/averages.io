@@ -4382,9 +4382,12 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const hashOf = s => [...s].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 7);
 
   const classPdf = f => (f.src === 'class' || f.src === 'turned') && f.raw && /\.pdf$/i.test(f.name);
+  // a Word, PowerPoint or Excel file Schoology made a PDF copy of (the API says preview: true): drawn and shown from that copy
+  const officePdf = f => (f.src === 'class' || f.src === 'turned') && f.raw && f.raw.preview === true && !/\.pdf$/i.test(f.name);
   const viewHref = f => f.src === 'turned' ? `${FSX.apiBase}/data/submission-file?section=${encodeURIComponent(f.raw.course)}&assignment=${encodeURIComponent(f.raw.assignment)}&revision=${encodeURIComponent(f.raw.revision)}&file=${encodeURIComponent(f.raw.id)}&view=1` : FSX.fileUrl(f.raw, true);
+  const pdfCopyHref = f => viewHref(f).replace(/&view=1$/, '') + '&as=pdf';
   function thumb(f) {
-    if (classPdf(f) && !thumb.plain) { thumb.plain = true; const d = thumb(f); thumb.plain = false; return `${d}<span class="fl-pth" data-pthumb="${esc(viewHref(f))}"></span>`; }
+    if ((classPdf(f) || officePdf(f)) && !thumb.plain) { thumb.plain = true; const d = thumb(f); thumb.plain = false; return `${d}<span class="fl-pth" data-pthumb="${esc(classPdf(f) ? viewHref(f) : pdfCopyHref(f))}"></span>`; }
     if (f.kind === 'image' && f.raw && (f.src === 'class' || f.src === 'turned')) return `<img class="fl-img" src="${esc(viewHref(f))}" alt="" loading="lazy">`;
     // Google Drive and Canva send their own preview picture; the drawn one stays under it in case the link has run out
     if (f.item && f.item.thumb && !thumb.plain) { thumb.plain = true; const d = thumb(f); thumb.plain = false; return `${d}<img class="fl-img fl-cimg" src="${esc(thumbAt(f.item.thumb, 480))}" alt="" loading="lazy" referrerpolicy="no-referrer" data-thumb-fallback>`; }
@@ -4416,7 +4419,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const PAGE_BOX = { doc: '40 14 80 106', slides: '16 22 128 76', sheet: '18 16 124 100', image: '0 0 160 120', design: '46 8 68 104' };
   const drawn = f => { thumb.plain = true; try { return thumb(f); } finally { thumb.plain = false; } };
   function thumbAt(u, px) { return /googleusercontent\.com\//i.test(u) ? u.replace(/=[sw]\d+[^/=]*$/i, '') + '=s' + px : u; }
-  const bigPage = f => classPdf(f) ? `<span class="fl-bigpdf" data-pthumb="${esc(FSX.fileUrl(f.raw, true))}" data-pthumb-w="1100">${bigPage0(f)}</span>` : bigPage0(f);
+  const bigPage = f => classPdf(f) ? `<span class="fl-bigpdf" data-pthumb="${esc(FSX.fileUrl(f.raw, true))}" data-pthumb-w="1100">${bigPage0(f)}</span>` : officePdf(f) ? `<span class="fl-bigpdf" data-pthumb="${esc(pdfCopyHref(f))}" data-pthumb-w="1100">${bigPage0(f)}</span>` : bigPage0(f);
   const bigPage0 = f => f.item && f.item.thumb ? `<img class="fl-bigimg" src="${esc(thumbAt(f.item.thumb, 1600))}" alt="${esc(f.name)}" referrerpolicy="no-referrer" data-thumb-fallback>` : f.kind === 'image' && f.raw && f.src === 'class' ? `<img class="fl-bigimg" src="${esc(FSX.fileUrl(f.raw, true))}" alt="${esc(f.name)}">` : drawn(f).replace('viewBox="0 0 160 120" preserveAspectRatio="xMidYMid slice"', `viewBox="${PAGE_BOX[f.kind]}" preserveAspectRatio="xMidYMid meet"`).replace('height="120" rx="4" fill="#ffffff"', 'height="106" rx="0" fill="#ffffff"').replace(/filter="drop-shadow[^"]*"/, '');
   const srcTag = f => f.src === 'turned' ? `<span class="fl-src turned">${ico('ok')}Turned in</span>` : SOURCES[f.src] ? `<span class="fl-src">${srcMark(f.src)}${esc(SOURCES[f.src].name)}</span>` : '';
   const whoLine = f => `${f.c === APP_CLASS ? '' : badge(C[f.c])}<span>${[f.src === 'class' ? f.who : '', f.when].filter(Boolean).map(esc).join(' · ')}</span>`;
@@ -5113,13 +5116,13 @@ window.AveragesHelp = {
     { const f0 = FILES.find(f => f.id === id); if (f0 && SOURCES[f0.src] && !(f0.item && f0.item.thumb)) { seeFile(id); openReal(f0); return; } }
     // class and turned-in files: the previewer, page by page and then on through the files shown here
     {
-      const P = window.AveragesPreview, f0 = FILES.find(f => f.id === id), ok = f => (f.src === 'class' || f.src === 'turned') && f.raw && VIEW_RE.test(f.name);
+      const P = window.AveragesPreview, f0 = FILES.find(f => f.id === id), ok = f => (f.src === 'class' || f.src === 'turned') && f.raw && (VIEW_RE.test(f.name) || officePdf(f));
       if (P && f0 && ok(f0)) {
         const inRecent = document.activeElement && document.activeElement.closest && document.activeElement.closest('#flRecent');
         const list = (inRecent ? sorted(FILES).slice(0, 10) : sorted(FILES.filter(f => matches(f)))).filter(ok);
         if (!list.includes(f0)) list.unshift(f0);
         seeFile(id);
-        P.open(list.map(f => ({ name: f.name, url: f.src === 'turned' ? viewHref(f) : FSX.fileUrl(f.raw, true), download: fileHref(f), sub: [kindLabel(f), f.size, f.c === APP_CLASS ? '' : (C[f.c] || {}).name].filter(Boolean).join(' · ') })), list.indexOf(f0));
+        P.open(list.map(f => ({ name: f.name, url: officePdf(f) ? pdfCopyHref(f) : f.src === 'turned' ? viewHref(f) : FSX.fileUrl(f.raw, true), ...(officePdf(f) ? { kind: 'pdf' } : {}), download: fileHref(f), sub: [kindLabel(f), f.size, f.c === APP_CLASS ? '' : (C[f.c] || {}).name].filter(Boolean).join(' · ') })), list.indexOf(f0));
         return;
       }
     }

@@ -1,7 +1,8 @@
 /*
  * The file previewer, everywhere (both looks): a dark full-window popup with the file's name on top, Open in a new
  * tab and Download, and arrows at the sides that go page by page through a PDF, then on to the next file.
- * AveragesPreview.open(files, at) with files = [{ name, url, download?, sub? }] (url: the address that shows it).
+ * AveragesPreview.open(files, at) with files = [{ name, url, download?, sub?, kind? }] (url: the address that shows it;
+ * kind: 'pdf' when url is a PDF copy of a file whose name says otherwise, like Schoology's copy of a .docx).
  * AveragesPreview.kind(name): 'pdf' | 'image' | 'text' | 'audio' | 'video' | '' (no preview).
  * PDFs draw with the app's own pdf.js (/vendor), like the Messages previewer.
  */
@@ -65,7 +66,7 @@
     n.disabled = !next; n.setAttribute('aria-label', L.page < pn - 1 ? 'Next page' : 'Next file');
   }
   function draw(d) {
-    var f = L.list[L.at], k = kind(f.name), my = ++L.n;
+    var f = L.list[L.at], k = f.kind || kind(f.name), my = ++L.n;
     var had = document.activeElement && document.activeElement.dataset && document.activeElement.dataset.go;
     var fig = k === 'image' ? '<img class="avp-pg" src="' + esc(f.url) + '" alt="' + esc(f.name) + '" title="Open in a new tab">' : k === 'video' ? '<video class="avp-pg" controls src="' + esc(f.url) + '"></video>'
       : k === 'audio' ? '<div class="avp-none"><b>' + esc(f.name) + '</b><audio controls src="' + esc(f.url) + '"></audio></div>'
@@ -133,7 +134,7 @@
     }
   }
   var rt = 0;
-  function resize() { clearTimeout(rt); rt = setTimeout(function () { if (L && kind(L.list[L.at].name) === 'pdf') draw(0); }, 150); }
+  function resize() { clearTimeout(rt); rt = setTimeout(function () { if (L && (L.list[L.at].kind || kind(L.list[L.at].name)) === 'pdf') draw(0); }, 150); }
   function open(files, at) {
     var list = (files || []).filter(function (f) { return f && f.name && f.url; });
     if (!list.length) return false;
