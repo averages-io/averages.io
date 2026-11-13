@@ -587,9 +587,11 @@
     });
   }
   // What each page shows beyond the bundle. Same paths and cache keys as app/lib/extras.ts where they overlap.
-  function extrasFor(who, bundleP) {
+  function extrasFor(who, bundleP, held) {
     var x = extrasPlan(), out = {};
     Object.keys(x).forEach(function (k) {
+      // kept from a moment ago: no cost, so it comes with the page; otherwise asked for once the page is up
+      if (x[k][2] === '@later' && held && cacheRead('averages_extras_' + x[k][1], 'data', who) === undefined) { held[k] = x[k]; return; }
       if (x[k][0] === '@for') out[k] = bundleP.then(function (b) { var q = turnedInFor(b); return q ? extra(k, '/data/submissions?for=' + q, 'fs_subs_' + q.length + '_' + q.slice(-24), who) : { files: [] }; });
       else if (x[k][2] === '@after') out[k] = bundleP.then(function () { return extra(k, x[k][0], x[k][1], who); });
       else out[k] = extra(k, x[k][0], x[k][1], who);
@@ -608,13 +610,16 @@
   }
   function extrasPlan() {
     var now = new Date(), tz = zone(), zq = tz ? '&tz=' + encodeURIComponent(tz) : '';
-    var x = { people: ['/data/people', 'people'], updates: ['/data/updates', 'updates'] };
-    if (page === 'calendar' || page === 'home') {
+    // Home (2026-11-13): drawn as soon as grades, assignments and turned-in work are in; teachers, course updates,
+    // messages and files come a moment later (@later), so the first round stays inside Schoology's 50 calls per 5 s.
+    var later = page === 'home' ? '@later' : '';
+    var x = { people: ['/data/people', 'people', later], updates: ['/data/updates', 'updates', later] };
+    if (page === 'calendar') {
       var s = ymd(addDays(now, -120)), e = ymd(addDays(now, 240));
       x.events = ['/data/events?start=' + s + '&end=' + e + zq, 'events_' + s + '_' + e];
     }
-    if (page === 'messages' || page === 'home' || page === 'contacts') x.messages = ['/messages', 'messages', page === 'home' ? '@after' : '']; // Home: after the bundle, which has just read the inbox
-    if (page === 'files' || page === 'home' || page === 'course-hub' || page === 'assignments') x.files = ['/data/files', 'fs_files', page === 'files' ? '' : '@after']; // assignments: Contains attachment
+    if (page === 'messages' || page === 'home' || page === 'contacts') x.messages = ['/messages', 'messages', later]; // Home: after the bundle, which has just read the inbox
+    if (page === 'files' || page === 'home' || page === 'course-hub' || page === 'assignments') x.files = ['/data/files', 'fs_files', page === 'files' ? '' : later || '@after']; // assignments: Contains attachment
     // what's been turned in (files), so finished work isn't called missing
     if (page === 'assignments' || page === 'home' || page === 'course-hub' || page === 'files' || page === 'calendar') x.submissions = page === 'files' ? ['/data/submissions', 'fs_submissions'] : ['@for'];
     if (page === 'contacts' || page === 'course-hub' || page === 'messages') x.classmates = ['/data/classmates', 'fs_classmates'];
@@ -669,6 +674,37 @@
   }
 
   var earlyBundle = bundle(); earlyBundle.catch(function () {});
+
+  // ---------- what comes after the page is drawn (@later in extrasPlan) ----------
+  // Asked for once the page is up, together. When they're in, FSD takes them in place (the page's own references keep
+  // working), the bell gets what they add (quietly: it's not news, just late) and the page hears 'fs:more'.
+  var HELD = {};
+  function loadLater() {
+    var keys = Object.keys(HELD), D = window.FSD;
+    if (!keys.length || !D || !D.me) return;
+    var who = D.me.uid;
+    Promise.all(keys.map(function (k) { return settle(extra(k, HELD[k][0], HELD[k][1], who), 25000); })).then(function (got) {
+      var D2 = window.FSD; if (!D2 || !window.FSA) return;
+      var raw = Object.assign({}, D2.raw), have = [];
+      keys.forEach(function (k, i) { if (got[i] !== undefined && !(got[i] && got[i].__signedOut)) { raw[k] = got[i]; have.push(k); } });
+      if (!have.length) return;
+      var fresh; try { fresh = window.FSA.adapt(raw); } catch (e) { return; }
+      mergeLater(D2, fresh, raw);
+      window.dispatchEvent(new CustomEvent('fs:more', { detail: { keys: have } }));
+    });
+  }
+  function mergeLater(D, fresh, raw) {
+    D.raw = raw;
+    // the classes: teachers and how many new posts, onto the same objects the page already holds
+    (D.CLASSES || []).forEach(function (c) { var f = fresh.C && fresh.C[c.id]; if (f) { c.teacher = f.teacher; c.teacherIds = f.teacherIds; c.updates = f.updates; } });
+    ['updates', 'people', 'classmates', 'exampleTeacher', 'counts'].forEach(function (k) { if (fresh[k] !== undefined) D[k] = fresh[k]; });
+    // the bell: what's new from the late lists, into the same list the page already holds
+    var have = {}, seenIds = {};
+    (D.NT || []).forEach(function (it) { have[it.id] = true; });
+    (fresh.NT_SEEN_IDS || []).forEach(function (id) { seenIds[id] = true; });
+    var add = (fresh.NT || []).filter(function (it) { return !have[it.id] && !seenIds[it.id]; });
+    if (Array.isArray(D.NT) && add.length) { add.forEach(function (it) { D.NT.push(it); }); window.dispatchEvent(new CustomEvent('fs:notis', { detail: { added: [] } })); }
+  }
   function seenSyncOff() {
     var o = lget('schoolagy_settings_options') || {};
     try { if (LS.getItem('schoolagy_account_mode') === 'incognito') return true; } catch (e) { return true; }
@@ -702,7 +738,7 @@
   }
   var started = session().then(function (me) {
     if (!me || me.mode !== 'live' || !me.uid) { window.location.replace('/'); return null; }
-    var who = me.uid, bP = earlyBundle, xs = extrasFor(who, bP), names = Object.keys(xs), sP = seenPull(me);
+    var who = me.uid, bP = earlyBundle, xs = extrasFor(who, bP, HELD), names = Object.keys(xs), sP = seenPull(me);
     var main = function (n) { return (page === 'files' && n === 'files') || (page === 'course-hub' && (n === 'files' || n === 'folders')); };
     return Promise.all([bP, sP].concat(names.map(function (n) { return settle(xs[n], main(n) ? 25000 : 8000); }))).then(function (all) {
       all.splice(1, 1);   // the seen lists are in place now; they aren't part of the data
@@ -723,7 +759,7 @@
       window.location.replace(cid ? '/IS/course-hub?course=' + encodeURIComponent(cid) + (cid !== qid ? '#materials/' + encodeURIComponent(qid) : (location.hash || '')) : '/IS/courses');
       return;
     }
-    return domReady.then(runPage);
+    return domReady.then(runPage).then(loadLater);
   }).catch(function (err) {
     if (err && err.signedOut) { window.location.replace('/'); return; }
     if (window.console) console.error('[fs] load failed', err);

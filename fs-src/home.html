@@ -2388,7 +2388,8 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   CLASSES.forEach(c => { const s = courseSubject(c.name); c.emoji = s[1]; c.color = s[2]; });
   const ORDER = CLASSES.map(c => c.id);
   const C = Object.fromEntries(CLASSES.map(c => [c.id, c]));
-  const badge = c => `<span class="badge" style="--c:${c.color}" aria-hidden="true">${EMOJI_SVG[c.emoji] || EMOJI_SVG['📚']}</span>`;
+  // no class (a message before the teachers are known, say): the plain books badge
+  const badge = c => `<span class="badge" style="--c:${c ? c.color : 'var(--muted)'}" aria-hidden="true">${(c && EMOJI_SVG[c.emoji]) || EMOJI_SVG['📚']}</span>`;
   const gcls = p => p >= 90 ? 'ga' : p >= 80 ? 'gb' : 'gc';
   const grade = p => `<span class="gr ${gcls(p)}">${letter(p)}</span>`;
   // a class with nothing graded yet reads N/A, never F 0.0%
@@ -2417,17 +2418,23 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
 
   // Schoology's inbox (teachers only in the app): each conversation with its newest message. The whole conversation
   // opens on the Messages page; replying from Home goes straight to Schoology.
-  const MSG = (FSD.raw.messages && Array.isArray(FSD.raw.messages.CONVERSATIONS)) ? FSD.raw.messages : null, PEOPLE_N = (MSG && MSG.PEOPLE) || {};
+  let MSG, PEOPLE_N;
+  const build_MSG = () => { MSG = (FSD.raw.messages && Array.isArray(FSD.raw.messages.CONVERSATIONS)) ? FSD.raw.messages : null; PEOPLE_N = (MSG && MSG.PEOPLE) || {}; };
+  build_MSG();
   const classOfPerson = pid => (CLASSES.find(c => (c.teacherIds || []).includes(String(pid))) || {}).id || '';
   // marked unread on Messages: unread here too, even if this device saw it once
   const MSG_MU = (() => { try { const v = JSON.parse(localStorage.getItem('fsmsg_mu') || '[]'); return Array.isArray(v) ? v.map(String) : []; } catch (e) { return []; } })();
   // who wrote: your teachers' and classmates' real names first (the inbox only knows "Teacher" when Schoology gives no names)
-  const KNOWN_N = (() => { try { return Object.fromEntries((FSX.people ? FSX.people() : []).map(p => [String(p.id), p.name])); } catch (e) { return {}; } })();
+  let KNOWN_N;
+  const build_KNOWN_N = () => { KNOWN_N = (() => { try { return Object.fromEntries((FSX.people ? FSX.people() : []).map(p => [String(p.id), p.name])); } catch (e) { return {}; } })(); };
+  build_KNOWN_N();
   const GENERIC_N = /^(Teacher|Classmate|Someone in Schoology)$/;
   const nameOf = pid => KNOWN_N[String(pid)] || ((PEOPLE_N[pid] || {}).name && !GENERIC_N.test(PEOPLE_N[pid].name) ? PEOPLE_N[pid].name : '') || (PEOPLE_N[pid] || {}).name || 'Schoology';
-  const THREADS = (MSG ? MSG.CONVERSATIONS.map(t => ({ id: String(t.id), who: nameOf(t.personId), pid: String(t.personId || ''), c: classOfPerson(t.personId), subject: t.subject || 'No subject', unread: !!t.unread && (MSG_MU.includes(String(t.id)) || !FSX.seen.has('m', t.id)), when: t.time || '', msgs: [{ me: false, t: t.preview || '', at: t.time || '' }] }))
+  let THREADS;
+  const build_THREADS = () => { THREADS = (MSG ? MSG.CONVERSATIONS.map(t => ({ id: String(t.id), who: nameOf(t.personId), pid: String(t.personId || ''), c: classOfPerson(t.personId), subject: t.subject || 'No subject', unread: !!t.unread && (MSG_MU.includes(String(t.id)) || !FSX.seen.has('m', t.id)), when: t.time || '', msgs: [{ me: false, t: t.preview || '', at: t.time || '' }] }))
     : FSD.messages.map(m => ({ id: String(m.id), who: m.from || 'Schoology', pid: '', c: m.courseId || classOfPerson(''), subject: m.subject || 'No subject', unread: !!m.unread && !FSX.seen.has('m', m.id), when: m.time || '', msgs: [{ me: false, t: m.preview || '', at: m.time || '' }] })))
-    .map(t => Object.assign(t, { c: C[t.c] ? t.c : '' }));
+    .map(t => Object.assign(t, { c: C[t.c] ? t.c : '' })); };
+  build_THREADS();
   const T = id => THREADS.find(t => t.id === id);
 
   // Course files, the API's adaptCourseFiles shape: Materials documents plus files attached to assignments (Schoology
@@ -2435,10 +2442,12 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   // Class files (GET /data/files): teachers' Materials documents and files on assignments, newest first. "New" is
   // posted in the last two days.
   const TYPE_N = { pdf: 'PDF', docx: 'Word document', doc: 'Word document', xlsx: 'Excel workbook', xls: 'Excel workbook', pptx: 'PowerPoint', ppt: 'PowerPoint', png: 'Picture', jpg: 'Picture', jpeg: 'Picture', gif: 'Picture', txt: 'Text', csv: 'Spreadsheet', mp4: 'Video', mp3: 'Audio', zip: 'Zip file' };
-  const FILES = ((FSD.raw.files && FSD.raw.files.files) || []).filter(f => C[f.course]).slice(0, 60).map(f => {
+  let FILES;
+  const build_FILES = () => { FILES = ((FSD.raw.files && FSD.raw.files.files) || []).filter(f => C[f.course]).slice(0, 60).map(f => {
     const ago = f.at ? Math.max(0, Math.round((Date.now() - f.at) / 60000)) : 99999;
     return { id: String(f.id), name: f.name, c: f.course, type: TYPE_N[f.ext] || (f.ext ? f.ext.toUpperCase() + ' file' : 'File'), size: FSA_SIZE(f.size), when: f.at ? (ago < 60 ? `${ago} minutes ago` : ago < 1440 ? `${Math.round(ago / 60)} hours ago` : FSD.fmt.dayLabel(f.at, Date.now())) : 'Earlier', ago, from: C[f.course].teacher, folder: f.parentTitle || '', isNew: ago < 2880, src: f };
-  });
+  }); };
+  build_FILES();
   function FSA_SIZE(b) { return !b ? '' : b < 1048576 ? Math.max(1, Math.round(b / 1024)) + ' KB' : (b / 1048576).toFixed(1) + ' MB'; }
   // Drafts started from an assignment page: Canva designs (GET /canva/drafts, one call per assignment), for the work
   // that's due soonest. Asked for only while the Drafts card is showing.
@@ -2455,7 +2464,9 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   // Same shape as the API's COURSE_UPDATES (sections/{id}/updates): body text, who posted, class, time. Updates have no title.
   // "New" means posted in the last 24 hours, as in the API's adaptUpdates().
   // Course updates (sections/{id}/updates): who posted, the class, when, the text. New: not opened yet.
-  const FEED = FSD.updates.filter(u => C[u.courseId]).map(u => ({ id: String(u.id), when: u.when || '', c: u.courseId, from: u.from || C[u.courseId].teacher, isNew: !!u.unread && !FSX.seen.has('u', u.id), body: u.body || '' }));
+  let FEED;
+  const build_FEED = () => { FEED = FSD.updates.filter(u => C[u.courseId]).map(u => ({ id: String(u.id), when: u.when || '', c: u.courseId, from: u.from || C[u.courseId].teacher, isNew: !!u.unread && !FSX.seen.has('u', u.id), body: u.body || '' })); };
+  build_FEED();
   const U = id => FEED.find(u => u.id === id);
 
   // Notification type icons: Twemoji SVGs copied from pages-src/course-home.html (CC-BY 4.0)
@@ -2471,7 +2482,8 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const minsAgoOld = w => { const m = String(w).match(/(\d+)\s*(minute|hour)/); if (m) return +m[1] * (m[2] === 'hour' ? 60 : 1);
     const t = String(w).match(/^(\d{1,2}):(\d\d)\s*(AM|PM)$/); if (t) return Math.max(0, 19 * 60 - ((+t[1] % 12 + (t[3] === 'PM' ? 12 : 0)) * 60 + +t[2]));
     return /just now/i.test(w) ? 0 : /yesterday/i.test(w) ? 1440 : 3000; };
-  const NOTIFS = [
+  let NOTIFS;
+  const build_NOTIFS = () => { NOTIFS = [
     ...GRADED.filter(g => g.isNew).map(g => ({ id: 'ng-' + g.id, type: 'grade', t: `${g.t} graded: ${g.got} / ${g.of}`, s: `${C[g.c].name} · ${g.when}`, go: 'graded:' + g.id, unread: true, ago: minsAgo(g.when) })),
     // a grade's comment (shown only when its comment_status lets the student see it)
     ...GRADED.filter(g => g.comment && g.commentNew).map(g => ({ id: 'nc-' + g.id, type: 'comment', t: `${C[g.c].teacher} commented on ${g.t}`, s: `"${g.comment.length > 60 ? g.comment.slice(0, 58) + '…' : g.comment}" · ${g.when}`, go: 'graded:' + g.id, unread: true, ago: minsAgo(g.when) + 1 })),
@@ -2480,7 +2492,8 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     ...FEED.filter(u => u.isNew).slice(0, 8).map(u => ({ id: 'nu-' + u.id, type: 'update', t: `New update in ${C[u.c].name}`, s: `${u.from} · ${u.when}`, go: 'update:' + u.id, unread: true, ago: minsAgo(u.when) })),
     ...DUE.filter(d => d.k === 'today').map(d => ({ id: 'nd-' + d.id, type: 'due', t: `${d.t} is due today`, s: `${C[d.c].name} · ${d.time}`, go: 'due:' + d.id, unread: true, ago: 600 })),
     ...DUE.filter(d => d.k === 'late').map(d => ({ id: 'nd-' + d.id, type: 'due', t: `${d.t} is late`, s: `${C[d.c].name} · was due ${d.date}`, go: 'due:' + d.id, unread: false, ago: 1440 * Math.max(1, -d.off) })),
-  ].sort((x, y) => x.ago - y.ago);
+  ].sort((x, y) => x.ago - y.ago); };
+  build_NOTIFS();
 
   // what you opened lately (this browser only)
   let RECENT = (store.get('fs_home_recent') || []).filter(r => r && r.go && typeof r.label === 'string').slice(0, 4);
@@ -2987,6 +3000,13 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       });
     });
   }
+  // Teachers, messages, files and course updates come a moment after the page is up (averages-fs-data.js, 2026-11-13):
+  // the lists built from them are built again and the cards drawn again.
+  window.addEventListener('fs:more', () => {
+    CLASSES.forEach(c => { const x = FSD.C[c.id]; if (x) { c.teacher = x.teacher || 'Your teacher'; c.teacherIds = x.teacherIds; } });
+    build_MSG(); build_KNOWN_N(); build_THREADS(); build_FILES(); build_FEED(); build_NOTIFS();
+    renderAll();
+  });
   function renderAll() {
     renderAvatar(); renderChips(); renderSide(); renderClasses(); renderGraded(); renderDue(); renderRecent(); renderMissing();
     renderMessages(); renderFeed(); renderMaterials(); renderDrafts(); renderCounts(); renderPromo(); applyOrder(); applySections();
