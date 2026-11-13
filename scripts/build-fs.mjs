@@ -388,7 +388,7 @@ requestAnimationFrame(function(){requestAnimationFrame(function(){r.classList.re
 }
 
 
-// The new sign-in page (/IS/signin, shown at "/" while the app's NEW_SIGNIN_PAGE switch is 1). Signed out, so none of
+// The sign-in page (/IS/signin, shown at "/" by worker/index.js). Signed out, so none of
 // the app's data scripts: just its version line, the theme, the checking logo and the error messages.
 function buildSignin() {
   let s = fs.readFileSync(path.join(SRC, "signin.html"), "utf8");

@@ -8,7 +8,7 @@
     'turnin-feature', 'messaging-features', 'notifications-features',
     'billing', 'calendar-sync', 'live-grades', 'fullscreen',
   ];
-  const DEFAULTS = { 'maintenance-banner': false, billing: true, fullscreen: false };
+  const DEFAULTS = { 'maintenance-banner': false, billing: true };
   const NAMES = {
     'canva-integration': 'Canva is', 'onedrive-integration': 'OneDrive is', 'drive-integration': 'Google Drive is',
     'schoology-signin': 'Signing in with Schoology is',

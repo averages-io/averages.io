@@ -8,13 +8,12 @@ the school platform. This app never sees a platform secret.
 
 ## How this repo is put together
 
-The 15 app screens live in **`pages-src/*.html`** as self-contained HTML/CSS/JS
+The 14 Windowed app screens live in **`pages-src/*.html`** as self-contained HTML/CSS/JS
 documents, the same format they've always been in, and still the source of
 truth. `scripts/port-pages.mjs` turns each one into a Next.js route at build
 time.
 
 ```
-pages-src/login.html      ->  /            (app/page.tsx)
 pages-src/onboarding.html ->  /onboard     (app/onboard/page.tsx)
 pages-src/home.html       ->  /home        (app/home/page.tsx)
 ...
@@ -24,6 +23,11 @@ pages-src/404.html        ->  app/not-found.tsx
 **Edit the HTML, not the generated TSX.** Everything under `app/*/page.tsx` is a
 build artifact and is gitignored: it is regenerated on every build, so any edit there
 is lost.
+
+The sign-in page is the Fullscreen one, `fs-src/signin.html`. `scripts/build-fs.mjs`
+builds it to `public/IS/signin.html`, and `worker/index.js` serves it at `/` (the
+address stays `/`). `app/page.tsx` is hand-written and only sends `/` there when the
+worker isn't running (`next dev`). API keys: `/?keys`.
 
 ### Why not rewrite the pages as React components?
 
@@ -55,7 +59,7 @@ live-data wiring silently does nothing.
 | Mode | How you get there | What renders |
 |---|---|---|
 | **live** | Sign in with a personal API key from your school's learning platform | The student's real courses, grades, assignments |
-| **demo** | Sign in with `demo` as **both** the key and the secret | Every page, fully usable, on built-in sample data |
+| **demo** | Sign in at `/?keys` with `demo` as **both** the key and the secret | Every page, fully usable, on built-in sample data |
 | signed-out | Neither | App pages bounce to the login screen |
 
 Demo mode is the beta-testing path: a tester with no school account gets the

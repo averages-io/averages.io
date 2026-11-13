@@ -18,7 +18,6 @@
  * shipping an app whose NSFW filter or live-data wiring quietly did nothing.
  */
 
-import * as SHARED from "./signin-shared.mjs";
 import { execFileSync } from "node:child_process";
 import crypto from "node:crypto";
 import fs from "node:fs";
@@ -71,7 +70,6 @@ function versionJsRefs(script, file) {
 
 /** filename (no .html) -> route path ("" = root) */
 const ROUTES = {
-  login: "",
   onboarding: "onboard",
   home: "home",
   courses: "courses",
@@ -88,7 +86,12 @@ const ROUTES = {
   settings: "settings",
 };
 
-const PUBLIC_PAGES = new Set(["login"]);
+/**
+ * Old page names that other pages still link to, and where they go now. The sign-in page
+ * isn't a Next.js page any more: "/" is fs-src/signin.html (scripts/build-fs.mjs, served
+ * there by worker/index.js), so "login.html" links just go to "/".
+ */
+const LINK_ONLY = { login: "" };
 
 /**
  * Sample-data constants that live data can override.
@@ -191,7 +194,7 @@ function extract(srcPath) {
 /** `courses.html?course=x` -> `/courses?course=x`, everywhere. */
 function rewriteLinks(text) {
   let out = text;
-  for (const [name, route] of Object.entries(ROUTES)) {
+  for (const [name, route] of [...Object.entries(ROUTES), ...Object.entries(LINK_ONLY)]) {
     const target = route === "" ? "/" : `/${route}`;
     out = out.replace(new RegExp(`(?<![\\w-])${name}\\.html`, "g"), target);
   }
@@ -275,86 +278,7 @@ function wireDataOverrides(script, file) {
   return out;
 }
 
-const NO_DATA_PAGES = new Set(["login", "onboarding", "settings", "files"]);
-
-/**
- * Replaces login's simulated credential check with the real one.
- *
- * The placeholder faked a round trip and treated the literal string "fail" as a
- * failed login. This swaps in a real call to api.averages.io, which verifies
- * the key/secret by calling Schoology as that user before issuing a session.
- */
-function wireLoginSubmit(script, file) {
-  let out = script;
-
-  // SECURITY: the placeholder logged the submitted key and secret to the
-  // console. That was harmless when they were make-believe; now they're the
-  // user's real Schoology credentials, and printing a secret to a console
-  // anyone can open is a credential leak. It goes before anything else.
-  const CREDENTIAL_LOG = "console.log('Connect requested', { key, secret });";
-  out = assertReplaced(
-    out,
-    out.replace(CREDENTIAL_LOG, "// (credential logging deliberately removed — never log a secret)"),
-    "strip-credential-logging",
-    file
-  );
-
-  // Comments describing the mock as the current state are now wrong, and a
-  // wrong comment is worse than none.
-  out = out.replace(
-    /\s*\/\/ Front-end only placeholder — real submit will POST to the backend,\n\s*\/\/ which signs the OAuth1 request and resolves the Schoology user ID\./,
-    ""
-  );
-  out = out.replace(
-    /\s*\/\/ Mock "API check"[\s\S]*?\/\/ can be demoed without a real backend to actually reject it\./,
-    ""
-  );
-
-  const start = out.indexOf("const shouldFail");
-  const endMarker = "}, 900);";
-  const end = out.indexOf(endMarker, start);
-  if (start === -1 || end === -1) {
-    throw new TransformError(
-      `Transform "login-submit" could not locate the mock connect block in ${file}.`
-    );
-  }
-  const script_ = out;
-
-  const replacement = `
-      const logo = window.__averagesLoginLogo;
-      if (logo) logo.show();
-      window.__averagesSignIn(key, secret).then((result) => {
-        if (result.ok) {
-          window.location.href = result.next;
-          return;
-        }
-        if (logo) logo.hide();
-
-        connectBtn.classList.remove('loading');
-        connectBtn.classList.add('error');
-        connectBtn.setAttribute('aria-label', result.message);
-
-        // A red button alone can't say WHY sign-in failed — a wrong key and a
-        // dropped connection need different fixes, so say which it was.
-        let errorNote = document.getElementById('signInError');
-        if (!errorNote) {
-          errorNote = document.createElement('div');
-          errorNote.id = 'signInError';
-          errorNote.setAttribute('role', 'alert');
-          errorNote.style.cssText = 'margin-top:10px;font-size:0.78rem;font-weight:700;color:#b3261e;line-height:1.35;';
-          connectBtn.insertAdjacentElement('afterend', errorNote);
-        }
-        errorNote.textContent = result.message;
-
-        window.setTimeout(() => {
-          connectBtn.classList.remove('error');
-          connectBtn.removeAttribute('aria-label');
-          setConnectBusy(false);
-        }, 1600);
-      });`;
-
-  return script_.slice(0, start) + replacement.trim() + script_.slice(end + endMarker.length);
-}
+const NO_DATA_PAGES = new Set(["onboarding", "settings", "files"]);
 
 /**
  * Makes onboarding actually finish.
@@ -410,144 +334,12 @@ function cssFile(name, style) {
 }
 
 function generatePage(name, route, data) {
-  const isLogin = name === "login";
   const outDir = route === "" ? APP_DIR : path.join(APP_DIR, route);
   // Relative to the page's own folder, so nested routes ("schools/apply") work too.
   let importPath = path.relative(outDir, path.join(APP_DIR, "components/LegacyPage")).split(path.sep).join("/");
   if (!importPath.startsWith(".")) importPath = "./" + importPath;
 
   fs.mkdirSync(outDir, { recursive: true });
-
-  const loginExtras = isLogin
-    ? `
-import { API_BASE, getSession, signIn } from "./lib/averages";
-
-const ERROR_MESSAGES: Record<string, string> = ${JSON.stringify(SHARED.ERROR_MESSAGES, null, 2)};
-
-const SCHOOLOGY_SIGNIN_ERRORS: Record<string, string> = ${JSON.stringify(SHARED.SCHOOLOGY_SIGNIN_ERRORS, null, 2)};
-`
-    : "";
-
-  const loginEffect = isLogin
-    ? `
-  useEffect(() => {
-    // NOTE: there is deliberately no keyboard shortcut here any more.
-    //
-    // Escape used to drop straight into sample-data mode by setting a
-    // localStorage flag. That made the demo reachable to anyone who knew the
-    // key, and — worse — made every app page reachable by editing browser
-    // storage or just typing a URL. Demo mode is now a real sign-in
-    // ("demo" as both the key and the secret) that the API grants, so the
-    // server decides who gets in and there is nothing local to forge.
-
-    // The legacy login script calls this; it must exist before that runs.
-    (window as any).__averagesSignIn = async (key: string, secret: string) => {
-      const result = await signIn(key, secret);
-      if (result.ok) {
-        let onboarded = false;
-        try {
-          onboarded = window.localStorage.getItem("schoolagy_onboarded") === "1";
-        } catch {}
-        // Demo always starts at onboarding so a tester sees the whole flow;
-        // a returning real user skips straight to Home.
-        return { ok: true, next: result.demo || !onboarded ? "/onboard" : "/home" };
-      }
-      return {
-        ok: false,
-        message: ERROR_MESSAGES[result.error ?? ""] ?? "Something went wrong signing in. Please try again.",
-      };
-    };
-
-    let cancelled = false;
-
-    fetch(\`\${API_BASE}/auth/schoology/status\`, { credentials: "omit" })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((s) => {
-        if (cancelled || !s || s.on !== true) return;
-        (window as any).__averagesLmsSignIn = (lms: string, domain: string) => {
-          if (lms !== "schoology") return;
-          let under13 = true;
-          try {
-            under13 = window.localStorage.getItem("schoolagy_13plus") !== "yes";
-          } catch {}
-          const q = new URLSearchParams({ domain: String(domain || ""), under13: under13 ? "1" : "0" });
-          (window as any).__averagesLoginLogo?.show();
-          window.location.href = \`\${API_BASE}/auth/schoology/start?\${q}\`;
-        };
-      })
-      .catch(() => {});
-
-    // Back from Schoology with a problem: say what it was on the Schoology
-    // screen, and drop it from the address so a reload doesn't repeat it.
-    const params = new URLSearchParams(window.location.search);
-    // just signed out (the wipe already happened, worker/index.js): drop it from the address
-    if (params.has("signedout")) { params.delete("signedout"); const rest = params.toString(); try { history.replaceState(history.state, "", window.location.pathname + (rest ? "?" + rest : "") + window.location.hash); } catch {} }
-    const signinError = params.get("signin_error");
-    const backFromSchoology = params.get("signin") === "schoology";
-    if (signinError) {
-      params.delete("signin_error");
-      const rest = params.toString();
-      try {
-        history.replaceState(history.state, "", window.location.pathname + (rest ? "?" + rest : "") + window.location.hash);
-      } catch {}
-      const text = (SCHOOLOGY_SIGNIN_ERRORS[signinError] ?? "Something went wrong signing in with Schoology. Please try again.") + \` (\${signinError.replace(/[^a-z_]/g, "").slice(0, 40)})\`;
-      let touched = false;
-      const stop = () => { touched = true; };
-      window.addEventListener("pointerdown", stop, { once: true, capture: true });
-      window.addEventListener("keydown", stop, { once: true, capture: true });
-      const say = () => {
-        const note = document.getElementById("schoolNote");
-        if (touched || cancelled || !note) return;
-        note.textContent = text;
-        note.hidden = false;
-      };
-      [0, 150, 500, 1000, 2000].forEach((ms) => setTimeout(say, ms));
-    }
-
-    // Already signed in? Don't make them do it again. The screen may still
-    // be showing the loading animation from CHECKING_JS below; it stays up all
-    // the way to Home when they are, and gives way to the sign-in options when
-    // they aren't.
-    const reveal = () => document.documentElement.removeAttribute("data-av-checking");
-    getSession(backFromSchoology ? { fresh: true } : undefined).then((session) => {
-      if (cancelled) return;
-      if (session.mode === "out") {
-        reveal();
-        // Back from Schoology signed in, yet no session here: the browser didn't keep the cookie. Say so.
-        if (backFromSchoology) {
-          try { history.replaceState(history.state, "", window.location.pathname + window.location.hash); } catch {}
-          const say = () => { const note = document.getElementById("schoolNote"); if (!cancelled && note) { note.textContent = SCHOOLOGY_SIGNIN_ERRORS.not_kept + " (not_kept)"; note.hidden = false; } };
-          [0, 150, 500, 1000, 2000].forEach((ms) => setTimeout(say, ms));
-        }
-        return;
-      }
-      let onboarded = false;
-      try {
-        onboarded = window.localStorage.getItem("schoolagy_onboarded") === "1";
-      } catch {}
-      // Signed in after all, but the sign-in options are showing (the hint
-      // said signed out, or the 8 s cap ran out): put the logo back up so the
-      // trip to Home happens under it, not over the sign-in buttons.
-      (window as any).__averagesLoginLogo?.show();
-      // replace, not href: Back from Home shouldn't land on this page again.
-      window.location.replace(onboarded ? "/home" : "/onboard");
-    });
-    return () => { cancelled = true; };
-  }, []);
-`
-    : "";
-
-  const loginChecking = isLogin
-    ? `
-const CHECKING_CSS = ${JSON.stringify(SHARED.CHECKING_CSS)};
-const CHECKING_JS = ${JSON.stringify(SHARED.CHECKING_JS)};
-`
-    : "";
-  const loginCheckingTags = isLogin
-    ? `
-      <style dangerouslySetInnerHTML={{ __html: CHECKING_CSS }} />
-      <script dangerouslySetInnerHTML={{ __html: CHECKING_JS }} />`
-    : "";
 
   const homeOnboard = name === "home"
     ? `
@@ -559,30 +351,24 @@ const ONBOARD_JS = "try{if(localStorage.getItem('schoolagy_onboarded')!=='1')loc
       <script dangerouslySetInnerHTML={{ __html: ONBOARD_JS }} />`
     : "";
 
-  // Only the login page runs an effect of its own; importing useEffect
-  // everywhere would leave an unused import on 14 of the 15 pages.
-  const reactImport = isLogin ? `import { useEffect } from "react";\n` : "";
-
   const content = `"use client";
-${reactImport}import LegacyPage from "${importPath}";
-import "./page.css";${loginExtras}
+import LegacyPage from "${importPath}";
+import "./page.css";
 
 const TITLE = ${JSON.stringify(data.title)};
 const BODY_HTML = ${JSON.stringify(data.body)};
 const SCRIPT_JS = ${JSON.stringify(data.script)};
-${loginChecking}${homeOnboard}
-export default function Page() {${loginEffect}
-  return (${isLogin ? "\n    <>" + loginCheckingTags : name === "home" ? "\n    <>" + homeOnboardTag : ""}
+${homeOnboard}
+export default function Page() {
+  return (${name === "home" ? "\n    <>" + homeOnboardTag : ""}
     <LegacyPage
       title={TITLE}
       bodyHtml={BODY_HTML}
       scriptJs={SCRIPT_JS}
-      requiresAuth={${!PUBLIC_PAGES.has(name)}}
-      usesSavedTheme={${!PUBLIC_PAGES.has(name)}}
       hasUploads={${UPLOAD_PAGES.has(name)}}
       externalScripts={${JSON.stringify(EXTERNAL_SCRIPTS[name] || [])}}
       pageId={${JSON.stringify(name)}}
-    />${isLogin || name === "home" ? "\n    </>" : ""}
+    />${name === "home" ? "\n    </>" : ""}
   );
 }
 `;
@@ -614,9 +400,6 @@ for (const [name, route] of Object.entries(ROUTES)) {
 
     if (name === "onboarding" || name === "settings") {
       script = wireNsfwScan(script, `${name}.html`);
-    }
-    if (name === "login") {
-      script = wireLoginSubmit(script, "login.html");
     }
     if (name === "onboarding") {
       script = wireOnboardingComplete(script, "onboarding.html");

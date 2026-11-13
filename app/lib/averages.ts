@@ -157,24 +157,6 @@ export async function getSession(opts?: { fresh?: boolean }): Promise<SessionSta
   return state;
 }
 
-export interface SignInResult {
-  ok: boolean;
-  error?: string;
-  demo?: boolean;
-}
-
-/**
- * Signs in with a Schoology personal API key — or with "demo"/"demo", which is
- * the one and only way into sample-data mode.
- */
-function under13(): boolean {
-  try {
-    return window.localStorage.getItem("schoolagy_13plus") !== "yes";
-  } catch {
-    return true;
-  }
-}
-
 /** Drops every cached answer about who's signed in and their data. */
 export function forgetSession(): void {
   cacheClear(SESSION_CACHE);
@@ -183,35 +165,6 @@ export function forgetSession(): void {
   cacheClear(FILES_CACHE);
   cacheClear(SUBS_CACHE);
   clearExtras();
-}
-
-export async function signIn(key: string, secret: string): Promise<SignInResult> {
-  try {
-    const response = await fetch(`${API_BASE}/auth/session`, {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      // The login page's "I'm 13 or older" box (saved just before this runs).
-      // Unticked means under 13: the API seals Incognito into the session.
-      body: JSON.stringify({ key, secret, under13: under13() }),
-    });
-    const data = (await response.json().catch(() => ({}))) as any;
-    if (!response.ok) {
-      return { ok: false, error: data?.error ?? `http_${response.status}` };
-    }
-    // A fresh sign-in invalidates whatever we thought before.
-    cacheClear(SESSION_CACHE);
-    cacheClear(BUNDLE_CACHE);
-    cacheClear(FILES_CACHE);
-    cacheClear(SUBS_CACHE);
-    clearExtras();
-    // The next page picks up the logo the sign-in screen put up (splash.ts).
-    cacheClear(SPLASH_KEY);
-    setSignedInHint(true);
-    return { ok: true, demo: !!data?.demo };
-  } catch {
-    return { ok: false, error: "network_error" };
-  }
 }
 
 const CLOUD_OWNER_KEY = "averages_cloud_owner";
@@ -331,7 +284,7 @@ export async function signOut(): Promise<void> {
   // first because forgetPushOnThisDevice reads nothing else from storage.
   forgetEverythingOnThisDevice();
   clearAppCookies();
-  // The one note kept: the login page shows its buttons straight away.
+  // The one note kept: the sign-in page shows its buttons straight away.
   setSignedInHint(false);
   const deleteRequest = fetch(`${API_BASE}/auth/session${forgetOnServer ? "?forget=1" : ""}`, {
     method: "DELETE",

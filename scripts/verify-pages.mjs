@@ -54,7 +54,8 @@ const pageFiles = [];
     const full = path.join(dir, entry.name);
     if (entry.isDirectory()) walk(full);
     else if (entry.name === "page.tsx" || entry.name === "not-found.tsx") {
-      if (["signout", "scan"].some((r) => path.relative(APP_DIR, full) === path.join(r, "page.tsx"))) continue;
+      // hand-written: sign out, the scan page, and "/" (which only moves to the sign-in page)
+      if (["signout", "scan", ""].some((r) => path.relative(APP_DIR, full) === path.join(r, "page.tsx"))) continue;
       pageFiles.push(full);
     }
   }
@@ -66,7 +67,6 @@ console.log(`\nVerifying ${pageFiles.length} generated pages\n`);
 const wiring = {
   nsfw: [],
   liveData: [],
-  signIn: [],
 };
 
 for (const file of pageFiles) {
@@ -118,13 +118,11 @@ for (const file of pageFiles) {
 
   if (script.includes("__averagesScanImage")) wiring.nsfw.push(rel);
   if (script.includes("window.__AVERAGES__")) wiring.liveData.push(rel);
-  if (script.includes("__averagesSignIn")) wiring.signIn.push(rel);
 
   // Placeholders that are supposed to be gone. If any survives, a transform
   // silently no-opped and a feature is quietly missing.
   for (const [placeholder, feature] of [
     ["mock scan delay", "NSFW screening"],
-    ["const shouldFail", "real sign-in"],
   ]) {
     if (script.includes(placeholder)) {
       fail(`${rel}: still contains the "${placeholder}" placeholder — ${feature} did not get wired`);
@@ -165,11 +163,17 @@ function expect(label, actual, expected) {
 // two — no more (dead weight) and no fewer (an unscreened upload path).
 expect("NSFW screening", wiring.nsfw, ["onboard/page.tsx", "settings/page.tsx"]);
 
-// Sign-in belongs only on the login page.
-expect("Real sign-in", wiring.signIn, ["page.tsx"]);
+// Sign-in is the Fullscreen page alone now (fs-src/signin.html, built by build-fs.mjs): no generated page signs in.
+{
+  const generated = pageFiles.filter((f) => fs.readFileSync(f, "utf8").includes("__averagesSignIn")).map((f) => path.relative(APP_DIR, f));
+  expect("No old sign-in left in the generated pages", generated, []);
+  const signin = path.resolve(APP_DIR, "../public/IS/signin.html");
+  if (fs.existsSync(signin)) pass("Sign-in page built: public/IS/signin.html");
+  else fail("public/IS/signin.html is missing: run scripts/build-fs.mjs (part of npm run port)");
+}
 
-// Every page that renders student data should accept live data. Login,
-// onboarding, settings and 404 have none to render.
+// Every page that renders student data should accept live data.
+// Onboarding, settings and 404 have none to render.
 expect("Live-data hooks", wiring.liveData, [
   "assignment/page.tsx",
   "assignments/page.tsx",
