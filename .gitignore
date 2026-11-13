@@ -19,6 +19,7 @@ app/*/page.css
 app/*/*/page.css
 app/not-found.css
 # hand-written routes (not generated)
+!app/page.tsx
 !app/signout/page.tsx
 app/not-found.tsx
 
