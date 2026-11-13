@@ -148,7 +148,8 @@ export default function LegacyPage({
   pageId,
 }: {
   title: string;
-  styleCss: string;
+  /** Optional: generated pages import their CSS as a file (app/<route>/page.css) instead. */
+  styleCss?: string;
   bodyHtml: string;
   scriptJs: string;
   /** Login is the one page reachable while signed out. */
@@ -562,7 +563,7 @@ export default function LegacyPage({
       {/* First-open logo splash: signed-in pages, only when this tab has no saved grades yet (app/lib/splash.ts). */}
       {requiresAuth && <style dangerouslySetInnerHTML={{ __html: SPLASH_CSS }} />}
       {requiresAuth && <script dangerouslySetInnerHTML={{ __html: SPLASH_JS }} />}
-      <style dangerouslySetInnerHTML={{ __html: styleCss }} />
+      {styleCss && <style dangerouslySetInnerHTML={{ __html: styleCss }} />}
       <style dangerouslySetInnerHTML={{ __html: SKELETON_CSS }} />
       {phase === "error" && (
         <div
