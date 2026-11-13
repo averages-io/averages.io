@@ -183,6 +183,26 @@ inside the app. The files are npm's `jszip@3.10.1` (`dist/`) and
 
 ---
 
+## pdf-lib, fontkit and Inter (the report card PDF)
+
+**Files:** `public/vendor/pdf-lib-1.17.1/pdf-lib.min.js`, `public/vendor/pdf-lib-fontkit-1.1.1/fontkit.umd.min.js`,
+`public/report/v1/Inter-Regular.ttf`, `Inter-Bold.ttf`, `Inter-ExtraBold.ttf`
+
+Used by Fullscreen Grades' "Report card" button (`public/js/averages-report.js`, 2026-11-12) to make the
+grade report PDF on the student's device. Loaded only when the button is used.
+
+- **pdf-lib:** https://github.com/Hopding/pdf-lib. npm's `pdf-lib@1.17.1` (`dist/`), unmodified. **MIT**.
+  Full text: `public/vendor/pdf-lib-1.17.1/LICENSE.md`.
+- **fontkit:** https://github.com/Hopding/fontkit (pdf-lib's fork of foliojs/fontkit). npm's
+  `@pdf-lib/fontkit@1.1.1` (`dist/`), unmodified. **MIT**. Full text: `public/vendor/pdf-lib-fontkit-1.1.1/LICENSE`.
+- **Inter 4.0:** https://github.com/rsms/inter. Copyright 2016 The Inter Project Authors. **SIL Open Font
+  License 1.1** (full text above and in `public/report/v1/OFL.txt`). Subset to Latin and converted to
+  TrueType outlines for embedding in PDFs.
+
+`public/report/v1/report-template.pdf` is our own design (the letterhead), not third-party.
+
+---
+
 ## Runtime dependencies
 
 These are installed from npm at build time rather than committed here, so their

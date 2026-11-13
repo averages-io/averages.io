@@ -3139,7 +3139,7 @@
 
       <main class="gr-main">
         <section class="panel" id="grSumPanel" aria-labelledby="gsTitle">
-          <div class="ph2"><h2 id="gsTitle">This term so far</h2><span class="ph2-tools"><a class="see" href="#" data-toast="your report card in Schoology">Report card</a></span></div>
+          <div class="ph2"><h2 id="gsTitle">This term so far</h2><span class="ph2-tools"><button class="see" type="button" id="grReport" title="Download a PDF of your current grades">Report card</button></span></div>
           <div class="gs" id="grSum"></div>
         </section>
         <section class="panel gr-classes" aria-labelledby="gcTitle">
@@ -3771,6 +3771,45 @@
   document.querySelector('.hub-h').style.setProperty('--class-c', 'var(--sky)');
 
   document.addEventListener('click', e => { if (e.target.closest('[data-gpascale]') && window.AveragesGPA) window.AveragesGPA.edit(gpaList(), () => { grMeta(); grSum(false); }); });
+
+  // Report card (2026-11-12): a one-page PDF of the grades on this page, made on this device by
+  // /js/averages-report.js (loaded the first time it's asked for). The student ID comes from /auth/me.
+  function reportData(studentId) {
+    const G = window.AveragesGPA, graded = CLASSES.filter(c => !c.none);
+    const lv = c => (G && G.level ? G.level({ id: String(c.id), name: c.origName || c.name }) : (/^(AP|IB)\b/.test(c.name) ? 'ap' : /\bhonors\b/i.test(c.name) ? 'honors' : 'regular'));
+    const byPeriod = CLASSES.slice().sort((a, b) => (a.hasPeriod ? a.period : 99) - (b.hasPeriod ? b.period : 99) || a.order - b.order);
+    return {
+      name: FSD.me && FSD.me.name || 'Student', studentId: studentId || '',
+      source: FSD.me && FSD.me.provider === 'google' ? 'Google Classroom' : 'Schoology',
+      classes: byPeriod.map(c => ({ period: c.hasPeriod ? String(c.period) : '', name: c.origName || c.name, teacher: c.teacher || '', pct: c.none ? null : c.pct, letter: c.none ? '' : letter(c.pct) })),
+      overall: graded.length ? { letter: letter(avg), pct: avg } : null,
+      gpa: graded.length ? { unweighted: gpa(false), weighted: gpa(true) } : null,
+      cuts: CUTS.map(c => [c[0], c[1]]),
+      points: G && G.points ? G.points() : GPTS, bonus: G && G.bonus ? G.bonus() : { honors: 0.5, ap: 1 },
+      ap: graded.filter(c => lv(c) === 'ap').map(c => c.origName || c.name), honors: graded.filter(c => lv(c) === 'honors').map(c => c.origName || c.name),
+    };
+  }
+  let reportBusy = false;
+  $('grReport').addEventListener('click', async () => {
+    if (reportBusy) return;
+    reportBusy = true; const b = $('grReport'); b.textContent = 'Making PDF…'; b.setAttribute('aria-busy', 'true');
+    try {
+      if (!window.AveragesReport) await new Promise((ok, no) => { const sc = document.createElement('script'); sc.src = '/js/averages-report.js'; sc.onload = ok; sc.onerror = no; document.head.appendChild(sc); });
+      let sid = '';
+      try {
+        const api = location.hostname.endsWith('averages.io') ? 'https://api.averages.io' : 'http://localhost:8787';
+        const r = await fetch(api + '/auth/me', { credentials: 'include', cache: 'no-store' });
+        if (r.ok) { const me = await r.json(); sid = typeof me.studentId === 'string' ? me.studentId : ''; }
+      } catch (e) { /* no ID line, then */ }
+      await window.AveragesReport.download(reportData(sid));
+      toast('Your report card is downloading.');
+    } catch (e) {
+      console.warn('[fs] report card', e);
+      toast('We couldn’t make the PDF. Please try again.');
+    } finally {
+      reportBusy = false; b.textContent = 'Report card'; b.removeAttribute('aria-busy');
+    }
+  });
   function grMeta() {
     const graded = WORK.filter(w => !w.missing).length, miss = WORK.filter(w => w.missing).length, fresh = WORK.filter(isNew).length;
     const m = (icon, html, cls = '') => `<span class="gm${cls}">${ico(icon)}<span class="t">${html}</span></span>`;
