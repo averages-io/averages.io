@@ -592,7 +592,7 @@
     Object.keys(x).forEach(function (k) {
       // kept from a moment ago: no cost, so it comes with the page; otherwise asked for once the page is up
       if (x[k][2] === '@later' && held && cacheRead('averages_extras_' + x[k][1], 'data', who) === undefined) { held[k] = x[k]; return; }
-      if (x[k][0] === '@for') out[k] = bundleP.then(function (b) { var q = turnedInFor(b); return q ? extra(k, '/data/submissions?for=' + q, 'fs_subs_' + q.length + '_' + q.slice(-24), who) : { files: [] }; });
+      if (x[k][0] === '@for') out[k] = bundleP.then(function (b) { var q = subsQuery(b); return q ? extra(k, '/data/submissions?' + q, 'fs_subs_' + q.length + '_' + q.slice(-24), who) : { files: [] }; });
       else if (x[k][2] === '@after') out[k] = bundleP.then(function () { return extra(k, x[k][0], x[k][1], who); });
       else out[k] = extra(k, x[k][0], x[k][1], who);
     });
@@ -610,12 +610,28 @@
     var graded = {};
     var gb = (b && b.GRADEBOOK) || {};
     Object.keys(gb).forEach(function (c) { L(gb[c] && gb[c].categories).forEach(function (cat) { L(cat && cat.assignments).forEach(function (a) { if (a && a.graded && typeof a.score === 'number') graded[c + ':' + a.id] = true; }); }); });
-    var ok = function (a) { return a && !a.outside && !a.noDropbox && !a.done && a.type !== 'discussion' && a.type !== 'assessment'; };
+    var ok = function (a) { return a && !a.outside && !a.noDropbox && a.type !== 'discussion' && a.type !== 'assessment'; };
     var add = function (a) { var k = String(a.courseId) + ':' + String(a.id); if (/^\d+:\d+$/.test(k) && out.indexOf(k) < 0 && !graded[k] && ok(a)) out.push(k); };
     L(b && b.OVERDUE).slice().reverse().forEach(add);   // newest past due first
     L(b && b.TODAY).forEach(add);
     L(b && b.UPCOMING).forEach(add);
     return out.slice(0, 20).join(',');   // 20 histories: with the bundle, still inside Schoology's 50 calls per 5 s
+  }
+  /** Past-due discussions not graded yet, newest first (at most 10): has the student posted in them? */
+  function postedFor(b) {
+    var out = [], L = function (v) { return Array.isArray(v) ? v : []; }, graded = {};
+    var gb = (b && b.GRADEBOOK) || {};
+    Object.keys(gb).forEach(function (c) { L(gb[c] && gb[c].categories).forEach(function (cat) { L(cat && cat.assignments).forEach(function (a) { if (a && ((a.graded && typeof a.score === 'number') || a.excused)) graded[c + ':' + a.id] = true; }); }); });
+    L(b && b.OVERDUE).slice().reverse().forEach(function (a) {
+      var k = String(a.courseId) + ':' + String(a.id);
+      if (a && a.type === 'discussion' && /^\d+:\d+$/.test(k) && out.indexOf(k) < 0 && !graded[k]) out.push(k);
+    });
+    return out.slice(0, 10).join(',');
+  }
+  /** GET /data/submissions for this page: turned-in files (for=) and posted-in discussions (posted=). '' when there's nothing to ask. */
+  function subsQuery(b) {
+    var f = turnedInFor(b), p = postedFor(b);
+    return f || p ? 'for=' + f + (p ? '&posted=' + p : '') : '';
   }
   function extrasPlan() {
     var now = new Date(), tz = zone(), zq = tz ? '&tz=' + encodeURIComponent(tz) : '';
@@ -1064,7 +1080,7 @@
       ask('bundle', '/data/bundle' + (tz ? '?tz=' + encodeURIComponent(tz) : ''), function (b) { sset('schoolagy_bundle_cache', JSON.stringify({ at: Date.now(), bundle: b })); if (window.FSD) window.FSD.generatedAt = (b && b.generatedAt) || new Date().toISOString(); notisAt = Date.now(); });
       Object.keys(plan).forEach(function (k) {
         var path = plan[k][0], key = plan[k][1];
-        if (path === '@for') { var q = turnedInFor(old.bundle); if (!q) return; path = '/data/submissions?for=' + q; key = 'fs_subs_' + q.length + '_' + q.slice(-24); }
+        if (path === '@for') { var q = subsQuery(old.bundle); if (!q) return; path = '/data/submissions?' + q; key = 'fs_subs_' + q.length + '_' + q.slice(-24); }
         ask(k, path, function (d) { sset('averages_extras_' + key, JSON.stringify({ at: Date.now(), who: me && me.uid, data: d })); });
       });
       S.wait = function (keys) {
@@ -1474,6 +1490,7 @@
     // st: 'missing' (past due, nothing turned in, not graded), 'due', 'turned' (files turned in, no grade yet)
     // or 'graded'. Discussions, tests and outside-tool work are done on Schoology (canTurnIn false).
     var subs = {};
+    var posted = {}; arr(raw.submissions && raw.submissions.posted).forEach(function (k) { posted[String(k)] = true; });
     arr(raw.submissions && raw.submissions.files).forEach(function (f) {
       var k = f.course + ':' + f.assignment, s = subs[k] || (subs[k] = { at: 0, files: [] });
       if (f.at > s.at) s.at = f.at;
@@ -1487,17 +1504,18 @@
     function addWork(c, a, dueMs, base) {
       var key = c + ':' + a.id; if (!C[c] || !a.id || seenW[key]) return; seenW[key] = true;
       var g = gbById[key] || {}, sub = subs[key], graded = g.graded && typeof g.score === 'number';
+      if (g.excused && !graded && !sub) return;   // excused by the teacher (Schoology's exception 1): nothing to do
       var type = base.type || 'assignment', outside = !!base.outside;
-      // done: Schoology says this student finished it (posted in the discussion, marked it done...): not overdue,
-      // the way Schoology's own To Do leaves it out (2026-11-14). A teacher's "missing" in the gradebook still wins.
-      var done = !!base.done && !sub;
+      // posted: a discussion the student has replied in (Schoology's discussion replies, 2026-11-14), done the way
+      // Schoology's own To Do counts it. A teacher's "missing" in the gradebook still wins.
+      var done = !sub && !!posted[key];
       var st = graded ? 'graded' : sub || done ? 'turned' : dueMs != null && dueMs < now ? (outside ? 'due' : 'missing') : 'due';
       if (g.missing && !graded && !sub) st = 'missing';
       WORK_ALL.push({
         id: String(a.id), c: c, t: a.title || g.title || 'Assignment', type: type, kind: type === 'assessment' ? 'test' : 'assignment', disc: type === 'discussion', outside: outside, noDrop: !!base.noDropbox,
         dueAt: dueMs, off: offOf(dueMs), day: dueMs != null ? WD[new Date(dueMs).getDay()] : '', time: dueMs != null ? (base.time || timeOf(dueMs)) : '',
         pts: typeof g.points === 'number' && g.points > 0 ? g.points : null, st: st,
-        turnedAt: sub ? sub.at : 0, turned: sub ? (sub.at ? dayLabel(sub.at, now) : 'earlier') : done ? 'earlier' : null, sent: sub ? sub.files : undefined, done: done || undefined,
+        turnedAt: sub ? sub.at : 0, turned: sub ? (sub.at ? dayLabel(sub.at, now) : 'earlier') : done ? 'earlier' : null, sent: sub ? sub.files : undefined, posted: done || undefined,
         got: graded ? g.score : undefined, gradedAt: graded ? g.gradedAt || 0 : 0, graded: graded ? (g.gradedAt ? dayLabel(g.gradedAt, now) : 'earlier') : null, note: g.comment || '',
       });
     }
