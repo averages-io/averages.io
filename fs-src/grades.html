@@ -57,7 +57,7 @@
 
   /* Twemoji subject icon on a tint of the subject color (same table as courses.html) */
   .badge { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; flex: none; background: color-mix(in srgb, var(--c) 18%, #ffffff); }
-  .badge svg { width: 17px; height: 17px; display: block; }
+  .badge svg { width: 21px; height: 21px; display: block; }   /* the class emoji fills its tile (was 17px, 2026-11-14) */
   .italic { font-style: italic; }
 
   /* ---------- frame ---------- */
@@ -3081,6 +3081,11 @@
   .gc-row .gr-ct b { font-size: 17px; }
   .gc-row .gr-ct small { font-size: 14px; }
   .gc-row .gc-g b { font-size: 23px; }
+  /* the class's emoji tile, a size up in the class rows (2026-11-14) */
+  .gc-row > .badge { width: 40px; height: 40px; border-radius: 11px; }
+  .gc-row > .badge svg { width: 27px; height: 27px; }
+  /* "N/A" stays on one line ("No grades yet" can wrap beside it) */
+  .gc-g b { white-space: nowrap; }
   @media (max-width: 760px) { .gc-row { padding: 14px 14px; } }
 </style>
 </head>
@@ -3831,7 +3836,7 @@
     // letter-grade lines, with labels only where they won't crowd each other
     let lastY = -99; const bands = [97, 93, 90, 87, 83, 80, 77, 73, 70].filter(v => v > lo && v < hi).map(v => { const y = Y(v), lab = Math.abs(y - lastY) >= 16; if (lab) lastY = y;
       return `<line class="band" x1="${CH.l}" x2="${CH.w - CH.r}" y1="${y}" y2="${y}"/>${lab ? `<text class="band-t" x="0" y="${y + 4}">${letter(v)}</text>` : ''}`; }).join('');
-    const step = CH.w < 480 ? 3 : 2, last = WEEKS.length - 1; // fewer date labels on a narrow chart, and never one crowding the last
+    const step = CH.w < 480 ? 2 : 1, last = WEEKS.length - 1; // every week's date (2026-11-14: Nov 2 was left out); every other on a narrow chart, never one crowding the last
     const xs = WEEKS.map((d, i) => (i % step === 0 && last - i >= step) || i === last ? `<text class="x-t" x="${X(i)}" y="${CH.h - 6}" text-anchor="${i === 0 ? 'start' : i === last ? 'end' : 'middle'}">${d}</text>` : '').join('');
     const each = GR.each ? CLASSES.map((c, k) => `<path class="cl" data-cl="${c.id}" pathLength="100" style="--i:${k}" d="${path(clTrend(c))}" stroke="${c.color}"/>`).join('') : '';
     const area = `${path(OVERALL)}L${X(last)},${CH.h - CH.b}L${X(FIRST)},${CH.h - CH.b}Z`;
@@ -3909,7 +3914,8 @@
   }
 
   // ---------- your classes ----------
-  const spark = c => { const t = c.trend, mid = (Math.min(...t) + Math.max(...t)) / 2, span = Math.max(8, Math.max(...t) - Math.min(...t) + 1.2), lo = mid - span / 2, hi = mid + span / 2, /* at least 8 points tall, so small moves look small */ w = 110, h = 30, x = i => (i / (t.length - 1)) * w, y = v => h - ((v - lo) / (hi - lo)) * h; const line = 'M' + t.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join('L');
+  // the class grade after each graded assignment (2026-11-14), the same line as its Grades chart; week by week until two are graded
+  const spark = c => { const t = c.steps && c.steps.length >= 2 ? c.steps.map(x => x.v) : c.trend, mid = (Math.min(...t) + Math.max(...t)) / 2, span = Math.max(8, Math.max(...t) - Math.min(...t) + 1.2), lo = mid - span / 2, hi = mid + span / 2, /* at least 8 points tall, so small moves look small */ w = 110, h = 30, x = i => (i / (t.length - 1)) * w, y = v => h - ((v - lo) / (hi - lo)) * h; const line = 'M' + t.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join('L');
     return `<svg class="gc-sp" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true"><path d="${line}L${w},${h}L0,${h}Z" fill="${c.color}" fill-opacity=".12"/><path d="${line}" fill="none" stroke="${c.color}" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg>`; };
   const workOf = (id, q) => WORK.filter(w => w.c === id && (!q || w.n.toLowerCase().includes(q)));
   function classesShown() {
@@ -3991,7 +3997,7 @@
   document.addEventListener('click', e => { const r = e.target.closest && e.target.closest('[data-gw], [data-rgw]'); if (r) seeWork(r.dataset.gw || r.dataset.rgw); }, true);
   $('grList').addEventListener('click', e => {
     const t = e.target.closest('[data-gctoggle]'); if (t) { toggleClass(t.dataset.gctoggle); return; }
-    const w = e.target.closest('[data-gw]'); if (w && !e.target.closest('button')) { const x = WORK.find(v => v.id === w.dataset.gw); FSX.hub(x.c, x.missing ? 'assignments' : 'grades', { a: x.id }); }
+    const w = e.target.closest('[data-gw]'); if (w && !e.target.closest('button')) { const x = WORK.find(v => v.id === w.dataset.gw); FSX.hub(x.c, 'assignments', { a: x.id }); }   // the assignment's own page in its class (2026-11-14), graded or not
   });
   $('grAll').addEventListener('click', () => { const list = classesShown(), all = list.every(c => GR.open.has(c.id)); list.forEach(c => all ? GR.open.delete(c.id) : GR.open.add(c.id)); store.set('fsgrades_open', [...GR.open]); grList(true); });
   $('grFind').addEventListener('input', e => { GR.q = e.target.value.trim(); grList(false); });

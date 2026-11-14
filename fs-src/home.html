@@ -57,7 +57,7 @@
 
   /* Twemoji subject icon on a tint of the subject color (same table as courses.html) */
   .badge { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; flex: none; background: color-mix(in srgb, var(--c) 18%, #ffffff); }
-  .badge svg { width: 17px; height: 17px; display: block; }
+  .badge svg { width: 21px; height: 21px; display: block; }   /* the class emoji fills its tile (was 17px, 2026-11-14) */
   .italic { font-style: italic; }
 
   /* ---------- frame ---------- */
@@ -4371,7 +4371,14 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (cur && cur.key === 'search' && big.value.trim() && (go || (act && !/^(stab|srecent|srecentx|sraw)$/.test(act.dataset.act)))) pushRecent(state.sFix && state.sFix.from === big.value.trim() ? state.sFix.to : big.value);
     if (act && act.classList.contains('dis')) return;
     if (go && !go.disabled && /^(class|due|turnin|update):/.test(go.dataset.go)) { closePop(); openPage(go.dataset.go); return; }
-    if (go && !go.disabled) { const [k, ...rest] = go.dataset.go.split(':'); swap(k, rest.join(':') || undefined); return; }
+    if (go && !go.disabled) {
+      const v = go.dataset.go;
+      // an address (a person in Contacts, say): go there. Anything with no popup of its own: open its page (2026-11-14)
+      if (v.charAt(0) === '/') { closePop(); window.location.href = v; return; }
+      const [k, ...rest] = v.split(':');
+      if (typeof POP[k] !== 'function' && k !== 'notifs' && k !== 'whatif') { closePop(); openPage(v); return; }
+      swap(k, rest.join(':') || undefined); return;
+    }
     if (act && ACT[act.dataset.act]) ACT[act.dataset.act](act.dataset.arg, act);
   }
 
@@ -5188,7 +5195,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       e.preventDefault();
       cur.opts.keep = false;
       const pick = items[i] || items[0];
-      (pick.matches('.person') ? pick.querySelector('[data-go]') : pick).click();
+      (pick.matches('.person') ? pick.querySelector('[data-go]') || pick : pick).click();
     }
   });
 

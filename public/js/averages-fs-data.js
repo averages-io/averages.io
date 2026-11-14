@@ -1332,6 +1332,30 @@
     return vals.map(function (v) { return v == null ? first : Math.round(v * 10) / 10; });
   }
 
+  /**
+   * The class grade right after each graded assignment, oldest first (2026-11-14): not the assignment's own score,
+   * the overall grade it took the class to, worked out the same way as gradeAt. Lined up with the grade Schoology
+   * reports today, like weeklyTrend: the gap, if any, is spread over every point so the last one is the real grade.
+   * [{ v, t (title), at (graded time, 0 when unknown), id, got, of }]
+   */
+  function gradeSteps(cats, pct) {
+    var list = [], weighted = cats.some(function (c) { return c.weight > 0; });
+    cats.forEach(function (c, ci) { arr(c.assignments).forEach(function (a) { if (a.graded && typeof a.score === 'number' && a.points > 0) list.push({ ci: ci, a: a }); }); });
+    list.sort(function (x, y) { return (x.a.gradedAt || x.a.due || 0) - (y.a.gradedAt || y.a.due || 0); });
+    var e = cats.map(function () { return 0; }), p = cats.map(function () { return 0; }), out = [];
+    list.forEach(function (x) {
+      e[x.ci] += x.a.score; p[x.ci] += x.a.points;
+      var tw = 0, tv = 0, pe = 0, pp = 0;
+      cats.forEach(function (c, i) { pe += e[i]; pp += p[i]; if (p[i] > 0 && c.weight > 0) { tw += c.weight; tv += c.weight * (e[i] / p[i] * 100); } });
+      var v = weighted ? (tw > 0 ? tv / tw : null) : (pp > 0 ? pe / pp * 100 : null);
+      if (v != null) out.push({ v: v, t: x.a.title || 'Assignment', at: x.a.gradedAt || 0, id: String(x.a.id || ''), got: x.a.score, of: x.a.points });
+    });
+    if (!out.length || typeof pct !== 'number') return out;
+    var off = pct - out[out.length - 1].v;
+    out.forEach(function (o) { o.v = Math.round(Math.max(0, Math.min(110, o.v + off)) * 10) / 10; });
+    return out;
+  }
+
   /** The student's grade in each class, one value per day it was seen (this device), for the trend charts. */
   function weeklyHas(cats, weeks, now) {
     var times = [];
@@ -1407,7 +1431,7 @@
         id: id, name: c.name || 'Class', short: initials(c.name), teacher: teacherOf(id), teacherIds: tids, period: typeof c.period === 'number' ? c.period : i + 1,
         hasPeriod: typeof c.period === 'number', room: '', students: m.length ? m.length + 1 : 0, pct: typeof c.pct === 'number' ? c.pct : 0, grade: c.grade || '',
         none: !(typeof c.pct === 'number' && c.pct > 0) && !cats.some(function (k) { return arr(k.assignments).some(function (a) { return a.graded; }); }),
-        trend: trend, trendHas: wk.has, trendPosted: wk.posted, due: due.length, missing: miss.length, updates: ups.length, next: next, code: c.code || '', section: c.section || '',
+        trend: trend, trendHas: wk.has, trendPosted: wk.posted, steps: gradeSteps(cats, typeof c.pct === 'number' ? c.pct : null), due: due.length, missing: miss.length, updates: ups.length, next: next, code: c.code || '', section: c.section || '',
         predicted: c.predicted || '', predictedPct: typeof c.predictedPct === 'number' ? c.predictedPct : c.pct, dir: c.trend || 'flat', updated: c.updated || '',
         points: points, dates: arr(hist.dates), titles: arr(hist.titles), emoji: s[1], color: s[2], lmsColor: c.color || '', order: i,
       };

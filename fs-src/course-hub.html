@@ -57,7 +57,7 @@
 
   /* Twemoji subject icon on a tint of the subject color (same table as courses.html) */
   .badge { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; flex: none; background: color-mix(in srgb, var(--c) 18%, #ffffff); }
-  .badge svg { width: 17px; height: 17px; display: block; }
+  .badge svg { width: 21px; height: 21px; display: block; }   /* the class emoji fills its tile (was 17px, 2026-11-14) */
   .italic { font-style: italic; }
 
   /* ---------- frame ---------- */
@@ -6615,9 +6615,11 @@ window.AveragesHelp = {
     if (h === mpHere) return; mpHere = h;
     try { history.pushState(null, '', h || location.pathname + location.search); } catch (_) {}
   }
-  const GD_FROM = (ME.trendHas || []).indexOf(true), GD_AT = GD_FROM < 0 ? ME.trend.length : GD_FROM;
-  const GD_WEEKS = FSD.WEEKS.slice(GD_AT);
-  const GD_TREND = ME.trend.slice(GD_AT);
+  // The chart is the class grade after each graded assignment (2026-11-14), not week by week: each point is where that
+  // assignment took your overall grade (averages-fs-data.js gradeSteps). Labels: the graded date and the assignment.
+  const GD_STEPS = ((FSD.C && FSD.C[ME.id]) || ME).steps || [];
+  const GD_WEEKS = GD_STEPS.map(x => x.at ? FSD.fmt.shortDate(x.at) : '');
+  const GD_TREND = GD_STEPS.map(x => x.v);
   const GD_CAT = m => m.cat || '';
   const GD_ICON = new Proxy({}, { get: (_, n) => catIcon(String(n)) });   // each category's emoji, from its name
   const GD = { type: 'all' };
@@ -6629,7 +6631,7 @@ window.AveragesHelp = {
     return out.filter(x => x.missing).concat(out.filter(x => !x.missing).sort((a, b) => b.at - a.at));
   }
   const gdPct = x => x.pts ? x.got / x.pts * 100 : 0;
-  const gdDelta = () => { if (GD_TREND.length < 3) return ''; const d = GD_TREND[GD_TREND.length - 1] - GD_TREND[GD_TREND.length - 3], k = Math.abs(d) < .15 ? 'flat' : d > 0 ? 'up' : 'down'; return `<span class="gd-d ${k}">${k === 'flat' ? 'Steady' : (d > 0 ? '+' : '-') + Math.abs(d).toFixed(1) + ' in 2 weeks'}</span>`; };
+  const gdDelta = () => { if (GD_TREND.length < 3) return ''; const d = GD_TREND[GD_TREND.length - 1] - GD_TREND[GD_TREND.length - 3], k = Math.abs(d) < .15 ? 'flat' : d > 0 ? 'up' : 'down'; return `<span class="gd-d ${k}">${k === 'flat' ? 'Steady' : (d > 0 ? '+' : '-') + Math.abs(d).toFixed(1) + ' over the last 2 grades'}</span>`; };
   function gdSumLine() {
     const it = gdItems(), n = it.filter(x => !x.missing).length, miss = it.filter(x => x.missing).length;
     $('gdSum').innerHTML = ME.none ? 'No grades yet' : `${letter(ME.pct)} · ${ME.pct.toFixed(1)}% · ${n} graded${miss ? ` · <span style="color:var(--bad)">${miss} missing</span>` : ''}`;
@@ -6637,18 +6639,19 @@ window.AveragesHelp = {
   // the chart: same entrance as Home's (the line draws across, then the points pop in)
   const GCH = { w: 600, h: 190, l: 34, r: 12, t: 12, b: 26 };
   function gdChartSVG(enter) {
-    if (GD_TREND.length < 2) return `<div class="gd-nodata"><b>Not enough data yet</b><span>Your grade week by week shows up once you have grades from two different weeks.</span></div>`;
-    // the real grade week by week, then a dashed step to the projected grade (if your recent scores hold), in a striped "not yet" zone
+    if (GD_TREND.length < 2) return `<div class="gd-nodata"><b>Not enough data yet</b><span>Your grade after each assignment shows up once two assignments are graded.</span></div>`;
+    // the real grade after each assignment, then a dashed step to the projected grade (if your recent scores hold), in a striped "not yet" zone
     const t = GD_TREND, last = t.length - 1, P = PROJ.predictedPct, all = t.concat([P]), mn = Math.min(...all), mx = Math.max(...all), mid = (mn + mx) / 2, span = Math.max(10, mx - mn + 3), lo = Math.floor(mid - span / 2), hi = Math.max(Math.ceil(mid + span / 2), Math.ceil(P + span * .16)); // room above the projected point for its label
     const n = last + 1, X = i => GCH.l + (i / n) * (GCH.w - GCH.l - GCH.r), Y = v => GCH.t + (1 - (v - lo) / (hi - lo)) * (GCH.h - GCH.t - GCH.b);
     const line = 'M' + t.map((v, i) => `${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join('L');
     let lastY = -99; const bands = [97, 93, 90, 87, 83, 80, 77, 73, 70].filter(v => v > lo && v < hi).map(v => { const y = Y(v), lab = Math.abs(y - lastY) >= 16; if (lab) lastY = y; return `<line class="band" x1="${GCH.l}" x2="${GCH.w - GCH.r}" y1="${y}" y2="${y}"/>${lab ? `<text class="band-t" x="0" y="${y + 4}">${letter(v)}</text>` : ''}`; }).join('');
-    const narrow = GCH.w < 480, step = narrow ? 3 : 2;
-    const xs = GD_WEEKS.map((d, i) => (i % step === 0 && last - i >= step) || (i === last && !narrow) ? `<text class="x-t" x="${X(i)}" y="${GCH.h - 6}" text-anchor="${i === 0 ? 'start' : 'middle'}">${d}</text>` : '').join('')
+    // about 5 dates along the bottom however many assignments there are (never the same date twice in a row)
+    const narrow = GCH.w < 480, step = Math.max(1, Math.ceil(n / (narrow ? 3 : 5)));
+    const xs = GD_WEEKS.map((d, i) => d && d !== GD_WEEKS[i - step] && ((i % step === 0 && last - i >= step) || (i === last && !narrow)) ? `<text class="x-t" x="${X(i)}" y="${GCH.h - 6}" text-anchor="${i === 0 ? 'start' : 'middle'}">${d}</text>` : '').join('')
       + `<text class="x-t gd-pt-x" x="${X(n)}" y="${GCH.h - 6}" text-anchor="end">Proj.</text>`;
     const pop = i => Math.max(0, Math.round(Math.acos(1 - 2 * i / last) / Math.PI * 900) - 60), colW = (GCH.w - GCH.l - GCH.r) / n;
     const lx = X(last), ly = Y(t[last]), px = X(n), py = Y(P), pid = 'gdStripes';
-    return `<svg class="gd-svg${enter && !calm() ? ' enter' : ''}" viewBox="0 0 ${GCH.w} ${GCH.h}" style="--series:${ME.color}" role="img" aria-label="Your ${esc(ME.name)} grade each week, from ${t[0]}% to ${t[last]}%, projected ${P}% if your recent scores hold">
+    return `<svg class="gd-svg${enter && !calm() ? ' enter' : ''}" viewBox="0 0 ${GCH.w} ${GCH.h}" style="--series:${ME.color}" role="img" aria-label="Your ${esc(ME.name)} grade after each assignment, from ${t[0]}% to ${t[last]}%, projected ${P}% if your recent scores hold">
       <defs><pattern id="${pid}" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)"><rect width="6" height="6" fill="${ME.color}" fill-opacity="0.06"/><line x1="0" y1="0" x2="0" y2="6" stroke="${ME.color}" stroke-opacity="0.3" stroke-width="2"/></pattern></defs>
       <rect class="gd-pz" x="${lx}" y="${GCH.t}" width="${px - lx}" height="${GCH.h - GCH.t - GCH.b}" fill="url(#${pid})"/>${bands}${xs}
       <line class="xh" id="gdXh" x1="0" x2="0" y1="${GCH.t}" y2="${GCH.h - GCH.b}" visibility="hidden"/><path class="gd-area" d="${line}L${lx},${GCH.h - GCH.b}L${X(0)},${GCH.h - GCH.b}Z"/><path class="gd-ln ln-main" pathLength="100" d="${line}"/>
@@ -6662,7 +6665,7 @@ window.AveragesHelp = {
     const it = gdItems().filter(x => !x.missing && x.pts), got = it.reduce((a, x) => a + x.got, 0), of = it.reduce((a, x) => a + x.pts, 0);
     $('grdTop').innerHTML = `<div class="gd-card"><div class="gd-gr">${ME.none ? '<span class="l g-na">N/A</span><span class="p"><small>No grades yet</small></span>' : `<span class="l ${gcls(ME.pct)}">${letter(ME.pct)}</span><span class="p">${ME.pct.toFixed(1)}%<small>right now</small></span>`}</div>${gdDelta()}
         <div class="gd-tiles"><div class="gd-tile" title="If your recent scores hold"><small>Projected</small>${ME.none ? '<b class="g-na">N/A</b>' : `<b>${letter(PROJ.predictedPct)} <span>${PROJ.predictedPct}%</span></b>`}</div><div class="gd-tile"><small>Points</small><b>${Math.round(got * 10) / 10}<span> / ${Math.round(of * 10) / 10}</span></b></div></div></div>
-      <div class="gd-ch"><div class="gd-cht"><b>Your grade, week by week</b><button class="btn" data-whatif="${ME.id}">${ico('calc')}What-if</button></div><div class="gd-chartbox" id="gdBox">${gdChartSVG(enter)}<div class="gs-tip gd-tip" id="gdTip"></div></div></div>`;
+      <div class="gd-ch"><div class="gd-cht"><b>Your grade, after each assignment</b><button class="btn" data-whatif="${ME.id}">${ico('calc')}What-if</button></div><div class="gd-chartbox" id="gdBox">${gdChartSVG(enter)}<div class="gs-tip gd-tip" id="gdTip"></div></div></div>`;
     gdFit(enter);
   }
   function gdCats() {
@@ -6718,7 +6721,7 @@ window.AveragesHelp = {
     const proj = hit.dataset.gdwk === 'p', i = +hit.dataset.gdwk, dot = proj ? svg.querySelector('.gd-pdot') : svg.querySelectorAll('.gd-dot')[i], box = $('gdBox').getBoundingClientRect(), dr = dot.getBoundingClientRect(), cx = +dot.getAttribute('cx');
     xh.setAttribute('x1', cx); xh.setAttribute('x2', cx); xh.setAttribute('visibility', 'visible');
     tip.innerHTML = proj ? `<small>Projected, if your recent scores hold</small><span class="r ov"><i></i>${esc(ME.name)}<b>${PROJ.predictedPct}% · ${letter(PROJ.predictedPct)}</b></span>`
-      : `<small>Week of ${esc(GD_WEEKS[i] || '')}</small><span class="r ov"><i></i>${esc(ME.name)}<b>${GD_TREND[i].toFixed(1)}% · ${letter(GD_TREND[i])}</b></span>`;
+      : `<small>After ${esc(GD_STEPS[i].t)}${GD_STEPS[i].of ? ` (${GD_STEPS[i].got} / ${GD_STEPS[i].of})` : ''}${GD_WEEKS[i] ? ' · ' + esc(GD_WEEKS[i]) : ''}</small><span class="r ov"><i></i>${esc(ME.name)}<b>${GD_TREND[i].toFixed(1)}% · ${letter(GD_TREND[i])}</b></span>`;
     const right = dr.left + dr.width / 2 - box.left < box.width / 2; tip.classList.toggle('left', !right);
     const tw = tip.offsetWidth, th = tip.offsetHeight, ax = dr.left + dr.width / 2 - box.left;
     tip.style.left = (right ? Math.min(ax + 14, box.width - tw - 4) : Math.max(ax - 14, tw + 4)) + 'px';
@@ -7405,7 +7408,11 @@ window.AveragesHelp = {
   // links from other pages: ?a= (an assignment), ?update= (a course update), ?turnin=1
   { const qa = FSX.q.get('a'), qu = FSX.q.get('update');
     if (qa && MATERIALS.some(m => m.id === qa) && !location.hash.startsWith('#grades')) agOpen(qa);
-    else if (qa && location.hash.startsWith('#grades')) setTimeout(() => { const r = $('grdWork').querySelector(`[data-gdopen="${CSS.escape(qa)}"]`); if (r) { r.scrollIntoView({ block: 'center' }); r.focus({ preventScroll: true }); } }, 200);
+    else if (qa && (location.hash.startsWith('#grades') || !MATERIALS.some(m => m.id === qa))) {
+      // graded work that has no page of its own here (a grade column, say): its row in Grades instead
+      if (!location.hash.startsWith('#grades')) setHubTab('grades');
+      setTimeout(() => { const r = $('grdWork').querySelector(`[data-gdopen="${CSS.escape(qa)}"]`); if (r) { r.scrollIntoView({ block: 'center' }); r.focus({ preventScroll: true }); } }, 200);
+    }
     if (qu && UPD.some(u => u.id === qu)) upGo(qu);
     if (FSX.q.get('turnin') === '1') tiOpen(qa && MATERIALS.some(m => m.id === qa) ? qa : ''); }
 /* ===== Life layer script: New stickers land at their own angle, in one of a few set spots on their item =====
