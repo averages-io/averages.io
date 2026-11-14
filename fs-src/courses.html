@@ -3725,14 +3725,16 @@
     });
   }
   // grade over the quarter as a small line; the last point gets a dot
+  // the class grade after each graded assignment (2026-11-14), the same line as its Grades chart; week by week until two are graded
+  const stepsOf = c => c.steps && c.steps.length >= 2 ? c.steps.map(x => x.v) : c.trend;
   function spark(c, w, h) {
-    const t = c.trend, mid = (Math.min(...t) + Math.max(...t)) / 2, span = Math.max(8, Math.max(...t) - Math.min(...t) + 1.2), lo = mid - span / 2, hi = mid + span / 2, /* at least 8 points tall, so small moves look small */ x = i => (i / (t.length - 1)) * w, y = v => h - ((v - lo) / (hi - lo)) * h;
+    const t = stepsOf(c), mid = (Math.min(...t) + Math.max(...t)) / 2, span = Math.max(8, Math.max(...t) - Math.min(...t) + 1.2), lo = mid - span / 2, hi = mid + span / 2, /* at least 8 points tall, so small moves look small */ x = i => (i / (t.length - 1)) * w, y = v => h - ((v - lo) / (hi - lo)) * h;
     const pts = t.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`), line = 'M' + pts.join('L');
     return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" role="img" aria-label="Grade this quarter, from ${t[0].toFixed(1)}% to ${t[t.length - 1].toFixed(1)}%">
       <path d="${line}L${w},${h}L0,${h}Z" fill="${c.color}" fill-opacity=".12" stroke="none"/><path d="${line}" fill="none" stroke="${c.color}" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>
       <circle cx="${x(t.length - 1).toFixed(1)}" cy="${y(t[t.length - 1]).toFixed(1)}" r="3" fill="${c.color}" stroke="var(--panel)" stroke-width="1.5" vector-effect="non-scaling-stroke"/></svg>`;
   }
-  const delta = c => { const d = c.trend[c.trend.length - 1] - c.trend[c.trend.length - 3]; const k = Math.abs(d) < .15 ? 'flat' : d > 0 ? 'up' : 'down'; return `<span class="cr-d ${k}" title="Change in the last two weeks">${k === 'flat' ? 'Steady' : (d > 0 ? '+' : '-') + Math.abs(d).toFixed(1)}</span>`; };
+  const delta = c => { const t = stepsOf(c), d = t[t.length - 1] - t[Math.max(0, t.length - 3)]; const k = Math.abs(d) < .15 ? 'flat' : d > 0 ? 'up' : 'down'; return `<span class="cr-d ${k}" title="${t === c.trend ? 'Change in the last two weeks' : 'Change over the last 2 grades'}">${k === 'flat' ? 'Steady' : (d > 0 ? '+' : '-') + Math.abs(d).toFixed(1)}</span>`; };
   // nothing graded: N/A on one line (the list's grade column is narrow: "None yet"), and no made-up trend line
   const grade = (c, narrow) => c.none ? `<span class="cr-g"><b class="g-na">N/A</b><span>${narrow ? 'None yet' : 'No grades yet'}</span></span>` : `<span class="cr-g"><b class="${gcls(c.pct)}">${letter(c.pct)}</b><span>${c.pct.toFixed(1)}%</span></span>`;
   const tag = (c, go, cls, label) => `<button class="cr-chip${cls}" data-crgo="${go}" data-crc="${c.id}" title="${esc(label)} in ${esc(c.name)}">${label}</button>`;

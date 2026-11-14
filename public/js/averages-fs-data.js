@@ -1551,6 +1551,9 @@
     }); }); });
     var canTurnIn = function (a) { return a.kind === 'assignment' && !a.disc && !a.outside && !a.noDrop; };
 
+    // each class's missing count: what's really missing (past due, not turned in, posted, graded or excused), not
+    // everything Schoology lists as past due (2026-11-14: Courses said 50 missing)
+    CLASSES.forEach(function (c) { c.missing = WORK_ALL.filter(function (a) { return a.c === c.id && a.st === 'missing'; }).length; });
     var counts = {
       assign: WORK_ALL.filter(function (a) { return (a.st === 'missing' || a.st === 'due') && a.dueAt; }).length,
       msg: arr(b.MESSAGES).filter(function (m) { return m.unread && !seen.has('m', m.id); }).length,
