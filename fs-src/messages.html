@@ -3023,6 +3023,11 @@
   .ms-fc .pf-page { display: block; }
   .ms-fc .pf-band, .ms-fc .pf-ln { display: block; }
   .ms-fc .pf-img.real img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
+  /* a real picture: the card takes the picture's own shape, scaled to fit, no white page around it (2026-11-14) */
+  .ms-fc .pf-doc.fit .pf-page { background: transparent; border: 0; border-radius: 6px; }
+  .ms-fc .pf-stage:has(.pf-doc.fit) { align-items: center; }
+  .ms-fc .pf-doc.fit .pf-img.real { inset: 0; border-radius: 6px; }
+  .ms-fc .pf-doc.fit .pf-img.real img { object-fit: contain; }
   .ms-fc .pf-img { position: absolute; inset: 5px; border-radius: 2px; background: radial-gradient(circle at 72% 30%, #ffffff 0 7%, transparent 8%), linear-gradient(160deg, color-mix(in srgb, var(--c) 28%, #ffffff), color-mix(in srgb, var(--c) 72%, #ffffff)); }
   .ms-fc .ft { display: flex; align-items: center; gap: 12px; padding: 12px 16px 12px; border-top: 2px solid color-mix(in srgb, var(--c) 10%, var(--field)); }
   .ms-fc .tx { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
@@ -4484,14 +4489,22 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     let pages = '';
     for (let n = 1; n <= shown; n++) {
       let body;
-      if (img) body = a.real && a.url ? `<span class="pf-img real"><img src="${esc(a.url)}" alt="" loading="lazy" decoding="async" onerror="this.remove()"></span>` : `<span class="pf-img"></span>`; // a real picture shows itself
+      if (img) body = a.real && a.url ? `<span class="pf-img real"><img src="${esc(a.url)}" alt="" loading="lazy" decoding="async" onload="window.__msFit && __msFit(this)" onerror="this.remove()"></span>` : `<span class="pf-img"></span>`; // a real picture shows itself, in its own shape (__msFit)
       else if (shape === 'landscape') { const col = () => Array.from({ length: 3 }, (_, i) => `<span class="pf-ln${i === 2 ? ' s' : ''}"></span>`).join(''); body = `<span class="pf-band"></span><span class="pf-cols"><span>${col()}</span><span>${col()}</span></span>`; }
       else { const lines = 3 + ((n * 2) % 4); body = `<span class="pf-band"></span>` + Array.from({ length: lines }, (_, i) => `<span class="pf-ln${i === lines - 1 ? ' s' : ''}"></span>`).join(''); }
       pages += `<span class="pf-page">${body}${img ? '' : `<span class="pf-num">${n}/${total}</span>`}</span>`;
     }
     const kind = img ? 'Image' : total === 1 ? '1 page' : total + (shape === 'landscape' && /\.(xlsx?|csv|numbers)$/i.test(a.name) ? ' sheets' : shape === 'landscape' ? ' slides' : ' pages');
-    return `<button class="ms-fc pf-host avfi-host" style="--c:${c}" data-msfile="${mid || ''}" aria-haspopup="dialog" aria-label="Open ${esc(a.name)}, ${kind}, ${esc(a.size)}"><span class="art" aria-hidden="true"><span class="pf-stage"><span class="pf-doc ${shape}${total <= 1 ? ' one' : ''}">${pages}</span>${total > 1 ? `<span class="pf-count">${kind}</span>` : ''}</span></span><span class="ft">${window.AveragesFileIcons ? AveragesFileIcons.html(a.name, { size: 28 }) : ico('doc')}<span class="tx"><b>${markQ(a.name)}</b><small>${esc(a.size)} · ${kind}</small></span></span></button>`;
+    const known = img && a.real && a.url && FIT[a.url] ? fitSize(FIT[a.url]) : null;
+    const fitStyle = known ? ` fit" style="--pw:${known[0]}px;--ph:${known[1]}px;--peel:${Math.round(known[0] * .48)}px` : '';
+    return `<button class="ms-fc pf-host avfi-host" style="--c:${c}" data-msfile="${mid || ''}" aria-haspopup="dialog" aria-label="Open ${esc(a.name)}, ${kind}, ${esc(a.size)}"><span class="art" aria-hidden="true"><span class="pf-stage"><span class="pf-doc ${shape}${total <= 1 ? ' one' : ''}${fitStyle}">${pages}</span>${total > 1 ? `<span class="pf-count">${kind}</span>` : ''}</span></span><span class="ft">${window.AveragesFileIcons ? AveragesFileIcons.html(a.name, { size: 28 }) : ico('doc')}<span class="tx"><b>${markQ(a.name)}</b><small>${esc(a.size)} · ${kind}</small></span></span></button>`;
   }
+  // A real picture's card takes the picture's shape: as big as fits in the card (160 x 118), wide or tall, never cut off.
+  // Kept per address, so a card drawn again starts in the right shape.
+  const FIT = {};
+  const fitSize = r => { let w = 160, h = w / r; if (h > 118) { h = 118; w = h * r; } return [Math.max(36, Math.round(w)), Math.max(28, Math.round(h))]; };
+  const fitDoc = (doc, r) => { const [w, h] = fitSize(r); doc.style.setProperty('--pw', w + 'px'); doc.style.setProperty('--ph', h + 'px'); doc.style.setProperty('--peel', Math.round(w * .48) + 'px'); doc.classList.add('fit'); };
+  window.__msFit = im => { const doc = im.closest('.pf-doc'); if (!doc || !im.naturalWidth || !im.naturalHeight) return; FIT[im.getAttribute('src')] = im.naturalWidth / im.naturalHeight; fitDoc(doc, FIT[im.getAttribute('src')]); };
   // the viewer: full screen, step through every file in the conversation with the arrows, download
   let lb = null;
   const msgById = mid => { for (const t of TH) { const m = t.msgs.find(x => x.id === mid); if (m) return [t, m]; } return []; };
