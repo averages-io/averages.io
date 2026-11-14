@@ -610,7 +610,7 @@
     var graded = {};
     var gb = (b && b.GRADEBOOK) || {};
     Object.keys(gb).forEach(function (c) { L(gb[c] && gb[c].categories).forEach(function (cat) { L(cat && cat.assignments).forEach(function (a) { if (a && a.graded && typeof a.score === 'number') graded[c + ':' + a.id] = true; }); }); });
-    var ok = function (a) { return a && !a.outside && !a.noDropbox && a.type !== 'discussion' && a.type !== 'assessment'; };
+    var ok = function (a) { return a && !a.outside && !a.noDropbox && !a.done && a.type !== 'discussion' && a.type !== 'assessment'; };
     var add = function (a) { var k = String(a.courseId) + ':' + String(a.id); if (/^\d+:\d+$/.test(k) && out.indexOf(k) < 0 && !graded[k] && ok(a)) out.push(k); };
     L(b && b.OVERDUE).slice().reverse().forEach(add);   // newest past due first
     L(b && b.TODAY).forEach(add);
@@ -1488,13 +1488,16 @@
       var key = c + ':' + a.id; if (!C[c] || !a.id || seenW[key]) return; seenW[key] = true;
       var g = gbById[key] || {}, sub = subs[key], graded = g.graded && typeof g.score === 'number';
       var type = base.type || 'assignment', outside = !!base.outside;
-      var st = graded ? 'graded' : sub ? 'turned' : dueMs != null && dueMs < now ? (outside ? 'due' : 'missing') : 'due';
+      // done: Schoology says this student finished it (posted in the discussion, marked it done...): not overdue,
+      // the way Schoology's own To Do leaves it out (2026-11-14). A teacher's "missing" in the gradebook still wins.
+      var done = !!base.done && !sub;
+      var st = graded ? 'graded' : sub || done ? 'turned' : dueMs != null && dueMs < now ? (outside ? 'due' : 'missing') : 'due';
       if (g.missing && !graded && !sub) st = 'missing';
       WORK_ALL.push({
         id: String(a.id), c: c, t: a.title || g.title || 'Assignment', type: type, kind: type === 'assessment' ? 'test' : 'assignment', disc: type === 'discussion', outside: outside, noDrop: !!base.noDropbox,
         dueAt: dueMs, off: offOf(dueMs), day: dueMs != null ? WD[new Date(dueMs).getDay()] : '', time: dueMs != null ? (base.time || timeOf(dueMs)) : '',
         pts: typeof g.points === 'number' && g.points > 0 ? g.points : null, st: st,
-        turnedAt: sub ? sub.at : 0, turned: sub ? (sub.at ? dayLabel(sub.at, now) : 'earlier') : null, sent: sub ? sub.files : undefined,
+        turnedAt: sub ? sub.at : 0, turned: sub ? (sub.at ? dayLabel(sub.at, now) : 'earlier') : done ? 'earlier' : null, sent: sub ? sub.files : undefined, done: done || undefined,
         got: graded ? g.score : undefined, gradedAt: graded ? g.gradedAt || 0 : 0, graded: graded ? (g.gradedAt ? dayLabel(g.gradedAt, now) : 'earlier') : null, note: g.comment || '',
       });
     }
