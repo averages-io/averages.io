@@ -598,15 +598,24 @@
     });
     return out;
   }
-  /** The work whose turn-ins the page shows (overdue, today, due soon), as "section:assignment,..." (at most 10). */
+  /**
+   * The work whose turn-ins the page shows, as "section:assignment,..." (at most 20): what's past due and not graded
+   * yet, newest first, then today's, then what's due soon. Only work that's turned in here (not discussions, tests,
+   * outside tools or work with no dropbox), and nothing already graded: that's done either way.
+   * (Before 2026-11-14 it took the first 10 of the bundle's OVERDUE, which is oldest first and has everything ever past
+   * due, so recent work that was turned in still showed as overdue.)
+   */
   function turnedInFor(b) {
-    var out = [];
-    var L = function (v) { return Array.isArray(v) ? v : []; };
-    L(b && b.OVERDUE).concat(L(b && b.TODAY), L(b && b.UPCOMING)).forEach(function (a) {
-      var k = String(a.courseId) + ':' + String(a.id);
-      if (/^\d+:\d+$/.test(k) && out.indexOf(k) < 0 && !a.outside && a.type !== 'discussion' && a.type !== 'assessment') out.push(k);
-    });
-    return out.slice(0, 10).join(',');   // overdue and today first; 10 keeps a page open under Schoology's limit
+    var out = [], L = function (v) { return Array.isArray(v) ? v : []; };
+    var graded = {};
+    var gb = (b && b.GRADEBOOK) || {};
+    Object.keys(gb).forEach(function (c) { L(gb[c] && gb[c].categories).forEach(function (cat) { L(cat && cat.assignments).forEach(function (a) { if (a && a.graded && typeof a.score === 'number') graded[c + ':' + a.id] = true; }); }); });
+    var ok = function (a) { return a && !a.outside && !a.noDropbox && a.type !== 'discussion' && a.type !== 'assessment'; };
+    var add = function (a) { var k = String(a.courseId) + ':' + String(a.id); if (/^\d+:\d+$/.test(k) && out.indexOf(k) < 0 && !graded[k] && ok(a)) out.push(k); };
+    L(b && b.OVERDUE).slice().reverse().forEach(add);   // newest past due first
+    L(b && b.TODAY).forEach(add);
+    L(b && b.UPCOMING).forEach(add);
+    return out.slice(0, 20).join(',');   // 20 histories: with the bundle, still inside Schoology's 50 calls per 5 s
   }
   function extrasPlan() {
     var now = new Date(), tz = zone(), zq = tz ? '&tz=' + encodeURIComponent(tz) : '';
