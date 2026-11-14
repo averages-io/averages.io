@@ -633,6 +633,16 @@
     var f = turnedInFor(b), p = postedFor(b);
     return f || p ? 'for=' + f + (p ? '&posted=' + p : '') : '';
   }
+  /** What a course hub needs beyond the bundle for one class: [path, cache key]. Shared with the prefetch below. */
+  function hubPlan(id) {
+    var now = new Date(), tz = zone(), zq = tz ? '&tz=' + encodeURIComponent(tz) : '', q = encodeURIComponent(id);
+    var hs = ymd(addDays(now, -60)), he = ymd(addDays(now, 120));
+    return {
+      folders: ['/data/folders?course=' + q, 'folders_' + id],
+      gradebook: ['/data/gradebook?course=' + q, 'gradebook_' + id],
+      hubEvents: ['/data/events?start=' + hs + '&end=' + he + '&course=' + q + zq, 'events_' + hs + '_' + he + '_' + id],
+    };
+  }
   function extrasPlan() {
     var now = new Date(), tz = zone(), zq = tz ? '&tz=' + encodeURIComponent(tz) : '';
     // Home (2026-11-13): drawn as soon as grades, assignments and turned-in work are in; teachers, course updates,
@@ -648,12 +658,7 @@
     // what's been turned in (files), so finished work isn't called missing
     if (page === 'assignments' || page === 'home' || page === 'course-hub' || page === 'files' || page === 'calendar') x.submissions = page === 'files' ? ['/data/submissions', 'fs_submissions'] : ['@for'];
     if (page === 'contacts' || page === 'course-hub' || page === 'messages') x.classmates = ['/data/classmates', 'fs_classmates'];
-    if (page === 'course-hub' && courseQ) {
-      x.folders = ['/data/folders?course=' + encodeURIComponent(courseQ), 'folders_' + courseQ];
-      x.gradebook = ['/data/gradebook?course=' + encodeURIComponent(courseQ), 'gradebook_' + courseQ];
-      var hs = ymd(addDays(now, -60)), he = ymd(addDays(now, 120));
-      x.hubEvents = ['/data/events?start=' + hs + '&end=' + he + '&course=' + encodeURIComponent(courseQ) + zq, 'events_' + hs + '_' + he + '_' + courseQ];
-    }
+    if (page === 'course-hub' && courseQ) { var h = hubPlan(courseQ); Object.keys(h).forEach(function (k) { x[k] = h[k]; }); }
     return x;
   }
   function settle(p, ms) {
@@ -717,6 +722,28 @@
       mergeLater(D2, fresh, raw);
       window.dispatchEvent(new CustomEvent('fs:more', { detail: { keys: have } }));
     });
+  }
+  /**
+   * Home and Courses (2026-11-14): once the page and its late lists are in, each class's hub data (materials, gradebook,
+   * its calendar) and the classmates list are read in the background and kept for 5 minutes, so opening a class is
+   * instant. One class at a time, a moment apart, so it stays well inside Schoology's 50 calls every 5 seconds and our
+   * own limit; skipped with Data Saver, on a slow connection or a low battery, and while the tab is hidden.
+   */
+  function prefetchHubs() {
+    if (page !== 'home' && page !== 'courses') return;
+    var D = window.FSD; if (!D || !D.me || !D.me.uid || saving()) return;
+    var who = D.me.uid, ids = (D.CLASSES || []).map(function (c) { return c.id; }).filter(function (id) { return /^\d+$/.test(id); }).slice(0, 12);
+    var jobs = [['classmates', '/data/classmates', 'fs_classmates']];
+    ids.forEach(function (id) { var h = hubPlan(id); Object.keys(h).forEach(function (k) { jobs.push([k, h[k][0], h[k][1]]); }); });
+    jobs = jobs.filter(function (j) { return cacheRead('averages_extras_' + j[2], 'data', who) === undefined; });
+    var i = 0;
+    var next = function () {
+      if (i >= jobs.length) return;
+      if (document.visibilityState === 'hidden') { setTimeout(next, 5000); return; }
+      var group = jobs.slice(i, i + 3); i += 3;   // one class's three lists together, then a pause
+      Promise.all(group.map(function (j) { return extra(j[0], j[1], j[2], who).catch(function () {}); })).then(function () { setTimeout(next, 1500); });
+    };
+    setTimeout(next, 2500);
   }
   function mergeLater(D, fresh, raw) {
     D.raw = raw;
@@ -784,7 +811,7 @@
       window.location.replace(cid ? '/IS/course-hub?course=' + encodeURIComponent(cid) + (cid !== qid ? '#materials/' + encodeURIComponent(qid) : (location.hash || '')) : '/IS/courses');
       return;
     }
-    return domReady.then(runPage).then(loadLater);
+    return domReady.then(runPage).then(loadLater).then(prefetchHubs);
   }).catch(function (err) {
     if (err && err.signedOut) { window.location.replace('/'); return; }
     if (window.console) console.error('[fs] load failed', err);
@@ -1348,7 +1375,7 @@
       var tw = 0, tv = 0, pe = 0, pp = 0;
       cats.forEach(function (c, i) { pe += e[i]; pp += p[i]; if (p[i] > 0 && c.weight > 0) { tw += c.weight; tv += c.weight * (e[i] / p[i] * 100); } });
       var v = weighted ? (tw > 0 ? tv / tw : null) : (pp > 0 ? pe / pp * 100 : null);
-      if (v != null) out.push({ v: v, t: x.a.title || 'Assignment', at: x.a.gradedAt || 0, id: String(x.a.id || ''), got: x.a.score, of: x.a.points });
+      if (v != null) out.push({ v: v, t: x.a.title || 'Assignment', at: x.a.gradedAt || x.a.due || 0, id: String(x.a.id || ''), got: x.a.score, of: x.a.points });
     });
     if (!out.length || typeof pct !== 'number') return out;
     var off = pct - out[out.length - 1].v;
