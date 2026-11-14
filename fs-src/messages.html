@@ -4367,16 +4367,26 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   // Schoology's inbox and sent messages (GET /messages): newest first, each with its newest message. The whole
   // conversation loads when it's opened (GET /messages/thread). Pins and hidden ones are kept in this browser.
   const PINS = new Set(store.get('fsmsg_pins') || []), HIDDEN = new Set(store.get('fsmsg_hidden') || []);
+  // Each conversation's newest message, read in the background (msPreviews) and kept for this tab only, by thread
+  // and its newest time: a newer message means asking again.
+  const PREV = (() => { try { return JSON.parse(sessionStorage.getItem('fsmsg_prev') || '{}') || {}; } catch (e) { return {}; } })();
+  const PREV_KEPT = t => { const k = PREV[String(t.id)]; return k && k.at === (t.at || 0) && typeof k.t === 'string' ? k : null; };
+  const prevKeep = (t, at) => { const l = t.msgs[t.msgs.length - 1]; if (!l || l.react) return; PREV[t.id] = { at, t: String(l.t || (l.att ? l.att.name : '')).slice(0, 160), me: l.from === 'me' };
+    try { const ks = Object.keys(PREV); if (ks.length > 60) ks.slice(0, ks.length - 60).forEach(k => delete PREV[k]); sessionStorage.setItem('fsmsg_prev', JSON.stringify(PREV)); } catch (e) { /* storage full or off */ } };
   const TH = MSG.CONVERSATIONS.filter(t => t && t.id && !HIDDEN.has(String(t.id))).map(t => {
     const me = String(MSG.me || ''), w2 = (t.participants || []).map(String).filter(x => x && x !== me);
     const withIds = (w2.length ? w2 : [String(t.personId || '')]).map(person);
-    return { id: String(t.id), with: withIds, subject: t.subject || 'No subject', unread: !!t.unread && (MU.has(String(t.id)) || !FSX.seen.has('m', t.id)), pinned: PINS.has(String(t.id)), loaded: false,
-      msgs: [M(withIds.includes(String(t.personId)) ? String(t.personId) : withIds[0], t.preview || '', new Date(t.at || Date.now()))] };
+    const kept = t.preview ? null : PREV_KEPT(t);
+    return { id: String(t.id), with: withIds, subject: t.subject || 'No subject', unread: !!t.unread && (MU.has(String(t.id)) || !FSX.seen.has('m', t.id)), pinned: PINS.has(String(t.id)), loaded: false, at0: t.at || 0, sgyUnread: !!t.unread,
+      msgs: [M(kept && kept.me ? 'me' : withIds.includes(String(t.personId)) ? String(t.personId) : withIds[0], t.preview || (kept ? kept.t : ''), new Date(t.at || Date.now()))] };
   });
-  const thLoad = t => {
-    if (!t || t.loaded || t.loading) return; t.loading = true;
-    FSX.thread(t.id).then(r => {
-      t.loaded = true; t.loading = false;
+  const thLoad = (t, peek) => {
+    if (!t || t.loaded || t.loading) return Promise.resolve(); t.loading = true; t.peeking = !!peek;
+    return FSX.thread(t.id, peek).then(r => {
+      t.loaded = true; t.loading = false; t.peeking = false;
+      if (!peek) t.sgyUnread = false;   // fetched for real: Schoology marked it read itself
+      else if (t.readWhenIn) msStatus([t], false);
+      t.readWhenIn = false;
       const fileOf = (f) => ({ name: f.name, size: f.size ? fmtSize(f.size) : 'File', url: `${FSX.API}/messages/file?thread=${encodeURIComponent(t.id)}&file=${encodeURIComponent(f.id)}&view=1`, dl: `${FSX.API}/messages/file?thread=${encodeURIComponent(t.id)}&file=${encodeURIComponent(f.id)}`, real: true });
       t.msgs = [];
       (r.messages || []).forEach(m => {
@@ -4393,9 +4403,10 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       const pend = (store.get('fsmsg_rx_sent') || []).filter(x => x.th === t.id && Date.now() - x.at < 10 * 60e3 && !t.msgs.some(o => o.from === 'me' && o.t === x.text && +o.when >= x.at - 120e3));
       pend.forEach((x, k) => { const o = M('me', x.text, new Date(x.at), { state: 'sent' }); o.id = t.id + '.p' + k; t.msgs.push(o); });
       rxFold(t.msgs);
+      prevKeep(t, t.at0 || 0);
       if (MS.open === t.id || (MS.open || '').startsWith('p:')) msThread(true); msRows();
       if (info && tsOf(info.id).includes(t)) infoDraw(true);
-    }).catch(() => { t.loading = false; t.failed = true; if (MS.open === t.id) msThread(true); });
+    }).catch(() => { t.loading = false; t.peeking = false; t.failed = true; if (MS.open === t.id) msThread(true); });
   };
 
   const last = t => t.msgs[t.msgs.length - 1];
@@ -4975,7 +4986,13 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     MS.open = id; if (id !== 'new') { store.set('fsmsg_open', id); if (MU.size) muSet(tsOf(id), false); }
     // opening it marks it read (Schoology does the same)
     const ts = id && id.startsWith('p:') ? TH.filter(x => keyOf(x) === id.slice(2)) : TH.filter(x => x.id === id);
-    const wasUnread = ts.some(t => t.unread); ts.forEach(t => { t.unread = false; FSX.seen.mark('m', t.id); thLoad(t); });
+    const wasUnread = ts.some(t => t.unread);
+    // a conversation already read in the background (a peek) didn't mark it read on Schoology: opening it does
+    // Schoology marks a conversation read when it's fetched for real. One already here (read in the background, or
+    // marked unread since) is marked with a status call instead; one still being read in the background, when that's in.
+    // (sgyUnread: what Schoology itself says, which can differ from the dot here.)
+    ts.forEach(t => { if (!t.sgyUnread) return; if (t.loaded) msStatus([t], false); else if (t.loading && t.peeking) t.readWhenIn = true; });
+    ts.forEach(t => { t.unread = false; FSX.seen.mark('m', t.id); thLoad(t); });
     msRows(); msThread(); if (wasUnread) { msView(); msMeta(); }
     if (focus !== false) { const f = $('msText') || $('msToIn'); if (f && innerWidth > 860) f.focus({ preventScroll: true }); }
   }
@@ -5054,6 +5071,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   // Schoology turned down a new message in the last day (the school's messaging settings): say so. It's tried again either way.
   // read / unread on Schoology too (POST /messages/status); the dot here changes at once either way
   function msStatus(ts, unread) {
+    ts.forEach(t => { t.sgyUnread = !!unread; });
     ts.filter(t => /^\d+$/.test(String(t.id))).forEach(t => FSX.api('/messages/status', { method: 'POST', json: { id: String(t.id), unread } }).catch(() => { /* still changed here */ }));
   }
   const sgyBlocked = () => { const t = +FSX.lget('averages_msg_new_blocked') || 0; return !!t && Date.now() - t < 864e5; };
@@ -5404,6 +5422,15 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   { const first = TH.slice().sort(sortT).find(t => t.unread && !MU.has(String(t.id))); if (!MS.open && innerWidth > 860) MS.open = first ? first.id : null; }
   if (MS.open) { tsOf(MS.open).forEach(t => { t.unread = false; FSX.seen.mark('m', t.id); thLoad(t); }); }
   msMeta(); msView(); msRows(); msThread(); ntInit();
+  // The list's previews (2026-11-13): Schoology's list often leaves out what a conversation's newest message says, so
+  // the newest ones are read in the background, two at a time, without marking anything read. At most 12, newest
+  // first, and kept for this tab, so it stays well inside Schoology's 50 calls every 5 seconds.
+  (function msPreviews() {
+    const todo = TH.filter(t => /^\d+$/.test(t.id) && !t.loaded && !(t.msgs[0] && (t.msgs[0].t || t.msgs[0].att))).slice(0, 12);
+    let i = 0;
+    const next = () => { const t = todo[i++]; if (!t) return; thLoad(t, true).catch(() => {}).then(() => setTimeout(next, 150)); };
+    setTimeout(() => { next(); next(); }, 800);
+  })();
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => mpPill($('msView'), false));
 
   // search anything: this page's conversations and people; "message ..." starts one right here

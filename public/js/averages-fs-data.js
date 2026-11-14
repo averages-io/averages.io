@@ -1156,7 +1156,8 @@
       },
     },
     /** Schoology messages: a conversation, a reply, a new message (teachers only, in the app). */
-    thread: function (id) { var z = zone(); return FSX.api('/messages/thread?id=' + encodeURIComponent(id) + (z ? '&tz=' + encodeURIComponent(z) : '')); },
+    /** One conversation. peek: read it without marking it read on Schoology (the list's background previews). */
+    thread: function (id, peek) { var z = zone(); return FSX.api('/messages/thread?id=' + encodeURIComponent(id) + (peek ? '&peek=1' : '') + (z ? '&tz=' + encodeURIComponent(z) : '')); },
     reply: function (id, message, fileIds) { return FSX.api('/messages/reply', { method: 'POST', json: { id: String(id), message: message, fileIds: fileIds || [] } }).then(function (r) { sdel('averages_extras_messages'); return r; }); },
     send: function (recipientIds, subject, message, fileIds) { return FSX.api('/messages', { method: 'POST', json: { recipientIds: recipientIds, subject: subject, message: message, fileIds: fileIds || [] } }).then(function (r) { sdel('averages_extras_messages'); return r; }); },
     msgUpload: function (file, onProgress) {
