@@ -803,6 +803,8 @@
   started.then(function (raw) {
     if (!raw) return;
     window.FSD = window.FSA.adapt(raw);
+    // class names for Advanced translation, the ones the student didn't rename (averages-i18n.js)
+    if (window.AvI18n && window.FSD && window.FSD.CLASSES) window.AvI18n.items(window.FSD.CLASSES.filter(function (c) { return c.name === c.origName; }).map(function (c) { return c.name; }));
     // a course hub needs one of the student's classes; anything else goes to Courses
     if (page === 'course-hub' && !window.FSD.C[courseQ]) {
       // From a Windowed address (/course-home?id=<class>, /assignment?id=<assignment>): find the class, then go there

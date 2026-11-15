@@ -670,3 +670,424 @@
 670|{x} est en retard
 671|Manquant · était à rendre le {x}
 672|Dem.
+673|Ajouter
+674|Essayer
+675|Retour
+676|Bêta
+677|Gras
+678|Code
+679|Données
+680|Terminé
+681|Bas
+682|Fin
+683|De
+684|Plus
+685|Enregistrer
+686|Texte
+687|Voir
+688|Word
+689|Ajouté
+690|Audio
+691|Vérifier
+692|Entrée
+693|Aller à
+694|Image
+695|Inde
+696|Photo
+697|Réinitialiser
+698|Partager
+699|Vidéo
+700|Joindre
+701|Annuler
+702|Copié
+703|Italique
+704|Les plus récents
+705|Sur
+706|Retirer
+707|Renommer
+708|Type ▾
+709|Retirer des favoris
+710|Vérifier
+711|Actions
+712|Archiver
+713|Modifications
+714|Effacé
+715|Copié.
+716|Anglais
+717|Revenir
+718|Aperçu
+719|Actualiser
+720|Quelqu'un
+721|Activer
+722|Tous les travaux
+723|Catégorie
+724|Continuer
+725|Inclus
+726|Nouveau fichier
+727|Nouveau lien
+728|Pas de fichier ?
+729|Organiser
+730|Personnes ▾
+731|Raccourci
+732|Synchronisation…
+733|Vérifié
+734|Page web
+735|Automatique
+736|Vérification…
+737|Camarade
+738|Suppression…
+739|Type de fichier
+740|Nouvelle note
+741|Aucun changement
+742|Ouvrir avec
+743|Envoyer le code
+744|Afficher moins
+745|Réessayer
+746|Souligné
+747|Utiliser la photo
+748|Ta note
+749|Ton travail
+750|a publié dans
+751|Ajouter un fichier
+752|Données du cours
+753|Déconnecter
+754|Si j'obtiens
+755|Modifié ▾
+756|Sans objet
+757|Ouvrir Canva
+758|Page de démarrage
+759|Fuseaux horaires
+760|À rendre
+761|Rendu en cours
+762|Envoi…
+763|il y a une minute
+764|trois points
+765|· Support
+766|Camarade ·
+767|Bientôt disponible
+768|Expériences
+769|Minuteur d'étude
+770|Google Docs
+771|Objectifs de notes
+772|Faire une copie
+773|Mexico
+774|Nouvelle-Zélande
+775|Rien de nouveau
+776|Ou ajouter depuis
+777|Choisis un fichier
+778|Envoi du rendu…
+779|À jour.
+780|Tu es ici
+781|Ta réponse
+782|minutes
+783|rien pour l'instant
+784|ta réponse
+785|✓ rendu
+786|Création Canva
+787|Heure du Centre
+788|Changer la photo
+789|Choisir des fichiers
+790|Heure de l'Est
+791|Arrêter Plus maintenant
+792|Arrêt de Plus…
+793|Google Forms
+794|Message de
+795|Nouvelle note en
+796|Notification
+797|Heure du Pacifique
+798|Ordre des périodes
+799|Notes rapides
+800|Retirer l'e-mail
+801|Image vectorielle
+802|Bilan de la semaine
+803|Tes créations
+804|Ton prof
+805|choisir des fichiers
+806|ton prof
+807|· Devoir
+808|Déjà ajouté
+809|Heure de l'Atlantique
+810|Liste à puces
+811|Arrêter Plus maintenant ?
+812|Préparation
+813|Heure des Rocheuses
+814|Mettre à la corbeille
+815|Pas encore de notes
+816|Liste numérotée
+817|Vérification de l'image
+818|Planificateur d'étude
+819|Document Word
+820|pour arrêter plus tôt.
+821|Ajoute ton e-mail
+822|Événement du calendrier
+823|Europe centrale
+824|Europe de l'Est
+825|De Schoology
+826|Cette page seulement
+827|Nom et photo
+828|Nouveau devoir
+829|Mode patate activé
+830|Partagés avec moi
+831|L'appli iPhone
+832|Réponse écrite
+833|une seconde
+834|Échec de l'envoi
+835|Couleurs sombres activées.
+836|Dépose les fichiers ici
+837|E-mail vérifié.
+838|Ouvrir le devoir
+839|Ouvrir dans un nouvel onglet
+840|Mode patate désactivé
+841|Cours Schoology
+842|Projet Scratch
+843|Chercher dans Drive
+844|Envoyer un nouveau code
+845|Mise en forme du texte
+846|Ton rendu
+847|Couleurs claires activées.
+848|Créer un nouveau lien ?
+849|Crée ta création
+850|Désactivé en navigation privée
+851|Rendus précédents
+852|Prêt à rendre
+853|Tes rendus
+854|a publié une nouveauté
+855|ta première visite
+856|Connecter d'autres applis
+857|Raccourcis par défaut
+858|Tout supprimer
+859|Feuille de calcul Excel
+860|Aperçus des fichiers activés.
+861|Fichiers et dossiers
+862|Laisser la barre latérale se fermer
+863|Aucun réglage ne correspond
+864|Pas encore disponible
+865|Ouvrir Google Drive
+866|Ouvrir dans un nouvel onglet
+867|Ouverture du paiement…
+868|Voir toutes les versions
+869|Rends ton travail
+870|Ce qui est envoyé
+871|Ton ordre des cours
+872|Avant d'envoyer…
+873|Aperçus des fichiers désactivés.
+874|Création des liens de partage
+875|Création de ta création
+876|Ouverture de ton abonnement…
+877|Lire l'animation
+878|Silence pendant les cours
+879|Enregistrement de ta réponse
+880|Enregistrement de ta photo…
+881|Abonné à Plus
+882|Ce que tu as rendu
+883|Ton lien de calendrier
+884|rien de noté pour l'instant
+885|· jusqu'à 95 Mo chacun
+886|Vérification de ton abonnement…
+887|Personnaliser cette page
+888|Saisis les 6 chiffres.
+889|Création d'un lien de partage
+890|Mettre l'animation en pause
+891|Place ta photo
+892|Ton e-mail a été retiré.
+893|Ton profil a été enregistré.
+894|Passer en navigation privée
+895|Indisponible avec Plus
+896|Ton e-mail Averages
+897|Tes fichiers OneDrive
+898|Ajoute d'abord un objet.
+899|Ajouter depuis une autre appli
+900|Ajoute d'abord ton nom.
+901|Classique ou navigation privée
+902|Dépose tes fichiers ici
+903|Paiements et reçus
+904|Passer en navigation privée ?
+905|Tu es à jour
+906|Ajouter à Apple Calendrier
+907|Averages.io pour Drive
+908|Retour à l'ordre des périodes.
+909|Avant d'ouvrir Canva
+910|Ne plus afficher
+911|Retourner sur Averages.io
+912|Ce n'est pas encore prêt.
+913|Inclus avec Plus.
+914|Ce dossier est vide.
+915|Coche les fichiers à ajouter
+916|Tu es à jour.
+917|1,99 $ par mois plus taxes
+918|Ajouter à Google Agenda
+919|Téléchargement de tes données.
+920|Rien n'a été rendu.
+921|Désactivé en navigation privée.
+922|Enregistré ici pendant que tu écris
+923|Écris d'abord un message.
+924|Tu as déjà Plus.
+925|Retour aux touches habituelles.
+926|Canva s'ouvre dans cet onglet
+927|Passage en navigation privée…
+928|Aucun abonnement à arrêter.
+929|Écris ta réponse ici…
+930|pour supprimer ton compte.
+931|Choisis ta vue par défaut
+932|Masquer la liste des devoirs
+933|Comment tu le rends
+934|Indisponible pour l'instant.
+935|Rien d'enregistré pour l'instant.
+936|Plus nécessite le mode Classique.
+937|Afficher la liste des devoirs
+938|Se déconnecter d'Averages.io ?
+939|Impossible de charger tes fichiers.
+940|Schoology · tes rendus
+941|Police du système, sans animation
+942|Ce message est trop long.
+943|Bienvenue dans Averages Plus.
+944|Écris ta réponse à la place
+945|Connecté dans ce navigateur.
+946|Ton lien de calendrier a été copié.
+947|Schoology · réponse écrite
+948|Rendu sur Schoology en cours
+949|Ce que ça implique de l'activer
+950|Ajouter des fichiers depuis Google Drive
+951|Ajouté par toi · Dans Schoology
+952|Clique sur Retourner sur Averages.io
+953|Les expériences sont incluses avec Plus.
+954|On vérifie que c'est bien parti
+955|Pas encore configuré de notre côté.
+956|Raccourci retiré de l'accueil.
+957|Choisis Averages.io pour Drive
+958|Analyse de ta photo…
+959|Les notifications du navigateur sont activées.
+960|Supprimer ton compte Averages ?
+961|Les fichiers Office s'affichent en PDF.
+962|Les pages suivent maintenant ton appareil.
+963|Impossible de charger tes cours
+964|Écris quelque chose pour le rendre
+965|La synchronisation du calendrier est incluse avec Plus.
+966|Trouve ton fichier dans Google Drive
+967|Il est dans tes fichiers Averages.io
+968|Envoyé. Ça s'affiche dans un instant.
+969|Impossible de lire cette image.
+970|Aucun abonnement à gérer pour l'instant.
+971|C'est désactivé en navigation privée.
+972|Appuie sur les touches que tu veux utiliser.
+973|Les jours restants ne sont pas remboursés.
+974|À jour. Du nouveau est arrivé.
+975|Google Drive s'ouvre dans un nouvel onglet.
+976|Pas encore de cours pour essayer des notes.
+977|Choisis une image PNG, JPG ou WebP.
+978|Un problème est survenu. Réessaie.
+979|Rendre, sur la page Devoirs
+980|Réponse écrite envoyée à Schoology
+981|Active d'abord Nouveautés en avant-première.
+982|Ta création est prête. Ouvre Canva.
+983|La synchronisation du calendrier est désactivée en navigation privée.
+984|Les fichiers de ton OneDrive y restent.
+985|Ça envoie ce fichier à Averages.io.
+986|Les fichiers Office s'ouvrent dans leur format d'origine.
+987|Plus est terminé. Tu es en mode Classique.
+988|Impossible d'ouvrir cette page. Réessaie.
+989|Fais un clic droit, puis choisis Ouvrir avec
+990|Les comptes de moins de 13 ans restent en navigation privée.
+991|Choisis une touche de lettre, de chiffre ou de symbole.
+992|Le fuseau horaire suit de nouveau cet appareil.
+993|Où ils s'ouvrent quand tu appuies sur Modifier.
+994|Une animation des étapes indiquées ici
+995|Les notifications du navigateur sont incluses avec Plus.
+996|Impossible de créer ta création. Réessaie.
+997|Ces touches font déjà autre chose.
+998|Les fichiers de ton Google Drive y restent.
+999|C'est en haut à droite dans Canva.
+1000|Pas encore vérifié. Vérifie-le pour l'utiliser.
+1001|Te revoilà, avec ta création jointe
+1002|Ton école, choisie quand tu t'es connecté
+1003|Impossible d'annuler pendant le rendu
+1004|Les raccourcis de l'accueil sont revenus par défaut.
+1005|Fais glisser pour la déplacer. Utilise le curseur pour zoomer.
+1006|Impossible d'arrêter Plus. Réessaie dans un instant.
+1007|Modifie-la dans Canva comme d'habitude.
+1008|Activé pour un autre navigateur. Active-le ici aussi.
+1009|Tape un score et le nombre de points sur lequel il est.
+1010|Retour au mode Classique. Tes réglages se synchronisent de nouveau.
+1011|Impossible d'enregistrer. Réessaie dans un instant.
+1012|Ça remplace Averages.io pour l'instant.
+1013|Ton navigateur utilise ces touches. Essaie-en d'autres.
+1014|Ajouter des contacts cherche maintenant dans tout Schoology.
+1015|Ajouter des contacts cherche maintenant seulement dans ton école.
+1016|Essaie un mot comme « sombre », « Canva » ou « bloquer ».
+1017|Impossible d'envoyer un test. Réessaie dans un instant.
+1018|Tes créations restent dans ton compte Canva.
+1019|Ça ne ressemble pas encore à une adresse e-mail.
+1020|Les fichiers que tu as utilisés avec Averages.io s'affichent ici.
+1021|Nouveau lien créé. L'ancien ne marche plus.
+1022|Seulement sur cet écran. Schoology ne change pas.
+1023|Remettre tes cours dans l'ordre de ton école.
+1024|Tu peux te reconnecter avec Schoology quand tu veux.
+1025|les réglages de ton compte Schoology, dans un nouvel onglet
+1026|Impossible de charger. Actualise la page et réessaie.
+1027|Vois à quoi ressemble une notification sur cet ordinateur.
+1028|Cette image est trop grande. Choisis-en une de moins de 15 Mo.
+1029|Suit ton appareil : clair ou sombre comme lui.
+1030|Pour les bulletins et la connexion sur de nouveaux appareils.
+1031|Désactivé en navigation privée. Les réglages restent dans ce navigateur.
+1032|Cette image ne peut pas être utilisée. Essaie-en une autre.
+1033|Pour avoir Plus, passe d'abord en mode Classique dans Confidentialité.
+1034|Ton ordre. Le mode fenêtré et la barre latérale l'utilisent aussi.
+1035|Pas en navigation privée. Plus nécessite la synchronisation entre appareils.
+1036|C'est comme ça que tu apparais dans Messages et Contacts.
+1037|Effacé. Les pages se rechargeront depuis Schoology la prochaine fois.
+1038|Schoology n'a pas répondu, ou la connexion a été coupée.
+1039|On t'enverra un code à 6 chiffres pour vérifier que c'est bien toi.
+1040|Impossible de supprimer ton compte. Réessaie dans un instant.
+1041|Seuls les fichiers que tu as ouverts avec Averages.io s'affichent ici.
+1042|Ce navigateur ne peut pas afficher les notifications des sites web.
+1043|Impossible de modifier la synchronisation du calendrier. Réessaie dans un instant.
+1044|Ton abonnement se renouvelle. Utilise Gérer l'abonnement pour le résilier d'abord.
+1045|Impossible d'activer les notifications. Réessaie dans un instant.
+1046|Jusqu'à 95 Mo chacun. Ils s'envoient dès que tu les ajoutes.
+1047|La synchronisation du calendrier est activée. Ajoute le lien à ton appli de calendrier.
+1048|Trop de messages à la fois. Attends une minute et réessaie.
+1049|La synchronisation du calendrier est désactivée. Ton lien de calendrier ne marche plus.
+1050|Canva nécessite un compte chez nous, donc c'est désactivé en navigation privée.
+1051|Chaque image est vérifiée sur cet appareil avant d'être utilisée.
+1052|Désactivé en navigation privée, car rien sur toi n'est stocké.
+1053|Les notifications du navigateur sont désactivées. Nous avons supprimé ta connexion enregistrée.
+1054|Impossible de vérifier cette image pour l'instant. Réessaie dans un instant.
+1055|Reçois une notification quand quelque chose change, même quand Averages est fermé.
+1056|Canva s'ouvre dans cet onglet. Voici comment récupérer ta création ici.
+1057|Schoology ne change pas. Tes cours, notes et travaux y restent.
+1058|Pas pour les comptes de moins de 13 ans. La navigation privée garde tout sur cet appareil.
+1059|Fixe la note que tu veux dans un cours et vois ce qu'il te faut sur ce qui reste.
+1060|Rendu, mais la note n'a pas été ajoutée. Ajoute-la en commentaire sur Schoology.
+1061|Activé parce que le mode patate est activé. Sinon, ça suit le réglage de ton appareil.
+1062|Essaie une note avant de la recevoir. Rien ici ne change ta vraie note.
+1063|Un minuteur sur chaque devoir pour de courtes séances d'étude, avec des pauses entre elles.
+1064|Notifications du navigateur, synchronisation du calendrier, nouveautés en avant-première et l'appli iPhone.
+1065|Rendre, Notes hypothétiques, Écrire à un prof, Ce qu'il te faut et Modifier les raccourcis.
+1066|Un résumé du dimanche sur l'accueil : ce que tu as rendu, les nouvelles notes et ce qui est à rendre la semaine prochaine.
+1067|Inclus avec Plus. Tes dates limites dans Google Agenda ou Apple Calendrier, toujours à jour.
+1068|Tu as Averages Plus. Résilie-le d'abord dans Abonnement, puis supprime ton compte quand il se termine.
+1069|Tout Averages, plus les notifications du navigateur, la synchronisation du calendrier et les nouveautés en avant-première.
+1070|Les fichiers que tu as enregistrés dans ces applis restent dans tes comptes. Tu peux revenir au mode Classique quand tu veux.
+1071|Ton navigateur affiche une notification quand quelque chose change dans Schoology, même quand Averages est fermé.
+1072|Découpe les gros devoirs en petites étapes et les répartit sur les jours avant la date limite.
+1073|Google Drive ne partage que les fichiers que tu ouvres avec Averages.io. Ça prend quelques secondes par fichier.
+1074|Ensuite, ton navigateur te demande si Averages peut envoyer des notifications. Tu peux les désactiver ici quand tu veux.
+1075|Ton navigateur a refusé. Autorise les notifications d'Averages.io dans les réglages du site, puis réessaie.
+1076|Averages vérifie tes cours toutes les quelques minutes. Une notification dit seulement ce qui a changé, comme une nouvelle note.
+1077|Nous gardons ta connexion Schoology, chiffrée, pour pouvoir vérifier pour toi. Désactiver les notifications la supprime.
+1078|Ta photo est vérifiée sur cet appareil pour détecter les contenus inappropriés. Elle ne quitte pas ton ordinateur pour cette vérification.
+1079|Toute personne ayant ce lien peut voir tes dates limites, alors garde-le pour toi. Un nouveau lien arrête l'ancien.
+1080|Dans Google Drive, fais un clic droit sur le fichier, puis Ouvrir avec, puis Averages.io pour Drive. Il apparaîtra ici ensuite.
+1081|Les notifications du navigateur, la synchronisation du calendrier et les nouveautés en avant-première sont gratuites pour tous tant qu'Averages Plus n'est pas en vente.
+1082|Ton ancien lien ne marche plus, donc les calendriers qui l'utilisent ne se mettent plus à jour. Ajoute ensuite le nouveau à ton appli de calendrier.
+1083|Ceci supprime tout ce qu'Averages a enregistré sur toi : réglages synchronisés, photo de profil et fond d'écran, notifications, lien de calendrier et applis connectées. Ensuite, tu es déconnecté.
+1084|La navigation privée ne stocke rien sur toi sur nos serveurs. Elle désactive la synchronisation entre appareils et supprime ce qui était stocké, déconnecte Canva, Google Drive et OneDrive, supprime ton lien de calendrier et désactive les notifications du navigateur.
+1085|Défini par cet appareil : {x}, il est {x}.
+1086|Bêta fermée {x} (version {x})
+1087|Ton ordre, {x} raccourcis sur l'accueil
+1088|Par période, {x} raccourcis sur l'accueil
+1089|Par période, {x} raccourci sur l'accueil
+1090|Activé pour {x} sur 5
+1091|Cet appareil : {x}
+1092|Fuseau horaire réglé sur {x}.
+1093|{x}, il est {x}. Les dates limites et le calendrier l'utilisent.

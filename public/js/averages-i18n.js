@@ -32,8 +32,12 @@
     for (var i = 0; i < list.length; i++) { var b = String(list[i] || '').toLowerCase().split('-')[0]; if (LANGS[b]) return b; }
     return 'en';
   }
-  var choice = ls.get('averages_lang') || 'auto';
-  var lang = choice === 'auto' ? fromDevice() : (LANGS[choice] ? choice : 'en');
+  // the choice syncs across devices with the other settings (schoolagy_settings_options.language, 2026-11-14)
+  function synced() { try { var o = JSON.parse(ls.get('schoolagy_settings_options') || '{}') || {}; return typeof o.language === 'string' ? o.language : null; } catch (e) { return null; } }
+  var choice = synced() || ls.get('averages_lang') || 'auto';
+  if (choice !== 'auto' && !LANGS[choice]) choice = 'auto';
+  var deviceLang = fromDevice();
+  var lang = choice === 'auto' ? deviceLang : choice;
   document.documentElement.lang = lang === 'zh' ? 'zh-Hans' : lang;
 
   // ---------- 1. the app's own words ----------
@@ -127,11 +131,18 @@
     }
   });
   function start() {
-    if (lang === 'en') return;   // English is the app's own words: nothing to do
+    if (lang === 'en' && !TR_ON) return;   // English is the app's own words: nothing to do
+    if (document.body.__avObs) return;
+    document.body.__avObs = true;
+    if (TR_ON) addCss();
     walk(document.body);
     mo.observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ATTRS });
     document.title = look(document.title) || document.title;
   }
+  var CSS = '.av-tr-wait{-webkit-mask-image:linear-gradient(100deg,#000 0,#000 35%,rgba(0,0,0,.35) 50%,#000 65%,#000 100%);mask-image:linear-gradient(100deg,#000 0,#000 35%,rgba(0,0,0,.35) 50%,#000 65%,#000 100%);-webkit-mask-size:300% 100%;mask-size:300% 100%;animation:avTrWait 1.3s linear infinite}' +
+    '@keyframes avTrWait{from{-webkit-mask-position:100% 0;mask-position:100% 0}to{-webkit-mask-position:0 0;mask-position:0 0}}' +
+    '.potato-mode .av-tr-wait{animation:none;opacity:.6}@media (prefers-reduced-motion:reduce){.av-tr-wait{animation:none;opacity:.6}}';
+  function addCss() { if (document.getElementById('avTrCss')) return; var st = document.createElement('style'); st.id = 'avTrCss'; st.textContent = CSS; (document.head || document.documentElement).appendChild(st); }
   function whenBody(f) { if (document.body) f(); else document.addEventListener('DOMContentLoaded', f); }
 
   if (lang !== 'en') {
@@ -150,21 +161,33 @@
   }
 
   // ---------- 2. Advanced translation: the school's words ----------
-  var TR_ON = lang !== 'en' && ls.get('averages_tr_items') === '1';
+  // Works in every language, English too (2026-11-14): each name, title, post or message is checked for
+  // the language it's written in, and only translated when that isn't the app's language. In English
+  // that means a Spanish teacher's posts or a French class's titles come out in English.
+  var TR_ON = ls.get('averages_tr_items') === '1';
   var SERVER_OK = ls.get('averages_tr_server') === '1';
   var ITEM_ORIG = new Set(), TRC = {}, trKey = 'averages_trc_' + lang, queue = [], queued = new Set(), busy = false;
-  var device = null;          // the browser's translator, once made
+  var devices = {};           // the browser's translators, by source language
+  var detector = null, detectorTried = false;   // the browser's language detector, once made
   var plusOk = null;          // null = not known yet
   try { TRC = JSON.parse(ls.get(trKey) || '{}') || {}; } catch (e) { TRC = {}; }
 
   // the browser's translator can take its time (or never answer, in some builds): don't wait on it forever
   function within(p, ms, fallback) { return Promise.race([p, new Promise(function (r) { setTimeout(function () { r(fallback); }, ms); })]); }
   function hasDevice() { return typeof window.Translator !== 'undefined' && typeof window.Translator.create === 'function'; }
+  function hasDetector() { return typeof window.LanguageDetector !== 'undefined' && typeof window.LanguageDetector.create === 'function'; }
+  // a name waiting for its translation shimmers (a soft band sweeping across it), so it's clearly not the
+  // sync spinner; it stops when the translation comes in, or when nothing here can translate it
+  var WAIT = new Set(), failed = new Set();
+  function waiting(el, on) { if (!el || !el.classList) return; if (on) { el.classList.add('av-tr-wait'); WAIT.add(el); } else { el.classList.remove('av-tr-wait'); WAIT.delete(el); } }
+  function settleWaits() { WAIT.forEach(function (el) { if (!el.isConnected) { WAIT.delete(el); return; } var t = el.textContent.trim(); if (!ITEM_ORIG.has(t) || TRC[t] != null || failed.has(t)) waiting(el, false); }); }
   function item(v, el) {
     var k = v.trim();
     if (!k || !ITEM_ORIG.has(k)) return null;
     var hit = TRC[k];
-    if (hit == null) { want(k); return null; }
+    if (hit == null) { if (!failed.has(k)) { want(k); waiting(el, true); } return null; }
+    waiting(el, false);
+    if (hit === '' || hit === k) return null;   // already in the app's language
     if (el && !el.hasAttribute('title')) el.setAttribute('title', (DICT && DICT['Original: #'] ? DICT['Original: #'].replace('#', '') : 'Original: ') + k);
     return v.replace(k, hit);
   }
@@ -175,7 +198,53 @@
     ls.set(trKey, JSON.stringify(TRC));
   }
   var redrawT = 0;
-  function redraw() { clearTimeout(redrawT); redrawT = setTimeout(function () { saveTRC(); walk(document.body); }, 250); }
+  function redraw() { clearTimeout(redrawT); redrawT = setTimeout(function () { saveTRC(); walk(document.body); settleWaits(); }, 250); }
+  function giveUp(list) { list.forEach(function (k) { failed.add(k); }); redraw(); }
+
+  /* Which of the 6 languages a text is in, or null when it can't tell (short titles like "Lab 3").
+     The browser's detector when there is one; otherwise a quick guess from the script and common words. */
+  var WORDS = {
+    en: 'the and of to is for on with your you this are be will by at from your please due today',
+    es: 'el la los las de del que y en un una para por con es su sus tu tus se al lo tarea examen clase mañana hoy',
+    fr: 'le la les des de du et en un une pour par avec est sur vos votre ton ta au aux devoir demain aujourd',
+    pt: 'o a os as de do da dos das que e em um uma para por com no na é seu sua você tarefa prova amanhã hoje',
+    de: 'der die das und ist nicht mit für auf den dem ein eine zu im von bitte heute morgen aufgabe',
+  };
+  var WORDSET = {}; Object.keys(WORDS).forEach(function (l) { WORDSET[l] = {}; WORDS[l].split(' ').forEach(function (w) { WORDSET[l][w] = 1; }); });
+  function guess(t) {
+    var cjk = (t.match(/[㐀-鿿]/g) || []).length;
+    if (cjk >= 2 && cjk >= t.replace(/\s/g, '').length * 0.3) return 'zh';
+    var low = t.toLowerCase(), ws = low.match(/[a-zà-ÿß]+/g) || [], score = { en: 0, es: 0, fr: 0, pt: 0, de: 0 };
+    ws.forEach(function (w) { for (var l in WORDSET) if (WORDSET[l][w]) score[l]++; });
+    if (/[ñ¿¡]/.test(low)) score.es += 2;
+    if (/[ãõ]|ção|ções/.test(low)) score.pt += 2;
+    if (/[ß]|[äöü]/.test(low)) score.de += 2;
+    if (/[èêëœ]|ç(?!ão)/.test(low)) score.fr += 1;
+    var best = null, top = 0, second = 0;
+    for (var l in score) { if (score[l] > top) { second = top; top = score[l]; best = l; } else if (score[l] > second) second = score[l]; }
+    return top >= 2 && top > second ? best : null;
+  }
+  function makeDetector(gesture) {
+    if (detector || !hasDetector() || (detectorTried && !gesture)) return Promise.resolve(detector);
+    detectorTried = true;
+    return within(window.LanguageDetector.availability(), 4000, 'unavailable').then(function (a) {
+      if (a === 'unavailable') return null;
+      if (a !== 'available' && !gesture && !(navigator.userActivation && navigator.userActivation.isActive)) return null;
+      return within(window.LanguageDetector.create(), gesture ? 120000 : 8000, null).then(function (d) { if (d) detector = d; return d || null; });
+    }).catch(function () { return null; });
+  }
+  function sourceOf(t) {
+    var g = guess(t);
+    if (!detector) return Promise.resolve(g);
+    return within(detector.detect(t), 3000, null).then(function (r) {
+      var top = r && r[0];
+      if (!top || top.confidence < 0.6) return g;
+      var base = String(top.detectedLanguage || '').toLowerCase().split('-')[0];
+      return LANGS[base] ? base : null;
+    }).catch(function () { return g; });
+  }
+  // a short text the app can't place: assume English when translating into another language, leave it in English
+  function fromOf(src) { return src || (lang === 'en' ? null : 'en'); }
 
   function checkPlus() {
     if (plusOk !== null) return Promise.resolve(plusOk);
@@ -189,57 +258,61 @@
       })
       .catch(function () { plusOk = false; return false; });
   }
-  function makeDevice(gesture) {
-    if (device) return Promise.resolve(device);
-    if (!hasDevice()) return Promise.resolve(null);
-    var to = lang === 'zh' ? 'zh' : lang;
-    return within(window.Translator.availability({ sourceLanguage: 'en', targetLanguage: to }), 4000, 'unavailable').then(function (a) {
+  function makeDevice(from, gesture) {
+    if (from in devices && !gesture) return Promise.resolve(devices[from]);   // asked already (a translator, or null for none): don't wait again
+    if (!hasDevice() || from === lang) return Promise.resolve(null);
+    devices[from] = null;
+    return within(window.Translator.availability({ sourceLanguage: from, targetLanguage: lang }), 4000, 'unavailable').then(function (a) {
       if (a === 'unavailable') return null;
       if (a !== 'available' && !gesture && !(navigator.userActivation && navigator.userActivation.isActive)) return null;   // a download needs a click first
-      return within(window.Translator.create({ sourceLanguage: 'en', targetLanguage: to }), gesture ? 180000 : 8000, null).then(function (t) { if (t) device = t; return t || null; });
+      return within(window.Translator.create({ sourceLanguage: from, targetLanguage: lang }), gesture ? 180000 : 8000, null).then(function (t) { if (t) devices[from] = t; return t || null; });
     }).catch(function () { return null; });
   }
   function pump() {
     if (busy || !queue.length || !TR_ON) return;
     busy = true;
     checkPlus().then(function (ok) {
-      if (!ok) { queue.length = 0; busy = false; return; }
-      return makeDevice(false).then(function (t) {
-        if (t) return byDevice(t);
-        if (SERVER_OK) return byServer();
-        queue.length = 0;   // nothing can translate here: leave the originals
-      });
+      if (!ok) { giveUp(queue.splice(0)); return; }
+      return makeDetector(false).then(work);
     }).catch(function () { /* leave the originals */ }).then(function () { busy = false; if (queue.length) setTimeout(pump, 50); });
   }
-  function byDevice(t) {
-    var batch = queue.splice(0, 20);
+  // a batch: find each text's language, translate on the device where it can, the rest on our server if that's on
+  function work() {
+    var batch = queue.splice(0, 30), server = [];
     return batch.reduce(function (p, k) {
-      return p.then(function () { return within(t.translate(k), 10000, null).then(function (out) { if (out) TRC[k] = out; }).catch(function () { /* left as it is */ }); });
-    }, Promise.resolve()).then(redraw);
+      return p.then(function () {
+        return sourceOf(k).then(function (src) {
+          var from = fromOf(src);
+          if (!from || from === lang) { TRC[k] = ''; return; }   // already in the app's language, or can't tell
+          return makeDevice(from, false).then(function (t) {
+            if (t) return within(t.translate(k), 10000, null).then(function (out) { if (out) TRC[k] = out; }).catch(function () { /* left as it is */ });
+            if (SERVER_OK) server.push([k, from]); else failed.add(k);   // nothing here can translate it
+          });
+        });
+      });
+    }, Promise.resolve()).then(function () { redraw(); if (server.length) return byServer(server); });
   }
-  function byServer() {
-    var batch = queue.splice(0, 40);
-    return fetch(API + '/translate', { method: 'POST', credentials: 'include', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ to: lang, texts: batch }) })
+  function byServer(list) {
+    return fetch(API + '/translate', { method: 'POST', credentials: 'include', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ to: lang, texts: list.map(function (x) { return x[0]; }), from: list.map(function (x) { return x[1]; }) }) })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (j) {
-        if (!j || !Array.isArray(j.texts)) return;
-        batch.forEach(function (k, i) { var o = j.texts[i]; if (typeof o === 'string' && o) TRC[k] = o; });
+        list.forEach(function (x, i) { var o = j && Array.isArray(j.texts) ? j.texts[i] : null; if (typeof o === 'string' && o) TRC[x[0]] = o; else failed.add(x[0]); });
         redraw();
-      });
+      }).catch(function () { giveUp(list.map(function (x) { return x[0]; })); });
   }
 
   /* The school's words to translate, from the data the pages get (averages-fs-data.js calls this):
      class names (not ones the student renamed), assignment and test titles, teacher posts and
      messages. Long text is also split by line, since a page draws each line on its own. */
   function items(list) {
-    if (lang === 'en' || !list) return;   // collected in every other language, so the app's words never replace them; translated only with Advanced translation
+    if (!list || (lang === 'en' && !TR_ON)) return;   // collected in every other language, so the app's words never replace them; translated only with Advanced translation
     var added = 0;
     list.forEach(function (s) {
       if (typeof s !== 'string') return;
       var parts = [s.trim()].concat(s.indexOf('\n') >= 0 ? s.split(/\n+/) : []);
       parts.forEach(function (p) {
         p = p.trim();
-        if (p.length < 2 || p.length > 2000 || !/[A-Za-z]/.test(p) || ITEM_ORIG.has(p)) return;
+        if (p.length < 2 || p.length > 2000 || !/[A-Za-zÀ-ÿ\u3400-\u9fff]/.test(p) || ITEM_ORIG.has(p)) return;
         if (/\.[A-Za-z0-9]{2,5}$/.test(p) && !/\s/.test(p)) return;   // looks like a file name
         if (/^(https?:|www\.)\S+$/.test(p)) return;
         ITEM_ORIG.add(p); added++;
@@ -253,7 +326,7 @@
   var TEXT_KEYS = { title: 1, subject: 1, preview: 1, body: 1, message: 1, text: 1, description: 1 };
   var PEOPLE_KEYS = { people: 1, classmates: 1, CLASSMATES: 1, TEACHERS: 1, members: 1, from: 1, author: 1, me: 1, profile: 1, files: 1, attachments: 1, FILES: 1 };
   function harvest(data) {
-    if (lang === 'en' || !data) return;
+    if (!data || (lang === 'en' && !TR_ON)) return;
     var out = [], seen = 0;
     (function go(v, depth) {
       if (!v || depth > 7 || seen > 8000) return;
@@ -298,24 +371,45 @@
   window.AvI18n = {
     LANGS: LANGS, lang: lang, choice: choice, locale: LOCALE[lang],
     t: function (s) { var r = look(String(s)); return r == null ? String(s) : r; },
-    set: function (code) { ls.set('averages_lang', LANGS[code] || code === 'auto' ? code : 'auto'); },
+    deviceLang: deviceLang,
+    set: function (code) {
+      code = LANGS[code] || code === 'auto' ? code : 'auto';
+      ls.set('averages_lang', code);
+      try { var o = JSON.parse(ls.get('schoolagy_settings_options') || '{}') || {}; o.language = code; ls.set('schoolagy_settings_options', JSON.stringify(o)); } catch (e) { /* storage off */ }
+      if (window.FSX && typeof window.FSX.syncPush === 'function') window.FSX.syncPush();   // to your other devices
+    },
+    switchTo: function (code) {
+      var api = this, next = code === 'auto' ? deviceLang : code;
+      var S = window.__averagesSplash; if (S && S.show) S.show(12000);
+      try { sessionStorage.setItem('averages_fs_logo', String(Date.now())); } catch (e) { /* the logo just won't wait */ }
+      api.set(code);
+      var ver = (window.AVG_I18NV && window.AVG_I18NV[next]) || '';
+      var get = next === 'en' ? Promise.resolve() : fetch('/i18n/' + next + '.json' + (ver ? '?v=' + ver : ''), { credentials: 'same-origin' })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (j) { if (j && j.t) ls.set('averages_i18n_' + next, JSON.stringify({ v: ver, t: j.t })); })
+        .catch(function () { /* the next page fetches it */ });
+      return within(get, 4000).then(function () { setTimeout(function () { location.reload(); }, 300); });
+    },
     items: items, harvest: harvest, shortDate: shortDate, names: names,
     timeOf: function (ms) { if (lang === 'en') return null; try { return new Date(ms).toLocaleTimeString(LOCALE[lang], { hour: 'numeric', minute: '2-digit' }); } catch (e) { return null; } },
     // Advanced translation
     trOn: function () { return TR_ON; },
     setItems: function (on) {
-      ls.set('averages_tr_items', on ? '1' : '0'); TR_ON = on && lang !== 'en';
-      if (TR_ON) return makeDevice(true).then(function (t) { pump(); return { device: !!t }; });   // the click lets the browser download its translator
+      ls.set('averages_tr_items', on ? '1' : '0'); TR_ON = !!on;
+      // the click lets the browser download its detector and the likeliest translator (English into the app's language; Spanish into English)
+      if (TR_ON) addCss();
+      if (!TR_ON) { WAIT.forEach(function (el) { waiting(el, false); }); }
+      if (TR_ON) return Promise.all([makeDetector(true), makeDevice(lang === 'en' ? 'es' : 'en', true)]).then(function (r) { if (!document.body.__avObs) start(); pump(); return { device: !!r[1] }; });
       return Promise.resolve({ device: false });
     },
     setServer: function (on) { ls.set('averages_tr_server', on ? '1' : '0'); SERVER_OK = !!on; if (on) pump(); },
     serverOn: function () { return SERVER_OK; },
     deviceCan: function () {
-      if (!hasDevice() || lang === 'en') return Promise.resolve(false);
-      return within(window.Translator.availability({ sourceLanguage: 'en', targetLanguage: lang }), 4000, 'unavailable').then(function (a) { return a !== 'unavailable'; }).catch(function () { return false; });
+      if (!hasDevice()) return Promise.resolve(false);
+      return within(window.Translator.availability({ sourceLanguage: lang === 'en' ? 'es' : 'en', targetLanguage: lang }), 4000, 'unavailable').then(function (a) { return a !== 'unavailable'; }).catch(function () { return false; });
     },
     forget: function () { TRC = {}; try { localStorage.removeItem(trKey); } catch (e) { /* none */ } },
-    _state: function () { return { items: ITEM_ORIG.size, cached: Object.keys(TRC).length, queue: queue.length, busy: busy, plus: plusOk, device: !!device, server: SERVER_OK, on: TR_ON }; },
+    _state: function () { return { items: ITEM_ORIG.size, cached: Object.keys(TRC).length, queue: queue.length, busy: busy, plus: plusOk, devices: Object.keys(devices), detector: !!detector, server: SERVER_OK, on: TR_ON }; },
     missing: function () { return missing ? Array.from(missing.entries()).sort(function (a, b) { return b[1] - a[1]; }) : []; },
   };
   whenBody(start);

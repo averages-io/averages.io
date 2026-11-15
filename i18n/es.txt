@@ -670,3 +670,424 @@
 670|{x} está atrasada
 671|Sin entregar · venció el {x}
 672|Mañ.
+673|Añadir
+674|Probar
+675|Atrás
+676|Beta
+677|Negrita
+678|Código
+679|Datos
+680|Listo
+681|Abajo
+682|Termina
+683|De
+684|Plus
+685|Guardar
+686|Texto
+687|Ver
+688|Word
+689|Añadido
+690|Audio
+691|Comprobar
+692|Entrar
+693|Ir a
+694|Imagen
+695|India
+696|Foto
+697|Restablecer
+698|Compartir
+699|Video
+700|Adjuntar
+701|Cancelar
+702|Copiado
+703|Cursiva
+704|Lo último
+705|De
+706|Quitar
+707|Cambiar nombre
+708|Tipo ▾
+709|Quitar de destacados
+710|Verificar
+711|Acciones
+712|Archivar
+713|Cambios
+714|Borrado
+715|Copiado.
+716|Inglés
+717|Volver
+718|Vista previa
+719|Actualizar
+720|Alguien
+721|Activar
+722|Todo el trabajo
+723|Categoría
+724|Continuar
+725|Incluido
+726|Archivo nuevo
+727|Enlace nuevo
+728|¿Sin archivo?
+729|Organizar
+730|Personas ▾
+731|Atajo
+732|Sincronizando…
+733|Verificado
+734|Página web
+735|Automática
+736|Comprobando…
+737|Compañero
+738|Eliminando…
+739|Tipo de archivo
+740|Nota nueva
+741|Sin cambios
+742|Abrir con
+743|Enviar código
+744|Mostrar menos
+745|Inténtalo de nuevo
+746|Subrayado
+747|Usar foto
+748|Tu nota
+749|Tu trabajo
+750|publicó en
+751|Añadir un archivo
+752|Datos de la clase
+753|Desconectar
+754|Si saco
+755|Modificado ▾
+756|Sin asunto
+757|Abrir Canva
+758|Página de inicio
+759|Zonas horarias
+760|Por entregar
+761|Entregando
+762|Subiendo…
+763|hace un minuto
+764|tres puntos
+765|· Material
+766|Compañero ·
+767|Próximamente
+768|Experimentos
+769|Temporizador de estudio
+770|Documentos de Google
+771|Metas de notas
+772|Hacer una copia
+773|Ciudad de México
+774|Nueva Zelanda
+775|Nada nuevo
+776|O añadir desde
+777|Elige un archivo
+778|Entregando…
+779|Al día.
+780|Estás aquí
+781|Tu respuesta
+782|minutos
+783|nada aún
+784|tu respuesta
+785|✓ entregado
+786|Diseño de Canva
+787|Hora central
+788|Cambiar foto
+789|Elegir archivos
+790|Hora del este
+791|Terminar Plus ahora
+792|Terminando Plus…
+793|Formularios de Google
+794|Mensaje de
+795|Nota nueva en
+796|Notificación
+797|Hora del Pacífico
+798|Orden por período
+799|Notas rápidas
+800|Quitar correo
+801|Imagen vectorial
+802|Resumen semanal
+803|Tus diseños
+804|Tu profesor
+805|elegir archivos
+806|tu profesor
+807|· Tarea
+808|Ya añadido
+809|Hora del Atlántico
+810|Lista con viñetas
+811|¿Terminar Plus ahora?
+812|Preparando
+813|Hora de la montaña
+814|Mover a la papelera
+815|Aún no hay notas
+816|Lista numerada
+817|Revisión de la imagen
+818|Planificador de estudio
+819|Documento de Word
+820|para terminar antes.
+821|Añade tu correo
+822|Evento del calendario
+823|Europa central
+824|Europa del este
+825|De Schoology
+826|Solo esta página
+827|Nombre y foto
+828|Tarea nueva
+829|Modo patata activado
+830|Compartido conmigo
+831|La app para iPhone
+832|Respuesta escrita
+833|un segundo
+834|No se pudo subir
+835|Colores oscuros activados.
+836|Suelta los archivos aquí
+837|Correo verificado.
+838|Abrir tarea
+839|Abrir en una pestaña nueva
+840|Modo patata desactivado
+841|Clase de Schoology
+842|Proyecto de Scratch
+843|Buscar en Drive
+844|Enviar un código nuevo
+845|Formato de texto
+846|Tu entrega
+847|Colores claros activados.
+848|¿Crear un enlace nuevo?
+849|Crea tu diseño
+850|Desactivado en Incógnito
+851|Entregas anteriores
+852|Listo para entregar
+853|Tus entregas
+854|publicó una novedad
+855|tu primera visita
+856|Conectar más apps
+857|Atajos predeterminados
+858|Eliminar todo
+859|Hoja de cálculo de Excel
+860|Vistas previas activadas.
+861|Archivos y carpetas
+862|Dejar que la barra lateral se cierre
+863|Ningún ajuste coincide
+864|Aún no disponible
+865|Abrir Google Drive
+866|Abrir en una pestaña nueva
+867|Abriendo el pago…
+868|Ver todas las versiones
+869|Entrega tu trabajo
+870|Lo que se envía
+871|Tu orden de cursos
+872|Antes de subir…
+873|Vistas previas desactivadas.
+874|Creando enlaces para compartir
+875|Creando tu diseño
+876|Abriendo tu plan…
+877|Reproducir la animación
+878|Silencio durante la clase
+879|Guardando tu respuesta
+880|Guardando tu foto…
+881|Suscrito a Plus
+882|Lo que entregaste
+883|Tu enlace de calendario
+884|nada calificado aún
+885|· hasta 95 MB cada uno
+886|Comprobando tu plan…
+887|Personalizar esta página
+888|Escribe los 6 dígitos.
+889|Creando un enlace para compartir
+890|Pausar la animación
+891|Coloca tu foto
+892|Se quitó tu correo.
+893|Se guardó tu perfil.
+894|Cambiar a Incógnito
+895|No disponible con Plus
+896|Tu correo de Averages
+897|Tus archivos de OneDrive
+898|Primero añade un asunto.
+899|Añadir desde otra app
+900|Primero añade tu nombre.
+901|Clásico o Incógnito
+902|Suelta tus archivos aquí
+903|Pagos y recibos
+904|¿Cambiar a Incógnito?
+905|Estás al día
+906|Añadir a Apple Calendar
+907|Averages.io para Drive
+908|De vuelta al orden por período.
+909|Antes de abrir Canva
+910|No volver a mostrar
+911|Volver a Averages.io
+912|Eso aún no está listo.
+913|Esto viene con Plus.
+914|Esta carpeta está vacía.
+915|Marca los archivos que quieres añadir
+916|Estás al día.
+917|$1.99 al mes más impuestos
+918|Añadir a Google Calendar
+919|Descargando tus datos.
+920|No se entregó nada.
+921|Desactivado en modo Incógnito.
+922|Se guarda aquí mientras escribes
+923|Primero escribe un mensaje.
+924|Ya tienes Plus.
+925|De vuelta a las teclas de siempre.
+926|Canva se abre en esta pestaña
+927|Cambiando a Incógnito…
+928|No hay ningún plan que terminar.
+929|Escribe tu respuesta aquí…
+930|para eliminar tu cuenta.
+931|Elige tu vista predeterminada
+932|Ocultar la lista de tareas
+933|Cómo lo vas a entregar
+934|No disponible ahora.
+935|Ahora no hay nada guardado.
+936|Plus necesita el modo Clásico.
+937|Mostrar la lista de tareas
+938|¿Cerrar sesión en Averages.io?
+939|No se pudieron cargar tus archivos.
+940|Schoology · tus entregas
+941|Fuente del sistema, sin animaciones
+942|Ese mensaje es demasiado largo.
+943|Bienvenido a Averages Plus.
+944|Escribe tu respuesta en su lugar
+945|Conectado en este navegador.
+946|Se copió tu enlace de calendario.
+947|Schoology · respuesta escrita
+948|Entregando en Schoology
+949|Qué significa activar esto
+950|Añadir archivos de Google Drive
+951|Añadido por ti · En Schoology
+952|Haz clic en Volver a Averages.io
+953|Los experimentos vienen con Plus.
+954|Comprobando que se envió
+955|Aún no está configurado de nuestro lado.
+956|Atajo quitado de Inicio.
+957|Elige Averages.io para Drive
+958|Revisando tu foto…
+959|Las notificaciones del navegador están activadas.
+960|¿Eliminar tu cuenta de Averages?
+961|Los archivos de Office se muestran como PDF.
+962|Las páginas ahora siguen a tu dispositivo.
+963|No pudimos cargar tus clases
+964|Escribe algo para entregarlo
+965|La sincronización del calendario viene con Plus.
+966|Busca tu archivo en Google Drive
+967|Está en tus archivos de Averages.io
+968|Enviado. Aparecerá en un momento.
+969|No se pudo leer esa imagen.
+970|Aún no hay ningún plan que gestionar.
+971|Esto está desactivado en modo Incógnito.
+972|Pulsa las teclas que quieres usar.
+973|Los días que quedan no se reembolsan.
+974|Al día. Llegaron cosas nuevas.
+975|Google Drive se abre en una pestaña nueva.
+976|Aún no hay clases para probar notas.
+977|Elige una imagen PNG, JPG o WebP.
+978|Algo salió mal. Inténtalo de nuevo.
+979|Entregar, en la página Tareas
+980|Respuesta escrita enviada a Schoology
+981|Primero activa Funciones nuevas antes.
+982|Tu diseño está listo. Abre Canva.
+983|La sincronización del calendario está desactivada en Incógnito.
+984|Los archivos de tu OneDrive se quedan allí.
+985|Envía ese archivo a Averages.io.
+986|Los archivos de Office se abren como el original.
+987|Plus terminó. Estás en Clásico.
+988|No se pudo abrir esa página. Inténtalo de nuevo.
+989|Haz clic derecho y elige Abrir con
+990|Las cuentas de menores de 13 se quedan en Incógnito.
+991|Elige una tecla de letra, número o símbolo.
+992|La zona horaria vuelve a seguir a este dispositivo.
+993|Dónde se abren cuando pulsas Editar.
+994|Una animación de los pasos de aquí
+995|Las notificaciones del navegador vienen con Plus.
+996|No se pudo crear tu diseño. Inténtalo de nuevo.
+997|Esas teclas ya hacen otra cosa.
+998|Los archivos de tu Google Drive se quedan allí.
+999|Está en la esquina superior derecha de Canva.
+1000|Aún no está verificado. Verifícalo para usarlo.
+1001|Ya volviste, con tu diseño adjunto
+1002|Tu escuela, elegida al iniciar sesión
+1003|No se puede cancelar mientras se entrega
+1004|Los atajos de Inicio volvieron a los predeterminados.
+1005|Arrastra para moverla. Usa el control para acercar.
+1006|No se pudo terminar Plus. Inténtalo de nuevo en un momento.
+1007|Edítalo en Canva como siempre.
+1008|Activado en otro navegador. Actívalo aquí también.
+1009|Escribe una puntuación y sobre cuántos puntos es.
+1010|De vuelta en Clásico. Tus ajustes se sincronizan de nuevo.
+1011|No se pudo guardar. Inténtalo de nuevo en un momento.
+1012|Por ahora ocupa el lugar de Averages.io.
+1013|Tu navegador usa esas teclas. Prueba otras.
+1014|Añadir contactos ahora busca en todo Schoology.
+1015|Añadir contactos ahora busca solo en tu escuela.
+1016|Prueba una palabra como "oscuro", "Canva" o "bloquear".
+1017|No se pudo enviar una prueba. Inténtalo de nuevo en un momento.
+1018|Los diseños que hiciste se quedan en tu cuenta de Canva.
+1019|Eso aún no parece un correo.
+1020|Aquí aparecen los archivos que usaste con Averages.io.
+1021|Se creó un enlace nuevo. El anterior dejó de funcionar.
+1022|Solo en esta pantalla. Schoology no cambia.
+1023|Volver a poner tus cursos en el orden de tu escuela.
+1024|Puedes volver a iniciar sesión con Schoology cuando quieras.
+1025|los ajustes de tu cuenta de Schoology, en una pestaña nueva
+1026|No se pudo cargar. Actualiza la página e inténtalo de nuevo.
+1027|Mira cómo se ve un aviso en esta computadora.
+1028|Esa imagen es demasiado grande. Elige una de menos de 15 MB.
+1029|Sigue a tu dispositivo: claro u oscuro, igual que él.
+1030|Para informes de notas e iniciar sesión en dispositivos nuevos.
+1031|Desactivado en Incógnito. Los ajustes se quedan en este navegador.
+1032|Esa imagen no se puede usar. Prueba con otra.
+1033|Para obtener Plus, primero cambia a Clásico en Privacidad.
+1034|Tu orden. La vista en ventana y la barra lateral también lo usan.
+1035|No en Incógnito. Plus necesita sincronizar entre dispositivos.
+1036|Así apareces en Mensajes y Contactos.
+1037|Borrado. Las páginas se cargarán de nuevo desde Schoology la próxima vez.
+1038|Schoology no respondió, o se cortó la conexión.
+1039|Te enviaremos un código de 6 dígitos para comprobar que es tuyo.
+1040|No se pudo eliminar tu cuenta. Inténtalo de nuevo en un momento.
+1041|Aquí solo aparecen los archivos que abriste con Averages.io.
+1042|Este navegador no puede mostrar notificaciones de sitios web.
+1043|No se pudo cambiar la sincronización del calendario. Inténtalo de nuevo en un momento.
+1044|Tu plan se renueva. Usa Gestionar plan para cancelarlo primero.
+1045|No se pudieron activar las notificaciones. Inténtalo de nuevo en un momento.
+1046|Hasta 95 MB cada uno. Se suben en cuanto los añades.
+1047|La sincronización del calendario está activada. Añade el enlace a tu app de calendario.
+1048|Demasiados mensajes a la vez. Espera un minuto e inténtalo de nuevo.
+1049|La sincronización del calendario está desactivada. Tu enlace de calendario dejó de funcionar.
+1050|Canva necesita una cuenta con nosotros, así que está desactivado en Incógnito.
+1051|Cada imagen se revisa en este dispositivo antes de usarla.
+1052|Desactivado en modo Incógnito, porque no guardamos nada sobre ti.
+1053|Las notificaciones del navegador están desactivadas. Eliminamos tu inicio de sesión guardado.
+1054|No se pudo revisar esa imagen ahora. Inténtalo de nuevo en un momento.
+1055|Recibe un aviso cuando algo cambie, aunque Averages esté cerrado.
+1056|Canva se abre en esta pestaña. Así puedes traer tu diseño de vuelta.
+1057|Schoology no cambia. Tus clases, notas y trabajos se quedan allí.
+1058|No para cuentas de menores de 13. Incógnito guarda todo en este dispositivo.
+1059|Pon la nota que quieres en una clase y mira lo que necesitas en lo que queda.
+1060|Entregado, pero la nota no se añadió. Añádela como comentario en Schoology.
+1061|Activado porque el modo patata está activado. Si no, sigue el ajuste de tu dispositivo.
+1062|Prueba una nota antes de recibirla. Nada de aquí cambia tu nota real.
+1063|Un temporizador en cada tarea para sesiones de estudio cortas, con descansos entre ellas.
+1064|Notificaciones del navegador, sincronización del calendario, funciones nuevas antes y la app para iPhone.
+1065|Entregar, Notas hipotéticas, Escribir a un profesor, Lo que necesitas y Editar atajos.
+1066|Un resumen del domingo en Inicio: lo que entregaste, las notas nuevas y lo que vence la próxima semana.
+1067|Incluido con Plus. Tus fechas de entrega en Google Calendar o Apple Calendar, siempre al día.
+1068|Tienes Averages Plus. Cancélalo primero en Plan y luego elimina tu cuenta cuando termine.
+1069|Todo Averages, más notificaciones del navegador, sincronización del calendario y funciones nuevas antes.
+1070|Los archivos que guardaste en esas apps se quedan en tus cuentas. Puedes volver a Clásico cuando quieras.
+1071|Tu navegador muestra un aviso cuando algo cambia en Schoology, aunque Averages esté cerrado.
+1072|Divide las tareas grandes en pasos pequeños y los reparte entre los días antes de la entrega.
+1073|Google Drive solo comparte los archivos que abres con Averages.io. Tarda unos segundos por archivo.
+1074|Ahora tu navegador te preguntará si Averages puede enviar notificaciones. Puedes desactivarlas aquí cuando quieras.
+1075|Tu navegador dijo que no. Permite las notificaciones de Averages.io en los ajustes del sitio e inténtalo de nuevo.
+1076|Averages revisa tus clases cada pocos minutos. Un aviso solo dice qué cambió, como una nota nueva.
+1077|Guardamos tu inicio de sesión de Schoology, cifrado, para poder revisar por ti. Al desactivar las notificaciones se elimina.
+1078|Tu foto se revisa en este dispositivo para detectar contenido inapropiado. No sale de tu computadora para la revisión.
+1079|Cualquiera con este enlace puede ver tus fechas de entrega, así que no lo compartas. Un enlace nuevo hace que el anterior deje de funcionar.
+1080|En Google Drive, haz clic derecho en el archivo, luego Abrir con y luego Averages.io para Drive. Después aparecerá aquí.
+1081|Las notificaciones del navegador, la sincronización del calendario y las funciones anticipadas son gratis para todos mientras Averages Plus no esté a la venta.
+1082|Tu enlace anterior deja de funcionar, así que los calendarios que lo usan dejan de actualizarse. Después añade el nuevo a tu app de calendario.
+1083|Esto elimina todo lo que Averages guardó sobre ti: ajustes sincronizados, tu foto de perfil y fondo, notificaciones, tu enlace de calendario y tus apps conectadas. Luego se cierra tu sesión.
+1084|Incógnito no guarda nada sobre ti en nuestros servidores. Desactiva Sincronizar entre dispositivos y elimina lo que guardó, desconecta Canva, Google Drive y OneDrive, elimina tu enlace de calendario y desactiva las notificaciones del navegador.
+1085|Según este dispositivo: {x}, ahora son las {x}.
+1086|Beta cerrada {x} (versión {x})
+1087|Tu orden, {x} atajos en Inicio
+1088|Por período, {x} atajos en Inicio
+1089|Por período, {x} atajo en Inicio
+1090|Activado para {x} de 5 cosas
+1091|Este dispositivo: {x}
+1092|Zona horaria cambiada a {x}.
+1093|{x}, ahora son las {x}. Las fechas de entrega y el calendario la usan.
