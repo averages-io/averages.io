@@ -403,7 +403,8 @@
       ls.set('averages_tr_items', on ? '1' : '0'); TR_ON = !!on;
       // the click lets the browser download its detector and the likeliest translator (English into the app's language; Spanish into English)
       if (TR_ON) addCss();
-      if (!TR_ON) { WAIT.forEach(function (el) { waiting(el, false); }); }
+      // turning it off also turns off "Translate on our server", so turning it back on never sends anything until that's chosen again
+      if (!TR_ON) { WAIT.forEach(function (el) { waiting(el, false); }); ls.set('averages_tr_server', '0'); SERVER_OK = false; }
       if (TR_ON) return Promise.all([makeDetector(true), makeDevice(lang === 'en' ? 'es' : 'en', true)]).then(function (r) { if (!document.body.__avObs) start(); pump(); return { device: !!r[1] }; });
       return Promise.resolve({ device: false });
     },
