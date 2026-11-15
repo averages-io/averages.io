@@ -95,15 +95,28 @@
   function check() { try { var c = JSON.parse(LS.getItem(CHECK) || 'null'); return c && c.ua === UA ? c : null; } catch (e) { return null; } }
   function setCheck(v, ok) { try { LS.setItem(CHECK, JSON.stringify({ ua: UA, v: v, ok: !!ok, at: Date.now() })); } catch (e) { /* full or off */ } }
   var GPU_ERR = /webgpu|shader|ortrun|compute pipeline|f16|device (was )?lost/i;
-  var testing = null;
+  var testing = null, TEST_MS = 90000;
   function selfTest(v) {
     if (testing) return testing;
-    testing = load(v).then(function () { return call({ t: 'ask', text: 'my grades', classes: ['Biology'], teachers: ['Ms. Lee'], lang: 'en' }); })
+    var my, timer = 0;
+    // a browser whose graphics never answer (Firefox can hang instead of failing, Martin 2026-11-15) counts as can't
+    var timeout = new Promise(function (_, no) { timer = setTimeout(function () { no(new Error('webgpu_test_timeout')); }, TEST_MS); });
+    my = testing = Promise.race([load(v).then(function () { return call({ t: 'ask', text: 'my grades', classes: ['Biology'], teachers: ['Ms. Lee'], lang: 'en' }); }), timeout])
       .then(function () { setCheck(v, true); return true; }, function (e) {
-        if (e && GPU_ERR.test(e.message || '')) { setCheck(v, false); if (W) { W.terminate(); W = null; } ready = null; readyV = ''; return false; }
+        if (e && e.message === 'stopped') throw e;   // turned off meanwhile
+        if (e && GPU_ERR.test(e.message || '')) { setCheck(v, false); stop(); return false; }
         throw e;   // something else (a network hiccup): not this browser's fault, so nothing is remembered
-      }).then(function (ok) { testing = null; changed(); return ok; }, function (e) { testing = null; throw e; });
+      }).then(function (ok) { clearTimeout(timer); if (testing === my) testing = null; changed(); return ok; },
+        function (e) { clearTimeout(timer); if (testing === my) testing = null; if (e && e.message !== 'stopped') LAST_ERR = e.message || 'failed'; changed(); throw e; });
+    LAST_ERR = '';
+    changed();   // Settings shows "Checking…" right away, every time (it used to wait for some other change)
     return testing;
+  }
+  /** Stops the model's thread: anything waiting on it gives up ("stopped"), and the next use starts it again. */
+  function stop() {
+    if (W) { W.terminate(); W = null; }
+    Object.keys(waits).forEach(function (k) { var w = waits[k]; delete waits[k]; w.no(new Error('stopped')); });
+    ready = null; readyV = ''; testing = null;
   }
 
   // ---------- the worker ----------
@@ -126,7 +139,7 @@
   }
   function load(v) {
     if (ready && readyV === v) return ready;
-    if (W && readyV && readyV !== v) { W.terminate(); W = null; }
+    if (W && readyV && readyV !== v) stop();
     var V = VARIANTS[v]; readyV = v;
     ready = call({ t: 'load', model: V.model, dtype: V.dtype, files: V.files, total: V.bytes, device: DEV_WASM ? 'wasm' : 'webgpu' }, function (p) {
       // the bar: a light event while bytes arrive (avai:progress, ~10 a second); avai:state only when something changes
@@ -158,6 +171,7 @@
       return true;
     }, function (e) {
       // the graphics can't even start it (some browsers fail here, not on the first search): same as a failed test
+      if (e && e.message === 'stopped') { DL = null; changed(); throw e; }   // turned off while it downloaded or checked
       if (e && GPU_ERR.test(e.message || '')) { setCheck(v, false); o.on = true; o.v = v; saveOpts(o); e = new Error('browser_cant'); }
       DL = null; LAST_ERR = e && e.message || 'failed'; changed(); throw e;
     });
@@ -170,7 +184,7 @@
   }
   /** Delete everything (model and runtime) and turn A.I. search off. */
   function remove() {
-    if (W) { W.terminate(); W = null; } ready = null; readyV = ''; DL = null;
+    stop(); DL = null; LAST_ERR = '';
     var o = opts(); o.on = false; saveOpts(o);
     return (window.caches ? caches.delete(CACHE).catch(function () {}) : Promise.resolve()).then(function () { changed(); });
   }
@@ -329,6 +343,7 @@
   var QWORD = /[?¿？]|^(what|whats|what's|when|where|who|which|why|how|is|are|am|do|does|did|can|show|find|list|any|qu[eé]|cu[aá]ndo|d[oó]nde|qui[eé]n|cu[aá]l|c[oó]mo|tengo|hay|my|mis|mi|mes|mon|ma|meus|minhas|meu|minha|meine|mein|open|abrir|ouvrir|öffne|quoi|quand|o[uù]|qui|quel|quelle|est-ce|ai-je|o que|quando|onde|quem|qual|tenho|was|wann|wo|wer|welche|habe|gibt)\b|什么|什麼|哪|谁|吗|嗎|有没有|我的|打开/i;
   var looksAsked = function (q) { return QWORD.test(q.trim()) || q.trim().split(/\s+/).length >= 4; };
   var STATE = { ok: null, saved: false, skip: '' };   // skip: words the student chose to search as words
+  var autoTried = false;
   function refresh() {
     if (!window.FSD || !window.FSD.me || !window.FSD.me.uid) return Promise.resolve();
     return offered().then(function (o) {
@@ -337,7 +352,8 @@
       return status().then(function (s) {
         STATE.saved = s.on && s.saved && !s.blocked;
         // turned on and saved, but not tested in this browser yet (it updated, or the test never ran): test it now
-        if (s.on && s.saved && !s.works && !s.blocked && !s.busy) selfTest(s.v).catch(function () {});
+        // (once per page, so a check that fails for another reason doesn't keep starting over)
+        if (s.on && s.saved && !s.works && !s.blocked && !s.busy && !autoTried) { autoTried = true; selfTest(s.v).catch(function () {}); }
       });
     }).catch(function () { STATE.ok = false; });
   }
@@ -396,7 +412,7 @@
     }).catch(function (e) {
       if (!still()) return;
       var gpu = e && GPU_ERR.test(e.message || '');
-      if (gpu) { setCheck(variantOf(), false); if (W) { W.terminate(); W = null; } ready = null; readyV = ''; changed(); }
+      if (gpu) { setCheck(variantOf(), false); stop(); changed(); }
       var m = e && e.message === 'not_saved' ? 'A.I. search needs its download again. Turn it on in Settings.'
         : gpu ? "This browser can't run A.I. search yet. Try Chrome or Edge. It tries again when this browser updates." : "A.I. search didn't work just now. Try again, or search for the words.";
       panel(b, '<div class="av-ai-say">' + AI_SVG + '<span>' + esc(t(m)) + '</span></div><button class="mi s-cmd av-ai-words" data-avai="words"><svg class="i"><use href="#i-search"/></svg><span class="tx"><b>' + esc(t('Search for the words instead')) + '</b></span></button>');

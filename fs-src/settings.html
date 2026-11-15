@@ -4411,7 +4411,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       const pct = st.busy && st.total ? Math.min(99, Math.floor(st.loaded / st.total * 100)) : 0;
       const pot = document.body.classList.contains('potato-mode');
       return `
-      ${grp('', tog('aiOn', 'A.I. search', st.testing ? 'Checking that this browser can run it…' : st.busy ? `Downloading… ${pct}% of ${A.mb(st.total)}` : on && st.blocked ? 'Saved on this device, but this browser can\'t run it yet.' : on ? 'Ask in your own words in search anything, like "what\'s missing in chem" or "my lowest grade". It runs on this device.' : `Ask in your own words in search anything, like "what\'s missing in chem". Turning it on downloads ${A.mb(V[cur].bytes)} once. Then it runs on this device.`, on || st.busy, st.busy, `<span class="sg-app">${ico('ai')}</span>`) +
+      ${grp('', tog('aiOn', 'A.I. search', st.testing ? 'Checking that this browser can run it…' : st.busy ? `Downloading… ${pct}% of ${A.mb(st.total)}` : on && st.blocked ? 'Saved on this device, but this browser can\'t run it yet.' : on ? 'Ask in your own words in search anything, like "what\'s missing in chem" or "my lowest grade". It runs on this device.' : `Ask in your own words in search anything, like "what\'s missing in chem". Turning it on downloads ${A.mb(V[cur].bytes)} once. Then it runs on this device.`, on || st.busy, false, `<span class="sg-app">${ico('ai')}</span>`) +
         (st.busy && !st.testing ? `<div class="sg-row" data-set="aiBar"><div class="av-ai-bar" role="progressbar" aria-label="Downloading A.I. search" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><i style="width:${pct}%"></i></div></div>` : '') +
         // a browser that tested and can't run it (Firefox's WebGPU, for now): the download stays, and it's tested again by
         // itself when the browser updates
@@ -5024,8 +5024,9 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       }
       if (k === 'aiOn') {
         const A = window.AvAI; if (!A || !AIX.st) return;
-        if (AIX.st.on && AIX.st.saved) { A.remove().then(() => { SGV.flip = 'aiOn'; toast('A.I. search is off. We deleted its download from this device.'); }); return; }
-        A.download(AIX.st.v).then(() => toast('A.I. search is on. Try it in search anything.'), e => toast(AI_ERR[e && e.message] || 'The download didn\'t finish. Try again.'));
+        // off (also in the middle of the download or the check): stops it and deletes what was saved
+        if ((AIX.st.on && AIX.st.saved) || AIX.st.busy) { A.remove().then(() => { SGV.flip = 'aiOn'; toast('A.I. search is off. We deleted its download from this device.'); }); return; }
+        A.download(AIX.st.v).then(() => toast('A.I. search is on. Try it in search anything.'), e => { if (e && e.message === 'stopped') return; toast(AI_ERR[e && e.message] || 'The download didn\'t finish. Try again.'); });
         return;
       }
       if (k === 'trServer') { const L = window.AvI18n, on = !L.serverOn(); L.setServer(on); t.setAttribute('aria-checked', on); t.querySelector('.sw').classList.toggle('on', on); toast(on ? 'Our server translates when this browser can\'t' : 'Only this device translates now'); return; }
@@ -5093,7 +5094,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     else if (k === 'creset') { FSX.courseOrder.clear(); CLASSES.sort((a, b) => a.period - b.period); renderSide(); redraw(); toast('Back to period order.'); }
     else if (k === 'credits') FSX.newTab('https://github.com/averages-io/averages.io/blob/main/THIRD-PARTY-NOTICES.md');
     else if (k === 'aidel') { if (window.AvAI) window.AvAI.remove().then(() => toast('Deleted. A.I. search is off until you turn it on again.')); }
-    else if (k === 'airetest') { if (window.AvAI) window.AvAI.retest().then(ok => toast(ok ? 'It works in this browser now. Try it in search anything.' : 'Still not in this browser. Try Chrome or Edge.'), () => toast('Couldn\'t check just now. Try again.')); }
+    else if (k === 'airetest') { if (window.AvAI) window.AvAI.retest().then(ok => toast(ok ? 'It works in this browser now. Try it in search anything.' : 'Still not in this browser. Try Chrome or Edge.'), e => { if (!e || e.message !== 'stopped') toast('Couldn\'t check just now. Try again.'); }); }
     else if (k === 'airetry') { if (window.AvAI && AIX.st) window.AvAI.download(AIX.st.v).catch(() => {}); }
     else if (k === 'cache') { try { CACHE_KEYS.forEach(x => sessionStorage.removeItem(x)); Object.keys(sessionStorage).filter(x => x.startsWith('averages_extras_')).forEach(x => sessionStorage.removeItem(x)); } catch (_) {} redraw(); toast('Cleared. Pages load fresh from Schoology next time.'); }
     else if (k === 'test') testNote();
