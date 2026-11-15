@@ -1235,6 +1235,8 @@
   .fs .ob-skin .lb { align-items: baseline; }
   .fs .ob-skin .lb small { font-size: 13px; font-weight: 600; color: var(--muted); }
   .fs .ob-modes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .fs .ob-langs { grid-template-columns: repeat(4, minmax(0, 1fr)); } .fs .ob-langs .ob-mode:first-child { grid-column: span 2; }
+  @media (max-width: 560px) { .fs .ob-langs { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   .fs .ob-modes .ob-mode { display: flex; align-items: center; justify-content: center; gap: 8px; height: 48px; padding: 0 12px; border-radius: 14px; background: var(--field); color: var(--ink); font-size: 15px; font-weight: 800; transition: box-shadow 0.15s ease; }
   .fs .ob-modes .ob-mode svg.i { width: 18px; height: 18px; color: var(--ink-2); }
   .fs .ob-lay .sub { padding: 0 4px; margin-top: -4px; font-size: 13px; font-weight: 600; color: var(--muted); }
@@ -1566,6 +1568,7 @@
           <section class="ob-step" data-fs-step="look" aria-labelledby="fsT2" hidden>
             <h1 id="fsT2">Pick a look</h1>
             <p class="lead">This is how it looks right now. Change it anytime in Settings.</p>
+            <div class="ob-sec"><h2 id="fsLangH">Language</h2><div class="ob-modes ob-langs" id="fsLangs" role="group" aria-labelledby="fsLangH"></div><p class="ob-fine">The language for Averages' buttons, menus and dates. It syncs to your other devices.</p></div>
             <div class="ob-sec"><h2 id="fsLayH">Window type</h2><div class="ob-thms ob-lays" id="fsLays" role="group" aria-labelledby="fsLayH"></div></div>
             <div class="ob-sec"><h2 id="fsSkinH">Theme</h2><div class="ob-thms" id="fsSkins" role="group" aria-labelledby="fsSkinH"></div></div>
             <div class="ob-sec"><h2 id="fsThmH">Mode</h2><div class="ob-modes" id="fsThms" role="group" aria-labelledby="fsThmH"></div></div>
@@ -3144,7 +3147,17 @@
       function accentNow() { return getComputedStyle(document.documentElement).getPropertyValue('--accent').trim().toLowerCase(); }
       const FS_SKINS = [['is', 'IS', 'Industry Standard']];
       let fsSkin = 'is';
+      // Language (2026-11-14): the same choice as Settings > Language, kept with the other settings so it syncs
+      // (schoolagy_settings_options.language). The app's pages read it through /js/averages-i18n.js.
+      const OB_LANGS = [['auto', 'Same as this device'], ['en', 'English'], ['es', 'Español'], ['fr', 'Français'], ['pt', 'Português'], ['de', 'Deutsch'], ['zh', '中文']];
+      function obLang() { try { const o = JSON.parse(localStorage.getItem('schoolagy_settings_options') || '{}') || {}; return typeof o.language === 'string' ? o.language : (localStorage.getItem('averages_lang') || 'auto'); } catch (e) { return 'auto'; } }
+      function obDeviceLang() { const list = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || 'en']; for (const l of list) { const b = String(l || '').toLowerCase().split('-')[0]; if (OB_LANGS.some(x => x[0] === b && b !== 'auto')) return b; } return 'en'; }
+      function obSetLang(v) {
+        try { const o = JSON.parse(localStorage.getItem('schoolagy_settings_options') || '{}') || {}; o.language = v; localStorage.setItem('schoolagy_settings_options', JSON.stringify(o)); localStorage.setItem('averages_lang', v); } catch (e) {}
+      }
       function lookDraw() {
+        const cur = obLang(), devName = (OB_LANGS.find(x => x[0] === obDeviceLang()) || OB_LANGS[1])[1];
+        $('fsLangs').innerHTML = OB_LANGS.map(([v, t]) => `<button class="ob-mode" type="button" data-fs-lang="${v}" aria-pressed="${cur === v}"${v === 'auto' ? ` title="${devName}"` : ''}>${v === 'auto' ? `${t} (${devName})` : t}</button>`).join('');
         $('fsLays').innerHTML = [['windowed', 'Windowed', 'A window over your own background.'], ['fullscreen', 'Fullscreen', 'Uses the whole screen. Our new look.']].map(([v, t, sub]) =>
           `<button class="ob-opt" type="button" data-fs-lay="${v}" aria-pressed="${v === 'fullscreen'}"><b>${t}</b><small>${sub}</small></button>`).join('');
         $('fsSkins').innerHTML = FS_SKINS.map(([v, t, full]) =>
@@ -3156,6 +3169,7 @@
         $('fsSws').innerHTML = ACCENTS.map(([k, n, c]) => `<button class="ob-swb" type="button" style="--c:${c}" data-fs-acc="${c}" aria-pressed="${a === c}" aria-label="${n}" title="${n}">${ico('ok')}</button>`).join('');
       }
       $('fsSkins').addEventListener('click', e => { const b = e.target.closest('[data-fs-skin]'); if (!b) return; fsSkin = b.dataset.fsSkin; lookDraw(); const again = $('fsSkins').querySelector(`[data-fs-skin="${fsSkin}"]`); if (again) again.focus({ preventScroll: true }); });
+      $('fsLangs').addEventListener('click', e => { const b = e.target.closest('[data-fs-lang]'); if (!b) return; obSetLang(b.dataset.fsLang); lookDraw(); const again = $('fsLangs').querySelector(`[data-fs-lang="${b.dataset.fsLang}"]`); if (again) again.focus({ preventScroll: true }); });
       $('fsLays').addEventListener('click', e => {
         const b = e.target.closest('[data-fs-lay]'); if (!b || b.dataset.fsLay !== 'windowed') return;
         const logo = window.__averagesSplash; if (logo && logo.show) logo.show(1000);

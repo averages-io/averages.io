@@ -917,17 +917,22 @@
      * changed on this device and not uploaded yet is left to the Windowed Settings, so nothing is lost.
      */
     syncWindowType: function () {
+      // also the language picked in onboarding (2026-11-14): sent once when the account's copy has none yet,
+      // so a language chosen on another device is never overwritten
       var me = window.FSD && window.FSD.me, LSs = window.sessionStorage;
       try { if (LSs.getItem('averages_fs_wt') === '1') return; LSs.setItem('averages_fs_wt', '1'); } catch (e) { return; }
       var opts = FSX.lget('schoolagy_settings_options') || {};
-      if (!me || me.incognito || opts.syncAcrossDevices === false || opts.windowType !== 'fullscreen') return;
+      if (!me || me.incognito || opts.syncAcrossDevices === false) return;
+      if (opts.windowType !== 'fullscreen' && typeof opts.language !== 'string') return;
       try { if (LS.getItem('schoolagy_account_mode') === 'incognito') return; } catch (e) { return; }
       FSX.api('/sync/settings').then(function (rec) {
         var st = rec && rec.settings; if (!st || typeof st !== 'object' || typeof rec.settingsUpdatedAt !== 'string') return;
-        var so = st.settingsOptions && typeof st.settingsOptions === 'object' ? st.settingsOptions : {};
-        if (so.windowType === 'fullscreen') return;
+        var so = st.settingsOptions && typeof st.settingsOptions === 'object' ? st.settingsOptions : {}, add = {};
+        if (opts.windowType === 'fullscreen' && so.windowType !== 'fullscreen') { add.windowType = 'fullscreen'; add.fsTheme = opts.fsTheme || 'is'; }
+        if (typeof opts.language === 'string' && typeof so.language !== 'string') add.language = opts.language;
+        if (!Object.keys(add).length) return;
         var mine = (FSX.lget('schoolagy_sync_meta') || {}).settingsUpdatedAt === rec.settingsUpdatedAt;
-        var next = Object.assign({}, st, { settingsOptions: Object.assign({}, so, { windowType: 'fullscreen', fsTheme: opts.fsTheme || 'is' }) });
+        var next = Object.assign({}, st, { settingsOptions: Object.assign({}, so, add) });
         return FSX.api('/sync/settings', { method: 'PUT', json: { settings: next } }).then(function (r) {
           // this device agreed with the account's copy before: it still does
           if (mine && r && typeof r.settingsUpdatedAt === 'string') FSX.lset('schoolagy_sync_meta', { settingsUpdatedAt: r.settingsUpdatedAt });
