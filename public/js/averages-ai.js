@@ -40,6 +40,10 @@
   // WebGPU with 16-bit shaders: the model's graph needs them (a GPU without them fails on its first search)
   function gpuOk() {
     if (DEV_WASM) return Promise.resolve(true);
+    // Chrome or Edge (any Chromium browser) on a computer only. Firefox's WebGPU turns down ONNX Runtime's shaders
+    // ("Shader 'Pad' parsing error", Martin 2026-11-15), and Safari's and phones' haven't been tested.
+    var uad = navigator.userAgentData;
+    if (!uad || uad.mobile || !(uad.brands || []).some(function (b) { return /chrom|edge/i.test(b.brand); })) return Promise.resolve(false);
     if (!gpuP) gpuP = !navigator.gpu || !navigator.gpu.requestAdapter ? Promise.resolve(false)
       : navigator.gpu.requestAdapter().then(function (a) { return !!a && !!a.features && a.features.has('shader-f16'); }).catch(function () { return false; });
     return gpuP;
@@ -343,7 +347,7 @@
   function answer(b, q) {
     var my = ++turn;
     var still = function () { return my === turn && b.res.isConnected && (b.input.value || '').trim() === q; };
-    panel(b, '<div class="av-ai-wait">' + AI_SVG + '<span>' + esc(t(ready ? 'Thinking on this device…' : 'Starting A.I. on this device…')) + '</span></div>');
+    panel(b, '<div class="av-ai-wait"><span class="av-ai-load" aria-hidden="true"></span><span>' + esc(t(ready ? 'Thinking on this device…' : 'Starting A.I. on this device…')) + '</span></div>');
     ask(q).then(function (r) {
       if (!still()) return;
       var words = '<button class="mi s-cmd av-ai-words" data-avai="words"><svg class="i"><use href="#i-search"/></svg><span class="tx"><b>' + esc(t('Search for the words instead')) + '</b><small data-no-t>“' + esc(q.slice(0, 120)) + '”</small></span></button>';
@@ -357,7 +361,9 @@
       panel(b, head + body + (out.note ? '<p class="av-ai-note">' + esc(t(out.note)) + '</p>' : '') + words + foot);
     }).catch(function (e) {
       if (!still()) return;
-      var m = e && e.message === 'not_saved' ? 'A.I. search needs its download again. Turn it on in Settings.' : "A.I. search didn't work just now. Try again, or search for the words.";
+      var gpu = e && /webgpu|shader|ortrun|compute pipeline/i.test(e.message || '');
+      var m = e && e.message === 'not_saved' ? 'A.I. search needs its download again. Turn it on in Settings.'
+        : gpu ? "A.I. search doesn't work with this computer's graphics in this browser. Try Chrome or Edge." : "A.I. search didn't work just now. Try again, or search for the words.";
       panel(b, '<div class="av-ai-say">' + AI_SVG + '<span>' + esc(t(m)) + '</span></div><button class="mi s-cmd av-ai-words" data-avai="words"><svg class="i"><use href="#i-search"/></svg><span class="tx"><b>' + esc(t('Search for the words instead')) + '</b></span></button>');
       if (window.console) console.warn('[ai]', e);
     });
@@ -384,9 +390,14 @@
     '.av-ai-end{flex:none;font-weight:800;color:var(--ink);white-space:nowrap}.av-ai-end small{color:var(--muted);font-weight:700;margin-left:4px}',
     '.av-ai-tag{display:inline-block;padding:2px 8px;border-radius:9px;font-size:12px;font-weight:800}.av-ai-tag.bad{background:color-mix(in srgb,#d0393e 14%,transparent);color:#b3261e}.av-ai-tag.ok{background:color-mix(in srgb,#2e7d4f 14%,transparent);color:#22653f}',
     '.av-ai-wait,.av-ai-say{display:flex;align-items:center;gap:6px;min-height:52px;padding:8px 12px;font-weight:700;color:var(--ink)}',
-    '.av-ai-wait .av-ai-ic{animation:avAiPulse 1.1s ease-in-out infinite}',
-    '@keyframes avAiPulse{0%,100%{opacity:1;transform:none}50%{opacity:.45;transform:scale(.9)}}',
-    '.potato-mode .av-ai-wait .av-ai-ic{animation:none}',
+    // waiting: the mascot in the logo's colors (#E5484D, with the loading logo's #FF7A50 glow) sweeping up through it;
+    // reduced motion blinks instead, Potato mode stays still
+    '.av-ai-load{flex:none;width:22px;height:22px;margin:0 7px;background:linear-gradient(to top,#E5484D 0%,#E5484D 30%,#FF7A50 45%,#FFB08F 50%,#FF7A50 55%,#E5484D 70%,#E5484D 100%) 0 0/100% 300% no-repeat;' +
+      "-webkit-mask:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M12 2.5c.8 0 1.5.5 1.8 1.2l6.9 16.1a1.6 1.6 0 0 1-1.5 2.2h-2.4a1.6 1.6 0 0 1-1.5-1l-1-2.6H9.7l-1 2.6a1.6 1.6 0 0 1-1.5 1H4.8a1.6 1.6 0 0 1-1.5-2.2l6.9-16.1c.3-.7 1-1.2 1.8-1.2zM10.35 10.6a.95.95 0 0 1 .95.95v1.5a.95.95 0 0 1-1.9 0v-1.5a.95.95 0 0 1 .95-.95zM13.65 10.6a.95.95 0 0 1 .95.95v1.5a.95.95 0 0 1-1.9 0v-1.5a.95.95 0 0 1 .95-.95z'/%3E%3C/svg%3E\") center/contain no-repeat;mask:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M12 2.5c.8 0 1.5.5 1.8 1.2l6.9 16.1a1.6 1.6 0 0 1-1.5 2.2h-2.4a1.6 1.6 0 0 1-1.5-1l-1-2.6H9.7l-1 2.6a1.6 1.6 0 0 1-1.5 1H4.8a1.6 1.6 0 0 1-1.5-2.2l6.9-16.1c.3-.7 1-1.2 1.8-1.2zM10.35 10.6a.95.95 0 0 1 .95.95v1.5a.95.95 0 0 1-1.9 0v-1.5a.95.95 0 0 1 .95-.95zM13.65 10.6a.95.95 0 0 1 .95.95v1.5a.95.95 0 0 1-1.9 0v-1.5a.95.95 0 0 1 .95-.95z'/%3E%3C/svg%3E\") center/contain no-repeat;animation:avAiUp 1.2s cubic-bezier(.45,0,.35,1) infinite}",
+    '@keyframes avAiUp{from{background-position:0 0}to{background-position:0 100%}}',
+    '@keyframes avAiBlink{0%,100%{opacity:1}50%{opacity:.35}}',
+    '@media (prefers-reduced-motion:reduce){.av-ai-load{animation:avAiBlink 1.4s ease-in-out infinite;background:#E5484D}}',
+    '.potato-mode .av-ai-load{animation:none;background:#E5484D}',
     '.av-ai-note{margin:4px 12px 6px;color:var(--muted);font-size:12px;font-weight:600}',
   ].join('');
   (document.head || document.documentElement).appendChild(css);

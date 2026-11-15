@@ -1161,3 +1161,4 @@
 1161|# ponderada
 1162|Créditos de código aberto
 1163|Incluindo o IBM Granite, base da pesquisa com I.A.
+1164|A pesquisa com I.A. não funciona com a placa de vídeo deste computador neste navegador. Experimente o Chrome ou o Edge.

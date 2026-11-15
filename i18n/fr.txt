@@ -1161,3 +1161,4 @@
 1161|# pondérée
 1162|Crédits open source
 1163|Dont IBM Granite, sur lequel repose la recherche I.A.
+1164|La recherche I.A. ne fonctionne pas avec la carte graphique de cet ordinateur dans ce navigateur. Essaie Chrome ou Edge.

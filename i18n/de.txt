@@ -1161,3 +1161,4 @@
 1161|# gewichtet
 1162|Open-Source-Hinweise
 1163|Darunter IBM Granite, auf dem die K.I.-Suche basiert
+1164|Die K.I.-Suche funktioniert mit der Grafik dieses Computers in diesem Browser nicht. Probier Chrome oder Edge.
