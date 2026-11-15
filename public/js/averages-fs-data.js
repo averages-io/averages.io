@@ -422,7 +422,7 @@
     if (window.FS_INK) try { window.FS_INK(); } catch (e) { /* the numbers stay as text */ }
   }
   ['fs:ready', 'fs:notis', 'fs:seen', 'fs:synced'].forEach(function (ev) { window.addEventListener(ev, function () { setTimeout(sideCounts, ev === 'fs:ready' ? 400 : 0); }); });
-  window.addEventListener('storage', function (e) { if (e.key === 'averages_seen') sideCounts(); });
+  window.addEventListener('storage', function (e) { if (e.key === 'averages_seen') { try { window.dispatchEvent(new CustomEvent('fs:seen')); } catch (x) { sideCounts(); } } });   // another tab: fs:seen recounts the sidebar and the bell
   // a Windowed color was swapped for Fullscreen's red (averages-fs.js): the account's copy gets it too
   window.addEventListener('fs:ready', function () { if (window.__fsAccentReset) { window.__fsAccentReset = false; setTimeout(function () { FSX.syncPush(); }, 2500); } });
   // the synced settings: on open, every 5 minutes, and when the tab comes back (FSX.syncPull)
@@ -808,6 +808,8 @@
       });
       if (added) lset('averages_seen', out);
       lset('averages_seen_at', at); seenTrim();
+      // arrived after the page drew (the page waits 1.5 s at most): its counts update now, not on the next refresh
+      if (added) { try { window.dispatchEvent(new CustomEvent('fs:seen')); } catch (e) { /* fine */ } }
       if (theirsMissing) seenPush();
     }).catch(function () {});
     return settle(got, 1500);   // never holds the page up for long

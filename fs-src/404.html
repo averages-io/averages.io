@@ -3450,6 +3450,9 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const ntIcon = it => it.ic && NT_ICON[it.ic] ? NT_ICON[it.ic] : it.ic ? (EMOJI_SVG[it.ic] || '') : it.k === 'graded' ? (EMOJI_SVG['📊'] || '') : it.k === 'new' ? NT_ICON[it.kind === 'assignment' ? 'new' : 'material'] : it.k === 'changed' ? NT_ICON.update : it.k === 'ann' ? NT_ICON.update : NT_ICON.message;
   const NT_SEEN = new Set(FSD.NT_SEEN_IDS);
   { const add = NT_SEEN.add.bind(NT_SEEN); NT_SEEN.add = id => { const it = NT_ITEMS.find(x => x.id === id); if (it) FSX.seen.mark(it.kind, it.raw); return add(id); }; }   // marked here = marked in Windowed too
+  // seen somewhere else after this page drew (another device's list arriving late, another tab, or the Grades page
+  // clearing new grades): count it here too, without marking it again (2026-11-14: the bell showed 10 until a refresh)
+  window.addEventListener('fs:seen', () => { let n = 0; NT_ITEMS.forEach(it => { if (!NT_SEEN.has(it.id) && FSX.seen.has(it.kind, it.raw)) { Set.prototype.add.call(NT_SEEN, it.id); n++; } }); if (n) { ntBadge(); NT.onChange(); } });
   const NT = Object.assign({ here: null, onChange: () => {} }, typeof NT_HOOKS === 'object' ? NT_HOOKS : {});
   let ntEl = null, ntFrom = null, ntScope = NT.here || 'all';
   const ntIsSeen = id => NT_SEEN.has(id);
