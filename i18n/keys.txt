@@ -1,0 +1,672 @@
+1|Grades
+2|Your classes
+3|Keep sidebar open
+4|Calendar
+5|Assignments
+6|Courses
+7|Messages
+8|Notifications
+9|Files
+10|Home
+11|Contacts
+12|School
+13|Open menu
+14|Averages.io, go to Home
+15|Profile and settings
+16|Sidebar
+17|Pages
+18|Quick search…
+19|Recents
+20|Your stuff
+21|Mark all as seen
+22|Notifications, # new
+23|Open in Schoology
+24|Shortcuts
+25|Synced
+26|Message a teacher
+27|Search
+28|Turn in an assignment
+29|# new
+30|Quick actions
+31|Or type a command, like
+32|or
+33|Synced just now
+34|search anything
+35|to move
+36|to open
+37|to close
+38|Last refreshed just now
+39|Close
+40|Page
+41|Start a new message
+42|Pick from what you have due
+43|Just this page. You can also press / or T
+44|open grades
+45|Course
+46|Show
+47|Turn in
+48|What-if grades
+49|Turned in
+50|All
+51|Clear the search
+52|Yesterday
+53|# PM
+54|Star
+55|Recently graded
+56|List
+57|This week
+58|Grade
+59|# AM
+60|This term
+61|Clear search
+62|Today
+63|Free
+64|Change over the last # grades
+65|See all
+66|# missing
+67|Updates
+68|Missing
+69|In # days
+70|New
+71|Course materials
+72|Edit shortcuts
+73|Classes and pages you open show up here.
+74|Labs
+75|Classmates
+76|Coming up
+77|School email
+78|Upcoming
+79|Starred
+80|Steady
+81|Message
+82|How it's weighted
+83|What it takes
+84|Tests
+85|Open Schoology
+86|% overall
+87|due this week
+88|missing
+89|Tests & Quizzes
+90|Homework & Discussions
+91|Graded
+92|Folders
+93|Tomorrow
+94|All classes
+95|Due today
+96|By class
+97|Change
+98|Conversations
+99|classes
+100|graded
+101|teachers
+102|To do
+103|What-if
+104|+# over the last # grades
+105|Assignment
+106|Classic
+107|Dark, Punch
+108|, Advanced translation
+109|Period order, # Home shortcuts
+110|Just Schoology
+111|Closed beta # (Build local)
+112|Comes with Plus
+113|Folder · # item
+114|#% of your grade · adds # points
+115|#d ago
+116|Details
+117|Find a material
+118|Week of
+119|Account
+120|# due
+121|Settings
+122|Test
+123|Members
+124|Folder · # items
+125|Language
+126|See gradebook
+127|Add a chart
+128|Open
+129|# to do
+130|Due today, #
+131|Plan
+132|Appearance
+133|Personalization
+134|Connected apps
+135|Privacy
+136|About
+137|All files
+138|Time zone
+139|Syncs to your devices
+140|Assignment · Labs
+141|No due date · A- · # / #
+142|Assignment · Tests & Quizzes
+143|No due date · B+ · # / #
+144|Assignment · Homework & Discussions
+145|No due date · B · # / #
+146|Open grades
+147|See all updates
+148|Pause
+149|Pause the summary
+150|Average
+151|last # weeks
+152|# of # turned in on time
+153|No new updates
+154|None
+155|Course info
+156|Search members
+157|Search assignments
+158|#% to #%
+159|Find a course or teacher
+160|Teacher
+161|# points
+162|Predicted
+163|Updated
+164|New materials
+165|See all files
+166|Grade trends
+167|Last # weeks
+168|Overall average. Open details.
+169|Overall average
+170|Overall average options
+171|Assignments turned in. Open details.
+172|Assignments turned in
+173|Assignments turned in options
+174|GPA. Open details.
+175|GPA options
+176|On-time turn-in rate. Open details.
+177|On-time turn-in rate
+178|On-time turn-in rate options
+179|All charts are hidden. Use the + button to show them again.
+180|Pick up where you left off
+181|Hide the This term card
+182|See what it takes
+183|Course updates
+184|Next test
+185|# classes could still go up a letter this term.
+186|Your grade
+187|Folder
+188|Connected
+189|Refresh everything on Home
+190|Materials
+191|Projected
+192|Recent updates
+193|Find an assignment
+194|Find an event
+195|Find a message
+196|Grid
+197|Find a person or class
+198|You, your school and how you sign in
+199|Edit profile
+200|· from Schoology
+201|Schoology website
+202|Where you sign in to Schoology
+203|These come from Schoology. To change them, talk to your school.
+204|Averages email
+205|No email yet
+206|Add one for grade reports and to sign in on new devices.
+207|Add email
+208|Only you see this. We never share it.
+209|Using Averages
+210|Open to
+211|The page you see first when you open Averages.
+212|Set by this device: UTC, # AM now.
+213|Search time zones
+214|Sign-in
+215|Signed in with Schoology
+216|Your classes and grades come straight from Schoology.
+217|Sign out
+218|Previews
+219|Class calendar
+220|Overview
+221|Suggested
+222|List: everything
+223|Icons: by folder, like Files
+224|Icons
+225|Now
+226|Assigned
+227|Edit
+228|Predicted B+, # percent
+229|#h ago
+230|Predicted A, # percent
+231|Predicted C, # percent
+232|Predicted A-, # percent
+233|Predicted B, # percent
+234|Predicted A+, # percent
+235|Summary
+236|Choose an item
+237|Overdue
+238|# more due later
+239|No new messages. Your teachers' replies will show up here.
+240|Refresh your courses
+241|This class shortcuts
+242|This class grades
+243|What-if grades for this class
+244|This class calendar
+245|Open this class in Schoology
+246|Refresh this class
+247|Refresh this class.
+248|Message your teacher
+249|Course sections
+250|Grade weights: Tests # percent, Labs # percent, Homework # percent
+251|Recent files
+252|Class roster
+253|Graded work
+254|Homework
+255|Folder path
+256|Links
+257|Refresh your assignments
+258|Open test
+259|Previous month
+260|Next month
+261|Your school · Event
+262|Find a class or assignment
+263|Refresh your messages
+264|New message
+265|Find a setting
+266|#% of grade
+267|#% of your grade
+268|Refresh everything on Home. Synced just now.
+269|No drafts in progress.
+270|Search (Ctrl+K or /)
+271|Open your courses in Schoology
+272|Join a course
+273|Your courses
+274|Cards
+275|Refresh your calendar
+276|Open all
+277|Refresh your files
+278|Refresh your contacts
+279|Contact
+280|Period # · Your teacher
+281|Notifications, nothing new
+282|Refresh your courses. Synced just now.
+283|courses
+284|new updates
+285|Trend
+286|Due soon
+287|Showing # of # courses, in period order
+288|File
+289|Open your assignments in Schoology
+290|Refresh your assignments.
+291|Quick turn in
+292|All your classes
+293|Contains attachment
+294|Reply
+295|Nothing due
+296|Open your calendar in Schoology
+297|Refresh your calendar.
+298|Import a calendar
+299|Next # days
+300|Days off
+301|Refresh your grades
+302|Open your messages in Schoology
+303|Your Messages plan and settings
+304|Plan and settings
+305|Refresh your messages. Synced # minute ago.
+306|Search in
+307|Conversation
+308|Open your files in Schoology
+309|Refresh your files.
+310|Add files
+311|Show files
+312|Search your files
+313|Search files
+314|Recent
+315|Opened or changed lately
+316|Scroll back
+317|Scroll forward
+318|From your teachers, plus yours
+319|Refresh your contacts. Synced # minute ago.
+320|Add contacts
+321|People
+322|Off
+323|Hello!
+324|Refresh everything on Home.
+325|turn in
+326|open calendar
+327|Grade weights: Tests & Quizzes # percent, Labs # percent, Homework & Discussions # percent
+328|Due
+329|Status
+330|Score
+331|No due date
+332|Class: All classes
+333|Show: All classes
+334|Open your grades in Schoology
+335|Refresh your grades.
+336|This term so far
+337|Download a PDF of your current grades
+338|Report card
+339|Sort classes
+340|Period
+341|Last # grades
+342|files
+343|from your apps
+344|Library
+345|Submissions
+346|Star a folder to keep it here.
+347|Your apps
+348|Connect an app
+349|Classes
+350|Your folders
+351|New folder
+352|Teachers
+353|Settings sections
+354|Everything is free right now
+355|Connect
+356|# pts
+357|Refresh your courses.
+358|Syncing your courses…
+359|Search Courses
+360|Type: All types
+361|All types
+362|# conversation
+363|new ·
+364|updates
+365|Your grade right now, from # graded assignments.
+366|Assignment · # points
+367|Test · # points
+368|Graded Yesterday · Labs
+369|New files
+370|Total size
+371|Last file posted
+372|missing ·
+373|to do ·
+374|# item
+375|# update
+376|Announcement
+377|Comments are on Schoology
+378|Refresh your assignments. Synced just now.
+379|due today
+380|due by Friday
+381|turned in
+382|# · Turn these in as soon as you can
+383|Due # AM
+384|Due # PM
+385|Next week
+386|Later
+387|# left to do by Friday, # more next week and after.
+388|Search Assignments
+389|tests in the next # weeks
+390|events this week
+391|days off this month
+392|All day
+393|Search Calendar
+394|overall
+395|Honors and AP classes count more
+396|Weighted
+397|How many points each grade is worth
+398|GPA scale
+399|Your overall grade, after each assignment
+400|Each class
+401|Overall
+402|Graded work · #
+403|Open course
+404|Search Grades
+405|Refresh your messages. Synced just now.
+406|unread
+407|conversations
+408|Last one
+409|yesterday
+410|Pick a conversation
+411|Or start a new message to one of your teachers.
+412|Search Messages
+413|Sort by Last changed
+414|Sort:
+415|Last changed
+416|Your classes' folders
+417|# files
+418|Search Files
+419|classmates
+420|starred
+421|Search Contacts
+422|Search Settings
+423|Window
+424|Theme
+425|Mode
+426|Accent color
+427|Punch
+428|Blue
+429|Green
+430|Plum
+431|Orange
+432|Teal
+433|Graphite
+434|Nothing new from your teachers this week.
+435|# students
+436|Select everything
+437|Name
+438|Note
+439|Type
+440|Size
+441|Posted
+442|# items
+443|# days late
+444|Due this week
+445|Today, #
+446|On Schoology
+447|See all #
+448|B · #% · # graded
+449|right now
+450|If your recent scores hold
+451|Points
+452|Your grade, after each assignment
+453|B · #%
+454|Labs · graded Yesterday
+455|Earlier
+456|Assignment · Today, #
+457|teacher ·
+458|students ·
+459|in your other classes
+460|In your other classes
+461|You
+462|Student · that's you
+463|All members
+464|Open contact
+465|Teaches
+466|Announcement · #
+467|Reminder: bring your safety goggles tomorrow for the…
+468|Refresh your calendar. Synced just now.
+469|Month
+470|Week
+471|Year
+472|Everything
+473|Events
+474|Refresh your grades. Synced just now.
+475|Unread
+476|By person
+477|Refresh your files. Synced just now.
+478|Refresh your contacts. Synced just now.
+479|Back to your contacts
+480|Email
+481|Copy email
+482|Class
+483|Copy
+484|Your school
+485|From Schoology.
+486|Notes
+487|Averages Plus and the other plans
+488|Your plan
+489|Active
+490|Your grades, assignments, files and calendar from Schoology, free for every student.
+491|Your grades, assignments and files
+492|Message your teachers
+493|Profile picture
+494|Free forever. Profile pictures are free for everyone.
+495|Other plans
+496|Averages Plus
+497|$# a month plus tax
+498|Not on sale yet.
+499|Get Plus
+500|Renews monthly until you cancel. Cancel anytime in Manage plan.
+501|Early access
+502|New features early
+503|Nothing in early access right now. New features show up here about two weeks before everyone else.
+504|Window, theme, colors and speed
+505|Fullscreen
+506|Uses the whole screen. Our new look.
+507|Windowed
+508|A window over your own background.
+509|Industry Standard
+510|Colors
+511|Light, dark, or follow your device.
+512|Light
+513|Dark
+514|System
+515|Buttons, highlights and the page you're on.
+516|Speed
+517|Potato mode
+518|Turns off animation and effects and uses the system font. Good for Chromebooks and older computers.
+519|Reduce motion
+520|Follows your device's setting. Potato mode turns off motion too.
+521|File previews
+522|Small previews of images and PDFs in Files and your courses.
+523|Office files as PDFs
+524|Previews Word, PowerPoint and Excel files using the PDF copy Schoology makes. Opening one in a new tab then shows the PDF, not the original.
+525|Saved on this device
+526|# KB, so pages open faster.
+527|Clear
+528|The app's language and Advanced translation
+529|Same as this device
+530|Advanced translation
+531|Translate class names, titles, posts and messages
+532|Class names, assignment and test titles, teacher posts and messages, in your language. File names stay as they are. Point at a translated name to see the original.
+533|Your browser translates on this device when it can (Chrome or Edge on a computer). Nothing leaves your device unless you turn on Translate on our server.
+534|Course order and Home shortcuts
+535|Course order
+536|In period order. Move a course to set your own; Windowed and the sidebar use it too.
+537|Home shortcuts
+538|Remove Turn in
+539|Remove What-if grades
+540|Remove Message a teacher
+541|Remove What it takes
+542|Remove Edit shortcuts
+543|Add a shortcut
+544|Missing work
+545|Gradebook
+546|The buttons under the search bar on Home. Drag to reorder; up to #.
+547|What your browser tells you about
+548|Browser notifications come with Plus
+549|New grades, assignments, due dates and messages, even with Averages closed.
+550|See Plus
+551|Browser notifications
+552|Comes with Plus.
+553|Notify me about
+554|Grade updates
+555|A new grade or a changed score.
+556|New assignments
+557|Work your teachers just posted.
+558|Due date reminders
+559|Before something is due.
+560|New messages from your teachers.
+561|Announcements
+562|New posts in your course updates.
+563|Send a test notification
+564|Turn on browser notifications first.
+565|Send
+566|Google Drive, Canva, OneDrive and calendars
+567|Your classes, grades, assignments and files. Averages needs this one.
+568|Files and designs
+569|Edit and add files.
+570|Edit files and turn in designs.
+571|Save and add files.
+572|Averages only sees the files you pick, and doesn't keep them. Work you turn in goes to Schoology. Google Drive is a trademark of Google LLC.
+573|Editing
+574|Open Word, PowerPoint and Excel files in
+575|Connect Canva, Google Drive or OneDrive to edit these.
+576|Open Office files in
+577|Calendar sync
+578|Your due dates in Google Calendar or Apple Calendar, kept up to date.
+579|What we keep and where it syncs
+580|What we keep
+581|Your settings, starred things and drafts are saved, so they follow you to every device.
+582|Incognito
+583|Nothing about you is stored on our servers. Everything stays in this browser.
+584|Sync across devices
+585|Always on in Classic.
+586|On
+587|Only search my school
+588|Add contacts finds people at your school. Turn this off to find anyone on Schoology, at any school or district.
+589|Your data
+590|Download your data
+591|A copy of everything Averages stored about you. Your grades and files stay in Schoology.
+592|Download
+593|Delete your account
+594|Deletes everything Averages stored about you. Schoology isn't changed.
+595|Delete
+596|Version, shortcuts and help
+597|Closed beta # (
+598|Built on this computer
+599|Build local
+600|Keyboard shortcuts
+601|Search anything
+602|From any page. On Home it goes to the big search box.
+603|Search this page
+604|Jumps to the page's own search box.
+605|Close a popup
+606|Change one to use different keys. Its old keys stop working while it's changed.
+607|Help
+608|Help Center
+609|How things work, step by step
+610|Send feedback
+611|Found a bug or have an idea? Tell us on GitHub.
+612|Privacy Policy and Terms
+613|Turn in {x}
+614|Open {x}
+615|More for {x}
+616|Refresh {x}
+617|Star {x}
+618|Select {x}
+619|Remove {x}
+620|Move {x} up
+621|Move {x} down
+622|{x}, Teacher
+623|{x}, Classmate
+624|{x} grade details
+625|# due in {x}
+626|Next: {x}, today
+627|Translate on our server
+628|This browser can't translate on its own. With this on, those names, posts and messages are sent to our server to translate. We don't keep them.
+629|Pick a language other than English first.
+630|Advanced translation comes with Plus.
+631|Advanced translation is on
+632|Advanced translation is off
+633|This browser can't translate on its own. Turn on Translate on our server to use it here.
+634|Our server translates when this browser can't
+635|Only this device translates now
+636|Original: #
+637|Good morning, {x}!
+638|Good afternoon, {x}!
+639|Good evening, {x}!
+640|Synced # minutes ago
+641|Synced # minute ago
+642|Refresh your messages. Synced # minutes ago.
+643|Refresh your contacts. Synced # minutes ago.
+644|Sunday
+645|Monday
+646|Tuesday
+647|Wednesday
+648|Thursday
+649|Friday
+650|Saturday
+651|Was due {x}
+652|Due {x}
+653|Graded {x}
+654|Turned in {x}
+655|Discussion
+656|Quiz
+657|Event
+658|Assessment
+659|No due date · {x}
+660|Predicted {x}, # percent
+661|Message {x}
+662|Period # · {x}
+663|{x} · Period #
+664|# day late
+665|was due yesterday at {x}
+666|was due {x} at {x}
+667|was due {x}
+668|due today at {x}
+669|due {x}
+670|{x} is late
+671|Missing · was due {x}
+672|Tmrw

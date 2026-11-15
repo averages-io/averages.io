@@ -1,0 +1,672 @@
+1|Noten
+2|Deine Kurse
+3|Seitenleiste offen lassen
+4|Kalender
+5|Aufgaben
+6|Kurse
+7|Nachrichten
+8|Benachrichtigungen
+9|Dateien
+10|Start
+11|Kontakte
+12|Schule
+13|Menü öffnen
+14|Averages.io, zur Startseite
+15|Profil und Einstellungen
+16|Seitenleiste
+17|Seiten
+18|Schnellsuche…
+19|Zuletzt
+20|Deine Sachen
+21|Alle als gesehen markieren
+22|Benachrichtigungen, # neu
+23|In Schoology öffnen
+24|Verknüpfungen
+25|Synchronisiert
+26|Einer Lehrkraft schreiben
+27|Suchen
+28|Eine Aufgabe abgeben
+29|# neu
+30|Schnellaktionen
+31|Oder gib einen Befehl ein, zum Beispiel
+32|oder
+33|Gerade synchronisiert
+34|alles durchsuchen
+35|zum Bewegen
+36|zum Öffnen
+37|zum Schließen
+38|Gerade aktualisiert
+39|Schließen
+40|Seite
+41|Neue Nachricht schreiben
+42|Wähle aus dem, was fällig ist
+43|Nur diese Seite. Du kannst auch / oder T drücken
+44|Noten öffnen
+45|Kurs
+46|Anzeigen
+47|Abgeben
+48|Was-wäre-wenn-Noten
+49|Abgegeben
+50|Alle
+51|Suche löschen
+52|Gestern
+53|# PM
+54|Markieren
+55|Kürzlich benotet
+56|Liste
+57|Diese Woche
+58|Note
+59|# AM
+60|Dieses Halbjahr
+61|Suche löschen
+62|Heute
+63|Kostenlos
+64|Veränderung über die letzten # Noten
+65|Alle ansehen
+66|# fehlen
+67|Neuigkeiten
+68|Fehlt
+69|In # Tagen
+70|Neu
+71|Kursmaterial
+72|Verknüpfungen bearbeiten
+73|Kurse und Seiten, die du öffnest, erscheinen hier.
+74|Labore
+75|Mitschüler
+76|Demnächst
+77|Schul-E-Mail
+78|Bevorstehend
+79|Markiert
+80|Stabil
+81|Nachricht
+82|Wie gewichtet wird
+83|Was du brauchst
+84|Tests
+85|Schoology öffnen
+86|% insgesamt
+87|diese Woche fällig
+88|fehlen
+89|Tests und Quizze
+90|Hausaufgaben und Diskussionen
+91|Benotet
+92|Ordner
+93|Morgen
+94|Alle Kurse
+95|Heute fällig
+96|Nach Kurs
+97|Veränderung
+98|Unterhaltungen
+99|Kurse
+100|benotet
+101|Lehrkräfte
+102|Zu erledigen
+103|Was wäre wenn
+104|+# über die letzten # Noten
+105|Aufgabe
+106|Klassisch
+107|Dunkel, Punch
+108|, erweiterte Übersetzung
+109|Nach Stunden sortiert, # Verknüpfungen auf der Startseite
+110|Nur Schoology
+111|Geschlossene Beta # (lokale Version)
+112|Mit Plus
+113|Ordner · # Element
+114|#% deiner Note · bringt # Punkte
+115|vor # T.
+116|Details
+117|Material suchen
+118|Woche vom
+119|Konto
+120|# fällig
+121|Einstellungen
+122|Test
+123|Mitglieder
+124|Ordner · # Elemente
+125|Sprache
+126|Notenbuch ansehen
+127|Diagramm hinzufügen
+128|Öffnen
+129|# zu erledigen
+130|Heute fällig, #
+131|Tarif
+132|Darstellung
+133|Personalisierung
+134|Verbundene Apps
+135|Datenschutz
+136|Über
+137|Alle Dateien
+138|Zeitzone
+139|Wird mit deinen Geräten synchronisiert
+140|Aufgabe · Labore
+141|Kein Abgabetermin · A- · # / #
+142|Aufgabe · Tests und Quizze
+143|Kein Abgabetermin · B+ · # / #
+144|Aufgabe · Hausaufgaben und Diskussionen
+145|Kein Abgabetermin · B · # / #
+146|Noten öffnen
+147|Alle Neuigkeiten ansehen
+148|Pause
+149|Zusammenfassung anhalten
+150|Durchschnitt
+151|letzte # Wochen
+152|# von # pünktlich abgegeben
+153|Keine Neuigkeiten
+154|Keine
+155|Kursinfo
+156|Mitglieder suchen
+157|Aufgaben suchen
+158|von #% auf #%
+159|Kurs oder Lehrkraft suchen
+160|Lehrkraft
+161|# Punkte
+162|Vorhergesagt
+163|Aktualisiert
+164|Neues Material
+165|Alle Dateien ansehen
+166|Notenverlauf
+167|Letzte # Wochen
+168|Gesamtdurchschnitt. Details öffnen.
+169|Gesamtdurchschnitt
+170|Optionen für den Gesamtdurchschnitt
+171|Abgegebene Aufgaben. Details öffnen.
+172|Abgegebene Aufgaben
+173|Optionen für abgegebene Aufgaben
+174|GPA. Details öffnen.
+175|GPA-Optionen
+176|Pünktlich abgegeben. Details öffnen.
+177|Pünktlich abgegeben
+178|Optionen für pünktliche Abgaben
+179|Alle Diagramme sind ausgeblendet. Mit der Schaltfläche + zeigst du sie wieder an.
+180|Mach weiter, wo du aufgehört hast
+181|Karte „Dieses Halbjahr“ ausblenden
+182|Sehen, was du brauchst
+183|Kursneuigkeiten
+184|Nächster Test
+185|# Kurse könnten in diesem Halbjahr noch eine Note besser werden.
+186|Deine Note
+187|Ordner
+188|Verbunden
+189|Alles auf der Startseite aktualisieren
+190|Material
+191|Hochgerechnet
+192|Neueste Neuigkeiten
+193|Aufgabe suchen
+194|Termin suchen
+195|Nachricht suchen
+196|Raster
+197|Person oder Kurs suchen
+198|Du, deine Schule und wie du dich anmeldest
+199|Profil bearbeiten
+200|· von Schoology
+201|Schoology-Website
+202|Wo du dich bei Schoology anmeldest
+203|Das kommt von Schoology. Wende dich an deine Schule, um es zu ändern.
+204|Averages-E-Mail
+205|Noch keine E-Mail
+206|Füge eine hinzu, um Notenberichte zu bekommen und dich auf neuen Geräten anzumelden.
+207|E-Mail hinzufügen
+208|Nur du siehst das. Wir geben es nie weiter.
+209|Averages verwenden
+210|Öffnen mit
+211|Die Seite, die du zuerst siehst, wenn du Averages öffnest.
+212|Von diesem Gerät festgelegt: UTC, jetzt # Uhr.
+213|Zeitzonen suchen
+214|Anmeldung
+215|Mit Schoology angemeldet
+216|Deine Kurse und Noten kommen direkt aus Schoology.
+217|Abmelden
+218|Vorschauen
+219|Kurskalender
+220|Übersicht
+221|Vorgeschlagen
+222|Liste: alles
+223|Symbole: nach Ordner, wie in Dateien
+224|Symbole
+225|Jetzt
+226|Gestellt
+227|Bearbeiten
+228|Vorhergesagt B+, # Prozent
+229|vor # Std.
+230|Vorhergesagt A, # Prozent
+231|Vorhergesagt C, # Prozent
+232|Vorhergesagt A-, # Prozent
+233|Vorhergesagt B, # Prozent
+234|Vorhergesagt A+, # Prozent
+235|Zusammenfassung
+236|Element auswählen
+237|Überfällig
+238|# weitere später fällig
+239|Keine neuen Nachrichten. Antworten deiner Lehrkräfte erscheinen hier.
+240|Deine Kurse aktualisieren
+241|Verknüpfungen für diesen Kurs
+242|Noten in diesem Kurs
+243|Was-wäre-wenn-Noten für diesen Kurs
+244|Kalender dieses Kurses
+245|Diesen Kurs in Schoology öffnen
+246|Diesen Kurs aktualisieren
+247|Diesen Kurs aktualisieren.
+248|Deiner Lehrkraft schreiben
+249|Kursbereiche
+250|Gewichtung: Tests # Prozent, Labore # Prozent, Hausaufgaben # Prozent
+251|Neueste Dateien
+252|Kursliste
+253|Benotete Arbeiten
+254|Hausaufgaben
+255|Ordnerpfad
+256|Links
+257|Deine Aufgaben aktualisieren
+258|Test öffnen
+259|Vorheriger Monat
+260|Nächster Monat
+261|Deine Schule · Termin
+262|Kurs oder Aufgabe suchen
+263|Deine Nachrichten aktualisieren
+264|Neue Nachricht
+265|Einstellung suchen
+266|#% der Note
+267|#% deiner Note
+268|Alles auf der Startseite aktualisieren. Gerade synchronisiert.
+269|Keine Entwürfe in Arbeit.
+270|Suchen (Strg+K oder /)
+271|Deine Kurse in Schoology öffnen
+272|Einem Kurs beitreten
+273|Deine Kurse
+274|Karten
+275|Deinen Kalender aktualisieren
+276|Alle öffnen
+277|Deine Dateien aktualisieren
+278|Deine Kontakte aktualisieren
+279|Kontakt
+280|Stunde # · Deine Lehrkraft
+281|Benachrichtigungen, nichts Neues
+282|Deine Kurse aktualisieren. Gerade synchronisiert.
+283|Kurse
+284|Neuigkeiten
+285|Verlauf
+286|Bald fällig
+287|# von # Kursen, nach Stunden sortiert
+288|Datei
+289|Deine Aufgaben in Schoology öffnen
+290|Deine Aufgaben aktualisieren.
+291|Schnell abgeben
+292|Alle deine Kurse
+293|Mit Anhang
+294|Antworten
+295|Nichts fällig
+296|Deinen Kalender in Schoology öffnen
+297|Deinen Kalender aktualisieren.
+298|Kalender importieren
+299|Nächste # Tage
+300|Freie Tage
+301|Deine Noten aktualisieren
+302|Deine Nachrichten in Schoology öffnen
+303|Tarif und Einstellungen für Nachrichten
+304|Tarif und Einstellungen
+305|Deine Nachrichten aktualisieren. Vor # Minute synchronisiert.
+306|Suchen in
+307|Unterhaltung
+308|Deine Dateien in Schoology öffnen
+309|Deine Dateien aktualisieren.
+310|Dateien hinzufügen
+311|Dateien anzeigen
+312|Deine Dateien durchsuchen
+313|Dateien suchen
+314|Zuletzt
+315|Kürzlich geöffnet oder geändert
+316|Zurückscrollen
+317|Weiterscrollen
+318|Von deinen Lehrkräften und deine eigenen
+319|Deine Kontakte aktualisieren. Vor # Minute synchronisiert.
+320|Kontakte hinzufügen
+321|Personen
+322|Aus
+323|Hallo!
+324|Alles auf der Startseite aktualisieren.
+325|abgeben
+326|Kalender öffnen
+327|Gewichtung: Tests und Quizze # Prozent, Labore # Prozent, Hausaufgaben und Diskussionen # Prozent
+328|Fällig
+329|Status
+330|Punktzahl
+331|Kein Abgabetermin
+332|Kurs: Alle Kurse
+333|Anzeigen: Alle Kurse
+334|Deine Noten in Schoology öffnen
+335|Deine Noten aktualisieren.
+336|Dieses Halbjahr bisher
+337|PDF deiner aktuellen Noten herunterladen
+338|Zeugnis
+339|Kurse sortieren
+340|Stunde
+341|Letzte # Noten
+342|Dateien
+343|aus deinen Apps
+344|Bibliothek
+345|Abgaben
+346|Markiere einen Ordner, um ihn hier zu behalten.
+347|Deine Apps
+348|App verbinden
+349|Kurse
+350|Deine Ordner
+351|Neuer Ordner
+352|Lehrkräfte
+353|Einstellungsbereiche
+354|Gerade ist alles kostenlos
+355|Verbinden
+356|# Pkt.
+357|Deine Kurse aktualisieren.
+358|Deine Kurse werden synchronisiert…
+359|In Kursen suchen
+360|Typ: Alle Typen
+361|Alle Typen
+362|# Unterhaltung
+363|neu ·
+364|Neuigkeiten
+365|Deine aktuelle Note, aus # benoteten Aufgaben.
+366|Aufgabe · # Punkte
+367|Test · # Punkte
+368|Gestern benotet · Labore
+369|Neue Dateien
+370|Gesamtgröße
+371|Zuletzt hochgeladene Datei
+372|fehlen ·
+373|zu erledigen ·
+374|# Element
+375|# Neuigkeit
+376|Ankündigung
+377|Kommentare gibt es in Schoology
+378|Deine Aufgaben aktualisieren. Gerade synchronisiert.
+379|heute fällig
+380|bis Freitag fällig
+381|abgegeben
+382|# · Gib sie so bald wie möglich ab
+383|Fällig um # AM
+384|Fällig um # PM
+385|Nächste Woche
+386|Später
+387|# bis Freitag zu erledigen, # weitere nächste Woche und danach.
+388|In Aufgaben suchen
+389|Tests in den nächsten # Wochen
+390|Termine diese Woche
+391|freie Tage diesen Monat
+392|Ganztägig
+393|Im Kalender suchen
+394|insgesamt
+395|Honors- und AP-Kurse zählen mehr
+396|Gewichtet
+397|Wie viele Punkte jede Note wert ist
+398|GPA-Skala
+399|Deine Gesamtnote nach jeder Aufgabe
+400|Jeder Kurs
+401|Gesamt
+402|Benotete Arbeiten · #
+403|Kurs öffnen
+404|In Noten suchen
+405|Deine Nachrichten aktualisieren. Gerade synchronisiert.
+406|ungelesen
+407|Unterhaltungen
+408|Die letzte
+409|gestern
+410|Wähle eine Unterhaltung
+411|Oder schreib einer deiner Lehrkräfte eine neue Nachricht.
+412|In Nachrichten suchen
+413|Sortieren nach Zuletzt geändert
+414|Sortieren:
+415|Zuletzt geändert
+416|Ordner deiner Kurse
+417|# Dateien
+418|In Dateien suchen
+419|Mitschüler
+420|markiert
+421|In Kontakten suchen
+422|In Einstellungen suchen
+423|Fenster
+424|Design
+425|Modus
+426|Akzentfarbe
+427|Punch
+428|Blau
+429|Grün
+430|Pflaume
+431|Orange
+432|Petrol
+433|Graphit
+434|Diese Woche nichts Neues von deinen Lehrkräften.
+435|# Schüler
+436|Alles auswählen
+437|Name
+438|Notiz
+439|Typ
+440|Größe
+441|Veröffentlicht
+442|# Elemente
+443|# Tage zu spät
+444|Diese Woche fällig
+445|Heute, #
+446|In Schoology
+447|Alle # ansehen
+448|B · #% · # benotet
+449|gerade
+450|Wenn deine letzten Ergebnisse so bleiben
+451|Punkte
+452|Deine Note nach jeder Aufgabe
+453|B · #%
+454|Labore · gestern benotet
+455|Früher
+456|Aufgabe · Heute, #
+457|Lehrkraft ·
+458|Schüler ·
+459|in deinen anderen Kursen
+460|In deinen anderen Kursen
+461|Du
+462|Schüler · das bist du
+463|Alle Mitglieder
+464|Kontakt öffnen
+465|Unterrichtet
+466|Ankündigung · #
+467|Erinnerung: Bring morgen deine Schutzbrille mit für das…
+468|Deinen Kalender aktualisieren. Gerade synchronisiert.
+469|Monat
+470|Woche
+471|Jahr
+472|Alles
+473|Termine
+474|Deine Noten aktualisieren. Gerade synchronisiert.
+475|Ungelesen
+476|Nach Person
+477|Deine Dateien aktualisieren. Gerade synchronisiert.
+478|Deine Kontakte aktualisieren. Gerade synchronisiert.
+479|Zurück zu deinen Kontakten
+480|E-Mail
+481|E-Mail kopieren
+482|Kurs
+483|Kopieren
+484|Deine Schule
+485|Von Schoology.
+486|Notizen
+487|Averages Plus und die anderen Tarife
+488|Dein Tarif
+489|Aktiv
+490|Deine Noten, Aufgaben, Dateien und dein Kalender aus Schoology, kostenlos für alle Schüler.
+491|Deine Noten, Aufgaben und Dateien
+492|Deinen Lehrkräften schreiben
+493|Profilbild
+494|Für immer kostenlos. Profilbilder sind für alle kostenlos.
+495|Andere Tarife
+496|Averages Plus
+497|# $ im Monat zzgl. Steuern
+498|Noch nicht erhältlich.
+499|Plus holen
+500|Verlängert sich jeden Monat, bis du kündigst. Kündige jederzeit unter Tarif verwalten.
+501|Früher Zugang
+502|Neue Funktionen früher
+503|Gerade gibt es nichts im frühen Zugang. Neue Funktionen erscheinen hier etwa zwei Wochen vor allen anderen.
+504|Fenster, Design, Farben und Tempo
+505|Vollbild
+506|Nutzt den ganzen Bildschirm. Unser neuer Look.
+507|Im Fenster
+508|Ein Fenster über deinem eigenen Hintergrund.
+509|Industry Standard
+510|Farben
+511|Hell, dunkel oder wie dein Gerät.
+512|Hell
+513|Dunkel
+514|System
+515|Schaltflächen, Hervorhebungen und die Seite, auf der du bist.
+516|Tempo
+517|Kartoffelmodus
+518|Schaltet Animationen und Effekte aus und nutzt die Systemschrift. Gut für Chromebooks und ältere Computer.
+519|Bewegung reduzieren
+520|Folgt der Einstellung deines Geräts. Der Kartoffelmodus schaltet Bewegung auch aus.
+521|Dateivorschauen
+522|Kleine Vorschauen von Bildern und PDFs in Dateien und deinen Kursen.
+523|Office-Dateien als PDF
+524|Zeigt Word-, PowerPoint- und Excel-Dateien mit der PDF-Kopie, die Schoology erstellt. Öffnest du eine in einem neuen Tab, siehst du das PDF, nicht das Original.
+525|Auf diesem Gerät gespeichert
+526|# KB, damit Seiten schneller öffnen.
+527|Löschen
+528|Die Sprache der App und die erweiterte Übersetzung
+529|Wie dieses Gerät
+530|Erweiterte Übersetzung
+531|Kursnamen, Titel, Beiträge und Nachrichten übersetzen
+532|Kursnamen, Titel von Aufgaben und Tests, Beiträge von Lehrkräften und Nachrichten in deiner Sprache. Dateinamen bleiben, wie sie sind. Zeig auf einen übersetzten Namen, um das Original zu sehen.
+533|Dein Browser übersetzt auf diesem Gerät, wenn er kann (Chrome oder Edge auf einem Computer). Nichts verlässt dein Gerät, außer du schaltest „Auf unserem Server übersetzen“ ein.
+534|Kursreihenfolge und Verknüpfungen auf der Startseite
+535|Kursreihenfolge
+536|Nach Stunden sortiert. Verschieb einen Kurs, um deine eigene Reihenfolge festzulegen; die Fensteransicht und die Seitenleiste nutzen sie auch.
+537|Verknüpfungen auf der Startseite
+538|„Abgeben“ entfernen
+539|„Was-wäre-wenn-Noten“ entfernen
+540|„Einer Lehrkraft schreiben“ entfernen
+541|„Was du brauchst“ entfernen
+542|„Verknüpfungen bearbeiten“ entfernen
+543|Verknüpfung hinzufügen
+544|Fehlende Arbeiten
+545|Notenbuch
+546|Die Schaltflächen unter der Suchleiste auf der Startseite. Zum Umsortieren ziehen; bis zu #.
+547|Worüber dein Browser dich informiert
+548|Browser-Benachrichtigungen gibt es mit Plus
+549|Neue Noten, Aufgaben, Abgabetermine und Nachrichten, auch wenn Averages geschlossen ist.
+550|Plus ansehen
+551|Browser-Benachrichtigungen
+552|Mit Plus.
+553|Benachrichtige mich über
+554|Notenänderungen
+555|Eine neue Note oder eine geänderte Punktzahl.
+556|Neue Aufgaben
+557|Arbeiten, die deine Lehrkräfte gerade gestellt haben.
+558|Erinnerungen an Abgabetermine
+559|Bevor etwas fällig ist.
+560|Neue Nachrichten von deinen Lehrkräften.
+561|Ankündigungen
+562|Neue Beiträge in den Neuigkeiten deiner Kurse.
+563|Testbenachrichtigung senden
+564|Schalte zuerst Browser-Benachrichtigungen ein.
+565|Senden
+566|Google Drive, Canva, OneDrive und Kalender
+567|Deine Kurse, Noten, Aufgaben und Dateien. Averages braucht diese.
+568|Dateien und Designs
+569|Dateien bearbeiten und hinzufügen.
+570|Dateien bearbeiten und Designs abgeben.
+571|Dateien speichern und hinzufügen.
+572|Averages sieht nur die Dateien, die du auswählst, und behält sie nicht. Was du abgibst, geht an Schoology. Google Drive ist eine Marke von Google LLC.
+573|Bearbeiten
+574|Word-, PowerPoint- und Excel-Dateien öffnen in
+575|Verbinde Canva, Google Drive oder OneDrive, um sie zu bearbeiten.
+576|Office-Dateien öffnen in
+577|Kalender-Synchronisierung
+578|Deine Abgabetermine in Google Kalender oder Apple Kalender, immer aktuell.
+579|Was wir speichern und wo es synchronisiert wird
+580|Was wir speichern
+581|Deine Einstellungen, markierten Sachen und Entwürfe werden gespeichert, damit sie dir auf jedes Gerät folgen.
+582|Inkognito
+583|Auf unseren Servern wird nichts über dich gespeichert. Alles bleibt in diesem Browser.
+584|Geräteübergreifend synchronisieren
+585|In Klassisch immer an.
+586|An
+587|Nur an meiner Schule suchen
+588|„Kontakte hinzufügen“ findet Personen an deiner Schule. Schalte das aus, um jeden auf Schoology zu finden, an jeder Schule oder in jedem Bezirk.
+589|Deine Daten
+590|Deine Daten herunterladen
+591|Eine Kopie von allem, was Averages über dich gespeichert hat. Deine Noten und Dateien bleiben in Schoology.
+592|Herunterladen
+593|Dein Konto löschen
+594|Löscht alles, was Averages über dich gespeichert hat. Schoology wird nicht verändert.
+595|Löschen
+596|Version, Tastenkürzel und Hilfe
+597|Geschlossene Beta # (
+598|Auf diesem Computer erstellt
+599|Lokale Version
+600|Tastenkürzel
+601|Alles durchsuchen
+602|Von jeder Seite aus. Auf der Startseite springt es in das große Suchfeld.
+603|Diese Seite durchsuchen
+604|Springt in das Suchfeld der Seite.
+605|Ein Popup schließen
+606|Ändere eins, um andere Tasten zu nutzen. Die alten Tasten funktionieren nicht mehr, solange es geändert ist.
+607|Hilfe
+608|Hilfecenter
+609|Wie alles funktioniert, Schritt für Schritt
+610|Feedback senden
+611|Einen Fehler gefunden oder eine Idee? Sag es uns auf GitHub.
+612|Datenschutzerklärung und Bedingungen
+613|{x} abgeben
+614|{x} öffnen
+615|Mehr zu {x}
+616|{x} aktualisieren
+617|{x} markieren
+618|{x} auswählen
+619|{x} entfernen
+620|{x} nach oben
+621|{x} nach unten
+622|{x}, Lehrkraft
+623|{x}, Mitschüler
+624|Notendetails für {x}
+625|# fällig in {x}
+626|Als Nächstes: {x}, heute
+627|Auf unserem Server übersetzen
+628|Dieser Browser kann nicht selbst übersetzen. Wenn das an ist, werden diese Namen, Beiträge und Nachrichten zum Übersetzen an unseren Server geschickt. Wir speichern sie nicht.
+629|Wähle zuerst eine andere Sprache als Englisch.
+630|Die erweiterte Übersetzung gibt es mit Plus.
+631|Die erweiterte Übersetzung ist an
+632|Die erweiterte Übersetzung ist aus
+633|Dieser Browser kann nicht selbst übersetzen. Schalte „Auf unserem Server übersetzen“ ein, um sie hier zu nutzen.
+634|Unser Server übersetzt, wenn dieser Browser es nicht kann
+635|Jetzt übersetzt nur noch dieses Gerät
+636|Original: #
+637|Guten Morgen, {x}!
+638|Guten Tag, {x}!
+639|Guten Abend, {x}!
+640|Vor # Minuten synchronisiert
+641|Vor # Minute synchronisiert
+642|Deine Nachrichten aktualisieren. Vor # Minuten synchronisiert.
+643|Deine Kontakte aktualisieren. Vor # Minuten synchronisiert.
+644|Sonntag
+645|Montag
+646|Dienstag
+647|Mittwoch
+648|Donnerstag
+649|Freitag
+650|Samstag
+651|War fällig am {x}
+652|Fällig am {x}
+653|Benotet am {x}
+654|Abgegeben am {x}
+655|Diskussion
+656|Quiz
+657|Termin
+658|Leistungsnachweis
+659|Kein Abgabetermin · {x}
+660|Vorhergesagt {x}, # Prozent
+661|{x} schreiben
+662|Stunde # · {x}
+663|{x} · Stunde #
+664|# Tag zu spät
+665|war gestern um {x} fällig
+666|war am {x} um {x} fällig
+667|war am {x} fällig
+668|heute um {x} fällig
+669|fällig am {x}
+670|{x} ist überfällig
+671|Fehlt · war am {x} fällig
+672|Morgen

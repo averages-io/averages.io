@@ -4417,9 +4417,9 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const last = t => t.msgs[t.msgs.length - 1];
   TH.forEach(t => t.msgs.forEach((m, i) => { m.id = t.id + '.' + i; })); // every message can be jumped to from search
   const sameDay = (a, b) => a.toDateString() === b.toDateString();
-  const fmtTime = d => d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-  const ago = d => { const days = Math.round((new Date(NOW.toDateString()) - new Date(d.toDateString())) / 864e5); return days === 0 ? fmtTime(d) : days === 1 ? 'Yesterday' : days < 7 ? d.toLocaleDateString('en-US', { weekday: 'short' }) : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); };
-  const dayName = d => { const days = Math.round((new Date(NOW.toDateString()) - new Date(d.toDateString())) / 864e5); return days === 0 ? 'Today' : days === 1 ? 'Yesterday' : d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }); };
+  const fmtTime = d => d.toLocaleTimeString((window.AvI18n ? window.AvI18n.locale : 'en-US'), { hour: 'numeric', minute: '2-digit' });
+  const ago = d => { const days = Math.round((new Date(NOW.toDateString()) - new Date(d.toDateString())) / 864e5); return days === 0 ? fmtTime(d) : days === 1 ? 'Yesterday' : days < 7 ? d.toLocaleDateString((window.AvI18n ? window.AvI18n.locale : 'en-US'), { weekday: 'short' }) : d.toLocaleDateString((window.AvI18n ? window.AvI18n.locale : 'en-US'), { month: 'short', day: 'numeric' }); };
+  const dayName = d => { const days = Math.round((new Date(NOW.toDateString()) - new Date(d.toDateString())) / 864e5); return days === 0 ? 'Today' : days === 1 ? 'Yesterday' : d.toLocaleDateString((window.AvI18n ? window.AvI18n.locale : 'en-US'), { weekday: 'long', month: 'short', day: 'numeric' }); };
   const others = t => t.with.map(P);
   const nick = p => p.role === 'Teacher' ? p.name : p.name.split(' ')[0]; // "Ms. Lin", not "Ms."
   const title = t => t.group || (t.with.length > 1 ? t.with.map(id => nick(P(id))).join(', ') : P(t.with[0]).name);

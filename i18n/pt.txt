@@ -1,0 +1,672 @@
+1|Notas
+2|Suas aulas
+3|Manter a barra lateral aberta
+4|Calendário
+5|Tarefas
+6|Cursos
+7|Mensagens
+8|Notificações
+9|Arquivos
+10|Início
+11|Contatos
+12|Escola
+13|Abrir menu
+14|Averages.io, ir para o Início
+15|Perfil e configurações
+16|Barra lateral
+17|Páginas
+18|Busca rápida…
+19|Recentes
+20|Suas coisas
+21|Marcar tudo como visto
+22|Notificações, # novas
+23|Abrir no Schoology
+24|Atalhos
+25|Sincronizado
+26|Mandar mensagem a um professor
+27|Pesquisar
+28|Entregar uma tarefa
+29|# novas
+30|Ações rápidas
+31|Ou digite um comando, como
+32|ou
+33|Sincronizado agora
+34|pesquisar qualquer coisa
+35|para mover
+36|para abrir
+37|para fechar
+38|Atualizado agora
+39|Fechar
+40|Página
+41|Escrever uma nova mensagem
+42|Escolha entre o que você tem para entregar
+43|Só esta página. Você também pode apertar / ou T
+44|abrir notas
+45|Curso
+46|Mostrar
+47|Entregar
+48|Notas simuladas
+49|Entregue
+50|Tudo
+51|Limpar a pesquisa
+52|Ontem
+53|# PM
+54|Favoritar
+55|Avaliado recentemente
+56|Lista
+57|Esta semana
+58|Nota
+59|# AM
+60|Este período
+61|Limpar pesquisa
+62|Hoje
+63|Grátis
+64|Mudança nas últimas # notas
+65|Ver tudo
+66|# pendentes
+67|Novidades
+68|Pendente
+69|Em # dias
+70|Novo
+71|Materiais do curso
+72|Editar atalhos
+73|As aulas e páginas que você abre aparecem aqui.
+74|Laboratórios
+75|Colegas
+76|Em breve
+77|E-mail da escola
+78|Próximas
+79|Favoritos
+80|Estável
+81|Mensagem
+82|Como é ponderado
+83|O que você precisa
+84|Provas
+85|Abrir o Schoology
+86|% no total
+87|para esta semana
+88|pendentes
+89|Provas e testes
+90|Tarefas e discussões
+91|Avaliado
+92|Pastas
+93|Amanhã
+94|Todas as aulas
+95|Para hoje
+96|Por aula
+97|Mudança
+98|Conversas
+99|aulas
+100|avaliadas
+101|professores
+102|A fazer
+103|Simulada
+104|+# nas últimas # notas
+105|Tarefa
+106|Clássico
+107|Escuro, Punch
+108|, tradução avançada
+109|Ordem dos períodos, # atalhos no Início
+110|Só o Schoology
+111|Beta fechado # (versão local)
+112|Vem com o Plus
+113|Pasta · # item
+114|#% da sua nota · soma # pontos
+115|há # d
+116|Detalhes
+117|Procurar um material
+118|Semana de
+119|Conta
+120|# para entregar
+121|Configurações
+122|Prova
+123|Membros
+124|Pasta · # itens
+125|Idioma
+126|Ver o boletim
+127|Adicionar um gráfico
+128|Abrir
+129|# a fazer
+130|Para hoje, #
+131|Plano
+132|Aparência
+133|Personalização
+134|Apps conectados
+135|Privacidade
+136|Sobre
+137|Todos os arquivos
+138|Fuso horário
+139|Sincroniza com seus dispositivos
+140|Tarefa · Laboratórios
+141|Sem data de entrega · A- · # / #
+142|Tarefa · Provas e testes
+143|Sem data de entrega · B+ · # / #
+144|Tarefa · Tarefas e discussões
+145|Sem data de entrega · B · # / #
+146|Abrir notas
+147|Ver todas as novidades
+148|Pausar
+149|Pausar o resumo
+150|Média
+151|últimas # semanas
+152|# de # entregues no prazo
+153|Nenhuma novidade
+154|Nenhum
+155|Informações do curso
+156|Procurar membros
+157|Procurar tarefas
+158|de #% para #%
+159|Procurar um curso ou professor
+160|Professor
+161|# pontos
+162|Prevista
+163|Atualizado
+164|Materiais novos
+165|Ver todos os arquivos
+166|Tendências das notas
+167|Últimas # semanas
+168|Média geral. Abrir detalhes.
+169|Média geral
+170|Opções da média geral
+171|Tarefas entregues. Abrir detalhes.
+172|Tarefas entregues
+173|Opções das tarefas entregues
+174|GPA. Abrir detalhes.
+175|Opções do GPA
+176|Entregas no prazo. Abrir detalhes.
+177|Entregas no prazo
+178|Opções das entregas no prazo
+179|Todos os gráficos estão ocultos. Use o botão + para mostrá-los de novo.
+180|Continue de onde parou
+181|Ocultar o cartão Este período
+182|Ver o que você precisa
+183|Novidades do curso
+184|Próxima prova
+185|# aulas ainda podem subir uma letra neste período.
+186|Sua nota
+187|Pasta
+188|Conectado
+189|Atualizar tudo no Início
+190|Materiais
+191|Projetada
+192|Novidades recentes
+193|Procurar uma tarefa
+194|Procurar um evento
+195|Procurar uma mensagem
+196|Grade
+197|Procurar uma pessoa ou aula
+198|Você, sua escola e como você entra
+199|Editar perfil
+200|· do Schoology
+201|Site do Schoology
+202|Onde você entra no Schoology
+203|Isso vem do Schoology. Para mudar, fale com sua escola.
+204|E-mail do Averages
+205|Ainda sem e-mail
+206|Adicione um para receber boletins e entrar em novos dispositivos.
+207|Adicionar e-mail
+208|Só você vê isso. Nunca compartilhamos.
+209|Usando o Averages
+210|Abrir em
+211|A página que você vê primeiro ao abrir o Averages.
+212|Definido por este dispositivo: UTC, agora são # AM.
+213|Procurar fusos horários
+214|Entrada
+215|Conectado com o Schoology
+216|Suas aulas e notas vêm direto do Schoology.
+217|Sair
+218|Prévias
+219|Calendário da aula
+220|Visão geral
+221|Sugerido
+222|Lista: tudo
+223|Ícones: por pasta, como em Arquivos
+224|Ícones
+225|Agora
+226|Atribuído
+227|Editar
+228|Prevista B+, # por cento
+229|há # h
+230|Prevista A, # por cento
+231|Prevista C, # por cento
+232|Prevista A-, # por cento
+233|Prevista B, # por cento
+234|Prevista A+, # por cento
+235|Resumo
+236|Escolha um item
+237|Atrasada
+238|Mais # para depois
+239|Nenhuma mensagem nova. As respostas dos seus professores vão aparecer aqui.
+240|Atualizar seus cursos
+241|Atalhos desta aula
+242|Notas desta aula
+243|Notas simuladas desta aula
+244|Calendário desta aula
+245|Abrir esta aula no Schoology
+246|Atualizar esta aula
+247|Atualizar esta aula.
+248|Mandar mensagem ao seu professor
+249|Seções do curso
+250|Pesos: Provas # por cento, Laboratórios # por cento, Tarefas # por cento
+251|Arquivos recentes
+252|Lista da turma
+253|Trabalhos avaliados
+254|Tarefas
+255|Caminho da pasta
+256|Links
+257|Atualizar suas tarefas
+258|Abrir prova
+259|Mês anterior
+260|Próximo mês
+261|Sua escola · Evento
+262|Procurar uma aula ou tarefa
+263|Atualizar suas mensagens
+264|Nova mensagem
+265|Procurar uma configuração
+266|#% da nota
+267|#% da sua nota
+268|Atualizar tudo no Início. Sincronizado agora.
+269|Nenhum rascunho em andamento.
+270|Pesquisar (Ctrl+K ou /)
+271|Abrir seus cursos no Schoology
+272|Entrar em um curso
+273|Seus cursos
+274|Cartões
+275|Atualizar seu calendário
+276|Abrir tudo
+277|Atualizar seus arquivos
+278|Atualizar seus contatos
+279|Contato
+280|Período # · Seu professor
+281|Notificações, nada novo
+282|Atualizar seus cursos. Sincronizado agora.
+283|cursos
+284|novidades
+285|Tendência
+286|Vence logo
+287|Mostrando # de # cursos, por período
+288|Arquivo
+289|Abrir suas tarefas no Schoology
+290|Atualizar suas tarefas.
+291|Entrega rápida
+292|Todas as suas aulas
+293|Tem anexo
+294|Responder
+295|Nada para entregar
+296|Abrir seu calendário no Schoology
+297|Atualizar seu calendário.
+298|Importar um calendário
+299|Próximos # dias
+300|Dias de folga
+301|Atualizar suas notas
+302|Abrir suas mensagens no Schoology
+303|Plano e configurações das Mensagens
+304|Plano e configurações
+305|Atualizar suas mensagens. Sincronizado há # minuto.
+306|Pesquisar em
+307|Conversa
+308|Abrir seus arquivos no Schoology
+309|Atualizar seus arquivos.
+310|Adicionar arquivos
+311|Mostrar arquivos
+312|Pesquisar seus arquivos
+313|Pesquisar arquivos
+314|Recentes
+315|Abertos ou alterados recentemente
+316|Rolar para trás
+317|Rolar para frente
+318|Dos seus professores, mais os seus
+319|Atualizar seus contatos. Sincronizado há # minuto.
+320|Adicionar contatos
+321|Pessoas
+322|Desativado
+323|Olá!
+324|Atualizar tudo no Início.
+325|entregar
+326|abrir calendário
+327|Pesos: Provas e testes # por cento, Laboratórios # por cento, Tarefas e discussões # por cento
+328|Entrega
+329|Status
+330|Pontuação
+331|Sem data de entrega
+332|Aula: Todas as aulas
+333|Mostrar: Todas as aulas
+334|Abrir suas notas no Schoology
+335|Atualizar suas notas.
+336|Este período até agora
+337|Baixar um PDF das suas notas atuais
+338|Boletim
+339|Ordenar aulas
+340|Período
+341|Últimas # notas
+342|arquivos
+343|dos seus apps
+344|Biblioteca
+345|Entregas
+346|Favorite uma pasta para mantê-la aqui.
+347|Seus apps
+348|Conectar um app
+349|Aulas
+350|Suas pastas
+351|Nova pasta
+352|Professores
+353|Seções das configurações
+354|Tudo está grátis por enquanto
+355|Conectar
+356|# pts
+357|Atualizar seus cursos.
+358|Sincronizando seus cursos…
+359|Pesquisar em Cursos
+360|Tipo: Todos os tipos
+361|Todos os tipos
+362|# conversa
+363|novas ·
+364|novidades
+365|Sua nota agora, com base em # tarefas avaliadas.
+366|Tarefa · # pontos
+367|Prova · # pontos
+368|Avaliado ontem · Laboratórios
+369|Arquivos novos
+370|Tamanho total
+371|Último arquivo publicado
+372|pendentes ·
+373|a fazer ·
+374|# item
+375|# novidade
+376|Aviso
+377|Os comentários ficam no Schoology
+378|Atualizar suas tarefas. Sincronizado agora.
+379|para hoje
+380|para sexta
+381|entregues
+382|# · Entregue o quanto antes
+383|Vence às # AM
+384|Vence às # PM
+385|Semana que vem
+386|Depois
+387|# a fazer até sexta, mais # na semana que vem e depois.
+388|Pesquisar em Tarefas
+389|provas nas próximas # semanas
+390|eventos esta semana
+391|dias de folga este mês
+392|Dia todo
+393|Pesquisar no Calendário
+394|no total
+395|Aulas Honors e AP contam mais
+396|Ponderado
+397|Quantos pontos vale cada nota
+398|Escala do GPA
+399|Sua nota geral, depois de cada tarefa
+400|Cada aula
+401|Geral
+402|Trabalhos avaliados · #
+403|Abrir curso
+404|Pesquisar em Notas
+405|Atualizar suas mensagens. Sincronizado agora.
+406|não lidas
+407|conversas
+408|A última
+409|ontem
+410|Escolha uma conversa
+411|Ou escreva uma nova mensagem para um dos seus professores.
+412|Pesquisar em Mensagens
+413|Ordenar por Última alteração
+414|Ordenar:
+415|Última alteração
+416|Pastas das suas aulas
+417|# arquivos
+418|Pesquisar em Arquivos
+419|colegas
+420|favoritos
+421|Pesquisar em Contatos
+422|Pesquisar em Configurações
+423|Janela
+424|Tema
+425|Modo
+426|Cor de destaque
+427|Punch
+428|Azul
+429|Verde
+430|Ameixa
+431|Laranja
+432|Azul-petróleo
+433|Grafite
+434|Nada novo dos seus professores esta semana.
+435|# alunos
+436|Selecionar tudo
+437|Nome
+438|Observação
+439|Tipo
+440|Tamanho
+441|Publicado
+442|# itens
+443|# dias de atraso
+444|Para esta semana
+445|Hoje, #
+446|No Schoology
+447|Ver os #
+448|B · #% · # avaliadas
+449|agora
+450|Se suas notas recentes se mantiverem
+451|Pontos
+452|Sua nota, depois de cada tarefa
+453|B · #%
+454|Laboratórios · avaliado ontem
+455|Antes
+456|Tarefa · Hoje, #
+457|professor ·
+458|alunos ·
+459|nas suas outras aulas
+460|Nas suas outras aulas
+461|Você
+462|Aluno · é você
+463|Todos os membros
+464|Abrir contato
+465|Ensina
+466|Aviso · #
+467|Lembrete: traga seus óculos de proteção amanhã para o…
+468|Atualizar seu calendário. Sincronizado agora.
+469|Mês
+470|Semana
+471|Ano
+472|Tudo
+473|Eventos
+474|Atualizar suas notas. Sincronizado agora.
+475|Não lidas
+476|Por pessoa
+477|Atualizar seus arquivos. Sincronizado agora.
+478|Atualizar seus contatos. Sincronizado agora.
+479|Voltar aos seus contatos
+480|E-mail
+481|Copiar e-mail
+482|Aula
+483|Copiar
+484|Sua escola
+485|Do Schoology.
+486|Anotações
+487|O Averages Plus e os outros planos
+488|Seu plano
+489|Ativo
+490|Suas notas, tarefas, arquivos e calendário do Schoology, grátis para todos os alunos.
+491|Suas notas, tarefas e arquivos
+492|Mandar mensagem aos seus professores
+493|Foto de perfil
+494|Grátis para sempre. Fotos de perfil são grátis para todos.
+495|Outros planos
+496|Averages Plus
+497|US$ # por mês mais impostos
+498|Ainda não está à venda.
+499|Assinar o Plus
+500|Renova todo mês até você cancelar. Cancele quando quiser em Gerenciar plano.
+501|Acesso antecipado
+502|Recursos novos antes
+503|Nada em acesso antecipado agora. Os recursos novos aparecem aqui cerca de duas semanas antes de todo mundo.
+504|Janela, tema, cores e velocidade
+505|Tela cheia
+506|Usa a tela toda. Nosso novo visual.
+507|Em janela
+508|Uma janela sobre o seu próprio fundo.
+509|Industry Standard
+510|Cores
+511|Claro, escuro ou igual ao seu dispositivo.
+512|Claro
+513|Escuro
+514|Sistema
+515|Botões, destaques e a página em que você está.
+516|Velocidade
+517|Modo batata
+518|Desliga animações e efeitos e usa a fonte do sistema. Bom para Chromebooks e computadores mais antigos.
+519|Reduzir movimento
+520|Segue a configuração do seu dispositivo. O modo batata também desliga o movimento.
+521|Prévias de arquivos
+522|Pequenas prévias de imagens e PDFs em Arquivos e nos seus cursos.
+523|Arquivos do Office como PDF
+524|Mostra arquivos do Word, PowerPoint e Excel com a cópia em PDF que o Schoology faz. Abrir um em uma nova aba mostra o PDF, não o original.
+525|Salvo neste dispositivo
+526|# KB, para as páginas abrirem mais rápido.
+527|Limpar
+528|O idioma do app e a tradução avançada
+529|Igual a este dispositivo
+530|Tradução avançada
+531|Traduzir nomes de aulas, títulos, publicações e mensagens
+532|Nomes de aulas, títulos de tarefas e provas, publicações dos professores e mensagens, no seu idioma. Nomes de arquivos não mudam. Passe o ponteiro sobre um nome traduzido para ver o original.
+533|Seu navegador traduz neste dispositivo quando pode (Chrome ou Edge em um computador). Nada sai do seu dispositivo, a menos que você ative Traduzir no nosso servidor.
+534|Ordem dos cursos e atalhos do Início
+535|Ordem dos cursos
+536|Por período. Mova um curso para definir sua própria ordem; o modo em janela e a barra lateral também usam.
+537|Atalhos do Início
+538|Remover Entregar
+539|Remover Notas simuladas
+540|Remover Mandar mensagem a um professor
+541|Remover O que você precisa
+542|Remover Editar atalhos
+543|Adicionar um atalho
+544|Trabalhos pendentes
+545|Boletim
+546|Os botões abaixo da barra de pesquisa do Início. Arraste para reordenar; até #.
+547|O que seu navegador te avisa
+548|As notificações do navegador vêm com o Plus
+549|Notas novas, tarefas, datas de entrega e mensagens, mesmo com o Averages fechado.
+550|Ver o Plus
+551|Notificações do navegador
+552|Vem com o Plus.
+553|Avisar sobre
+554|Atualizações de notas
+555|Uma nota nova ou uma pontuação alterada.
+556|Tarefas novas
+557|Trabalhos que seus professores acabaram de publicar.
+558|Lembretes de entrega
+559|Antes de algo vencer.
+560|Mensagens novas dos seus professores.
+561|Avisos
+562|Publicações novas nas novidades dos seus cursos.
+563|Enviar uma notificação de teste
+564|Ative primeiro as notificações do navegador.
+565|Enviar
+566|Google Drive, Canva, OneDrive e calendários
+567|Suas aulas, notas, tarefas e arquivos. O Averages precisa desta.
+568|Arquivos e designs
+569|Edite e adicione arquivos.
+570|Edite arquivos e entregue designs.
+571|Salve e adicione arquivos.
+572|O Averages só vê os arquivos que você escolhe e não os guarda. O que você entrega vai para o Schoology. Google Drive é uma marca da Google LLC.
+573|Edição
+574|Abrir arquivos do Word, PowerPoint e Excel em
+575|Conecte o Canva, o Google Drive ou o OneDrive para editá-los.
+576|Abrir arquivos do Office em
+577|Sincronizar calendário
+578|Suas datas de entrega no Google Agenda ou no Calendário da Apple, sempre atualizadas.
+579|O que guardamos e onde sincroniza
+580|O que guardamos
+581|Suas configurações, favoritos e rascunhos ficam salvos, então te acompanham em todos os dispositivos.
+582|Anônimo
+583|Nada sobre você fica nos nossos servidores. Tudo fica neste navegador.
+584|Sincronizar entre dispositivos
+585|Sempre ativado no Clássico.
+586|Ativado
+587|Pesquisar só na minha escola
+588|Adicionar contatos encontra pessoas da sua escola. Desative para encontrar qualquer pessoa no Schoology, de qualquer escola ou distrito.
+589|Seus dados
+590|Baixar seus dados
+591|Uma cópia de tudo o que o Averages guardou sobre você. Suas notas e arquivos ficam no Schoology.
+592|Baixar
+593|Excluir sua conta
+594|Exclui tudo o que o Averages guardou sobre você. O Schoology não muda.
+595|Excluir
+596|Versão, atalhos e ajuda
+597|Beta fechado # (
+598|Feito neste computador
+599|Versão local
+600|Atalhos de teclado
+601|Pesquisar qualquer coisa
+602|De qualquer página. No Início, vai para a caixa de pesquisa grande.
+603|Pesquisar nesta página
+604|Vai para a caixa de pesquisa da própria página.
+605|Fechar uma janela
+606|Mude um para usar outras teclas. As teclas antigas param de funcionar enquanto estiver mudado.
+607|Ajuda
+608|Central de ajuda
+609|Como as coisas funcionam, passo a passo
+610|Enviar feedback
+611|Achou um bug ou tem uma ideia? Conte pra gente no GitHub.
+612|Política de privacidade e termos
+613|Entregar {x}
+614|Abrir {x}
+615|Mais de {x}
+616|Atualizar {x}
+617|Favoritar {x}
+618|Selecionar {x}
+619|Remover {x}
+620|Subir {x}
+621|Descer {x}
+622|{x}, professor
+623|{x}, colega
+624|Detalhes da nota de {x}
+625|# para entregar em {x}
+626|Próxima: {x}, hoje
+627|Traduzir no nosso servidor
+628|Este navegador não consegue traduzir sozinho. Com isto ativado, esses nomes, publicações e mensagens são enviados ao nosso servidor para tradução. Não os guardamos.
+629|Escolha primeiro um idioma que não seja inglês.
+630|A tradução avançada vem com o Plus.
+631|A tradução avançada está ativada
+632|A tradução avançada está desativada
+633|Este navegador não consegue traduzir sozinho. Ative Traduzir no nosso servidor para usar aqui.
+634|Nosso servidor traduz quando este navegador não consegue
+635|Agora só este dispositivo traduz
+636|Original: #
+637|Bom dia, {x}!
+638|Boa tarde, {x}!
+639|Boa noite, {x}!
+640|Sincronizado há # minutos
+641|Sincronizado há # minuto
+642|Atualizar suas mensagens. Sincronizado há # minutos.
+643|Atualizar seus contatos. Sincronizado há # minutos.
+644|Domingo
+645|Segunda-feira
+646|Terça-feira
+647|Quarta-feira
+648|Quinta-feira
+649|Sexta-feira
+650|Sábado
+651|Vencia em {x}
+652|Vence em {x}
+653|Avaliado em {x}
+654|Entregue em {x}
+655|Discussão
+656|Teste
+657|Evento
+658|Avaliação
+659|Sem data de entrega · {x}
+660|Prevista {x}, # por cento
+661|Mandar mensagem a {x}
+662|Período # · {x}
+663|{x} · Período #
+664|# dia de atraso
+665|venceu ontem às {x}
+666|venceu em {x} às {x}
+667|venceu em {x}
+668|vence hoje às {x}
+669|vence em {x}
+670|{x} está atrasada
+671|Pendente · venceu em {x}
+672|Amanhã

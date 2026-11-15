@@ -4016,8 +4016,8 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   // your conversations (Schoology's, newest message only), the same ones as on the Messages page
   const MSG = (FSD.raw.messages && Array.isArray(FSD.raw.messages.CONVERSATIONS)) ? FSD.raw.messages : { CONVERSATIONS: [], me: '' };
   const CONV = MSG.CONVERSATIONS.map(t => ({ id: String(t.id), with: (t.participants || []).map(String).filter(x => x !== String(MSG.me)).concat([String(t.personId || '')]).filter((x, i, a) => x && a.indexOf(x) === i), subject: t.subject || 'No subject', from: String(t.personId || ''), t: t.preview || '', when: new Date(t.at || Date.now()), unread: !!t.unread }));
-  const fmtTime = d => d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-  const ago = d => { const days = Math.round((new Date(NOW.toDateString()) - new Date(d.toDateString())) / 864e5); return days === 0 ? fmtTime(d) : days === 1 ? 'Yesterday' : days < 7 ? d.toLocaleDateString('en-US', { weekday: 'short' }) : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); };
+  const fmtTime = d => d.toLocaleTimeString((window.AvI18n ? window.AvI18n.locale : 'en-US'), { hour: 'numeric', minute: '2-digit' });
+  const ago = d => { const days = Math.round((new Date(NOW.toDateString()) - new Date(d.toDateString())) / 864e5); return days === 0 ? fmtTime(d) : days === 1 ? 'Yesterday' : days < 7 ? d.toLocaleDateString((window.AvI18n ? window.AvI18n.locale : 'en-US'), { weekday: 'short' }) : d.toLocaleDateString((window.AvI18n ? window.AvI18n.locale : 'en-US'), { month: 'short', day: 'numeric' }); };
   function av(p) {
     if (p.role === 'Teacher') { const c = C[p.c]; return `<span class="ms-av t" style="--c:${c.color}" aria-hidden="true">${esc(ini(p.name))}${badge(c)}</span>`; }
     return p.photo ? `<span class="ms-av ph" style="background-image:url(&quot;${esc(p.photo)}&quot;)" aria-hidden="true"></span>` : `<span class="ms-av${p.role === 'Staff' ? ' staff' : ''}" style="--h:${hue(p.name)}" aria-hidden="true">${esc(ini(p.name))}</span>`;

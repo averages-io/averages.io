@@ -2395,13 +2395,15 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   // a class with nothing graded yet reads N/A, never F 0.0%
   const gtxt = c => c.none ? 'No grades yet' : `${letter(c.pct)} · ${c.pct.toFixed(1)}%`;
   const WITH_GRADES = () => CLASSES.filter(c => !c.none);
-  const dtile = d => d.k === 'late' ? `<span class="dtile late" aria-hidden="true"><small>${d.day}</small><b>${String(d.date).split(' ')[1] || ''}</b></span>`
-    : `<span class="dtile ${d.date === TODAY ? 'today' : ''}" aria-hidden="true"><small>${d.date === TODAY ? 'Today' : d.day}</small><b>${d.date.split(' ')[1]}</b></span>`;
+  // the day of the month in a short date: "Nov 21", "21 nov.", "21. Nov." and "11月21日" all give 21 (2026-11-15: dates follow the app's language)
+  const dayNum = x => { const m = String(x || '').match(/\d+/g); return m ? m[m.length - 1] : ''; };
+  const dtile = d => d.k === 'late' ? `<span class="dtile late" aria-hidden="true"><small>${d.day}</small><b>${dayNum(d.date)}</b></span>`
+    : `<span class="dtile ${d.date === TODAY ? 'today' : ''}" aria-hidden="true"><small>${d.date === TODAY ? 'Today' : d.day}</small><b>${dayNum(d.date)}</b></span>`;
 
   // What's due (late, today, then the rest), and what's turned in, from every class (averages-fs-data.js). Each has its
   // date label ("Oct 29"), weekday, time, days from today (off) and points; the description loads when it's opened.
   const DAY0 = FSD.fmt.startOfDay(Date.now());
-  const longWhen = off => off <= 6 ? new Date(DAY0 + off * 864e5).toLocaleDateString('en-US', { weekday: 'long' }) : off <= 13 ? 'next ' + new Date(DAY0 + off * 864e5).toLocaleDateString('en-US', { weekday: 'long' }) : new Date(DAY0 + off * 864e5).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+  const longWhen = off => off <= 6 ? new Date(DAY0 + off * 864e5).toLocaleDateString((window.AvI18n ? window.AvI18n.locale : 'en-US'), { weekday: 'long' }) : off <= 13 ? 'next ' + new Date(DAY0 + off * 864e5).toLocaleDateString((window.AvI18n ? window.AvI18n.locale : 'en-US'), { weekday: 'long' }) : new Date(DAY0 + off * 864e5).toLocaleDateString((window.AvI18n ? window.AvI18n.locale : 'en-US'), { weekday: 'long', month: 'short', day: 'numeric' });
   const toDue = a => ({ id: a.id, c: a.c, t: a.t, k: a.st === 'missing' ? 'late' : a.off === 0 ? 'today' : '', date: a.dueAt ? FSD.fmt.shortDate(a.dueAt) : '', day: a.day || '', time: a.time || '', pts: a.pts,
     off: a.off == null ? 99 : a.off, kind: a.kind === 'test' ? 'test' : undefined, canTurnIn: FSD.canTurnIn(a), tag: a.off != null && a.off > 6 ? FSD.fmt.shortDate(a.dueAt) : '', long: a.off != null && a.off > 1 ? longWhen(a.off) : '', desc: '', a });
   let DUE = FSD.ASG.filter(a => (a.st === 'missing' || a.st === 'due') && a.dueAt).sort((x, y) => (x.st === 'missing' ? 0 : 1) - (y.st === 'missing' ? 0 : 1) || x.dueAt - y.dueAt).map(toDue);
@@ -2413,7 +2415,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const dueLong = d => d.k === 'late' ? `was due ${d.off === -1 ? 'yesterday' : d.date} at ${d.time}` : d.k === 'today' ? `due today at ${d.time}` : d.long ? `due ${d.long}, ${d.time}` : `due ${d.day} at ${d.time}`;
 
   const DOW = (new Date().getDay() + 6) % 7;   // 0 is Monday
-  const WEEK = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'].map((d, i) => [d, FSD.fmt.shortDate(DAY0 + (i - DOW) * 864e5)]);
+  const WEEK = (window.AvI18n && AvI18n.names() ? AvI18n.names().wd.slice(1, 6) : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']).map((d, i) => [d, FSD.fmt.shortDate(DAY0 + (i - DOW) * 864e5)]);
   const TODAY = FSD.fmt.shortDate(DAY0);
 
   // Schoology's inbox (teachers only in the app): each conversation with its newest message. The whole conversation
@@ -2622,7 +2624,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     document.querySelectorAll('[data-name]').forEach(el => { el.textContent = PROFILE.name; });
     const h = new Date().getHours();
     $('greet').textContent = `Good ${h < 12 ? 'morning' : h < 18 ? 'afternoon' : 'evening'}, ${firstName()}!`;
-    $('todayDate').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+    $('todayDate').textContent = new Date().toLocaleDateString((window.AvI18n ? window.AvI18n.locale : 'en-US'), { weekday: 'long', month: 'long', day: 'numeric' });
   }
   function renderSide() {
     $('sideClasses').innerHTML = sortedClasses().map(c =>
@@ -2703,7 +2705,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const daysOut = d => d.off;
   function buildSummaryCats() {
     const up = DUE.filter(d => d.k !== 'late'), tests = up.filter(d => d.kind === 'test'), work = up.filter(d => d.kind !== 'test');
-    const tile = d => { const n = daysOut(d); return { top: n === 0 ? 'Today' : n === 1 ? 'Tmrw' : d.day, num: String(d.date).split(' ')[1] || '', color: C[d.c].color }; };
+    const tile = d => { const n = daysOut(d); return { top: n === 0 ? 'Today' : n === 1 ? 'Tmrw' : d.day, num: dayNum(d.date), color: C[d.c].color }; };
     const cats = [];
     if (tests.length) cats.push({ key: 'test', label: 'Next test', desc: 'Your upcoming quizzes and tests', items: tests.slice(0, 5).map(d => { const n = daysOut(d);
       return { ...tile(d), title: d.t, go: 'due:' + d.id, meta: `${C[d.c].name} · ${n === 0 ? 'Today' : n === 1 ? 'Tomorrow' : `In ${n} days`}` }; }) });
@@ -2711,7 +2713,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       return { ...tile(d), title: d.t, go: 'due:' + d.id, meta: `${C[d.c].name} · ${n === 0 ? `Due today at ${d.time}` : n === 1 ? 'Due tomorrow' : `Due in ${n} days`}` }; }) });
     const today = up.filter(d => d.k === 'today'), late = DUE.filter(d => d.k === 'late').length;
     const meta = [today.length ? `${today[0].t}, ${C[today[0].c].name}${today.length > 1 ? ` + ${today.length - 1} more` : ''}` : '', late ? `${late} overdue` : 'Nothing overdue'].filter(Boolean).join(' · ');
-    cats.push({ key: 'today', label: 'Today', desc: 'A summary of today', items: [{ top: new Date().toLocaleDateString('en-US', { weekday: 'short' }), num: String(new Date().getDate()), color: 'var(--accent)', go: 'page:Calendar',
+    cats.push({ key: 'today', label: 'Today', desc: 'A summary of today', items: [{ top: new Date().toLocaleDateString((window.AvI18n ? window.AvI18n.locale : 'en-US'), { weekday: 'short' }), num: String(new Date().getDate()), color: 'var(--accent)', go: 'page:Calendar',
       title: today.length ? `${today.length} thing${today.length > 1 ? 's' : ''} due today` : 'Nothing due today', meta }] });
     return cats;
   }
@@ -3447,7 +3449,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       return { label: 'This week', wide: true, html: head('This week', `${WEEK[0][1]} to ${WEEK[4][1]}`, { page: 'Calendar', pageLabel: 'Open Calendar' }) + `<div class="week">${WEEK.map(([dn, date]) => {
         const items = DUE.filter(d => d.date === date);
         const done = DONE.filter(d => d.date === date);
-        return `<div class="day"><span class="dtile${date === TODAY ? ' today' : ''}"><small>${date === TODAY ? 'Today' : dn}</small><b>${String(date).split(' ')[1] || ''}</b></span><div class="items">${
+        return `<div class="day"><span class="dtile${date === TODAY ? ' today' : ''}"><small>${date === TODAY ? 'Today' : dn}</small><b>${dayNum(date)}</b></span><div class="items">${
           items.map(dueRow).join('') + done.map(d => mi({ attrs: 'disabled', cls: 'dis', lead: ico('ok'), t: d.t, sub: C[d.c].name, end: '<span class="due done">Done</span>' })).join('') ||
           '<div class="none">Nothing due</div>'}</div></div>`;
       }).join('')}</div>` };
@@ -5005,7 +5007,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
         const finish = () => {
           FSX.refresh();
           tiSending = false; if (ti) { ti.classList.remove('busy'); ti.querySelector('.ti-main').classList.remove('sending'); }
-          m.again = false; m.turnedClock = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }); awOpen[id] = new Set([(m.prev || []).length + 1]); delete awOpen[id + ':again']; m.noteDraft = '';
+          m.again = false; m.turnedClock = new Date().toLocaleTimeString((window.AvI18n ? window.AvI18n.locale : 'en-US'), { hour: 'numeric', minute: '2-digit' }); awOpen[id] = new Set([(m.prev || []).length + 1]); delete awOpen[id + ':again']; m.noteDraft = '';
           if (m.writing) { const w = wordCount(m.answer); Object.assign(m, { turned: 'just now', justTurned: true, writing: false, answerSent: m.answer, note, sent: [{ name: 'Written answer', size: `${w} ${w === 1 ? 'word' : 'words'}`, write: true }] }); }
           else { Object.assign(m, { turned: 'just now', justTurned: true, sent: DRAFT[id].map(f => ({ name: shownName(f), size: shownSub(f), link: f.src !== 'local' && f.mode === 'link' })), note }); delete DRAFT[id]; }
           if (!ti) { renderList(); renderComing(); ntBadge(); if (HUB_TAB === 'assignments') agRender(false); agCounts(); return; }

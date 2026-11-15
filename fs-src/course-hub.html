@@ -3755,7 +3755,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const ME = C[FSX.course];
   const NOW = Date.now(), DAY0 = FSD.fmt.startOfDay(NOW), DAYMS = 864e5;
   const offOf = ms => ms == null ? null : Math.round((FSD.fmt.startOfDay(ms) - DAY0) / DAYMS);
-  const dueTxtOf = ms => { if (ms == null) return ''; const o = offOf(ms), t = FSD.fmt.timeOf(ms); return o === 0 ? `today, ${t}` : o === 1 ? `tomorrow, ${t}` : `${new Date(ms).toLocaleDateString('en-US', { weekday: 'short' })}, ${FSD.fmt.shortDate(ms)} · ${t}`; };
+  const dueTxtOf = ms => { if (ms == null) return ''; const o = offOf(ms), t = FSD.fmt.timeOf(ms); return o === 0 ? `today, ${t}` : o === 1 ? `tomorrow, ${t}` : `${new Date(ms).toLocaleDateString((window.AvI18n ? window.AvI18n.locale : 'en-US'), { weekday: 'short' })}, ${FSD.fmt.shortDate(ms)} · ${t}`; };
   const whenOf = ms => ms ? FSD.fmt.dayLabel(ms, NOW) : '';
   const sizeOf = b => !b ? '' : b < 1048576 ? Math.max(1, Math.round(b / 1024)) + ' KB' : (b / 1048576).toFixed(1) + ' MB';
   const withExt = (n, x) => x && !new RegExp('\\.' + x + '$', 'i').test(n) ? `${n}.${x}` : n;
@@ -5451,7 +5451,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
         const finish = () => {
           FSX.refresh();
           tiSending = false; if (ti) { ti.classList.remove('busy'); ti.querySelector('.ti-main').classList.remove('sending'); }
-          m.again = false; m.turnedClock = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }); awOpen[id] = new Set([(m.prev || []).length + 1]); delete awOpen[id + ':again']; m.noteDraft = '';
+          m.again = false; m.turnedClock = new Date().toLocaleTimeString((window.AvI18n ? window.AvI18n.locale : 'en-US'), { hour: 'numeric', minute: '2-digit' }); awOpen[id] = new Set([(m.prev || []).length + 1]); delete awOpen[id + ':again']; m.noteDraft = '';
           if (m.writing) { const w = wordCount(m.answer); Object.assign(m, { turned: 'just now', justTurned: true, writing: false, answerSent: m.answer, note, sent: [{ name: 'Written answer', size: `${w} ${w === 1 ? 'word' : 'words'}`, write: true }] }); }
           else {
             Object.assign(m, { turned: 'just now', justTurned: true, sent: DRAFT[id].map(f => ({ name: shownName(f), size: shownSub(f), link: f.src !== 'local' && f.mode === 'link' })), note });

@@ -4155,13 +4155,13 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   // Every class's assignments (averages-fs-data.js): what's due, what's missing, what's turned in and waiting, and
   // what was graded in the last three weeks. Dates are days from today (0 is today); WEEK is this week, Monday to Friday.
   const TODAY = 0, DAY0 = FSD.fmt.startOfDay(Date.now()), DOW = (new Date().getDay() + 6) % 7;   // DOW: 0 is Monday
-  const WEEK = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'].map((d, i) => [d, i - DOW, new Date(DAY0 + (i - DOW) * 864e5).getDate()]);
+  const WEEK = (window.AvI18n && AvI18n.names() ? AvI18n.names().wd.slice(1, 6) : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']).map((d, i) => [d, i - DOW, new Date(DAY0 + (i - DOW) * 864e5).getDate()]);
   const WEEK_END = Math.max(0, 4 - DOW), NEXT_END = 4 - DOW + 7;   // this Friday and next, as days from today
   const ASG = FSD.ASG.map(a => Object.assign({}, a, { date: a.off, desc: '' }));
   const KIND_L = { assignment: 'Assignment', test: 'Test' };
   const kindL = a => a.disc ? 'Discussion' : KIND_L[a.kind];
   const monthDay = d => FSD.fmt.shortDate(DAY0 + d * 864e5);
-  const longDay = d => new Date(DAY0 + d * 864e5).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+  const longDay = d => new Date(DAY0 + d * 864e5).toLocaleDateString((window.AvI18n ? window.AvI18n.locale : 'en-US'), { weekday: 'long', month: 'short', day: 'numeric' });
   const dueWhen = a => a.date == null ? 'No due date' : a.date === TODAY ? 'Today' : a.date === TODAY + 1 ? 'Tomorrow' : `${a.day}, ${monthDay(a.date)}`;
   const canTurnIn = a => FSD.canTurnIn(a);
   const isTodo = a => a.st === 'missing' || a.st === 'due';
@@ -4984,7 +4984,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
         const finish = () => {
           FSX.refresh();
           tiSending = false; if (ti) { ti.classList.remove('busy'); ti.querySelector('.ti-main').classList.remove('sending'); }
-          m.again = false; m.turnedClock = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }); awOpen[id] = new Set([(m.prev || []).length + 1]); delete awOpen[id + ':again']; m.noteDraft = '';
+          m.again = false; m.turnedClock = new Date().toLocaleTimeString((window.AvI18n ? window.AvI18n.locale : 'en-US'), { hour: 'numeric', minute: '2-digit' }); awOpen[id] = new Set([(m.prev || []).length + 1]); delete awOpen[id + ':again']; m.noteDraft = '';
           if (m.writing) { const w = wordCount(m.answer); Object.assign(m, { turned: 'just now', justTurned: true, writing: false, answerSent: m.answer, note, sent: [{ name: 'Written answer', size: `${w} ${w === 1 ? 'word' : 'words'}`, write: true }] }); }
           else { Object.assign(m, { turned: 'just now', justTurned: true, sent: DRAFT[id].map(f => ({ name: shownName(f), size: shownSub(f), link: f.src !== 'local' && f.mode === 'link' })), note }); delete DRAFT[id]; }
           if (!ti) { renderList(); renderComing(); ntBadge(); if (HUB_TAB === 'assignments') agRender(false); agCounts(); return; }

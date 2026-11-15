@@ -579,10 +579,11 @@
     });
   }
   function extra(name, path, key, who) {
-    var hit = cacheRead('averages_extras_' + key, 'data', who);
-    if (hit !== undefined) return Promise.resolve(hit);
+    var hit = cacheRead('averages_extras_' + key, 'data', who), tr = window.AvI18n;
+    if (hit !== undefined) { if (tr) tr.harvest(hit); return Promise.resolve(hit); }
     return getJSON(path).then(function (d) {
       sset('averages_extras_' + key, JSON.stringify({ at: Date.now(), who: who, data: d }));
+      if (tr) tr.harvest(d);
       return d;
     });
   }
@@ -902,7 +903,7 @@
       if (mins < 1) return 'just now';
       if (mins < 60) return mins + (mins === 1 ? ' minute ago' : ' minutes ago');
       var d = new Date(at), today = new Date().toDateString() === d.toDateString();
-      return (today ? 'today' : d.toLocaleDateString('en-US', { weekday: 'long' })) + ' at ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+      return (today ? 'today' : d.toLocaleDateString((window.AvI18n ? window.AvI18n.locale : 'en-US'), { weekday: 'long' })) + ' at ' + d.toLocaleTimeString((window.AvI18n ? window.AvI18n.locale : 'en-US'), { hour: 'numeric', minute: '2-digit' });
     },
     hub: function (course, tab, params) { FSX.go('course-hub', Object.assign({ course: course }, params || {}), tab || ''); },
     hubUrl: function (course, tab, params) { return FSX.url('course-hub', Object.assign({ course: course }, params || {}), tab || ''); },
@@ -1074,7 +1075,7 @@
       if (opts.headers) Object.keys(opts.headers).forEach(function (k) { init.headers[k] = opts.headers[k]; });
       return fetch(API + path, init).then(function (r) {
         if (r.status === 401) { sdel('schoolagy_session_state'); window.location.replace('/'); throw new Error('signed_out'); }
-        return r.json().catch(function () { return {}; }).then(function (j) { if (!r.ok) { var e = new Error(j && j.error || 'http_' + r.status); e.status = r.status; e.body = j; throw e; } return j; });
+        return r.json().catch(function () { return {}; }).then(function (j) { if (!r.ok) { var e = new Error(j && j.error || 'http_' + r.status); e.status = r.status; e.body = j; throw e; } if (window.AvI18n && path.indexOf('/translate') !== 0) window.AvI18n.harvest(j); return j; });
       });
     },
     /** Drops the cached answers so the next load asks Schoology again (Refresh buttons). */
@@ -1230,8 +1231,8 @@
       v.at = now; lset('averages_fs_visit', v);
       if (!v.prev) return 'your first visit';
       var d = new Date(v.prev), days = Math.round((new Date(new Date().toDateString()) - new Date(d.toDateString())) / 86400000);
-      var t = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-      return (days === 0 ? 'today' : days === 1 ? 'yesterday' : days < 7 ? d.toLocaleDateString('en-US', { weekday: 'long' }) : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })) + ' at ' + t;
+      var t = d.toLocaleTimeString((window.AvI18n ? window.AvI18n.locale : 'en-US'), { hour: 'numeric', minute: '2-digit' });
+      return (days === 0 ? 'today' : days === 1 ? 'yesterday' : days < 7 ? d.toLocaleDateString((window.AvI18n ? window.AvI18n.locale : 'en-US'), { weekday: 'long' }) : d.toLocaleDateString((window.AvI18n ? window.AvI18n.locale : 'en-US'), { month: 'short', day: 'numeric' })) + ' at ' + t;
     },
     /** A class by its name ("AP Chemistry"), for the few places a page only has the name. */
     classNamed: function (name) {
@@ -1297,15 +1298,17 @@
   var obj = function (v) { return v && typeof v === 'object' && !Array.isArray(v) ? v : {}; };
   var DAY = 86400000;
   var WD = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  (function () { var N = window.AvI18n && window.AvI18n.names(); if (N) { WD = N.wd; MON = N.mon3; } })();   // the student's language (averages-i18n.js)
   function startOfDay(t) { var d = new Date(t); return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime(); }
   function dayLabel(ms, now) {
     var diff = Math.round((startOfDay(ms) - startOfDay(now)) / DAY), d = new Date(ms);
     if (diff === 0) return 'Today'; if (diff === 1) return 'Tomorrow'; if (diff === -1) return 'Yesterday';
     if (diff > 1 && diff < 7) return WD[d.getDay()];
-    return MON[d.getMonth()] + ' ' + d.getDate();
+    return shortDate(ms);
   }
-  function shortDate(ms) { var d = new Date(ms); return MON[d.getMonth()] + ' ' + d.getDate(); }
-  function timeOf(ms) { return new Date(ms).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }); }
+  // in the student's language when it isn't English (averages-i18n.js, 2026-11-15)
+  function shortDate(ms) { var L = window.AvI18n && window.AvI18n.shortDate(ms); if (L) return L; var d = new Date(ms); return MON[d.getMonth()] + ' ' + d.getDate(); }
+  function timeOf(ms) { var L = window.AvI18n && window.AvI18n.timeOf(ms); if (L) return L; return new Date(ms).toLocaleTimeString((window.AvI18n ? window.AvI18n.locale : 'en-US'), { hour: 'numeric', minute: '2-digit' }); }
   function initials(n) { return String(n || '').replace(/^(Dr|Mr|Mrs|Ms|Mx|Sra|Sr|Srta|Prof)\.?\s+/i, '').split(/\s+/).filter(Boolean).map(function (w) { return w[0]; }).join('').slice(0, 2).toUpperCase() || '?'; }
   /** "45/50" -> [45, 50]. */
   function pts(s) { var m = String(s || '').match(/^\s*([\d.]+)\s*\/\s*([\d.]+)\s*$/); return m ? [Number(m[1]), Number(m[2])] : [null, null]; }
@@ -1419,6 +1422,7 @@
   }
   function adapt(raw) {
     var now = Date.now();
+    if (window.AvI18n) window.AvI18n.harvest(raw);   // Advanced translation: the school's words on these pages
     var b = obj(raw.bundle), people = obj(raw.people), me = raw.me || {};
     var courses = arr(b.COURSES), history = obj(b.HISTORY), gradebook = obj(b.GRADEBOOK);
     var ct = obj(people.courseTeachers), T = obj(people.TEACHERS);

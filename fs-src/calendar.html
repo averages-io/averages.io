@@ -4144,6 +4144,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const addD = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
   const MON = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   const MON3 = MON.map(m => m.slice(0, 3)), WD = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], WDL = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  { const N = window.AvI18n && AvI18n.names(); if (N) { MON.splice(0, 12, ...N.mon); MON3.splice(0, 12, ...N.mon3); WD.splice(0, 7, ...N.wd); WDL.splice(0, 7, ...N.wdl); } }   // the student's language (averages-i18n.js, 2026-11-15)
   const SCHOOL = { id: 'school', name: FSD.me.school || 'Your school', color: '#6e7088' };
   const OFF_RE = /no school|no classes|holiday|(labor|veterans|memorial|presidents?'?|columbus|indigenous peoples'?|independence|juneteenth|mlk|martin luther king( jr\.?)?|thanksgiving|winter|spring|fall|new year'?s?) (day|break|recess)|\bbreak\b|recess|day off|days off|closed|staff (development|work)|teacher (work|planning|in-?service)|in-?service|professional (development|learning)|vacation|non-?student|non-?attendance|student holiday|furlough/i;
   // e: id, c (class, or school), t, kind (assignment, test, event, off), date, time (none for all day), by (schoology, teacher, school, upload)

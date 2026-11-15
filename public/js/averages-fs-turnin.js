@@ -29,7 +29,7 @@
     if (!ms) return '';
     var d = Math.round((Date.now() - ms) / 86400000);
     if (d <= 0) return 'Edited today'; if (d === 1) return 'Edited yesterday'; if (d < 7) return 'Edited ' + d + ' days ago';
-    return 'Edited ' + new Date(ms).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return 'Edited ' + new Date(ms).toLocaleDateString((window.AvI18n ? window.AvI18n.locale : 'en-US'), { month: 'short', day: 'numeric' });
   }
   function size(b) { return !b ? '' : b < 1048576 ? Math.max(1, Math.round(b / 1024)) + ' KB' : (b / 1048576).toFixed(1) + ' MB'; }
   function tz() { try { return (window.averagesTimeZone && window.averagesTimeZone()) || Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) { return ''; } }

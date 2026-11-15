@@ -1578,7 +1578,7 @@
     const t = Date.parse(s || '');
     if (!t) return '';
     const d = new Date(t);
-    return d.toLocaleDateString('en-US', d.getFullYear() === new Date().getFullYear() ? { month: 'short', day: 'numeric' } : { month: 'short', day: 'numeric', year: 'numeric' });
+    return d.toLocaleDateString((window.AvI18n ? window.AvI18n.locale : 'en-US'), d.getFullYear() === new Date().getFullYear() ? { month: 'short', day: 'numeric' } : { month: 'short', day: 'numeric', year: 'numeric' });
   }
 
   let pickerOpen = null; // closes the picker that's open (a second one replaces it)

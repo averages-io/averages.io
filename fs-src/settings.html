@@ -3039,6 +3039,7 @@
   .sg-opts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
   .sg-opt { display: flex; flex-direction: column; justify-content: center; gap: 2px; min-height: 64px; padding: 8px 16px; border-radius: 16px; background: var(--field); text-align: left; color: var(--ink); transition: box-shadow .15s ease; }
   .sg-opt b { font-size: 15px; font-weight: 800; }
+  .sg-langs { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); } /* Language (2026-11-15) */
   .sg-opt small { font-size: 13px; font-weight: 600; color: var(--muted); }
   .sg-skins { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
   .sg-skin { display: flex; flex-direction: column; gap: 8px; padding: 8px 8px 12px; border-radius: 14px; background: var(--field); text-align: left; color: var(--ink); transition: box-shadow .15s ease; }
@@ -3420,6 +3421,7 @@
   <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 6.5 8.5 6.5 8.5-6.5"/></symbol>
   <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/></symbol>
   <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3Z"/></symbol>
   <symbol id="i-text" viewBox="0 0 24 24"><path d="M5 6h14M5 10h14M5 14h14M5 18h9"/></symbol>
   <symbol id="i-list" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4 6h2M4 12h2M4 18h2"/></symbol>
   <symbol id="i-clip" viewBox="0 0 24 24"><path d="M19.5 11.5l-7.6 7.6a4.6 4.6 0 0 1-6.5-6.5l8-8a3.1 3.1 0 0 1 4.4 4.4l-7.9 7.9a1.55 1.55 0 0 1-2.2-2.2l7.2-7.2"/></symbol>
@@ -4197,6 +4199,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     { id: 'account', t: 'Account', ic: 'user', c: '#3e64b0', d: 'You, your school and how you sign in' },
     { id: 'plan', t: 'Plan', ic: 'star', c: '#b77d00', d: 'Averages Plus and the other plans' },
     { id: 'appearance', t: 'Appearance', ic: 'brush', c: '#7a3fa0', d: 'Window, theme, colors and speed' },
+    { id: 'language', t: 'Language', ic: 'globe', c: '#2f5fb3', d: 'The app\'s language and Advanced translation' },
     { id: 'personal', t: 'Personalization', ic: 'sliders', c: '#b25600', d: 'Course order and Home shortcuts' },
     { id: 'notifications', t: 'Notifications', ic: 'bell', c: '#d0393e', d: 'What your browser tells you about' },
     { id: 'apps', t: 'Connected apps', ic: 'link', c: '#2e7d4f', d: 'Google Drive, Canva, OneDrive and calendars' },
@@ -4250,6 +4253,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     ['account', 'avemail', 'Averages email', 'email address verify change add code'], ['account', 'start', 'Open to', 'start page open first home default landing'], ['account', 'tz', 'Time zone', 'timezone zone clock time due dates'], ['account', 'signin', 'Signed in with Schoology', 'sign in password login account'], ['account', 'signout', 'Sign out', 'log out leave'],
     ['plan', 'current', 'Your plan', 'averages plus subscription renew billing'], ['plan', 'other', 'Other plans', 'free classic switch cancel downgrade get plus upgrade'], ['plan', 'payment', 'Payment and receipts', 'card billing cancel receipt'], ['plan', 'early', 'New features early', 'beta preview try'], ['plan', 'experiments', 'Experiments', 'beta labs try new features study planner grade goals focus timer weekly recap'],
     ['appearance', 'layout', 'Window', 'layout fullscreen windowed full screen background'], ['appearance', 'fstheme', 'Theme', 'is industry standard look style fullscreen theme'], ['appearance', 'theme', 'Mode', 'dark mode light system auto colors night'], ['appearance', 'accent', 'Accent color', 'color highlight buttons'],
+    ['language', 'lang', 'Language', 'language english spanish espanol french francais portuguese german deutsch chinese translate'], ['language', 'trItems', 'Advanced translation', 'translate names titles posts messages plus auto translate'],
     ['personal', 'corder', 'Course order', 'courses order move up down reorder sort classes'], ['personal', 'shortcuts', 'Home shortcuts', 'shortcuts home buttons chips quick actions customize add remove'], ['privacy', 'ctSchool', 'Only search my school', 'add contacts people search school everyone schoology find'], ['appearance', 'potato', 'Potato mode', 'performance animations chromebook slow fast font'], ['appearance', 'motion', 'Reduce motion', 'animation accessibility'], ['appearance', 'previews', 'File previews', 'thumbnails images pdf'], ['appearance', 'officePdf', 'Office files as PDFs', 'word powerpoint excel docx pptx xlsx convert pdf previews original'], ['appearance', 'cache', 'Saved on this device', 'cache storage clear space'],
     ['notifications', 'notif', 'Browser notifications', 'alerts push notices'], ['notifications', 'nGrades', 'Grade updates', 'scores new grade'], ['notifications', 'nAssign', 'New assignments', 'work posted homework'],
     ['notifications', 'nDue', 'Due date reminders', 'due soon remind tomorrow'], ['notifications', 'nMsgs', 'Messages', 'inbox chat'], ['notifications', 'nAnn', 'Announcements', 'updates posts course'], ['notifications', 'quiet', 'Quiet during class', 'school hours do not disturb silence'], ['notifications', 'test', 'Send a test notification', 'try check'],
@@ -4286,6 +4290,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (id === 'apps') { const a = appsOn().map(k => APPS[k]); return a.length ? a.join(', ') : 'Just Schoology'; }
     if (id === 'plan') return billingOn() ? PLANS[SG.plan].t : 'Everything is free right now';
     if (id === 'privacy') return (incog() ? 'Incognito' : 'Classic');
+    if (id === 'language') { const L = window.AvI18n; if (!L) return 'English'; return `<span data-no-t>${esc(L.LANGS[L.lang])}</span>${L.trOn() ? ', Advanced translation' : ''}`; }
     if (id === 'personal') { let n = 0; try { n = scList().length; } catch (_) {} return `${FSX.courseOrder.get().length ? 'Your course order' : 'Period order'}, ${n} Home ${n === 1 ? 'shortcut' : 'shortcuts'}`; }
     return `${STAGE}${VER} (Build ${SHA.slice(0, 7)})`;
   }
@@ -4331,7 +4336,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       const B = LIVE.billing;
       if (!B) return grp('', row('current', 'Checking your plan…', ''));
       if (!B.enabled) return grp('Your plan', row('current', 'Everything is free right now', 'Browser notifications, calendar sync and early features are free for everyone while Averages Plus isn\'t on sale.', chip(ico('ok') + 'Free', ' on')));
-      const cur = SG.plan, ends = B.renewsAt ? new Date(B.renewsAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+      const cur = SG.plan, ends = B.renewsAt ? new Date(B.renewsAt).toLocaleDateString((window.AvI18n ? window.AvI18n.locale : 'en-US'), { month: 'short', day: 'numeric' }) : '';
       const P = { t: PLANS[cur].t, pr: cur === 'plus' ? (priceText(B.price) || PLANS.plus.pr) : '' };
       const feats = { plus: [['Browser notifications'], ['Calendar sync'], ['New features early'], ['The iPhone app', 'Coming soon']], free: [['Your grades, assignments and files'], ['Message your teachers'], ['Profile picture']] }[cur];
       const blurb = { plus: 'Everything in Averages, plus browser notifications, calendar sync and new features early.', free: 'Your grades, assignments, files and calendar from Schoology, free for every student.' }[cur];
@@ -4361,6 +4366,22 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
         tog('previews', 'File previews', 'Small previews of images and PDFs in Files and your courses.', SG.previews) +
         tog('officePdf', 'Office files as PDFs', 'Previews Word, PowerPoint and Excel files using the PDF copy Schoology makes. Opening one in a new tab then shows the PDF, not the original.', SG.officePdf) +
         row('cache', 'Saved on this device', cacheKB() ? `${cacheTxt()}, so pages open faster.` : 'Nothing saved right now.', btn('cache', cacheKB() ? 'Clear' : 'Cleared', cacheKB() ? '' : ' disabled')))}`;
+    },
+
+    // Language (2026-11-15, public/js/averages-i18n.js): the app's words in 6 languages, free; Advanced
+    // translation (Plus) translates the school's words too: class names, titles, posts and messages, not files.
+    language: () => {
+      const L = window.AvI18n;
+      if (!L) return grp('Language', row('lang', 'Language', 'English'));
+      const isEn = L.lang === 'en', on = L.trOn();
+      if (on && SGV.trDevice === undefined) { SGV.trDevice = null; L.deviceCan().then(ok => { SGV.trDevice = ok; if (SG.sec === 'language') sgPane(); }); }
+      const opts = [['auto', 'Same as this device']].concat(Object.entries(L.LANGS));
+      return `
+      ${sec('Language', `<div class="sg-opts sg-langs" role="group" aria-label="Language" data-set="lang">${opts.map(([v, t]) => `<button class="sg-opt" data-seg="lang" data-v="${v}" aria-pressed="${L.choice === v}">${v === 'auto' ? `<b>${t}</b><small data-no-t>${esc(L.LANGS[L.lang])}</small>` : `<b data-no-t>${t}</b>`}</button>`).join('')}</div>`)}
+      ${grp(`Advanced translation ${plusChip()}`,
+        tog('trItems', 'Translate class names, titles, posts and messages', isEn ? 'Pick a language other than English first.' : 'Class names, assignment and test titles, teacher posts and messages, in your language. File names stay as they are. Point at a translated name to see the original.', on, isEn || !plusOk()) +
+        (on && SGV.trDevice === false ? tog('trServer', 'Translate on our server', 'This browser can\'t translate on its own. With this on, those names, posts and messages are sent to our server to translate. We don\'t keep them.', L.serverOn()) : ''),
+        'Your browser translates on this device when it can (Chrome or Edge on a computer). Nothing leaves your device unless you turn on Translate on our server.')}`;
     },
 
     personal: () => `
@@ -4922,6 +4943,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (t) {
       const k = t.dataset.tog;
       if (t.getAttribute('aria-disabled') === 'true') {
+        if (k === 'trItems') { toast(window.AvI18n && AvI18n.lang === 'en' ? 'Pick a language other than English first.' : 'Advanced translation comes with Plus.'); return; }
         if (k.startsWith('exp:')) toast(plus() ? 'Turn on New features early first.' : 'Experiments come with Plus.');
         else if (['notif', 'early', 'cal'].includes(k) && !plus()) toast('This comes with Plus.');
         else if (['notif', 'cal'].includes(k) && incog()) toast('This is off in Incognito mode.');
@@ -4938,6 +4960,13 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
         if (mr) { const v = mr.querySelector('.val'), d = mr.querySelector('small, p, .sg-sub'); if (v) v.textContent = on || matchMedia('(prefers-reduced-motion: reduce)').matches ? 'On' : 'Off'; if (d) d.textContent = on ? 'On because Potato mode is on. Otherwise it follows your device\'s setting.' : 'Follows your device\'s setting. Potato mode turns off motion too.'; }
         return;
       }
+      if (k === 'trItems') {
+        const L = window.AvI18n, on = !L.trOn();
+        L.setItems(on).then(r => { if (!on) L.forget(); SGV.trDevice = on ? r.device : undefined; SGV.flip = 'trItems'; redraw();
+          toast(!on ? 'Advanced translation is off' : r.device ? 'Advanced translation is on' : 'This browser can\'t translate on its own. Turn on Translate on our server to use it here.'); });
+        return;
+      }
+      if (k === 'trServer') { const L = window.AvI18n, on = !L.serverOn(); L.setServer(on); t.setAttribute('aria-checked', on); t.querySelector('.sw').classList.toggle('on', on); toast(on ? 'Our server translates when this browser can\'t' : 'Only this device translates now'); return; }
       if (k === 'notif' && !SG.notif) { notifConsent(); return; }
       if (k === 'notif') { window.AveragesPush.disable().then(() => { SG.notif = false; SGV.flip = 'notif'; redraw(); toast('Browser notifications are off. We deleted your saved sign-in.'); }); return; }
       if (k === 'cal') { calSet(!(LIVE.cal && LIVE.cal.on)); return; }
@@ -4954,6 +4983,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     const s = e.target.closest('[data-seg]');
     if (s) {
       if (s.getAttribute('aria-disabled') === 'true') { toast(s.dataset.seg === 'openIn' ? `Connect ${APPS[s.dataset.v]} first.` : 'Turn on browser notifications first.'); return; }
+      if (s.dataset.seg === 'lang') { const L = window.AvI18n; if (L && L.choice !== s.dataset.v) { L.set(s.dataset.v); location.reload(); } return; }
       const k = s.dataset.seg, v = s.dataset.v; if (SG[k] === v) return; SG[k] = v;
       s.parentElement.querySelectorAll('[data-seg]').forEach(b => b.setAttribute('aria-pressed', b === s)); segSync(s.parentElement.parentElement, true); sgSave(); sgNav();
       if (k === 'layout' && v === 'windowed') {
