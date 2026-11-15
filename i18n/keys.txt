@@ -1093,3 +1093,71 @@
 1093|{x}, {x} now. Due dates and the calendar use it.
 1094|Your browser translates on this device (Chrome or Edge on a computer). Nothing leaves your device.
 1095|This browser can't translate on its own. Try Chrome or Edge on a computer.
+1096|Ask A.I.
+1097|Search with A.I.
+1098|Set it up in Settings. It runs on this device.
+1099|Thinking on this device…
+1100|Starting A.I. on this device…
+1101|Search for the words instead
+1102|A.I. can be wrong. It ran on this device; nothing you typed was sent anywhere.
+1103|I can only search your classes, grades, work, posts, messages and files.
+1104|Nothing found for that.
+1105|A.I. search needs its download again. Turn it on in Settings.
+1106|A.I. search didn't work just now. Try again, or search for the words.
+1107|An estimate from points. Your teacher may weight categories differently.
+1108|Couldn't tell which class or grade that's for.
+1109|Work
+1110|Last week
+1111|Quizzes
+1112|Projects
+1113|Essays
+1114|PDFs
+1115|Slides
+1116|Documents
+1117|Spreadsheets
+1118|Images
+1119|Posts
+1120|Words
+1121|GPA
+1122|Scores
+1123|Lowest first
+1124|Highest first
+1125|Downloading…
+1126|Quality
+1127|Standard
+1128|Higher quality
+1129|Goal: {x}
+1130|Now: #%
+1131|A.I. search
+1132|Ask in your own words, on this device
+1133|On, {x}
+1134|Nothing saved yet.
+1135|# MB. Only one version is kept.
+1136|Smaller download. Right almost every time.
+1137|A little more accurate. Twice the download.
+1138|# MB
+1139|Downloading… #% of # MB
+1140|Ask in your own words in search anything, like "what's missing in chem" or "my lowest grade". It runs on this device.
+1141|Ask in your own words in search anything, like "what's missing in chem". Turning it on downloads # MB once. Then it runs on this device.
+1142|The download didn't finish
+1143|Check your connection and try again.
+1144|There isn't enough free space on this device. Free some up and try again.
+1145|Potato mode is on, so A.I. search is hidden in search anything. Turn off Potato mode to use it.
+1146|Built on IBM Granite 4.0 (Apache 2.0), trained by Averages. It only sees what you type and the names of your classes and teachers, and nothing is sent anywhere. A.I. can be wrong, so check what it finds. Needs a browser with WebGPU, like Chrome or Edge on a computer.
+1147|A.I. tools
+1148|# MB. The A.I. search model, saved so it doesn't download again. Delete it to free the space.
+1149|A.I. search is on. Try it in search anything.
+1150|A.I. search is off. We deleted its download from this device.
+1151|Deleted. A.I. search is off until you turn it on again.
+1152|The download didn't finish. Try again.
+1153|No points posted for upcoming work yet
+1154|You're already there
+1155|Not reachable with the points posted so far
+1156|About #% on {x}
+1157|# assignments still to come (# points)
+1158|# found. Showing the first #.
+1159|(No subject)
+1160|# classes
+1161|# weighted
+1162|Open-source credits
+1163|Including IBM Granite, which A.I. search is built on

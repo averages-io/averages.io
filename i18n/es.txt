@@ -1093,3 +1093,71 @@
 1093|{x}, ahora son las {x}. Las fechas de entrega y el calendario la usan.
 1094|Tu navegador traduce en este dispositivo (Chrome o Edge en una computadora). Nada sale de tu dispositivo.
 1095|Este navegador no puede traducir por sí solo. Prueba con Chrome o Edge en una computadora.
+1096|Preguntar a la I.A.
+1097|Buscar con I.A.
+1098|Actívala en Ajustes. Funciona en este dispositivo.
+1099|Pensando en este dispositivo…
+1100|Iniciando la I.A. en este dispositivo…
+1101|Buscar las palabras
+1102|La I.A. puede equivocarse. Funcionó en este dispositivo; nada de lo que escribiste se envió a ningún lado.
+1103|Solo puedo buscar en tus clases, notas, tareas, publicaciones, mensajes y archivos.
+1104|No se encontró nada.
+1105|La búsqueda con I.A. necesita descargarse de nuevo. Actívala en Ajustes.
+1106|La búsqueda con I.A. no funcionó ahora. Inténtalo de nuevo o busca las palabras.
+1107|Un cálculo aproximado con puntos. Tu profesor puede ponderar las categorías de otra forma.
+1108|No se pudo saber para qué clase o nota es.
+1109|Tareas
+1110|La semana pasada
+1111|Cuestionarios
+1112|Proyectos
+1113|Ensayos
+1114|PDF
+1115|Diapositivas
+1116|Documentos
+1117|Hojas de cálculo
+1118|Imágenes
+1119|Publicaciones
+1120|Palabras
+1121|Promedio
+1122|Puntuaciones
+1123|Más bajas primero
+1124|Más altas primero
+1125|Descargando…
+1126|Calidad
+1127|Estándar
+1128|Mayor calidad
+1129|Meta: {x}
+1130|Ahora: #%
+1131|Búsqueda con I.A.
+1132|Pregunta con tus propias palabras, en este dispositivo
+1133|Activada, {x}
+1134|Nada guardado todavía.
+1135|# MB. Solo se guarda una versión.
+1136|Descarga más pequeña. Acierta casi siempre.
+1137|Un poco más precisa. El doble de descarga.
+1138|# MB
+1139|Descargando… #% de # MB
+1140|Pregunta con tus propias palabras en la búsqueda, como "qué me falta en química" o "mi nota más baja". Funciona en este dispositivo.
+1141|Pregunta con tus propias palabras en la búsqueda, como "qué me falta en química". Al activarla se descargan # MB una sola vez. Después funciona en este dispositivo.
+1142|La descarga no terminó
+1143|Revisa tu conexión e inténtalo de nuevo.
+1144|No hay suficiente espacio libre en este dispositivo. Libera espacio e inténtalo de nuevo.
+1145|El modo patata está activado, así que la búsqueda con I.A. no aparece en la búsqueda. Desactiva el modo patata para usarla.
+1146|Basada en IBM Granite 4.0 (Apache 2.0), entrenada por Averages. Solo ve lo que escribes y los nombres de tus clases y profesores, y nada se envía a ningún lado. La I.A. puede equivocarse, así que revisa lo que encuentra. Necesita un navegador con WebGPU, como Chrome o Edge en una computadora.
+1147|Herramientas de I.A.
+1148|# MB. El modelo de búsqueda con I.A., guardado para que no se descargue otra vez. Bórralo para liberar espacio.
+1149|La búsqueda con I.A. está activada. Pruébala en la búsqueda.
+1150|La búsqueda con I.A. está desactivada. Borramos su descarga de este dispositivo.
+1151|Borrado. La búsqueda con I.A. está desactivada hasta que la vuelvas a activar.
+1152|La descarga no terminó. Inténtalo de nuevo.
+1153|Aún no hay puntos publicados para las próximas tareas
+1154|Ya lo lograste
+1155|No se puede alcanzar con los puntos publicados hasta ahora
+1156|Alrededor de #% en {x}
+1157|# tareas pendientes (# puntos)
+1158|# encontrados. Se muestran los primeros #.
+1159|(Sin asunto)
+1160|# clases
+1161|# ponderado
+1162|Créditos de código abierto
+1163|Incluido IBM Granite, en el que se basa la búsqueda con I.A.

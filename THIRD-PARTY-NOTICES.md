@@ -203,6 +203,33 @@ grade report PDF on the student's device. Loaded only when the button is used.
 
 ---
 
+## A.I. search: the model, transformers.js, ONNX Runtime and the word list
+
+**Files:** `public/vendor/transformers-4.3.2/transformers.min.js`, `public/vendor/transformers-4.3.2/ort-wasm-simd-threaded.asyncify.mjs`,
+`public/vendor/averages-ai-1/constrain.mjs`, `public/vendor/averages-ai-1/safety.mjs`; and, in R2 (served at `/ai/` by
+`worker/index.js`, not in this repository because of their size), `ai/models/averages-search-q4-r6/`,
+`ai/models/averages-search-q8-r6/` and `ai/runtime/ort-1.31.0-dev.20260914/ort-wasm-simd-threaded.asyncify.wasm`.
+
+Used by A.I. search (`public/js/averages-ai.js`, `public/js/averages-ai-worker.js`, 2026-11-15), which runs on the
+student's device. Downloaded only when the student turns it on.
+
+- **The model:** Averages' fine-tune of **IBM Granite 4.0 H 350M** (https://huggingface.co/ibm-granite/granite-4.0-h-350m),
+  © IBM, **Apache-2.0**. Converted to ONNX in the layout of `onnx-community/granite-4.0-h-350m-ONNX`. Each model
+  folder in R2 carries IBM's `LICENSE` (Apache 2.0) and a `NOTICE` saying it's built on Granite and fine-tuned for
+  Averages.io. "Granite" and "IBM" are IBM's trademarks; A.I. search isn't made or endorsed by IBM.
+- **transformers.js:** https://github.com/huggingface/transformers.js. npm's `@huggingface/transformers@4.3.2`
+  (`dist/transformers.min.js`), unmodified. **Apache-2.0**. Full text: `public/vendor/transformers-4.3.2/LICENSE`.
+- **ONNX Runtime Web:** https://github.com/microsoft/onnxruntime. npm's `onnxruntime-web@1.31.0-dev.20260914-8d85527a0`
+  (`dist/ort-wasm-simd-threaded.asyncify.mjs` and `.wasm`), unmodified. © Microsoft, **MIT**. Full text:
+  `public/vendor/transformers-4.3.2/LICENSE-onnxruntime`.
+- **Explicit-word list** (`safety_words.json` in each model folder, used by `safety.mjs`): built from the List of
+  Dirty, Naughty, Obscene, and Otherwise Bad Words (LDNOOBW, https://github.com/LDNOOBW/List-of-Dirty-Naughty-Obscene-and-Otherwise-Bad-Words)
+  via the `naughty-words` npm package, minus our allowlist. **CC-BY-4.0**.
+- `constrain.mjs` and `safety.mjs` are our own (written for the model's training), under this project's license.
+- The A.I. mascot ("A buddy", `public/brand/ai-mascot.svg`) is our own.
+
+---
+
 ## Runtime dependencies
 
 These are installed from npm at build time rather than committed here, so their

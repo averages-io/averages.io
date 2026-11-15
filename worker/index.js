@@ -59,10 +59,39 @@ function signinPage(request, env) {
   return env.ASSETS.fetch(new Request(new URL("/IS/signin", url).toString(), { method: request.method, headers: request.headers }));
 }
 
+/**
+ * A.I. search's files (2026-11-15, public/js/averages-ai.js): the model and the ONNX Runtime .wasm are too big for
+ * static assets (25 MiB a file), so they live in R2 (bucket "averages-ai", binding AI_FILES) and come through here,
+ * on the app's own site: no other site, no CORS. Only GET/HEAD of a fixed set of paths under /ai/. Each version
+ * has its own folder name, so they never change in place and browsers can keep them for a year.
+ */
+const AI_PATH = /^\/ai\/((?:models\/averages-search-(?:q4|q8)-r[0-9]+\/(?:onnx\/)?|runtime\/ort-[0-9a-z.\-]+\/)[A-Za-z0-9_.\-]+)$/;
+const AI_TYPES = { json: "application/json", onnx: "application/octet-stream", onnx_data: "application/octet-stream", wasm: "application/wasm", txt: "text/plain; charset=utf-8" };
+/** @param {Request} request @param {any} env */
+export async function aiFile(request, env) {
+  const url = new URL(request.url);
+  const m = AI_PATH.exec(url.pathname);
+  if (!m || m[1].includes("..")) return new Response("Not found", { status: 404 });
+  if (request.method !== "GET" && request.method !== "HEAD") return new Response(null, { status: 405, headers: { Allow: "GET, HEAD" } });
+  if (!env.AI_FILES) return new Response("A.I. files aren't set up", { status: 503, headers: { "Cache-Control": "no-store" } });
+  const obj = request.method === "HEAD" ? await env.AI_FILES.head(m[1]) : await env.AI_FILES.get(m[1]);
+  if (!obj) return new Response("Not found", { status: 404, headers: { "Cache-Control": "no-store" } });
+  const ext = (m[1].match(/\.([a-z_]+)$/) || [, ""])[1];
+  const headers = new Headers({
+    "Content-Type": AI_TYPES[ext] || "application/octet-stream",
+    "Content-Length": String(obj.size),
+    "Cache-Control": "public, max-age=31536000, immutable",
+    "X-Content-Type-Options": "nosniff",
+  });
+  if (obj.httpEtag) headers.set("ETag", obj.httpEtag);
+  return new Response(request.method === "HEAD" ? null : obj.body, { status: 200, headers });
+}
+
 export default {
-  /** @param {Request} request @param {{ ASSETS: { fetch: (r: Request) => Promise<Response> } }} env */
+  /** @param {Request} request @param {{ ASSETS: { fetch: (r: Request) => Promise<Response> }, AI_FILES?: any }} env */
   async fetch(request, env) {
     const url = new URL(request.url);
+    if (url.pathname.startsWith("/ai/")) return aiFile(request, env);
     if (request.method === "GET" && url.pathname === "/" && url.searchParams.has("signedout")) {
       const page = await signinPage(new Request(new URL("/", url).toString(), { headers: request.headers }), env);
       const res = new Response(page.body, page);

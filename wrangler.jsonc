@@ -7,6 +7,9 @@
     "directory": "./out",
     "binding": "ASSETS",
     "not_found_handling": "404-page",
-    "run_worker_first": ["/"]
-  }
+    "run_worker_first": ["/", "/ai/*"]
+  },
+  // A.I. search's model and runtime (2026-11-15), served at /ai/ by worker/index.js. Create the bucket first:
+  //   npx wrangler r2 bucket create averages-ai
+  "r2_buckets": [{ "binding": "AI_FILES", "bucket_name": "averages-ai" }]
 }

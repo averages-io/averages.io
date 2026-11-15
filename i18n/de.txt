@@ -1093,3 +1093,71 @@
 1093|{x}, jetzt {x}. Abgabetermine und der Kalender nutzen sie.
 1094|Dein Browser übersetzt auf diesem Gerät (Chrome oder Edge auf einem Computer). Nichts verlässt dein Gerät.
 1095|Dieser Browser kann nicht selbst übersetzen. Versuch es mit Chrome oder Edge auf einem Computer.
+1096|K.I. fragen
+1097|Mit K.I. suchen
+1098|Schalte sie in den Einstellungen ein. Sie läuft auf diesem Gerät.
+1099|Denkt auf diesem Gerät nach…
+1100|K.I. startet auf diesem Gerät…
+1101|Nach den Wörtern suchen
+1102|K.I. kann sich irren. Sie lief auf diesem Gerät; nichts, was du getippt hast, wurde irgendwohin gesendet.
+1103|Ich kann nur in deinen Kursen, Noten, Aufgaben, Beiträgen, Nachrichten und Dateien suchen.
+1104|Nichts gefunden.
+1105|Die K.I.-Suche muss erneut heruntergeladen werden. Schalte sie in den Einstellungen ein.
+1106|Die K.I.-Suche hat gerade nicht funktioniert. Versuch es noch einmal oder suche nach den Wörtern.
+1107|Eine Schätzung anhand der Punkte. Deine Lehrkraft gewichtet Kategorien vielleicht anders.
+1108|Konnte nicht erkennen, für welchen Kurs oder welche Note das ist.
+1109|Aufgaben
+1110|Letzte Woche
+1111|Quizze
+1112|Projekte
+1113|Aufsätze
+1114|PDFs
+1115|Folien
+1116|Dokumente
+1117|Tabellen
+1118|Bilder
+1119|Beiträge
+1120|Wörter
+1121|Notendurchschnitt
+1122|Punkte
+1123|Niedrigste zuerst
+1124|Höchste zuerst
+1125|Wird heruntergeladen…
+1126|Qualität
+1127|Standard
+1128|Höhere Qualität
+1129|Ziel: {x}
+1130|Jetzt: #%
+1131|K.I.-Suche
+1132|Frag in deinen eigenen Worten, auf diesem Gerät
+1133|An, {x}
+1134|Noch nichts gespeichert.
+1135|# MB. Nur eine Version wird behalten.
+1136|Kleinerer Download. Fast immer richtig.
+1137|Etwas genauer. Doppelt so großer Download.
+1138|# MB
+1139|Wird heruntergeladen… #% von # MB
+1140|Frag in deinen eigenen Worten in der Suche, zum Beispiel "was fehlt mir in Chemie" oder "meine schlechteste Note". Sie läuft auf diesem Gerät.
+1141|Frag in deinen eigenen Worten in der Suche, zum Beispiel "was fehlt mir in Chemie". Beim Einschalten werden einmal # MB heruntergeladen. Danach läuft sie auf diesem Gerät.
+1142|Der Download wurde nicht fertig
+1143|Prüfe deine Verbindung und versuch es noch einmal.
+1144|Auf diesem Gerät ist nicht genug Speicher frei. Gib etwas Platz frei und versuch es noch einmal.
+1145|Der Kartoffelmodus ist an, deshalb ist die K.I.-Suche in der Suche ausgeblendet. Schalte den Kartoffelmodus aus, um sie zu nutzen.
+1146|Basiert auf IBM Granite 4.0 (Apache 2.0), trainiert von Averages. Sie sieht nur, was du tippst, und die Namen deiner Kurse und Lehrkräfte, und nichts wird gesendet. K.I. kann sich irren, also prüfe, was sie findet. Braucht einen Browser mit WebGPU, wie Chrome oder Edge auf einem Computer.
+1147|K.I.-Werkzeuge
+1148|# MB. Das Modell der K.I.-Suche, gespeichert, damit es nicht erneut heruntergeladen wird. Lösche es, um Platz zu schaffen.
+1149|Die K.I.-Suche ist an. Probier sie in der Suche aus.
+1150|Die K.I.-Suche ist aus. Wir haben ihren Download von diesem Gerät gelöscht.
+1151|Gelöscht. Die K.I.-Suche bleibt aus, bis du sie wieder einschaltest.
+1152|Der Download wurde nicht fertig. Versuch es noch einmal.
+1153|Noch keine Punkte für kommende Aufgaben veröffentlicht
+1154|Das hast du schon geschafft
+1155|Mit den bisher veröffentlichten Punkten nicht erreichbar
+1156|Etwa #% bei {x}
+1157|# kommende Aufgaben (# Punkte)
+1158|# gefunden. Die ersten # werden gezeigt.
+1159|(Kein Betreff)
+1160|# Kurse
+1161|# gewichtet
+1162|Open-Source-Hinweise
+1163|Darunter IBM Granite, auf dem die K.I.-Suche basiert

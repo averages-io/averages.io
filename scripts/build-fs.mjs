@@ -18,6 +18,8 @@ const GPA_FILE = path.resolve(HERE, "../public/js/averages-gpa.js");
 const PREVIEW_FILE = path.resolve(HERE, "../public/js/averages-preview.js");
 const NOTE_FILE = path.resolve(HERE, "../public/js/averages-note.js");
 const AVATAR_FILE = path.resolve(HERE, "../public/js/averages-avatar.js");
+// A.I. search (2026-11-15): the "Ask A.I." row in search anything, on every page (it stays hidden unless it's on)
+const AI_FILE = path.resolve(HERE, "../public/js/averages-ai.js");
 // Other languages (2026-11-15): the word lists in public/i18n and the script that uses them, first in <head> so the page draws in the student's language
 const I18N_FILE = path.resolve(HERE, "../public/js/averages-i18n.js");
 const I18N_DIR = path.resolve(HERE, "../public/i18n");
@@ -276,7 +278,7 @@ function build() {
   const JSV_TAG = `<script>window.AVG_JSV=${JSON.stringify(JSV)};</script>`;
   const I18NV = fs.existsSync(I18N_DIR) ? Object.fromEntries(fs.readdirSync(I18N_DIR).filter((f) => /^[a-z]{2}\.json$/.test(f)).sort().map((f) => [f.slice(0, 2), ver(path.join(I18N_DIR, f))])) : {};
   const I18N_TAG = `<script>window.AVG_I18NV=${JSON.stringify(I18NV)};</script>\n<script src="/js/averages-i18n.js?v=${ver(I18N_FILE)}"></script>`;
-  const tag = `${JSV_TAG}\n${I18N_TAG}\n${SPLASH_TAG}\n<script src="/js/averages-avatar.js?v=${ver(AVATAR_FILE)}"></script>\n<script src="/js/averages-note.js?v=${ver(NOTE_FILE)}"></script>\n<script src="/js/averages-fs.js?v=${ver(JS_FILE)}"></script>\n<script src="/js/averages-fs-data.js?v=${ver(DATA_FILE)}"></script>\n<script src="/js/averages-live.js?v=${ver(LIVE_FILE)}" defer></script>\n<script src="/js/averages-gpa.js?v=${ver(GPA_FILE)}" defer></script>\n<script src="/js/averages-preview.js?v=${ver(PREVIEW_FILE)}" defer></script>`;
+  const tag = `${JSV_TAG}\n${I18N_TAG}\n${SPLASH_TAG}\n<script src="/js/averages-avatar.js?v=${ver(AVATAR_FILE)}"></script>\n<script src="/js/averages-note.js?v=${ver(NOTE_FILE)}"></script>\n<script src="/js/averages-fs.js?v=${ver(JS_FILE)}"></script>\n<script src="/js/averages-fs-data.js?v=${ver(DATA_FILE)}"></script>\n<script src="/js/averages-live.js?v=${ver(LIVE_FILE)}" defer></script>\n<script src="/js/averages-gpa.js?v=${ver(GPA_FILE)}" defer></script>\n<script src="/js/averages-preview.js?v=${ver(PREVIEW_FILE)}" defer></script>\n<script src="/js/averages-ai.js?v=${ver(AI_FILE)}" defer></script>`;
   let n = 0;
   const LIGHT_CSS = [
     ".sum-view{transition:opacity 150ms ease!important}.sum-view.switching{filter:none!important}",

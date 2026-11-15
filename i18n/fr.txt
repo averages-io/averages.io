@@ -1093,3 +1093,71 @@
 1093|{x}, il est {x}. Les dates limites et le calendrier l'utilisent.
 1094|Ton navigateur traduit sur cet appareil (Chrome ou Edge sur un ordinateur). Rien ne quitte ton appareil.
 1095|Ce navigateur ne peut pas traduire tout seul. Essaie Chrome ou Edge sur un ordinateur.
+1096|Demander à l'I.A.
+1097|Chercher avec l'I.A.
+1098|Active-la dans les Réglages. Elle fonctionne sur cet appareil.
+1099|Réflexion sur cet appareil…
+1100|Démarrage de l'I.A. sur cet appareil…
+1101|Chercher les mots
+1102|L'I.A. peut se tromper. Elle a fonctionné sur cet appareil ; rien de ce que tu as tapé n'a été envoyé.
+1103|Je peux seulement chercher dans tes cours, notes, devoirs, publications, messages et fichiers.
+1104|Rien trouvé.
+1105|La recherche I.A. doit être téléchargée à nouveau. Active-la dans les Réglages.
+1106|La recherche I.A. n'a pas marché. Réessaie, ou cherche les mots.
+1107|Une estimation à partir des points. Ton prof peut pondérer les catégories autrement.
+1108|Impossible de savoir pour quel cours ou quelle note.
+1109|Travail
+1110|La semaine dernière
+1111|Quiz
+1112|Projets
+1113|Rédactions
+1114|PDF
+1115|Diapos
+1116|Documents
+1117|Feuilles de calcul
+1118|Images
+1119|Publications
+1120|Mots
+1121|Moyenne
+1122|Scores
+1123|Les plus basses d'abord
+1124|Les plus hautes d'abord
+1125|Téléchargement…
+1126|Qualité
+1127|Standard
+1128|Meilleure qualité
+1129|Objectif : {x}
+1130|Maintenant : #%
+1131|Recherche I.A.
+1132|Demande avec tes propres mots, sur cet appareil
+1133|Activée, {x}
+1134|Rien d'enregistré pour l'instant.
+1135|# Mo. Une seule version est gardée.
+1136|Téléchargement plus petit. Juste presque à chaque fois.
+1137|Un peu plus précise. Deux fois plus lourde.
+1138|# Mo
+1139|Téléchargement… #% de # Mo
+1140|Demande avec tes propres mots dans la recherche, comme "qu'est-ce qui me manque en chimie" ou "ma note la plus basse". Elle fonctionne sur cet appareil.
+1141|Demande avec tes propres mots dans la recherche, comme "qu'est-ce qui me manque en chimie". L'activer télécharge # Mo une seule fois. Ensuite, elle fonctionne sur cet appareil.
+1142|Le téléchargement n'a pas abouti
+1143|Vérifie ta connexion et réessaie.
+1144|Il n'y a pas assez d'espace libre sur cet appareil. Libère de la place et réessaie.
+1145|Le mode patate est activé, donc la recherche I.A. est masquée. Désactive le mode patate pour l'utiliser.
+1146|Basée sur IBM Granite 4.0 (Apache 2.0), entraînée par Averages. Elle ne voit que ce que tu tapes et les noms de tes cours et profs, et rien n'est envoyé. L'I.A. peut se tromper, alors vérifie ce qu'elle trouve. Il faut un navigateur avec WebGPU, comme Chrome ou Edge sur un ordinateur.
+1147|Outils I.A.
+1148|# Mo. Le modèle de recherche I.A., gardé pour ne pas le retélécharger. Supprime-le pour libérer de la place.
+1149|La recherche I.A. est activée. Essaie-la dans la recherche.
+1150|La recherche I.A. est désactivée. Nous avons supprimé son téléchargement de cet appareil.
+1151|Supprimé. La recherche I.A. est désactivée jusqu'à ce que tu la réactives.
+1152|Le téléchargement n'a pas abouti. Réessaie.
+1153|Pas encore de points publiés pour les travaux à venir
+1154|Tu y es déjà
+1155|Impossible à atteindre avec les points publiés pour l'instant
+1156|Environ #% à {x}
+1157|# travaux à venir (# points)
+1158|# trouvés. Les # premiers sont affichés.
+1159|(Sans objet)
+1160|# cours
+1161|# pondérée
+1162|Crédits open source
+1163|Dont IBM Granite, sur lequel repose la recherche I.A.
