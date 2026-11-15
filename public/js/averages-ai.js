@@ -40,10 +40,12 @@
   // WebGPU with 16-bit shaders: the model's graph needs them (a GPU without them fails on its first search)
   function gpuOk() {
     if (DEV_WASM) return Promise.resolve(true);
-    // Chrome or Edge (any Chromium browser) on a computer only. Firefox's WebGPU turns down ONNX Runtime's shaders
-    // ("Shader 'Pad' parsing error", Martin 2026-11-15), and Safari's and phones' haven't been tested.
+    // Computers only (phones haven't been tested, and the model needs the memory). Every browser with WebGPU may try:
+    // the first run checks it can really search (selfTest below). Firefox 145's WebGPU can't yet: it turns down one of
+    // ONNX Runtime's shaders ("Shader 'Pad' parsing error", Martin 2026-11-15), so there it says so and tries again
+    // when the browser updates.
     var uad = navigator.userAgentData;
-    if (!uad || uad.mobile || !(uad.brands || []).some(function (b) { return /chrom|edge/i.test(b.brand); })) return Promise.resolve(false);
+    if (uad ? uad.mobile : /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '')) return Promise.resolve(false);
     if (!gpuP) gpuP = !navigator.gpu || !navigator.gpu.requestAdapter ? Promise.resolve(false)
       : navigator.gpu.requestAdapter().then(function (a) { return !!a && !!a.features && a.features.has('shader-f16'); }).catch(function () { return false; });
     return gpuP;
@@ -77,11 +79,32 @@
           var o = opts();
           // compressed files don't say their size: a saved version counts as its known size
           var measured = sizes.reduce(function (a, b) { return a + b; }, 0);
-          return { on: !!o.on, v: v, saved: saved, any: ks.length > 0, bytes: saved ? Math.max(measured, V.bytes) : measured, busy: !!DL, loaded: DL ? DL.loaded : 0, total: DL ? DL.total : 0, error: LAST_ERR };
+          var c = check();
+          // works: tested fine in this browser; blocked: tested and this browser can't run it (yet)
+          return { on: !!o.on, v: v, saved: saved, any: ks.length > 0, bytes: saved ? Math.max(measured, V.bytes) : measured, busy: !!DL || !!testing, testing: !!testing, loaded: DL ? DL.loaded : 0, total: DL ? DL.total : 0, error: LAST_ERR,
+            works: !!(c && c.ok && c.v === v), blocked: !!(c && !c.ok) };
         });
     });
   }
   function changed() { window.dispatchEvent(new CustomEvent('avai:state')); }
+
+  // ---------- can this browser really run it? ----------
+  // averages_ai_check = { ua, v, ok }: one test search after each download, and again whenever the browser updates
+  // (its user agent changes), so a browser that couldn't (Firefox, for now) starts working once it can.
+  var CHECK = 'averages_ai_check', UA = String(navigator.userAgent || '').slice(0, 300);
+  function check() { try { var c = JSON.parse(LS.getItem(CHECK) || 'null'); return c && c.ua === UA ? c : null; } catch (e) { return null; } }
+  function setCheck(v, ok) { try { LS.setItem(CHECK, JSON.stringify({ ua: UA, v: v, ok: !!ok, at: Date.now() })); } catch (e) { /* full or off */ } }
+  var GPU_ERR = /webgpu|shader|ortrun|compute pipeline|f16|device (was )?lost/i;
+  var testing = null;
+  function selfTest(v) {
+    if (testing) return testing;
+    testing = load(v).then(function () { return call({ t: 'ask', text: 'my grades', classes: ['Biology'], teachers: ['Ms. Lee'], lang: 'en' }); })
+      .then(function () { setCheck(v, true); return true; }, function (e) {
+        if (e && GPU_ERR.test(e.message || '')) { setCheck(v, false); if (W) { W.terminate(); W = null; } ready = null; readyV = ''; return false; }
+        throw e;   // something else (a network hiccup): not this browser's fault, so nothing is remembered
+      }).then(function (ok) { testing = null; changed(); return ok; }, function (e) { testing = null; throw e; });
+    return testing;
+  }
 
   // ---------- the worker ----------
   var W = null, seq = 0, waits = {}, ready = null, readyV = '', DL = null, LAST_ERR = '';
@@ -129,7 +152,13 @@
       o.on = true; o.v = v; saveOpts(o);
       // the other version, if there was one: deleted (only one is kept)
       return prev !== v ? removeModel(prev) : null;
-    }).then(function () { DL = null; changed(); return true; }, function (e) {
+    }).then(function () { DL = null; changed(); return selfTest(v); }).then(function (ok) {
+      // the download is kept either way; a browser that can't run it is told so (and tries again when it updates)
+      if (!ok) { LAST_ERR = 'browser_cant'; changed(); throw new Error('browser_cant'); }
+      return true;
+    }, function (e) {
+      // the graphics can't even start it (some browsers fail here, not on the first search): same as a failed test
+      if (e && GPU_ERR.test(e.message || '')) { setCheck(v, false); o.on = true; o.v = v; saveOpts(o); e = new Error('browser_cant'); }
       DL = null; LAST_ERR = e && e.message || 'failed'; changed(); throw e;
     });
     changed();
@@ -305,7 +334,11 @@
     return offered().then(function (o) {
       STATE.ok = o.ok && !o.potato;
       if (!o.ok) return;
-      return status().then(function (s) { STATE.saved = s.on && s.saved; });
+      return status().then(function (s) {
+        STATE.saved = s.on && s.saved && !s.blocked;
+        // turned on and saved, but not tested in this browser yet (it updated, or the test never ran): test it now
+        if (s.on && s.saved && !s.works && !s.blocked && !s.busy) selfTest(s.v).catch(function () {});
+      });
     }).catch(function () { STATE.ok = false; });
   }
   window.addEventListener('avai:state', function () { refresh(); });
@@ -362,9 +395,10 @@
       panel(b, head + body + (out.note ? '<p class="av-ai-note">' + esc(t(out.note)) + '</p>' : '') + words + foot);
     }).catch(function (e) {
       if (!still()) return;
-      var gpu = e && /webgpu|shader|ortrun|compute pipeline/i.test(e.message || '');
+      var gpu = e && GPU_ERR.test(e.message || '');
+      if (gpu) { setCheck(variantOf(), false); if (W) { W.terminate(); W = null; } ready = null; readyV = ''; changed(); }
       var m = e && e.message === 'not_saved' ? 'A.I. search needs its download again. Turn it on in Settings.'
-        : gpu ? "A.I. search doesn't work with this computer's graphics in this browser. Try Chrome or Edge." : "A.I. search didn't work just now. Try again, or search for the words.";
+        : gpu ? "This browser can't run A.I. search yet. Try Chrome or Edge. It tries again when this browser updates." : "A.I. search didn't work just now. Try again, or search for the words.";
       panel(b, '<div class="av-ai-say">' + AI_SVG + '<span>' + esc(t(m)) + '</span></div><button class="mi s-cmd av-ai-words" data-avai="words"><svg class="i"><use href="#i-search"/></svg><span class="tx"><b>' + esc(t('Search for the words instead')) + '</b></span></button>');
       if (window.console) console.warn('[ai]', e);
     });
@@ -403,7 +437,7 @@
   ].join('');
   (document.head || document.documentElement).appendChild(css);
 
-  window.AvAI = { VARIANTS: VARIANTS, mb: mb, offered: offered, status: status, download: download, remove: remove, ask: ask, run: run, variant: variantOf, lists: lists, _state: STATE };
+  window.AvAI = { retest: function () { try { LS.removeItem(CHECK); } catch (e) { /* off */ } return selfTest(variantOf()); }, VARIANTS: VARIANTS, mb: mb, offered: offered, status: status, download: download, remove: remove, ask: ask, run: run, variant: variantOf, lists: lists, _state: STATE };
   // only once the page has the student's data (never on the sign-in page: /config/features there would be a 401)
   if (window.FSD && window.FSD.me && window.FSD.me.uid) refresh();
   window.addEventListener('fs:ready', refresh);

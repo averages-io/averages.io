@@ -1162,3 +1162,14 @@
 1162|Open-Source-Hinweise
 1163|Darunter IBM Granite, auf dem die K.I.-Suche basiert
 1164|Die K.I.-Suche funktioniert mit der Grafik dieses Computers in diesem Browser nicht. Probier Chrome oder Edge.
+1165|Wird geprüft, ob dieser Browser sie ausführen kann…
+1166|Auf diesem Gerät gespeichert, aber dieser Browser kann sie noch nicht ausführen.
+1167|Dieser Browser kann die K.I.-Suche noch nicht ausführen
+1168|Seine Grafikunterstützung kann das Modell noch nicht ausführen, daher funktioniert die Suche wie vorher. Probier Chrome oder Edge. Sie prüft es von selbst erneut, wenn dieser Browser aktualisiert wird.
+1169|Erneut prüfen
+1170|In diesem Browser noch nicht
+1171|Dieser Browser kann die K.I.-Suche noch nicht ausführen. Probier Chrome oder Edge.
+1172|Dieser Browser kann die K.I.-Suche noch nicht ausführen. Probier Chrome oder Edge. Sie versucht es erneut, wenn dieser Browser aktualisiert wird.
+1173|Sie funktioniert jetzt in diesem Browser. Probier sie in der Suche aus.
+1174|In diesem Browser immer noch nicht. Probier Chrome oder Edge.
+1175|Konnte gerade nicht prüfen. Versuch es noch einmal.

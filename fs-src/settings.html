@@ -4315,10 +4315,10 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       const sub = pane.querySelector('[data-tog="aiOn"] small'); if (sub) sub.textContent = `Downloading… ${pct}% of ${window.AvAI.mb(d.total)}`;   // the page's translator picks up the new text
     });
   }
-  const AI_ERR = { no_space: 'There isn\'t enough free space on this device. Free some up and try again.' };
+  const AI_ERR = { no_space: 'There isn\'t enough free space on this device. Free some up and try again.', browser_cant: 'This browser can\'t run A.I. search yet. Try Chrome or Edge.' };
   function summary(id) {
     if (id === 'account') return esc(PROFILE.name);
-    if (id === 'ai') { const st = AIX.st; return !st ? 'Checking…' : st.busy ? 'Downloading…' : st.on && st.saved ? `On, ${window.AvAI.VARIANTS[st.v].name}` : 'Off'; }
+    if (id === 'ai') { const st = AIX.st; return !st ? 'Checking…' : st.testing ? 'Checking…' : st.busy ? 'Downloading…' : st.on && st.saved && st.blocked ? 'Not in this browser yet' : st.on && st.saved ? `On, ${window.AvAI.VARIANTS[st.v].name}` : 'Off'; }
     if (id === 'appearance') return `${THEMES[SG.theme]}, ${accentOf(SG.accent)[1]}${document.body.classList.contains('potato-mode') ? ', Potato mode' : ''}`;
     if (id === 'notifications') return incog() ? 'Off in Incognito' : !plusOk() ? 'Comes with Plus' : !SG.notif ? 'Off' : `On for ${nCount()} of 5 things`;
     if (id === 'apps') { const a = appsOn().map(k => APPS[k]); return a.length ? a.join(', ') : 'Just Schoology'; }
@@ -4411,9 +4411,12 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       const pct = st.busy && st.total ? Math.min(99, Math.floor(st.loaded / st.total * 100)) : 0;
       const pot = document.body.classList.contains('potato-mode');
       return `
-      ${grp('', tog('aiOn', 'A.I. search', st.busy ? `Downloading… ${pct}% of ${A.mb(st.total)}` : on ? 'Ask in your own words in search anything, like "what\'s missing in chem" or "my lowest grade". It runs on this device.' : `Ask in your own words in search anything, like "what\'s missing in chem". Turning it on downloads ${A.mb(V[cur].bytes)} once. Then it runs on this device.`, on || st.busy, st.busy, `<span class="sg-app">${ico('ai')}</span>`) +
-        (st.busy ? `<div class="sg-row" data-set="aiBar"><div class="av-ai-bar" role="progressbar" aria-label="Downloading A.I. search" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><i style="width:${pct}%"></i></div></div>` : '') +
-        (st.error && !st.busy ? row('aiErr', 'The download didn\'t finish', esc(AI_ERR[st.error] || 'Check your connection and try again.'), btn('airetry', 'Try again')) : ''),
+      ${grp('', tog('aiOn', 'A.I. search', st.testing ? 'Checking that this browser can run it…' : st.busy ? `Downloading… ${pct}% of ${A.mb(st.total)}` : on && st.blocked ? 'Saved on this device, but this browser can\'t run it yet.' : on ? 'Ask in your own words in search anything, like "what\'s missing in chem" or "my lowest grade". It runs on this device.' : `Ask in your own words in search anything, like "what\'s missing in chem". Turning it on downloads ${A.mb(V[cur].bytes)} once. Then it runs on this device.`, on || st.busy, st.busy, `<span class="sg-app">${ico('ai')}</span>`) +
+        (st.busy && !st.testing ? `<div class="sg-row" data-set="aiBar"><div class="av-ai-bar" role="progressbar" aria-label="Downloading A.I. search" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><i style="width:${pct}%"></i></div></div>` : '') +
+        // a browser that tested and can't run it (Firefox's WebGPU, for now): the download stays, and it's tested again by
+        // itself when the browser updates
+        (on && st.blocked && !st.busy ? row('aiBlocked', 'This browser can\'t run A.I. search yet', 'Its graphics support can\'t run the model yet, so search works as before. Try Chrome or Edge. It checks again by itself when this browser updates.', btn('airetest', 'Check again')) :
+        st.error && st.error !== 'browser_cant' && !st.busy ? row('aiErr', 'The download didn\'t finish', esc(AI_ERR[st.error] || 'Check your connection and try again.'), btn('airetry', 'Try again')) : ''),
         pot ? 'Potato mode is on, so A.I. search is hidden in search anything. Turn off Potato mode to use it.' : '')}
       ${sec('Quality', `<div class="sg-opts" role="group" aria-label="A.I. quality" data-set="aiQ">${[['q4', 'Smaller download. Right almost every time.'], ['q8', 'A little more accurate. Twice the download.']].map(([v, d]) => `<button class="sg-opt" data-seg="aiQ" data-v="${v}" aria-pressed="${cur === v}"${st.busy ? ' aria-disabled="true"' : ''}><b>${V[v].name}</b><small>${A.mb(V[v].bytes)} · ${d}</small></button>`).join('')}</div>`)}
       ${grp('', row('aiSaved', 'Saved on this device', st.any ? `${A.mb(st.bytes)}. Only one version is kept.` : 'Nothing saved yet.', btn('aidel', 'Delete', st.any && !st.busy ? '' : ' disabled')),
@@ -5090,6 +5093,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     else if (k === 'creset') { FSX.courseOrder.clear(); CLASSES.sort((a, b) => a.period - b.period); renderSide(); redraw(); toast('Back to period order.'); }
     else if (k === 'credits') FSX.newTab('https://github.com/averages-io/averages.io/blob/main/THIRD-PARTY-NOTICES.md');
     else if (k === 'aidel') { if (window.AvAI) window.AvAI.remove().then(() => toast('Deleted. A.I. search is off until you turn it on again.')); }
+    else if (k === 'airetest') { if (window.AvAI) window.AvAI.retest().then(ok => toast(ok ? 'It works in this browser now. Try it in search anything.' : 'Still not in this browser. Try Chrome or Edge.'), () => toast('Couldn\'t check just now. Try again.')); }
     else if (k === 'airetry') { if (window.AvAI && AIX.st) window.AvAI.download(AIX.st.v).catch(() => {}); }
     else if (k === 'cache') { try { CACHE_KEYS.forEach(x => sessionStorage.removeItem(x)); Object.keys(sessionStorage).filter(x => x.startsWith('averages_extras_')).forEach(x => sessionStorage.removeItem(x)); } catch (_) {} redraw(); toast('Cleared. Pages load fresh from Schoology next time.'); }
     else if (k === 'test') testNote();

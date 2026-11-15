@@ -1162,3 +1162,14 @@
 1162|Crédits open source
 1163|Dont IBM Granite, sur lequel repose la recherche I.A.
 1164|La recherche I.A. ne fonctionne pas avec la carte graphique de cet ordinateur dans ce navigateur. Essaie Chrome ou Edge.
+1165|Vérification que ce navigateur peut la faire fonctionner…
+1166|Enregistrée sur cet appareil, mais ce navigateur ne peut pas encore la faire fonctionner.
+1167|Ce navigateur ne peut pas encore faire fonctionner la recherche I.A.
+1168|Sa prise en charge graphique ne peut pas encore faire fonctionner le modèle, donc la recherche marche comme avant. Essaie Chrome ou Edge. Elle revérifie toute seule quand ce navigateur se met à jour.
+1169|Revérifier
+1170|Pas encore dans ce navigateur
+1171|Ce navigateur ne peut pas encore faire fonctionner la recherche I.A. Essaie Chrome ou Edge.
+1172|Ce navigateur ne peut pas encore faire fonctionner la recherche I.A. Essaie Chrome ou Edge. Elle réessaiera quand ce navigateur se mettra à jour.
+1173|Elle fonctionne maintenant dans ce navigateur. Essaie-la dans la recherche.
+1174|Toujours pas dans ce navigateur. Essaie Chrome ou Edge.
+1175|Impossible de vérifier pour l'instant. Réessaie.

@@ -1162,3 +1162,14 @@
 1162|Créditos de código aberto
 1163|Incluindo o IBM Granite, base da pesquisa com I.A.
 1164|A pesquisa com I.A. não funciona com a placa de vídeo deste computador neste navegador. Experimente o Chrome ou o Edge.
+1165|Verificando se este navegador consegue executá-la…
+1166|Salva neste dispositivo, mas este navegador ainda não consegue executá-la.
+1167|Este navegador ainda não consegue executar a pesquisa com I.A.
+1168|O suporte gráfico dele ainda não consegue executar o modelo, então a pesquisa funciona como antes. Experimente o Chrome ou o Edge. Ela verifica de novo sozinha quando este navegador atualizar.
+1169|Verificar de novo
+1170|Ainda não neste navegador
+1171|Este navegador ainda não consegue executar a pesquisa com I.A. Experimente o Chrome ou o Edge.
+1172|Este navegador ainda não consegue executar a pesquisa com I.A. Experimente o Chrome ou o Edge. Ela tenta de novo quando este navegador atualizar.
+1173|Agora funciona neste navegador. Experimente na pesquisa.
+1174|Ainda não neste navegador. Experimente o Chrome ou o Edge.
+1175|Não deu para verificar agora. Tente de novo.

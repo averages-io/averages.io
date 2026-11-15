@@ -1162,3 +1162,14 @@
 1162|Open-source credits
 1163|Including IBM Granite, which A.I. search is built on
 1164|A.I. search doesn't work with this computer's graphics in this browser. Try Chrome or Edge.
+1165|Checking that this browser can run it…
+1166|Saved on this device, but this browser can't run it yet.
+1167|This browser can't run A.I. search yet
+1168|Its graphics support can't run the model yet, so search works as before. Try Chrome or Edge. It checks again by itself when this browser updates.
+1169|Check again
+1170|Not in this browser yet
+1171|This browser can't run A.I. search yet. Try Chrome or Edge.
+1172|This browser can't run A.I. search yet. Try Chrome or Edge. It tries again when this browser updates.
+1173|It works in this browser now. Try it in search anything.
+1174|Still not in this browser. Try Chrome or Edge.
+1175|Couldn't check just now. Try again.
