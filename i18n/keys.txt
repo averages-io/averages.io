@@ -1091,3 +1091,5 @@
 1091|This device: {x}
 1092|Time zone set to {x}.
 1093|{x}, {x} now. Due dates and the calendar use it.
+1094|Your browser translates on this device (Chrome or Edge on a computer). Nothing leaves your device.
+1095|This browser can't translate on its own. Try Chrome or Edge on a computer.

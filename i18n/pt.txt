@@ -1091,3 +1091,5 @@
 1091|Este dispositivo: {x}
 1092|Fuso horário definido como {x}.
 1093|{x}, agora são {x}. As datas de entrega e o calendário usam esse fuso.
+1094|Seu navegador traduz neste dispositivo (Chrome ou Edge em um computador). Nada sai do seu dispositivo.
+1095|Este navegador não consegue traduzir sozinho. Tente o Chrome ou o Edge em um computador.

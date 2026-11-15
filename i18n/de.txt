@@ -1091,3 +1091,5 @@
 1091|Dieses Gerät: {x}
 1092|Zeitzone auf {x} gestellt.
 1093|{x}, jetzt {x}. Abgabetermine und der Kalender nutzen sie.
+1094|Dein Browser übersetzt auf diesem Gerät (Chrome oder Edge auf einem Computer). Nichts verlässt dein Gerät.
+1095|Dieser Browser kann nicht selbst übersetzen. Versuch es mit Chrome oder Edge auf einem Computer.

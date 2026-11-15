@@ -1091,3 +1091,5 @@
 1091|Este dispositivo: {x}
 1092|Zona horaria cambiada a {x}.
 1093|{x}, ahora son las {x}. Las fechas de entrega y el calendario la usan.
+1094|Tu navegador traduce en este dispositivo (Chrome o Edge en una computadora). Nada sale de tu dispositivo.
+1095|Este navegador no puede traducir por sí solo. Prueba con Chrome o Edge en una computadora.

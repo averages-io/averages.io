@@ -1091,3 +1091,5 @@
 1091|Cet appareil : {x}
 1092|Fuseau horaire réglé sur {x}.
 1093|{x}, il est {x}. Les dates limites et le calendrier l'utilisent.
+1094|Ton navigateur traduit sur cet appareil (Chrome ou Edge sur un ordinateur). Rien ne quitte ton appareil.
+1095|Ce navigateur ne peut pas traduire tout seul. Essaie Chrome ou Edge sur un ordinateur.

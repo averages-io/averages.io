@@ -297,7 +297,18 @@
       });
     }, Promise.resolve()).then(function () { redraw(); if (server.length) return byServer(server); });
   }
+  // "Translate on our server" also needs the server-translate switch (off until PowerSchool agrees: src/flags.ts in the
+  // API). Asked once per tab from /config/features.
+  var serverSwitch = null;
+  function serverAllowed() {
+    if (serverSwitch) return serverSwitch;
+    return (serverSwitch = fetch(API + '/config/features', { credentials: 'include' }).then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (f) { return !!(f && f.features && f.features['server-translate']); }).catch(function () { return false; }));
+  }
   function byServer(list) {
+    return serverAllowed().then(function (ok) { if (!ok) { giveUp(list.map(function (x) { return x[0]; })); return; } return byServerNow(list); });
+  }
+  function byServerNow(list) {
     return fetch(API + '/translate', { method: 'POST', credentials: 'include', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ to: lang, texts: list.map(function (x) { return x[0]; }), from: list.map(function (x) { return x[1]; }) }) })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (j) {
