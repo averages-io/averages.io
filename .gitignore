@@ -26,3 +26,4 @@ app/not-found.tsx
 # built from fs-src/ by scripts/build-fs.mjs on every build (2026-10-28; /IS/ since 10-30, /fs/ moves there)
 public/IS/
 public/fs/
+i18n-harvest.json
