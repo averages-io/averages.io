@@ -139,9 +139,10 @@
     mo.observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ATTRS });
     document.title = look(document.title) || document.title;
   }
-  var CSS = '.av-tr-wait{-webkit-mask-image:linear-gradient(100deg,#000 0,#000 35%,rgba(0,0,0,.35) 50%,#000 65%,#000 100%);mask-image:linear-gradient(100deg,#000 0,#000 35%,rgba(0,0,0,.35) 50%,#000 65%,#000 100%);-webkit-mask-size:300% 100%;mask-size:300% 100%;animation:avTrWait 1.3s linear infinite}' +
-    '@keyframes avTrWait{from{-webkit-mask-position:100% 0;mask-position:100% 0}to{-webkit-mask-position:0 0;mask-position:0 0}}' +
-    '.potato-mode .av-tr-wait{animation:none;opacity:.6}@media (prefers-reduced-motion:reduce){.av-tr-wait{animation:none;opacity:.6}}';
+  // a blue band sweeping across the text (the text keeps its own color, --av-tr-c, everywhere else)
+  var CSS = '.av-tr-wait{background-image:linear-gradient(100deg,var(--av-tr-c) 0,var(--av-tr-c) 38%,#4c9aff 50%,var(--av-tr-c) 62%,var(--av-tr-c) 100%);background-size:300% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:avTrWait 1.4s linear infinite}' +
+    '@keyframes avTrWait{from{background-position:100% 0}to{background-position:0 0}}' +
+    '.potato-mode .av-tr-wait{animation:none;background:none;-webkit-text-fill-color:#4c9aff}@media (prefers-reduced-motion:reduce){.av-tr-wait{animation:none;background:none;-webkit-text-fill-color:#4c9aff}}';
   function addCss() { if (document.getElementById('avTrCss')) return; var st = document.createElement('style'); st.id = 'avTrCss'; st.textContent = CSS; (document.head || document.documentElement).appendChild(st); }
   function whenBody(f) { if (document.body) f(); else document.addEventListener('DOMContentLoaded', f); }
 
@@ -179,7 +180,11 @@
   // a name waiting for its translation shimmers (a soft band sweeping across it), so it's clearly not the
   // sync spinner; it stops when the translation comes in, or when nothing here can translate it
   var WAIT = new Set(), failed = new Set();
-  function waiting(el, on) { if (!el || !el.classList) return; if (on) { el.classList.add('av-tr-wait'); WAIT.add(el); } else { el.classList.remove('av-tr-wait'); WAIT.delete(el); } }
+  function waiting(el, on) {
+    if (!el || !el.classList) return;
+    if (on) { if (WAIT.has(el)) return; try { el.style.setProperty('--av-tr-c', getComputedStyle(el).color); } catch (e) { /* keeps the fallback */ } el.classList.add('av-tr-wait'); WAIT.add(el); }
+    else if (WAIT.has(el)) { el.classList.remove('av-tr-wait'); el.style.removeProperty('--av-tr-c'); WAIT.delete(el); }
+  }
   function settleWaits() { WAIT.forEach(function (el) { if (!el.isConnected) { WAIT.delete(el); return; } var t = el.textContent.trim(); if (!ITEM_ORIG.has(t) || TRC[t] != null || failed.has(t)) waiting(el, false); }); }
   function item(v, el) {
     var k = v.trim();
