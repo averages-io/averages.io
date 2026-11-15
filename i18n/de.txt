@@ -1180,3 +1180,4 @@
 1180|# bewertete Aufgabe mit {x}.
 1181|Nichts ist als fehlend markiert. # Aufgaben sind verspätet (überfällig und nicht abgegeben). Frag nach verspäteten Aufgaben, um sie zu sehen.
 1182|Nichts ist als fehlend markiert. # Aufgabe ist verspätet (überfällig und nicht abgegeben). Frag nach verspäteten Aufgaben, um sie zu sehen.
+1183|Fast intelligente Suche

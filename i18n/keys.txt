@@ -1180,3 +1180,4 @@
 1180|# graded assignment with an {x}.
 1181|Nothing is marked missing. # assignments are late (past due and not turned in). Ask for late work to see them.
 1182|Nothing is marked missing. # assignment is late (past due and not turned in). Ask for late work to see it.
+1183|Almost Intelligent search

@@ -1180,3 +1180,4 @@
 1180|# tarea calificada con {x}.
 1181|Nada está marcado como faltante. # tareas están atrasadas (vencidas y sin entregar). Pregunta por las tareas atrasadas para verlas.
 1182|Nada está marcado como faltante. # tarea está atrasada (vencida y sin entregar). Pregunta por las tareas atrasadas para verla.
+1183|Búsqueda casi inteligente
