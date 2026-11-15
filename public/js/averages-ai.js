@@ -229,6 +229,9 @@
     essay: /\b(essay|paper|writing|ensayo|redacci[oó]n|dissertation|reda[cç][aã]o|aufsatz|essai)\b|作文|论文/i, lab: /\b(lab|labs|laboratory|laboratorio|laboratoire|labor)\b|实验/i };
   var FILE_EXT = { pdf: /^pdf$/, slides: /^(ppt|pptx|key|gslides|odp)$/, doc: /^(doc|docx|txt|rtf|gdoc|pages|odt)$/, sheet: /^(xls|xlsx|csv|gsheet|numbers|ods)$/, image: /^(png|jpe?g|gif|webp|heic|bmp|svg)$/ };
   function clsTile(c) {
+    // the page's own class badge (its emoji on the class color), the same as everywhere else in search; every page
+    // defines badge() at the top level of its script. The initials tile is only for a page without one.
+    try { if (c && typeof badge === 'function') return badge(c); } catch (e) { /* fall back */ }
     var ini = c ? (c.short || String(c.name || '?').slice(0, 2)) : '?';
     return '<span class="av-ai-cl" style="--c:' + esc((c && c.color) || '#6b7280') + '" aria-hidden="true">' + esc(String(ini).slice(0, 3)) + '</span>';
   }
@@ -245,20 +248,91 @@
   /** What the model asked for, as short chips: Work · Missing · Chemistry */
   function chips(name, a) {
     var out = [LABEL.tool[name] || name];
-    if (a.status && a.status !== 'any') out.push(LABEL.status[a.status]);
+    if (a.status && a.status !== 'any') out.push(a.status === 'missing' && a.late ? 'Late' : LABEL.status[a.status]);
     if (a.kind && a.kind !== 'any') out.push(LABEL.kind[a.kind]);
     if (a.unread) out.push('Unread');
     if (name === 'find_grades' && a.show === 'gpa') out.push('GPA');
     if (name === 'find_grades' && a.show === 'scores') out.push('Scores');
     if (a.sort === 'lowest') out.push('Lowest first'); if (a.sort === 'highest') out.push('Highest first');
     if (a.when && a.when !== 'any') out.push(LABEL.when[a.when]);
-    var named = [a['class'], a.teacher, a.target, a.assignment].filter(Boolean);
+    var named = [a.letter ? a.letter + 's' : '', a['class'], a.teacher, a.target, a.assignment].filter(Boolean);
     return out.map(function (x) { return '<span class="av-ai-chip">' + esc(t(x)) + '</span>'; }).join('') + named.map(function (x) { return '<span class="av-ai-chip" data-no-t>' + esc(x) + '</span>'; }).join('');
   }
 
   /** { rows: html[], note, go, words } for a tool call */
-  function run(c) {
-    var D = window.FSD || {}, FSX = window.FSX, a = c.args || {}, now = Date.now(), C = D.C || {}, rows = [], note = '';
+  // ---------- second checks on the model's choice, with what the student actually typed ----------
+  // A class or teacher the student never named is dropped (results get wider, never wrong): the model sometimes
+  // fills one in from the list ("how many assignments have a B" came back as AP Human Geog A, Martin 2026-11-15).
+  var GENERIC = { the: 1, and: 1, ap: 1, ib: 1, honors: 1, hon: 1, i: 1, ii: 1, iii: 1, iv: 1, v: 1, period: 1, class: 1, course: 1, intro: 1, introduction: 1, to: 1, of: 1, advanced: 1, placement: 1, a: 1, b: 1, c: 1, sem: 1, semester: 1, s1: 1, s2: 1 };
+  // the same subject in the app's other languages (the class is usually named in English)
+  var SUBJ = [
+    [/chem/, /qu[ií]mic|chimi|chemie|化学/], [/bio/, /biolog|生物/], [/physic/, /f[ií]sic|physik|physique|物理/],
+    [/math|algebra|geometr|calcul|statist|precal|trig/, /matem|math[eé]|mathe|[aá]lgebra|alg[eè]bre|geometr|g[eé]om[eé]tr|c[aá]lculo|calcul|estad[ií]stic|statisti|数学|代数|几何|微积分|统计/],
+    [/hist/, /histori|histoire|geschicht|历史/], [/english|literat|lang/, /ingl[eé]s|anglais|englisch|literat|英语|英文|语文/],
+    [/spanish/, /espa[nñ]ol|espagnol|espanhol|spanisch|西班牙/], [/french/, /franc[eé]s|fran[cç]ais|franc[eê]s|franz[oö]sisch|法语/],
+    [/german/, /alem[aã]n|allemand|deutsch|德语/], [/chinese|mandarin/, /chino|chinois|chin[eê]s|chinesisch|中文|汉语/],
+    [/geog/, /geogra|g[eé]ograph|地理/], [/gov|civic|politic/, /gobierno|gouvernement|governo|regierung|c[ií]vic|politi|政府|政治/],
+    [/econ/, /econom|[eé]conom|ökonom|wirtschaft|经济/], [/psych/, /psicolog|psycholog|心理/], [/art|draw|paint|design/, /arte|art|kunst|dibujo|dessin|desenho|美术|艺术/],
+    [/music|band|choir|orchestra/, /m[uú]sic|musique|musik|banda|coro|chorale|chor|orquest|orchest|音乐|乐队|合唱/],
+    [/\bpe\b|physical ed|fitness|gym|health/, /educaci[oó]n f[ií]sica|[eé]ducation physique|eps|educa[cç][aã]o f[ií]sica|sport|turnen|salud|sant[eé]|sa[uú]de|gesundheit|体育|健康/],
+    [/computer|programming|coding|\bcs\b/, /inform[aá]tic|computaci|programaci|programma|informatique|computa[cç]|informatik|计算机|编程/],
+  ];
+  function named(name, q) {
+    var qn = norm(q), qw = qn.split(' ').filter(function (w) { return w.length >= 3; });
+    var nw = norm(name).split(' ').filter(function (w) { return w.length >= 2 && !GENERIC[w]; });
+    if (!nw.length) return true;   // nothing to check it by
+    if (nw.some(function (w) { return qw.some(function (x) { return w.indexOf(x) === 0 || x.indexOf(w.slice(0, 4)) === 0; }); })) return true;
+    var ln = String(name).toLowerCase(), lq = String(q).toLowerCase();
+    return SUBJ.some(function (p) { return p[0].test(ln) && p[1].test(lq); });
+  }
+  // a letter grade the student asked about: "have a B", "how many As", "any A's", "B+ grades", "with an A-"
+  function letterAsked(q) {
+    var m = /(?:\b(?:a|an|any|many|all|my|got|get|have|has|had|with|earned|of|gotten|un|una|des|um|uma|eine?n?)\s+|^)([ABCDF][+-]?)(?:'?s)?(?=$|[\s?.,!])/.exec(q) || /(?:^|\s)([ABCDF][+-]?)(?:'?s)?\s+(?:[Gg]rades?|as a grade|[Nn]otas?|[Nn]otes?|[Nn]oten?|成绩)/.exec(q);
+    if (!m) return '';
+    var L = m[1];
+    // "A list of..." at the start is a word, not a grade
+    if (L === 'A' && m.index === 0 && !/^A'?s\b|^A\s+(grade|grades)\b/.test(q)) return '';
+    return L;
+  }
+  function letterIs(L, pct) { var got = letterOf(pct); return L.length === 2 ? got === L : got.charAt(0) === L; }
+  function sanitize(c, q) {
+    var a = Object.assign({}, c.args || {});
+    if (a['class'] && q && !named(a['class'], q)) delete a['class'];
+    if (a.teacher && q && !named(a.teacher, q)) delete a.teacher;
+    // filters the student never asked for: "what have my teachers texted me" came back as unread only (Martin 2026-11-15)
+    if (a.unread && q && !/unread|\bnew\b|haven'?t (read|seen|opened)|not (read|seen|opened)|didn'?t (read|see|open)|sin leer|no le[ií]d|nuev[oa]s?|non lus?|nouveaux?|nouvelles?|n[aã]o lid|nov[oa]s?|ungelesen|neue?n?|未读|新/i.test(q)) delete a.unread;
+    if (a.when && a.when !== 'any' && q && !/today|tonight|tomorrow|week|yesterday|\bnow\b|soon|hoy|ma[nñ]ana|semana|esta noche|aujourd|demain|semaine|ce soir|hoje|amanh[aã]|heute|morgen|woche|今天|明天|昨天|本周|这周|下周|上周|星期|礼拜|今晚/i.test(q)) delete a.when;
+    var name = c.name, L = q ? letterAsked(q) : '';
+    // "assignment with the highest grade" is about pieces of work, not classes (the model answered with classes)
+    if (name === 'find_grades' && (!a.show || a.show === 'grade') && q && /\b(assignments?|tests?|quiz(z?es)?|homework|essays?|labs?|projects?|scores?|tareas?|trabajos?|ex[aá]men(es)?|devoirs?|contr[oô]les?|tarefas?|provas?|aufgaben?|arbeiten?|klausuren?)\b|作业|考试|测验/i.test(q) && !/\b(class|classes|course|courses|clase|clases|cours|aula|aulas|kurs|kurse)\b|课/i.test(q)) a.show = 'scores';
+    // the model has one status for both; the words tell them apart
+    if (name === 'find_work' && a.status === 'missing') a.late = /\b(late|overdue|past due|behind|tarde|atrasad[oa]s?|vencid[oa]s?|retard|en retard|verspätet|überfällig|zu spät)\b|逾期|迟交|过期/i.test(q || '');
+    // grades by letter aren't something the model can ask for: answered here, from the scores
+    // only for questions about pieces of work ("do I have an A in chem" is the class's grade, and stays that)
+    var aboutWork = (name === 'find_grades' && a.show === 'scores') || /assignments?|scores?|tests?|quiz|homework|how many|which|tareas?|trabajos?|ex[aá]men|devoirs?|contr[oô]les?|tarefas?|trabalhos?|provas?|aufgaben|arbeiten|tests|作业|考试|测验|哪些|多少/i.test(q || '');
+    if (L && aboutWork && (name === 'find_grades' || (name === 'find_work' && (!a.status || a.status === 'graded' || a.status === 'any')))) { name = 'find_grades'; a = { 'class': a['class'], show: 'scores', sort: a.sort }; if (!a['class']) delete a['class']; if (!a.sort) delete a.sort; a.letter = L; }
+    return { name: name, args: a };
+  }
+
+  // ---------- data a page didn't load (Messages and Files only load on some pages) ----------
+  // The same answers the pages keep (sessionStorage averages_extras_<key>, 5 minutes), so it's asked for once.
+  var EXTRA = { messages: ['/messages', 'messages'], files: ['/data/files', 'fs_files'] };
+  function extraData(kind) {
+    var D = window.FSD || {}, me = D.me && D.me.uid, E = EXTRA[kind];
+    if (kind === 'messages' && D.raw && D.raw.messages && Array.isArray(D.raw.messages.CONVERSATIONS)) return Promise.resolve(D.raw.messages);
+    if (kind === 'files' && D.raw && D.raw.files && Array.isArray(D.raw.files.files)) return Promise.resolve(D.raw.files);
+    if (!E || !window.FSX) return Promise.resolve(null);
+    try { var c = JSON.parse(sessionStorage.getItem('averages_extras_' + E[1]) || 'null'); if (c && c.data && c.who === me && Date.now() - (c.at || 0) < 5 * 6e4) return Promise.resolve(c.data); } catch (e) { /* unreadable */ }
+    return window.FSX.api(E[0]).then(function (d) {
+      try { sessionStorage.setItem('averages_extras_' + E[1], JSON.stringify({ at: Date.now(), who: me, data: d })); } catch (e) { /* full */ }
+      return d;
+    }).catch(function () { return null; });
+  }
+  var NEEDS = { find_messages: 'messages', find_files: 'files' };
+
+  function run(c, q, extra) {
+    c = sanitize(c, q);
+    var D = window.FSD || {}, FSX = window.FSX, a = c.args || {}, now = Date.now(), C = D.C || {}, rows = [], note = '', lead = '';
     var want = a['class'] ? classesNamed(a['class']).map(function (x) { return String(x.id); }) : null;
     var inClass = function (id) { return !want || want.indexOf(String(id)) >= 0; };
     if (c.name === 'word_search') return { words: a.text || '' };
@@ -272,6 +346,8 @@
       var R = a.when && a.when !== 'any' ? range(a.when, now) : null, st = { due: 'due', missing: 'missing', turned_in: 'turned', graded: 'graded' }[a.status] || '';
       var W = (D.ASG || []).filter(function (x) {
         if (!inClass(x.c) || (st && x.st !== st)) return false;
+        // "missing" is what the teacher marked missing; work that's only past due is "late" (asked for by name)
+        if (st === 'missing' && a.late !== undefined && (a.late ? x.marked : !x.marked)) return false;
         if (st === 'due' && x.dueAt && x.dueAt < now - 6e4 && !x.outside) return false;
         if (a.kind && a.kind !== 'any' && !(KIND_RE[a.kind].test(x.t) || (a.kind === 'test' && x.kind === 'test'))) return false;
         if (R) { var at = x.dueAt || x.gradedAt || x.turnedAt; if (!at || at < R[0] || at >= R[1]) return false; }
@@ -279,20 +355,27 @@
       });
       W.sort(st === 'graded' ? function (x, y) { return (y.gradedAt || 0) - (x.gradedAt || 0); } : st === 'missing' ? function (x, y) { return (y.dueAt || 0) - (x.dueAt || 0); } : function (x, y) { return (x.dueAt || 9e15) - (y.dueAt || 9e15); });
       rows = W.slice(0, 30).map(function (x) {
-        var cc = C[x.c], end = x.st === 'graded' && x.got != null ? esc(x.got + (x.pts ? '/' + x.pts : '')) : x.st === 'missing' ? '<span class="av-ai-tag bad">' + esc(t('Missing')) + '</span>' : x.st === 'turned' ? '<span class="av-ai-tag ok">' + esc(t('Turned in')) + '</span>' : '';
+        var cc = C[x.c], end = x.st === 'graded' && x.got != null ? esc(x.got + (x.pts ? '/' + x.pts : '')) : x.st === 'missing' ? '<span class="av-ai-tag bad">' + esc(t(x.marked ? 'Missing' : 'Late')) + '</span>' : x.st === 'turned' ? '<span class="av-ai-tag ok">' + esc(t('Turned in')) + '</span>' : '';
         return row({ href: FSX.hubUrl(x.c, '', { a: x.id }), lead: clsTile(cc), t: x.t, sub: (cc ? cc.name : '') + (x.dueAt ? ' · ' + t('Due') + ' ' + dShort(x.dueAt) + (x.time ? ', ' + x.time : '') : ''), end: end });
       });
       if (W.length > 30) note = W.length + ' found. Showing the first 30.';
+      // nothing marked missing, but some work is past due: say so (the student may mean that)
+      if (st === 'missing' && !a.late && !W.length) {
+        var late = (D.ASG || []).filter(function (x) { return inClass(x.c) && x.st === 'missing' && !x.marked; }).length;
+        if (late) lead = late === 1 ? 'Nothing is marked missing. 1 assignment is late (past due and not turned in). Ask for late work to see it.' : 'Nothing is marked missing. ' + late + ' assignments are late (past due and not turned in). Ask for late work to see them.';
+      }
     } else if (c.name === 'find_grades') {
       var list = (D.CLASSES || []).filter(function (x) { return !x.none && inClass(x.id); });
       if (a.show === 'gpa') {
         var G = window.AveragesGPA, g = G ? G.compute(list.map(function (x) { return { id: String(x.id), name: x.name, grade: letterOf(x.pct) }; })) : null;
         if (g && g.unweighted != null) rows = [row({ href: FSX.url('grades'), lead: '<span class="av-ai-cl" style="--c:#3e64b0" aria-hidden="true">GPA</span>', t: g.unweighted.toFixed(2) + ' GPA', sub: (g.weighted != null ? g.weighted.toFixed(2) + ' weighted · ' : '') + list.length + ' classes' })];
       } else if (a.show === 'scores') {
-        var S = (D.WORK || []).filter(function (w) { return inClass(w.c) && w.got != null && w.of; });
         var pct = function (w) { return w.got / w.of * 100; };
+        var S = (D.WORK || []).filter(function (w) { return inClass(w.c) && w.got != null && w.of && (!a.letter || letterIs(a.letter, pct(w))); });
+        var count = S.length;
         if (a.sort === 'lowest') S.sort(function (x, y) { return pct(x) - pct(y); }); else if (a.sort === 'highest') S.sort(function (x, y) { return pct(y) - pct(x); });
-        rows = S.slice(0, 30).map(function (w) { var cc = C[w.c]; return row({ href: FSX.hubUrl(w.c, 'grades', { a: w.id }), lead: clsTile(cc), t: w.n, sub: (cc ? cc.name : '') + (w.on ? ' · ' + w.on : ''), end: esc(w.got + '/' + w.of) + ' <small>' + pct(w).toFixed(0) + '%</small>' }); });
+        rows = S.slice(0, 30).map(function (w) { var cc = C[w.c]; return row({ href: FSX.hubUrl(w.c, 'grades', { a: w.id }), lead: clsTile(cc), t: w.n, sub: (cc ? cc.name : '') + (w.on ? ' · ' + w.on : ''), end: esc(w.got + '/' + w.of) + ' <small>' + pct(w).toFixed(0) + '% ' + esc(letterOf(pct(w))) + '</small>' }); });
+        if (a.letter) lead = count === 1 ? '1 graded assignment with ' + (a.letter.charAt(0) === 'A' || a.letter.charAt(0) === 'F' ? 'an ' : 'a ') + a.letter + '.' : count + ' graded assignments with ' + (a.letter.charAt(0) === 'A' || a.letter.charAt(0) === 'F' ? 'an ' : 'a ') + a.letter + '.';
       } else {
         if (a.sort === 'lowest') list.sort(function (x, y) { return x.pct - y.pct; }); else if (a.sort === 'highest') list.sort(function (x, y) { return y.pct - x.pct; });
         rows = list.map(function (x) { return row({ href: FSX.hubUrl(x.id, 'grades'), lead: clsTile(x), t: x.name, sub: x.teacher || '', end: esc(letterOf(x.pct)) + ' <small>' + x.pct.toFixed(1) + '%</small>' }); });
@@ -324,15 +407,26 @@
       P.sort(function (x, y) { return (y.at || 0) - (x.at || 0); });
       rows = P.slice(0, 30).map(function (u) { var cc = C[u.courseId], b = String(u.body || '').replace(/\s+/g, ' ').trim(); return row({ href: FSX.hubUrl(u.courseId, 'updates', { update: u.id }), lead: clsTile(cc), t: b.length > 90 ? b.slice(0, 88) + '…' : b, sub: (u.from || '') + (u.when ? ' · ' + u.when : '') + (cc ? ' · ' + cc.name : '') }); });
     } else if (c.name === 'find_messages') {
-      var seen = FSX.seen, M = (D.messages || []).filter(function (m) { return (!a.teacher || sameTeacher(a.teacher, m.from)) && (!a.unread || (m.unread && !(seen && seen.has('m', m.id)))); });
+      var seen = FSX.seen, M;
+      if (extra && Array.isArray(extra.CONVERSATIONS)) {
+        // Schoology's conversations (the same list the Messages page shows): who it's with, by name
+        var PPL = extra.PEOPLE || {}, me = String(extra.me || '');
+        M = extra.CONVERSATIONS.filter(function (x) { return x && x.id; }).map(function (x) {
+          var ids = (x.participants || []).map(String).filter(function (id) { return id && id !== me; }); if (!ids.length && x.personId) ids = [String(x.personId)];
+          var names = ids.map(function (id) { return (PPL[id] || {}).name || ''; }).filter(Boolean);
+          return { id: String(x.id), from: names.join(', ') || 'Someone in Schoology', subject: x.subject || '', preview: x.preview || '', unread: !!x.unread, time: x.at ? dShort(x.at) : '', at: x.at || 0 };
+        });
+      } else M = D.messages || [];
+      M = M.filter(function (m) { return (!a.teacher || sameTeacher(a.teacher, m.from)) && (!a.unread || (m.unread && !(seen && seen.has('m', m.id)))); });
+      M.sort(function (x, y) { return (y.at || 0) - (x.at || 0); });
       rows = M.slice(0, 30).map(function (m) { return row({ href: FSX.url('messages', { thread: m.id }), lead: FSX.personAv ? FSX.personAv({ name: m.from, teacher: true }) : '', t: m.subject || m.preview || t('(No subject)'), sub: (m.from || '') + (m.time ? ' · ' + m.time : ''), end: m.unread ? '<span class="unread" aria-label="Unread"></span>' : '' }); });
     } else if (c.name === 'find_files') {
       var since2 = a.when === 'today' ? sod(now) : a.when === 'this_week' ? now - 7 * DAY : 0, re = a.kind && a.kind !== 'any' ? FILE_EXT[a.kind] : null;
-      var F = ((D.raw && D.raw.files && D.raw.files.files) || []).filter(function (f) { return f && inClass(f.course) && (!re || re.test(String(f.ext || '').toLowerCase())) && (!since2 || (f.at || 0) >= since2); });
+      var F = ((extra && extra.files) || (D.raw && D.raw.files && D.raw.files.files) || []).filter(function (f) { return f && inClass(f.course) && (!re || re.test(String(f.ext || '').toLowerCase())) && (!since2 || (f.at || 0) >= since2); });
       F.sort(function (x, y) { return (y.at || 0) - (x.at || 0); });
       rows = F.slice(0, 30).map(function (f) { var cc = C[f.course]; return row({ href: FSX.hubUrl(f.course, 'materials/x' + f.id), lead: clsTile(cc), t: f.name, sub: (cc ? cc.name : '') + (f.at ? ' · ' + dShort(f.at) : '') + (f.parentTitle ? ' · ' + f.parentTitle : '') }); });
     }
-    return { rows: rows, note: note };
+    return { rows: rows, note: note, lead: lead, call: c };
   }
 
   // ---------- search anything: the "Ask A.I." row and its answer ----------
@@ -382,6 +476,9 @@
         b.res.querySelectorAll('.mi.sel').forEach(function (x) { x.classList.remove('sel'); }); el.classList.add('sel');
       } else b.res.insertBefore(el, foot || null);
       var empty = b.res.querySelector(':scope > .cmdk-empty, :scope > .s-empty'); if (empty && STATE.saved) { empty.remove(); el.classList.add('sel'); }
+      // Home with no results: the tabs are all 0, so they go too (they left an empty band under the A.I. row)
+      var tabs = b.res.querySelector(':scope > .s-tabs');
+      if (tabs && STATE.saved && ![].some.call(tabs.querySelectorAll('.ct'), function (x) { return +x.textContent > 0; })) tabs.remove();
     });
   }
   var injT = 0;
@@ -403,12 +500,16 @@
       var words = '<button class="mi s-cmd av-ai-words" data-avai="words"><svg class="i"><use href="#i-search"/></svg><span class="tx"><b>' + esc(t('Search for the words instead')) + '</b><small data-no-t>“' + esc(q.slice(0, 120)) + '”</small></span></button>';
       var foot = '<p class="av-ai-note">' + esc(t('A.I. can be wrong. It ran on this device; nothing you typed was sent anywhere.')) + '</p>';
       if (r.kind !== 'call') { panel(b, '<div class="av-ai-say">' + AI_SVG + '<span>' + esc(t("I can only search your classes, grades, work, posts, messages and files.")) + '</span></div>' + words + foot); return; }
-      var out = run(r);
+      var need = NEEDS[r.name];
+      return (need ? extraData(need) : Promise.resolve(null)).then(function (extra) {
+      if (!still()) return;
+      var out = run(r, q, extra); r = out.call || r;
       if (out.go) { window.location.href = out.go; return; }
       if (out.words != null) { STATE.skip = out.words; b.input.value = out.words; b.input.dispatchEvent(new Event('input', { bubbles: true })); return; }
       var head = '<div class="lbl av-ai-h">' + AI_SVG + chips(r.name, r.args || {}) + '</div>';
       var body = out.rows.length ? out.rows.join('') : '<div class="cmdk-empty">' + esc(t('Nothing found for that.')) + '</div>';
-      panel(b, head + body + (out.note ? '<p class="av-ai-note">' + esc(t(out.note)) + '</p>' : '') + words + foot);
+      panel(b, head + (out.lead ? '<p class="av-ai-lead">' + esc(t(out.lead)) + '</p>' : '') + body + (out.note ? '<p class="av-ai-note">' + esc(t(out.note)) + '</p>' : '') + words + foot);
+      });
     }).catch(function (e) {
       if (!still()) return;
       var gpu = e && GPU_ERR.test(e.message || '');
@@ -433,6 +534,7 @@
   var css = document.createElement('style');
   css.textContent = [
     '.av-ai-ic{width:22px;height:22px;flex:none;margin:0 7px;color:var(--ink)}',
+    '.av-ai-row + .s-tabs{margin-top:6px}',
     '.av-ai-cl{flex:none;display:grid;place-items:center;width:30px;height:30px;border-radius:9px;background:var(--c);color:#fff;font-size:11px;font-weight:800;letter-spacing:.02em}',
     '.av-ai-panel{display:flex;flex-direction:column;gap:2px}',
     '.av-ai-h{display:flex!important;flex-wrap:wrap;align-items:center;gap:6px;text-transform:none!important;letter-spacing:0!important}',
@@ -449,6 +551,7 @@
     '@keyframes avAiBlink{0%,100%{opacity:1}50%{opacity:.35}}',
     '@media (prefers-reduced-motion:reduce){.av-ai-load{animation:avAiBlink 1.4s ease-in-out infinite;background:#E5484D}}',
     '.potato-mode .av-ai-load{animation:none;background:#E5484D}',
+    '.av-ai-lead{margin:2px 12px 8px;color:var(--ink);font-size:15px;font-weight:800}',
     '.av-ai-note{margin:4px 12px 6px;color:var(--muted);font-size:12px;font-weight:600}',
   ].join('');
   (document.head || document.documentElement).appendChild(css);

@@ -1612,6 +1612,7 @@
         id: String(a.id), c: c, t: a.title || g.title || 'Assignment', type: type, kind: type === 'assessment' ? 'test' : 'assignment', disc: type === 'discussion', outside: outside, noDrop: !!base.noDropbox,
         dueAt: dueMs, off: offOf(dueMs), day: dueMs != null ? WD[new Date(dueMs).getDay()] : '', time: dueMs != null ? (base.time || timeOf(dueMs)) : '',
         pts: typeof g.points === 'number' && g.points > 0 ? g.points : null, st: st,
+        marked: !!(g.missing && !graded && !sub),   // the teacher marked it missing (st 'missing' is also work that's only past due)
         turnedAt: sub ? sub.at : 0, turned: sub ? (sub.at ? dayLabel(sub.at, now) : 'earlier') : done ? 'earlier' : null, sent: sub ? sub.files : undefined, posted: done || undefined,
         got: graded ? g.score : undefined, gradedAt: graded ? g.gradedAt || 0 : 0, graded: graded ? (g.gradedAt ? dayLabel(g.gradedAt, now) : 'earlier') : null, note: g.comment || '',
       });

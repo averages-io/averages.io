@@ -1173,3 +1173,10 @@
 1173|Agora funciona neste navegador. Experimente na pesquisa.
 1174|Ainda não neste navegador. Experimente o Chrome ou o Edge.
 1175|Não deu para verificar agora. Tente de novo.
+1176|Atrasadas
+1177|# tarefas avaliadas com {x}.
+1178|# tarefas avaliadas com {x}.
+1179|# tarefa avaliada com {x}.
+1180|# tarefa avaliada com {x}.
+1181|Nada está marcado como faltando. # tarefas estão atrasadas (vencidas e não entregues). Pergunte pelas tarefas atrasadas para vê-las.
+1182|Nada está marcado como faltando. # tarefa está atrasada (vencida e não entregue). Pergunte pelas tarefas atrasadas para vê-la.

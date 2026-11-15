@@ -1173,3 +1173,10 @@
 1173|Sie funktioniert jetzt in diesem Browser. Probier sie in der Suche aus.
 1174|In diesem Browser immer noch nicht. Probier Chrome oder Edge.
 1175|Konnte gerade nicht prüfen. Versuch es noch einmal.
+1176|Verspätet
+1177|# bewertete Aufgaben mit {x}.
+1178|# bewertete Aufgaben mit {x}.
+1179|# bewertete Aufgabe mit {x}.
+1180|# bewertete Aufgabe mit {x}.
+1181|Nichts ist als fehlend markiert. # Aufgaben sind verspätet (überfällig und nicht abgegeben). Frag nach verspäteten Aufgaben, um sie zu sehen.
+1182|Nichts ist als fehlend markiert. # Aufgabe ist verspätet (überfällig und nicht abgegeben). Frag nach verspäteten Aufgaben, um sie zu sehen.

@@ -1173,3 +1173,10 @@
 1173|Elle fonctionne maintenant dans ce navigateur. Essaie-la dans la recherche.
 1174|Toujours pas dans ce navigateur. Essaie Chrome ou Edge.
 1175|Impossible de vérifier pour l'instant. Réessaie.
+1176|En retard
+1177|# travaux notés avec {x}.
+1178|# travaux notés avec {x}.
+1179|# travail noté avec {x}.
+1180|# travail noté avec {x}.
+1181|Rien n'est marqué manquant. # travaux sont en retard (date passée et non rendus). Demande les travaux en retard pour les voir.
+1182|Rien n'est marqué manquant. # travail est en retard (date passée et non rendu). Demande les travaux en retard pour le voir.

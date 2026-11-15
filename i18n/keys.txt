@@ -1173,3 +1173,10 @@
 1173|It works in this browser now. Try it in search anything.
 1174|Still not in this browser. Try Chrome or Edge.
 1175|Couldn't check just now. Try again.
+1176|Late
+1177|# graded assignments with a {x}.
+1178|# graded assignments with an {x}.
+1179|# graded assignment with a {x}.
+1180|# graded assignment with an {x}.
+1181|Nothing is marked missing. # assignments are late (past due and not turned in). Ask for late work to see them.
+1182|Nothing is marked missing. # assignment is late (past due and not turned in). Ask for late work to see it.
