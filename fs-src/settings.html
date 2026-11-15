@@ -4379,7 +4379,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       const opts = [['auto', 'Same as this device']].concat(Object.entries(L.LANGS));
       return `
       ${sec('Language', `<div class="sg-opts sg-langs" role="group" aria-label="Language" data-set="lang">${opts.map(([v, t]) => `<button class="sg-opt" data-seg="lang" data-v="${v}" aria-pressed="${L.choice === v}">${v === 'auto' ? `<b>${t}</b><small data-no-t>${esc(L.LANGS[L.deviceLang])}</small>` : `<b data-no-t>${t}</b>`}</button>`).join('')}</div>`)}
-      ${grp(`Advanced translation ${plusChip()}`,
+      ${grp(`Advanced translation ${billingOn() ? plusChip() : ""}`,
         tog('trItems', 'Translate class names, titles, posts and messages', 'Class names, assignment and test titles, teacher posts and messages, in your language. File names stay as they are. Point at a translated name to see the original.', on, !plusOk()) +
         (on && SGV.trDevice === false ? tog('trServer', 'Translate on our server', 'This browser can\'t translate on its own. With this on, those names, posts and messages are sent to our server to translate. We don\'t keep them.', L.serverOn()) : ''),
         'Your browser translates on this device when it can (Chrome or Edge on a computer). Nothing leaves your device unless you turn on Translate on our server.')}`;
