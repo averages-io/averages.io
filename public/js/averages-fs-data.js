@@ -271,7 +271,7 @@
       window.FSD.NT.forEach(function (it) { have[it.id] = true; });
       var added = fresh.NT.filter(function (it) { return !have[it.id]; });
       if (!added.length) return;
-      added.forEach(function (it) { window.FSD.NT.push(it); });
+      window.FSX.seen.ages(added); added.forEach(function (it) { window.FSD.NT.push(it); });
       window.dispatchEvent(new CustomEvent('fs:notis', { detail: { added: added } }));
     }).catch(function () { /* try again next time */ }).then(function () { notisBusy = false; });
   }
@@ -756,35 +756,58 @@
     (D.NT || []).forEach(function (it) { have[it.id] = true; });
     (fresh.NT_SEEN_IDS || []).forEach(function (id) { seenIds[id] = true; });
     var add = (fresh.NT || []).filter(function (it) { return !have[it.id] && !seenIds[it.id]; });
-    if (Array.isArray(D.NT) && add.length) { add.forEach(function (it) { D.NT.push(it); }); window.dispatchEvent(new CustomEvent('fs:notis', { detail: { added: [] } })); }
+    if (Array.isArray(D.NT) && add.length) { window.FSX.seen.ages(add); add.forEach(function (it) { D.NT.push(it); }); window.dispatchEvent(new CustomEvent('fs:notis', { detail: { added: [] } })); }
   }
   function seenSyncOff() {
     var o = lget('schoolagy_settings_options') || {};
     try { if (LS.getItem('schoolagy_account_mode') === 'incognito') return true; } catch (e) { return true; }
     return o.syncAcrossDevices === false;
   }
+  /* Seen ids are kept for 15 days (2026-11-14, the API's sync.ts SEEN_DAYS): averages_seen_at holds the day each
+     was marked seen. Anything posted more than 15 days ago counts as seen anyway (FSX.seen.has), so older ids go. */
+  var SEEN_DAYS = 15, seenAge = {};
+  function today() { return Math.floor(Date.now() / 86400000); }
+  function seenAtRead() { var v = lget('averages_seen_at'); return v && typeof v === 'object' && !Array.isArray(v) ? v : {}; }
+  function seenTrim() {
+    var v = lget('averages_seen'), at = seenAtRead(), d = today(), changed = false;
+    if (!v || typeof v !== 'object' || Array.isArray(v)) return;
+    ['u', 'g', 'm', 'a', 'f'].forEach(function (k) {
+      if (!Array.isArray(v[k])) return;
+      var m = at[k] && typeof at[k] === 'object' ? at[k] : {}, keep = [], km = {};
+      v[k].map(String).forEach(function (id) { var day = typeof m[id] === 'number' ? m[id] : d; if (day >= d - SEEN_DAYS) { keep.push(id); km[id] = day; } });
+      if (keep.length !== v[k].length || Object.keys(m).length !== keep.length) changed = true;
+      v[k] = keep; at[k] = km;
+    });
+    lset('averages_seen_at', at);
+    if (changed) lset('averages_seen', v);
+  }
   var seenPushT = 0;
   function seenPush() {
     if (seenSyncOff()) return;
     clearTimeout(seenPushT);
     seenPushT = setTimeout(function () {
-      fetch(API + '/sync/seen', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ seen: lget('averages_seen') || {} }) }).catch(function () {});
+      seenTrim();
+      fetch(API + '/sync/seen', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ seen: lget('averages_seen') || {}, seenAt: lget('averages_seen_at') || {} }) }).catch(function () {});
     }, 1500);
   }
   function seenPull(me) {
+    seenTrim();   // this device's list: the last 15 days only
     if (!me || me.incognito || seenSyncOff()) return Promise.resolve();
     var got = fetch(API + '/sync/seen', { credentials: 'include', cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.seen || typeof j.seen !== 'object') return;
       var local = lget('averages_seen'); local = local && typeof local === 'object' && !Array.isArray(local) ? local : {};
-      var out = Object.assign({}, local), added = false, theirsMissing = false;
+      var out = Object.assign({}, local), added = false, theirsMissing = false, at = seenAtRead(), theirAt = j.seenAt && typeof j.seenAt === 'object' ? j.seenAt : {};
       ['u', 'g', 'm', 'a', 'f'].forEach(function (k) {
         var mine = Array.isArray(local[k]) ? local[k].map(String) : [], theirs = Array.isArray(j.seen[k]) ? j.seen[k].map(String) : [];
+        // each id keeps the later day either side knows (the server drops what's over 15 days)
+        theirs.forEach(function (x) { var d = theirAt[k] && theirAt[k][x]; if (typeof d === 'number') { at[k] = at[k] || {}; if (!(at[k][x] >= d)) at[k][x] = d; } });
         var all = mine.slice(); theirs.forEach(function (x) { if (all.indexOf(x) < 0) all.push(x); }); all = all.slice(-300);
         if (all.length > mine.length) added = true;
         if (mine.some(function (x) { return theirs.indexOf(x) < 0; })) theirsMissing = true;
         if (all.length) out[k] = all;
       });
       if (added) lset('averages_seen', out);
+      lset('averages_seen_at', at); seenTrim();
       if (theirsMissing) seenPush();
     }).catch(function () {});
     return settle(got, 1500);   // never holds the page up for long
@@ -1149,16 +1172,24 @@
     },
     seen: {
       read: function () { var v = lget('averages_seen'); return v && typeof v === 'object' && !Array.isArray(v) ? v : {}; },
-      has: function (kind, id) { var l = FSX.seen.read()[kind]; return Array.isArray(l) && l.indexOf(String(id)) >= 0; },
+      has: function (kind, id) {
+        var t = seenAge[kind + ':' + id];
+        if (t && Date.now() - t > SEEN_DAYS * 86400000) return true;   // over 15 days old: not new on any device
+        var l = FSX.seen.read()[kind]; return Array.isArray(l) && l.indexOf(String(id)) >= 0;
+      },
+      /** When each notification's item was posted (from its "ago"), for has()'s 15-day rule. */
+      ages: function (items) { var n = Date.now(); (items || []).forEach(function (it) { if (it && it.kind && it.raw != null && typeof it.ago === 'number' && it.ago < 99999) seenAge[it.kind + ':' + it.raw] = n - it.ago * 60000; }); },
       mark: function (kind, ids) {
         var v = FSX.seen.read(), l = Array.isArray(v[kind]) ? v[kind].map(String) : [];
-        [].concat(ids).forEach(function (id) { var s = String(id == null ? '' : id); if (s && l.indexOf(s) < 0) l.push(s); });
-        v[kind] = l.slice(-300); lset('averages_seen', v);
+        var at = seenAtRead(), d = today(); at[kind] = at[kind] && typeof at[kind] === 'object' ? at[kind] : {};
+        [].concat(ids).forEach(function (id) { var s = String(id == null ? '' : id); if (s && l.indexOf(s) < 0) { l.push(s); at[kind][s] = d; } });
+        v[kind] = l.slice(-300); lset('averages_seen', v); lset('averages_seen_at', at);
         seenPush(); try { window.dispatchEvent(new CustomEvent('fs:seen')); } catch (e) { /* fine */ }
       },
       unmark: function (kind, ids) {
         var v = FSX.seen.read(), drop = [].concat(ids).map(String), l = Array.isArray(v[kind]) ? v[kind].map(String) : [];
         v[kind] = l.filter(function (id) { return drop.indexOf(id) < 0; }); lset('averages_seen', v);
+        var at = seenAtRead(); if (at[kind]) { drop.forEach(function (id) { delete at[kind][id]; }); lset('averages_seen_at', at); }
         seenPush(); try { window.dispatchEvent(new CustomEvent('fs:seen')); } catch (e) { /* fine */ }
       },
     },
@@ -1444,6 +1475,7 @@
     var days = gradeHistory(courses);
     var WEEKS = weekStarts(now);
     var seen = window.FSX.seen;
+    seen.ages(updates.map(function (u) { return { kind: 'u', raw: u.id, ago: agoMin(u.when) }; }));
 
     // ---------- profile ----------
     var prof = window.FSX.lget('schoolagy_profile') || {};
@@ -1519,6 +1551,7 @@
       NT.push({ id: 'f:' + f.id, kind: 'f', raw: String(f.id), ago: Math.max(0, Math.round((now - f.at) / 60000)), c: f.course, k: 'new', ic: 'material', t: f.name || 'File', d: f.parentTitle ? 'In ' + f.parentTitle : 'New file', unread: true, mat: f.parent || '' });
     });
     // Only what's new to the student counts; seen ones (here or in Windowed) are already "seen".
+    seen.ages(NT);   // over 15 days old counts as seen (FSX.seen.has)
     var NT_SEEN_IDS = NT.filter(function (it) { return !it.unread || seen.has(it.kind, it.raw); }).map(function (it) { return it.id; });
 
     // ---------- every graded (or missing) piece of work, newest first ----------
