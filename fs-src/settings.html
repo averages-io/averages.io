@@ -4303,7 +4303,17 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   }
   if (window.AvAI) {
     window.AvAI.offered().then(o => { AIX.ok = o.ok; AIX.why = o.why || ''; if (!o.ok && SG.sec === 'ai') { SG.sec = 'account'; sgPane(); } return aiStat(); });
-    let aiT = 0; window.addEventListener('avai:state', () => { clearTimeout(aiT); aiT = setTimeout(aiStat, 120); });
+    // at most every 150 ms, and never put off by more events (it was a debounce, so a download's stream of updates
+    // kept pushing it back: the bar sat at 1% until the last file)
+    let aiT = 0; window.addEventListener('avai:state', () => { if (aiT) return; aiT = setTimeout(() => { aiT = 0; aiStat(); }, 150); });
+    // the download's bar and percent, changed in place (no redraw while bytes arrive)
+    window.addEventListener('avai:progress', e => {
+      const d = e.detail || {}, st = AIX.st; if (!st || !d.total) return;
+      st.busy = true; st.loaded = d.loaded; st.total = d.total;
+      const pct = Math.min(99, Math.floor(d.loaded / d.total * 100)), pane = $('sgPane');
+      const bar = pane.querySelector('[data-set="aiBar"] .av-ai-bar'); if (bar) { bar.setAttribute('aria-valuenow', pct); bar.firstElementChild.style.width = pct + '%'; }
+      const sub = pane.querySelector('[data-tog="aiOn"] small'); if (sub) sub.textContent = `Downloading… ${pct}% of ${window.AvAI.mb(d.total)}`;   // the page's translator picks up the new text
+    });
   }
   const AI_ERR = { no_space: 'There isn\'t enough free space on this device. Free some up and try again.' };
   function summary(id) {

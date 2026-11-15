@@ -106,7 +106,8 @@
     if (W && readyV && readyV !== v) { W.terminate(); W = null; }
     var V = VARIANTS[v]; readyV = v;
     ready = call({ t: 'load', model: V.model, dtype: V.dtype, files: V.files, total: V.bytes, device: DEV_WASM ? 'wasm' : 'webgpu' }, function (p) {
-      if (DL) { DL.loaded = Math.min(p.loaded || 0, DL.total); changed(); }
+      // the bar: a light event while bytes arrive (avai:progress, ~10 a second); avai:state only when something changes
+      if (DL) { DL.loaded = Math.min(p.loaded || 0, DL.total); var n = Date.now(); if (n - (DL.shown || 0) > 100) { DL.shown = n; window.dispatchEvent(new CustomEvent('avai:progress', { detail: { loaded: DL.loaded, total: DL.total } })); } }
     }).catch(function (e) { ready = null; readyV = ''; throw e; });
     return ready;
   }
