@@ -4278,7 +4278,9 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const billingOn = () => !!(LIVE.billing && LIVE.billing.enabled);
   // with billing off, everything that would need Plus is free
   const plusOk = () => plus() || !billingOn();
-  const tile = s => `<span class="sg-tile" style="--c:${s.c}" aria-hidden="true">${ico(s.ic)}</span>`;
+  // A.I. search's icon is dim while it's off and lights up (the page's text color, like the icon on its own page) while it's on
+  var AI_LIT = false;
+  const tile = s => `<span class="sg-tile" style="--c:${s.id === 'ai' && AI_LIT ? 'var(--ink)' : s.c}" aria-hidden="true">${ico(s.ic)}</span>`;
   const tx = (t, sub) => `<span class="tx"><b>${t}</b>${sub ? `<small>${sub}</small>` : ''}</span>`;
   const row = (id, t, sub, right = '', cls = '') => `<div class="sg-row${cls}" data-set="${id}">${tx(t, sub)}${right}</div>`;
   const tog = (id, t, sub, on, dis = false, lead = '') => `<button class="sg-row${lead ? ' has-ic' : ''}" role="switch" aria-checked="${!!on}" data-set="${id}" data-tog="${id}"${dis ? ' aria-disabled="true"' : ''}>${lead}${tx(t, sub)}<span class="sw${on ? ' on' : ''}" aria-hidden="true"></span></button>`;
@@ -4299,7 +4301,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const secOn = s => s.id !== 'ai' || AIX.ok;
   function aiStat() {
     if (!window.AvAI) return;
-    return window.AvAI.status().then(st => { AIX.st = st; sgNav(); if (['ai', 'appearance'].includes(SG.sec) && !$('sgPane').contains(document.activeElement && document.activeElement.closest('input'))) sgPane(); });
+    return window.AvAI.status().then(st => { AIX.st = st; AI_LIT = !!(st.on && st.saved && !st.blocked); sgNav(); if (['ai', 'appearance'].includes(SG.sec) && !$('sgPane').contains(document.activeElement && document.activeElement.closest('input'))) sgPane(); });
   }
   if (window.AvAI) {
     window.AvAI.offered().then(o => { AIX.ok = o.ok; AIX.why = o.why || ''; if (!o.ok && SG.sec === 'ai') { SG.sec = 'account'; sgPane(); } return aiStat(); });
