@@ -154,69 +154,20 @@
     var n = Date.now(); if (n - (DL.shown || 0) > 100) { DL.shown = n; window.dispatchEvent(new CustomEvent('avai:progress', { detail: { loaded: DL.loaded, total: DL.total } })); }
   }
 
-  // ---------- downloading in the background (2026-11-16) ----------
-  // Chrome and Edge's Background Fetch: the browser downloads the files itself, so it keeps going when the student opens
-  // another page or closes the tab (the browser shows its own download progress). The service worker (/sw.js) puts each
-  // file in the same cache when it's done. Every page picks a running download back up (refresh below). Browsers
-  // without it download in the page, and pick up where they stopped: finished files are kept, only the rest is fetched.
-  var BG = 'averages-ai-', WASM_URL = '/ai/runtime/ort-1.31.0-dev.20260914/ort-wasm-simd-threaded.asyncify.wasm';
-  function bgOk() { return !DEV_WASM && 'serviceWorker' in navigator && typeof window.BackgroundFetchManager === 'function'; }
-  function swReg() {
-    return navigator.serviceWorker.getRegistration('/').then(function (r) { return r || navigator.serviceWorker.register('/sw.js', { scope: '/' }); })
-      .then(function () { return navigator.serviceWorker.ready; });
-  }
-  // the files this version still needs, and the bytes already saved
-  function missing(V) {
-    return cacheKeys().then(function (ks) {
-      var have = {}; ks.forEach(function (x) { have[x.k.url] = x; });
-      var urls = V.files.map(function (f) { return location.origin + '/ai/models/' + V.model + '/' + f; }).concat(location.origin + WASM_URL);
-      var kept = urls.filter(function (u) { return have[u]; });
-      return Promise.all(kept.map(function (u) { return have[u].c.match(have[u].k).then(function (r) { return r ? +r.headers.get('content-length') || 0 : 0; }); }))
-        .then(function (sizes) { return { urls: urls.filter(function (u) { return !have[u]; }), have: sizes.reduce(function (a, b) { return a + b; }, 0) }; });
-    });
-  }
-  function bgFiles(v) {
-    var V = VARIANTS[v], id = BG + V.model;
-    return missing(V).then(function (m) {
-      if (!m.urls.length) return 'done';
-      return swReg().then(function (reg) {
-        return reg.backgroundFetch.get(id).then(function (bg) {
-          return bg || reg.backgroundFetch.fetch(id, m.urls, { title: 'Averages A.I. search', icons: [{ src: '/brand/ai-mascot.svg', sizes: 'any', type: 'image/svg+xml' }] });
-        });
-      }).then(function (bg) { return follow(bg, m.have, V); }, function () { return 'page'; });   // no Background Fetch here after all: the page downloads it
-    });
-  }
-  // a running Background Fetch: its progress on the bar, done once the service worker has saved the files
-  function follow(bg, have, V) {
-    return new Promise(function (yes, no) {
-      var done = false;
-      var finish = function () {
-        if (done || !bg.result) return;
-        done = true;
-        if (bg.result !== 'success') { no(new Error(bg.failureReason === 'aborted' ? 'stopped' : 'download_failed')); return; }
-        // the service worker is saving them: wait until the model file is in the cache (up to 2 minutes)
-        var t0 = Date.now(), look = function () {
-          missing(V).then(function (m) { if (!m.urls.length) yes('done'); else if (Date.now() - t0 > 120000) no(new Error('download_failed')); else setTimeout(look, 500); }, no);
-        };
-        look();
-      };
-      bg.addEventListener('progress', function () { progressed(have + (bg.downloaded || 0)); finish(); });
-      progressed(have + (bg.downloaded || 0)); finish();
-      // a browser that took the job but doesn't start it (some keep background downloads waiting): after 20 s with
-      // nothing downloaded, it's called off and this page downloads it instead
-      setTimeout(function () {
-        if (done || bg.result || (bg.downloaded || 0) > 0) return;
-        done = true; bg.abort().catch(function () {}); yes('page');
-      }, 20000);
-    });
-  }
-  function bgAbort() {
-    if (!bgOk()) return;
+  // A download that was going on when the page closed carries on in the next page (refresh below): finished files are
+  // kept, only the rest is fetched. (A Background Fetch, so it kept going with no page open, was tried 2026-11-16 and
+  // taken out: it didn't work. Any left over from then is called off.)
+  function bgCleanup() {
+    if (!('serviceWorker' in navigator) || typeof window.BackgroundFetchManager !== 'function') return;
     navigator.serviceWorker.getRegistration('/').then(function (reg) {
       if (!reg || !reg.backgroundFetch) return;
-      Object.keys(VARIANTS).forEach(function (k) { reg.backgroundFetch.get(BG + VARIANTS[k].model).then(function (b) { if (b) b.abort(); }); });
+      return reg.backgroundFetch.getIds().then(function (ids) { ids.filter(function (id) { return id.indexOf('averages-ai-') === 0; }).forEach(function (id) { reg.backgroundFetch.get(id).then(function (b) { if (b) b.abort(); }); }); });
     }).catch(function () {});
   }
+
+  // leaving the page mid-download: the browser asks "Leave site?" first (it picks the words; leaving anyway, the next
+  // page carries on from the files already saved)
+  window.addEventListener('beforeunload', function (e) { if (DL) { e.preventDefault(); e.returnValue = ''; } });
 
   /** Download the model (once) and check it runs here. v: 'q4' or 'q8'. */
   function download(v) {
@@ -232,9 +183,7 @@
       // remembered, so any page picks it back up if this one closes first
       var o1 = opts(); o1.pending = v; saveOpts(o1);
       changed();
-      return bgOk() ? bgFiles(v) : null;
-    }).then(function () {
-      return load(v);   // the files are saved by now (or, without Background Fetch, the worker downloads what's left)
+      return load(v);   // the worker downloads what isn't saved yet
     }).then(function () {
       o = opts(); o.on = true; o.v = v; delete o.pending; saveOpts(o);
       // the other version, if there was one: deleted (only one is kept)
@@ -259,7 +208,7 @@
   }
   /** Delete everything (model and runtime) and turn A.I. search off. */
   function remove() {
-    stop(); bgAbort(); DL = null; LAST_ERR = '';
+    stop(); DL = null; LAST_ERR = '';
     var o = opts(); o.on = false; delete o.pending; saveOpts(o);
     return (window.caches ? caches.delete(CACHE).catch(function () {}) : Promise.resolve()).then(function () { changed(); });
   }
@@ -512,13 +461,14 @@
   var QWORD = /[?¿？]|^(what|whats|what's|when|where|who|which|why|how|is|are|am|do|does|did|can|show|find|list|any|qu[eé]|cu[aá]ndo|d[oó]nde|qui[eé]n|cu[aá]l|c[oó]mo|tengo|hay|my|mis|mi|mes|mon|ma|meus|minhas|meu|minha|meine|mein|open|abrir|ouvrir|öffne|quoi|quand|o[uù]|qui|quel|quelle|est-ce|ai-je|o que|quando|onde|quem|qual|tenho|was|wann|wo|wer|welche|habe|gibt)\b|什么|什麼|哪|谁|吗|嗎|有没有|我的|打开/i;
   var looksAsked = function (q) { return QWORD.test(q.trim()) || q.trim().split(/\s+/).length >= 4; };
   var STATE = { ok: null, saved: false, skip: '' };   // skip: words the student chose to search as words
-  var autoTried = false, resumed = false;
+  var autoTried = false, resumed = false, cleaned = false;
   function refresh() {
     if (!window.FSD || !window.FSD.me || !window.FSD.me.uid) return Promise.resolve();
     return offered().then(function (o) {
       STATE.ok = o.ok && !o.potato;
       if (!o.ok) return;
       var pend = opts().pending;
+      if (!cleaned) { cleaned = true; bgCleanup(); }
       if (pend && VARIANTS[pend] && !DL && !resumed) { resumed = true; download(pend).catch(function () {}); }
       return status().then(function (s) {
         STATE.saved = s.on && s.saved && !s.blocked;
