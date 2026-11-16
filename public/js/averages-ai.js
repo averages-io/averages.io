@@ -608,6 +608,8 @@
   css.textContent = [
     '.av-ai-ic{width:22px;height:22px;flex:none;margin:0 7px;color:var(--ink)}',
     '.av-ai-row + .s-tabs{margin-top:6px}',
+    // Home's dropdown has no top padding (its first row is a label with its own): room above the A.I. row and the answer
+    '.pop.spop > .av-ai-row:first-child{margin-top:8px}.pop.spop > .av-ai-panel{padding-top:8px}',
     '.av-ai-cl{flex:none;display:grid;place-items:center;width:30px;height:30px;border-radius:9px;background:var(--c);color:#fff;font-size:11px;font-weight:800;letter-spacing:.02em}',
     '.av-ai-panel{display:flex;flex-direction:column;gap:2px}',
     '.av-ai-h{display:flex!important;flex-wrap:wrap;align-items:center;gap:6px;text-transform:none!important;letter-spacing:0!important}',
