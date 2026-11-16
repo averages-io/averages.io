@@ -504,6 +504,27 @@
   function floatBox(b, on) {
     var box = b.kind === 'cmdk' ? b.res.closest('.cmdk') : b.res;
     if (box) box.classList.toggle('av-ai-float', !!on);
+    if (on) dim(b, box);
+  }
+  // everything but the search field greys out while it works: a dark layer with a hole where the field is (a big
+  // shadow around a box the field's size), under the pill. Ctrl K already darkens the page behind its window.
+  function dim(b, box) {
+    if (b.kind !== 'home' || document.querySelector('.av-ai-dim')) return;
+    var field = b.input.closest('label') || b.input, d = document.createElement('div');
+    d.className = 'av-ai-dim'; d.setAttribute('aria-hidden', 'true');
+    var place = function () { var r = field.getBoundingClientRect(), cs = getComputedStyle(field);
+      d.style.left = r.left + 'px'; d.style.top = r.top + 'px'; d.style.width = r.width + 'px'; d.style.height = r.height + 'px'; d.style.borderRadius = cs.borderRadius; };
+    place(); document.body.appendChild(d);
+    if (d.animate && !calmNow()) d.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 220, easing: 'ease-out' });
+    // follows the field, and goes once the box is back (the answer, typing again, Escape, a click away)
+    var tick = setInterval(function () {
+      if (!box.isConnected || !box.classList.contains('av-ai-float')) {
+        clearInterval(tick);
+        if (d.animate && !calmNow()) d.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 200, easing: 'ease-in' }).onfinish = function () { d.remove(); }; else d.remove();
+        return;
+      }
+      place();
+    }, 60);
   }
   function wait(b, starting) {
     floatBox(b, true);
@@ -628,14 +649,16 @@
     '.potato-mode .av-ai-load{animation:none;background:#E5484D}',
     '.av-ai-lead{margin:6px 12px 6px;color:var(--ink);font-size:16px;font-weight:800}',
     // waiting: the dark pill, its ring of 8 dots fading round, and the status shimmering
-    '.av-ai-pillwrap{display:flex;justify-content:center;padding:20px 0 18px}',
+    '.av-ai-pillwrap{display:flex;justify-content:center;padding:24px 0 22px}',
+    '.av-ai-dim{position:fixed;z-index:59;pointer-events:none;box-shadow:0 0 0 200vmax rgba(8,9,12,.55)}',
     // while the pill shows, the box behind it goes (Home: the dropdown; Ctrl K: the window, leaving just its search field)
     '.pop.spop,.cmdk{transition:background-color .2s ease,box-shadow .2s ease}',
     '.pop.spop.av-ai-float{background:transparent;box-shadow:none}.pop.spop.av-ai-float > .pop-foot{display:none}',
     '.cmdk.av-ai-float{background:transparent;box-shadow:none;overflow:visible}.cmdk.av-ai-float .cmdk-foot{display:none}',
+    '.cmdk-scrim{transition:background-color .2s ease}.cmdk-scrim:has(.cmdk.av-ai-float){background:rgba(8,9,12,.55)}',
     '.cmdk.av-ai-float .cmdk-in{background:var(--field);border-radius:20px;border-bottom-color:transparent;box-shadow:var(--pop-shadow)}',
-    '.av-ai-pill{display:inline-flex;align-items:center;gap:11px;height:42px;padding:0 20px 0 15px;border-radius:21px;background:#121318;color:#f4f4f7;box-shadow:0 8px 28px rgba(0,0,0,.28),inset 0 0 0 1px rgba(255,255,255,.07);font-size:15px;font-weight:700;white-space:nowrap}',
-    '.av-ai-dots{position:relative;flex:none;width:18px;height:18px}.av-ai-dots i{position:absolute;left:7.6px;top:0;width:2.8px;height:2.8px;border-radius:50%;background:#fff;transform-origin:1.4px 9px;animation:avAiDot .8s linear infinite}',
+    '.av-ai-pill{display:inline-flex;align-items:center;gap:14px;height:58px;padding:0 28px 0 22px;border-radius:29px;background:#121318;color:#f4f4f7;box-shadow:0 12px 36px rgba(0,0,0,.35),inset 0 0 0 1px rgba(255,255,255,.08);font-size:18px;font-weight:700;white-space:nowrap}',
+    '.av-ai-dots{position:relative;flex:none;width:24px;height:24px}.av-ai-dots i{position:absolute;left:10.2px;top:0;width:3.6px;height:3.6px;border-radius:50%;background:#fff;transform-origin:1.8px 12px;animation:avAiDot .8s linear infinite}',
     '@keyframes avAiDot{0%{opacity:1}100%{opacity:.15}}',
     '.av-ai-step{display:inline-block;background:linear-gradient(90deg,#8e909b 0%,#8e909b 38%,#ffffff 50%,#8e909b 62%,#8e909b 100%) 0 0/260% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:avAiText 1.7s linear infinite}',
     '@keyframes avAiText{from{background-position:100% 0}to{background-position:0 0}}',
