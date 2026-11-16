@@ -500,7 +500,13 @@
   // When the answer is ready the pill opens out into it.
   var SEARCHING = { find_work: 'Searching assignments', find_grades: 'Searching grades', what_it_takes: 'Working out your grade',
     find_posts: 'Searching posts', find_messages: 'Searching messages', find_files: 'Searching files', open_page: 'Opening it', word_search: 'Searching' };
+  // the search box's dropdown (or the Ctrl K window around the field) steps back while it works, so only the pill shows
+  function floatBox(b, on) {
+    var box = b.kind === 'cmdk' ? b.res.closest('.cmdk') : b.res;
+    if (box) box.classList.toggle('av-ai-float', !!on);
+  }
   function wait(b, starting) {
+    floatBox(b, true);
     var dots = ''; for (var d = 0; d < 8; d++) dots += '<i style="transform:rotate(' + (d * 45) + 'deg);animation-delay:' + (-0.8 + d * 0.1).toFixed(1) + 's"></i>';
     panel(b, '<div class="av-ai-pillwrap"><div class="av-ai-pill" role="status"><span class="av-ai-dots" aria-hidden="true">' + dots + '</span><span class="av-ai-step">' + esc(t(starting ? 'Starting A.I.' : 'Working')) + '</span></div></div>');
     var pill = b.res.querySelector('.av-ai-pill');
@@ -527,6 +533,7 @@
   // the answer replaces the pill: the box grows from the pill's height to the answer's, then the rows come in
   function open(b, html) {
     var h0 = b.res.offsetHeight;
+    floatBox(b, false);
     panel(b, html);
     if (calmNow() || !b.res.animate) return;
     var h1 = b.res.offsetHeight;
@@ -591,7 +598,11 @@
     else if (el.dataset.avai === 'words') { STATE.skip = q; turn++; b.input.dispatchEvent(new Event('input', { bubbles: true })); b.input.focus({ preventScroll: true }); }
   }, true);
   // typing again: back to the normal results (the page redraws them), and the A.I. row may come back
-  document.addEventListener('input', function (e) { if (e.target && (e.target.id === 'bigInput' || e.target.id === 'cmdkInput') && (e.target.value || '').trim() !== STATE.skip) STATE.skip = ''; }, true);
+  document.addEventListener('input', function (e) {
+    if (!e.target || (e.target.id !== 'bigInput' && e.target.id !== 'cmdkInput')) return;
+    if ((e.target.value || '').trim() !== STATE.skip) STATE.skip = '';
+    document.querySelectorAll('.av-ai-float').forEach(function (x) { x.classList.remove('av-ai-float'); });   // typing again: the box is back
+  }, true);
 
   var css = document.createElement('style');
   css.textContent = [
@@ -616,6 +627,11 @@
     '.av-ai-lead{margin:6px 12px 6px;color:var(--ink);font-size:16px;font-weight:800}',
     // waiting: the dark pill, its ring of 8 dots fading round, and the status shimmering
     '.av-ai-pillwrap{display:flex;justify-content:center;padding:20px 0 18px}',
+    // while the pill shows, the box behind it goes (Home: the dropdown; Ctrl K: the window, leaving just its search field)
+    '.pop.spop,.cmdk{transition:background-color .2s ease,box-shadow .2s ease}',
+    '.pop.spop.av-ai-float{background:transparent;box-shadow:none}.pop.spop.av-ai-float > .pop-foot{display:none}',
+    '.cmdk.av-ai-float{background:transparent;box-shadow:none;overflow:visible}.cmdk.av-ai-float .cmdk-foot{display:none}',
+    '.cmdk.av-ai-float .cmdk-in{background:var(--field);border-radius:20px;border-bottom-color:transparent;box-shadow:var(--pop-shadow)}',
     '.av-ai-pill{display:inline-flex;align-items:center;gap:11px;height:42px;padding:0 20px 0 15px;border-radius:21px;background:#121318;color:#f4f4f7;box-shadow:0 8px 28px rgba(0,0,0,.28),inset 0 0 0 1px rgba(255,255,255,.07);font-size:15px;font-weight:700;white-space:nowrap}',
     '.av-ai-dots{position:relative;flex:none;width:18px;height:18px}.av-ai-dots i{position:absolute;left:7.6px;top:0;width:2.8px;height:2.8px;border-radius:50%;background:#fff;transform-origin:1.4px 9px;animation:avAiDot .8s linear infinite}',
     '@keyframes avAiDot{0%{opacity:1}100%{opacity:.15}}',
