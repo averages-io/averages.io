@@ -1214,3 +1214,4 @@
 1214|Pesquisando
 1215|Revisando resultados
 1216|Nosso modelo de {x} parâmetros, totalmente no dispositivo e bom para pedir dados.
+1217|Baixando… #% de # MB. Você pode continuar usando o Averages.

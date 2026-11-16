@@ -4314,7 +4314,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       st.busy = true; st.loaded = d.loaded; st.total = d.total;
       const pct = Math.min(99, Math.floor(d.loaded / d.total * 100)), pane = $('sgPane');
       const bar = pane.querySelector('[data-set="aiBar"] .av-ai-bar'); if (bar) { bar.setAttribute('aria-valuenow', pct); bar.firstElementChild.style.width = pct + '%'; }
-      const sub = pane.querySelector('[data-tog="aiOn"] small'); if (sub) sub.textContent = `Downloading… ${pct}% of ${window.AvAI.mb(d.total)}`;   // the page's translator picks up the new text
+      const sub = pane.querySelector('[data-tog="aiOn"] small'); if (sub) sub.textContent = `Downloading… ${pct}% of ${window.AvAI.mb(d.total)}. You can keep using Averages.`;   // the page's translator picks up the new text
     });
   }
   const AI_ERR = { no_space: 'There isn\'t enough free space on this device. Free some up and try again.', browser_cant: 'This browser can\'t run A.I. search yet. Try Chrome or Edge.' };
@@ -4413,7 +4413,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       const pct = st.busy && st.total ? Math.min(99, Math.floor(st.loaded / st.total * 100)) : 0;
       const pot = document.body.classList.contains('potato-mode');
       return `
-      ${grp('', tog('aiOn', 'Almost Intelligent search', st.testing ? 'Checking that this browser can run it…' : st.busy ? `Downloading… ${pct}% of ${A.mb(st.total)}` : on && st.blocked ? 'Saved on this device, but this browser can\'t run it yet.' : `Our ${V[cur].params || '350M'} parameter model, completely on device and good for asking for data.`, on || st.busy, false, `<span class="sg-app">${ico('ai')}</span>`) +
+      ${grp('', tog('aiOn', 'Almost Intelligent search', st.testing ? 'Checking that this browser can run it…' : st.busy ? `Downloading… ${pct}% of ${A.mb(st.total)}. You can keep using Averages.` : on && st.blocked ? 'Saved on this device, but this browser can\'t run it yet.' : `Our ${V[cur].params || '350M'} parameter model, completely on device and good for asking for data.`, on || st.busy, false, `<span class="sg-app">${ico('ai')}</span>`) +
         (st.busy && !st.testing ? `<div class="sg-row" data-set="aiBar"><div class="av-ai-bar" role="progressbar" aria-label="Downloading A.I. search" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><i style="width:${pct}%"></i></div></div>` : '') +
         // a browser that tested and can't run it (Firefox's WebGPU, for now): the download stays, and it's tested again by
         // itself when the browser updates

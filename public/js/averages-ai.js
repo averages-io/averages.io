@@ -142,10 +142,80 @@
     if (W && readyV && readyV !== v) stop();
     var V = VARIANTS[v]; readyV = v;
     ready = call({ t: 'load', model: V.model, dtype: V.dtype, files: V.files, total: V.bytes, device: DEV_WASM ? 'wasm' : 'webgpu' }, function (p) {
-      // the bar: a light event while bytes arrive (avai:progress, ~10 a second); avai:state only when something changes
-      if (DL) { DL.loaded = Math.min(p.loaded || 0, DL.total); var n = Date.now(); if (n - (DL.shown || 0) > 100) { DL.shown = n; window.dispatchEvent(new CustomEvent('avai:progress', { detail: { loaded: DL.loaded, total: DL.total } })); } }
+      if (DL) progressed(p.loaded || 0);
     }).catch(function (e) { ready = null; readyV = ''; throw e; });
     return ready;
+  }
+
+  // the bar: a light event while bytes arrive (avai:progress, ~10 a second); avai:state only when something changes
+  function progressed(loaded) {
+    if (!DL) return;
+    DL.loaded = Math.min(loaded, DL.total);
+    var n = Date.now(); if (n - (DL.shown || 0) > 100) { DL.shown = n; window.dispatchEvent(new CustomEvent('avai:progress', { detail: { loaded: DL.loaded, total: DL.total } })); }
+  }
+
+  // ---------- downloading in the background (2026-11-16) ----------
+  // Chrome and Edge's Background Fetch: the browser downloads the files itself, so it keeps going when the student opens
+  // another page or closes the tab (the browser shows its own download progress). The service worker (/sw.js) puts each
+  // file in the same cache when it's done. Every page picks a running download back up (refresh below). Browsers
+  // without it download in the page, and pick up where they stopped: finished files are kept, only the rest is fetched.
+  var BG = 'averages-ai-', WASM_URL = '/ai/runtime/ort-1.31.0-dev.20260914/ort-wasm-simd-threaded.asyncify.wasm';
+  function bgOk() { return !DEV_WASM && 'serviceWorker' in navigator && typeof window.BackgroundFetchManager === 'function'; }
+  function swReg() {
+    return navigator.serviceWorker.getRegistration('/').then(function (r) { return r || navigator.serviceWorker.register('/sw.js', { scope: '/' }); })
+      .then(function () { return navigator.serviceWorker.ready; });
+  }
+  // the files this version still needs, and the bytes already saved
+  function missing(V) {
+    return cacheKeys().then(function (ks) {
+      var have = {}; ks.forEach(function (x) { have[x.k.url] = x; });
+      var urls = V.files.map(function (f) { return location.origin + '/ai/models/' + V.model + '/' + f; }).concat(location.origin + WASM_URL);
+      var kept = urls.filter(function (u) { return have[u]; });
+      return Promise.all(kept.map(function (u) { return have[u].c.match(have[u].k).then(function (r) { return r ? +r.headers.get('content-length') || 0 : 0; }); }))
+        .then(function (sizes) { return { urls: urls.filter(function (u) { return !have[u]; }), have: sizes.reduce(function (a, b) { return a + b; }, 0) }; });
+    });
+  }
+  function bgFiles(v) {
+    var V = VARIANTS[v], id = BG + V.model;
+    return missing(V).then(function (m) {
+      if (!m.urls.length) return 'done';
+      return swReg().then(function (reg) {
+        return reg.backgroundFetch.get(id).then(function (bg) {
+          return bg || reg.backgroundFetch.fetch(id, m.urls, { title: 'Averages A.I. search', icons: [{ src: '/brand/ai-mascot.svg', sizes: 'any', type: 'image/svg+xml' }] });
+        });
+      }).then(function (bg) { return follow(bg, m.have, V); }, function () { return 'page'; });   // no Background Fetch here after all: the page downloads it
+    });
+  }
+  // a running Background Fetch: its progress on the bar, done once the service worker has saved the files
+  function follow(bg, have, V) {
+    return new Promise(function (yes, no) {
+      var done = false;
+      var finish = function () {
+        if (done || !bg.result) return;
+        done = true;
+        if (bg.result !== 'success') { no(new Error(bg.failureReason === 'aborted' ? 'stopped' : 'download_failed')); return; }
+        // the service worker is saving them: wait until the model file is in the cache (up to 2 minutes)
+        var t0 = Date.now(), look = function () {
+          missing(V).then(function (m) { if (!m.urls.length) yes('done'); else if (Date.now() - t0 > 120000) no(new Error('download_failed')); else setTimeout(look, 500); }, no);
+        };
+        look();
+      };
+      bg.addEventListener('progress', function () { progressed(have + (bg.downloaded || 0)); finish(); });
+      progressed(have + (bg.downloaded || 0)); finish();
+      // a browser that took the job but doesn't start it (some keep background downloads waiting): after 20 s with
+      // nothing downloaded, it's called off and this page downloads it instead
+      setTimeout(function () {
+        if (done || bg.result || (bg.downloaded || 0) > 0) return;
+        done = true; bg.abort().catch(function () {}); yes('page');
+      }, 20000);
+    });
+  }
+  function bgAbort() {
+    if (!bgOk()) return;
+    navigator.serviceWorker.getRegistration('/').then(function (reg) {
+      if (!reg || !reg.backgroundFetch) return;
+      Object.keys(VARIANTS).forEach(function (k) { reg.backgroundFetch.get(BG + VARIANTS[k].model).then(function (b) { if (b) b.abort(); }); });
+    }).catch(function () {});
   }
 
   /** Download the model (once) and check it runs here. v: 'q4' or 'q8'. */
@@ -159,10 +229,14 @@
     DL.p = space.then(function (est) {
       if (est && est.quota && est.quota - (est.usage || 0) < V.bytes * 1.1) throw new Error('no_space');
       if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(function () {});
+      // remembered, so any page picks it back up if this one closes first
+      var o1 = opts(); o1.pending = v; saveOpts(o1);
       changed();
-      return load(v);
+      return bgOk() ? bgFiles(v) : null;
     }).then(function () {
-      o.on = true; o.v = v; saveOpts(o);
+      return load(v);   // the files are saved by now (or, without Background Fetch, the worker downloads what's left)
+    }).then(function () {
+      o = opts(); o.on = true; o.v = v; delete o.pending; saveOpts(o);
       // the other version, if there was one: deleted (only one is kept)
       return prev !== v ? removeModel(prev) : null;
     }).then(function () { DL = null; changed(); return selfTest(v); }).then(function (ok) {
@@ -172,6 +246,7 @@
     }, function (e) {
       // the graphics can't even start it (some browsers fail here, not on the first search): same as a failed test
       if (e && e.message === 'stopped') { DL = null; changed(); throw e; }   // turned off while it downloaded or checked
+      if (e && e.message === 'download_failed') { var o3 = opts(); delete o3.pending; saveOpts(o3); }
       if (e && GPU_ERR.test(e.message || '')) { setCheck(v, false); o.on = true; o.v = v; saveOpts(o); e = new Error('browser_cant'); }
       DL = null; LAST_ERR = e && e.message || 'failed'; changed(); throw e;
     });
@@ -184,8 +259,8 @@
   }
   /** Delete everything (model and runtime) and turn A.I. search off. */
   function remove() {
-    stop(); DL = null; LAST_ERR = '';
-    var o = opts(); o.on = false; saveOpts(o);
+    stop(); bgAbort(); DL = null; LAST_ERR = '';
+    var o = opts(); o.on = false; delete o.pending; saveOpts(o);
     return (window.caches ? caches.delete(CACHE).catch(function () {}) : Promise.resolve()).then(function () { changed(); });
   }
 
@@ -437,12 +512,14 @@
   var QWORD = /[?¿？]|^(what|whats|what's|when|where|who|which|why|how|is|are|am|do|does|did|can|show|find|list|any|qu[eé]|cu[aá]ndo|d[oó]nde|qui[eé]n|cu[aá]l|c[oó]mo|tengo|hay|my|mis|mi|mes|mon|ma|meus|minhas|meu|minha|meine|mein|open|abrir|ouvrir|öffne|quoi|quand|o[uù]|qui|quel|quelle|est-ce|ai-je|o que|quando|onde|quem|qual|tenho|was|wann|wo|wer|welche|habe|gibt)\b|什么|什麼|哪|谁|吗|嗎|有没有|我的|打开/i;
   var looksAsked = function (q) { return QWORD.test(q.trim()) || q.trim().split(/\s+/).length >= 4; };
   var STATE = { ok: null, saved: false, skip: '' };   // skip: words the student chose to search as words
-  var autoTried = false;
+  var autoTried = false, resumed = false;
   function refresh() {
     if (!window.FSD || !window.FSD.me || !window.FSD.me.uid) return Promise.resolve();
     return offered().then(function (o) {
       STATE.ok = o.ok && !o.potato;
       if (!o.ok) return;
+      var pend = opts().pending;
+      if (pend && VARIANTS[pend] && !DL && !resumed) { resumed = true; download(pend).catch(function () {}); }
       return status().then(function (s) {
         STATE.saved = s.on && s.saved && !s.blocked;
         // turned on and saved, but not tested in this browser yet (it updated, or the test never ran): test it now

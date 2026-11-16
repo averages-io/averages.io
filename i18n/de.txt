@@ -1214,3 +1214,4 @@
 1214|Wird gesucht
 1215|Ergebnisse werden geprüft
 1216|Unser Modell mit {x} Parametern, komplett auf dem Gerät und gut, um nach Daten zu fragen.
+1217|Wird heruntergeladen… #% von # MB. Du kannst Averages weiter nutzen.

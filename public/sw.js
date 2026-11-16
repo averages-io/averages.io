@@ -77,3 +77,46 @@ self.addEventListener('notificationclick', (event) => {
     })()
   );
 });
+
+/*
+ * A.I. search's model download (2026-11-16, public/js/averages-ai.js). The page asks the browser for a Background
+ * Fetch, so the download keeps going when the student opens another page or closes the tab. When it finishes, each
+ * file goes into the cache the page reads ("averages-ai-v1"), under its own address. Only files from our own /ai/.
+ */
+const AI_CACHE = 'averages-ai-v1';
+const isAi = (bg) => bg && typeof bg.id === 'string' && bg.id.indexOf('averages-ai-') === 0;
+async function aiKeep(bg) {
+  const cache = await caches.open(AI_CACHE);
+  const records = await bg.matchAll();
+  for (const record of records) {
+    try {
+      const url = new URL(record.request.url);
+      if (url.origin !== self.location.origin || url.pathname.indexOf('/ai/') !== 0) continue;
+      const res = await record.responseReady;
+      if (res && res.ok) await cache.put(url.href, res);
+    } catch (e) {
+      // that file didn't come: the page asks for whatever is still missing next time
+    }
+  }
+}
+async function aiTell(msg) {
+  const tabs = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+  tabs.forEach((c) => c.postMessage(msg));
+}
+self.addEventListener('backgroundfetchsuccess', (event) => {
+  if (!isAi(event.registration)) return;
+  event.waitUntil((async () => {
+    await aiKeep(event.registration);
+    try { await event.updateUI({ title: 'A.I. search is downloaded' }); } catch (e) { /* no UI to update */ }
+    await aiTell({ t: 'avai-downloaded' });
+  })());
+});
+self.addEventListener('backgroundfetchfail', (event) => {
+  if (!isAi(event.registration)) return;
+  // keep what did arrive, so the next try only fetches the rest
+  event.waitUntil((async () => { await aiKeep(event.registration); await aiTell({ t: 'avai-download-failed' }); })());
+});
+self.addEventListener('backgroundfetchclick', (event) => {
+  if (!isAi(event.registration)) return;
+  event.waitUntil(self.clients.openWindow ? self.clients.openWindow('/IS/settings?section=ai') : Promise.resolve());
+});
