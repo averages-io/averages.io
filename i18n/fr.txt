@@ -1213,3 +1213,4 @@
 1213|Ouverture
 1214|Recherche
 1215|Vérification des résultats
+1216|Notre modèle de {x} paramètres, entièrement sur l'appareil et idéal pour demander des données.

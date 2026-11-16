@@ -20,8 +20,8 @@
   var RUNTIME = 26861777;   // ort-wasm-simd-threaded.asyncify.wasm
   var COMMON = 7153421 + 25054 + 2022 + 210724 + 13310;   // tokenizer.json, tokenizer_config.json, config.json, generation_config.json, safety_words.json
   var VARIANTS = {
-    q4: { model: 'averages-search-q4-r6', dtype: 'q4f16', data: 'onnx/model_q4f16.onnx_data', files: ['config.json', 'generation_config.json', 'tokenizer.json', 'tokenizer_config.json', 'safety_words.json', 'onnx/model_q4f16.onnx', 'onnx/model_q4f16.onnx_data'], bytes: 1905888 + 236435712 + COMMON + RUNTIME, name: 'Standard' },
-    q8: { model: 'averages-search-q8-r6', dtype: 'q8', data: 'onnx/model_quantized.onnx_data', files: ['config.json', 'generation_config.json', 'tokenizer.json', 'tokenizer_config.json', 'safety_words.json', 'onnx/model_quantized.onnx', 'onnx/model_quantized.onnx_data'], bytes: 1855514 + 472699392 + COMMON + RUNTIME, name: 'Higher quality' },
+    q4: { model: 'averages-search-q4-r6', dtype: 'q4f16', data: 'onnx/model_q4f16.onnx_data', files: ['config.json', 'generation_config.json', 'tokenizer.json', 'tokenizer_config.json', 'safety_words.json', 'onnx/model_q4f16.onnx', 'onnx/model_q4f16.onnx_data'], bytes: 1905888 + 236435712 + COMMON + RUNTIME, name: 'Standard', params: '350M' },
+    q8: { model: 'averages-search-q8-r6', dtype: 'q8', data: 'onnx/model_quantized.onnx_data', files: ['config.json', 'generation_config.json', 'tokenizer.json', 'tokenizer_config.json', 'safety_words.json', 'onnx/model_quantized.onnx', 'onnx/model_quantized.onnx_data'], bytes: 1855514 + 472699392 + COMMON + RUNTIME, name: 'Higher quality', params: '350M' },
   };
   var LS = window.localStorage;
   function opts() { try { var o = JSON.parse(LS.getItem(STORE) || 'null'); return o && typeof o === 'object' ? o : {}; } catch (e) { return {}; } }

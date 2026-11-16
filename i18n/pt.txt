@@ -1213,3 +1213,4 @@
 1213|Abrindo
 1214|Pesquisando
 1215|Revisando resultados
+1216|Nosso modelo de {x} parâmetros, totalmente no dispositivo e bom para pedir dados.
