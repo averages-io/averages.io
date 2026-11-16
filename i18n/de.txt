@@ -1181,3 +1181,5 @@
 1181|Nichts ist als fehlend markiert. # Aufgaben sind verspätet (überfällig und nicht abgegeben). Frag nach verspäteten Aufgaben, um sie zu sehen.
 1182|Nichts ist als fehlend markiert. # Aufgabe ist verspätet (überfällig und nicht abgegeben). Frag nach verspäteten Aufgaben, um sie zu sehen.
 1183|Fast intelligente Suche
+1184|Suche in deinen eigenen Worten, auf diesem Gerät.
+1185|Suche in deinen eigenen Worten, auf diesem Gerät. Einmaliger Download von # MB.

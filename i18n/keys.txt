@@ -1181,3 +1181,5 @@
 1181|Nothing is marked missing. # assignments are late (past due and not turned in). Ask for late work to see them.
 1182|Nothing is marked missing. # assignment is late (past due and not turned in). Ask for late work to see it.
 1183|Almost Intelligent search
+1184|Search in your own words, on this device.
+1185|Search in your own words, on this device. One-time # MB download.

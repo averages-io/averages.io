@@ -4411,7 +4411,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       const pct = st.busy && st.total ? Math.min(99, Math.floor(st.loaded / st.total * 100)) : 0;
       const pot = document.body.classList.contains('potato-mode');
       return `
-      ${grp('', tog('aiOn', 'Almost Intelligent search', st.testing ? 'Checking that this browser can run it…' : st.busy ? `Downloading… ${pct}% of ${A.mb(st.total)}` : on && st.blocked ? 'Saved on this device, but this browser can\'t run it yet.' : on ? 'Ask in your own words in search anything, like "what\'s missing in chem" or "my lowest grade". It runs on this device.' : `Ask in your own words in search anything, like "what\'s missing in chem". Turning it on downloads ${A.mb(V[cur].bytes)} once. Then it runs on this device.`, on || st.busy, false, `<span class="sg-app">${ico('ai')}</span>`) +
+      ${grp('', tog('aiOn', 'Almost Intelligent search', st.testing ? 'Checking that this browser can run it…' : st.busy ? `Downloading… ${pct}% of ${A.mb(st.total)}` : on && st.blocked ? 'Saved on this device, but this browser can\'t run it yet.' : on ? 'Search in your own words, on this device.' : `Search in your own words, on this device. One-time ${A.mb(V[cur].bytes)} download.`, on || st.busy, false, `<span class="sg-app">${ico('ai')}</span>`) +
         (st.busy && !st.testing ? `<div class="sg-row" data-set="aiBar"><div class="av-ai-bar" role="progressbar" aria-label="Downloading A.I. search" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><i style="width:${pct}%"></i></div></div>` : '') +
         // a browser that tested and can't run it (Firefox's WebGPU, for now): the download stays, and it's tested again by
         // itself when the browser updates

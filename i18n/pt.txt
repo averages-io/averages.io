@@ -1181,3 +1181,5 @@
 1181|Nada está marcado como faltando. # tarefas estão atrasadas (vencidas e não entregues). Pergunte pelas tarefas atrasadas para vê-las.
 1182|Nada está marcado como faltando. # tarefa está atrasada (vencida e não entregue). Pergunte pelas tarefas atrasadas para vê-la.
 1183|Pesquisa quase inteligente
+1184|Pesquise com suas palavras, neste dispositivo.
+1185|Pesquise com suas palavras, neste dispositivo. Download único de # MB.

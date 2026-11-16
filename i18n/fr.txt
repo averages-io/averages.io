@@ -1181,3 +1181,5 @@
 1181|Rien n'est marqué manquant. # travaux sont en retard (date passée et non rendus). Demande les travaux en retard pour les voir.
 1182|Rien n'est marqué manquant. # travail est en retard (date passée et non rendu). Demande les travaux en retard pour le voir.
 1183|Recherche presque intelligente
+1184|Cherche avec tes propres mots, sur cet appareil.
+1185|Cherche avec tes propres mots, sur cet appareil. Téléchargement unique de # Mo.
