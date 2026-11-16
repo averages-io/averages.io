@@ -4422,7 +4422,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
         pot ? 'Potato mode is on, so A.I. search is hidden in search anything. Turn off Potato mode to use it.' : '')}
       ${sec('Quality', `<div class="sg-opts" role="group" aria-label="A.I. quality" data-set="aiQ">${[['q4', 'Smaller download. Right almost every time.'], ['q8', 'A little more accurate. Twice the download.']].map(([v, d]) => `<button class="sg-opt" data-seg="aiQ" data-v="${v}" aria-pressed="${cur === v}"${st.busy ? ' aria-disabled="true"' : ''}><b>${V[v].name}</b><small>${A.mb(V[v].bytes)} · ${d}</small></button>`).join('')}</div>`)}
       ${grp('', row('aiSaved', 'Saved on this device', st.any ? `${A.mb(st.bytes)}. Only one version is kept.` : 'Nothing saved yet.', btn('aidel', 'Delete', st.any && !st.busy ? '' : ' disabled')),
-        'Built on IBM Granite 4.0 (Apache 2.0), trained by Averages. It only sees what you type and the names of your classes and teachers, and nothing is sent anywhere. A.I. can be wrong, so check what it finds. Needs a browser with WebGPU, like Chrome or Edge on a computer.')}`;
+        'Built on IBM Granite 4.0 (Apache 2.0), trained by Averages. Made to run fully on device, and not use our servers. A.I. can make mistakes.')}`;
     },
 
     // Language (2026-11-15, public/js/averages-i18n.js): the app's words in 6 languages, free; Advanced
@@ -4431,11 +4431,16 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       const L = window.AvI18n;
       if (!L) return grp('Language', row('lang', 'Language', 'English'));
       const on = L.trOn();
-      if (on && SGV.trDevice === undefined) { SGV.trDevice = null; L.deviceCan().then(ok => { SGV.trDevice = ok; if (SG.sec === 'language') sgPane(); }); }
+      if (SGV.trDevice === undefined) { SGV.trDevice = null; L.deviceCan().then(ok => { SGV.trDevice = ok; if (SG.sec === 'language') sgPane(); }); }
+      // Advanced translation only shows where it can work: this browser translates on its own, or "Translate on our
+      // server" is offered (the server-translate switch). Otherwise (Firefox, say, with the switch off) the switch did
+      // nothing, so the whole group is hidden, and turned off if it was on (Martin 2026-11-16).
+      const trShown = SGV.trDevice === true || !!LIVE.serverTr;
+      if (!trShown && SGV.trDevice === false && on) L.setItems(false).then(() => { L.forget(); if (SG.sec === 'language') sgPane(); });
       const opts = [['auto', 'Same as this device']].concat(Object.entries(L.LANGS));
       return `
       ${sec('Language', `<div class="sg-opts sg-langs" role="group" aria-label="Language" data-set="lang">${opts.map(([v, t]) => `<button class="sg-opt" data-seg="lang" data-v="${v}" aria-pressed="${L.choice === v}">${v === 'auto' ? `<b>${t}</b><small data-no-t>${esc(L.LANGS[L.deviceLang])}</small>` : `<b data-no-t>${t}</b>`}</button>`).join('')}</div>`)}
-      ${grp(`Advanced translation ${billingOn() ? plusChip() : ""}`,
+      ${!trShown ? '' : grp(`Advanced translation ${billingOn() ? plusChip() : ""}`,
         tog('trItems', 'Translate class names, titles, posts and messages', 'Class names, assignment and test titles, teacher posts and messages, in your language. File names stay as they are. Point at a translated name to see the original.', on, !plusOk()) +
         (on && SGV.trDevice === false && LIVE.serverTr ? tog('trServer', 'Translate on our server', 'This browser can\'t translate on its own. With this on, those names, posts and messages are sent to our server to translate. We don\'t keep them.', L.serverOn()) : ''),
         LIVE.serverTr ? 'Your browser translates on this device when it can (Chrome or Edge on a computer). Nothing leaves your device unless you turn on Translate on our server.' : 'Your browser translates on this device (Chrome or Edge on a computer). Nothing leaves your device.')}`;

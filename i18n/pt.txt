@@ -1216,3 +1216,4 @@
 1216|Nosso modelo de {x} parâmetros, totalmente no dispositivo e bom para pedir dados.
 1217|Baixando… #% de # MB. Você pode continuar usando o Averages.
 1218|Baixado. Preparando…
+1219|Baseada no IBM Granite 4.0 (Apache 2.0), treinada pelo Averages. Feita para rodar totalmente no dispositivo, sem usar nossos servidores. A I.A. pode cometer erros.

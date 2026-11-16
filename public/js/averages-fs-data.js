@@ -269,7 +269,11 @@
       window.FSD.generatedAt = (got[0] && got[0].generatedAt) || new Date().toISOString(); syncShow();
       window.dispatchEvent(new CustomEvent('fs:synced'));
       window.FSD.NT.forEach(function (it) { have[it.id] = true; });
-      var added = fresh.NT.filter(function (it) { return !have[it.id]; });
+      // Only what's really new: not already in the list, and not already seen (read in Schoology, seen on this device or
+      // another one, or over 15 days old: fresh.NT_SEEN_IDS), the same rule as the late lists (mergeLater). Seen ones
+      // used to come in as new, so the bell said 10 until a manual sync rebuilt the list (Martin 2026-11-16).
+      var seenIds = {}; (fresh.NT_SEEN_IDS || []).forEach(function (id) { seenIds[id] = true; });
+      var added = fresh.NT.filter(function (it) { return !have[it.id] && !seenIds[it.id]; });
       if (!added.length) return;
       window.FSX.seen.ages(added); added.forEach(function (it) { window.FSD.NT.push(it); });
       window.dispatchEvent(new CustomEvent('fs:notis', { detail: { added: added } }));
