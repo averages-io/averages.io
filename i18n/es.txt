@@ -1215,3 +1215,4 @@
 1215|Revisando resultados
 1216|Nuestro modelo de {x} parámetros, totalmente en el dispositivo y bueno para pedir datos.
 1217|Descargando… #% de # MB. Puedes seguir usando Averages.
+1218|Descargado. Preparándolo…

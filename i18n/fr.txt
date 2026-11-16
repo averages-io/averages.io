@@ -1215,3 +1215,4 @@
 1215|Vérification des résultats
 1216|Notre modèle de {x} paramètres, entièrement sur l'appareil et idéal pour demander des données.
 1217|Téléchargement… #% de # Mo. Tu peux continuer à utiliser Averages.
+1218|Téléchargé. Préparation…

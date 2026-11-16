@@ -81,7 +81,7 @@
           var measured = sizes.reduce(function (a, b) { return a + b; }, 0);
           var c = check();
           // works: tested fine in this browser; blocked: tested and this browser can't run it (yet)
-          return { on: !!o.on, v: v, saved: saved, any: ks.length > 0, bytes: saved ? Math.max(measured, V.bytes) : measured, busy: !!DL || !!testing, testing: !!testing, loaded: DL ? DL.loaded : 0, total: DL ? DL.total : 0, error: LAST_ERR,
+          return { on: !!o.on, v: v, saved: saved, any: ks.length > 0, bytes: saved ? Math.max(measured, V.bytes) : measured, busy: !!DL || !!testing, phase: DL ? DL.phase || '' : '', testing: !!testing, loaded: DL ? DL.loaded : 0, total: DL ? DL.total : 0, error: LAST_ERR,
             works: !!(c && c.ok && c.v === v), blocked: !!(c && !c.ok) };
         });
     });
@@ -142,16 +142,18 @@
     if (W && readyV && readyV !== v) stop();
     var V = VARIANTS[v]; readyV = v;
     ready = call({ t: 'load', model: V.model, dtype: V.dtype, files: V.files, total: V.bytes, device: DEV_WASM ? 'wasm' : 'webgpu' }, function (p) {
-      if (DL) progressed(p.loaded || 0);
+      if (!DL) return;
+      if (p.phase) { DL.phase = p.phase; progressed(DL.total, true); changed(); return; }   // downloaded: getting it ready
+      progressed(p.loaded || 0);
     }).catch(function (e) { ready = null; readyV = ''; throw e; });
     return ready;
   }
 
   // the bar: a light event while bytes arrive (avai:progress, ~10 a second); avai:state only when something changes
-  function progressed(loaded) {
+  function progressed(loaded, now) {
     if (!DL) return;
     DL.loaded = Math.min(loaded, DL.total);
-    var n = Date.now(); if (n - (DL.shown || 0) > 100) { DL.shown = n; window.dispatchEvent(new CustomEvent('avai:progress', { detail: { loaded: DL.loaded, total: DL.total } })); }
+    var n = Date.now(); if (now || n - (DL.shown || 0) > 100) { DL.shown = n; window.dispatchEvent(new CustomEvent('avai:progress', { detail: { loaded: DL.loaded, total: DL.total, phase: DL.phase || '' } })); }
   }
 
   // A download that was going on when the page closed carries on in the next page (refresh below): finished files are

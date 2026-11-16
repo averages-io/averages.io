@@ -1215,3 +1215,4 @@
 1215|Reviewing results
 1216|Our {x} parameter model, completely on device and good for asking for data.
 1217|Downloading… #% of # MB. You can keep using Averages.
+1218|Downloaded. Getting it ready…

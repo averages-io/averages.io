@@ -72,7 +72,8 @@ async function load(m) {
     const cache = await caches.open(CACHE);
     const urls = [...(m.files || []).map((f) => '/ai/models/' + m.model + '/' + f), WASM].map((u) => new URL(u, self.location.origin).href);
     for (const url of urls) {
-      if (await cache.match(url)) { const r = await cache.match(url); got[url] = +r.headers.get('content-length') || 0; progress_callback({ status: 'progress', file: url, loaded: got[url] }); continue; }
+      // already saved (an earlier, unfinished download): counted at its real size, even without a Content-Length
+      if (await cache.match(url)) { const r = await cache.match(url); got[url] = +r.headers.get('content-length') || (await r.blob()).size; progress_callback({ status: 'progress', file: url, loaded: got[url] }); continue; }
       const r = await fetch(url, { credentials: 'omit' });
       if (!r.ok || !r.body) throw new Error('download_failed_' + r.status);
       const [keep, count] = r.body.tee();
@@ -83,6 +84,8 @@ async function load(m) {
       for (;;) { const { done, value } = await rd.read(); if (done) break; n += value.byteLength; progress_callback({ status: 'progress', file: url, loaded: n }); }
       await put;
     }
+    // every file is here: the bar fills, and the page says it's getting it ready (starting the model takes a few seconds)
+    post({ t: 'progress', id: m.id, loaded: m.total || 0, total: m.total || 0, phase: 'prepare' });
     tok = await AutoTokenizer.from_pretrained(m.model);
     model = await AutoModelForCausalLM.from_pretrained(m.model, { dtype: m.dtype, device: want });
     const sw = await cache.match(new URL('/ai/models/' + m.model + '/safety_words.json', self.location.origin).href);
