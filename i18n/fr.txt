@@ -1183,3 +1183,33 @@
 1183|Recherche presque intelligente
 1184|Cherche avec tes propres mots, sur cet appareil.
 1185|Cherche avec tes propres mots, sur cet appareil. Téléchargement unique de # Mo.
+1186|Recherche
+1187|Lecture de ta question…
+1188|Choix de l'endroit où chercher…
+1189|Recherche dans tes cours…
+1190|# travail
+1191|# travaux
+1192|# travail noté
+1193|# travaux notés
+1194|# cours
+1195|# moyenne
+1196|# estimation
+1197|# estimations
+1198|# publication
+1199|# publications
+1200|# conversations
+1201|# fichier
+1202|# résultat
+1203|# résultats
+1204|Démarrage de l'I.A.
+1205|Ça travaille
+1206|Lecture de ta question
+1207|Recherche dans les devoirs
+1208|Recherche dans les notes
+1209|Calcul de ta note
+1210|Recherche dans les publications
+1211|Recherche dans les messages
+1212|Recherche dans les fichiers
+1213|Ouverture
+1214|Recherche
+1215|Vérification des résultats

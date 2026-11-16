@@ -1183,3 +1183,33 @@
 1183|Almost Intelligent search
 1184|Search in your own words, on this device.
 1185|Search in your own words, on this device. One-time # MB download.
+1186|Searched for
+1187|Reading your question…
+1188|Picking where to look…
+1189|Searching your classes…
+1190|# assignment
+1191|# assignments
+1192|# graded assignment
+1193|# graded assignments
+1194|# class
+1195|# GPA
+1196|# estimate
+1197|# estimates
+1198|# post
+1199|# posts
+1200|# conversations
+1201|# file
+1202|# result
+1203|# results
+1204|Starting A.I.
+1205|Working
+1206|Reading your question
+1207|Searching assignments
+1208|Searching grades
+1209|Working out your grade
+1210|Searching posts
+1211|Searching messages
+1212|Searching files
+1213|Opening it
+1214|Searching
+1215|Reviewing results

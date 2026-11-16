@@ -1183,3 +1183,33 @@
 1183|Búsqueda casi inteligente
 1184|Busca con tus propias palabras, en este dispositivo.
 1185|Busca con tus propias palabras, en este dispositivo. Descarga única de # MB.
+1186|Buscó
+1187|Leyendo tu pregunta…
+1188|Eligiendo dónde buscar…
+1189|Buscando en tus clases…
+1190|# tarea
+1191|# tareas
+1192|# tarea calificada
+1193|# tareas calificadas
+1194|# clase
+1195|# promedio
+1196|# cálculo
+1197|# cálculos
+1198|# publicación
+1199|# publicaciones
+1200|# conversaciones
+1201|# archivo
+1202|# resultado
+1203|# resultados
+1204|Iniciando la I.A.
+1205|Trabajando
+1206|Leyendo tu pregunta
+1207|Buscando tareas
+1208|Buscando notas
+1209|Calculando tu nota
+1210|Buscando publicaciones
+1211|Buscando mensajes
+1212|Buscando archivos
+1213|Abriendo
+1214|Buscando
+1215|Revisando resultados

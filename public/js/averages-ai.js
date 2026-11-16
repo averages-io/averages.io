@@ -491,24 +491,86 @@
     b.res.innerHTML = '<div class="av-ai-panel">' + html + '</div>' + (foot ? foot.outerHTML : '');
     var f = b.res.querySelector('.av-ai-panel .mi'); if (f) f.classList.add('sel');
   }
+  // what each search finds, for the line at the top: "6 assignments"
+  var NOUN = { find_work: ['assignment', 'assignments'], scores: ['graded assignment', 'graded assignments'], grade: ['class', 'classes'], gpa: ['GPA', 'GPA'],
+    what_it_takes: ['estimate', 'estimates'], find_posts: ['post', 'posts'], find_messages: ['conversation', 'conversations'], find_files: ['file', 'files'] };
+  var calmNow = function () { return potato() || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches); };
+  // While it works (like Siri's "Working… Searching events… Reviewing results", Martin 2026-11-15): the results
+  // shrink to a small dark pill with a spinning ring of dots and a status that shimmers and changes as it goes.
+  // When the answer is ready the pill opens out into it.
+  var SEARCHING = { find_work: 'Searching assignments', find_grades: 'Searching grades', what_it_takes: 'Working out your grade',
+    find_posts: 'Searching posts', find_messages: 'Searching messages', find_files: 'Searching files', open_page: 'Opening it', word_search: 'Searching' };
+  function wait(b, starting) {
+    var dots = ''; for (var d = 0; d < 8; d++) dots += '<i style="transform:rotate(' + (d * 45) + 'deg);animation-delay:' + (-0.8 + d * 0.1).toFixed(1) + 's"></i>';
+    panel(b, '<div class="av-ai-pillwrap"><div class="av-ai-pill" role="status"><span class="av-ai-dots" aria-hidden="true">' + dots + '</span><span class="av-ai-step">' + esc(t(starting ? 'Starting A.I.' : 'Working')) + '</span></div></div>');
+    var pill = b.res.querySelector('.av-ai-pill');
+    if (pill && pill.animate && !calmNow()) pill.animate([{ opacity: 0, transform: 'scale(.6)' }, { opacity: 1, transform: 'none' }], { duration: 280, easing: 'cubic-bezier(.2,.8,.2,1)' });
+    // still working after a moment: say so
+    var el = b.res.querySelector('.av-ai-step');
+    setTimeout(function () { if (el && el.isConnected && el.dataset.step === undefined) step(b, 'Reading your question'); }, starting ? 1800 : 900);
+  }
+  // the status line moves on: the old words slide up and out, the new ones in. Resolves when it's on screen.
+  function step(b, text) {
+    var el = b.res.querySelector('.av-ai-step');
+    if (!el) return Promise.resolve();
+    el.dataset.step = text;
+    if (calmNow() || !el.animate) { el.textContent = t(text); return Promise.resolve(); }
+    return new Promise(function (done) {
+      el.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(-5px)' }], { duration: 130, easing: 'ease-in' }).onfinish = function () {
+        if (!el.isConnected) { done(); return; }
+        el.textContent = t(text);
+        el.animate([{ opacity: 0, transform: 'translateY(5px)' }, { opacity: 1, transform: 'none' }], { duration: 170, easing: 'ease-out' }).onfinish = done;
+      };
+    });
+  }
+  var pause = function (ms) { return new Promise(function (r) { setTimeout(r, calmNow() ? 0 : ms); }); };
+  // the answer replaces the pill: the box grows from the pill's height to the answer's, then the rows come in
+  function open(b, html) {
+    var h0 = b.res.offsetHeight;
+    panel(b, html);
+    if (calmNow() || !b.res.animate) return;
+    var h1 = b.res.offsetHeight;
+    if (Math.abs(h1 - h0) > 4) {
+      var ov = b.res.style.overflow; b.res.style.overflow = 'hidden';
+      b.res.animate([{ height: h0 + 'px' }, { height: h1 + 'px' }], { duration: 300, easing: 'cubic-bezier(.2,.8,.2,1)' }).onfinish = function () { b.res.style.overflow = ov; };
+    }
+    reveal(b);
+  }
+  // the answer comes in: the count line, then each row, 40 ms apart, rising a little (not in Potato mode or reduced motion)
+  function reveal(b) {
+    if (calmNow()) return;
+    var els = b.res.querySelectorAll('.av-ai-panel > *');
+    for (var k = 0; k < els.length && k < 14; k++) {
+      if (!els[k].animate) break;
+      els[k].animate([{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], { duration: 260, delay: 60 + Math.min(k, 10) * 40, easing: 'cubic-bezier(.2,.8,.2,1)', fill: 'backwards' });
+    }
+  }
   function answer(b, q) {
     var my = ++turn;
     var still = function () { return my === turn && b.res.isConnected && (b.input.value || '').trim() === q; };
-    panel(b, '<div class="av-ai-wait"><span class="av-ai-load" aria-hidden="true"></span><span>' + esc(t(ready ? 'Thinking on this device…' : 'Starting A.I. on this device…')) + '</span></div>');
+    wait(b, !ready);
     ask(q).then(function (r) {
       if (!still()) return;
       var words = '<button class="mi s-cmd av-ai-words" data-avai="words"><svg class="i"><use href="#i-search"/></svg><span class="tx"><b>' + esc(t('Search for the words instead')) + '</b><small data-no-t>“' + esc(q.slice(0, 120)) + '”</small></span></button>';
       var foot = '<p class="av-ai-note">' + esc(t('A.I. can be wrong. It ran on this device; nothing you typed was sent anywhere.')) + '</p>';
-      if (r.kind !== 'call') { panel(b, '<div class="av-ai-say">' + AI_SVG + '<span>' + esc(t("I can only search your classes, grades, work, posts, messages and files.")) + '</span></div>' + words + foot); return; }
-      var need = NEEDS[r.name];
-      return (need ? extraData(need) : Promise.resolve(null)).then(function (extra) {
+      if (r.kind !== 'call') { open(b, '<div class="av-ai-say">' + AI_SVG + '<span>' + esc(t("I can only search your classes, grades, work, posts, messages and files.")) + '</span></div>' + words + foot); return; }
+      var need = NEEDS[r.name], got = null;
+      // what it's doing now, then the data it needs, then "Reviewing results" for a moment before the answer opens
+      return step(b, SEARCHING[r.name] || 'Searching').then(function () { return Promise.all([need ? extraData(need) : null, pause(350)]); })
+        .then(function (x) { got = x[0]; if (!still()) return; return step(b, 'Reviewing results').then(function () { return pause(250); }); })
+        .then(function () { var extra = got;
       if (!still()) return;
       var out = run(r, q, extra); r = out.call || r;
       if (out.go) { window.location.href = out.go; return; }
       if (out.words != null) { STATE.skip = out.words; b.input.value = out.words; b.input.dispatchEvent(new Event('input', { bubbles: true })); return; }
-      var head = '<div class="lbl av-ai-h">' + AI_SVG + chips(r.name, r.args || {}) + '</div>';
-      var body = out.rows.length ? out.rows.join('') : '<div class="cmdk-empty">' + esc(t('Nothing found for that.')) + '</div>';
-      panel(b, head + (out.lead ? '<p class="av-ai-lead">' + esc(t(out.lead)) + '</p>' : '') + body + (out.note ? '<p class="av-ai-note">' + esc(t(out.note)) + '</p>' : '') + words + foot);
+      // the answer first (how many, or the count line), then the rows, then what the A.I. searched for, big enough to read
+      var n = out.rows.length, noun = NOUN[r.name === 'find_grades' ? (r.args && r.args.show === 'scores' ? 'scores' : r.args && r.args.show === 'gpa' ? 'gpa' : 'grade') : r.name] || ['result', 'results'];
+      // a count only where one means something (not for the GPA or a what-it-takes estimate, which are one row)
+      var counted = n && noun[0] !== 'GPA' && noun[0] !== 'estimate';
+      var line = out.lead || (counted ? (n === 1 ? '1 ' + noun[0] : n + ' ' + noun[1]) : n ? '' : 'Nothing found for that.');
+      var top = line ? '<p class="av-ai-lead">' + esc(t(line)) + '</p>' : '';
+      var by = '<div class="av-ai-by"><span class="av-ai-by-h">' + AI_SVG + esc(t('Searched for')) + '</span><span class="av-ai-chips">' + chips(r.name, r.args || {}) + '</span></div>';
+      open(b, top + out.rows.join('') + (out.note ? '<p class="av-ai-note">' + esc(t(out.note)) + '</p>' : '') + by + words + foot);
       });
     }).catch(function (e) {
       if (!still()) return;
@@ -516,7 +578,7 @@
       if (gpu) { setCheck(variantOf(), false); stop(); changed(); }
       var m = e && e.message === 'not_saved' ? 'A.I. search needs its download again. Turn it on in Settings.'
         : gpu ? "This browser can't run A.I. search yet. Try Chrome or Edge. It tries again when this browser updates." : "A.I. search didn't work just now. Try again, or search for the words.";
-      panel(b, '<div class="av-ai-say">' + AI_SVG + '<span>' + esc(t(m)) + '</span></div><button class="mi s-cmd av-ai-words" data-avai="words"><svg class="i"><use href="#i-search"/></svg><span class="tx"><b>' + esc(t('Search for the words instead')) + '</b></span></button>');
+      open(b, '<div class="av-ai-say">' + AI_SVG + '<span>' + esc(t(m)) + '</span></div><button class="mi s-cmd av-ai-words" data-avai="words"><svg class="i"><use href="#i-search"/></svg><span class="tx"><b>' + esc(t('Search for the words instead')) + '</b></span></button>');
       if (window.console) console.warn('[ai]', e);
     });
   }
@@ -551,7 +613,20 @@
     '@keyframes avAiBlink{0%,100%{opacity:1}50%{opacity:.35}}',
     '@media (prefers-reduced-motion:reduce){.av-ai-load{animation:avAiBlink 1.4s ease-in-out infinite;background:#E5484D}}',
     '.potato-mode .av-ai-load{animation:none;background:#E5484D}',
-    '.av-ai-lead{margin:2px 12px 8px;color:var(--ink);font-size:15px;font-weight:800}',
+    '.av-ai-lead{margin:6px 12px 6px;color:var(--ink);font-size:16px;font-weight:800}',
+    // waiting: the dark pill, its ring of 8 dots fading round, and the status shimmering
+    '.av-ai-pillwrap{display:flex;justify-content:center;padding:20px 0 18px}',
+    '.av-ai-pill{display:inline-flex;align-items:center;gap:11px;height:42px;padding:0 20px 0 15px;border-radius:21px;background:#121318;color:#f4f4f7;box-shadow:0 8px 28px rgba(0,0,0,.28),inset 0 0 0 1px rgba(255,255,255,.07);font-size:15px;font-weight:700;white-space:nowrap}',
+    '.av-ai-dots{position:relative;flex:none;width:18px;height:18px}.av-ai-dots i{position:absolute;left:7.6px;top:0;width:2.8px;height:2.8px;border-radius:50%;background:#fff;transform-origin:1.4px 9px;animation:avAiDot .8s linear infinite}',
+    '@keyframes avAiDot{0%{opacity:1}100%{opacity:.15}}',
+    '.av-ai-step{display:inline-block;background:linear-gradient(90deg,#8e909b 0%,#8e909b 38%,#ffffff 50%,#8e909b 62%,#8e909b 100%) 0 0/260% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:avAiText 1.7s linear infinite}',
+    '@keyframes avAiText{from{background-position:100% 0}to{background-position:0 0}}',
+    '.potato-mode .av-ai-dots i,.potato-mode .av-ai-step{animation:none}.potato-mode .av-ai-step{color:#f4f4f7;background:none}',
+    '@media (prefers-reduced-motion:reduce){.av-ai-dots i{animation:none;opacity:.7}.av-ai-step{animation:none;color:#f4f4f7;background:none}}',
+    // after the answer: what it searched for, at the bottom, in readable chips
+    '.av-ai-by{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:8px 4px 2px;padding:10px 12px;border-radius:14px;background:var(--panel,#f2f3f6)}',
+    '.av-ai-by-h{display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-size:13px;font-weight:700}.av-ai-by-h .av-ai-ic{width:18px;height:18px;margin:0}',
+    '.av-ai-chips{display:flex;flex-wrap:wrap;gap:6px}.av-ai-by .av-ai-chip{height:28px;padding:0 12px;border-radius:14px;font-size:13.5px;background:var(--frame,var(--card,#fff))}',
     '.av-ai-note{margin:4px 12px 6px;color:var(--muted);font-size:12px;font-weight:600}',
   ].join('');
   (document.head || document.documentElement).appendChild(css);
