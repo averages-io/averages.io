@@ -358,7 +358,7 @@
 
   function run(c, q, extra) {
     c = sanitize(c, q);
-    var D = window.FSD || {}, FSX = window.FSX, a = c.args || {}, now = Date.now(), C = D.C || {}, rows = [], note = '', lead = '';
+    var D = window.FSD || {}, FSX = window.FSX, a = c.args || {}, now = Date.now(), C = D.C || {}, rows = [], note = '', lead = '', big = '';
     var want = a['class'] ? classesNamed(a['class']).map(function (x) { return String(x.id); }) : null;
     var inClass = function (id) { return !want || want.indexOf(String(id)) >= 0; };
     if (c.name === 'word_search') return { words: a.text || '' };
@@ -380,6 +380,13 @@
         return true;
       });
       W.sort(st === 'graded' ? function (x, y) { return (y.gradedAt || 0) - (x.gradedAt || 0); } : st === 'missing' ? function (x, y) { return (y.dueAt || 0) - (x.dueAt || 0); } : function (x, y) { return (x.dueAt || 9e15) - (y.dueAt || 9e15); });
+      // the answer in a few words, for the top of the card: "2 due tomorrow", "6 missing", or a single test's day and time
+      var nW = W.length, one = nW === 1 && W[0].dueAt && a.kind && a.kind !== 'any' && st !== 'graded' && st !== 'turned';
+      if (one) big = new Date(W[0].dueAt).toLocaleDateString((window.AvI18n && window.AvI18n.locale) || 'en-US', { weekday: 'short' }) + (W[0].time ? ', ' + W[0].time : '');
+      else if (st === 'due' && (a.when === 'today' || a.when === 'tomorrow')) big = t(nW + ' due ' + a.when);
+      else if (st === 'missing') big = t(nW + (a.late ? ' late' : ' missing'));
+      else if (st === 'graded') big = t(nW + ' graded');
+      else if (st === 'turned') big = t(nW + ' turned in');
       rows = W.slice(0, 30).map(function (x) {
         var cc = C[x.c], end = x.st === 'graded' && x.got != null ? esc(x.got + (x.pts ? '/' + x.pts : '')) : x.st === 'missing' ? '<span class="av-ai-tag bad">' + esc(t(x.marked ? 'Missing' : 'Late')) + '</span>' : x.st === 'turned' ? '<span class="av-ai-tag ok">' + esc(t('Turned in')) + '</span>' : '';
         return row({ href: FSX.hubUrl(x.c, '', { a: x.id }), lead: clsTile(cc), t: x.t, sub: (cc ? cc.name : '') + (x.dueAt ? ' · ' + t('Due') + ' ' + dShort(x.dueAt) + (x.time ? ', ' + x.time : '') : ''), end: end });
@@ -394,6 +401,7 @@
       var list = (D.CLASSES || []).filter(function (x) { return !x.none && inClass(x.id); });
       if (a.show === 'gpa') {
         var G = window.AveragesGPA, g = G ? G.compute(list.map(function (x) { return { id: String(x.id), name: x.name, grade: letterOf(x.pct) }; })) : null;
+        if (g && g.unweighted != null) big = 'GPA ' + g.unweighted.toFixed(2);
         if (g && g.unweighted != null) rows = [row({ href: FSX.url('grades'), lead: '<span class="av-ai-cl" style="--c:#3e64b0" aria-hidden="true">GPA</span>', t: g.unweighted.toFixed(2) + ' GPA', sub: (g.weighted != null ? g.weighted.toFixed(2) + ' weighted · ' : '') + list.length + ' classes' })];
       } else if (a.show === 'scores') {
         var pct = function (w) { return w.got / w.of * 100; };
@@ -405,6 +413,8 @@
       } else {
         if (a.sort === 'lowest') list.sort(function (x, y) { return x.pct - y.pct; }); else if (a.sort === 'highest') list.sort(function (x, y) { return y.pct - x.pct; });
         rows = list.map(function (x) { return row({ href: FSX.hubUrl(x.id, 'grades'), lead: clsTile(x), t: x.name, sub: x.teacher || '', end: esc(letterOf(x.pct)) + ' <small>' + x.pct.toFixed(1) + '%</small>' }); });
+        // one class, or the lowest or highest: its grade is the answer
+        if (list.length && (list.length === 1 || a.sort === 'lowest' || a.sort === 'highest')) big = (list.length > 1 ? list[0].name + ', ' : '') + letterOf(list[0].pct) + ' ' + list[0].pct.toFixed(1) + '%';
       }
     } else if (c.name === 'what_it_takes') {
       var k = want ? C[want[0]] : null, T = targetPct(a.target);
@@ -426,6 +436,7 @@
         var tt = need <= 0 ? t("You're already there") : need > 100 ? t('Not reachable with the points posted so far') : t('About ' + Math.ceil(need) + '% on ' + what);
         rows = [row({ href: todo.length === 1 ? FSX.hubUrl(k.id, '', { a: todo[0].id }) : FSX.hubUrl(k.id, 'grades'), lead: clsTile(k), t: tt, sub: (todo.length === 1 && need <= 100 && need > 0 ? '' : todo.length === 1 ? todo[0].t + ' · ' : '') + sub2 })];
         note = 'An estimate from points. Your teacher may weight categories differently.';
+        if (need > 0 && need <= 100) big = t(Math.ceil(need) + '% for ' + (/^[AEF]/.test(String(a.target)) ? 'an ' : 'a ') + a.target);
       }
     } else if (c.name === 'find_posts') {
       var since = a.when === 'today' ? sod(now) : a.when === 'this_week' ? now - 7 * DAY : 0;
@@ -444,6 +455,7 @@
         });
       } else M = D.messages || [];
       M = M.filter(function (m) { return (!a.teacher || sameTeacher(a.teacher, m.from)) && (!a.unread || (m.unread && !(seen && seen.has('m', m.id)))); });
+      if (a.unread) big = t(M.length + ' unread');
       M.sort(function (x, y) { return (y.at || 0) - (x.at || 0); });
       rows = M.slice(0, 30).map(function (m) { return row({ href: FSX.url('messages', { thread: m.id }), lead: FSX.personAv ? FSX.personAv({ name: m.from, teacher: true }) : '', t: m.subject || m.preview || t('(No subject)'), sub: (m.from || '') + (m.time ? ' · ' + m.time : ''), end: m.unread ? '<span class="unread" aria-label="Unread"></span>' : '' }); });
     } else if (c.name === 'find_files') {
@@ -452,7 +464,7 @@
       F.sort(function (x, y) { return (y.at || 0) - (x.at || 0); });
       rows = F.slice(0, 30).map(function (f) { var cc = C[f.course]; return row({ href: FSX.hubUrl(f.course, 'materials/x' + f.id), lead: clsTile(cc), t: f.name, sub: (cc ? cc.name : '') + (f.at ? ' · ' + dShort(f.at) : '') + (f.parentTitle ? ' · ' + f.parentTitle : '') }); });
     }
-    return { rows: rows, note: note, lead: lead, call: c };
+    return { rows: rows, note: note, lead: lead, big: big, call: c };
   }
 
   // ---------- search anything: the "Ask A.I." row and its answer ----------
@@ -625,9 +637,15 @@
       // a count only where one means something (not for the GPA or a what-it-takes estimate, which are one row)
       var counted = n && noun[0] !== 'GPA' && noun[0] !== 'estimate';
       var line = out.lead || (counted ? (n === 1 ? '1 ' + noun[0] : n + ' ' + noun[1]) : n ? '' : 'Nothing found for that.');
-      var top = line ? '<p class="av-ai-lead">' + esc(t(line)) + '</p>' : '';
-      var by = '<div class="av-ai-by"><span class="av-ai-by-h">' + AI_SVG + esc(t('Searched for')) + '</span><span class="av-ai-chips">' + chips(r.name, r.args || {}) + '</span></div>';
-      open(b, top + out.rows.join('') + (out.note ? '<p class="av-ai-note">' + esc(t(out.note)) + '</p>' : '') + by + words + foot);
+      // the answer card (the sneak-peek ad's design, Martin 2026-11-17): "A.I." with the mascot, the answer big, the rows,
+      // then "Searched for:" with its chips. A longer count line (letter grades) goes under the big answer.
+      var head = out.big || (out.lead && out.lead.length <= 28 ? out.lead : line);
+      var sub = out.lead && head !== out.lead ? '<p class="av-ai-lead">' + esc(t(out.lead)) + '</p>' : '';
+      var card = '<div class="av-ai-card"><div class="av-ai-hd">' + AI_SVG + '<span>A.I.</span></div>'
+        + (head ? '<p class="av-ai-big" data-no-t>' + esc(out.big ? head : t(head)) + '</p>' : '') + sub
+        + out.rows.join('') + (out.note ? '<p class="av-ai-note">' + esc(t(out.note)) + '</p>' : '')
+        + '<div class="av-ai-by"><span class="av-ai-by-h">' + esc(t('Searched for:')) + '</span><span class="av-ai-chips">' + chips(r.name, r.args || {}) + '</span></div></div>';
+      open(b, card + words + foot);
       });
     }).catch(function (e) {
       if (!still()) return;
@@ -693,6 +711,13 @@
     '@keyframes avAiText{from{background-position:100% 0}to{background-position:0 0}}',
     '.potato-mode .av-ai-dots i,.potato-mode .av-ai-step{animation:none}.potato-mode .av-ai-step{color:#f4f4f7;background:none}',
     '@media (prefers-reduced-motion:reduce){.av-ai-dots i{animation:none;opacity:.7}.av-ai-step{animation:none;color:#f4f4f7;background:none}}',
+    // the answer card: a raised card, "A.I." header, the answer big, rows with the class badge and a bold value
+    '.av-ai-card{display:flex;flex-direction:column;gap:2px;margin:6px 4px 6px;padding:16px 10px 12px;border-radius:20px;background:var(--field,#fff);box-shadow:0 1px 0 rgba(0,0,0,.04),0 10px 28px -12px rgba(20,21,31,.25),inset 0 0 0 1px var(--inner,rgba(0,0,0,.06))}',
+    '.av-ai-hd{display:flex;align-items:center;gap:7px;padding:0 10px;color:var(--muted);font-size:14px;font-weight:800}.av-ai-hd .av-ai-ic{width:18px;height:18px;margin:0}',
+    '.av-ai-big{margin:4px 10px 8px;color:var(--ink);font-family:var(--display,inherit);font-size:34px;line-height:1.05;font-weight:800;letter-spacing:-.02em;overflow-wrap:anywhere}',
+    '.av-ai-card .av-ai-lead{margin:0 10px 8px;font-size:15px;color:var(--ink-2,var(--muted))}',
+    '.av-ai-card .av-ai-end{font-size:15px}',
+    '.av-ai-card .av-ai-by{margin:10px 0 0;padding:0 10px;background:none}.av-ai-card .av-ai-by .av-ai-chip{background:var(--panel,#eef0f4);height:26px;font-size:13px}',
     // after the answer: what it searched for, at the bottom, in readable chips
     '.av-ai-by{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:8px 4px 2px;padding:10px 12px;border-radius:14px;background:var(--panel,#f2f3f6)}',
     '.av-ai-by-h{display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-size:13px;font-weight:700}.av-ai-by-h .av-ai-ic{width:18px;height:18px;margin:0}',
