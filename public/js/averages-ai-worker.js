@@ -74,12 +74,22 @@ export function searchTools(classes, teachers, schema = 16) {
   return tools;
 }
 
-let tok = null, model = null, safety = null, loading = null, device = '', schema = 16, firstAsk = true;
-const post = (m) => self.postMessage(m);
+let tok = null, model = null, safety = null, loading = null, device = '', schema = 16, firstAsk = true, loaded = '';
+// One copy of the model for every page of the site (2026-11-17): the app starts this as a SharedWorker when it can,
+// so going to another page in the same tab keeps the model ready instead of starting it again (Firefox and Safari
+// keep a shared worker across same-site page changes; Chrome does with extendedLifetime, about 30 s). Each page talks
+// through its own port; replies go to the page whose message is being handled (one message at a time, below).
+const SHARED = typeof SharedWorkerGlobalScope !== 'undefined' && self instanceof SharedWorkerGlobalScope;
+let port = null;
+const post = (m) => (port || self).postMessage(m);
 
 async function load(m) {
-  if (model) return device;
+  if (model && loaded === m.model) return device;
   if (loading) return loading;
+  // a shared worker without WebGPU (some browsers only have it in pages and dedicated workers): the page uses its own
+  if (SHARED && m.device !== 'wasm' && !(self.navigator && self.navigator.gpu)) throw new Error('shared_no_gpu');
+  // another page switched versions (Standard / Higher quality): the old model goes first
+  if (model) { try { await model.dispose(); } catch { /* gone anyway */ } model = null; tok = null; loaded = ''; }
   loading = (async () => {
     // one progress bar for every file: the sizes come from the app (it knows them), the bytes from each file
     const got = {};
@@ -120,9 +130,11 @@ async function load(m) {
     // a search typed meanwhile waits in the queue below and runs right after.
     post({ t: 'progress', id: m.id, loaded: m.total || 0, total: m.total || 0, phase: 'warmup' });
     const w0 = performance.now();
-    try { await ask({ text: 'what is due tomorrow', classes: ['Math'], teachers: ['Ms. Lee'], lang: 'en', warm: true }); } catch { /* the real searches will say */ }
+    // a graphics failure fails the load (the page may then try a worker of its own); anything else, the real searches will say
+    try { await ask({ text: 'what is due tomorrow', classes: ['Math'], teachers: ['Ms. Lee'], lang: 'en', warm: true }); }
+    catch (e) { if (/webgpu|shader|ortrun|compute pipeline|f16|device (was )?lost/i.test(String(e && e.message || e))) { model = null; throw e; } }
     console.info('[ai] warm-up ' + Math.round(performance.now() - w0) + ' ms (' + want + ', ' + m.model + ')');
-    device = want;
+    device = want; loaded = m.model; fresh = true;
     return device;
   })();
   try { return await loading; } finally { loading = null; }
@@ -200,15 +212,21 @@ function parseCall(json, tools) {
   return { name: c.name, args };
 }
 
-let queue = Promise.resolve();
-self.onmessage = (e) => {
-  const m = e.data || {};
+let queue = Promise.resolve(), fresh = false;
+function handle(m, from) {
   queue = queue.then(async () => {
+    port = from;
     try {
-      if (m.t === 'load') post({ t: 'ready', id: m.id, device: await load(m) });
+      if (m.t === 'quit') { self.close(); return; }
+      if (m.t === 'state') { post({ t: 'state', id: m.id, loaded: model ? loaded : '' }); return; }
+      // fresh: this page's load really started the model (not one another page had started already)
+      if (m.t === 'load') { fresh = false; const d = await load(m); post({ t: 'ready', id: m.id, device: d, fresh }); }
       else if (m.t === 'ask') { if (!model) throw new Error('not_loaded'); post({ t: 'answer', id: m.id, ...(await ask(m)) }); }
     } catch (err) {
       post({ t: 'error', id: m.id, error: String(err && err.message || err).slice(0, 300) });
     }
   });
-};
+}
+self.onmessage = (e) => handle(e.data || {}, null);
+// shared: every page that connects gets a port
+self.onconnect = (e) => { const p = e.ports[0]; p.onmessage = (ev) => handle(ev.data || {}, p); p.start(); };

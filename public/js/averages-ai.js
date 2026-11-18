@@ -119,32 +119,50 @@
   }
   /** Stops the model's thread: anything waiting on it gives up ("stopped"), and the next use starts it again. */
   function stop() {
-    if (W) { W.terminate(); W = null; }
+    if (W) { W.end(); W = null; }
     Object.keys(waits).forEach(function (k) { var w = waits[k]; delete waits[k]; w.no(new Error('stopped')); });
     ready = null; readyV = ''; testing = null;
   }
 
   // ---------- the worker ----------
   var W = null, seq = 0, waits = {}, ready = null, readyV = '', DL = null, LAST_ERR = '', STARTING = false;
+  // One model for the whole site (2026-11-17, Martin: "every single time you go to another page, in the same tab, the
+  // ai still has to initialize"): a SharedWorker, so the next page finds the model already running. Firefox and Safari
+  // keep it across same-site page changes; Chrome does with extendedLifetime (Chrome 148+, ~30 s after the last page
+  // goes). A browser without SharedWorker, or without WebGPU inside one, gets a worker of this page's own, as before.
+  var NO_SHARED = false;
+  try { NO_SHARED = sessionStorage.getItem('averages_ai_own') === '1'; } catch (e) { /* off */ }
   function worker() {
     if (W) return W;
-    var v = (window.AVG_JSV || {})['averages-ai-worker.js'];
-    W = new Worker('/js/averages-ai-worker.js' + (v ? '?v=' + v : ''), { type: 'module', name: 'averages-ai' });
-    W.onmessage = function (e) {
+    var v = (window.AVG_JSV || {})['averages-ai-worker.js'], url = '/js/averages-ai-worker.js' + (v ? '?v=' + v : '');
+    var onmsg = function (e) {
       var m = e.data || {}, w = waits[m.id]; if (!w) return;
       if (m.t === 'progress') { if (w.progress) w.progress(m); return; }
       delete waits[m.id];
       if (m.t === 'error') w.no(new Error(m.error || 'ai_failed')); else w.yes(m);
     };
-    W.onerror = function (e) { Object.keys(waits).forEach(function (k) { waits[k].no(new Error((e && e.message) || 'worker_failed')); delete waits[k]; }); W = null; ready = null; };
+    var onerr = function (e) { Object.keys(waits).forEach(function (k) { waits[k].no(new Error((e && e.message) || 'worker_failed')); delete waits[k]; }); W = null; ready = null; };
+    if (!NO_SHARED && typeof SharedWorker === 'function' && !DEV_WASM) {
+      try {
+        var sw = new SharedWorker(url, { type: 'module', name: 'averages-ai', extendedLifetime: true });
+        sw.port.onmessage = onmsg; sw.onerror = onerr; sw.port.start();
+        // leaving: this page's port closes; the model stays for the next page. stop(): the model goes for every page.
+        W = { shared: true, post: function (m) { sw.port.postMessage(m); }, end: function () { try { sw.port.postMessage({ t: 'quit' }); sw.port.close(); } catch (e) { /* gone */ } } };
+        return W;
+      } catch (e) { NO_SHARED = true; }
+    }
+    var dw = new Worker(url, { type: 'module', name: 'averages-ai' });
+    dw.onmessage = onmsg; dw.onerror = onerr;
+    W = { shared: false, post: function (m) { dw.postMessage(m); }, end: function () { dw.terminate(); } };
     return W;
   }
   function call(msg, progress) {
-    return new Promise(function (yes, no) { var id = ++seq; waits[id] = { yes: yes, no: no, progress: progress }; msg.id = id; worker().postMessage(msg); });
+    return new Promise(function (yes, no) { var id = ++seq; waits[id] = { yes: yes, no: no, progress: progress }; msg.id = id; worker().post(msg); });
   }
   function load(v) {
     if (ready && readyV === v) return ready;
-    if (W && readyV && readyV !== v) stop();
+    // the other version: a page's own worker starts over; the shared one swaps models itself (other pages use it too)
+    if (W && readyV && readyV !== v) { if (W.shared) { ready = null; readyV = ''; } else stop(); }
     var V = VARIANTS[v]; readyV = v;
     var shown = DL ? null : initStart(v);   // a download has its own bar in Settings
     starting(true);
@@ -152,8 +170,17 @@
       if (!DL) return;
       if (p.phase) { DL.phase = p.phase; progressed(DL.total, true); changed(); return; }   // downloaded: getting it ready
       progressed(p.loaded || 0);
-    }).then(function (r) { if (shown) initDone(shown, true); starting(false); return r; },
-      function (e) { if (shown) initDone(shown, false); starting(false); ready = null; readyV = ''; throw e; });
+    }).then(function (r) { if (shown) initDone(shown, true, r && r.fresh); starting(false); return r; },
+      function (e) {
+        if (shown) initDone(shown, false); starting(false); ready = null; readyV = '';
+        // no WebGPU (or a broken one) in a shared worker here: this page, and this tab from now on, uses a worker of its own
+        if (e && W && W.shared && (e.message === 'shared_no_gpu' || GPU_ERR.test(e.message || ''))) {
+          NO_SHARED = true; try { sessionStorage.setItem('averages_ai_own', '1'); } catch (x) { /* off */ }
+          try { W.end(); } catch (x) { /* gone */ } W = null;
+          return load(v);
+        }
+        throw e;
+      });
     return ready;
   }
 
@@ -186,9 +213,10 @@
     };
     paint(); o.tick = setInterval(paint, 500);
   }
-  function initDone(o, ok) {
+  function initDone(o, ok, fresh) {
     o.done = true; clearTimeout(o.show); clearInterval(o.tick);
-    if (ok) try { LS.setItem(INIT, JSON.stringify({ ua: UA, m: VARIANTS[o.v].model, ms: Date.now() - o.t0 })); } catch (e) { /* full */ }
+    // only a real start counts for next time's estimate (not finding it already running from the last page)
+    if (ok && fresh !== false) try { LS.setItem(INIT, JSON.stringify({ ua: UA, m: VARIANTS[o.v].model, ms: Date.now() - o.t0 })); } catch (e) { /* full */ }
     var el = o.el; if (!el) return;
     if (ok) { el.classList.add('ok'); el.querySelector('b').textContent = t('Almost Intelligent search is ready'); el.querySelector('small').textContent = t('Ask it anything about your classes in search.'); el.querySelector('.bar > i').style.width = '100%'; }
     setTimeout(function () {
@@ -207,6 +235,8 @@
   function warmSoon(v) {
     if (autoWarm || ready || DL || potato()) return; autoWarm = true;
     starting(true);   // from now: no "Ask A.I." until it's ready
+    // already running from the last page (the shared worker): ready right away, no card
+    call({ t: 'state' }).then(function (st) { if (st && st.loaded === VARIANTS[v].model && !ready && !DL) load(v).catch(function () {}); }).catch(function () {});
     setTimeout(function () { (window.requestIdleCallback || setTimeout)(function () { if (!ready && !DL) load(v).catch(function () {}); else if (!ready) starting(false); }, { timeout: 3000 }); }, 1200);
   }
 
