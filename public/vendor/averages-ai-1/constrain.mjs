@@ -87,8 +87,43 @@ function args(r, props, start, first, used, required) {
 }
 
 // [is s a valid prefix?, is s a complete valid answer?]
+export const MAX_CALLS = Number(globalThis.process?.env?.AVG_MAX_CALLS ?? 3); // round 8+: up to 3 calls, one per question
+const SEP = CLOSE + "\n"; // round 8: several calls back to back, one per question
+
 export function check(s, specs, plain) {
+  if (!s.includes(SEP) || MAX_CALLS === 1) return checkOne(s, specs, plain);
+  const parts = s.split(SEP);
+  const done = parts.slice(0, -1).map((x) => x + CLOSE), last = parts[parts.length - 1];
+  // ship check Nov 17: a repeated call is allowed (the app drops duplicates); rejecting it at its last character got stuck
+  if (parts.length > MAX_CALLS) return [false, false];
+  for (const d of done) if (!d.startsWith(HEAD) || !checkOne(d, specs, [])[1]) return [false, false];
+  if (last === "") return [true, false];
+  return checkOne(last, specs, []);
+}
+
+// Non-ASCII characters that could ever be valid here: those in the names/enums and refusal sentences, plus one
+// stand-in for free text (where any character is fine). Same as constrain.py _probes.
+const PROBES = new WeakMap();
+function probes(specs, plain) {
+  let byPlain = PROBES.get(specs);
+  if (!byPlain) { byPlain = new WeakMap(); PROBES.set(specs, byPlain); }
+  let p = byPlain.get(plain);
+  if (!p) {
+    const set = new Set(["é"]);
+    for (const c of JSON.stringify(specs) + plain.join("")) if (c.codePointAt(0) > 127) set.add(c);
+    p = [...set]; byPlain.set(plain, p);
+  }
+  return p;
+}
+
+export function checkOne(s, specs, plain) {
   const t = s.replace(/�+$/, "");      // a character still being built from byte tokens
+  if (t !== s) {
+    // ship check Nov 17: a half-built character is only OK where some non-ASCII character can come next (free text,
+    // a non-ASCII class/teacher name, a refusal sentence), never inside "this_week". At most 3 bytes are pending.
+    if (s.length - t.length > 3) return [false, false];
+    return [probes(specs, plain).some((c) => checkOne(t + c, specs, plain)[0]), false];
+  }
   let ok = false, complete = false;
   for (const p of plain) if (p.startsWith(t)) { ok = true; complete = complete || (t === p && t === s); }
   if (HEAD.startsWith(t)) return [true, complete];
@@ -100,7 +135,10 @@ export function check(s, specs, plain) {
     const r = rest.slice(name.length);
     if (MID.startsWith(r)) { ok = true; continue; }
     if (!r.startsWith(MID)) continue;
-    const [o, c] = args(r.slice(MID.length), props, 0, true, new Set(), required);
+    const a = r.slice(MID.length);
+    // round 7: find_grades.letter only after "show": "scores" (show comes first in the schema order)
+    const p2 = a.includes('"show": "scores"') ? props : props.filter(p => p[0] !== "letter");
+    const [o, c] = args(a, p2, 0, true, new Set(), required);
     ok = ok || o; complete = complete || (c && t === s);
   }
   return [ok, complete];
@@ -123,9 +161,12 @@ export function makeToolCallConstraint(LogitsProcessor, tokenizer, promptLen, to
         let pick = valid(best) ? best : null;
         if (pick === null) {
           const order = Array.from(data.keys()).sort((x, y) => data[y] - data[x]);
-          for (let r = 1; r < Math.min(order.length, 4097); r++) if (valid(order[r])) { pick = order[r]; this.forced++; break; }
+          // ship check Nov 17: no cap (was 4097: "leave this step alone" let invalid text in, and then every later step
+          // failed too). The whole vocabulary is searched; this is rare and only slow then.
+          for (let r = 1; r < order.length; r++) if (valid(order[r])) { pick = order[r]; this.forced++; break; }
         }
-        if (pick === null) continue;                 // nothing valid nearby: leave this step alone
+        if (pick === null && check(s, specs, plain)[1]) pick = eosId;   // nothing else fits but the answer is complete
+        if (pick === null) continue;
         const keep = data[pick];
         data.fill(-Infinity);
         data[pick] = keep;

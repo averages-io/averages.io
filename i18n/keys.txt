@@ -1217,3 +1217,47 @@
 1217|Downloading… #% of # MB. You can keep using Averages.
 1218|Downloaded. Getting it ready…
 1219|Built on IBM Granite 4.0 (Apache 2.0), trained by Averages. Made to run fully on device, and not use our servers. A.I. can make mistakes.
+1220|Turned in late
+1221|This month
+1222|This school year
+1223|Soonest due first
+1224|Latest due first
+1225|Most points first
+1226|From teachers
+1227|From classmates
+1228|Commented on
+1229|Every class
+1230|Getting A.I. ready
+1231|Under #%
+1232|#% or more
+1233|# turned in late
+1234|# turned in
+1235|# graded
+1236|# late
+1237|# due today
+1238|# due tomorrow
+1239|# unread
+1240|Average #%
+1241|# graded assignments under #%
+1242|# graded assignments #% or more
+1243|# graded assignments #% to #%
+1244|# graded assignment under #%
+1245|# graded assignment #% or more
+1246|# graded assignment #% to #%
+1247|# classes under #%
+1248|# classes #% or more
+1249|# classes #% to #%
+1250|# class under #%
+1251|# class #% or more
+1252|# class #% to #%
+1253|# classes with a {x}
+1254|# classes with an {x}
+1255|# class with a {x}
+1256|# class with an {x}
+1257|#% for a {x}
+1258|#% for an {x}
+1259|Searched for:
+1260|A.I.
+1261|Open page
+1262|Open class
+1263|More accurate, and understands more kinds of questions. Twice the download.

@@ -207,8 +207,8 @@ grade report PDF on the student's device. Loaded only when the button is used.
 
 **Files:** `public/vendor/transformers-4.3.2/transformers.min.js`, `public/vendor/transformers-4.3.2/ort-wasm-simd-threaded.asyncify.mjs`,
 `public/vendor/averages-ai-1/constrain.mjs`, `public/vendor/averages-ai-1/safety.mjs`; and, in R2 (served at `/ai/` by
-`worker/index.js`, not in this repository because of their size), `ai/models/averages-search-q4-r6/`,
-`ai/models/averages-search-q8-r6/` and `ai/runtime/ort-1.31.0-dev.20260914/ort-wasm-simd-threaded.asyncify.wasm`.
+`worker/index.js`, not in this repository because of their size), `ai/models/averages-search-q4-r10/`,
+`ai/models/averages-search-q8-r17/` and `ai/runtime/ort-1.31.0-dev.20260914/ort-wasm-simd-threaded.asyncify.wasm`.
 
 Used by A.I. search (`public/js/averages-ai.js`, `public/js/averages-ai-worker.js`, 2026-11-15), which runs on the
 student's device. Downloaded only when the student turns it on.

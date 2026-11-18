@@ -1217,3 +1217,47 @@
 1217|Téléchargement… #% de # Mo. Tu peux continuer à utiliser Averages.
 1218|Téléchargé. Préparation…
 1219|Basée sur IBM Granite 4.0 (Apache 2.0), entraînée par Averages. Conçue pour fonctionner entièrement sur l'appareil, sans utiliser nos serveurs. L'I.A. peut se tromper.
+1220|Rendu en retard
+1221|Ce mois-ci
+1222|Cette année scolaire
+1223|Échéance la plus proche d'abord
+1224|Échéance la plus lointaine d'abord
+1225|Plus de points d'abord
+1226|Des professeurs
+1227|Des camarades
+1228|Avec commentaires
+1229|Tous les cours
+1230|Préparation de l'I.A.
+1231|Moins de #%
+1232|#% ou plus
+1233|# rendus en retard
+1234|# rendus
+1235|# notés
+1236|# en retard
+1237|# à rendre aujourd'hui
+1238|# à rendre demain
+1239|# non lus
+1240|Moyenne #%
+1241|# devoirs notés sous #%
+1242|# devoirs notés à #% ou plus
+1243|# devoirs notés entre #% et #%
+1244|# devoir noté sous #%
+1245|# devoir noté à #% ou plus
+1246|# devoir noté entre #% et #%
+1247|# cours sous #%
+1248|# cours à #% ou plus
+1249|# cours entre #% et #%
+1250|# cours sous #%
+1251|# cours à #% ou plus
+1252|# cours entre #% et #%
+1253|# cours avec {x}
+1254|# cours avec {x}
+1255|# cours avec {x}
+1256|# cours avec {x}
+1257|#% pour un {x}
+1258|#% pour un {x}
+1259|Recherché :
+1260|I.A.
+1261|Ouvrir la page
+1262|Ouvrir le cours
+1263|Plus précise, et comprend plus de types de questions. Deux fois plus lourde.

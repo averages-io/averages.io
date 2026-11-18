@@ -1217,3 +1217,47 @@
 1217|Baixando… #% de # MB. Você pode continuar usando o Averages.
 1218|Baixado. Preparando…
 1219|Baseada no IBM Granite 4.0 (Apache 2.0), treinada pelo Averages. Feita para rodar totalmente no dispositivo, sem usar nossos servidores. A I.A. pode cometer erros.
+1220|Entregue com atraso
+1221|Este mês
+1222|Este ano letivo
+1223|Prazo mais próximo primeiro
+1224|Prazo mais distante primeiro
+1225|Mais pontos primeiro
+1226|De professores
+1227|De colegas
+1228|Com comentários
+1229|Todas as aulas
+1230|Preparando a I.A.
+1231|Abaixo de #%
+1232|#% ou mais
+1233|# entregues com atraso
+1234|# entregues
+1235|# avaliadas
+1236|# atrasadas
+1237|# para hoje
+1238|# para amanhã
+1239|# não lidas
+1240|Média #%
+1241|# tarefas avaliadas abaixo de #%
+1242|# tarefas avaliadas com #% ou mais
+1243|# tarefas avaliadas entre #% e #%
+1244|# tarefa avaliada abaixo de #%
+1245|# tarefa avaliada com #% ou mais
+1246|# tarefa avaliada entre #% e #%
+1247|# aulas abaixo de #%
+1248|# aulas com #% ou mais
+1249|# aulas entre #% e #%
+1250|# aula abaixo de #%
+1251|# aula com #% ou mais
+1252|# aula entre #% e #%
+1253|# aulas com {x}
+1254|# aulas com {x}
+1255|# aula com {x}
+1256|# aula com {x}
+1257|#% para um {x}
+1258|#% para um {x}
+1259|Pesquisado:
+1260|I.A.
+1261|Abrir página
+1262|Abrir aula
+1263|Mais precisa e entende mais tipos de perguntas. O dobro do download.

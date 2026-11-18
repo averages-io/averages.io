@@ -1217,3 +1217,47 @@
 1217|Wird heruntergeladen… #% von # MB. Du kannst Averages weiter nutzen.
 1218|Heruntergeladen. Wird vorbereitet…
 1219|Basiert auf IBM Granite 4.0 (Apache 2.0), trainiert von Averages. Läuft komplett auf dem Gerät, ohne unsere Server. K.I. kann Fehler machen.
+1220|Verspätet abgegeben
+1221|Diesen Monat
+1222|Dieses Schuljahr
+1223|Früheste Fälligkeit zuerst
+1224|Späteste Fälligkeit zuerst
+1225|Meiste Punkte zuerst
+1226|Von Lehrkräften
+1227|Von Mitschülern
+1228|Mit Kommentar
+1229|Alle Kurse
+1230|K.I. wird vorbereitet
+1231|Unter #%
+1232|#% oder mehr
+1233|# verspätet abgegeben
+1234|# abgegeben
+1235|# bewertet
+1236|# überfällig
+1237|# heute fällig
+1238|# morgen fällig
+1239|# ungelesen
+1240|Durchschnitt #%
+1241|# bewertete Aufgaben unter #%
+1242|# bewertete Aufgaben mit #% oder mehr
+1243|# bewertete Aufgaben zwischen #% und #%
+1244|# bewertete Aufgabe unter #%
+1245|# bewertete Aufgabe mit #% oder mehr
+1246|# bewertete Aufgabe zwischen #% und #%
+1247|# Kurse unter #%
+1248|# Kurse mit #% oder mehr
+1249|# Kurse zwischen #% und #%
+1250|# Kurs unter #%
+1251|# Kurs mit #% oder mehr
+1252|# Kurs zwischen #% und #%
+1253|# Kurse mit {x}
+1254|# Kurse mit {x}
+1255|# Kurs mit {x}
+1256|# Kurs mit {x}
+1257|#% für eine {x}
+1258|#% für eine {x}
+1259|Gesucht nach:
+1260|K.I.
+1261|Seite öffnen
+1262|Kurs öffnen
+1263|Genauer und versteht mehr Arten von Fragen. Doppelt so großer Download.

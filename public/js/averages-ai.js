@@ -8,7 +8,10 @@
  *   Averages.io school), the browser has WebGPU, and Potato mode is off.
  * - Downloaded once, when the student turns it on in Settings > A.I. search (size shown first), from our R2 through
  *   the app's own /ai/ (worker/index.js). Kept in the browser's Cache Storage ("averages-ai-v1"); never a server.
- * - Two versions: Standard (4-bit) and Higher quality (8-bit, twice the download). Both round 6.
+ * - Two versions (2026-11-17): Standard = Round 10 in 4-bit; Higher quality = the 70/30 blend (0.7 Round 17b + 0.3
+ *   Round 10) in 8-bit, twice the download, the only one that knows the Round 17 search options (schema 17: grades
+ *   above/below a percent and by kind of work, work sorted, what it takes in every class). Both have the Firefox fix
+ *   (every ONNX Pad rewritten, same weights), and both answer a two- or three-part question with up to 3 searches.
  * - The model runs in a Web Worker (averages-ai-worker.js), with constrained decoding and the explicit-word filter.
  *
  * window.AvAI: offered(), status(), download(v), remove(), ask(text), run(call), VARIANTS.
@@ -20,8 +23,8 @@
   var RUNTIME = 26861777;   // ort-wasm-simd-threaded.asyncify.wasm
   var COMMON = 7153421 + 25054 + 2022 + 210724 + 13310;   // tokenizer.json, tokenizer_config.json, config.json, generation_config.json, safety_words.json
   var VARIANTS = {
-    q4: { model: 'averages-search-q4-r6', dtype: 'q4f16', data: 'onnx/model_q4f16.onnx_data', files: ['config.json', 'generation_config.json', 'tokenizer.json', 'tokenizer_config.json', 'safety_words.json', 'onnx/model_q4f16.onnx', 'onnx/model_q4f16.onnx_data'], bytes: 1905888 + 236435712 + COMMON + RUNTIME, name: 'Standard', params: '350M' },
-    q8: { model: 'averages-search-q8-r6', dtype: 'q8', data: 'onnx/model_quantized.onnx_data', files: ['config.json', 'generation_config.json', 'tokenizer.json', 'tokenizer_config.json', 'safety_words.json', 'onnx/model_quantized.onnx', 'onnx/model_quantized.onnx_data'], bytes: 1855514 + 472699392 + COMMON + RUNTIME, name: 'Higher quality', params: '350M' },
+    q4: { model: 'averages-search-q4-r10', dtype: 'q4f16', data: 'onnx/model_q4f16.onnx_data', files: ['config.json', 'generation_config.json', 'tokenizer.json', 'tokenizer_config.json', 'safety_words.json', 'onnx/model_q4f16.onnx', 'onnx/model_q4f16.onnx_data'], bytes: 2087113 + 236435712 + COMMON + RUNTIME, name: 'Standard', params: '350M', schema: 16 },
+    q8: { model: 'averages-search-q8-r17', dtype: 'q8', data: 'onnx/model_quantized.onnx_data', files: ['config.json', 'generation_config.json', 'tokenizer.json', 'tokenizer_config.json', 'safety_words.json', 'onnx/model_quantized.onnx', 'onnx/model_quantized.onnx_data'], bytes: 2036627 + 472699392 + COMMON + RUNTIME, name: 'Higher quality', params: '350M', schema: 17 },
   };
   var LS = window.localStorage;
   function opts() { try { var o = JSON.parse(LS.getItem(STORE) || 'null'); return o && typeof o === 'object' ? o : {}; } catch (e) { return {}; } }
@@ -41,9 +44,10 @@
   function gpuOk() {
     if (DEV_WASM) return Promise.resolve(true);
     // Computers only (phones haven't been tested, and the model needs the memory). Every browser with WebGPU may try:
-    // the first run checks it can really search (selfTest below). Firefox 145's WebGPU can't yet: it turns down one of
-    // ONNX Runtime's shaders ("Shader 'Pad' parsing error", Martin 2026-11-15), so there it says so and tries again
-    // when the browser updates.
+    // the first run checks it can really search (selfTest below). Firefox turned down one of ONNX Runtime's shaders
+    // with Round 6 ("Shader 'Pad' parsing error", Martin 2026-11-15); the Round 10 / 70/30 files have every Pad
+    // rewritten (same weights), so Firefox 160 runs them. A browser that still can't is told so, and tested again
+    // when it updates.
     var uad = navigator.userAgentData;
     if (uad ? uad.mobile : /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '')) return Promise.resolve(false);
     if (!gpuP) gpuP = !navigator.gpu || !navigator.gpu.requestAdapter ? Promise.resolve(false)
@@ -90,10 +94,11 @@
 
   // ---------- can this browser really run it? ----------
   // averages_ai_check = { ua, v, ok }: one test search after each download, and again whenever the browser updates
-  // (its user agent changes), so a browser that couldn't (Firefox, for now) starts working once it can.
+  // (its user agent changes), so a browser that couldn't starts working once it can.
   var CHECK = 'averages_ai_check', UA = String(navigator.userAgent || '').slice(0, 300);
-  function check() { try { var c = JSON.parse(LS.getItem(CHECK) || 'null'); return c && c.ua === UA ? c : null; } catch (e) { return null; } }
-  function setCheck(v, ok) { try { LS.setItem(CHECK, JSON.stringify({ ua: UA, v: v, ok: !!ok, at: Date.now() })); } catch (e) { /* full or off */ } }
+  // ...and per model: a new model is tested again (Firefox couldn't run Round 6; the Round 10 / 70/30 files can)
+  function check() { try { var c = JSON.parse(LS.getItem(CHECK) || 'null'); return c && c.ua === UA && VARIANTS[c.v] && c.m === VARIANTS[c.v].model ? c : null; } catch (e) { return null; } }
+  function setCheck(v, ok) { try { LS.setItem(CHECK, JSON.stringify({ ua: UA, v: v, m: VARIANTS[v] && VARIANTS[v].model, ok: !!ok, at: Date.now() })); } catch (e) { /* full or off */ } }
   var GPU_ERR = /webgpu|shader|ortrun|compute pipeline|f16|device (was )?lost/i;
   var testing = null, TEST_MS = 90000;
   function selfTest(v) {
@@ -120,7 +125,7 @@
   }
 
   // ---------- the worker ----------
-  var W = null, seq = 0, waits = {}, ready = null, readyV = '', DL = null, LAST_ERR = '';
+  var W = null, seq = 0, waits = {}, ready = null, readyV = '', DL = null, LAST_ERR = '', WARMING = false;
   function worker() {
     if (W) return W;
     var v = (window.AVG_JSV || {})['averages-ai-worker.js'];
@@ -141,11 +146,14 @@
     if (ready && readyV === v) return ready;
     if (W && readyV && readyV !== v) stop();
     var V = VARIANTS[v]; readyV = v;
-    ready = call({ t: 'load', model: V.model, dtype: V.dtype, files: V.files, total: V.bytes, device: DEV_WASM ? 'wasm' : 'webgpu' }, function (p) {
+    ready = call({ t: 'load', model: V.model, dtype: V.dtype, files: V.files, total: V.bytes, device: DEV_WASM ? 'wasm' : 'webgpu', schema: V.schema || 16 }, function (p) {
+      // the throwaway first search (worker load()): a search box waiting on it says "Getting A.I. ready"
+      if (p.phase === 'warmup') { WARMING = true; window.dispatchEvent(new CustomEvent('avai:warmup')); }
       if (!DL) return;
       if (p.phase) { DL.phase = p.phase; progressed(DL.total, true); changed(); return; }   // downloaded: getting it ready
       progressed(p.loaded || 0);
-    }).catch(function (e) { ready = null; readyV = ''; throw e; });
+    }).then(function (r) { if (WARMING) { WARMING = false; window.dispatchEvent(new CustomEvent('avai:warmup', { detail: { done: true } })); } return r; },
+      function (e) { WARMING = false; ready = null; readyV = ''; throw e; });
     return ready;
   }
 
@@ -188,8 +196,8 @@
       return load(v);   // the worker downloads what isn't saved yet
     }).then(function () {
       o = opts(); o.on = true; o.v = v; delete o.pending; saveOpts(o);
-      // the other version, if there was one: deleted (only one is kept)
-      return prev !== v ? removeModel(prev) : null;
+      // the other version, and any older model, deleted (only one is kept)
+      return stale(v);
     }).then(function () { DL = null; changed(); return selfTest(v); }).then(function (ok) {
       // the download is kept either way; a browser that can't run it is told so (and tries again when it updates)
       if (!ok) { LAST_ERR = 'browser_cant'; changed(); throw new Error('browser_cant'); }
@@ -204,9 +212,10 @@
     changed();
     return DL.p;
   }
-  function removeModel(v) {
-    var V = VARIANTS[v];
-    return cacheKeys().then(function (ks) { return Promise.all(ks.filter(function (x) { return x.k.url.indexOf('/ai/models/' + V.model + '/') >= 0; }).map(function (x) { return x.c.delete(x.k); })); });
+  // every saved model file but version v's: the other version, and older rounds (a new model has a new name)
+  function stale(v) {
+    var keep = '/ai/models/' + VARIANTS[v].model + '/';
+    return cacheKeys().then(function (ks) { return Promise.all(ks.filter(function (x) { return x.k.url.indexOf('/ai/models/') >= 0 && x.k.url.indexOf(keep) < 0; }).map(function (x) { return x.c.delete(x.k); })); });
   }
   /** Delete everything (model and runtime) and turn A.I. search off. */
   function remove() {
@@ -236,7 +245,9 @@
   function weekStart(ms) { var s = sod(ms), d = new Date(s).getDay(); return s - ((d + 6) % 7) * DAY; }   // Monday
   function range(when, now) {
     var today = sod(now), ws = weekStart(now);
-    return { today: [today, today + DAY], tomorrow: [today + DAY, today + 2 * DAY], this_week: [today, ws + 7 * DAY], next_week: [ws + 7 * DAY, ws + 14 * DAY], last_week: [ws - 7 * DAY, ws] }[when] || null;
+    var d = new Date(now), y = d.getFullYear(), mo = d.getMonth(), sy = mo >= 7 ? y : y - 1;   // the school year starts Aug 1
+    return { today: [today, today + DAY], tomorrow: [today + DAY, today + 2 * DAY], this_week: [today, ws + 7 * DAY], next_week: [ws + 7 * DAY, ws + 14 * DAY], last_week: [ws - 7 * DAY, ws],
+      this_month: [new Date(y, mo, 1).getTime(), new Date(y, mo + 1, 1).getTime()], this_year: [new Date(sy, 7, 1).getTime(), new Date(sy + 1, 7, 1).getTime()] }[when] || null;
   }
   var norm = function (s) { return String(s || '').toLowerCase().normalize('NFKD').replace(/\p{Mn}/gu, '').replace(/[^a-z0-9一-鿿]+/g, ' ').trim(); };
   var TITLES = /^(mr|mrs|ms|miss|mx|dr|prof|professor|sr|sra|srta|mme|mlle|m|herr|frau|coach|senor|senora|profe|profesor|profesora|teacher|老师)\s+/;
@@ -250,6 +261,8 @@
     var L = String(s).trim().toUpperCase().replace(/\s+/g, ''); for (var i = 0; i < CUTS.length; i++) if (CUTS[i][1] === L) return CUTS[i][0];
     return null;
   }
+  // "80%", "80", "80.5 %": a number, or null
+  var pctOf = function (s) { var m = /(\d{1,3}(?:[.,]\d+)?)/.exec(String(s == null ? '' : s)); return m ? parseFloat(m[1].replace(',', '.')) : null; };
   var KIND_RE = { test: /\b(test|exam|midterm|final|assessment|examen|prueba|teste|prova|klausur|klassenarbeit|pr[üu]fung)\b|考试|测验/i, quiz: /\b(quiz|quizz?es|quizlet|cuestionario|interro)\b|小测/i,
     homework: /\b(homework|hw|worksheet|practice|tarea|deberes|devoirs?|exerc[ií]cios?|li[cç][aã]o|hausaufgaben?)\b|作业/i, project: /\b(project|proyecto|projet|projeto|projekt)\b|项目/i,
     essay: /\b(essay|paper|writing|ensayo|redacci[oó]n|dissertation|reda[cç][aã]o|aufsatz|essai)\b|作文|论文/i, lab: /\b(lab|labs|laboratory|laboratorio|laboratoire|labor)\b|实验/i };
@@ -266,8 +279,10 @@
   }
   var dShort = function (ms) { var D = window.FSD; return ms ? (D && D.fmt && D.fmt.shortDate ? D.fmt.shortDate(ms) : new Date(ms).toLocaleDateString()) : ''; };
   var LABEL = {
-    status: { due: 'Due', missing: 'Missing', turned_in: 'Turned in', graded: 'Graded' },
-    when: { today: 'Today', tomorrow: 'Tomorrow', this_week: 'This week', next_week: 'Next week', last_week: 'Last week' },
+    status: { due: 'Due', missing: 'Missing', late: 'Late', turned_in: 'Turned in', turned_in_late: 'Turned in late', graded: 'Graded' },
+    when: { today: 'Today', tomorrow: 'Tomorrow', this_week: 'This week', next_week: 'Next week', last_week: 'Last week', this_month: 'This month', this_year: 'This school year' },
+    sort: { lowest: 'Lowest first', highest: 'Highest first', earliest_due: 'Soonest due first', latest_due: 'Latest due first', most_points: 'Most points first' },
+    from: { teachers: 'From teachers', classmates: 'From classmates' },
     kind: { test: 'Tests', quiz: 'Quizzes', homework: 'Homework', project: 'Projects', essay: 'Essays', lab: 'Labs', pdf: 'PDFs', slides: 'Slides', doc: 'Documents', sheet: 'Spreadsheets', image: 'Images' },
     tool: { find_work: 'Work', find_grades: 'Grades', what_it_takes: 'What it takes', find_posts: 'Posts', find_messages: 'Messages', find_files: 'Files', open_page: 'Open', word_search: 'Words' },
   };
@@ -276,11 +291,16 @@
     var out = [LABEL.tool[name] || name];
     if (a.status && a.status !== 'any') out.push(a.status === 'missing' && a.late ? 'Late' : LABEL.status[a.status]);
     if (a.kind && a.kind !== 'any') out.push(LABEL.kind[a.kind]);
+    if (a.commented) out.push('Commented on');
     if (a.unread) out.push('Unread');
+    if (a.from && LABEL.from[a.from]) out.push(LABEL.from[a.from]);
     if (name === 'find_grades' && a.show === 'gpa') out.push('GPA');
     if (name === 'find_grades' && a.show === 'scores') out.push('Scores');
-    if (a.sort === 'lowest') out.push('Lowest first'); if (a.sort === 'highest') out.push('Highest first');
-    if (a.when && a.when !== 'any') out.push(LABEL.when[a.when]);
+    if (a.sort && LABEL.sort[a.sort]) out.push(LABEL.sort[a.sort]);
+    if (a.when && a.when !== 'any' && LABEL.when[a.when]) out.push(LABEL.when[a.when]);
+    if (name === 'what_it_takes' && !a['class']) out.push('Every class');
+    var lo = pctOf(a.above), hi = pctOf(a.below);
+    if (hi != null) out.push('Under ' + hi + '%'); if (lo != null) out.push(lo + '% or more');
     var named = [a.letter ? a.letter + 's' : '', a['class'], a.teacher, a.target, a.assignment].filter(Boolean);
     return out.map(function (x) { return '<span class="av-ai-chip">' + esc(t(x)) + '</span>'; }).join('') + named.map(function (x) { return '<span class="av-ai-chip" data-no-t>' + esc(x) + '</span>'; }).join('');
   }
@@ -327,16 +347,28 @@
     if (a.teacher && q && !named(a.teacher, q)) delete a.teacher;
     // filters the student never asked for: "what have my teachers texted me" came back as unread only (Martin 2026-11-15)
     if (a.unread && q && !/unread|\bnew\b|haven'?t (read|seen|opened)|not (read|seen|opened)|didn'?t (read|see|open)|sin leer|no le[ií]d|nuev[oa]s?|non lus?|nouveaux?|nouvelles?|n[aã]o lid|nov[oa]s?|ungelesen|neue?n?|未读|新/i.test(q)) delete a.unread;
-    if (a.when && a.when !== 'any' && q && !/today|tonight|tomorrow|week|yesterday|\bnow\b|soon|hoy|ma[nñ]ana|semana|esta noche|aujourd|demain|semaine|ce soir|hoje|amanh[aã]|heute|morgen|woche|今天|明天|昨天|本周|这周|下周|上周|星期|礼拜|今晚/i.test(q)) delete a.when;
+    if (a.when && a.when !== 'any' && q && !/today|tonight|tomorrow|week|yesterday|\bnow\b|soon|month|year|semester|hoy|ma[nñ]ana|semana|esta noche|\bmes\b|a[nñ]o|aujourd|demain|semaine|ce soir|mois|ann[eé]e|\ban\b|hoje|amanh[aã]|m[eê]s|\bano\b|heute|morgen|woche|monat|jahr|今天|明天|昨天|本周|这周|下周|上周|星期|礼拜|今晚|月|年/i.test(q)) delete a.when;
+    // only work a teacher commented on: when the student said so
+    if (a.commented && q && !/comment|feedback|remark|\bnotes?\b|coment|retroaliment|commentaire|remarque|kommentar|anmerkung|r[uü]ckmeldung|评论|评语|反馈/i.test(q)) delete a.commented;
     var name = c.name, L = q ? letterAsked(q) : '';
     // "assignment with the highest grade" is about pieces of work, not classes (the model answered with classes)
     if (name === 'find_grades' && (!a.show || a.show === 'grade') && q && /\b(assignments?|tests?|quiz(z?es)?|homework|essays?|labs?|projects?|scores?|tareas?|trabajos?|ex[aá]men(es)?|devoirs?|contr[oô]les?|tarefas?|provas?|aufgaben?|arbeiten?|klausuren?)\b|作业|考试|测验/i.test(q) && !/\b(class|classes|course|courses|clase|clases|cours|aula|aulas|kurs|kurse)\b|课/i.test(q)) a.show = 'scores';
-    // the model has one status for both; the words tell them apart
-    if (name === 'find_work' && a.status === 'missing') a.late = /\b(late|overdue|past due|behind|tarde|atrasad[oa]s?|vencid[oa]s?|retard|en retard|verspätet|überfällig|zu spät)\b|逾期|迟交|过期/i.test(q || '');
+    // missing (marked by the teacher) or late (past due, not turned in): the model tells them apart since Round 7; if it
+    // still says missing, the words decide
+    if (name === 'find_work' && a.status === 'late') { a.status = 'missing'; a.late = true; }
+    else if (name === 'find_work' && a.status === 'missing') a.late = /\b(late|overdue|past due|behind|tarde|atrasad[oa]s?|vencid[oa]s?|retard|en retard|verspätet|überfällig|zu spät)\b|逾期|迟交|过期/i.test(q || '');
     // grades by letter aren't something the model can ask for: answered here, from the scores
     // only for questions about pieces of work ("do I have an A in chem" is the class's grade, and stays that)
     var aboutWork = (name === 'find_grades' && a.show === 'scores') || /assignments?|scores?|tests?|quiz|homework|how many|which|tareas?|trabajos?|ex[aá]men|devoirs?|contr[oô]les?|tarefas?|trabalhos?|provas?|aufgaben|arbeiten|tests|作业|考试|测验|哪些|多少/i.test(q || '');
-    if (L && aboutWork && (name === 'find_grades' || (name === 'find_work' && (!a.status || a.status === 'graded' || a.status === 'any')))) { name = 'find_grades'; a = { 'class': a['class'], show: 'scores', sort: a.sort }; if (!a['class']) delete a['class']; if (!a.sort) delete a.sort; a.letter = L; }
+    if (L && !a.letter && aboutWork && (name === 'find_grades' || (name === 'find_work' && (!a.status || a.status === 'graded' || a.status === 'any')))) {
+      if (name === 'find_work') { a = { 'class': a['class'], kind: a.kind }; if (!a['class']) delete a['class']; if (!a.kind || a.kind === 'any') delete a.kind; }
+      name = 'find_grades'; a.show = 'scores'; a.letter = L;
+    }
+    // a letter, or one kind of work (tests, quizzes), is about scores on pieces of work; "which classes have a B" is
+    // about the classes' grades (the model answered with scores, golden set 2026-11-17)
+    var classWords = /\b(class|classes|course|courses|clase|clases|cours|aula|aulas|mat[eé]rias?|kurs|kurse|f[aä]cher)\b|课/i, workWords = /\b(assignments?|tests?|quiz(z?es)?|homework|essays?|labs?|projects?|scores?|tareas?|trabajos?|ex[aá]men(es)?|devoirs?|contr[oô]les?|tarefas?|provas?|aufgaben?|arbeiten?|klausuren?)\b|作业|考试|测验/i;
+    if (name === 'find_grades' && a.letter && (!a.kind || a.kind === 'any') && q && classWords.test(q) && !workWords.test(q)) a.show = 'grade';
+    else if (name === 'find_grades' && a.show !== 'gpa' && (a.letter || (a.kind && a.kind !== 'any'))) a.show = 'scores';
     return { name: name, args: a };
   }
 
@@ -369,9 +401,14 @@
       return { go: FSX.url(a.page || 'home') };
     }
     if (c.name === 'find_work') {
-      var R = a.when && a.when !== 'any' ? range(a.when, now) : null, st = { due: 'due', missing: 'missing', turned_in: 'turned', graded: 'graded' }[a.status] || '';
+      var R = a.when && a.when !== 'any' ? range(a.when, now) : null, st = { due: 'due', missing: 'missing', turned_in: 'turned', turned_in_late: 'turned', graded: 'graded' }[a.status] || '';
+      var lateIn = a.status === 'turned_in_late', wasLate = function (x) { return !!(x.turnedAt && x.dueAt && x.turnedAt > x.dueAt + 6e4); };
       var W = (D.ASG || []).filter(function (x) {
-        if (!inClass(x.c) || (st && x.st !== st)) return false;
+        if (!inClass(x.c)) return false;
+        // turned in after the due date: still waiting for a grade, or graded since
+        if (lateIn) { if ((x.st !== 'turned' && x.st !== 'graded') || !wasLate(x)) return false; }
+        else if (st && x.st !== st) return false;
+        if (a.commented && !x.note) return false;
         // "missing" is what the teacher marked missing; work that's only past due is "late" (asked for by name)
         if (st === 'missing' && a.late !== undefined && (a.late ? x.marked : !x.marked)) return false;
         if (st === 'due' && x.dueAt && x.dueAt < now - 6e4 && !x.outside) return false;
@@ -379,16 +416,21 @@
         if (R) { var at = x.dueAt || x.gradedAt || x.turnedAt; if (!at || at < R[0] || at >= R[1]) return false; }
         return true;
       });
-      W.sort(st === 'graded' ? function (x, y) { return (y.gradedAt || 0) - (x.gradedAt || 0); } : st === 'missing' ? function (x, y) { return (y.dueAt || 0) - (x.dueAt || 0); } : function (x, y) { return (x.dueAt || 9e15) - (y.dueAt || 9e15); });
+      W.sort(a.sort === 'earliest_due' ? function (x, y) { return (x.dueAt || 9e15) - (y.dueAt || 9e15); } : a.sort === 'latest_due' ? function (x, y) { return (y.dueAt || 0) - (x.dueAt || 0); }
+        : a.sort === 'most_points' ? function (x, y) { return (y.pts || 0) - (x.pts || 0); }
+        : st === 'graded' ? function (x, y) { return (y.gradedAt || 0) - (x.gradedAt || 0); } : st === 'missing' ? function (x, y) { return (y.dueAt || 0) - (x.dueAt || 0); } : function (x, y) { return (x.dueAt || 9e15) - (y.dueAt || 9e15); });
       // the answer in a few words, for the top of the card: "2 due tomorrow", "6 missing", or a single test's day and time
       var nW = W.length, one = nW === 1 && W[0].dueAt && a.kind && a.kind !== 'any' && st !== 'graded' && st !== 'turned';
       if (one) big = new Date(W[0].dueAt).toLocaleDateString((window.AvI18n && window.AvI18n.locale) || 'en-US', { weekday: 'short' }) + (W[0].time ? ', ' + W[0].time : '');
       else if (st === 'due' && (a.when === 'today' || a.when === 'tomorrow')) big = t(nW + ' due ' + a.when);
       else if (st === 'missing') big = t(nW + (a.late ? ' late' : ' missing'));
       else if (st === 'graded') big = t(nW + ' graded');
+      else if (lateIn) big = t(nW + ' turned in late');
       else if (st === 'turned') big = t(nW + ' turned in');
+      // "the next thing due", "my oldest missing work": the first one is the answer
+      if ((a.sort === 'earliest_due' || a.sort === 'latest_due') && nW && W[0].dueAt && !big) big = dShort(W[0].dueAt);
       rows = W.slice(0, 30).map(function (x) {
-        var cc = C[x.c], end = x.st === 'graded' && x.got != null ? esc(x.got + (x.pts ? '/' + x.pts : '')) : x.st === 'missing' ? '<span class="av-ai-tag bad">' + esc(t(x.marked ? 'Missing' : 'Late')) + '</span>' : x.st === 'turned' ? '<span class="av-ai-tag ok">' + esc(t('Turned in')) + '</span>' : '';
+        var cc = C[x.c], end = x.st === 'graded' && x.got != null ? esc(x.got + (x.pts ? '/' + x.pts : '')) : x.st === 'missing' ? '<span class="av-ai-tag bad">' + esc(t(x.marked ? 'Missing' : 'Late')) + '</span>' : x.st === 'turned' ? '<span class="av-ai-tag ok">' + esc(t(lateIn ? 'Turned in late' : 'Turned in')) + '</span>' : a.sort === 'most_points' && x.pts ? esc(t(x.pts + ' pts')) : '';
         return row({ href: FSX.hubUrl(x.c, '', { a: x.id }), lead: clsTile(cc), t: x.t, sub: (cc ? cc.name : '') + (x.dueAt ? ' · ' + t('Due') + ' ' + dShort(x.dueAt) + (x.time ? ', ' + x.time : '') : ''), end: end });
       });
       if (W.length > 30) note = W.length + ' found. Showing the first 30.';
@@ -399,45 +441,66 @@
       }
     } else if (c.name === 'find_grades') {
       var list = (D.CLASSES || []).filter(function (x) { return !x.none && inClass(x.id); });
+      // Round 17 (Higher quality): under / at or over a percent
+      var lo = pctOf(a.above), hi = pctOf(a.below), inBand = function (p) { return (lo == null || p >= lo) && (hi == null || p < hi); };
+      var band = hi != null && lo != null ? t(lo + '% to ' + hi + '%') : hi != null ? t('under ' + hi + '%') : lo != null ? t(lo + '% or more') : '';
       if (a.show === 'gpa') {
         var G = window.AveragesGPA, g = G ? G.compute(list.map(function (x) { return { id: String(x.id), name: x.name, grade: letterOf(x.pct) }; })) : null;
         if (g && g.unweighted != null) big = 'GPA ' + g.unweighted.toFixed(2);
         if (g && g.unweighted != null) rows = [row({ href: FSX.url('grades'), lead: '<span class="av-ai-cl" style="--c:#3e64b0" aria-hidden="true">GPA</span>', t: g.unweighted.toFixed(2) + ' GPA', sub: (g.weighted != null ? g.weighted.toFixed(2) + ' weighted · ' : '') + list.length + ' classes' })];
       } else if (a.show === 'scores') {
-        var pct = function (w) { return w.got / w.of * 100; };
-        var S = (D.WORK || []).filter(function (w) { return inClass(w.c) && w.got != null && w.of && (!a.letter || letterIs(a.letter, pct(w))); });
+        var pct = function (w) { return w.got / w.of * 100; }, kre = a.kind && a.kind !== 'any' ? KIND_RE[a.kind] : null;
+        var S = (D.WORK || []).filter(function (w) { return inClass(w.c) && w.got != null && w.of && (!a.letter || letterIs(a.letter, pct(w))) && (!kre || kre.test(w.n + ' ' + (w.cat || ''))) && inBand(pct(w)); });
         var count = S.length;
         if (a.sort === 'lowest') S.sort(function (x, y) { return pct(x) - pct(y); }); else if (a.sort === 'highest') S.sort(function (x, y) { return pct(y) - pct(x); });
         rows = S.slice(0, 30).map(function (w) { var cc = C[w.c]; return row({ href: FSX.hubUrl(w.c, 'grades', { a: w.id }), lead: clsTile(cc), t: w.n, sub: (cc ? cc.name : '') + (w.on ? ' · ' + w.on : ''), end: esc(w.got + '/' + w.of) + ' <small>' + pct(w).toFixed(0) + '% ' + esc(letterOf(pct(w))) + '</small>' }); });
-        if (a.letter) lead = count === 1 ? '1 graded assignment with ' + (a.letter.charAt(0) === 'A' || a.letter.charAt(0) === 'F' ? 'an ' : 'a ') + a.letter + '.' : count + ' graded assignments with ' + (a.letter.charAt(0) === 'A' || a.letter.charAt(0) === 'F' ? 'an ' : 'a ') + a.letter + '.';
+        var an = function (L) { return (L.charAt(0) === 'A' || L.charAt(0) === 'F' ? 'an ' : 'a ') + L; };
+        if (a.letter) lead = count === 1 ? '1 graded assignment with ' + an(a.letter) + '.' : count + ' graded assignments with ' + an(a.letter) + '.';
+        // the lowest or highest one is the answer; otherwise how many, and their average (most "how am I doing" asks)
+        else if (count && (a.sort === 'lowest' || a.sort === 'highest')) big = pct(S[0]).toFixed(0) + '% ' + letterOf(pct(S[0]));
+        else if (count) {
+          var avg = S.reduce(function (x, w) { return x + pct(w); }, 0) / count;
+          big = t('Average ' + avg.toFixed(0) + '%');
+          lead = count === 1 ? '1 graded assignment' : count + ' graded assignments';
+        }
+        if (band && !a.letter) lead = (count === 1 ? '1 graded assignment' : count + ' graded assignments') + ' ' + band;
       } else {
+        list = list.filter(function (x) { return inBand(x.pct) && (!a.letter || letterIs(a.letter, x.pct)); });
         if (a.sort === 'lowest') list.sort(function (x, y) { return x.pct - y.pct; }); else if (a.sort === 'highest') list.sort(function (x, y) { return y.pct - x.pct; });
         rows = list.map(function (x) { return row({ href: FSX.hubUrl(x.id, 'grades'), lead: clsTile(x), t: x.name, sub: x.teacher || '', end: esc(letterOf(x.pct)) + ' <small>' + x.pct.toFixed(1) + '%</small>' }); });
-        // one class, or the lowest or highest: its grade is the answer
-        if (list.length && (list.length === 1 || a.sort === 'lowest' || a.sort === 'highest')) big = (list.length > 1 ? list[0].name + ', ' : '') + letterOf(list[0].pct) + ' ' + list[0].pct.toFixed(1) + '%';
+        // one class, or the lowest or highest: its grade is the answer; "which classes am I under 80%": how many
+        if (band) big = list.length === 1 ? t('1 class ' + band) : t(list.length + ' classes ' + band);
+        else if (a.letter) big = list.length === 1 ? t('1 class with ' + (/^[AF]/.test(a.letter) ? 'an ' : 'a ') + a.letter) : t(list.length + ' classes with ' + (/^[AF]/.test(a.letter) ? 'an ' : 'a ') + a.letter);
+        else if (list.length && (list.length === 1 || a.sort === 'lowest' || a.sort === 'highest')) big = (list.length > 1 ? list[0].name + ', ' : '') + letterOf(list[0].pct) + ' ' + list[0].pct.toFixed(1) + '%';
       }
     } else if (c.name === 'what_it_takes') {
-      var k = want ? C[want[0]] : null, T = targetPct(a.target);
-      if (!k || T == null) return { rows: [], note: "Couldn't tell which class or grade that's for." };
-      var got = 0, of = 0; (D.WORK || []).forEach(function (w) { if (String(w.c) === String(k.id) && w.got != null && w.of) { got += w.got; of += w.of; } });
-      var todo = (D.ASG || []).filter(function (x) { return String(x.c) === String(k.id) && (x.st === 'due' || x.st === 'missing') && x.pts; });
-      if (a.assignment) {
-        var an = norm(a.assignment), hit = todo.filter(function (x) { return norm(x.t).indexOf(an) >= 0 || an.indexOf(norm(x.t)) >= 0; });
-        // "the next test": no title matches, so the soonest work of that kind
-        if (!hit.length) { var kk = Object.keys(KIND_RE).filter(function (k2) { return KIND_RE[k2].test(a.assignment); })[0];
-          if (kk) hit = todo.filter(function (x) { return KIND_RE[kk].test(x.t) || (kk === 'test' && x.kind === 'test'); }).sort(function (x, y) { return (x.dueAt || 9e15) - (y.dueAt || 9e15); }); }
-        if (hit.length) todo = hit.slice(0, 1);
-      }
-      var rem = todo.reduce(function (s2, x) { return s2 + x.pts; }, 0), now2 = k.pct;
-      var sub2 = [t('Goal: ' + a.target), t('Now: ' + now2.toFixed(1) + '%'), k.name].join(' · ');
-      if (!rem || !of) rows = [row({ href: FSX.hubUrl(k.id, 'grades'), lead: clsTile(k), t: t('No points posted for upcoming work yet'), sub: sub2 })];
-      else {
+      var T = targetPct(a.target);
+      // one class, or (Round 17, Higher quality, no class named) every class
+      var ks = want ? want.map(function (id) { return C[id]; }).filter(Boolean).slice(0, 1) : (D.CLASSES || []).filter(function (x) { return !x.none && x.pct != null; });
+      if (!ks.length || T == null) return { rows: [], note: "Couldn't tell which class or grade that's for.", call: c };
+      var each = ks.map(function (k) {
+        var got = 0, of = 0; (D.WORK || []).forEach(function (w) { if (String(w.c) === String(k.id) && w.got != null && w.of) { got += w.got; of += w.of; } });
+        var todo = (D.ASG || []).filter(function (x) { return String(x.c) === String(k.id) && (x.st === 'due' || x.st === 'missing') && x.pts; });
+        if (a.assignment) {
+          var an2 = norm(a.assignment), hit = todo.filter(function (x) { return norm(x.t).indexOf(an2) >= 0 || an2.indexOf(norm(x.t)) >= 0; });
+          // "the next test": no title matches, so the soonest work of that kind
+          if (!hit.length) { var kk = Object.keys(KIND_RE).filter(function (k2) { return KIND_RE[k2].test(a.assignment); })[0];
+            if (kk) hit = todo.filter(function (x) { return KIND_RE[kk].test(x.t) || (kk === 'test' && x.kind === 'test'); }).sort(function (x, y) { return (x.dueAt || 9e15) - (y.dueAt || 9e15); }); }
+          if (hit.length) todo = hit.slice(0, 1);
+        }
+        var rem = todo.reduce(function (s2, x) { return s2 + x.pts; }, 0), now2 = k.pct;
+        var sub2 = [t('Goal: ' + a.target), t('Now: ' + now2.toFixed(1) + '%'), k.name].join(' · ');
+        if (!rem || !of) return { need: 1e9, row: row({ href: FSX.hubUrl(k.id, 'grades'), lead: clsTile(k), t: t('No points posted for upcoming work yet'), sub: sub2 }) };
         var need = (T * (of + rem) - now2 * of) / rem, what = todo.length === 1 ? todo[0].t : t(todo.length + ' assignments still to come (' + rem + ' points)');
         var tt = need <= 0 ? t("You're already there") : need > 100 ? t('Not reachable with the points posted so far') : t('About ' + Math.ceil(need) + '% on ' + what);
-        rows = [row({ href: todo.length === 1 ? FSX.hubUrl(k.id, '', { a: todo[0].id }) : FSX.hubUrl(k.id, 'grades'), lead: clsTile(k), t: tt, sub: (todo.length === 1 && need <= 100 && need > 0 ? '' : todo.length === 1 ? todo[0].t + ' · ' : '') + sub2 })];
-        note = 'An estimate from points. Your teacher may weight categories differently.';
-        if (need > 0 && need <= 100) big = t(Math.ceil(need) + '% for ' + (/^[AEF]/.test(String(a.target)) ? 'an ' : 'a ') + a.target);
-      }
+        return { need: need, row: row({ href: todo.length === 1 ? FSX.hubUrl(k.id, '', { a: todo[0].id }) : FSX.hubUrl(k.id, 'grades'), lead: clsTile(k), t: tt, sub: (todo.length === 1 && need <= 100 && need > 0 ? '' : todo.length === 1 ? todo[0].t + ' · ' : '') + sub2 }) };
+      });
+      // every class: the hardest to reach first
+      if (each.length > 1) each.sort(function (x, y) { return (y.need === 1e9 ? -1e9 : y.need) - (x.need === 1e9 ? -1e9 : x.need); });
+      rows = each.map(function (x) { return x.row; });
+      if (each.some(function (x) { return x.need !== 1e9; })) note = 'An estimate from points. Your teacher may weight categories differently.';
+      var n1 = each[0].need;
+      if (each.length === 1 && n1 > 0 && n1 <= 100) big = t(Math.ceil(n1) + '% for ' + (/^[AEF]/.test(String(a.target)) ? 'an ' : 'a ') + a.target);
     } else if (c.name === 'find_posts') {
       var since = a.when === 'today' ? sod(now) : a.when === 'this_week' ? now - 7 * DAY : 0;
       var P = (D.updates || []).filter(function (u) { return inClass(u.courseId) && (!a.teacher || sameTeacher(a.teacher, u.from)) && (!since || (u.at || 0) >= since); });
@@ -454,7 +517,10 @@
           return { id: String(x.id), from: names.join(', ') || 'Someone in Schoology', subject: x.subject || '', preview: x.preview || '', unread: !!x.unread, time: x.at ? dShort(x.at) : '', at: x.at || 0 };
         });
       } else M = D.messages || [];
-      M = M.filter(function (m) { return (!a.teacher || sameTeacher(a.teacher, m.from)) && (!a.unread || (m.unread && !(seen && seen.has('m', m.id)))); });
+      // class: from that class's teacher. from: teachers or classmates (a teacher is anyone teaching one of the classes)
+      var who = a.teacher || (want && C[want[0]] && C[want[0]].teacher) || '';
+      var TEACH = lists().teachers, isTeacher = function (n) { return TEACH.some(function (x) { return sameTeacher(x, n); }); };
+      M = M.filter(function (m) { return (!who || sameTeacher(who, m.from)) && (a.from !== 'teachers' || isTeacher(m.from)) && (a.from !== 'classmates' || !isTeacher(m.from)) && (!a.unread || (m.unread && !(seen && seen.has('m', m.id)))); });
       if (a.unread) big = t(M.length + ' unread');
       M.sort(function (x, y) { return (y.at || 0) - (x.at || 0); });
       rows = M.slice(0, 30).map(function (m) { return row({ href: FSX.url('messages', { thread: m.id }), lead: FSX.personAv ? FSX.personAv({ name: m.from, teacher: true }) : '', t: m.subject || m.preview || t('(No subject)'), sub: (m.from || '') + (m.time ? ' · ' + m.time : ''), end: m.unread ? '<span class="unread" aria-label="Unread"></span>' : '' }); });
@@ -475,7 +541,14 @@
   var QWORD = /[?¿？]|^(what|whats|what's|when|where|who|which|why|how|is|are|am|do|does|did|can|show|find|list|any|qu[eé]|cu[aá]ndo|d[oó]nde|qui[eé]n|cu[aá]l|c[oó]mo|tengo|hay|my|mis|mi|mes|mon|ma|meus|minhas|meu|minha|meine|mein|open|abrir|ouvrir|öffne|quoi|quand|o[uù]|qui|quel|quelle|est-ce|ai-je|o que|quando|onde|quem|qual|tenho|was|wann|wo|wer|welche|habe|gibt)\b|什么|什麼|哪|谁|吗|嗎|有没有|我的|打开/i;
   var looksAsked = function (q) { return QWORD.test(q.trim()) || q.trim().split(/\s+/).length >= 4; };
   var STATE = { ok: null, saved: false, skip: '' };   // skip: words the student chose to search as words
-  var autoTried = false, resumed = false, cleaned = false;
+  var autoTried = false, resumed = false, cleaned = false, oldGone = false;
+  function dropOld() {
+    var names = Object.keys(VARIANTS).map(function (k) { return '/ai/models/' + VARIANTS[k].model + '/'; });
+    cacheKeys().then(function (ks) {
+      var old = ks.filter(function (x) { return x.k.url.indexOf('/ai/models/') >= 0 && !names.some(function (n) { return x.k.url.indexOf(n) >= 0; }); });
+      if (old.length) return Promise.all(old.map(function (x) { return x.c.delete(x.k); })).then(changed);
+    }).catch(function () {});
+  }
   function refresh() {
     if (!window.FSD || !window.FSD.me || !window.FSD.me.uid) return Promise.resolve();
     return offered().then(function (o) {
@@ -485,6 +558,8 @@
       if (!cleaned) { cleaned = true; bgCleanup(); }
       if (pend && VARIANTS[pend] && !DL && !resumed) { resumed = true; download(pend).catch(function () {}); }
       return status().then(function (s) {
+        // files from an older model (Round 6): they go, freeing the space (turning it on again gets the new one)
+        if (!s.busy && !DL && !opts().pending && !oldGone) { oldGone = true; dropOld(); }
         STATE.saved = s.on && s.saved && !s.blocked;
         // turned on and saved, but not tested in this browser yet (it updated, or the test never ran): test it now
         // (once per page, so a check that fails for another reason doesn't keep starting over)
@@ -493,6 +568,12 @@
     }).catch(function () { STATE.ok = false; });
   }
   window.addEventListener('avai:state', function () { refresh(); });
+  // getting ready early: the model starts (and warms up) as soon as the student clicks into a search box, so most of
+  // the wait is over by the time they press Enter. Only when it's on, saved and has worked in this browser.
+  document.addEventListener('focusin', function (e) {
+    if (!e.target || (e.target.id !== 'bigInput' && e.target.id !== 'cmdkInput') || ready || !STATE.ok || !STATE.saved || potato()) return;
+    status().then(function (s) { if (s.on && s.saved && s.works && !s.busy && !ready) load(s.v).catch(function () {}); }).catch(function () {});
+  }, true);
 
   function boxes() {
     var out = [];
@@ -575,7 +656,14 @@
     if (pill && pill.animate && !calmNow()) pill.animate([{ opacity: 0, transform: 'scale(.6)' }, { opacity: 1, transform: 'none' }], { duration: 280, easing: 'cubic-bezier(.2,.8,.2,1)' });
     // still working after a moment: say so
     var el = b.res.querySelector('.av-ai-step');
-    setTimeout(function () { if (el && el.isConnected && el.dataset.step === undefined) step(b, 'Reading your question'); }, starting ? 1800 : 900);
+    setTimeout(function () { if (el && el.isConnected && el.dataset.step === undefined) step(b, WARMING ? 'Getting A.I. ready' : 'Reading your question'); }, starting ? 1800 : 900);
+    // the model's first, throwaway search (it compiles its graphics programs: up to half a minute in Firefox)
+    var warm = function (e) {
+      if (!el || !el.isConnected) { window.removeEventListener('avai:warmup', warm); return; }
+      if (e.detail && e.detail.done) { window.removeEventListener('avai:warmup', warm); if (el.dataset.step === 'Getting A.I. ready') step(b, 'Reading your question'); }
+      else if (el.dataset.step !== 'Getting A.I. ready') step(b, 'Getting A.I. ready');
+    };
+    window.addEventListener('avai:warmup', warm);
   }
   // the status line moves on: the old words slide up and out, the new ones in. Resolves when it's on screen.
   function step(b, text) {
@@ -614,6 +702,22 @@
       els[k].animate([{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], { duration: 260, delay: 60 + Math.min(k, 10) * 40, easing: 'cubic-bezier(.2,.8,.2,1)', fill: 'backwards' });
     }
   }
+  var PAGE_NAME = { home: 'Home', grades: 'Grades', assignments: 'Assignments', calendar: 'Calendar', messages: 'Messages', files: 'Files', contacts: 'Contacts', settings: 'Settings', courses: 'Courses', 'class': 'class' };
+  // one search's answer card (the sneak-peek ad's design, Martin 2026-11-17): "A.I." with the mascot, the answer big,
+  // the rows, then "Searched for:" with its chips. A longer count line (letter grades) goes under the big answer.
+  function card(out, c) {
+    var r = out.call || c, a = r.args || {};
+    var n = out.rows.length, noun = NOUN[r.name === 'find_grades' ? (a.show === 'scores' ? 'scores' : a.show === 'gpa' ? 'gpa' : 'grade') : r.name] || ['result', 'results'];
+    // a count only where one means something (not for the GPA or a what-it-takes estimate, which are one row)
+    var counted = n && noun[0] !== 'GPA' && noun[0] !== 'estimate';
+    var line = out.lead || (counted ? (n === 1 ? '1 ' + noun[0] : n + ' ' + noun[1]) : n ? '' : 'Nothing found for that.');
+    var head = out.big || (out.lead && out.lead.length <= 28 ? out.lead : line);
+    var sub = out.lead && head !== out.lead ? '<p class="av-ai-lead">' + esc(t(out.lead)) + '</p>' : '';
+    return '<div class="av-ai-card"><div class="av-ai-hd">' + AI_SVG + '<span>A.I.</span></div>'
+      + (head ? '<p class="av-ai-big" data-no-t>' + esc(out.big ? head : t(head)) + '</p>' : '') + sub
+      + out.rows.join('') + (out.note ? '<p class="av-ai-note">' + esc(t(out.note)) + '</p>' : '')
+      + '<div class="av-ai-by"><span class="av-ai-by-h">' + esc(t('Searched for:')) + '</span><span class="av-ai-chips">' + chips(r.name, a) + '</span></div></div>';
+  }
   function answer(b, q) {
     var my = ++turn;
     var still = function () { return my === turn && b.res.isConnected && (b.input.value || '').trim() === q; };
@@ -623,30 +727,32 @@
       var words = '<button class="mi s-cmd av-ai-words" data-avai="words"><svg class="i"><use href="#i-search"/></svg><span class="tx"><b>' + esc(t('Search for the words instead')) + '</b><small data-no-t>“' + esc(q.slice(0, 120)) + '”</small></span></button>';
       var foot = '<p class="av-ai-note">' + esc(t('A.I. can be wrong. It ran on this device; nothing you typed was sent anywhere.')) + '</p>';
       if (r.kind !== 'call') { open(b, '<div class="av-ai-say">' + AI_SVG + '<span>' + esc(t("I can only search your classes, grades, work, posts, messages and files.")) + '</span></div>' + words + foot); return; }
-      var need = NEEDS[r.name], got = null;
+      // up to 3 searches, one per question ("what's due tomorrow and my bio grade"): each its own card, a line apart
+      var calls = (r.calls && r.calls.length ? r.calls : [{ name: r.name, args: r.args }]).slice(0, 3);
+      // with other searches, "look for these words" adds nothing
+      if (calls.length > 1) { var real = calls.filter(function (x) { return x.name !== 'word_search'; }); calls = real.length ? real : calls.slice(0, 1); }
+      var needs = calls.map(function (x) { return NEEDS[x.name]; }).filter(function (x, i, A) { return x && A.indexOf(x) === i; });
+      var got = {};
       // what it's doing now, then the data it needs, then "Reviewing results" for a moment before the answer opens
-      return step(b, SEARCHING[r.name] || 'Searching').then(function () { return Promise.all([need ? extraData(need) : null, pause(350)]); })
-        .then(function (x) { got = x[0]; if (!still()) return; return step(b, 'Reviewing results').then(function () { return pause(250); }); })
-        .then(function () { var extra = got;
+      return step(b, SEARCHING[calls[0].name] || 'Searching').then(function () { return Promise.all([Promise.all(needs.map(function (k) { return extraData(k).then(function (d) { got[k] = d; }); })), pause(350)]); })
+        .then(function () { if (!still()) return; return step(b, 'Reviewing results').then(function () { return pause(250); }); })
+        .then(function () {
       if (!still()) return;
-      var out = run(r, q, extra); r = out.call || r;
-      if (out.go) { window.location.href = out.go; return; }
-      if (out.words != null) { STATE.skip = out.words; b.input.value = out.words; b.input.dispatchEvent(new Event('input', { bubbles: true })); return; }
-      // the answer first (how many, or the count line), then the rows, then what the A.I. searched for, big enough to read
-      var n = out.rows.length, noun = NOUN[r.name === 'find_grades' ? (r.args && r.args.show === 'scores' ? 'scores' : r.args && r.args.show === 'gpa' ? 'gpa' : 'grade') : r.name] || ['result', 'results'];
-      // a count only where one means something (not for the GPA or a what-it-takes estimate, which are one row)
-      var counted = n && noun[0] !== 'GPA' && noun[0] !== 'estimate';
-      var line = out.lead || (counted ? (n === 1 ? '1 ' + noun[0] : n + ' ' + noun[1]) : n ? '' : 'Nothing found for that.');
-      // the answer card (the sneak-peek ad's design, Martin 2026-11-17): "A.I." with the mascot, the answer big, the rows,
-      // then "Searched for:" with its chips. A longer count line (letter grades) goes under the big answer.
-      var head = out.big || (out.lead && out.lead.length <= 28 ? out.lead : line);
-      var sub = out.lead && head !== out.lead ? '<p class="av-ai-lead">' + esc(t(out.lead)) + '</p>' : '';
-      var card = '<div class="av-ai-card"><div class="av-ai-hd">' + AI_SVG + '<span>A.I.</span></div>'
-        + (head ? '<p class="av-ai-big" data-no-t>' + esc(out.big ? head : t(head)) + '</p>' : '') + sub
-        + out.rows.join('') + (out.note ? '<p class="av-ai-note">' + esc(t(out.note)) + '</p>' : '')
-        + '<div class="av-ai-by"><span class="av-ai-by-h">' + esc(t('Searched for:')) + '</span><span class="av-ai-chips">' + chips(r.name, r.args || {}) + '</span></div></div>';
-      open(b, card + words + foot);
-      });
+      if (calls.length === 1) {
+        var out = run(calls[0], q, got[NEEDS[calls[0].name]]);
+        if (out.go) { window.location.href = out.go; return; }
+        if (out.words != null) { STATE.skip = out.words; b.input.value = out.words; b.input.dispatchEvent(new Event('input', { bubbles: true })); return; }
+        open(b, card(out, calls[0]) + words + foot);
+        return;
+      }
+      // several: a page to open is a row in its own card (nothing opens by itself)
+      var html = calls.map(function (x) {
+        var o = run(x, q, got[NEEDS[x.name]]);
+        if (o.go) o = { rows: [row({ href: o.go, lead: '<svg class="i"><use href="#i-right"/></svg>', t: t('Open ' + (PAGE_NAME[x.args && x.args.page] || 'page')) })], call: x };
+        return card(o, x);
+      }).join('');
+      open(b, html + words + foot);
+        });
     }).catch(function (e) {
       if (!still()) return;
       var gpu = e && GPU_ERR.test(e.message || '');
@@ -717,6 +823,8 @@
     '.av-ai-big{margin:4px 10px 8px;color:var(--ink);font-family:var(--display,inherit);font-size:34px;line-height:1.05;font-weight:800;letter-spacing:-.02em;overflow-wrap:anywhere}',
     '.av-ai-card .av-ai-lead{margin:0 10px 8px;font-size:15px;color:var(--ink-2,var(--muted))}',
     '.av-ai-card .av-ai-end{font-size:15px}',
+    // two or three questions in one: each answer its own card, a line apart (Martin's note in the model handoff)
+    '.av-ai-card + .av-ai-card{margin-top:18px}',
     '.av-ai-card .av-ai-by{margin:10px 0 0;padding:0 10px;background:none}.av-ai-card .av-ai-by .av-ai-chip{background:var(--panel,#eef0f4);height:26px;font-size:13px}',
     // after the answer: what it searched for, at the bottom, in readable chips
     '.av-ai-by{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:8px 4px 2px;padding:10px 12px;border-radius:14px;background:var(--panel,#f2f3f6)}',
