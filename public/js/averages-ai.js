@@ -125,7 +125,7 @@
   }
 
   // ---------- the worker ----------
-  var W = null, seq = 0, waits = {}, ready = null, readyV = '', DL = null, LAST_ERR = '';
+  var W = null, seq = 0, waits = {}, ready = null, readyV = '', DL = null, LAST_ERR = '', STARTING = false;
   function worker() {
     if (W) return W;
     var v = (window.AVG_JSV || {})['averages-ai-worker.js'];
@@ -147,12 +147,13 @@
     if (W && readyV && readyV !== v) stop();
     var V = VARIANTS[v]; readyV = v;
     var shown = DL ? null : initStart(v);   // a download has its own bar in Settings
+    starting(true);
     ready = call({ t: 'load', model: V.model, dtype: V.dtype, files: V.files, total: V.bytes, device: DEV_WASM ? 'wasm' : 'webgpu', schema: V.schema || 16 }, function (p) {
       if (!DL) return;
       if (p.phase) { DL.phase = p.phase; progressed(DL.total, true); changed(); return; }   // downloaded: getting it ready
       progressed(p.loaded || 0);
-    }).then(function (r) { if (shown) initDone(shown, true); return r; },
-      function (e) { if (shown) initDone(shown, false); ready = null; readyV = ''; throw e; });
+    }).then(function (r) { if (shown) initDone(shown, true); starting(false); return r; },
+      function (e) { if (shown) initDone(shown, false); starting(false); ready = null; readyV = ''; throw e; });
     return ready;
   }
 
@@ -194,11 +195,19 @@
       if (el.animate && !calmNow()) el.animate([{ opacity: 1 }, { opacity: 0, transform: 'translateY(10px)' }], { duration: 200, easing: 'ease-in' }).onfinish = function () { el.remove(); }; else el.remove();
     }, ok ? 2200 : 0);
   }
+  // while the model starts, search anything has no "Ask A.I." row (it would only wait); it comes back once it's ready
+  // (Martin 2026-11-17)
+  function starting(on) {
+    STARTING = on;
+    if (on) document.querySelectorAll('.av-ai-row[data-avai="ask"]').forEach(function (x) { x.remove(); });
+    else if (typeof soon === 'function') soon();
+  }
   // starts it by itself on each page once it's on, saved and has worked in this browser (not in Potato mode)
   var autoWarm = false;
   function warmSoon(v) {
     if (autoWarm || ready || DL || potato()) return; autoWarm = true;
-    setTimeout(function () { (window.requestIdleCallback || setTimeout)(function () { if (!ready && !DL) load(v).catch(function () {}); }, { timeout: 3000 }); }, 1200);
+    starting(true);   // from now: no "Ask A.I." until it's ready
+    setTimeout(function () { (window.requestIdleCallback || setTimeout)(function () { if (!ready && !DL) load(v).catch(function () {}); else if (!ready) starting(false); }, { timeout: 3000 }); }, 1200);
   }
 
   // the bar: a light event while bytes arrive (avai:progress, ~10 a second); avai:state only when something changes
@@ -633,7 +642,7 @@
       var q = (b.input.value || '').trim(); if (q.length < 2 || q === STATE.skip) return;
       var asked = looksAsked(q);
       var html = STATE.saved
-        ? '<button class="mi s-cmd av-ai-row" data-avai="ask">' + AI_SVG + '<span class="tx"><b>' + esc(t('Ask A.I.')) + '</b><small data-no-t>“' + esc(q.slice(0, 120)) + '”</small></span></button>'
+        ? STARTING ? '' : '<button class="mi s-cmd av-ai-row" data-avai="ask">' + AI_SVG + '<span class="tx"><b>' + esc(t('Ask A.I.')) + '</b><small data-no-t>“' + esc(q.slice(0, 120)) + '”</small></span></button>'
         : asked ? '<button class="mi s-cmd av-ai-row" data-go="' + esc(window.FSX.url('settings', { section: 'ai' })) + '">' + AI_SVG + '<span class="tx"><b>' + esc(t('Search with A.I.')) + '</b><small>' + esc(t('Set it up in Settings. It runs on this device.')) + '</small></span></button>' : '';
       if (!html) return;
       var foot = b.res.querySelector(':scope > .pop-foot'), first = asked && STATE.saved;
