@@ -1261,3 +1261,8 @@
 1261|Seite öffnen
 1262|Kurs öffnen
 1263|Genauer und versteht mehr Arten von Fragen. Doppelt so großer Download.
+1264|Almost Intelligent search wird gestartet
+1265|Noch etwa # s
+1266|Fast fertig…
+1267|Almost Intelligent search ist bereit
+1268|Frag in der Suche alles über deine Kurse.

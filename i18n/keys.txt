@@ -1261,3 +1261,8 @@
 1261|Open page
 1262|Open class
 1263|More accurate, and understands more kinds of questions. Twice the download.
+1264|Almost Intelligent search is initializing
+1265|About # s left
+1266|Almost there…
+1267|Almost Intelligent search is ready
+1268|Ask it anything about your classes in search.

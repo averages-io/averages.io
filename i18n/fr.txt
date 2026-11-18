@@ -1261,3 +1261,8 @@
 1261|Ouvrir la page
 1262|Ouvrir le cours
 1263|Plus précise, et comprend plus de types de questions. Deux fois plus lourde.
+1264|Almost Intelligent search démarre
+1265|Encore environ # s
+1266|Presque fini…
+1267|Almost Intelligent search est prête
+1268|Pose-lui n'importe quelle question sur tes cours dans la recherche.

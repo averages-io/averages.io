@@ -1261,3 +1261,8 @@
 1261|Abrir página
 1262|Abrir clase
 1263|Más precisa y entiende más tipos de preguntas. El doble de descarga.
+1264|Almost Intelligent search se está iniciando
+1265|Quedan unos # s
+1266|Ya casi…
+1267|Almost Intelligent search está lista
+1268|Pregúntale lo que quieras sobre tus clases en la búsqueda.

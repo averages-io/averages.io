@@ -1261,3 +1261,8 @@
 1261|Abrir página
 1262|Abrir aula
 1263|Mais precisa e entende mais tipos de perguntas. O dobro do download.
+1264|Almost Intelligent search está iniciando
+1265|Faltam cerca de # s
+1266|Quase lá…
+1267|Almost Intelligent search está pronta
+1268|Pergunte o que quiser sobre suas aulas na pesquisa.

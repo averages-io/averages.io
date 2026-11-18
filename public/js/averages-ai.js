@@ -125,7 +125,7 @@
   }
 
   // ---------- the worker ----------
-  var W = null, seq = 0, waits = {}, ready = null, readyV = '', DL = null, LAST_ERR = '', WARMING = false;
+  var W = null, seq = 0, waits = {}, ready = null, readyV = '', DL = null, LAST_ERR = '';
   function worker() {
     if (W) return W;
     var v = (window.AVG_JSV || {})['averages-ai-worker.js'];
@@ -146,15 +146,59 @@
     if (ready && readyV === v) return ready;
     if (W && readyV && readyV !== v) stop();
     var V = VARIANTS[v]; readyV = v;
+    var shown = DL ? null : initStart(v);   // a download has its own bar in Settings
     ready = call({ t: 'load', model: V.model, dtype: V.dtype, files: V.files, total: V.bytes, device: DEV_WASM ? 'wasm' : 'webgpu', schema: V.schema || 16 }, function (p) {
-      // the throwaway first search (worker load()): a search box waiting on it says "Getting A.I. ready"
-      if (p.phase === 'warmup') { WARMING = true; window.dispatchEvent(new CustomEvent('avai:warmup')); }
       if (!DL) return;
       if (p.phase) { DL.phase = p.phase; progressed(DL.total, true); changed(); return; }   // downloaded: getting it ready
       progressed(p.loaded || 0);
-    }).then(function (r) { if (WARMING) { WARMING = false; window.dispatchEvent(new CustomEvent('avai:warmup', { detail: { done: true } })); } return r; },
-      function (e) { WARMING = false; ready = null; readyV = ''; throw e; });
+    }).then(function (r) { if (shown) initDone(shown, true); return r; },
+      function (e) { if (shown) initDone(shown, false); ready = null; readyV = ''; throw e; });
     return ready;
+  }
+
+  // ---------- starting the model, in the background, with a status in the bottom right ----------
+  // Every page that loads the model starts it on its own thread (the page stays usable) and runs one throwaway search,
+  // so the student's first real search is fast (Firefox compiles its graphics programs then: ~25-30 s). While that
+  // goes on, a small card in the bottom right says so, with about how long is left: the time it took last time in
+  // this browser (averages_ai_init), or a first guess. Quick starts (Chrome: a second or two) never show it.
+  var INIT = 'averages_ai_init';
+  function initGuess(v) {
+    try { var r = JSON.parse(LS.getItem(INIT) || 'null'); if (r && r.ua === UA && r.m === VARIANTS[v].model && r.ms > 0) return r.ms; } catch (e) { /* none */ }
+    return /firefox/i.test(UA) ? 32000 : 8000;
+  }
+  function initStart(v) {
+    var o = { v: v, t0: Date.now(), est: initGuess(v), el: null, tick: 0 };
+    o.show = setTimeout(function () { initCard(o); }, 1500);
+    return o;
+  }
+  function initCard(o) {
+    if (o.done || !document.body || potato()) return;
+    var el = document.createElement('div');
+    el.className = 'av-ai-init'; el.setAttribute('role', 'status');
+    el.innerHTML = '<span class="av-ai-load" aria-hidden="true"></span><span class="tx"><b>' + esc(t('Almost Intelligent search is initializing')) + '</b><small></small><i class="bar"><i></i></i></span>';
+    document.body.appendChild(el); o.el = el;
+    if (el.animate && !calmNow()) el.animate([{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 220, easing: 'cubic-bezier(.2,.8,.2,1)' });
+    var paint = function () {
+      var gone = Date.now() - o.t0, left = Math.ceil((o.est - gone) / 1000);
+      el.querySelector('small').textContent = left > 1 ? t('About ' + left + ' s left') : t('Almost there…');
+      el.querySelector('.bar > i').style.width = Math.min(96, gone / o.est * 100).toFixed(1) + '%';
+    };
+    paint(); o.tick = setInterval(paint, 500);
+  }
+  function initDone(o, ok) {
+    o.done = true; clearTimeout(o.show); clearInterval(o.tick);
+    if (ok) try { LS.setItem(INIT, JSON.stringify({ ua: UA, m: VARIANTS[o.v].model, ms: Date.now() - o.t0 })); } catch (e) { /* full */ }
+    var el = o.el; if (!el) return;
+    if (ok) { el.classList.add('ok'); el.querySelector('b').textContent = t('Almost Intelligent search is ready'); el.querySelector('small').textContent = t('Ask it anything about your classes in search.'); el.querySelector('.bar > i').style.width = '100%'; }
+    setTimeout(function () {
+      if (el.animate && !calmNow()) el.animate([{ opacity: 1 }, { opacity: 0, transform: 'translateY(10px)' }], { duration: 200, easing: 'ease-in' }).onfinish = function () { el.remove(); }; else el.remove();
+    }, ok ? 2200 : 0);
+  }
+  // starts it by itself on each page once it's on, saved and has worked in this browser (not in Potato mode)
+  var autoWarm = false;
+  function warmSoon(v) {
+    if (autoWarm || ready || DL || potato()) return; autoWarm = true;
+    setTimeout(function () { (window.requestIdleCallback || setTimeout)(function () { if (!ready && !DL) load(v).catch(function () {}); }, { timeout: 3000 }); }, 1200);
   }
 
   // the bar: a light event while bytes arrive (avai:progress, ~10 a second); avai:state only when something changes
@@ -564,6 +608,7 @@
         // turned on and saved, but not tested in this browser yet (it updated, or the test never ran): test it now
         // (once per page, so a check that fails for another reason doesn't keep starting over)
         if (s.on && s.saved && !s.works && !s.blocked && !s.busy && !autoTried) { autoTried = true; selfTest(s.v).catch(function () {}); }
+        else if (s.on && s.saved && s.works && !s.busy) warmSoon(s.v);
       });
     }).catch(function () { STATE.ok = false; });
   }
@@ -656,14 +701,7 @@
     if (pill && pill.animate && !calmNow()) pill.animate([{ opacity: 0, transform: 'scale(.6)' }, { opacity: 1, transform: 'none' }], { duration: 280, easing: 'cubic-bezier(.2,.8,.2,1)' });
     // still working after a moment: say so
     var el = b.res.querySelector('.av-ai-step');
-    setTimeout(function () { if (el && el.isConnected && el.dataset.step === undefined) step(b, WARMING ? 'Getting A.I. ready' : 'Reading your question'); }, starting ? 1800 : 900);
-    // the model's first, throwaway search (it compiles its graphics programs: up to half a minute in Firefox)
-    var warm = function (e) {
-      if (!el || !el.isConnected) { window.removeEventListener('avai:warmup', warm); return; }
-      if (e.detail && e.detail.done) { window.removeEventListener('avai:warmup', warm); if (el.dataset.step === 'Getting A.I. ready') step(b, 'Reading your question'); }
-      else if (el.dataset.step !== 'Getting A.I. ready') step(b, 'Getting A.I. ready');
-    };
-    window.addEventListener('avai:warmup', warm);
+    setTimeout(function () { if (el && el.isConnected && el.dataset.step === undefined) step(b, 'Reading your question'); }, starting ? 1800 : 900);
   }
   // the status line moves on: the old words slide up and out, the new ones in. Resolves when it's on screen.
   function step(b, text) {
@@ -831,6 +869,11 @@
     '.av-ai-by-h{display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-size:13px;font-weight:700}.av-ai-by-h .av-ai-ic{width:18px;height:18px;margin:0}',
     '.av-ai-chips{display:flex;flex-wrap:wrap;gap:6px}.av-ai-by .av-ai-chip{height:28px;padding:0 12px;border-radius:14px;font-size:13.5px;background:var(--frame,var(--card,#fff))}',
     '.av-ai-note{margin:4px 12px 6px;color:var(--muted);font-size:12px;font-weight:600}',
+    // starting in the background: a small dark card in the bottom right (above the page, under dialogs)
+    '.av-ai-init{position:fixed;right:20px;bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:78;display:flex;align-items:center;gap:4px;width:min(340px,calc(100vw - 40px));padding:12px 16px 12px 8px;border-radius:18px;background:#121318;color:#f4f4f7;box-shadow:0 12px 36px rgba(0,0,0,.35),inset 0 0 0 1px rgba(255,255,255,.08)}',
+    '.av-ai-init .tx{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}.av-ai-init b{font-size:14px;font-weight:800}.av-ai-init small{color:#a9abb6;font-size:12.5px;font-weight:700}',
+    '.av-ai-init .bar{display:block;height:4px;margin-top:6px;border-radius:2px;background:rgba(255,255,255,.12);overflow:hidden}.av-ai-init .bar > i{display:block;height:100%;width:0;border-radius:2px;background:#FF7A50;transition:width .5s linear}',
+    '.av-ai-init.ok .av-ai-load{animation:none;background:#E5484D}.av-ai-init.ok .bar > i{background:#2e9d5b}',
   ].join('');
   (document.head || document.documentElement).appendChild(css);
 
