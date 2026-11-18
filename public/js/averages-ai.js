@@ -506,7 +506,7 @@
         var S = (D.WORK || []).filter(function (w) { return inClass(w.c) && w.got != null && w.of && (!a.letter || letterIs(a.letter, pct(w))) && (!kre || kre.test(w.n + ' ' + (w.cat || ''))) && inBand(pct(w)); });
         var count = S.length;
         if (a.sort === 'lowest') S.sort(function (x, y) { return pct(x) - pct(y); }); else if (a.sort === 'highest') S.sort(function (x, y) { return pct(y) - pct(x); });
-        rows = S.slice(0, 30).map(function (w) { var cc = C[w.c]; return row({ href: FSX.hubUrl(w.c, 'grades', { a: w.id }), lead: clsTile(cc), t: w.n, sub: (cc ? cc.name : '') + (w.on ? ' · ' + w.on : ''), end: esc(w.got + '/' + w.of) + ' <small>' + pct(w).toFixed(0) + '% ' + esc(letterOf(pct(w))) + '</small>' }); });
+        rows = S.slice(0, 30).map(function (w) { var cc = C[w.c]; return row({ href: FSX.hubUrl(w.c, '', { a: w.id }),   /* the assignment itself (the class page opens it; graded work with no page of its own goes to its row in Grades) */ lead: clsTile(cc), t: w.n, sub: (cc ? cc.name : '') + (w.on ? ' · ' + w.on : ''), end: esc(w.got + '/' + w.of) + ' <small>' + pct(w).toFixed(0) + '% ' + esc(letterOf(pct(w))) + '</small>' }); });
         var an = function (L) { return (L.charAt(0) === 'A' || L.charAt(0) === 'F' ? 'an ' : 'a ') + L; };
         if (a.letter) lead = count === 1 ? '1 graded assignment with ' + an(a.letter) + '.' : count + ' graded assignments with ' + an(a.letter) + '.';
         // the lowest or highest one is the answer; otherwise how many, and their average (most "how am I doing" asks)
@@ -831,6 +831,9 @@
     '.av-ai-row + .s-tabs{margin-top:6px}',
     // Home's dropdown has no top padding (its first row is a label with its own): room above the A.I. row and the answer
     '.pop.spop > .av-ai-row:first-child{margin-top:8px}.pop.spop > .av-ai-panel{padding-top:8px}',
+    // the arrow keys move down through a long answer: the row they pick scrolls up past the sticky key-hints footer
+    // instead of stopping behind it (it was picked but hidden, Martin 2026-11-17)
+    '.pop.spop{scroll-padding:8px 0 64px}.cmdk-res{scroll-padding:8px 0 8px}',
     '.av-ai-cl{flex:none;display:grid;place-items:center;width:30px;height:30px;border-radius:9px;background:var(--c);color:#fff;font-size:11px;font-weight:800;letter-spacing:.02em}',
     '.av-ai-panel{display:flex;flex-direction:column;gap:2px}',
     '.av-ai-h{display:flex!important;flex-wrap:wrap;align-items:center;gap:6px;text-transform:none!important;letter-spacing:0!important}',
