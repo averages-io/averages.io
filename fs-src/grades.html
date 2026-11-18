@@ -3030,7 +3030,7 @@
   .gx-menu button:hover, .gx-menu button:focus-visible { background: var(--inner); outline: none; }
   #grSumPanel[hidden] { display: none; }
   /* rail */
-  .rg2 { display: flex; align-items: center; gap: 12px; padding: 8px; margin: 0 -8px; border-radius: 12px; cursor: pointer; }
+  .rg2 { display: flex; align-items: center; gap: 12px; padding: 8px; margin: 0 -8px; border-radius: 12px; cursor: pointer; color: var(--ink); text-decoration: none; }
   .rg2:hover { background: var(--inner); }
   .rg2 .tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
   .rg2 .tx b { font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -4050,9 +4050,11 @@
   // ---------- rail ----------
   function grRecent() {
     const list = WORK.filter(w => !w.missing).slice(0, 6);
-    $('grRecent').innerHTML = list.map(w => `<div class="rg2" data-rgw="${w.id}">${badge(C[w.c])}<span class="tx"><b>${esc(w.n)}</b><small>${esc(C[w.c].name)} · ${esc(w.on)}</small></span>${isNew(w) ? '<span class="newtag">New</span>' : ''}<span class="sc"><b class="${gcls(pctOf(w))}">${pctOf(w).toFixed(0)}%</b><small>${w.got} / ${w.of}</small></span></div>`).join('');
+    // each one opens that assignment, like everywhere else (Martin 2026-11-17); graded work with no page of its own
+    // opens its row in the class's Grades
+    $('grRecent').innerHTML = list.map(w => `<a class="rg2" href="${esc(FSX.hubUrl(w.c, '', { a: w.id }))}" data-rgw="${w.id}">${badge(C[w.c])}<span class="tx"><b>${esc(w.n)}</b><small>${esc(C[w.c].name)} · ${esc(w.on)}</small></span>${isNew(w) ? '<span class="newtag">New</span>' : ''}<span class="sc"><b class="${gcls(pctOf(w))}">${pctOf(w).toFixed(0)}%</b><small>${w.got} / ${w.of}</small></span></a>`).join('');
   }
-  $('grRecent').addEventListener('click', e => { const r = e.target.closest('[data-rgw]'); if (!r) return; const w = WORK.find(v => v.id === r.dataset.rgw); if (!GR.open.has(w.c)) { GR.open.add(w.c); store.set('fsgrades_open', [...GR.open]); grList(false); } const el = $('grList').querySelector(`[data-gw="${w.id}"]`); if (el) { el.scrollIntoView({ block: 'center', behavior: calm() ? 'auto' : 'smooth' }); if (!calm() && el.animate) el.animate([{ background: 'color-mix(in srgb, var(--sun) 40%, transparent)' }, { background: 'transparent' }], { duration: 1400, easing: 'ease-out' }); } });
+  // (it used to scroll to the work in the list above; now each row is a link to the assignment)
   function grMoves() {
     const list = AVG_OF.slice().sort((a, b) => Math.abs(change(b)) - Math.abs(change(a)));
     $('grMoves').innerHTML = list.map(c => `<div class="mv">${badge(c)}<span class="tx"><b>${esc(c.name)}</b><small>${fromOf(c).toFixed(1)}% to ${c.pct.toFixed(1)}%</small></span>${deltaChip(change(c), false, stepsOf(c) === c.trend)}</div>`).join('');

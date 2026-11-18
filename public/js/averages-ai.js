@@ -136,53 +136,68 @@
     if (W) return W;
     var v = (window.AVG_JSV || {})['averages-ai-worker.js'], url = '/js/averages-ai-worker.js' + (v ? '?v=' + v : '');
     var onmsg = function (e) {
+      if (W) W.alive = true;
       var m = e.data || {}, w = waits[m.id]; if (!w) return;
       if (m.t === 'progress') { if (w.progress) w.progress(m); return; }
       delete waits[m.id];
       if (m.t === 'error') w.no(new Error(m.error || 'ai_failed')); else w.yes(m);
     };
-    var onerr = function (e) { Object.keys(waits).forEach(function (k) { waits[k].no(new Error((e && e.message) || 'worker_failed')); delete waits[k]; }); W = null; ready = null; };
+    var onerr = function (e) { if (window.console) console.warn('[ai] worker error: ' + ((e && e.message) || 'unknown')); Object.keys(waits).forEach(function (k) { waits[k].no(new Error((e && e.message) || 'worker_failed')); delete waits[k]; }); W = null; ready = null; };
     if (!NO_SHARED && typeof SharedWorker === 'function' && !DEV_WASM) {
       try {
         var sw = new SharedWorker(url, { type: 'module', name: 'averages-ai', extendedLifetime: true });
-        sw.port.onmessage = onmsg; sw.onerror = onerr; sw.port.start();
+        // a shared worker that has already answered keeps going: some browsers report its later script errors here
+        // too (they aren't fatal), and treating them as fatal started the model over and over (Martin 2026-11-17)
+        sw.port.onmessage = onmsg; sw.onerror = function (e) { if (W && W.shared && W.alive) { if (window.console) console.warn('[ai] shared worker:', e && e.message); return; } onerr(e); }; sw.port.start();
         // leaving: this page's port closes; the model stays for the next page. stop(): the model goes for every page.
-        W = { shared: true, post: function (m) { sw.port.postMessage(m); }, end: function () { try { sw.port.postMessage({ t: 'quit' }); sw.port.close(); } catch (e) { /* gone */ } } };
+        W = { shared: true, post: function (m) { sw.port.postMessage(m); }, close: function () { try { sw.port.close(); } catch (e) { /* gone */ } }, end: function () { try { sw.port.postMessage({ t: 'quit' }); sw.port.close(); } catch (e) { /* gone */ } } };
         return W;
       } catch (e) { NO_SHARED = true; }
     }
     var dw = new Worker(url, { type: 'module', name: 'averages-ai' });
     dw.onmessage = onmsg; dw.onerror = onerr;
-    W = { shared: false, post: function (m) { dw.postMessage(m); }, end: function () { dw.terminate(); } };
+    W = { shared: false, post: function (m) { dw.postMessage(m); }, close: function () { dw.terminate(); }, end: function () { dw.terminate(); } };
     return W;
   }
   function call(msg, progress) {
     return new Promise(function (yes, no) { var id = ++seq; waits[id] = { yes: yes, no: no, progress: progress }; msg.id = id; worker().post(msg); });
   }
-  function load(v) {
+  var lastFail = 0;
+  function load(v, card) {
     if (ready && readyV === v) return ready;
     // the other version: a page's own worker starts over; the shared one swaps models itself (other pages use it too)
     if (W && readyV && readyV !== v) { if (W.shared) { ready = null; readyV = ''; } else stop(); }
     var V = VARIANTS[v]; readyV = v;
-    var shown = DL ? null : initStart(v);   // a download has its own bar in Settings
+    // one status card per start: a retry in a worker of this page's own keeps the same card (it used to vanish and
+    // come back, Martin 2026-11-17). A download has its own bar in Settings.
+    var shown = card || (DL ? null : initStart(v)), w = worker(), t0 = Date.now();
     starting(true);
+    if (window.console) console.info('[ai] starting ' + V.model + (w.shared ? ' (shared by every page)' : ' (this page only)'));
+    // a shared worker that never answers (it couldn't start in this browser): after 8 s, this page uses its own
+    if (w.shared && !w.alive) setTimeout(function () { if (W === w && !w.alive) Object.keys(waits).forEach(function (k) { var x = waits[k]; delete waits[k]; x.no(new Error('shared_silent')); }); }, 8000);
     ready = call({ t: 'load', model: V.model, dtype: V.dtype, files: V.files, total: V.bytes, device: DEV_WASM ? 'wasm' : 'webgpu', schema: V.schema || 16 }, function (p) {
       if (!DL) return;
       if (p.phase) { DL.phase = p.phase; progressed(DL.total, true); changed(); return; }   // downloaded: getting it ready
       progressed(p.loaded || 0);
-    }).then(function (r) { if (shown) initDone(shown, true, r && r.fresh); starting(false); return r; },
-      function (e) {
-        if (shown) initDone(shown, false); starting(false); ready = null; readyV = '';
-        // no WebGPU (or a broken one) in a shared worker here: this page, and this tab from now on, uses a worker of its own
-        if (e && W && W.shared && (e.message === 'shared_no_gpu' || GPU_ERR.test(e.message || ''))) {
+    }).then(function (r) {
+      if (window.console) console.info('[ai] ready in ' + (Date.now() - t0) + ' ms' + (r && r.fresh === false ? ' (it was already running)' : ''));
+      if (shown) initDone(shown, true, r && r.fresh); starting(false); return r;
+    }, function (e) {
+        ready = null; readyV = '';
+        if (window.console) console.warn('[ai] start failed: ' + (e && e.message) + (W && W.shared ? ' (shared worker: trying a worker of its own)' : ''));
+        // the shared worker couldn't start it here (no WebGPU in one, or anything else): this page, and this tab from
+        // now on, uses a worker of its own, as before, so it's never worse than that (other tabs keep theirs)
+        if (e && e.message !== 'stopped' && W && W.shared) {
           NO_SHARED = true; try { sessionStorage.setItem('averages_ai_own', '1'); } catch (x) { /* off */ }
-          try { W.end(); } catch (x) { /* gone */ } W = null;
-          return load(v);
+          try { W.close(); } catch (x) { /* gone */ } W = null;
+          return load(v, shown);
         }
+        if (shown) initDone(shown, false); starting(false); lastFail = Date.now();
         throw e;
       });
     return ready;
   }
+
 
   // ---------- starting the model, in the background, with a status in the bottom right ----------
   // Every page that loads the model starts it on its own thread (the page stays usable) and runs one throwaway search,
@@ -656,7 +671,7 @@
   // the wait is over by the time they press Enter. Only when it's on, saved and has worked in this browser.
   document.addEventListener('focusin', function (e) {
     if (!e.target || (e.target.id !== 'bigInput' && e.target.id !== 'cmdkInput') || ready || !STATE.ok || !STATE.saved || potato()) return;
-    status().then(function (s) { if (s.on && s.saved && s.works && !s.busy && !ready) load(s.v).catch(function () {}); }).catch(function () {});
+    status().then(function (s) { if (s.on && s.saved && s.works && !s.busy && !ready && Date.now() - lastFail > 60000) load(s.v).catch(function () {}); }).catch(function () {});
   }, true);
 
   function boxes() {
