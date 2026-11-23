@@ -1322,7 +1322,7 @@
     function potatoOn() { return !!(document.body && document.body.classList.contains("potato-mode")); }
     function applyPotato() {
       var on = false;
-      try { on = (JSON.parse(localStorage.getItem("schoolagy_settings_options") || "{}") || {}).potatoMode === true; } catch (e) {}
+      try { on = (JSON.parse(localStorage.getItem("averages_settings_options") || "{}") || {}).potatoMode === true; } catch (e) {}
       if (document.body) document.body.classList.toggle("potato-mode", on);
       if (!document.getElementById("potatoStyle")) {
         var st = document.createElement("style");
@@ -1356,7 +1356,7 @@
       }
     }
       applyPotato();
-      window.addEventListener('storage', function (e) { if (e.key === 'schoolagy_settings_options') applyPotato(); });
+      window.addEventListener('storage', function (e) { if (e.key === 'averages_settings_options') applyPotato(); });
     })();
 
     // Bottom nav "More" overflow. Shows as many pages as fit without
@@ -1453,7 +1453,7 @@
       function applyAppearance() {
         let saved = null;
         try {
-          const raw = localStorage.getItem('schoolagy_appearance');
+          const raw = localStorage.getItem('averages_appearance');
           if (raw) saved = JSON.parse(raw);
         } catch {}
         if (!saved) return;
@@ -1475,7 +1475,7 @@
       }
       applyAppearance();
       window.addEventListener('storage', e => {
-        if (e.key === 'schoolagy_appearance') applyAppearance();
+        if (e.key === 'averages_appearance') applyAppearance();
       });
     })();
 
@@ -1486,8 +1486,8 @@
     // score/status match no matter which page it's viewed from.
     // ------------------------------------------------------------------
 
-    const AVERAGES_COURSE_CUSTOM_KEY = 'schoolagy_course_custom';
-    const AVERAGES_COURSE_ORDER_KEY = 'schoolagy_course_order';
+    const AVERAGES_COURSE_CUSTOM_KEY = 'averages_course_custom';
+    const AVERAGES_COURSE_ORDER_KEY = 'averages_course_order';
     function loadCourseCustom() {
       try {
         const raw = localStorage.getItem(AVERAGES_COURSE_CUSTOM_KEY);
@@ -1759,13 +1759,13 @@
       const inLists = ALL_ITEMS.find(i => String(i.id || '') === qId);
       const located = LIVE_DATA && LIVE_DATA.LOCATED;
       let gbHint = null;
-      try { gbHint = JSON.parse(sessionStorage.getItem('schoolagy_gb_open') || 'null'); } catch {}
+      try { gbHint = JSON.parse(sessionStorage.getItem('averages_gb_open') || 'null'); } catch {}
       if (inLists) { qCourseFromId = inLists.courseId; qTitleFromId = inLists.title; }
       else if (located && String(located.id) === qId && avgIsId(located.section)) { qCourseFromId = String(located.section); qTitleFromId = located.title || 'Assignment'; }
       else if (gbHint && gbHint.id === qId) { qCourseFromId = gbHint.courseId; qTitleFromId = gbHint.title; }
       else {
         let hint = null;
-        try { hint = JSON.parse(sessionStorage.getItem('schoolagy_locate') || 'null'); } catch {}
+        try { hint = JSON.parse(sessionStorage.getItem('averages_locate') || 'null'); } catch {}
         if (hint && hint.id === qId && avgIsId(hint.section)) { qCourseFromId = hint.section; qTitleFromId = hint.title || 'Assignment'; }
         else if (window.__AVERAGES_MODE__ === 'live') {
           // Not loaded with the page (slow, or an old link): ask once, then reopen.
@@ -1774,7 +1774,7 @@
             .then(r => (r.ok ? r.json() : null))
             .then(j => {
               if (j && avgIsId(j.section)) {
-                try { sessionStorage.setItem('schoolagy_locate', JSON.stringify({ id: qId, section: String(j.section), title: String(j.title || '') })); } catch {}
+                try { sessionStorage.setItem('averages_locate', JSON.stringify({ id: qId, section: String(j.section), title: String(j.title || '') })); } catch {}
                 window.location.reload();
               } else {
                 window.location.replace('assignments.html');
@@ -1801,7 +1801,7 @@
         item = { status: 'upcoming', type: 'assignment', title: qTitle, courseId: qCourse, due: null };
         if (qFrom === 'gradebook') {
           let gb = null;
-          try { gb = JSON.parse(sessionStorage.getItem('schoolagy_gb_open') || 'null'); } catch {}
+          try { gb = JSON.parse(sessionStorage.getItem('averages_gb_open') || 'null'); } catch {}
           if (gb && gb.courseId === qCourse && (gb.title === item.title || (qIdOk && gb.id === qId))) {
             const cat = String(gb.category || '');
             item.type = /test|quiz|exam|assessment/i.test(cat) ? 'assessment' : /discussion/i.test(cat) ? 'discussion' : 'assignment';
@@ -1851,7 +1851,7 @@
     const DRIVE_EXTS = ['doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx'];
     const DRIVE_KIND = { doc: ['DOC', '#3b6fd1'], docx: ['DOC', '#3b6fd1'], ppt: ['SLIDES', '#d1852f'], pptx: ['SLIDES', '#d1852f'], xls: ['SHEET', '#2f7d54'], xlsx: ['SHEET', '#2f7d54'] };
     let EDITOR_PREF = 'canva';
-    try { if (localStorage.getItem('schoolagy_default_editor') === 'gdrive') EDITOR_PREF = 'gdrive'; } catch {}
+    try { if (localStorage.getItem('averages_default_editor') === 'gdrive') EDITOR_PREF = 'gdrive'; } catch {}
     const EDIT_READY = { canva: CANVA_PREVIEW, gdrive: CANVA_PREVIEW };
     const INCOGNITO = !!(window.__AVERAGES_INCOGNITO__ && window.__AVERAGES_INCOGNITO__.on);
     function editAppFor(ext) {
@@ -4997,7 +4997,7 @@
     (function () {
       var profile = null;
       try {
-        var raw = localStorage.getItem('schoolagy_profile');
+        var raw = localStorage.getItem('averages_profile');
         if (raw) profile = JSON.parse(raw);
       } catch (e) {}
       if (!profile || !profile.name || !String(profile.name).trim()) profile = Object.assign({}, profile, { name: window.__AVERAGES_NAME__ || '' });

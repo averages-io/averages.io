@@ -13,7 +13,7 @@
 
   function manual() {
     try {
-      var o = JSON.parse(localStorage.getItem('schoolagy_settings_options') || '{}') || {};
+      var o = JSON.parse(localStorage.getItem('averages_settings_options') || '{}') || {};
       var z = o.timeZone;
       return z && z !== 'auto' && valid(z) ? z : '';
     } catch (e) { return ''; }

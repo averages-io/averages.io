@@ -1933,7 +1933,7 @@
     function potatoOn() { return !!(document.body && document.body.classList.contains("potato-mode")); }
     function applyPotato() {
       var on = false;
-      try { on = (JSON.parse(localStorage.getItem("schoolagy_settings_options") || "{}") || {}).potatoMode === true; } catch (e) {}
+      try { on = (JSON.parse(localStorage.getItem("averages_settings_options") || "{}") || {}).potatoMode === true; } catch (e) {}
       if (document.body) document.body.classList.toggle("potato-mode", on);
       if (!document.getElementById("potatoStyle")) {
         var st = document.createElement("style");
@@ -1967,7 +1967,7 @@
       }
     }
       applyPotato();
-      window.addEventListener('storage', function (e) { if (e.key === 'schoolagy_settings_options') applyPotato(); });
+      window.addEventListener('storage', function (e) { if (e.key === 'averages_settings_options') applyPotato(); });
     })();
 
     // Bottom nav "More" overflow. Shows as many pages as fit without
@@ -2259,7 +2259,7 @@
         if (typeof syncEditorHint === 'function' && editorReady) syncEditorHint();
       }
       let editorReady = false;
-      const EDITOR_KEY = 'schoolagy_default_editor';
+      const EDITOR_KEY = 'averages_default_editor';
       const editorBtn = document.getElementById('defaultEditorBtn');
       const editorMenu = document.getElementById('defaultEditorMenu');
       const editorLabel = document.getElementById('defaultEditorLabel');
@@ -2768,7 +2768,7 @@
     // Kept for the call at the bottom of the page (the old section-text index); nothing to build now.
     function buildSearchIndex() {}
 
-    const AVERAGES_DARK_MODE_KEY = 'schoolagy_dark_mode';
+    const AVERAGES_DARK_MODE_KEY = 'averages_dark_mode';
     function averagesSavedDarkPref() {
       try {
         const v = localStorage.getItem(AVERAGES_DARK_MODE_KEY);
@@ -2819,7 +2819,7 @@
       applyDarkMode(isDark);
     });
 
-    const AVERAGES_SETTINGS_OPTIONS_KEY = 'schoolagy_settings_options';
+    const AVERAGES_SETTINGS_OPTIONS_KEY = 'averages_settings_options';
     function loadSettingsOptions() {
       try {
         const raw = localStorage.getItem(AVERAGES_SETTINGS_OPTIONS_KEY);
@@ -2939,7 +2939,7 @@
       // link hear about the new zone now rather than at tomorrow's check-in.
       function zoneChanged() {
         try {
-          ['schoolagy_bundle_cache', 'averages_live_at'].forEach(k => sessionStorage.removeItem(k));
+          ['averages_bundle_cache', 'averages_live_at'].forEach(k => sessionStorage.removeItem(k));
           const drop = [];
           for (let i = 0; i < sessionStorage.length; i++) { const k = sessionStorage.key(i); if (k && k.startsWith('averages_extras_')) drop.push(k); }
           drop.forEach(k => sessionStorage.removeItem(k));
@@ -2985,7 +2985,7 @@
       window.addEventListener('storage', (e) => { if (e.key === AVERAGES_SETTINGS_OPTIONS_KEY) render(); });
     })();
 
-    const CACHE_STORAGE_KEYS = ['schoolagy_bundle_cache', 'schoolagy_session_state', 'averages_previews'];
+    const CACHE_STORAGE_KEYS = ['averages_bundle_cache', 'averages_session_state', 'averages_previews'];
     function computeCacheBytes() {
       let total = 0;
       try {
@@ -3042,7 +3042,7 @@
       return '#' + [r, g, b].map(v => Math.round(v).toString(16).padStart(2, '0')).join('');
     }
 
-    const AVERAGES_APPEARANCE_KEY = 'schoolagy_appearance';
+    const AVERAGES_APPEARANCE_KEY = 'averages_appearance';
     function loadAppearance() {
       try {
         const raw = localStorage.getItem(AVERAGES_APPEARANCE_KEY);
@@ -3530,7 +3530,7 @@
         bgCropState.naturalH * drawScale
       );
       // JPEG, not PNG: this is a full-viewport photo, not a small icon —
-      // keeping it PNG would bloat schoolagy_appearance (and everything
+      // keeping it PNG would bloat averages_appearance (and everything
       // that syncs it) for no visible benefit on a photographic image.
       const croppedDataUrl = canvas.toDataURL('image/jpeg', 0.92);
       const onConfirm = bgCropState.onConfirm;
@@ -3720,7 +3720,7 @@
       }
     }
 
-    const AVERAGES_PROFILE_KEY = 'schoolagy_profile';
+    const AVERAGES_PROFILE_KEY = 'averages_profile';
     function loadProfileState() {
       const defaults = { name: '', email: '', emailVerified: false, photo: null };
       try {
@@ -4208,7 +4208,7 @@
     if (!AVERAGES_SYNC_UNAVAILABLE && AVERAGES_INCOGNITO) {
       if (settingsOptions.syncAcrossDevices === true) {
         deleteSyncSettingsNow();
-        try { localStorage.removeItem('schoolagy_sync_meta'); } catch {}   // clearSyncMeta's key; that helper is defined further down
+        try { localStorage.removeItem('averages_sync_meta'); } catch {}   // clearSyncMeta's key; that helper is defined further down
         try { localStorage.removeItem('averages_sync_media'); } catch {}
         saveSettingsOption('syncAcrossDevices', false);
       }
@@ -4223,7 +4223,7 @@
       try {
         const o = loadSettingsOptions();
         o.syncAcrossDevices = true;
-        localStorage.setItem('schoolagy_settings_options', JSON.stringify(o));
+        localStorage.setItem('averages_settings_options', JSON.stringify(o));
       } catch {}
     }
 
@@ -4342,7 +4342,7 @@
       } catch {}
     }
 
-    const AVERAGES_SYNC_META_KEY = 'schoolagy_sync_meta';
+    const AVERAGES_SYNC_META_KEY = 'averages_sync_meta';
     function loadSyncMeta() {
       try {
         const raw = localStorage.getItem(AVERAGES_SYNC_META_KEY);
@@ -4731,8 +4731,8 @@
       const INC = window.__AVERAGES_INCOGNITO__ || null;   // signed in only
       const LIVE = window.__AVERAGES_MODE__ === 'live';
       const read = k => { try { return localStorage.getItem(k); } catch { return null; } };
-      const is13 = read('schoolagy_13plus') === 'yes';
-      const incognito = INC ? INC.on : read('schoolagy_account_mode') === 'incognito';
+      const is13 = read('averages_13plus') === 'yes';
+      const incognito = INC ? INC.on : read('averages_account_mode') === 'incognito';
       const locked = !!(INC && INC.locked);
       const PRICE = '$1.99/month plus tax.';   // $1.99 + tax (2026-11-10, Martin)
       const OFFER = 'Notifications, calendar sync and early features. ' + PRICE;
@@ -4904,7 +4904,7 @@
         }
         if (mode === 'classic') {
           if (now === 'incognito') {
-            try { localStorage.setItem('schoolagy_account_mode', 'classic'); } catch {}
+            try { localStorage.setItem('averages_account_mode', 'classic'); } catch {}
             reloadToAccount();
             return;
           }
@@ -4914,7 +4914,7 @@
         }
         // Plus. From Incognito this is Classic as well: a checkout that's
         // cancelled comes back to Classic.
-        if (now === 'incognito') { try { localStorage.setItem('schoolagy_account_mode', 'classic'); } catch {} }
+        if (now === 'incognito') { try { localStorage.setItem('averages_account_mode', 'classic'); } catch {} }
         openStripe('checkout');
       }
       Object.keys(picks).forEach(m => picks[m].addEventListener('click', () => pick(m)));
@@ -4971,7 +4971,7 @@
           if (C) { try { C.disconnectGoogle(); C.disconnectOneDrive(); } catch {} }
         }
         try {
-          localStorage.setItem('schoolagy_account_mode', 'incognito');
+          localStorage.setItem('averages_account_mode', 'incognito');
           localStorage.removeItem('averages_cloud_accounts');
           localStorage.removeItem('averages_drive_drafts');
           localStorage.removeItem('averages_drive_opened');

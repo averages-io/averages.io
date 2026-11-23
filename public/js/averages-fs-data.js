@@ -260,7 +260,7 @@
       // nothing new from Schoology (or only the files): no rebuilding, the page just says it checked
       if (!b && !u && !(fl && Array.isArray(fl.files))) { window.FSD.generatedAt = new Date().toISOString(); syncShow(); return; }
       b = b || window.FSD.raw.bundle;
-      if (got[0]) sset('schoolagy_bundle_cache', JSON.stringify({ at: Date.now(), bundle: b }));
+      if (got[0]) sset('averages_bundle_cache', JSON.stringify({ at: Date.now(), bundle: b }));
       if (u) sset('averages_extras_updates', JSON.stringify({ at: Date.now(), who: me.uid, data: u }));
       if (fl && Array.isArray(fl.files)) { filesAt = Date.now(); sset('averages_extras_fs_files', JSON.stringify({ at: Date.now(), who: me.uid, data: fl })); }
       var raw = Object.assign({}, window.FSD.raw, { bundle: b }); if (u) raw.updates = u; if (fl && Array.isArray(fl.files)) raw.files = fl;
@@ -439,7 +439,7 @@
   window.addEventListener('fs:ready', function () {
     if (window.FSX) window.FSX.notisCheck = notisCheck;   // also: check now
     // after the page's first sync has had its turn (it asks Schoology for everything once)
-    var cacheAt = 0; try { cacheAt = (JSON.parse(sessionStorage.getItem('schoolagy_bundle_cache') || 'null') || {}).at || 0; } catch (e) { /* none */ }
+    var cacheAt = 0; try { cacheAt = (JSON.parse(sessionStorage.getItem('averages_bundle_cache') || 'null') || {}).at || 0; } catch (e) { /* none */ }
     // a page that opened from this tab's copy (from a page before) checks for anything new right after it shows
     var stale = cacheAt && Date.now() - cacheAt > 10000;
     setTimeout(function () { notisAt = Date.now(); if (stale) setTimeout(notisCheck, 800); setInterval(function () { if (Date.now() - notisAt >= refreshEvery()) notisCheck(); }, 5000); setInterval(syncShow, 30000); }, 1000);
@@ -460,7 +460,7 @@
   })();
   window.addEventListener('fs:ready', function () {
     setTimeout(function () {
-      var me = window.FSD && window.FSD.me, prof = lget('schoolagy_profile') || {};
+      var me = window.FSD && window.FSD.me, prof = lget('averages_profile') || {};
       if (!me || me.incognito || seenSyncOff() || sget('averages_fs_photo_pulled') || (typeof prof.photo === 'string' && /^data:image\//.test(prof.photo))) return;
       sset('averages_fs_photo_pulled', '1');
       window.FSX.api('/sync/settings').then(function (rec) {
@@ -472,7 +472,7 @@
         var fr = new FileReader();
         fr.onload = function () {
           var url = String(fr.result || ''); if (!/^data:image\//.test(url)) return;
-          var cur = lget('schoolagy_profile') || {}; cur.photo = url; lset('schoolagy_profile', cur);
+          var cur = lget('averages_profile') || {}; cur.photo = url; lset('averages_profile', cur);
           var fp = lget('fsmock_profile2') || {}; fp.photo = url; if (!fp.name) fp.name = cur.name || me.name || ''; lset('fsmock_profile2', fp);
           window.dispatchEvent(new StorageEvent('storage', { key: 'fsmock_profile2' }));
           document.querySelectorAll('[data-av]').forEach(function (el) { el.classList.add('photo'); el.style.backgroundImage = 'url("' + url + '")'; el.style.backgroundSize = 'cover'; el.textContent = ''; });
@@ -548,7 +548,7 @@
   function getFresh(key, path) {
     var q = FP[key] ? (path.indexOf('?') < 0 ? '?' : '&') + 'since=' + FP[key] : '';
     return fetch(API + path + q, { credentials: 'include', cache: 'no-store' }).then(function (r) {
-      if (r.status === 401) { sdel('schoolagy_session_state'); throw { signedOut: true }; }
+      if (r.status === 401) { sdel('averages_session_state'); throw { signedOut: true }; }
       if (!r.ok) throw { status: r.status };
       var fp = r.headers.get('X-Averages-Fp');
       return r.json().then(function (j) {
@@ -559,26 +559,26 @@
   }
   function getJSON(path) {
     return fetch(API + path, { credentials: 'include', cache: 'no-store' }).then(function (r) {
-      if (r.status === 401) { sdel('schoolagy_session_state'); throw { signedOut: true }; }
+      if (r.status === 401) { sdel('averages_session_state'); throw { signedOut: true }; }
       if (!r.ok) throw { status: r.status };
       return r.json();
     });
   }
   function session() {
-    var raw = sget('schoolagy_session_state');
+    var raw = sget('averages_session_state');
     if (raw) { try { var p = JSON.parse(raw); if (Date.now() - p.at < 60000 && p.state && p.state.mode === 'live' && p.state.uid) return Promise.resolve(p.state); } catch (e) { /* ask */ } }
     return getJSON('/auth/me').then(function (d) {
       var state = { mode: d && d.demo ? 'demo' : 'live', name: d && d.name, incognito: !!(d && d.incognito), provider: d && d.provider === 'google' ? 'google' : 'schoology', uid: d && d.uid != null ? String(d.uid) : undefined, email: d && d.email || '', picture: d && d.pictureUrl || '' };
-      sset('schoolagy_session_state', JSON.stringify({ at: Date.now(), state: state }));
+      sset('averages_session_state', JSON.stringify({ at: Date.now(), state: state }));
       return state;
     });
   }
   function bundle() {
-    var hit = cacheRead('schoolagy_bundle_cache', 'bundle');
+    var hit = cacheRead('averages_bundle_cache', 'bundle');
     if (hit) return Promise.resolve(hit);
     var tz = zone();
     return getJSON('/data/bundle' + (tz ? '?tz=' + encodeURIComponent(tz) : '')).then(function (b) {
-      sset('schoolagy_bundle_cache', JSON.stringify({ at: Date.now(), bundle: b }));
+      sset('averages_bundle_cache', JSON.stringify({ at: Date.now(), bundle: b }));
       return b;
     });
   }
@@ -703,7 +703,7 @@
       root.classList.remove('fs-wait');
       var d = document.createElement('div'); d.className = 'fs-fail'; d.setAttribute('role', 'alert');
       d.innerHTML = '<div><b>We couldn’t load your classes</b>' + text + '<br><button type="button">Try again</button></div>';
-      d.querySelector('button').addEventListener('click', function () { sdel('schoolagy_bundle_cache'); window.location.reload(); });
+      d.querySelector('button').addEventListener('click', function () { sdel('averages_bundle_cache'); window.location.reload(); });
       document.body.appendChild(d);
     });
   }
@@ -753,7 +753,7 @@
   function mergeLater(D, fresh, raw) {
     D.raw = raw;
     // the classes: teachers and how many new posts, onto the same objects the page already holds
-    (D.CLASSES || []).forEach(function (c) { var f = fresh.C && fresh.C[c.id]; if (f) { c.teacher = f.teacher; c.teacherIds = f.teacherIds; c.updates = f.updates; } });
+    (D.CLASSES || []).forEach(function (c) { var f = fresh.C && fresh.C[c.id]; if (f) { c.teacher = f.teacher; c.teacherIds = f.teacherIds; c.teachers = f.teachers; c.updates = f.updates; } });
     ['updates', 'people', 'classmates', 'exampleTeacher', 'counts'].forEach(function (k) { if (fresh[k] !== undefined) D[k] = fresh[k]; });
     // the bell: what's new from the late lists, into the same list the page already holds
     var have = {}, seenIds = {};
@@ -763,8 +763,8 @@
     if (Array.isArray(D.NT) && add.length) { window.FSX.seen.ages(add); add.forEach(function (it) { D.NT.push(it); }); window.dispatchEvent(new CustomEvent('fs:notis', { detail: { added: [] } })); }
   }
   function seenSyncOff() {
-    var o = lget('schoolagy_settings_options') || {};
-    try { if (LS.getItem('schoolagy_account_mode') === 'incognito') return true; } catch (e) { return true; }
+    var o = lget('averages_settings_options') || {};
+    try { if (LS.getItem('averages_account_mode') === 'incognito') return true; } catch (e) { return true; }
     return o.syncAcrossDevices === false;
   }
   /* Seen ids are kept for 15 days (2026-11-14, the API's sync.ts SEEN_DAYS): averages_seen_at holds the day each
@@ -928,7 +928,7 @@
     newGo: function (it) { if (it.kind === 'a') FSX.hub(it.c, '', { a: it.raw }); else FSX.hub(it.c, 'materials' + (it.mat ? '/' + it.mat : '')); },
     /** When this tab last got fresh grades and updates, for the bell ("Last refreshed today at 7:38 PM"). */
     lastRefreshed: function () {
-      var at = 0; try { at = (JSON.parse(sessionStorage.getItem('schoolagy_bundle_cache') || 'null') || {}).at || 0; } catch (e) { /* unreadable */ }
+      var at = 0; try { at = (JSON.parse(sessionStorage.getItem('averages_bundle_cache') || 'null') || {}).at || 0; } catch (e) { /* unreadable */ }
       if (!at) return 'just now';
       var mins = Math.round((Date.now() - at) / 60000);
       if (mins < 1) return 'just now';
@@ -950,21 +950,21 @@
       // so a language chosen on another device is never overwritten
       var me = window.FSD && window.FSD.me, LSs = window.sessionStorage;
       try { if (LSs.getItem('averages_fs_wt') === '1') return; LSs.setItem('averages_fs_wt', '1'); } catch (e) { return; }
-      var opts = FSX.lget('schoolagy_settings_options') || {};
+      var opts = FSX.lget('averages_settings_options') || {};
       if (!me || me.incognito || opts.syncAcrossDevices === false) return;
       if (opts.windowType !== 'fullscreen' && typeof opts.language !== 'string') return;
-      try { if (LS.getItem('schoolagy_account_mode') === 'incognito') return; } catch (e) { return; }
+      try { if (LS.getItem('averages_account_mode') === 'incognito') return; } catch (e) { return; }
       FSX.api('/sync/settings').then(function (rec) {
         var st = rec && rec.settings; if (!st || typeof st !== 'object' || typeof rec.settingsUpdatedAt !== 'string') return;
         var so = st.settingsOptions && typeof st.settingsOptions === 'object' ? st.settingsOptions : {}, add = {};
         if (opts.windowType === 'fullscreen' && so.windowType !== 'fullscreen') { add.windowType = 'fullscreen'; add.fsTheme = opts.fsTheme || 'is'; }
         if (typeof opts.language === 'string' && typeof so.language !== 'string') add.language = opts.language;
         if (!Object.keys(add).length) return;
-        var mine = (FSX.lget('schoolagy_sync_meta') || {}).settingsUpdatedAt === rec.settingsUpdatedAt;
+        var mine = (FSX.lget('averages_sync_meta') || {}).settingsUpdatedAt === rec.settingsUpdatedAt;
         var next = Object.assign({}, st, { settingsOptions: Object.assign({}, so, add) });
         return FSX.api('/sync/settings', { method: 'PUT', json: { settings: next } }).then(function (r) {
           // this device agreed with the account's copy before: it still does
-          if (mine && r && typeof r.settingsUpdatedAt === 'string') FSX.lset('schoolagy_sync_meta', { settingsUpdatedAt: r.settingsUpdatedAt });
+          if (mine && r && typeof r.settingsUpdatedAt === 'string') FSX.lset('averages_sync_meta', { settingsUpdatedAt: r.settingsUpdatedAt });
         });
       }).catch(function () {});
     },
@@ -973,21 +973,21 @@
       FSX._syncT = setTimeout(function () {
         var me = window.FSD && window.FSD.me;
         var raw = function (k) { try { return LS.getItem(k); } catch (e) { return null; } };
-        if (!me || me.incognito || raw('schoolagy_account_mode') === 'incognito') return;
-        var opts = FSX.lget('schoolagy_settings_options') || {}; delete opts.browserNotifications;
+        if (!me || me.incognito || raw('averages_account_mode') === 'incognito') return;
+        var opts = FSX.lget('averages_settings_options') || {}; delete opts.browserNotifications;
         var media = FSX.lget('averages_sync_media') || {}, ok = true;
         var ref = function (kind, v) {
           if (typeof v !== 'string' || !/^data:image\//.test(v)) return v;
           var k = media[kind]; if (k && k.v) return 'r2:' + kind + ':' + k.v;
           ok = false; return v;
         };
-        var ap = FSX.lget('schoolagy_appearance'), pr = FSX.lget('schoolagy_profile');
+        var ap = FSX.lget('averages_appearance'), pr = FSX.lget('averages_profile');
         if (ap && typeof ap === 'object') ap = Object.assign({}, ap, { background: ref('background', ap.background) });
         if (pr && typeof pr === 'object') pr = Object.assign({}, pr, { photo: ref('photo', pr.photo) });
         if (!ok) return;
-        var settings = { settingsOptions: opts, appearance: ap, darkMode: raw('schoolagy_dark_mode') || 'auto', profile: pr };   // 'auto' = System, so it syncs too
+        var settings = { settingsOptions: opts, appearance: ap, darkMode: raw('averages_dark_mode') || 'auto', profile: pr };   // 'auto' = System, so it syncs too
         FSX.api('/sync/settings', { method: 'PUT', json: { settings: settings } }).then(function (r) {
-          if (r && typeof r.settingsUpdatedAt === 'string') FSX.lset('schoolagy_sync_meta', { settingsUpdatedAt: r.settingsUpdatedAt });
+          if (r && typeof r.settingsUpdatedAt === 'string') FSX.lset('averages_sync_meta', { settingsUpdatedAt: r.settingsUpdatedAt });
         }).catch(function () {});
       }, 800);
     },
@@ -1001,8 +1001,8 @@
     syncPull: function (force) {
       var me = window.FSD && window.FSD.me;
       var raw = function (k) { try { return LS.getItem(k); } catch (e) { return null; } };
-      if (!me || me.incognito || raw('schoolagy_account_mode') === 'incognito') return Promise.resolve(false);
-      if ((FSX.lget('schoolagy_settings_options') || {}).syncAcrossDevices === false) return Promise.resolve(false);
+      if (!me || me.incognito || raw('averages_account_mode') === 'incognito') return Promise.resolve(false);
+      if ((FSX.lget('averages_settings_options') || {}).syncAcrossDevices === false) return Promise.resolve(false);
       var SS = window.sessionStorage, last = 0;
       try { last = Number(SS.getItem('averages_fs_sync_pulled') || 0); } catch (e) { /* none */ }
       if (!force && Date.now() - last < 5 * 60 * 1000) return Promise.resolve(false);
@@ -1011,7 +1011,7 @@
       return (FSX._syncPulling = FSX.api('/sync/settings').then(function (rec) {
         var st = rec && rec.settings, stamp = rec && rec.settingsUpdatedAt;
         if (!st || typeof st !== 'object' || typeof stamp !== 'string' || !stamp) return false;
-        if ((FSX.lget('schoolagy_sync_meta') || {}).settingsUpdatedAt === stamp) return false;
+        if ((FSX.lget('averages_sync_meta') || {}).settingsUpdatedAt === stamp) return false;
         var known = FSX.lget('averages_sync_media') || {}, media = Object.assign({}, known), REF = /^r2:(photo|background):([A-Za-z0-9._-]{1,128})$/;
         var isImg = function (v) { return typeof v === 'string' && /^data:image\//.test(v); };
         var hashOf = function (t) { return crypto.subtle.digest('SHA-256', new TextEncoder().encode(t)).then(function (d) { return Array.from(new Uint8Array(d).slice(0, 12), function (b) { return b.toString(16).padStart(2, '0'); }).join(''); }); };
@@ -1028,16 +1028,16 @@
               .then(function (url) { if (!isImg(url)) return undefined; return hashOf(url).then(function (h) { media[kind] = { v: v, h: h }; return url; }); });
           }).catch(function () { return undefined; });
         };
-        var localAp = FSX.lget('schoolagy_appearance'), localPr = FSX.lget('schoolagy_profile');
+        var localAp = FSX.lget('averages_appearance'), localPr = FSX.lget('averages_profile');
         var apP = st.appearance && typeof st.appearance === 'object' ? picture('background', st.appearance.background, localAp && localAp.background) : Promise.resolve(null);
         var prP = st.profile && typeof st.profile === 'object' ? picture('photo', st.profile.photo, localPr && localPr.photo) : Promise.resolve(null);
         return Promise.all([apP, prP]).then(function (pics) {
           var put = function (k, v) { try { if (LS.getItem(k) !== v) { LS.setItem(k, v); return true; } } catch (e) { /* storage off */ } return false; };
           var changed = false;
           if (st.settingsOptions && typeof st.settingsOptions === 'object') {
-            var o = Object.assign({}, st.settingsOptions), mine = (FSX.lget('schoolagy_settings_options') || {}).browserNotifications;
+            var o = Object.assign({}, st.settingsOptions), mine = (FSX.lget('averages_settings_options') || {}).browserNotifications;
             delete o.browserNotifications; if (mine !== undefined) o.browserNotifications = mine;
-            changed = put('schoolagy_settings_options', JSON.stringify(o)) || changed;
+            changed = put('averages_settings_options', JSON.stringify(o)) || changed;
           }
           var redAgain = false;
           if (st.appearance && typeof st.appearance === 'object') {
@@ -1046,23 +1046,23 @@
             // every device agrees (same rule as averages-fs.js)
             if (ap.accent && ['#b8352f', '#2f5fb3', '#2e7d4f', '#7a3fa0', '#b25600', '#0f7470', '#44465a'].indexOf(String(ap.accent).toLowerCase()) < 0) { ap.accent = '#b8352f'; redAgain = true; }
             if (pics[0] === undefined) { if (localAp && localAp.background != null) ap.background = localAp.background; else delete ap.background; } else ap.background = pics[0];
-            changed = put('schoolagy_appearance', JSON.stringify(ap)) || changed;
+            changed = put('averages_appearance', JSON.stringify(ap)) || changed;
           }
           if (st.profile && typeof st.profile === 'object') {
             var pr = Object.assign({}, st.profile);
             if (pics[1] === undefined) { if (localPr && localPr.photo) pr.photo = localPr.photo; else delete pr.photo; } else pr.photo = pics[1];
-            changed = put('schoolagy_profile', JSON.stringify(pr)) || changed;
-            if (typeof pr.name === 'string' && pr.name.trim()) put('schoolagy_profile_name', pr.name.trim());
+            changed = put('averages_profile', JSON.stringify(pr)) || changed;
+            if (typeof pr.name === 'string' && pr.name.trim()) put('averages_profile_name', pr.name.trim());
           }
-          // the theme and accent on this page now: averages-fs.js turns fsset into both (and back into schoolagy_*)
+          // the theme and accent on this page now: averages-fs.js turns fsset into both (and back into averages_*)
           var dm = st.darkMode === 'dark' || st.darkMode === 'light' || st.darkMode === 'auto' ? st.darkMode : null;
           var fsset = FSX.lget('fsset') || {}, before = JSON.stringify(fsset);
           if (dm) fsset.theme = dm;
-          var acc = String((FSX.lget('schoolagy_appearance') || {}).accent || '').toLowerCase(), KEYS = { '#b8352f': 'punch', '#2f5fb3': 'blue', '#2e7d4f': 'green', '#7a3fa0': 'plum', '#b25600': 'orange', '#0f7470': 'teal', '#44465a': 'graphite' };
+          var acc = String((FSX.lget('averages_appearance') || {}).accent || '').toLowerCase(), KEYS = { '#b8352f': 'punch', '#2f5fb3': 'blue', '#2e7d4f': 'green', '#7a3fa0': 'plum', '#b25600': 'orange', '#0f7470': 'teal', '#44465a': 'graphite' };
           if (KEYS[acc]) fsset.accent = KEYS[acc];
           if (JSON.stringify(fsset) !== before) { changed = true; try { LS.setItem('fsset', JSON.stringify(fsset)); } catch (e) { /* storage off */ } }
           FSX.lset('averages_sync_media', media);
-          FSX.lset('schoolagy_sync_meta', { settingsUpdatedAt: stamp });
+          FSX.lset('averages_sync_meta', { settingsUpdatedAt: stamp });
           if (redAgain) FSX.syncPush();
           if (changed) try { window.dispatchEvent(new CustomEvent('fs:synced-settings')); } catch (e) { /* fine */ }
           return changed;
@@ -1110,13 +1110,13 @@
       else if (opts.body !== undefined) init.body = opts.body;
       if (opts.headers) Object.keys(opts.headers).forEach(function (k) { init.headers[k] = opts.headers[k]; });
       return fetch(API + path, init).then(function (r) {
-        if (r.status === 401) { sdel('schoolagy_session_state'); window.location.replace('/'); throw new Error('signed_out'); }
+        if (r.status === 401) { sdel('averages_session_state'); window.location.replace('/'); throw new Error('signed_out'); }
         return r.json().catch(function () { return {}; }).then(function (j) { if (!r.ok) { var e = new Error(j && j.error || 'http_' + r.status); e.status = r.status; e.body = j; throw e; } if (window.AvI18n && path.indexOf('/translate') !== 0) window.AvI18n.harvest(j); return j; });
       });
     },
     /** Drops the cached answers so the next load asks Schoology again (Refresh buttons). */
     refresh: function () {
-      sdel('schoolagy_bundle_cache');
+      sdel('averages_bundle_cache');
       try { for (var i = SS.length - 1; i >= 0; i--) { var k = SS.key(i); if (k && k.indexOf('averages_extras_') === 0) SS.removeItem(k); } } catch (e) { /* off */ }
     },
     reload: function () { FSX.refresh(); window.location.reload(); },
@@ -1141,7 +1141,7 @@
         P[key] = getJSON(path).then(function (d) { store(d); var same = norm(d) === norm(old[key]); if (!same) { S.changed = true; (S.which = S.which || []).push(key); try { sset('averages_fs_sync_changed', key); } catch (e) {} } return same; },
           function (err) { if (err && err.signedOut) { window.location.replace('/'); return new Promise(function () {}); } S.failed = true; return true; });
       };
-      ask('bundle', '/data/bundle' + (tz ? '?tz=' + encodeURIComponent(tz) : ''), function (b) { sset('schoolagy_bundle_cache', JSON.stringify({ at: Date.now(), bundle: b })); if (window.FSD) window.FSD.generatedAt = (b && b.generatedAt) || new Date().toISOString(); notisAt = Date.now(); });
+      ask('bundle', '/data/bundle' + (tz ? '?tz=' + encodeURIComponent(tz) : ''), function (b) { sset('averages_bundle_cache', JSON.stringify({ at: Date.now(), bundle: b })); if (window.FSD) window.FSD.generatedAt = (b && b.generatedAt) || new Date().toISOString(); notisAt = Date.now(); });
       Object.keys(plan).forEach(function (k) {
         var path = plan[k][0], key = plan[k][1];
         if (path === '@for') { var q = subsQuery(old.bundle); if (!q) return; path = '/data/submissions?' + q; key = 'fs_subs_' + q.length + '_' + q.slice(-24); }
@@ -1172,9 +1172,9 @@
     /** Notifications already opened (the Windowed bell's list, averages_seen). kind: 'u' update, 'g' grade, 'm' message. */
     /** The student's course order (shared with Windowed): ids, or [] for the school's. set() saves it for both looks. */
     courseOrder: {
-      get: function () { var v = lget('schoolagy_course_order'); return Array.isArray(v) ? v.map(String) : []; },
-      set: function (ids) { lset('schoolagy_course_order', ids.map(String)); },
-      clear: function () { try { LS.removeItem('schoolagy_course_order'); } catch (e) {} },
+      get: function () { var v = lget('averages_course_order'); return Array.isArray(v) ? v.map(String) : []; },
+      set: function (ids) { lset('averages_course_order', ids.map(String)); },
+      clear: function () { try { LS.removeItem('averages_course_order'); } catch (e) {} },
     },
     seen: {
       read: function () { var v = lget('averages_seen'); return v && typeof v === 'object' && !Array.isArray(v) ? v : {}; },
@@ -1484,7 +1484,7 @@
     seen.ages(updates.map(function (u) { return { kind: 'u', raw: u.id, ago: agoMin(u.when) }; }));
 
     // ---------- profile ----------
-    var prof = window.FSX.lget('schoolagy_profile') || {};
+    var prof = window.FSX.lget('averages_profile') || {};
     var name = (typeof prof.name === 'string' && prof.name.trim()) || (me.name || '').trim() || 'You';
     var photo = typeof prof.photo === 'string' && /^data:image\//.test(prof.photo) ? prof.photo : '';
     var schoolSaved = ((window.FSX.lget('averages_login_school') || {})[me.provider === 'google' ? 'classroom' : 'schoology']) || {};
@@ -1502,9 +1502,12 @@
       var ups = updates.filter(function (u) { return u.courseId === id && u.unread && !seen.has('u', u.id); });
       var next = nextUp[0] ? [nextUp[0].title, dayLabel(Date.parse(nextUp[0].dueAt), now)] : null;
       var m = arr(mates[id]);
-      var tids = arr(people.CONTACTS).filter(function (p) { return arr(p.courses).indexOf(id) >= 0; }).map(function (p) { return String(p.id); });
+      var tcs = arr(people.CONTACTS).filter(function (p) { return arr(p.courses).indexOf(id) >= 0; });
+      var tids = tcs.map(function (p) { return String(p.id); });
+      // each teacher by name, for "Message a teacher" when a class has more than one (2026-11-18)
+      var tlist = tcs.map(function (p) { return { id: String(p.id), name: String(p.name || 'Teacher') }; });
       return {
-        id: id, name: c.name || 'Class', short: initials(c.name), teacher: teacherOf(id), teacherIds: tids, period: typeof c.period === 'number' ? c.period : i + 1,
+        id: id, name: c.name || 'Class', short: initials(c.name), teacher: teacherOf(id), teacherIds: tids, teachers: tlist, period: typeof c.period === 'number' ? c.period : i + 1,
         hasPeriod: typeof c.period === 'number', room: '', students: m.length ? m.length + 1 : 0, pct: typeof c.pct === 'number' ? c.pct : 0, grade: c.grade || '',
         none: !(typeof c.pct === 'number' && c.pct > 0) && !cats.some(function (k) { return arr(k.assignments).some(function (a) { return a.graded; }); }),
         trend: trend, trendHas: wk.has, trendPosted: wk.posted, steps: gradeSteps(cats, typeof c.pct === 'number' ? c.pct : null), due: due.length, missing: miss.length, updates: ups.length, next: next, code: c.code || '', section: c.section || '',
@@ -1512,7 +1515,7 @@
         points: points, dates: arr(hist.dates), titles: arr(hist.titles), emoji: s[1], color: s[2], lmsColor: c.color || '', order: i,
       };
     });
-    var saved = arr(window.FSX.lget('schoolagy_course_order')).map(String);
+    var saved = arr(window.FSX.lget('averages_course_order')).map(String);
     if (saved.length) CLASSES.sort(function (x, y) { var a = saved.indexOf(String(x.id)), b = saved.indexOf(String(y.id)); return (a < 0 ? 1e6 : a) - (b < 0 ? 1e6 : b); });
     // your own name, emoji and color for a class (Course info on its page), kept on this device per class:
     // fshub_course_custom = { <class id>: { name, emoji, color } }. Schoology's are kept as orig* for Reset.
@@ -1594,11 +1597,12 @@
     var posted = {}; arr(raw.submissions && raw.submissions.posted).forEach(function (k) { posted[String(k)] = true; });
     arr(raw.submissions && raw.submissions.files).forEach(function (f) {
       var k = f.course + ':' + f.assignment, s = subs[k] || (subs[k] = { at: 0, files: [] });
-      if (f.at > s.at) s.at = f.at;
+      // late: Schoology's own mark on the newest turned-in revision (2026-11-18, for "what did I turn in late")
+      if (f.at >= s.at) { s.at = f.at; s.late = !!f.late; }
       if (s.files.length < 20) s.files.push({ name: f.name, size: f.size ? (f.size < 1048576 ? Math.max(1, Math.round(f.size / 1024)) + ' KB' : (f.size / 1048576).toFixed(1) + ' MB') : 'File', rev: f.revision });
     });
-    var gbById = {};
-    CLASSES.forEach(function (c) { arr(obj(gradebook[c.id]).categories).forEach(function (cat) { arr(cat.assignments).forEach(function (a) { gbById[c.id + ':' + a.id] = a; }); }); });
+    var gbById = {}, gbCat = {};
+    CLASSES.forEach(function (c) { arr(obj(gradebook[c.id]).categories).forEach(function (cat) { arr(cat.assignments).forEach(function (a) { gbById[c.id + ':' + a.id] = a; gbCat[c.id + ':' + a.id] = cat.name || ''; }); }); });
     var today0 = startOfDay(now);
     var offOf = function (ms) { return ms == null ? null : Math.round((startOfDay(ms) - today0) / DAY); };
     var WORK_ALL = [], seenW = {};
@@ -1618,6 +1622,8 @@
         pts: typeof g.points === 'number' && g.points > 0 ? g.points : null, st: st,
         marked: !!(g.missing && !graded && !sub),   // the teacher marked it missing (st 'missing' is also work that's only past due)
         turnedAt: sub ? sub.at : 0, turned: sub ? (sub.at ? dayLabel(sub.at, now) : 'earlier') : done ? 'earlier' : null, sent: sub ? sub.files : undefined, posted: done || undefined,
+        // turned in late: Schoology says so, or it came in after the due date (graded tests taken in class have neither)
+        turnedLate: !!(sub && (sub.late || (sub.at && dueMs != null && sub.at > dueMs + 60000))), cat: gbCat[key] || '',
         got: graded ? g.score : undefined, gradedAt: graded ? g.gradedAt || 0 : 0, graded: graded ? (g.gradedAt ? dayLabel(g.gradedAt, now) : 'earlier') : null, note: g.comment || '',
       });
     }

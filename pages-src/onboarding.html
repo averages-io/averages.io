@@ -1626,7 +1626,7 @@
     function potatoOn() { return !!(document.body && document.body.classList.contains("potato-mode")); }
     function applyPotato() {
       var on = false;
-      try { on = (JSON.parse(localStorage.getItem("schoolagy_settings_options") || "{}") || {}).potatoMode === true; } catch (e) {}
+      try { on = (JSON.parse(localStorage.getItem("averages_settings_options") || "{}") || {}).potatoMode === true; } catch (e) {}
       if (document.body) document.body.classList.toggle("potato-mode", on);
       if (!document.getElementById("potatoStyle")) {
         var st = document.createElement("style");
@@ -1660,7 +1660,7 @@
       }
     }
       applyPotato();
-      window.addEventListener('storage', function (e) { if (e.key === 'schoolagy_settings_options') applyPotato(); });
+      window.addEventListener('storage', function (e) { if (e.key === 'averages_settings_options') applyPotato(); });
     })();
 
     // ------------------------------------------------------------------
@@ -1956,7 +1956,7 @@
     }
 
     if (darkModeToggle) {
-      const AVERAGES_DARK_MODE_KEY = 'schoolagy_dark_mode';
+      const AVERAGES_DARK_MODE_KEY = 'averages_dark_mode';
       const averagesSavedDarkPref = () => {
         try {
           const v = localStorage.getItem(AVERAGES_DARK_MODE_KEY);
@@ -1964,7 +1964,7 @@
           if (v === 'light') return false;
         } catch {}
         let under13 = true;
-        try { under13 = localStorage.getItem('schoolagy_13plus') !== 'yes'; } catch {}
+        try { under13 = localStorage.getItem('averages_13plus') !== 'yes'; } catch {}
         if (under13) return true;
         return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
       };
@@ -1975,7 +1975,7 @@
       darkModeToggle.checked = initialDark;
       applyDarkMode(initialDark);
       // Save the under-13 default right away so Home and every other page open dark too.
-      try { if (!localStorage.getItem(AVERAGES_DARK_MODE_KEY) && localStorage.getItem('schoolagy_13plus') !== 'yes') averagesSetDarkPref(true); } catch {}
+      try { if (!localStorage.getItem(AVERAGES_DARK_MODE_KEY) && localStorage.getItem('averages_13plus') !== 'yes') averagesSetDarkPref(true); } catch {}
       darkModeToggle.addEventListener('change', () => {
         applyDarkMode(darkModeToggle.checked);
         averagesSetDarkPref(darkModeToggle.checked);
@@ -2221,7 +2221,7 @@
         bgCropState.naturalH * drawScale
       );
       // JPEG, not PNG: this is a full-viewport photo, not a small icon —
-      // keeping it PNG would bloat schoolagy_appearance (and everything
+      // keeping it PNG would bloat averages_appearance (and everything
       // that syncs it) for no visible benefit on a photographic image.
       const croppedDataUrl = canvas.toDataURL('image/jpeg', 0.92);
       const onConfirm = bgCropState.onConfirm;
@@ -2689,7 +2689,7 @@
     // immediately see and feel change.
     const potatoToggle = document.querySelector('[data-key="potatoMode"]');
     if (potatoToggle) {
-      try { if ((JSON.parse(localStorage.getItem('schoolagy_settings_options') || '{}') || {}).potatoMode === true) potatoToggle.checked = true; } catch {}
+      try { if ((JSON.parse(localStorage.getItem('averages_settings_options') || '{}') || {}).potatoMode === true) potatoToggle.checked = true; } catch {}
       document.body.classList.toggle('potato-mode', potatoToggle.checked);
       potatoToggle.addEventListener('change', () => {
         document.body.classList.toggle('potato-mode', potatoToggle.checked);
@@ -2704,7 +2704,7 @@
     const submitBtn = document.getElementById('submitBtn');
 
     let IS_13_PLUS = false;
-    try { IS_13_PLUS = localStorage.getItem('schoolagy_13plus') === 'yes'; } catch {}
+    try { IS_13_PLUS = localStorage.getItem('averages_13plus') === 'yes'; } catch {}
     const modeButtons = document.querySelectorAll('.mode-option');
     const modeNext = document.getElementById('modeNext');
     const modeHint = document.getElementById('modeHint');
@@ -2983,20 +2983,20 @@
 
       try {
         const savedMode = accountMode === 'plus' ? 'classic' : (accountMode || 'incognito');
-        localStorage.setItem('schoolagy_account_mode', savedMode);
+        localStorage.setItem('averages_account_mode', savedMode);
         try { sessionStorage.removeItem('averages_onboard_draft'); } catch (e) {}   // done: no draft to come back to
         {
           let opts = {};
-          try { opts = JSON.parse(localStorage.getItem('schoolagy_settings_options') || '{}') || {}; } catch {}
+          try { opts = JSON.parse(localStorage.getItem('averages_settings_options') || '{}') || {}; } catch {}
           // Potato PC Mode chosen here now carries into the app (it was never saved before).
           const potatoPick = document.querySelector('[data-key="potatoMode"]');
           if (potatoPick) opts.potatoMode = potatoPick.checked;
           opts.syncAcrossDevices = savedMode === 'classic';
           opts.windowType = document.body.classList.contains('fs-on') ? 'fullscreen' : 'windowed';
           if (opts.windowType === 'fullscreen') opts.fsTheme = 'is';
-          localStorage.setItem('schoolagy_settings_options', JSON.stringify(opts));
+          localStorage.setItem('averages_settings_options', JSON.stringify(opts));
         }
-        localStorage.setItem('schoolagy_profile', JSON.stringify({
+        localStorage.setItem('averages_profile', JSON.stringify({
           name: nameInput.value.trim(),
           email: emailVal,
           emailVerified: !!emailVal && emailVerified,
@@ -3004,7 +3004,7 @@
         }));
         const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
         if (accent) {
-          localStorage.setItem('schoolagy_appearance', JSON.stringify({
+          localStorage.setItem('averages_appearance', JSON.stringify({
             accent,
             background: selectedBackgroundValue,
           }));
@@ -3062,7 +3062,7 @@
       const FROM_LIVE = { mode: 'mode', theme: 'look', features: 'apps', profile: 'you' };
       const ACCENTS = [['punch', 'Punch', '#b8352f'], ['blue', 'Blue', '#2f5fb3'], ['green', 'Green', '#2e7d4f'], ['plum', 'Plum', '#7a3fa0'],
                        ['orange', 'Orange', '#b25600'], ['teal', 'Teal', '#0f7470'], ['graphite', 'Graphite', '#44465a']];
-      const DARK_KEY = 'schoolagy_dark_mode';
+      const DARK_KEY = 'averages_dark_mode';
       const INCOG = () => window.__AVERAGES_INCOGNITO__ || null;
       const KID = () => !IS_13_PLUS || !!(INCOG() && INCOG().locked);
       const liveMode = k => document.querySelector(`.mode-option[data-mode="${k}"]`);
@@ -3148,12 +3148,12 @@
       const FS_SKINS = [['is', 'IS', 'Industry Standard']];
       let fsSkin = 'is';
       // Language (2026-11-14): the same choice as Settings > Language, kept with the other settings so it syncs
-      // (schoolagy_settings_options.language). The app's pages read it through /js/averages-i18n.js.
+      // (averages_settings_options.language). The app's pages read it through /js/averages-i18n.js.
       const OB_LANGS = [['auto', 'Same as this device'], ['en', 'English'], ['es', 'Español'], ['fr', 'Français'], ['pt', 'Português'], ['de', 'Deutsch'], ['zh', '中文']];
-      function obLang() { try { const o = JSON.parse(localStorage.getItem('schoolagy_settings_options') || '{}') || {}; return typeof o.language === 'string' ? o.language : (localStorage.getItem('averages_lang') || 'auto'); } catch (e) { return 'auto'; } }
+      function obLang() { try { const o = JSON.parse(localStorage.getItem('averages_settings_options') || '{}') || {}; return typeof o.language === 'string' ? o.language : (localStorage.getItem('averages_lang') || 'auto'); } catch (e) { return 'auto'; } }
       function obDeviceLang() { const list = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || 'en']; for (const l of list) { const b = String(l || '').toLowerCase().split('-')[0]; if (OB_LANGS.some(x => x[0] === b && b !== 'auto')) return b; } return 'en'; }
       function obSetLang(v) {
-        try { const o = JSON.parse(localStorage.getItem('schoolagy_settings_options') || '{}') || {}; o.language = v; localStorage.setItem('schoolagy_settings_options', JSON.stringify(o)); localStorage.setItem('averages_lang', v); } catch (e) {}
+        try { const o = JSON.parse(localStorage.getItem('averages_settings_options') || '{}') || {}; o.language = v; localStorage.setItem('averages_settings_options', JSON.stringify(o)); localStorage.setItem('averages_lang', v); } catch (e) {}
       }
       function lookDraw() {
         const cur = obLang(), devName = (OB_LANGS.find(x => x[0] === obDeviceLang()) || OB_LANGS[1])[1];

@@ -4,7 +4,7 @@
   if (window.AveragesLive) return;
 
   var API = window.location.hostname.endsWith('averages.io') ? 'https://api.averages.io' : 'http://localhost:8787';
-  var BUNDLE_CACHE = 'schoolagy_bundle_cache';
+  var BUNDLE_CACHE = 'averages_bundle_cache';
   var AT_KEY = 'averages_live_at';
   var EVERY_KEY = 'averages_live_every';
   var DEFAULT_EVERY_S = 300;

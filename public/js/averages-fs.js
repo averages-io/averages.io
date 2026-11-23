@@ -24,7 +24,7 @@
   // Where app.averages.io opens next time (the app worker reads it at "/"): kept up to date on every page.
   function avStart() {
     try {
-      var o = JSON.parse(localStorage.getItem("schoolagy_settings_options") || "{}") || {};
+      var o = JSON.parse(localStorage.getItem("averages_settings_options") || "{}") || {};
       var pages = ["courses", "calendar", "grades", "messages", "assignments", "files", "contacts"];
       var to = pages.indexOf(o.openTo) >= 0 ? o.openTo : "home";
       var fs = o.windowType === "fullscreen" && sessionStorage.getItem("averages_fs_off") !== "1";
@@ -36,17 +36,17 @@
   try { document.cookie = "averages_start=" + avStart() + "; Path=/; Max-Age=31536000; SameSite=Lax" + (location.protocol === "https:" ? "; Secure" : ""); } catch (e) { /* cookies off */ }
   function goWindowed(save) {
     if (save) {
-      var o = json('schoolagy_settings_options') || {};
+      var o = json('averages_settings_options') || {};
       o.windowType = 'windowed';
-      put('schoolagy_settings_options', JSON.stringify(o));
+      put('averages_settings_options', JSON.stringify(o));
     }
     try { document.cookie = 'averages_start=/home; Path=/; Max-Age=31536000; SameSite=Lax' + (location.protocol === 'https:' ? '; Secure' : ''); } catch (e) { /* cookies off */ }
     window.location.replace(page === 'settings' && save ? '/settings?section=general' : windowedPath());
   }
-  var opts = json('schoolagy_settings_options') || {};
+  var opts = json('averages_settings_options') || {};
   window.addEventListener('pageshow', function (e) {
     if (!e.persisted) return;
-    var o = json('schoolagy_settings_options') || {};
+    var o = json('averages_settings_options') || {};
     if (o.windowType !== 'fullscreen') { goWindowed(false); return; }
     if (window.__averagesSplash && window.__averagesSplash.hide) window.__averagesSplash.hide();
   });
@@ -54,7 +54,7 @@
 
   // ---------- theme ----------
   var mq = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
-  function themeChoice() { var v = get('schoolagy_dark_mode'); return v === 'dark' || v === 'light' ? v : 'auto'; }
+  function themeChoice() { var v = get('averages_dark_mode'); return v === 'dark' || v === 'light' ? v : 'auto'; }
   function applyTheme() {
     var t = themeChoice(), dark = t === 'dark' || (t === 'auto' && !!(mq && mq.matches));
     root.setAttribute('data-theme', dark ? 'dark' : 'light');
@@ -65,7 +65,7 @@
 
   // ---------- accent ----------
   var ACCENTS = { punch: ['#b8352f', '#9c2b26'], blue: ['#2f5fb3', '#264d93'], green: ['#2e7d4f', '#246340'], plum: ['#7a3fa0', '#663486'], orange: ['#b25600', '#964800'], teal: ['#0f7470', '#0b5e5b'], graphite: ['#44465a', '#33354a'] };
-  function savedAccent() { var a = String((json('schoolagy_appearance') || {}).accent || '').toLowerCase(); return /^#[0-9a-f]{6}$/.test(a) ? a : ''; }
+  function savedAccent() { var a = String((json('averages_appearance') || {}).accent || '').toLowerCase(); return /^#[0-9a-f]{6}$/.test(a) ? a : ''; }
   function accentKey() {
     var a = savedAccent();
     for (var k in ACCENTS) if (ACCENTS[k][0] === a) return k;
@@ -85,9 +85,9 @@
   // One of Fullscreen's seven colors, or its default red: a Windowed color (from a background, say) showed on some
   // pages and not others (2026-11-09, Martin: "force choose the default red"). Saved, so every page agrees.
   if (accentKey() === 'custom') {
-    var apx = json('schoolagy_appearance') || {};
+    var apx = json('averages_appearance') || {};
     apx.accent = ACCENTS.punch[0];
-    put('schoolagy_appearance', JSON.stringify(apx));
+    put('averages_appearance', JSON.stringify(apx));
     var fsx = json('fsset') || {}; fsx.accent = 'punch'; put('fsset', JSON.stringify(fsx));
     window.__fsAccentReset = true;   // averages-fs-data.js sends it to Sync once the page is ready
   }
@@ -98,19 +98,19 @@
   fsset.theme = themeChoice();
   fsset.accent = accentKey();
   fsset.layout = 'full';
-  var mode = get('schoolagy_account_mode');
+  var mode = get('averages_account_mode');
   if (mode === 'incognito' || mode === 'classic') fsset.mode = mode;
   put('fsset', JSON.stringify(fsset));
   put('fsmock_potato', JSON.stringify(opts.potatoMode === true));
-  var prof = json('schoolagy_profile') || {};
-  var name = (typeof prof.name === 'string' && prof.name.trim()) || (get('schoolagy_profile_name') || '').trim();
+  var prof = json('averages_profile') || {};
+  var name = (typeof prof.name === 'string' && prof.name.trim()) || (get('averages_profile_name') || '').trim();
   if (name) {
     var photo = typeof prof.photo === 'string' && /^data:image\//.test(prof.photo) ? prof.photo : '';
     put('fsmock_profile2', JSON.stringify({ name: name, photo: photo }));
   }
 
   // ...and back again when the Fullscreen pages change them.
-  function saveOption(k, v) { var o = json('schoolagy_settings_options') || {}; o[k] = v; put('schoolagy_settings_options', JSON.stringify(o)); }
+  function saveOption(k, v) { var o = json('averages_settings_options') || {}; o[k] = v; put('averages_settings_options', JSON.stringify(o)); }
   var lastSig = {};
   Storage.prototype.setItem = function (k, v) {
     rawSet.call(this, k, v);
@@ -118,22 +118,22 @@
     try {
       if (k === 'fsset') {
         var s = JSON.parse(v) || {};
-        if (s.theme === 'dark' || s.theme === 'light') put('schoolagy_dark_mode', s.theme);
-        else if (s.theme === 'auto') drop('schoolagy_dark_mode');
+        if (s.theme === 'dark' || s.theme === 'light') put('averages_dark_mode', s.theme);
+        else if (s.theme === 'auto') drop('averages_dark_mode');
         applyTheme();
         if (s.accent && ACCENTS[s.accent]) {
-          var ap = json('schoolagy_appearance') || {};
+          var ap = json('averages_appearance') || {};
           ap.accent = ACCENTS[s.accent][0];
-          put('schoolagy_appearance', JSON.stringify(ap));
+          put('averages_appearance', JSON.stringify(ap));
           applyAccent(s.accent);
         }
       } else if (k === 'fsmock_potato') {
         saveOption('potatoMode', JSON.parse(v) === true);
       } else if (k === 'fsmock_profile2') {
-        var p = JSON.parse(v) || {}, cur = json('schoolagy_profile') || {};
+        var p = JSON.parse(v) || {}, cur = json('averages_profile') || {};
         if (typeof p.name === 'string' && p.name.trim()) cur.name = p.name.trim();
         if (typeof p.photo === 'string') cur.photo = /^data:image\//.test(p.photo) ? p.photo : null;
-        put('schoolagy_profile', JSON.stringify(cur));
+        put('averages_profile', JSON.stringify(cur));
       }
       var sig = k === 'fsset' ? (function (o) { return (o.theme || '') + '|' + (o.accent || ''); })(JSON.parse(v) || {}) : k + v;
       if ((k === 'fsset' || k === 'fsmock_potato' || k === 'fsmock_profile2') && sig !== lastSig[k] && window.FSX && window.FSX.syncPush) { var first = !(k in lastSig); lastSig[k] = sig; if (!first) window.FSX.syncPush(); }   // the account's copy follows real changes
@@ -268,7 +268,7 @@
     };
     if (window.MutationObserver) new MutationObserver(function (ms) { for (var i = 0; i < ms.length; i++) if (touches(ms[i])) { avSoon(); return; } }).observe(document.body, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['style', 'class'] });
   });
-  window.addEventListener('storage', function (e) { if (e.key === 'fsmock_profile2' || e.key === 'schoolagy_profile') avSoon(); });
+  window.addEventListener('storage', function (e) { if (e.key === 'fsmock_profile2' || e.key === 'averages_profile') avSoon(); });
 
 
   // ---------- keyboard shortcuts the student changed (Settings > About) ----------

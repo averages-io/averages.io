@@ -303,8 +303,8 @@ function wireOnboardingComplete(script, file) {
         // Remember that onboarding is done so a returning user goes straight
         // to Home instead of being walked through setup again.
         try {
-          window.localStorage.setItem('schoolagy_onboarded', '1');
-          window.localStorage.setItem('schoolagy_profile_name', nameInput.value.trim());
+          window.localStorage.setItem('averages_onboarded', '1');
+          window.localStorage.setItem('averages_profile_name', nameInput.value.trim());
         } catch (e) { /* private browsing — non-fatal, they just redo setup */ }
 
         setTimeout(() => {
@@ -343,7 +343,7 @@ function generatePage(name, route, data) {
 
   const homeOnboard = name === "home"
     ? `
-const ONBOARD_JS = "try{if(localStorage.getItem('schoolagy_onboarded')!=='1')location.replace('/onboard');}catch(e){}";
+const ONBOARD_JS = "try{if(localStorage.getItem('averages_onboarded')!=='1')location.replace('/onboard');}catch(e){}";
 `
     : "";
   const homeOnboardTag = name === "home"

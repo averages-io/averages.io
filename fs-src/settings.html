@@ -4177,14 +4177,14 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   // ---------- Settings ----------
   // Most settings follow you to every device (Classic). Your school, email and student ID come from Schoology,
   // so they're shown here but changed there. Names people typed (yours, blocked classmates) go through esc().
-  const OPTS = () => { try { return JSON.parse(localStorage.getItem('schoolagy_settings_options') || '{}') || {}; } catch (_) { return {}; } };
-  const saveOpt = (k, v) => { const o = OPTS(); o[k] = v; try { localStorage.setItem('schoolagy_settings_options', JSON.stringify(o)); } catch (_) {} FSX.syncPush(); };
-  const darkPref = () => { try { const v = localStorage.getItem('schoolagy_dark_mode'); return v === 'dark' || v === 'light' ? v : 'auto'; } catch (_) { return 'auto'; } };
+  const OPTS = () => { try { return JSON.parse(localStorage.getItem('averages_settings_options') || '{}') || {}; } catch (_) { return {}; } };
+  const saveOpt = (k, v) => { const o = OPTS(); o[k] = v; try { localStorage.setItem('averages_settings_options', JSON.stringify(o)); } catch (_) {} FSX.syncPush(); };
+  const darkPref = () => { try { const v = localStorage.getItem('averages_dark_mode'); return v === 'dark' || v === 'light' ? v : 'auto'; } catch (_) { return 'auto'; } };
   const savedFs = store.get('fsset') || {};
-  const SG = { sec: (savedFs.sec && /^[a-z]+$/.test(savedFs.sec)) ? savedFs.sec : 'account', plan: 'free', mode: FSD.me.incognito || (() => { try { return localStorage.getItem('schoolagy_account_mode') === 'incognito'; } catch (_) { return false; } })() ? 'incognito' : 'classic',
+  const SG = { sec: (savedFs.sec && /^[a-z]+$/.test(savedFs.sec)) ? savedFs.sec : 'account', plan: 'free', mode: FSD.me.incognito || (() => { try { return localStorage.getItem('averages_account_mode') === 'incognito'; } catch (_) { return false; } })() ? 'incognito' : 'classic',
     layout: 'full', skin: 'is', theme: darkPref(), accent: savedFs.accent || 'punch', previews: OPTS().filePreviews !== false, officePdf: OPTS().officePdfPreviews !== false, ctSchool: OPTS().contactsSearch !== 'everyone',
     notif: false, nGrades: true, nAssign: true, nDue: true, nMsgs: true, nAnn: true,
-    drive: false, canva: false, onedrive: false, openIn: (() => { try { const v = localStorage.getItem('schoolagy_default_editor'); return v === 'onedrive' ? 'onedrive' : v === 'gdrive' ? 'drive' : 'canva'; } catch (_) { return 'canva'; } })(), cal: false };
+    drive: false, canva: false, onedrive: false, openIn: (() => { try { const v = localStorage.getItem('averages_default_editor'); return v === 'onedrive' ? 'onedrive' : v === 'gdrive' ? 'drive' : 'canva'; } catch (_) { return 'canva'; } })(), cal: false };
   { const q = FSX.q.get('section'); if (q && ['account', 'plan', 'appearance', 'language', 'ai', 'personal', 'notifications', 'apps', 'privacy', 'about'].includes(q)) SG.sec = q; }
   // what the API says (filled in as each answer comes back): Plus, the calendar link, Canva, notifications, early features
   const LIVE = { billing: null, cal: null, canva: null, push: null, pushCfg: null, early: [], busy: '' };
@@ -4221,9 +4221,9 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const THEMES = { light: 'Light', dark: 'Dark', auto: 'System' };
   const FS_SKINS = [['is', 'IS', 'Industry Standard']];
   const STARTS = [['home', 'Home', 'home'], ['courses', 'Courses', 'binder'], ['calendar', 'Calendar', 'cal'], ['grades', 'Grades', 'chart'], ['messages', 'Messages', 'msg'], ['assignments', 'Assignments', 'inbox'], ['files', 'Files', 'folder'], ['contacts', 'Contacts', 'users']];
-  // settings that sync (schoolagy_settings_options, like Windowed's): where the app opens, the time zone
-  const optGet = () => store.get('schoolagy_settings_options') || {};
-  const optSet = (k, v) => { const o = optGet(); if (v == null) delete o[k]; else o[k] = v; store.set('schoolagy_settings_options', o); FSX.syncPush(); };
+  // settings that sync (averages_settings_options, like Windowed's): where the app opens, the time zone
+  const optGet = () => store.get('averages_settings_options') || {};
+  const optSet = (k, v) => { const o = optGet(); if (v == null) delete o[k]; else o[k] = v; store.set('averages_settings_options', o); FSX.syncPush(); };
   const ZONES = (() => { let z = []; try { z = Intl.supportedValuesOf('timeZone'); } catch (e) { /* older browser */ } return z.length ? z : ['America/New_York', 'America/Chicago', 'America/Denver', 'America/Phoenix', 'America/Los_Angeles', 'America/Anchorage', 'Pacific/Honolulu', 'Europe/London', 'Europe/Paris', 'Asia/Tokyo', 'Australia/Sydney', 'UTC']; })();
   const deviceZone = () => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'; } catch (e) { return 'UTC'; } };
   const zoneName = z => z.replace(/_/g, ' ').replace(/\//g, ' / ');
@@ -4331,7 +4331,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     return `${STAGE}${VER} (Build ${SHA.slice(0, 7)})`;
   }
   // what this device keeps so pages open faster (the Windowed Settings' list, plus the Fullscreen pages' extras)
-  const CACHE_KEYS = ['schoolagy_bundle_cache', 'schoolagy_session_state', 'averages_previews'];
+  const CACHE_KEYS = ['averages_bundle_cache', 'averages_session_state', 'averages_previews'];
   function cacheKB() { let n = 0; try { for (let i = 0; i < sessionStorage.length; i++) { const k = sessionStorage.key(i); if (CACHE_KEYS.includes(k) || k.startsWith('averages_extras_')) n += (sessionStorage.getItem(k) || '').length * 2; } } catch (_) {} return n / 1024; }
   function cacheTxt() { const kb = cacheKB(); return kb >= 1024 ? (kb / 1024).toFixed(1) + ' MB' : Math.max(1, Math.round(kb)) + ' KB'; }
 
@@ -4357,7 +4357,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
         row('sgy', 'Schoology website', 'Where you sign in to Schoology', `<a class="val" href="https://${esc(SGY)}" target="_blank" rel="noopener noreferrer">${esc(SGY)}</a>`) +
         (EMAIL ? row('email', 'School email', esc(EMAIL), '') : ''),
         'These come from Schoology. To change them, talk to your school.')}
-      ${incog() ? '' : (() => { const P = store.get('schoolagy_profile') || {}, em = typeof P.email === 'string' ? P.email : '', ok = !!em && P.emailVerified === true;
+      ${incog() ? '' : (() => { const P = store.get('averages_profile') || {}, em = typeof P.email === 'string' ? P.email : '', ok = !!em && P.emailVerified === true;
         return grp('Averages email', row('avemail', em ? esc(em) : 'No email yet', em ? (ok ? 'For grade reports and signing in on new devices.' : 'Not verified yet. Verify it to use it.') : 'Add one for grade reports and to sign in on new devices.',
           (ok ? chip(ico('ok') + 'Verified', ' on') : '') + btn('avemail', !em ? 'Add email' : ok ? 'Change' : 'Verify', '', em ? '' : ' primary')),
           'Only you see this. We never share it.'); })()}
@@ -4440,10 +4440,16 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       const opts = [['auto', 'Same as this device']].concat(Object.entries(L.LANGS));
       return `
       ${sec('Language', `<div class="sg-opts sg-langs" role="group" aria-label="Language" data-set="lang">${opts.map(([v, t]) => `<button class="sg-opt" data-seg="lang" data-v="${v}" aria-pressed="${L.choice === v}">${v === 'auto' ? `<b>${t}</b><small data-no-t>${esc(L.LANGS[L.deviceLang])}</small>` : `<b data-no-t>${t}</b>`}</button>`).join('')}</div>`)}
-      ${!trShown ? '' : grp(`Advanced translation ${billingOn() ? plusChip() : ""}`,
-        tog('trItems', 'Translate class names, titles, posts and messages', 'Class names, assignment and test titles, teacher posts and messages, in your language. File names stay as they are. Point at a translated name to see the original.', on, !plusOk()) +
-        (on && SGV.trDevice === false && LIVE.serverTr ? tog('trServer', 'Translate on our server', 'This browser can\'t translate on its own. With this on, those names, posts and messages are sent to our server to translate. We don\'t keep them.', L.serverOn()) : ''),
-        LIVE.serverTr ? 'Your browser translates on this device when it can (Chrome or Edge on a computer). Nothing leaves your device unless you turn on Translate on our server.' : 'Your browser translates on this device (Chrome or Edge on a computer). Nothing leaves your device.')}`;
+      // One switch (Martin 2026-11-18: "it won't let you turn it on"): where this browser can't translate on its own
+      // but our server can, the switch says so and turning it on uses the server (it used to need a second switch that
+      // only showed up after the first). Locked without Plus: it says why, right on the row.
+      ${!trShown ? '' : (() => { const viaServer = SGV.trDevice === false && !!LIVE.serverTr, locked = !plusOk();
+        const desc = locked ? 'Comes with Averages Plus. Class names, assignment and test titles, teacher posts and messages, in your language.'
+          : viaServer ? 'Class names, assignment and test titles, teacher posts and messages, in your language. This browser can\'t translate on its own, so they\'re sent to our server to translate. We don\'t keep them.'
+          : 'Class names, assignment and test titles, teacher posts and messages, in your language. File names stay as they are. Point at a translated name to see the original.';
+        return grp(`Advanced translation ${billingOn() || locked ? plusChip() : ""}`,
+        tog('trItems', 'Translate class names, titles, posts and messages', desc, SGV.trWant !== undefined ? SGV.trWant : on && (!viaServer || L.serverOn()), locked),
+        viaServer ? 'Chrome or Edge on a computer translate on the device instead: nothing leaves it there.' : LIVE.serverTr ? 'Your browser translates on this device when it can (Chrome or Edge on a computer). Otherwise our server translates, and we don\'t keep anything.' : 'Your browser translates on this device (Chrome or Edge on a computer). Nothing leaves your device.'); })()}`;
     },
 
     personal: () => `
@@ -4601,7 +4607,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
 
   // ---------- Averages email: add, change or remove it, with a 6-digit code (public/js/averages-email.js) ----------
   function editEmail() {
-    const P = store.get('schoolagy_profile') || {}, cur = typeof P.email === 'string' ? P.email : '';
+    const P = store.get('averages_profile') || {}, cur = typeof P.email === 'string' ? P.email : '';
     let sentTo = '';
     const d = dlgOpen({ title: cur ? 'Your Averages email' : 'Add your email', ok: 'Send code', body: `
       <label class="sg-fl"><b>Email</b><input id="sgEm" type="email" maxlength="200" autocomplete="email" placeholder="you@example.com" value="${esc(cur)}"><small id="sgEmMsg">We'll email you a 6-digit code to check it's yours.</small></label>
@@ -4611,8 +4617,8 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     const say = (t, bad) => { $m.textContent = t; $m.style.color = bad ? '#e5484d' : ''; };
     const label = () => { const v = $e.value.trim(); okB.textContent = !v ? (cur ? 'Remove email' : 'Save') : sentTo && sentTo === v.toLowerCase() ? 'Verify' : 'Send code'; };
     const save = (email, verified) => {
-      const p = store.get('schoolagy_profile') || {}; if (!p.name && PROFILE.name) p.name = PROFILE.name; p.email = email; p.emailVerified = !!verified;
-      store.set('schoolagy_profile', p); FSX.syncPush(); dlgClose(true); redraw();
+      const p = store.get('averages_profile') || {}; if (!p.name && PROFILE.name) p.name = PROFILE.name; p.email = email; p.emailVerified = !!verified;
+      store.set('averages_profile', p); FSX.syncPush(); dlgClose(true); redraw();
       toast(!email ? 'Removed your email.' : 'Email verified.');
     };
     const send = async () => {
@@ -4621,7 +4627,12 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       if (!window.AveragesEmail.valid(v)) { say("That doesn't look like an email address yet.", true); $e.focus(); return; }
       okB.disabled = true;
       try { await window.AveragesEmail.send(v); sentTo = v.toLowerCase(); el.querySelector('#sgEmCodeW').hidden = false; say(`Enter the 6-digit code we sent to ${v}. It works for 10 minutes.`); $c.value = ''; $c.focus(); }
-      catch (e) { say(window.AveragesEmail.say(e), true); }
+      catch (e) {
+        say(window.AveragesEmail.say(e), true);
+        // "Did you mean sam@gmail.com?": one tap fixes it
+        const fix = e === 'email_typo' && window.AveragesEmail.suggestion && window.AveragesEmail.suggestion();
+        if (fix) { const b = document.createElement('button'); b.type = 'button'; b.className = 'sg-lnk'; b.dataset.dact = 'usefix'; b.dataset.fix = fix; b.textContent = ` Use ${fix}`; $m.appendChild(b); }
+      }
       finally { okB.disabled = false; label(); }
     };
     const check = async () => {
@@ -4639,7 +4650,14 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     }
     $e.addEventListener('input', () => { if (sentTo && sentTo !== $e.value.trim().toLowerCase()) { sentTo = ''; el.querySelector('#sgEmCodeW').hidden = true; say("We'll email you a 6-digit code to check it's yours."); } label(); });
     $c.addEventListener('input', () => { $c.value = $c.value.replace(/\D/g, '').slice(0, 6); if ($c.value.length === 6) check(); });
-    d.onAct = k => { if (k === 'resend') { sentTo = ''; send(); } };
+    d.onAct = (k, b) => {
+      if (k === 'resend') { sentTo = ''; send(); }
+      if (k === 'usefix') { $e.value = (b && b.dataset.fix) || window.AveragesEmail.suggestion(); label(); say("We'll email you a 6-digit code to check it's yours."); $e.focus(); }
+    };
+    // no email yet: the one on their Averages Plus account, filled in (they can change it, and it's still checked with a code)
+    if (!cur && window.AveragesEmail && window.AveragesEmail.suggested) window.AveragesEmail.suggested().then(v => {
+      if (v && !$e.value.trim() && $e.isConnected) { $e.value = v; say('From your Averages Plus account. Change it if you like.'); label(); }
+    });
     label();
   }
 
@@ -4871,7 +4889,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   function setPlan(k) { if (k === 'plus') stripe('checkout'); }
   function setMode(m) {
     if (m === SG.mode) return;
-    if (m === 'classic') { try { localStorage.setItem('schoolagy_account_mode', 'classic'); } catch (_) {} toast('Back to Classic. Your settings sync again.'); setTimeout(() => location.reload(), 600); return; }
+    if (m === 'classic') { try { localStorage.setItem('averages_account_mode', 'classic'); } catch (_) {} toast('Back to Classic. Your settings sync again.'); setTimeout(() => location.reload(), 600); return; }
     dlgOpen({ title: 'Switch to Incognito?', ok: 'Switch to Incognito', danger: true, body: `<p>Incognito stores nothing about you on our servers. It turns off Sync across devices and deletes what it stored, disconnects Canva, Google Drive and OneDrive, deletes your calendar link and turns off browser notifications.</p><p>Files you saved to those apps stay in your accounts. You can come back to Classic anytime.</p>`,
       onOk: () => {
         toast('Switching to Incognito…');
@@ -4879,7 +4897,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
         Promise.all([del('/sync/settings'), del('/canva/connection'), del('/calendar'), window.AveragesPush ? window.AveragesPush.disable().catch(() => {}) : null,
           FST.disconnect('drive').catch(() => {}), FST.disconnect('onedrive').catch(() => {})]).then(() => {
           saveOpt('syncAcrossDevices', false);
-          try { ['averages_cloud_accounts', 'averages_drive_drafts', 'averages_drive_opened', 'averages_calendar_on', 'averages_calendar_touched', 'schoolagy_sync_meta'].forEach(k => localStorage.removeItem(k)); sessionStorage.removeItem('averages_cloud_tokens'); localStorage.setItem('schoolagy_account_mode', 'incognito'); } catch (_) {}
+          try { ['averages_cloud_accounts', 'averages_drive_drafts', 'averages_drive_opened', 'averages_calendar_on', 'averages_calendar_touched', 'averages_sync_meta'].forEach(k => localStorage.removeItem(k)); sessionStorage.removeItem('averages_cloud_tokens'); localStorage.setItem('averages_account_mode', 'incognito'); } catch (_) {}
           location.reload();
         });
       } });
@@ -5024,9 +5042,18 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
         return;
       }
       if (k === 'trItems') {
-        const L = window.AvI18n, on = !L.trOn();
-        L.setItems(on).then(r => { if (!on) L.forget(); SGV.trDevice = on ? r.device : undefined; SGV.flip = 'trItems'; redraw();
-          toast(!on ? 'Advanced translation is off' : r.device ? 'Advanced translation is on' : LIVE.serverTr ? 'This browser can\'t translate on its own. Turn on Translate on our server to use it here.' : 'This browser can\'t translate on its own. Try Chrome or Edge on a computer.'); });
+        const L = window.AvI18n, viaServer = SGV.trDevice === false && !!LIVE.serverTr, on = viaServer ? !(L.trOn() && L.serverOn()) : !L.trOn();
+        // the switch moves right away (asking the browser for its translator can take a few seconds)
+        t.setAttribute('aria-checked', on); const sw0 = t.querySelector('.sw'); if (sw0) sw0.classList.toggle('on', on);
+        if (on && viaServer) L.setServer(true);   // known already: only the server can translate here
+        SGV.trWant = on;   // shown as asked while the browser answers (a redraw meanwhile keeps it)
+        L.setItems(on).then(r => {
+          SGV.trWant = undefined;
+          if (!on) L.forget();
+          // this browser can't translate on its own: the server does it (the row says so)
+          if (on && !r.device && LIVE.serverTr) L.setServer(true);
+          SGV.trDevice = on ? r.device : SGV.trDevice; SGV.flip = 'trItems'; redraw();
+          toast(!on ? 'Advanced translation is off' : r.device || LIVE.serverTr ? 'Advanced translation is on' : 'This browser can\'t translate on its own. Try Chrome or Edge on a computer.'); });
         return;
       }
       if (k === 'aiOn') {
@@ -5070,7 +5097,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
         location.replace('/settings');
       }
       if (k === 'theme') { sgPane(); FSX.syncPush(); toast(v === 'dark' ? 'Dark colors on.' : v === 'auto' ? 'Pages follow your device now.' : 'Light colors on.'); }
-      if (k === 'openIn') { try { localStorage.setItem('schoolagy_default_editor', v === 'onedrive' ? 'onedrive' : v === 'drive' ? 'gdrive' : 'canva'); } catch (_) {} toast(`Office files open in ${APPS[v]}.`); }
+      if (k === 'openIn') { try { localStorage.setItem('averages_default_editor', v === 'onedrive' ? 'onedrive' : v === 'drive' ? 'gdrive' : 'canva'); } catch (_) {} toast(`Office files open in ${APPS[v]}.`); }
       return;
     }
     const sw = e.target.closest('[data-accent]');

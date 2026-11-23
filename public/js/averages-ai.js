@@ -449,6 +449,17 @@
     // only work a teacher commented on: when the student said so
     if (a.commented && q && !/comment|feedback|remark|\bnotes?\b|coment|retroaliment|commentaire|remarque|kommentar|anmerkung|r[uü]ckmeldung|评论|评语|反馈/i.test(q)) delete a.commented;
     var name = c.name, L = q ? letterAsked(q) : '';
+    // a kind of work the student never said ("got an A" came back as tests only, Martin 2026-11-18)
+    // (loosely: "tests", "quizzes", "exams" count; only a kind with no word for it at all goes)
+    if (a.kind && a.kind !== 'any' && KIND_RE[a.kind] && q && name !== 'find_files' && !new RegExp(KIND_RE[a.kind].source.replace(/\\b/g, ''), 'i').test(q)) delete a.kind;
+    // "my period 2 grade", "3rd period": the class in that period (both models; the model has no period yet)
+    var per = q && (/\b(?:period|per\.?|p[eé]riode?|periodo|stunde)\s*#?(\d{1,2})\b/i.exec(q) || /\b(\d{1,2})(?:st|nd|rd|th|º|°|e|er|ª)?\s*(?:period|per\.?|p[eé]riode?|periodo|stunde)\b/i.exec(q) || /第\s*(\d{1,2})\s*节/.exec(q));
+    if (per && name !== 'word_search' && name !== 'open_page') {
+      var pc = ((window.FSD && window.FSD.CLASSES) || []).filter(function (x) { return String(x.period) === String(+per[1]); })[0];
+      if (pc) { a['class'] = pc.name; if (name === 'find_messages') { delete a.teacher; } }
+    }
+    // late or turned-in work with a letter grade: the letter filters that work (find_work keeps its status)
+    if (L && name === 'find_work' && /turned_in/.test(a.status || '')) a.letter = L;
     // "assignment with the highest grade" is about pieces of work, not classes (the model answered with classes)
     if (name === 'find_grades' && (!a.show || a.show === 'grade') && q && /\b(assignments?|tests?|quiz(z?es)?|homework|essays?|labs?|projects?|scores?|tareas?|trabajos?|ex[aá]men(es)?|devoirs?|contr[oô]les?|tarefas?|provas?|aufgaben?|arbeiten?|klausuren?)\b|作业|考试|测验/i.test(q) && !/\b(class|classes|course|courses|clase|clases|cours|aula|aulas|kurs|kurse)\b|课/i.test(q)) a.show = 'scores';
     // missing (marked by the teacher) or late (past due, not turned in): the model tells them apart since Round 7; if it
@@ -500,17 +511,21 @@
     }
     if (c.name === 'find_work') {
       var R = a.when && a.when !== 'any' ? range(a.when, now) : null, st = { due: 'due', missing: 'missing', turned_in: 'turned', turned_in_late: 'turned', graded: 'graded' }[a.status] || '';
-      var lateIn = a.status === 'turned_in_late', wasLate = function (x) { return !!(x.turnedAt && x.dueAt && x.turnedAt > x.dueAt + 6e4); };
+      var lateIn = a.status === 'turned_in_late', wasLate = function (x) { return !!(x.turnedLate || (x.turnedAt && x.dueAt && x.turnedAt > x.dueAt + 6e4)); };
+      // a letter grade on work ("turned in late but still got an A"): graded work with that letter (app side; no model has it)
+      var gotPct = function (x) { return x.got != null && x.pts ? x.got / x.pts * 100 : null; };
       var W = (D.ASG || []).filter(function (x) {
         if (!inClass(x.c)) return false;
         // turned in after the due date: still waiting for a grade, or graded since
         if (lateIn) { if ((x.st !== 'turned' && x.st !== 'graded') || !wasLate(x)) return false; }
         else if (st && x.st !== st) return false;
         if (a.commented && !x.note) return false;
+        if (a.letter) { var gp = gotPct(x); if (gp == null || !letterIs(a.letter, gp)) return false; }
         // "missing" is what the teacher marked missing; work that's only past due is "late" (asked for by name)
         if (st === 'missing' && a.late !== undefined && (a.late ? x.marked : !x.marked)) return false;
         if (st === 'due' && x.dueAt && x.dueAt < now - 6e4 && !x.outside) return false;
-        if (a.kind && a.kind !== 'any' && !(KIND_RE[a.kind].test(x.t) || (a.kind === 'test' && x.kind === 'test'))) return false;
+        // the kind of work by its title, its gradebook category ("Tests", "Labs"), or Schoology's own type
+        if (a.kind && a.kind !== 'any' && !(KIND_RE[a.kind].test(x.t + ' ' + (x.cat || '')) || (a.kind === 'test' && x.kind === 'test'))) return false;
         if (R) { var at = x.dueAt || x.gradedAt || x.turnedAt; if (!at || at < R[0] || at >= R[1]) return false; }
         return true;
       });
@@ -692,7 +707,13 @@
       if (!html) return;
       var foot = b.res.querySelector(':scope > .pop-foot'), first = asked && STATE.saved;
       var tmp = document.createElement('div'); tmp.innerHTML = html; var el = tmp.firstChild;
-      if (first) {
+      // with Actions (Turn in…, Message…), Ask A.I. goes right under them and they stay first: "turn in my lab" + Enter
+      // turns it in (Martin 2026-11-18)
+      var actLbl = [].filter.call(b.res.querySelectorAll(':scope > .lbl'), function (x) { var tx = x.textContent.trim(); return tx === 'Actions' || tx === t('Actions'); })[0];
+      if (actLbl) {
+        var after = actLbl; while (after.nextElementSibling && after.nextElementSibling.classList.contains('mi')) after = after.nextElementSibling;
+        b.res.insertBefore(el, after.nextSibling);
+      } else if (first) {
         var lead = b.res.querySelector(':scope > .s-fix'); b.res.insertBefore(el, lead ? lead.nextSibling : b.res.firstChild);
         b.res.querySelectorAll('.mi.sel').forEach(function (x) { x.classList.remove('sel'); }); el.classList.add('sel');
       } else b.res.insertBefore(el, foot || null);

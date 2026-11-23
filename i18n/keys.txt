@@ -1266,3 +1266,20 @@
 1266|Almost there…
 1267|Almost Intelligent search is ready
 1268|Ask it anything about your classes in search.
+1269|Start a group chat
+1270|New message to {x}
+1271|Comes with Averages Plus. Class names, assignment and test titles, teacher posts and messages, in your language.
+1272|Class names, assignment and test titles, teacher posts and messages, in your language. This browser can't translate on its own, so they're sent to our server to translate. We don't keep them.
+1273|Chrome or Edge on a computer translate on the device instead: nothing leaves it there.
+1274|Your browser translates on this device when it can (Chrome or Edge on a computer). Otherwise our server translates, and we don't keep anything.
+1275|Use an email you'll keep. Throwaway inboxes can't be used.
+1276|That email's domain can't get email. Check it for a typo.
+1277|Did you mean {x}? Fix it, or send again to use it as it is.
+1278|Check that email for a typo.
+1279|From your Averages Plus account. Change it if you like.
+1280|Use {x}
+1281|Your overall grade, day by day
+1282|Each class, day by day
+1283|# grades
+1284|After {x}
+1285|Sent to {x}.

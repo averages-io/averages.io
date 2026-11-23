@@ -3,7 +3,7 @@
   'use strict';
   if (window.AveragesFileIcons) return;
   try {
-    if ((JSON.parse(localStorage.getItem('schoolagy_settings_options') || '{}') || {}).potatoMode === true) return;
+    if ((JSON.parse(localStorage.getItem('averages_settings_options') || '{}') || {}).potatoMode === true) return;
   } catch (e) { /* storage blocked: draw them */ }
 
   // key: [label, color, name]

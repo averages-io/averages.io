@@ -1266,3 +1266,20 @@
 1266|Quase lá…
 1267|Almost Intelligent search está pronta
 1268|Pergunte o que quiser sobre suas aulas na pesquisa.
+1269|Iniciar um chat em grupo
+1270|Nova mensagem para {x}
+1271|Incluído no Averages Plus. Nomes das aulas, títulos de tarefas e provas, publicações e mensagens dos professores, no seu idioma.
+1272|Nomes das aulas, títulos de tarefas e provas, publicações e mensagens dos professores, no seu idioma. Este navegador não consegue traduzir sozinho, então eles são enviados ao nosso servidor para tradução. Não os guardamos.
+1273|Chrome ou Edge em um computador traduzem no próprio dispositivo: nada sai dele.
+1274|Seu navegador traduz neste dispositivo quando pode (Chrome ou Edge em um computador). Caso contrário, nosso servidor traduz, e não guardamos nada.
+1275|Use um e-mail que você vai manter. Caixas descartáveis não podem ser usadas.
+1276|O domínio desse e-mail não pode receber e-mails. Verifique se há um erro de digitação.
+1277|Você quis dizer {x}? Corrija, ou envie de novo para usar como está.
+1278|Verifique se esse e-mail tem um erro de digitação.
+1279|Da sua conta Averages Plus. Altere se quiser.
+1280|Usar {x}
+1281|Sua nota geral, dia a dia
+1282|Cada aula, dia a dia
+1283|# notas
+1284|Depois de {x}
+1285|Enviado para {x}.

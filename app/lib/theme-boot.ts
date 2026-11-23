@@ -1,5 +1,7 @@
 // The user's saved dark-mode / accent / background, applied before the browser paints anything at all.
-export const THEME_BOOT_JS = `(function () {
+// The old names (schoolagy_*) move to averages_* first, once (2026-11-18), so saved settings carry over.
+export const STORAGE_RENAME_JS = `(function(){try{[localStorage,sessionStorage].forEach(function(st){var ks=[];for(var i=0;i<st.length;i++){var k=st.key(i);if(k&&k.indexOf('schoolagy_')===0)ks.push(k)}ks.forEach(function(k){var n='averages_'+k.slice(10);if(st.getItem(n)===null)st.setItem(n,st.getItem(k));st.removeItem(k)})})}catch(e){}})();`;
+export const THEME_BOOT_JS = STORAGE_RENAME_JS + `(function () {
   function darken(hex, amount) {
     var n = parseInt(hex.slice(1), 16);
     var c = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map(function (v) {
@@ -15,7 +17,7 @@ export const THEME_BOOT_JS = `(function () {
 
     var isDark = false;
     try {
-      var v = localStorage.getItem("schoolagy_dark_mode");
+      var v = localStorage.getItem("averages_dark_mode");
       if (v === "dark") isDark = true;
       else if (v === "light") isDark = false;
       else isDark = !!(window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
@@ -64,7 +66,7 @@ export const THEME_BOOT_JS = `(function () {
     }
 
     try {
-      var raw = localStorage.getItem("schoolagy_appearance");
+      var raw = localStorage.getItem("averages_appearance");
       var saved = raw ? JSON.parse(raw) : null;
       if (saved && saved.accent) {
         root.setProperty("--accent", saved.accent);
@@ -92,7 +94,7 @@ export const THEME_BOOT_JS = `(function () {
   function potatoOn() { return !!(document.body && document.body.classList.contains("potato-mode")); }
   function applyPotato() {
     var on = false;
-    try { on = (JSON.parse(localStorage.getItem("schoolagy_settings_options") || "{}") || {}).potatoMode === true; } catch (e) {}
+    try { on = (JSON.parse(localStorage.getItem("averages_settings_options") || "{}") || {}).potatoMode === true; } catch (e) {}
     if (document.body) document.body.classList.toggle("potato-mode", on);
     if (!document.getElementById("potatoStyle")) {
       var st = document.createElement("style");

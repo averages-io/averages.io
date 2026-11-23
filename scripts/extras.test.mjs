@@ -351,11 +351,11 @@ await test("failed calls (5xx, 403, 404, network) are absent and never cached", 
 
 await test("a 401 means signed out (and drops the cached session answer)", async () => {
   reset();
-  session.setItem("schoolagy_session_state", JSON.stringify({ at: Date.now(), state: { mode: "live" } }));
+  session.setItem("averages_session_state", JSON.stringify({ at: Date.now(), state: { mode: "live" } }));
   routes = { "/data/people": { status: 401, body: { error: "not_authenticated" } }, "/data/updates": { body: { COURSE_UPDATES: [] } } };
   const r = await loadExtras("home", "", "u1");
   assert.equal(r.signedOut, true);
-  assert.equal(session.getItem("schoolagy_session_state"), null);
+  assert.equal(session.getItem("averages_session_state"), null);
 });
 
 await test("waits at most 4 s; a late extra keeps going and fills the cache", async () => {
@@ -391,7 +391,7 @@ console.log("\ncache clearing and sign-out");
 function seed() {
   session.setItem("averages_extras_people", "x");
   session.setItem("averages_extras_events_2026-06-08_2027-06-03", "x");
-  session.setItem("schoolagy_bundle_cache", "x");
+  session.setItem("averages_bundle_cache", "x");
   session.setItem("unrelated", "keep");
 }
 const extrasKeys = () => [...session._map.keys()].filter((k) => k.startsWith("averages_extras_"));
@@ -404,7 +404,7 @@ await test("clearExtras / invalidateBundle / forgetSession drop every averages_e
   seed();
   invalidateBundle();
   assert.deepEqual(extrasKeys(), []);
-  assert.equal(session.getItem("schoolagy_bundle_cache"), null);
+  assert.equal(session.getItem("averages_bundle_cache"), null);
   seed();
   forgetSession();
   assert.deepEqual(extrasKeys(), []);
@@ -421,14 +421,14 @@ await test("signIn drops them too", async () => {
 
 await test("signOut: extras, cloud (incl. OneDrive picks) and push notes gone; push unsubscribed inline", async () => {
   reset(); seed();
-  for (const k of ["averages_push_endpoint", "averages_push_touched", "averages_push_pending_delete", "averages_onedrive_picked", "averages_cloud_accounts", "schoolagy_dark_mode"]) local.setItem(k, "1");
+  for (const k of ["averages_push_endpoint", "averages_push_touched", "averages_push_pending_delete", "averages_onedrive_picked", "averages_cloud_accounts", "averages_dark_mode"]) local.setItem(k, "1");
   let unsubscribed = 0;
   setNavigator({ serviceWorker: { getRegistration: async (scope) => (scope === "/" ? { pushManager: { getSubscription: async () => ({ unsubscribe: async () => { unsubscribed++; return true; } }) } } : null) } });
   routes = { "/auth/session": { body: { ok: true } } };
   await signOut();
   assert.deepEqual(extrasKeys(), []);
   for (const k of ["averages_push_endpoint", "averages_push_touched", "averages_push_pending_delete", "averages_onedrive_picked", "averages_cloud_accounts"]) assert.equal(local.getItem(k), null, k);
-  assert.equal(local.getItem("schoolagy_dark_mode"), null, "everything goes, the theme too (2026-11-06)");
+  assert.equal(local.getItem("averages_dark_mode"), null, "everything goes, the theme too (2026-11-06)");
   assert.equal(unsubscribed, 1);
   assert.ok(calls.some((c) => /^\/auth\/session(\?|$)/.test(c.path) && c.init.method === "DELETE"));
 });
@@ -476,12 +476,12 @@ await test("expired extras are swept, so old event windows don't pile up (2026-1
   const old = JSON.stringify({ at: Date.now() - 6 * 60 * 1000, who: "u1", data: { EVENTS: [] } });
   session.setItem("averages_extras_events_2026-01-01_2026-09-01", old);
   session.setItem("averages_extras_events_2026-01-02_2026-09-02", "not json");
-  session.setItem("schoolagy_bundle_cache", "keep me");
+  session.setItem("averages_bundle_cache", "keep me");
   routes = { "/data/people": { body: PEOPLE } };
   await loadExtras("contacts", "", "u1");
   assert.equal(session.getItem("averages_extras_events_2026-01-01_2026-09-01"), null);
   assert.equal(session.getItem("averages_extras_events_2026-01-02_2026-09-02"), null);
-  assert.equal(session.getItem("schoolagy_bundle_cache"), "keep me", "other keys untouched");
+  assert.equal(session.getItem("averages_bundle_cache"), "keep me", "other keys untouched");
   assert.ok(session.getItem("averages_extras_people"), "the fresh one is cached");
 });
 

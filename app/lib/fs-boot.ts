@@ -11,7 +11,7 @@ export const FS_BOOT_JS = `(function () {
   go();
   function avStart() {
     try {
-      var o = JSON.parse(localStorage.getItem("schoolagy_settings_options") || "{}") || {};
+      var o = JSON.parse(localStorage.getItem("averages_settings_options") || "{}") || {};
       var pages = ["courses", "calendar", "grades", "messages", "assignments", "files", "contacts"];
       var to = pages.indexOf(o.openTo) >= 0 ? o.openTo : "home";
       var fs = o.windowType === "fullscreen" && sessionStorage.getItem("averages_fs_off") !== "1";
@@ -28,7 +28,7 @@ export const FS_BOOT_JS = `(function () {
       if (sessionStorage.getItem("averages_opened") === "1") return false;
       sessionStorage.setItem("averages_opened", "1");
       if (p !== "/home" || location.search || location.hash) return false;
-      var to = (JSON.parse(localStorage.getItem("schoolagy_settings_options") || "{}") || {}).openTo;
+      var to = (JSON.parse(localStorage.getItem("averages_settings_options") || "{}") || {}).openTo;
       if (!/^(courses|calendar|grades|messages|assignments|files|contacts)$/.test(to || "")) return false;
       location.replace("/" + to);
       return true;
@@ -36,7 +36,7 @@ export const FS_BOOT_JS = `(function () {
   }
   function go() {
   try {
-    var o = JSON.parse(localStorage.getItem("schoolagy_settings_options") || "{}") || {};
+    var o = JSON.parse(localStorage.getItem("averages_settings_options") || "{}") || {};
     if (o.windowType !== "fullscreen") return;
     if (sessionStorage.getItem("averages_fs_off") === "1") return;
     var c = JSON.parse(sessionStorage.getItem("averages_features") || "null");

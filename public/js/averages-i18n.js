@@ -32,8 +32,8 @@
     for (var i = 0; i < list.length; i++) { var b = String(list[i] || '').toLowerCase().split('-')[0]; if (LANGS[b]) return b; }
     return 'en';
   }
-  // the choice syncs across devices with the other settings (schoolagy_settings_options.language, 2026-11-14)
-  function synced() { try { var o = JSON.parse(ls.get('schoolagy_settings_options') || '{}') || {}; return typeof o.language === 'string' ? o.language : null; } catch (e) { return null; } }
+  // the choice syncs across devices with the other settings (averages_settings_options.language, 2026-11-14)
+  function synced() { try { var o = JSON.parse(ls.get('averages_settings_options') || '{}') || {}; return typeof o.language === 'string' ? o.language : null; } catch (e) { return null; } }
   var choice = synced() || ls.get('averages_lang') || 'auto';
   if (choice !== 'auto' && !LANGS[choice]) choice = 'auto';
   var deviceLang = fromDevice();
@@ -391,7 +391,7 @@
     set: function (code) {
       code = LANGS[code] || code === 'auto' ? code : 'auto';
       ls.set('averages_lang', code);
-      try { var o = JSON.parse(ls.get('schoolagy_settings_options') || '{}') || {}; o.language = code; ls.set('schoolagy_settings_options', JSON.stringify(o)); } catch (e) { /* storage off */ }
+      try { var o = JSON.parse(ls.get('averages_settings_options') || '{}') || {}; o.language = code; ls.set('averages_settings_options', JSON.stringify(o)); } catch (e) { /* storage off */ }
       if (window.FSX && typeof window.FSX.syncPush === 'function') window.FSX.syncPush();   // to your other devices
     },
     switchTo: function (code) {

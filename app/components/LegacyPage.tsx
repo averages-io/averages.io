@@ -117,7 +117,7 @@ function touchCalendarIfOn(): void {
 function repaintProfileButtons(): void {
   let profile: any = null;
   try {
-    profile = JSON.parse(window.localStorage.getItem("schoolagy_profile") || "null");
+    profile = JSON.parse(window.localStorage.getItem("averages_profile") || "null");
   } catch {}
   const name = (profile && typeof profile.name === "string" && profile.name.trim()) || (window as any).__AVERAGES_NAME__ || "";
   const photo = profile && typeof profile.photo === "string" && /^data:image\//.test(profile.photo) ? profile.photo : "";
@@ -203,7 +203,7 @@ export default function LegacyPage({
   useEffect(() => {
     if (!usesSavedTheme) return;
     function onStorage(e: StorageEvent) {
-      if (e.key === "schoolagy_dark_mode" || e.key === "schoolagy_appearance") reapplyStoredTheme();
+      if (e.key === "averages_dark_mode" || e.key === "averages_appearance") reapplyStoredTheme();
     }
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
@@ -244,7 +244,7 @@ export default function LegacyPage({
       if (pageId === "onboarding" && session.mode === "live" && !session.incognito) {
         let done = false;
         try {
-          done = window.localStorage.getItem("schoolagy_onboarded") === "1" || window.localStorage.getItem("schoolagy_account_mode") === "incognito";
+          done = window.localStorage.getItem("averages_onboarded") === "1" || window.localStorage.getItem("averages_account_mode") === "incognito";
         } catch {}
         if (!done && (await restoreSyncedSetup())) {
           if (cancelled) return;
@@ -311,8 +311,8 @@ export default function LegacyPage({
       (window as any).__AVERAGES_PROVIDER__ = session.mode === "live" ? (session.provider === "google" ? "google" : "schoology") : "";
       let pickedIncognito = false;
       try {
-        if (session.incognito) window.localStorage.setItem("schoolagy_account_mode", "incognito");
-        pickedIncognito = window.localStorage.getItem("schoolagy_account_mode") === "incognito";
+        if (session.incognito) window.localStorage.setItem("averages_account_mode", "incognito");
+        pickedIncognito = window.localStorage.getItem("averages_account_mode") === "incognito";
       } catch {
         /* storage blocked: only the API's answer counts */
       }
@@ -539,7 +539,7 @@ export default function LegacyPage({
             window.dispatchEvent(new StorageEvent("storage", { key, newValue: window.localStorage.getItem(key), storageArea: window.localStorage }));
           } catch {}
         }
-        if (changed.includes("schoolagy_profile")) repaintProfileButtons();
+        if (changed.includes("averages_profile")) repaintProfileButtons();
       });
     };
     const first = window.setTimeout(run, 1500);

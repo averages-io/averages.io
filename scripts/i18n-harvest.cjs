@@ -15,8 +15,8 @@ const env = Object.fromEntries(fs.readFileSync(process.argv[2], 'utf8').split('\
   await p.goto('http://localhost:3000/?keys'); await p.waitForTimeout(1000);
   await p.click('[data-go="api"]'); await p.fill('#siKey', env.REVIEW_KEY); await p.fill('#siSecret', env.REVIEW_SECRET);
   await p.click('#siConnect'); await p.waitForURL(/onboard|home/, { timeout: 20000 }); await p.waitForTimeout(2000);
-  await p.evaluate(() => { localStorage.setItem('schoolagy_onboarded', '1'); const o = JSON.parse(localStorage.getItem('schoolagy_settings_options') || '{}'); o.windowType = 'fullscreen'; localStorage.setItem('schoolagy_settings_options', JSON.stringify(o)); });
-  await p.evaluate(() => { localStorage.setItem('schoolagy_onboarded', '1'); const o = JSON.parse(localStorage.getItem('schoolagy_settings_options') || '{}'); o.windowType = 'fullscreen'; localStorage.setItem('schoolagy_settings_options', JSON.stringify(o));
+  await p.evaluate(() => { localStorage.setItem('averages_onboarded', '1'); const o = JSON.parse(localStorage.getItem('averages_settings_options') || '{}'); o.windowType = 'fullscreen'; localStorage.setItem('averages_settings_options', JSON.stringify(o)); });
+  await p.evaluate(() => { localStorage.setItem('averages_onboarded', '1'); const o = JSON.parse(localStorage.getItem('averages_settings_options') || '{}'); o.windowType = 'fullscreen'; localStorage.setItem('averages_settings_options', JSON.stringify(o));
     localStorage.setItem('averages_lang', 'es'); localStorage.setItem('averages_i18n_collect', '1'); localStorage.setItem('averages_tr_items', '1'); localStorage.removeItem('averages_i18n_es'); });
   const all = {}; const errs = [];
   const grab = async (q, tag) => { const m = await q.evaluate(() => window.AvI18n ? AvI18n.missing() : []); for (const [k, n] of m) { all[k] = all[k] || { n: 0, pages: new Set() }; all[k].n += n; all[k].pages.add(tag); } };

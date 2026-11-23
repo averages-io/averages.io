@@ -39,8 +39,8 @@
   const SYNC_API = window.location.hostname.endsWith('averages.io') ? 'https://api.averages.io' : 'http://localhost:8787';
   function seenSyncOff() {
     try {
-      if (localStorage.getItem('schoolagy_account_mode') === 'incognito') return true;
-      const o = JSON.parse(localStorage.getItem('schoolagy_settings_options') || '{}');
+      if (localStorage.getItem('averages_account_mode') === 'incognito') return true;
+      const o = JSON.parse(localStorage.getItem('averages_settings_options') || '{}');
       return !!o && o.syncAcrossDevices === false;
     } catch { return true; }
   }
@@ -344,7 +344,7 @@
           if (!Array.isArray(b[k])) return;
           if (Array.isArray(d[k])) d[k].splice(0, d[k].length, ...b[k]); else d[k] = b[k];
         });
-        try { sessionStorage.setItem('schoolagy_bundle_cache', JSON.stringify({ at: Date.now(), bundle: b })); } catch { /* full or off */ }
+        try { sessionStorage.setItem('averages_bundle_cache', JSON.stringify({ at: Date.now(), bundle: b })); } catch { /* full or off */ }
       }
       if (u && Array.isArray(u.COURSE_UPDATES)) extra = Object.assign({}, extra || {}, { COURSE_UPDATES: u.COURSE_UPDATES });
       render();
@@ -354,7 +354,7 @@
   function startChecks() {
     if (checkTimer || mode !== 'live') return;
     checkedAt = Date.now();
-    try { const at = (JSON.parse(sessionStorage.getItem('schoolagy_bundle_cache') || 'null') || {}).at || 0; if (at && Date.now() - at > 60000) setTimeout(backgroundCheck, 4000); } catch { /* none */ }
+    try { const at = (JSON.parse(sessionStorage.getItem('averages_bundle_cache') || 'null') || {}).at || 0; if (at && Date.now() - at > 60000) setTimeout(backgroundCheck, 4000); } catch { /* none */ }
     checkTimer = setInterval(() => { if (Date.now() - checkedAt >= CHECK_EVERY) backgroundCheck(); }, 15000);
     document.addEventListener('visibilitychange', () => { if (!document.hidden && Date.now() - checkedAt >= CHECK_EVERY) backgroundCheck(); });
   }

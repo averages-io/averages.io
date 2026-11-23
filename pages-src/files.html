@@ -710,7 +710,7 @@
     function potatoOn() { return !!(document.body && document.body.classList.contains("potato-mode")); }
     function applyPotato() {
       var on = false;
-      try { on = (JSON.parse(localStorage.getItem("schoolagy_settings_options") || "{}") || {}).potatoMode === true; } catch (e) {}
+      try { on = (JSON.parse(localStorage.getItem("averages_settings_options") || "{}") || {}).potatoMode === true; } catch (e) {}
       if (document.body) document.body.classList.toggle("potato-mode", on);
       if (!document.getElementById("potatoStyle")) {
         var st = document.createElement("style");
@@ -744,7 +744,7 @@
       }
     }
       applyPotato();
-      window.addEventListener('storage', function (e) { if (e.key === 'schoolagy_settings_options') applyPotato(); });
+      window.addEventListener('storage', function (e) { if (e.key === 'averages_settings_options') applyPotato(); });
     })();
 
     // Bottom nav "More" overflow. Shows as many pages as fit without
@@ -837,7 +837,7 @@
       function applyAppearance() {
         let saved = null;
         try {
-          const raw = localStorage.getItem('schoolagy_appearance');
+          const raw = localStorage.getItem('averages_appearance');
           if (raw) saved = JSON.parse(raw);
         } catch {}
         if (!saved) return;
@@ -859,7 +859,7 @@
       }
       applyAppearance();
       window.addEventListener('storage', e => {
-        if (e.key === 'schoolagy_appearance') applyAppearance();
+        if (e.key === 'averages_appearance') applyAppearance();
       });
     })();
 
@@ -946,7 +946,7 @@
     let fxFilter = 'all';
     let fxQuery = '';
     let fxView = 'list';
-    try { if (localStorage.getItem('schoolagy_files_view') === 'grid') fxView = 'grid'; } catch {}
+    try { if (localStorage.getItem('averages_files_view') === 'grid') fxView = 'grid'; } catch {}
     FILES.forEach((f, i) => { f.id = 'f' + i; });
 
     function inFilter(f, filter) {
@@ -2088,7 +2088,7 @@
           return;
         }
         const view = t.closest('[data-view]');
-        if (view) { fxView = view.dataset.view; try { localStorage.setItem('schoolagy_files_view', fxView); } catch {} render(); return; }
+        if (view) { fxView = view.dataset.view; try { localStorage.setItem('averages_files_view', fxView); } catch {} render(); return; }
         if (t.closest('[data-flash-close]')) { flashState = null; render(); return; }
         if (t.closest('[data-flash-undo]')) { const u = flashState && flashState.undo; flashState = null; if (u) u(); else render(); return; }
         if (t.closest('[data-show-hidden]')) { LV.showHidden = !LV.showHidden; render(); return; }
@@ -2233,7 +2233,7 @@
         const filt = e.target.closest('[data-filter]');
         if (filt) { fxFilter = filt.dataset.filter; render(); return; }
         const view = e.target.closest('[data-view]');
-        if (view) { fxView = view.dataset.view; try { localStorage.setItem('schoolagy_files_view', fxView); } catch {} render(); return; }
+        if (view) { fxView = view.dataset.view; try { localStorage.setItem('averages_files_view', fxView); } catch {} render(); return; }
         if (e.target.closest('#fxAddDrive')) {
           openFxMenu(e.target.closest('#fxAddDrive'), 'Add files', [
             { label: 'From Google Drive', soon: true },
@@ -2288,7 +2288,7 @@
     (function () {
       var profile = null;
       try {
-        var raw = localStorage.getItem('schoolagy_profile');
+        var raw = localStorage.getItem('averages_profile');
         if (raw) profile = JSON.parse(raw);
       } catch (e) {}
       if (!profile || !profile.name || !String(profile.name).trim()) profile = Object.assign({}, profile, { name: window.__AVERAGES_NAME__ || '' });

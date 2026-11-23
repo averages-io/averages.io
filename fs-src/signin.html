@@ -4059,7 +4059,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     SCHOOLS = (d && Array.isArray(d.schools) ? d.schools : []).filter(x => x && typeof x.name === 'string' && typeof x.domain === 'string');
     if (document.activeElement === $('siFind')) resDraw();
   }).catch(() => {});
-  const SI = Object.assign({ view: 'platform', school: (() => { const l = store.get('averages_login_school'); return l && l.schoology && l.schoology.domain ? l.schoology : null; })(), age13: (() => { try { return localStorage.getItem('schoolagy_13plus') === 'yes'; } catch (e) { return false; } })() }, store.get('fssignin') || {});
+  const SI = Object.assign({ view: 'platform', school: (() => { const l = store.get('averages_login_school'); return l && l.schoology && l.schoology.domain ? l.schoology : null; })(), age13: (() => { try { return localStorage.getItem('averages_13plus') === 'yes'; } catch (e) { return false; } })() }, store.get('fssignin') || {});
   if (SI.view === 'done' || SI.view === 'busy') SI.view = 'platform';
 
   // Sign in is app auth only (your school's own Schoology page). API keys only show at /?keys (or #keys in the mock).
@@ -4145,11 +4145,11 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const err = (id, text) => { const e = $(id); e.textContent = text || ''; e.hidden = !text; };
   const logo = () => window.__averagesLoginLogo;
   const setHint = on => { try { localStorage.setItem('averages_signed_in', on ? '1' : '0'); } catch (e) {} };
-  const saveAge = () => { try { localStorage.setItem('schoolagy_13plus', SI.age13 ? 'yes' : 'no'); } catch (e) {} };
-  const onboarded = () => { try { return localStorage.getItem('schoolagy_onboarded') === '1'; } catch (e) { return false; } };
+  const saveAge = () => { try { localStorage.setItem('averages_13plus', SI.age13 ? 'yes' : 'no'); } catch (e) {} };
+  const onboarded = () => { try { return localStorage.getItem('averages_onboarded') === '1'; } catch (e) { return false; } };
   // what the rest of the app reads: the school picked last time, per platform
   const rememberSchool = () => { try { const all = JSON.parse(localStorage.getItem('averages_login_school') || '{}') || {}; all.schoology = { name: SI.school.name, domain: SI.school.domain }; localStorage.setItem('averages_login_school', JSON.stringify(all)); } catch (e) {} };
-  const freshStart = () => { try { ['schoolagy_session_state', 'schoolagy_bundle_cache', 'schoolagy_files_cache', 'averages_splash_shown'].forEach(k => sessionStorage.removeItem(k)); } catch (e) {} };
+  const freshStart = () => { try { ['averages_session_state', 'averages_bundle_cache', 'averages_files_cache', 'averages_splash_shown'].forEach(k => sessionStorage.removeItem(k)); } catch (e) {} };
   function busy(btn, label) { btn.disabled = true; btn.innerHTML = `<span class="pp-spin" aria-hidden="true"></span><span>${esc(label)}</span>`; }
   const goLabel = () => `${ico('up')}<span>Log in with Schoology</span>`;
   let sgyOn = null;   // the API says whether Sign in with Schoology is set up
@@ -4195,7 +4195,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   // Where to go once signed in: straight to Fullscreen when that's the look picked (and to the Open to page), not via /home
   function startPath() {
     try {
-      const o = JSON.parse(localStorage.getItem('schoolagy_settings_options') || '{}') || {};
+      const o = JSON.parse(localStorage.getItem('averages_settings_options') || '{}') || {};
       const to = ['courses', 'calendar', 'grades', 'messages', 'assignments', 'files', 'contacts'].includes(o.openTo) ? o.openTo : 'home';
       const c = JSON.parse(sessionStorage.getItem('averages_features') || 'null');
       const fs = o.windowType === 'fullscreen' && sessionStorage.getItem('averages_fs_off') !== '1' && !(c && c.features && c.features.fullscreen === false);

@@ -17,7 +17,7 @@ export const SPLASH_CSS =
 
 export const SPLASH_JS =
   "(function(){var d=document.documentElement,api={on:false,at:0,hide:function(){},show:function(){}};window.__averagesSplash=api;" +
-  "var potato=false,calm=false;try{potato=(JSON.parse(localStorage.getItem('schoolagy_settings_options')||'{}')||{}).potatoMode===true;}catch(e){}" +
+  "var potato=false,calm=false;try{potato=(JSON.parse(localStorage.getItem('averages_settings_options')||'{}')||{}).potatoMode===true;}catch(e){}" +
   "try{calm=potato||matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){}" +
   "function dr(lo,hi,ms){var f=lo+Math.random()*(hi-lo),t=lo+Math.random()*(hi-lo),t0=performance.now(),l=ms;return function(n){if(n-t0>l){f=t;t=lo+Math.random()*(hi-lo);t0=n;l=ms*(0.6+Math.random()*0.8);}var k=Math.min(1,(n-t0)/l);return f+(t-f)*(1-Math.cos(Math.PI*k))/2;};}" +
   "function clear(){d.removeAttribute('data-av-splash');d.style.removeProperty('--av-dx');d.style.removeProperty('--av-dy');}" +
@@ -32,5 +32,5 @@ export const SPLASH_JS =
   "api.show=start;" +
   "try{var m=+sessionStorage.getItem('averages_mode_logo')||0;if(m){sessionStorage.removeItem('averages_mode_logo');if(Date.now()-m<15000){start();return;}}}catch(e){}" +
   // the first open of a tab with nothing saved yet (and onboarding until it's finished): up until the page has its data
-  "try{var s=window.sessionStorage,ob=location.pathname.replace(/\\/$/,'')==='/onboard'&&localStorage.getItem('schoolagy_onboarded')!=='1';if(s.getItem('schoolagy_bundle_cache')||(s.getItem('" + SPLASH_KEY + "')&&!ob))return;s.setItem('" + SPLASH_KEY + "','1');}catch(e){return;}" +
+  "try{var s=window.sessionStorage,ob=location.pathname.replace(/\\/$/,'')==='/onboard'&&localStorage.getItem('averages_onboarded')!=='1';if(s.getItem('averages_bundle_cache')||(s.getItem('" + SPLASH_KEY + "')&&!ob))return;s.setItem('" + SPLASH_KEY + "','1');}catch(e){return;}" +
   "start();})();";

@@ -33,10 +33,10 @@ import { SPLASH_KEY } from "./splash";
 export type Mode = "live" | "demo" | "out";
 
 /** Short-lived cache of the API's answer, so navigating doesn't re-ask every time. */
-const SESSION_CACHE = "schoolagy_session_state";
+const SESSION_CACHE = "averages_session_state";
 const SESSION_CACHE_MS = 60 * 1000;
 
-const BUNDLE_CACHE = "schoolagy_bundle_cache";
+const BUNDLE_CACHE = "averages_bundle_cache";
 /** The Files page's course-file list (pages-src/files.html keeps it 5 minutes). */
 const FILES_CACHE = "averages_files_cache";
 const SUBS_CACHE = "averages_subs_cache";
@@ -231,7 +231,7 @@ function forgetPushOnThisDevice(): Promise<void> {
   })();
 }
 
-const OUR_STORAGE_KEY = /^(schoolagy_|averages_|fs|wi_|av_help_)/;
+const OUR_STORAGE_KEY = /^(averages_|averages_|fs|wi_|av_help_)/;
 
 /** Whether this device was syncing settings to the account when signing out. */
 function forgetEverythingOnThisDevice(): void {
@@ -527,16 +527,16 @@ async function adoptSyncedRecord(remote: any, stamp: string, ask: (path: string)
       return undefined;
     }
   };
-  const localAppearance = readJson("schoolagy_appearance");
-  const localProfile = readJson("schoolagy_profile");
+  const localAppearance = readJson("averages_appearance");
+  const localProfile = readJson("averages_profile");
   const next: Record<string, string> = {};
   if (remote.settingsOptions && typeof remote.settingsOptions === "object") {
     // Notifications on/off belongs to each browser, not the account.
     const options = { ...remote.settingsOptions };
     delete options.browserNotifications;
-    const mine = (readJson("schoolagy_settings_options") || {}).browserNotifications;
+    const mine = (readJson("averages_settings_options") || {}).browserNotifications;
     if (mine !== undefined) options.browserNotifications = mine;
-    next.schoolagy_settings_options = JSON.stringify(options);
+    next.averages_settings_options = JSON.stringify(options);
   }
   if (remote.appearance && typeof remote.appearance === "object") {
     const appearance = { ...remote.appearance };
@@ -545,9 +545,9 @@ async function adoptSyncedRecord(remote: any, stamp: string, ask: (path: string)
       if (localAppearance && localAppearance.background != null) appearance.background = localAppearance.background;
       else delete appearance.background;
     } else appearance.background = bg;
-    next.schoolagy_appearance = JSON.stringify(appearance);
+    next.averages_appearance = JSON.stringify(appearance);
   }
-  if (remote.darkMode === "dark" || remote.darkMode === "light") next.schoolagy_dark_mode = remote.darkMode;
+  if (remote.darkMode === "dark" || remote.darkMode === "light") next.averages_dark_mode = remote.darkMode;
   // System ("auto", 2026-11-09): this device follows its own light or dark setting
   const followSystem = remote.darkMode === "auto";
   if (remote.profile && typeof remote.profile === "object") {
@@ -557,13 +557,13 @@ async function adoptSyncedRecord(remote: any, stamp: string, ask: (path: string)
       if (localProfile && localProfile.photo) profile.photo = localProfile.photo;
       else delete profile.photo;
     } else profile.photo = photo;
-    next.schoolagy_profile = JSON.stringify(profile);
-    if (typeof profile.name === "string" && profile.name.trim()) next.schoolagy_profile_name = profile.name.trim();
+    next.averages_profile = JSON.stringify(profile);
+    if (typeof profile.name === "string" && profile.name.trim()) next.averages_profile_name = profile.name.trim();
   }
   const changed: string[] = [];
-  if (followSystem && ls.getItem("schoolagy_dark_mode") !== null) {
-    ls.removeItem("schoolagy_dark_mode");
-    changed.push("schoolagy_dark_mode");
+  if (followSystem && ls.getItem("averages_dark_mode") !== null) {
+    ls.removeItem("averages_dark_mode");
+    changed.push("averages_dark_mode");
   }
   for (const [k, v] of Object.entries(next)) {
     if (ls.getItem(k) !== v) {
@@ -572,7 +572,7 @@ async function adoptSyncedRecord(remote: any, stamp: string, ask: (path: string)
     }
   }
   ls.setItem("averages_sync_media", JSON.stringify(media));
-  ls.setItem("schoolagy_sync_meta", JSON.stringify({ settingsUpdatedAt: stamp }));
+  ls.setItem("averages_sync_meta", JSON.stringify({ settingsUpdatedAt: stamp }));
   return changed;
 }
 
@@ -604,7 +604,7 @@ export async function restoreSyncedSetup(): Promise<boolean> {
     const record = await fetchSyncedRecord(ask);
     if (!record) return false;
     await adoptSyncedRecord(record.settings, record.stamp, ask);
-    window.localStorage.setItem("schoolagy_onboarded", "1");
+    window.localStorage.setItem("averages_onboarded", "1");
     return true;
   } catch {
     return false;
@@ -623,7 +623,7 @@ export async function pullSyncedSettings(): Promise<string[]> {
     if (!record) return [];
     let meta = "";
     try {
-      meta = (JSON.parse(window.localStorage.getItem("schoolagy_sync_meta") || "null") || {}).settingsUpdatedAt || "";
+      meta = (JSON.parse(window.localStorage.getItem("averages_sync_meta") || "null") || {}).settingsUpdatedAt || "";
     } catch {}
     if (meta === record.stamp) return [];
     return await adoptSyncedRecord(record.settings, record.stamp, ask);

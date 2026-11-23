@@ -31,7 +31,7 @@ function splashTag() {
   if (js === SPLASH_JS) throw new Error("splash.ts changed: couldn't take out its first-open start");
   const handoff = "(function(){var t=0;try{t=+sessionStorage.getItem('averages_fs_logo')||0;sessionStorage.removeItem('averages_fs_logo');}catch(e){}" +
     // a clean start (nothing loaded in this tab yet): the logo stays up until the page has its data, not a skeleton
-    "if(!window.__averagesSplash)return;if(!t||Date.now()-t>15000){var fresh=false;try{fresh=!sessionStorage.getItem('schoolagy_bundle_cache');}catch(e){}if(!fresh)return;t=Date.now();}" +
+    "if(!window.__averagesSplash)return;if(!t||Date.now()-t>15000){var fresh=false;try{fresh=!sessionStorage.getItem('averages_bundle_cache');}catch(e){}if(!fresh)return;t=Date.now();}" +
     "var S=window.__averagesSplash,ready=false,up=false;S.show(12000);" +
     "function go(){if(ready&&up)S.hide();}setTimeout(function(){up=true;go();},Math.max(0,1000-(Date.now()-t)));" +
     "window.addEventListener('fs:ready',function(){ready=true;go();});})();";
@@ -385,6 +385,7 @@ requestAnimationFrame(function(){requestAnimationFrame(function(){r.classList.re
     s = s.replace(/<\/head>/, `<style id="fsLight">${LIGHT_CSS}</style>\n</head>`);
     s = s.replace(/<\/head>/, `<style id="fsSide">${SIDE_CSS}</style>\n</head>`);
     s = s.replace(/<title>([^<]*?)\s*Mock<\/title>/, "<title>$1</title>");
+    s = s.replace(/<head>/, `<head>\n<script>${STORAGE_RENAME}</script>`);
     fs.writeFileSync(path.join(OUT, file), s);
     // the old address moves here
     const page = file.replace(/\.html$/, "");
@@ -395,6 +396,10 @@ requestAnimationFrame(function(){requestAnimationFrame(function(){r.classList.re
 }
 
 
+// Browser storage that still has the old names (schoolagy_*) moves to averages_* first, once, before any page script reads it
+// (2026-11-18, the rename away from the old name). Put first in every page's <head>, the sign-in page too.
+const STORAGE_RENAME = "(function(){try{[localStorage,sessionStorage].forEach(function(st){var ks=[];for(var i=0;i<st.length;i++){var k=st.key(i);if(k&&k.indexOf('schoolagy_')===0)ks.push(k)}ks.forEach(function(k){var n='averages_'+k.slice(10);if(st.getItem(n)===null)st.setItem(n,st.getItem(k));st.removeItem(k)})})}catch(e){}})();";
+
 // The sign-in page (/IS/signin, shown at "/" by worker/index.js). Signed out, so none of
 // the app's data scripts: just its version line, the theme, the checking logo and the error messages.
 function buildSignin() {
@@ -404,10 +409,11 @@ function buildSignin() {
   s = s.replaceAll("__AVERAGES_STAGE__ ", VERSION.stage ? esc(VERSION.stage) + " " : "").replaceAll("__AVERAGES_BASE__", esc(VERSION.base))
     .replaceAll("__AVERAGES_COMMIT__", esc(VERSION.when)).replaceAll("__AVERAGES_BUILD__", esc(VERSION.sha.slice(0, 7)));
   s = s.replace("__SIGNIN_ERRORS__", JSON.stringify(SHARED.ERROR_MESSAGES)).replace("__SCHOOLOGY_ERRORS__", JSON.stringify(SHARED.SCHOOLOGY_SIGNIN_ERRORS));
-  const theme = "(function(){try{var v=localStorage.getItem('schoolagy_dark_mode'),d=v==='dark'||(v!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches),r=document.documentElement;r.setAttribute('data-theme',d?'dark':'light');r.style.colorScheme=d?'dark':'light'}catch(e){}})();";
+  const theme = "(function(){try{var v=localStorage.getItem('averages_dark_mode'),d=v==='dark'||(v!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches),r=document.documentElement;r.setAttribute('data-theme',d?'dark':'light');r.style.colorScheme=d?'dark':'light'}catch(e){}})();";
   s = s.replace(/<head>/, `<head>\n<script>${theme}</script>\n<style>${SHARED.CHECKING_CSS}</style>\n<script>${SHARED.CHECKING_JS}</script>`);
   s = s.replace(/<\/head>/, `<style id="fsDark">\n${darkCss(styles)}</style>\n</head>`);
   if (/__AVERAGES_|__SIGNIN_ERRORS__|__SCHOOLOGY_ERRORS__/.test(s)) throw new Error("signin.html: a placeholder was left");
+  s = s.replace(/<head>/, `<head>\n<script>${STORAGE_RENAME}</script>`);
   fs.writeFileSync(path.join(OUT, "signin.html"), s);
 }
 

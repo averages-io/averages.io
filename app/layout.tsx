@@ -4,6 +4,7 @@ import "./lib/averages-help.css";
 import "./lib/averages-avatar.css";
 import { JS } from "./lib/js-version";
 import { FS_BOOT_JS } from "./lib/fs-boot";
+import { STORAGE_RENAME_JS } from "./lib/theme-boot";
 
 const TYPEKIT_CSS = "https://use.typekit.net/gsk6off.css";
 const FONT_LOADER = `(function(){
@@ -16,7 +17,7 @@ const FONT_LOADER = `(function(){
   }
   window.__averagesLoadFonts = load;
   try {
-    var o = JSON.parse(localStorage.getItem('schoolagy_settings_options') || '{}') || {};
+    var o = JSON.parse(localStorage.getItem('averages_settings_options') || '{}') || {};
     if (o.potatoMode === true) return;
   } catch (e) {}
   load();
@@ -59,7 +60,8 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: FS_BOOT_JS }} />
+        {/* the old saved names move first (schoolagy_* -> averages_*, 2026-11-18), before anything reads them */}
+        <script dangerouslySetInnerHTML={{ __html: STORAGE_RENAME_JS + FS_BOOT_JS }} />
         <link rel="preconnect" href="https://api.averages.io" />
         <link rel="preconnect" href="https://use.typekit.net" />
         <link rel="preconnect" href="https://p.typekit.net" crossOrigin="anonymous" />

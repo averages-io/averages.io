@@ -803,7 +803,7 @@
     function potatoOn() { return !!(document.body && document.body.classList.contains("potato-mode")); }
     function applyPotato() {
       var on = false;
-      try { on = (JSON.parse(localStorage.getItem("schoolagy_settings_options") || "{}") || {}).potatoMode === true; } catch (e) {}
+      try { on = (JSON.parse(localStorage.getItem("averages_settings_options") || "{}") || {}).potatoMode === true; } catch (e) {}
       if (document.body) document.body.classList.toggle("potato-mode", on);
       if (!document.getElementById("potatoStyle")) {
         var st = document.createElement("style");
@@ -837,7 +837,7 @@
       }
     }
       applyPotato();
-      window.addEventListener('storage', function (e) { if (e.key === 'schoolagy_settings_options') applyPotato(); });
+      window.addEventListener('storage', function (e) { if (e.key === 'averages_settings_options') applyPotato(); });
     })();
 
     // Bottom nav "More" overflow. Shows as many pages as fit without
@@ -965,7 +965,7 @@
       function applyAppearance() {
         let saved = null;
         try {
-          const raw = localStorage.getItem('schoolagy_appearance');
+          const raw = localStorage.getItem('averages_appearance');
           if (raw) saved = JSON.parse(raw);
         } catch {}
         if (!saved) return;
@@ -987,7 +987,7 @@
       }
       applyAppearance();
       window.addEventListener('storage', e => {
-        if (e.key === 'schoolagy_appearance') applyAppearance();
+        if (e.key === 'averages_appearance') applyAppearance();
       });
     })();
 
@@ -999,8 +999,8 @@
     // those belong to the All Courses list, not the Grades overview.
     // ------------------------------------------------------------------
 
-    const AVERAGES_COURSE_CUSTOM_KEY = 'schoolagy_course_custom';
-    const AVERAGES_COURSE_ORDER_KEY = 'schoolagy_course_order';
+    const AVERAGES_COURSE_CUSTOM_KEY = 'averages_course_custom';
+    const AVERAGES_COURSE_ORDER_KEY = 'averages_course_order';
     function loadCourseCustom() {
       try {
         const raw = localStorage.getItem(AVERAGES_COURSE_CUSTOM_KEY);
@@ -1318,7 +1318,7 @@
     document.getElementById('gpaEditBtn').addEventListener('click', () => {
       if (window.AveragesGPA) window.AveragesGPA.edit(COURSES.map(c => ({ id: String(c.id), name: c.name, grade: c.grade })), renderGPA);
     });
-    window.addEventListener('storage', e => { if (e.key === 'schoolagy_settings_options') renderGPA(); });
+    window.addEventListener('storage', e => { if (e.key === 'averages_settings_options') renderGPA(); });
 
     // ------------------------------------------------------------------
     // Predicted-grade reasoning popup — ported verbatim from
@@ -1735,7 +1735,7 @@
     (function () {
       var profile = null;
       try {
-        var raw = localStorage.getItem('schoolagy_profile');
+        var raw = localStorage.getItem('averages_profile');
         if (raw) profile = JSON.parse(raw);
       } catch (e) {}
       if (!profile || !profile.name || !String(profile.name).trim()) profile = Object.assign({}, profile, { name: window.__AVERAGES_NAME__ || '' });

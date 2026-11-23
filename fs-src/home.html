@@ -2375,7 +2375,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     gb.forEach(k => (k.assignments || []).forEach(a => { if (a.graded && typeof a.score === 'number') pts += a.points || 0; else if (a.due && a.due > Date.now() && a.points > 0) { rem += a.points; left = true; } }));
     const recent = FSD.WORK.filter(w => w.c === x.id && !w.missing).slice(0, 3).map(w => [w.n, `${w.got} / ${w.of}`]);
     const points = x.points.length ? x.points : [x.pct];
-    return { id: x.id, short: x.short, name: x.name, teacher: x.teacher || 'Your teacher', teacherIds: x.teacherIds, pct: x.pct, none: !!x.none, c: i + 1, pts, rem: left && pts ? rem : null,
+    return { id: x.id, short: x.short, name: x.name, teacher: x.teacher || 'Your teacher', teacherIds: x.teacherIds, teachers: x.teachers || [], pct: x.pct, none: !!x.none, c: i + 1, pts, rem: left && pts ? rem : null,
       room: x.hasPeriod ? 'Period ' + x.period : (x.code || 'Schoology class'), recent, predictedPct: x.predictedPct, points, dates: x.dates.length ? x.dates : ['Now'], names: (x.titles || []).map(t => Array.isArray(t) ? t[0] : t), updated: x.updated || '' };
   });
   // The projection starts from the most recent graded assignment, so its direction is latest score to projected grade
@@ -3005,7 +3005,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   // Teachers, messages, files and course updates come a moment after the page is up (averages-fs-data.js, 2026-11-13):
   // the lists built from them are built again and the cards drawn again.
   window.addEventListener('fs:more', () => {
-    CLASSES.forEach(c => { const x = FSD.C[c.id]; if (x) { c.teacher = x.teacher || 'Your teacher'; c.teacherIds = x.teacherIds; } });
+    CLASSES.forEach(c => { const x = FSD.C[c.id]; if (x) { c.teacher = x.teacher || 'Your teacher'; c.teacherIds = x.teacherIds; c.teachers = x.teachers || []; } });
     build_MSG(); build_KNOWN_N(); build_THREADS(); build_FILES(); build_FEED(); build_NOTIFS();
     renderAll();
   });
@@ -3484,17 +3484,28 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     teachers() {
       return { label: 'Message a teacher', html: head('Message a teacher') + CLASSES.map(c => {
         const n = convos(c.id).length;
-        return mi({ attrs: `data-go="compose:${c.id}"`, lead: badge(c), t: c.teacher, sub: n ? `${c.name} · ${n} conversation${n > 1 ? 's' : ''}` : c.name });
+        // a class with more than one teacher: pick who (or everyone, as a group chat) first
+        const many = (c.teachers || []).length > 1;
+        return mi({ attrs: `data-go="${many ? 'pickteacher' : 'compose'}:${c.id}"`, lead: badge(c), t: c.teacher, sub: n ? `${c.name} · ${n} conversation${n > 1 ? 's' : ''}` : c.name, end: many ? ico('chev-r', 'i go') : '' });
       }).join('') };
     },
-    compose(cid) {
-      const c = C[cid];
+    // Martin 2026-11-18: "Message Martin, Message Test, or Start a GC"
+    pickteacher(cid) {
+      const c = C[cid], L = c.teachers || [];
+      return { label: 'Message ' + c.teacher, html: head('Message a teacher', c.name, { back: 'teachers', lead: badge(c) }) +
+        L.map((t, i) => mi({ attrs: `data-go="compose:${c.id}~${i}"`, lead: FSX.personAv ? FSX.personAv({ name: t.name, teacher: true }) : ico('user'), t: `Message ${t.name}` })).join('') +
+        mi({ attrs: `data-go="compose:${c.id}~all"`, lead: ico('users'), t: 'Start a group chat', sub: L.map(t => t.name).join(', ') }) };
+    },
+    compose(arg) {
+      // "cid", "cid~1" (one of the class's teachers) or "cid~all" (a group chat with all of them)
+      const [cid, pick] = String(arg).split('~'), c = C[cid], L = c.teachers || [];
+      const to = pick === 'all' ? L.map(t => t.name).join(', ').replace(/, ([^,]*)$/, ' and $1') : pick != null && L[+pick] ? L[+pick].name : c.teacher;
       const open = convos(cid);
-      return { label: 'New message to ' + c.teacher, wide: true, html: head('New message to ' + c.teacher, c.name, { back: 'teachers', lead: badge(c) }) +
+      return { label: 'New message to ' + to, wide: true, html: head('New message to ' + to, c.name, { back: pick != null ? 'pickteacher:' + cid : 'teachers', lead: badge(c) }) +
         `<div class="fld"><label for="cmpSubj">Subject</label><input id="cmpSubj" maxlength="80" placeholder="For example: Question about Quiz 4" autocomplete="off"></div>
         <div class="fld"><label for="cmpBody">Message</label><textarea id="cmpBody" rows="4" placeholder="Ask about an assignment, a grade or a due date"></textarea></div>
         <div class="err" id="cmpErr" hidden></div>
-        <div class="acts"><button class="btn" data-act="close">Cancel</button><button class="btn primary" data-act="compose" data-arg="${c.id}">Send${ico('up')}</button></div>
+        <div class="acts"><button class="btn" data-act="close">Cancel</button><button class="btn primary" data-act="compose" data-arg="${esc(arg)}">Send${ico('up')}</button></div>
         ${open.length ? `<div class="hr"></div><div class="lbl">Or continue a conversation</div>${open.map(t => mi({ attrs: `data-act="openpage" data-arg="thread:${t.id}"`, lead: `<span class="unread${t.unread ? '' : ' off'}"></span>${badge(C[t.c])}`, t: t.subject, sub: `${t.who} · ${t.msgs[t.msgs.length - 1].t}`, end: `<span class="end">${esc(t.when)}</span>${ico('up', 'i go')}` })).join('')}` : ''}` };
     },
 
@@ -4253,17 +4264,21 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
         toast(`Sent to ${t.who}`);
       }, e => { if (btn) btn.disabled = false; toast(FSX.msgError(e)); });
     },
-    compose(cid) {
+    compose(arg) {
+      const [cid, pick] = String(arg).split('~'), L = (C[cid] && C[cid].teachers) || [];
       const subj = cur.el.querySelector('#cmpSubj'), ta = cur.el.querySelector('#cmpBody'), c = C[cid], err = cur.el.querySelector('#cmpErr');
+      // who it goes to: the teacher picked, all of them (a group chat), or (one teacher) the class's teacher
+      const ids = pick === 'all' ? L.map(t => t.id) : pick != null && L[+pick] ? [L[+pick].id] : (c.teacherIds || []).slice(0, 1);
+      const who = pick === 'all' ? L.map(t => t.name).join(', ') : pick != null && L[+pick] ? L[+pick].name : c.teacher;
       const s = subj.value.trim().replace(/\s+/g, ' ');
       if (!s) { err.textContent = 'Add a subject so your teacher knows what this is about.'; err.hidden = false; subj.focus(); return; }
       if (!ta.value.trim()) { err.textContent = 'Write a message first.'; err.hidden = false; ta.focus(); return; }
       if (!(c.teacherIds || []).length) { err.textContent = 'Schoology doesn\'t list a teacher for this class, so there\'s no one to send it to.'; err.hidden = false; return; }
       const text = ta.value.trim(), send = cur.el.querySelector('[data-act="compose"]'); if (send) send.disabled = true;
-      FSX.send(c.teacherIds.slice(0, 1), s, text).then(r => {
-        const t = { id: String(r.id || 'new' + Date.now()), who: c.teacher, c: cid, subject: s, unread: false, when: 'Just now', msgs: [{ me: true, t: text, at: 'Just now' }] };
+      FSX.send(ids, s, text).then(r => {
+        const t = { id: String(r.id || 'new' + Date.now()), who, c: cid, subject: s, unread: false, when: 'Just now', msgs: [{ me: true, t: text, at: 'Just now' }] };
         THREADS.unshift(t); closePop(); touchRecent('Messages', t.subject, 'thread:' + t.id);
-        toast(`Sent to ${c.teacher}.`);
+        toast(`Sent to ${who}.`);
       }, e2 => { if (send) send.disabled = false; err.textContent = FSX.msgError(e2); err.hidden = false; });
     },
     notif(id) {
@@ -5113,7 +5128,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (k === 'thread') { const th = T(a); if (th) { th.unread = false; FSX.seen.mark('m', a); touchRecent('Messages', th.subject, go); } FSX.go('messages', { thread: a }); return; }
     if (k === 'update') { const u = U(a); if (u) { FSX.seen.mark('u', a); touchRecent('Updates', C[u.c].name, go); FSX.hub(u.c, 'updates', { update: a }); } return; }
     if (k === 'turnin') { const d = DUE.concat(DONE).find(x => x.id === a); if (d && !d.canTurnIn) { openPage('due:' + a); return; } tiPopup.open(a); return; } // the Turn in popup, for just this assignment (a discussion or a test opens its page instead)
-    if (k === 'graded') { const g = GRADED.find(x => x.id === a); if (g) { FSX.seen.mark('g', a); touchRecent('Assignment', g.t, go); FSX.hub(g.c, 'grades', { a: g.id }); } return; }
+    if (k === 'graded') { const g = GRADED.find(x => x.id === a); if (g) { FSX.seen.mark('g', a); touchRecent('Assignment', g.t, go); FSX.hub(g.c, '', { a: g.id }); } return; }   // the assignment itself, like Assignments (graded work with no page of its own: its row in Grades)
     if (k === 'page') { FSX.go(PG[a] || String(a).toLowerCase()); return; }
     if (k === 'sc') { FSX.go(SCP[a] || 'home'); return; }
   }

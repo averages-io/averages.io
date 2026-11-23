@@ -1,6 +1,6 @@
 /*
  * GPA, unweighted and weighted, with a scale the student can edit (both looks).
- * Kept in schoolagy_settings_options.gpa, so it syncs like the other settings:
+ * Kept in averages_settings_options.gpa, so it syncs like the other settings:
  *   { points: { 'A+': 4, ... }, bonus: { honors: 0.5, ap: 1 }, levels: { <class id>: 'regular' | 'honors' | 'ap' } }
  * A class's level starts from its name (AP or IB = AP, Honors = Honors) until the student picks one.
  * AveragesGPA.compute(classes) with [{ id, name, grade }] answers { unweighted, weighted } (null with nothing graded).
@@ -14,7 +14,7 @@
   var BONUS = { honors: 0.5, ap: 1 };
   var LEVELS = [['regular', 'Regular'], ['honors', 'Honors'], ['ap', 'AP / IB']];
 
-  function opts() { try { return JSON.parse(localStorage.getItem('schoolagy_settings_options') || '{}') || {}; } catch (e) { return {}; } }
+  function opts() { try { return JSON.parse(localStorage.getItem('averages_settings_options') || '{}') || {}; } catch (e) { return {}; } }
   function saved() { var g = opts().gpa; return g && typeof g === 'object' ? g : {}; }
   function num(v, lo, hi, d) { v = Number(v); return isFinite(v) && v >= lo && v <= hi ? Math.round(v * 100) / 100 : d; }
   function points() { var p = saved().points || {}, out = {}; LETTERS.forEach(function (l) { out[l] = num(p[l], 0, 10, POINTS[l]); }); return out; }
@@ -23,9 +23,9 @@
   function level(c) { var l = (saved().levels || {})[String(c.id)]; return l === 'regular' || l === 'honors' || l === 'ap' ? l : guess(c.name); }
   function store(g) {
     var o = opts(); o.gpa = g;
-    try { localStorage.setItem('schoolagy_settings_options', JSON.stringify(o)); } catch (e) { /* storage off */ }
+    try { localStorage.setItem('averages_settings_options', JSON.stringify(o)); } catch (e) { /* storage off */ }
     // Windowed pages push synced settings on their own; Fullscreen pages through FSX
-    try { if (window.FSX && window.FSX.syncPush) window.FSX.syncPush(); else window.dispatchEvent(new StorageEvent('storage', { key: 'schoolagy_settings_options' })); } catch (e) { /* fine */ }
+    try { if (window.FSX && window.FSX.syncPush) window.FSX.syncPush(); else window.dispatchEvent(new StorageEvent('storage', { key: 'averages_settings_options' })); } catch (e) { /* fine */ }
     window.dispatchEvent(new CustomEvent('averages:gpa'));
   }
   function compute(classes) {
