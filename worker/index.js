@@ -19,7 +19,7 @@ export function cookieValue(header, name) {
 }
 
 /** Sign-in page addresses that carry something to show (a Google outcome, the hidden key form): never skipped. */
-const KEEP_PARAMS = ["google", "keys", "demo", "signedout"];
+const KEEP_PARAMS = ["google", "keys", "demo", "signedout", "launch"];
 
 /** @param {string | null} header @param {string} name */
 export function hasCookie(header, name) {
@@ -47,6 +47,33 @@ export function frontDoor(request) {
   let start = "";
   try { start = decodeURIComponent(cookieValue(cookies, START_COOKIE)); } catch { start = ""; }
   return START_RE.test(start) ? start : "/home";
+}
+
+/**
+ * Opened from inside Schoology (2026-11-23, Martin: "is identifying the user having SSO or schoology log in done").
+ * Schoology opens the App URL with a SAML packet (form field SAMLResponse, base64) that names the student (uid) and
+ * their school's Schoology address (domain); it used to get "405 Method Not Allowed". Its signature isn't checked
+ * here on purpose: the packet is only a hint for which school to send them to. Who they are is still proven by
+ * Schoology's own sign-in (OAuth), so a made-up packet can't sign anyone in. Answers where to go, or null.
+ * @param {string} body the form body
+ */
+export function schoologyLaunch(body) {
+  let saml = "";
+  try { saml = new URLSearchParams(body).get("SAMLResponse") || ""; } catch { return null; }
+  if (!saml || saml.length > 200000) return null;
+  let xml = "";
+  try { xml = atob(saml.replace(/\s+/g, "")); } catch { return null; }
+  const attr = (name) => {
+    const m = new RegExp(`<(?:[\\w-]+:)?Attribute\\b[^>]*\\bName="${name}"[^>]*>\\s*<(?:[\\w-]+:)?AttributeValue\\b[^>]*>([^<]{1,255})<`, "i").exec(xml);
+    return m ? m[1].trim() : "";
+  };
+  // a plain host name only (schoolname.schoology.com, app.schoology.com, or a school's own lms.school.org)
+  const domain = attr("domain").toLowerCase().replace(/^https?:\/\//, "").replace(/\/.*$/, "");
+  if (!/^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)+$/.test(domain)) return null;
+  const uid = attr("uid");
+  const q = new URLSearchParams({ launch: domain });
+  if (/^[0-9]{1,20}$/.test(uid)) q.set("as", uid);
+  return "/?" + q.toString();
 }
 
 /**
@@ -98,6 +125,13 @@ export default {
       res.headers.set("Clear-Site-Data", '"cookies", "storage"');
       res.headers.set("Cache-Control", "no-store");
       return res;
+    }
+    // opened from inside Schoology: on to the sign-in page, with their school picked (see schoologyLaunch)
+    if (request.method === "POST" && url.pathname === "/") {
+      let body = "";
+      try { body = (request.headers.get("Content-Type") || "").includes("form") ? await request.text() : ""; } catch { body = ""; }
+      const go = schoologyLaunch(body);
+      return new Response(null, { status: 303, headers: { Location: go || "/", "Cache-Control": "no-store" } });
     }
     const to = frontDoor(request);
     if (to) {

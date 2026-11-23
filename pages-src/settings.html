@@ -1718,7 +1718,7 @@
           <h3>Email</h3>
           <input type="email" id="profileEditEmailInput" placeholder="you@example.com (optional)" style="width: 100%; font: inherit; font-size: 0.9rem; color: var(--text-dark); background: var(--panel-inner); border: 1px solid var(--border); border-radius: var(--window-radius-sm); padding: 10px 12px;">
           <p class="settings-row-desc" id="profileEditEmailError" style="margin-top: 6px; color: var(--grade-bad); font-weight: 700;" hidden>Enter a valid email address (like you@example.com).</p>
-          <p class="settings-row-desc" style="margin-top: 6px;">Not required.</p>
+          <p class="settings-row-desc" id="profileEditEmailHint" style="margin-top: 6px;">Not required.</p>
         </div>
       </div>
       <div class="editor-actions">
@@ -3841,6 +3841,13 @@
       profileEditNameInput.value = profileState.name;
       profileEditEmailInput.value = profileState.email;
       profileEditEmailError.hidden = true;
+      // no email yet: the one on their Averages Plus account (from Stripe), filled in; they can change it, and it's
+      // still checked with a code (same as Fullscreen, 2026-11-23)
+      const hint = document.getElementById('profileEditEmailHint');
+      hint.textContent = 'Not required.';
+      if (!profileState.email && window.AveragesEmail && window.AveragesEmail.suggested) window.AveragesEmail.suggested().then((v) => {
+        if (v && !profileEditEmailInput.value.trim() && profileEditOverlay.classList.contains('show')) { profileEditEmailInput.value = v; hint.textContent = 'From your Averages Plus account. Change it if you like.'; }
+      });
       editingPhoto = profileState.photo;
       renderAvatarBubble(profileEditAvatarPreview, editingPhoto, profileState.name);
       profileEditOverlay.classList.add('show');

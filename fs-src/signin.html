@@ -4055,7 +4055,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   // The schools the API lists (GET /config/schools); typing any Schoology address works too.
   const API = /(^|\.)averages\.io$/.test(location.hostname) ? 'https://api.averages.io' : 'http://localhost:8787';
   let SCHOOLS = [];
-  fetch(API + '/config/schools?lms=schoology').then(r => (r.ok ? r.json() : null)).then(d => {
+  const schoolsP = fetch(API + '/config/schools?lms=schoology').then(r => (r.ok ? r.json() : null)).then(d => {
     SCHOOLS = (d && Array.isArray(d.schools) ? d.schools : []).filter(x => x && typeof x.name === 'string' && typeof x.domain === 'string');
     if (document.activeElement === $('siFind')) resDraw();
   }).catch(() => {});
@@ -4207,11 +4207,29 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   (() => {
     const params = new URLSearchParams(location.search);
     const back = params.get('signin') === 'schoology', code = params.get('signin_error');
-    const clean = () => { ['signin', 'signin_error', 'signedout'].forEach(k => params.delete(k)); const rest = params.toString(); try { history.replaceState(history.state, '', location.pathname + (rest ? '?' + rest : '') + location.hash); } catch (e) {} };
-    if (params.has('signedout') || code || back) clean();
+    // opened from inside Schoology (worker/index.js schoologyLaunch): their school, and who Schoology says they are
+    const launch = (params.get('launch') || '').toLowerCase(), launchAs = params.get('as') || '';
+    const clean = () => { ['signin', 'signin_error', 'signedout', 'launch', 'as'].forEach(k => params.delete(k)); const rest = params.toString(); try { history.replaceState(history.state, '', location.pathname + (rest ? '?' + rest : '') + location.hash); } catch (e) {} };
+    if (params.has('signedout') || code || back || launch) clean();
+    // the school picked for them: a Schoology address, or a school's own address we know (the API checks again)
+    const launchPick = () => {
+      if (!/^[a-z0-9.-]+$/.test(launch)) return;
+      const known = SCHOOLS.find(s => s.domain === launch || (Array.isArray(s.aliases) && s.aliases.includes(launch)));
+      if (!known && !/(^|\.)schoology\.com$/.test(launch)) return;
+      SI.school = { domain: known ? known.domain : launch, name: known ? known.name : launch }; siSave(); show('school', false); schoolDraw();
+    };
     if (code) { show('school', false); err('siErr', (SAY_SGY[code] || 'Something went wrong signing in with Schoology. Please try again.') + ` (${code.replace(/[^a-z_]/g, '').slice(0, 40)})`); }
     const reveal = () => document.documentElement.removeAttribute('data-av-checking');
-    fetch(API + '/auth/me', { credentials: 'include', cache: 'no-store' }).then(r => {
+    fetch(API + '/auth/me', { credentials: 'include', cache: 'no-store' }).then(async r => {
+      // opened from Schoology as someone else than who's signed in here (a shared computer): sign that one out first
+      if (r.ok && launch && launchAs) {
+        const me = await r.clone().json().catch(() => null);
+        if (me && me.uid && String(me.uid) !== launchAs) {
+          await fetch(API + '/auth/session', { method: 'DELETE', credentials: 'include' }).catch(() => {});
+          try { ['averages_session_state', 'averages_bundle_cache', 'averages_files_cache'].forEach(k => sessionStorage.removeItem(k)); } catch (e) {}
+          setHint(false); reveal(); schoolsP.then(launchPick, launchPick); return;
+        }
+      }
       if (r.ok) {
         setHint(true); freshStart();
         if (logo()) logo().show();
@@ -4220,6 +4238,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       }
       if (r.status === 401) setHint(false);
       reveal();
+      if (launch) schoolsP.then(launchPick, launchPick);
       if (back) { show('school', false); err('siErr', SAY_SGY.not_kept + ' (not_kept)'); }
     }).catch(reveal);
   })();
