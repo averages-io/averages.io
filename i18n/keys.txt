@@ -1289,3 +1289,10 @@
 1289|Classmates who use Averages see your photo in place of your initials. Turn this off and it stops showing right away.
 1290|Classmates who use Averages see your photo now.
 1291|Your photo is hidden from classmates now.
+1292|Verify your email
+1293|Send verification code
+1294|Resend verification code
+1295|Email verification code
+1296|Use a different email
+1297|Sending…
+1298|Next, we'll email it a 6-digit code to check it's yours.

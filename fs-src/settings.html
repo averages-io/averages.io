@@ -3307,6 +3307,8 @@
   .sg-scan { align-items: stretch; text-align: left; }
   .sg-crop-btns { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
   .sg-spin { width: 28px; height: 28px; border-radius: 50%; border: 3px solid var(--inner); border-top-color: var(--accent); animation: spin .8s linear infinite; }
+  .sg-vtxt { margin: 0 0 14px; font-size: 14px; line-height: 1.5; color: var(--muted); } .sg-vtxt b { color: var(--ink); }
+  .sg-vsend { align-self: flex-start; } .sg-vmsg { margin: 10px 0 14px; min-height: 1.4em; font-size: 13.5px; font-weight: 600; } .sg-vback { margin-top: 8px; }
 </style>
 </head>
 <body>
@@ -4610,59 +4612,87 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && dlg) { e.preventDefault(); e.stopImmediatePropagation(); dlgClose(true); } }, true);
 
   // ---------- Averages email: add, change or remove it, with a 6-digit code (public/js/averages-email.js) ----------
+  // Two steps in one popup (2026-11-23, Martin: replace the popup with the code box, and the student clicks to send
+  // the code, it isn't automatic): 1. the email (checked, nothing sent); 2. "Verify your email" with Send
+  // verification code, the code box and Verify. "Use a different email" goes back to step 1.
   function editEmail() {
     const P = store.get('averages_profile') || {}, cur = typeof P.email === 'string' ? P.email : '';
-    let sentTo = '';
-    const d = dlgOpen({ title: cur ? 'Your Averages email' : 'Add your email', ok: 'Send code', body: `
-      <label class="sg-fl"><b>Email</b><input id="sgEm" type="email" maxlength="200" autocomplete="email" placeholder="you@example.com" value="${esc(cur)}"><small id="sgEmMsg">We'll email you a 6-digit code to check it's yours.</small></label>
-      <label class="sg-fl" id="sgEmCodeW" hidden><b>Code</b><input id="sgEmCode" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="000000" style="letter-spacing:.3em;font-variant-numeric:tabular-nums"><small><button class="sg-lnk" type="button" data-dact="resend">Send a new code</button></small></label>`,
-      onOk: () => { go(); return false; } });
-    const el = d.el, $e = el.querySelector('#sgEm'), $c = el.querySelector('#sgEmCode'), $m = el.querySelector('#sgEmMsg'), okB = el.querySelector('[data-dlg="ok"]');
-    const say = (t, bad) => { $m.textContent = t; $m.style.color = bad ? '#e5484d' : ''; };
-    const label = () => { const v = $e.value.trim(); okB.textContent = !v ? (cur ? 'Remove email' : 'Save') : sentTo && sentTo === v.toLowerCase() ? 'Verify' : 'Send code'; };
-    const save = (email, verified) => {
-      const p = store.get('averages_profile') || {}; if (!p.name && PROFILE.name) p.name = PROFILE.name; p.email = email; p.emailVerified = !!verified;
+    let email = cur, sentTo = '', step = 'email';
+    const d = dlgOpen({ title: cur ? 'Your Averages email' : 'Add your email', ok: 'Continue', body: '', onOk: () => { go(); return false; } });
+    const el = d.el, $t = el.querySelector('#sgDlgT'), $b = el.querySelector('#sgDlgB'), okB = el.querySelector('[data-dlg="ok"]');
+    const $m = () => el.querySelector('#sgEmMsg');
+    const say = (t, bad) => { const m = $m(); if (!m) return; m.textContent = t; m.style.color = bad ? '#e5484d' : ''; };
+    const save = (v, verified) => {
+      const p = store.get('averages_profile') || {}; if (!p.name && PROFILE.name) p.name = PROFILE.name; p.email = v; p.emailVerified = !!verified;
       store.set('averages_profile', p); FSX.syncPush(); dlgClose(true); redraw();
-      toast(!email ? 'Removed your email.' : 'Email verified.');
+      toast(!v ? 'Removed your email.' : 'Email verified.');
     };
-    const send = async () => {
-      const v = $e.value.trim();
+    // ---- step 1: the email ----
+    function showEmail() {
+      step = 'email'; $t.textContent = cur ? 'Your Averages email' : 'Add your email';
+      $b.innerHTML = `<label class="sg-fl"><b>Email</b><input id="sgEm" type="email" maxlength="200" autocomplete="email" placeholder="you@example.com" value="${esc(email)}"><small id="sgEmMsg">Next, we'll email it a 6-digit code to check it's yours.</small></label>`;
+      const $e = el.querySelector('#sgEm');
+      const label = () => { const v = $e.value.trim(); okB.textContent = !v ? (cur ? 'Remove email' : 'Close') : 'Continue'; okB.disabled = false; };
+      $e.addEventListener('input', () => { email = $e.value.trim(); label(); say("Next, we'll email it a 6-digit code to check it's yours."); });
+      label(); $e.focus({ preventScroll: true });
+      // no email yet: the one on their Averages Plus account, filled in (they can change it, and it's still checked with a code)
+      if (!email && window.AveragesEmail && window.AveragesEmail.suggested) window.AveragesEmail.suggested().then(v => {
+        if (v && step === 'email' && !$e.value.trim() && $e.isConnected) { $e.value = email = v; say('From your Averages Plus account. Change it if you like.'); label(); }
+      });
+    }
+    async function nextFromEmail() {
+      const $e = el.querySelector('#sgEm'), v = $e.value.trim();
+      if (!v) { if (cur) save('', false); else dlgClose(true); return; }
       if (!window.AveragesEmail) { say("Couldn't load. Refresh the page and try again.", true); return; }
       if (!window.AveragesEmail.valid(v)) { say("That doesn't look like an email address yet.", true); $e.focus(); return; }
-      okB.disabled = true;
-      try { await window.AveragesEmail.send(v); sentTo = v.toLowerCase(); el.querySelector('#sgEmCodeW').hidden = false; say(`Enter the 6-digit code we sent to ${v}. It works for 10 minutes.`); $c.value = ''; $c.focus(); }
+      okB.disabled = true; okB.textContent = 'Checking…';
+      try { await window.AveragesEmail.precheck(v); email = v; showCode(); }
       catch (e) {
+        okB.disabled = false; okB.textContent = 'Continue';
         say(window.AveragesEmail.say(e), true);
         // "Did you mean sam@gmail.com?": one tap fixes it
         const fix = e === 'email_typo' && window.AveragesEmail.suggestion && window.AveragesEmail.suggestion();
-        if (fix) { const b = document.createElement('button'); b.type = 'button'; b.className = 'sg-lnk'; b.dataset.dact = 'usefix'; b.dataset.fix = fix; b.textContent = ` Use ${fix}`; $m.appendChild(b); }
+        if (fix) { const b = document.createElement('button'); b.type = 'button'; b.className = 'sg-lnk'; b.dataset.dact = 'usefix'; b.dataset.fix = fix; b.textContent = ` Use ${fix}`; $m().appendChild(b); }
       }
-      finally { okB.disabled = false; label(); }
-    };
-    const check = async () => {
-      const v = $e.value.trim();
+    }
+    // ---- step 2: the code ----
+    function showCode() {
+      step = 'code'; $t.textContent = 'Verify your email';
+      const sent = sentTo === email.toLowerCase();
+      $b.innerHTML = `<p class="sg-vtxt">To check that <b>${esc(email)}</b> is yours, we'll email it a 6-digit code. The code works for 10 minutes.</p>
+        <button class="btn sg-vsend" type="button" data-dact="send">${sent ? 'Resend verification code' : 'Send verification code'}</button>
+        <p class="sg-vmsg" id="sgEmMsg" role="status" aria-live="polite">${sent ? `Verification code sent to ${esc(email)}.` : ''}</p>
+        <label class="sg-fl"><b>Email verification code</b><input id="sgEmCode" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="000000" style="letter-spacing:.3em;font-variant-numeric:tabular-nums"${sent ? '' : ' disabled'}></label>
+        <button class="sg-lnk sg-vback" type="button" data-dact="back">Use a different email</button>`;
+      okB.textContent = 'Verify'; okB.disabled = true;
+      const $c = el.querySelector('#sgEmCode');
+      $c.addEventListener('input', () => { $c.value = $c.value.replace(/\D/g, '').slice(0, 6); okB.disabled = $c.value.length !== 6; if ($c.value.length === 6) check(); });
+      (sent ? $c : el.querySelector('[data-dact="send"]')).focus({ preventScroll: true });
+    }
+    async function send() {
+      const b = el.querySelector('[data-dact="send"]'); if (!b || b.disabled) return;
+      b.disabled = true; b.textContent = 'Sending…'; say('');
+      try {
+        await window.AveragesEmail.send(email); sentTo = email.toLowerCase();
+        b.textContent = 'Resend verification code'; say(`Verification code sent to ${email}.`);
+        const $c = el.querySelector('#sgEmCode'); $c.disabled = false; $c.value = ''; $c.focus();
+      } catch (e) { b.textContent = sentTo ? 'Resend verification code' : 'Send verification code'; say(window.AveragesEmail.say(e), true); }
+      finally { b.disabled = false; }
+    }
+    async function check() {
+      const $c = el.querySelector('#sgEmCode');
       if (!/^\d{6}$/.test($c.value)) { say('Enter all 6 digits.', true); $c.focus(); return; }
       okB.disabled = true; $c.disabled = true;
-      try { await window.AveragesEmail.check(v, $c.value); save(v, true); }
-      catch (e) { say(window.AveragesEmail.say(e), true); $c.disabled = false; $c.select(); }
-      finally { okB.disabled = false; $c.disabled = false; }
-    };
-    function go() {
-      const v = $e.value.trim();
-      if (!v) { if (cur) save('', false); else dlgClose(true); return; }
-      if (sentTo && sentTo === v.toLowerCase()) check(); else send();
+      try { await window.AveragesEmail.check(email, $c.value); save(email, true); }
+      catch (e) { say(window.AveragesEmail.say(e), true); $c.disabled = false; $c.select(); okB.disabled = false; }
     }
-    $e.addEventListener('input', () => { if (sentTo && sentTo !== $e.value.trim().toLowerCase()) { sentTo = ''; el.querySelector('#sgEmCodeW').hidden = true; say("We'll email you a 6-digit code to check it's yours."); } label(); });
-    $c.addEventListener('input', () => { $c.value = $c.value.replace(/\D/g, '').slice(0, 6); if ($c.value.length === 6) check(); });
+    function go() { if (step === 'email') nextFromEmail(); else check(); }
     d.onAct = (k, b) => {
-      if (k === 'resend') { sentTo = ''; send(); }
-      if (k === 'usefix') { $e.value = (b && b.dataset.fix) || window.AveragesEmail.suggestion(); label(); say("We'll email you a 6-digit code to check it's yours."); $e.focus(); }
+      if (k === 'send') send();
+      if (k === 'back') showEmail();
+      if (k === 'usefix') { const $e = el.querySelector('#sgEm'); $e.value = email = (b && b.dataset.fix) || window.AveragesEmail.suggestion(); say("Next, we'll email it a 6-digit code to check it's yours."); $e.focus(); okB.textContent = 'Continue'; }
     };
-    // no email yet: the one on their Averages Plus account, filled in (they can change it, and it's still checked with a code)
-    if (!cur && window.AveragesEmail && window.AveragesEmail.suggested) window.AveragesEmail.suggested().then(v => {
-      if (v && !$e.value.trim() && $e.isConnected) { $e.value = v; say('From your Averages Plus account. Change it if you like.'); label(); }
-    });
-    label();
+    showEmail();
   }
 
   let scanFrame = null, scanReady = null;

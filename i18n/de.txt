@@ -1289,3 +1289,10 @@
 1289|Mitschüler, die Averages nutzen, sehen dein Foto statt deiner Initialen. Schalte es aus, und es verschwindet sofort.
 1290|Mitschüler, die Averages nutzen, sehen jetzt dein Foto.
 1291|Dein Foto ist jetzt für Mitschüler verborgen.
+1292|E-Mail bestätigen
+1293|Bestätigungscode senden
+1294|Bestätigungscode erneut senden
+1295|E-Mail-Bestätigungscode
+1296|Andere E-Mail verwenden
+1297|Wird gesendet…
+1298|Danach schicken wir dir einen 6-stelligen Code, um zu prüfen, dass sie dir gehört.

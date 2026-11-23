@@ -41,6 +41,8 @@
     valid: function (e) { return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(e || '').trim()); },
     // the same address again right after "Did you mean…?": the student meant it, so it goes ahead
     send: function (email) { var force = typo.email === norm(email); return post('/email/code', { email: email, force: force }).then(function (j) { token = j.token || ''; tokenFor = norm(email); }); },
+    /** Checks the address before any code is sent (throwaway, typo, a domain that gets email); nothing is emailed. */
+    precheck: function (email) { var force = typo.email === norm(email); return post('/email/check', { email: email, force: force }); },
     /** The typo fix from the last answer ("sam@gmail.com"), or '' */
     suggestion: function () { return typo.suggest; },
     suggested: function () {

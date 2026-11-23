@@ -3102,6 +3102,7 @@
   .wrap::before, .wrap::after { display: none; }
   /* ===== end Life layer for the course page ===== */
   .si-err { margin: 0 0 10px; font-size: 13px; font-weight: 700; line-height: 1.4; color: #e5484d; }
+  .si-ts:empty { display: none; } .si-ts { margin-top: 10px; }
 </style>
 </head>
 <body>
@@ -3182,6 +3183,7 @@
             </div>
             <p class="si-err" id="siErr" role="alert" hidden></p>
             <button class="pp-btn primary" id="siGo" disabled><svg class="i"><use href="#i-up"/></svg><span>Log in with Schoology</span></button>
+            <div id="siTs" class="si-ts"></div>
             <p class="si-hint" id="siGoHint">Pick your school first.</p>
           </div>
 
@@ -4153,15 +4155,51 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   function busy(btn, label) { btn.disabled = true; btn.innerHTML = `<span class="pp-spin" aria-hidden="true"></span><span>${esc(label)}</span>`; }
   const goLabel = () => `${ico('up')}<span>Log in with Schoology</span>`;
   let sgyOn = null;   // the API says whether Sign in with Schoology is set up
-  fetch(API + '/auth/schoology/status', { credentials: 'omit' }).then(r => (r.ok ? r.json() : null)).then(j => { sgyOn = !!(j && j.on === true); }).catch(() => { sgyOn = false; });
-  $('siGo').addEventListener('click', () => {
+  fetch(API + '/auth/schoology/status', { credentials: 'omit' }).then(r => (r.ok ? r.json() : null)).then(j => { sgyOn = !!(j && j.on === true); if (j && typeof j.turnstile === 'string') tsLoad(j.turnstile); }).catch(() => { sgyOn = false; });
+  // Cloudflare Turnstile, invisible (2026-11-23): almost everyone sees nothing. The check runs when they press Log in
+  // (or Connect), and its one-time token goes to the API with the sign-in. Only when the API gives a site key.
+  // If Cloudflare needs a click from someone, its box shows under the button (.si-ts).
+  const TS = { key: '', id: null, wait: null, loaded: null };
+  function tsLoad(key) {
+    TS.key = key;
+    TS.loaded = new Promise(ok => {
+      window.__avTsReady = () => ok(true);
+      const sc = document.createElement('script');
+      sc.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=__avTsReady'; sc.async = true; sc.defer = true;
+      sc.onerror = () => ok(false); document.head.appendChild(sc);
+      setTimeout(() => ok(false), 10000);
+    }).then(up => {
+      if (!up || !window.turnstile) return false;
+      TS.id = window.turnstile.render('#siTs', { sitekey: key, action: 'signin', execution: 'execute', appearance: 'interaction-only', size: 'flexible',
+        callback: t => { const w = TS.wait; TS.wait = null; if (w) w(t); },
+        'error-callback': () => { const w = TS.wait; TS.wait = null; if (w) w(''); return true; },
+        'expired-callback': () => { try { window.turnstile.reset(TS.id); } catch (e) {} } });
+      return true;
+    });
+  }
+  /** A fresh one-time token ('' when Turnstile is off or couldn't run: the API then says what to do). */
+  async function tsToken(where) {
+    if (!TS.key) return '';
+    const up = await TS.loaded; if (!up || TS.id === null) return '';
+    // its box (only ever shown when Cloudflare needs a click) goes under the button that was pressed
+    const box = $('siTs'); if (where && box && box.previousElementSibling !== where) where.after(box);
+    return new Promise(ok => {
+      TS.wait = ok;
+      try { window.turnstile.reset(TS.id); window.turnstile.execute(TS.id); } catch (e) { TS.wait = null; ok(''); }
+      setTimeout(() => { if (TS.wait === ok) { TS.wait = null; ok(''); } }, 60000);   // long enough for a box they have to click
+    });
+  }
+  $('siGo').addEventListener('click', async () => {
     if (!SI.school) return; const b = $('siGo');
     err('siErr', '');
     if (sgyOn === false) { err('siErr', SAY_SGY.not_configured); return; }
+    // the person check first, while the page still shows (if Cloudflare wants a click, its box is right here)
+    b.disabled = true; const ts = await tsToken(b); b.disabled = false;
     saveAge(); rememberSchool();
     busy(b, `Opening ${SI.school.domain}`);
     if (logo()) logo().show();
     const q = new URLSearchParams({ domain: SI.school.domain, under13: SI.age13 ? '0' : '1' });
+    if (ts) q.set('ts', ts);
     location.href = `${API}/auth/schoology/start?${q}`;
     // the school's page never loaded: let them try again
     setTimeout(() => { if (document.visibilityState === 'visible') unstick(); }, 20000);
@@ -4179,10 +4217,12 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   $('siConnect').addEventListener('click', async () => {
     const b = $('siConnect'), key = $('siKey').value.trim(), secret = $('siSecret').value.trim();
     if (!key || !secret) return;
-    err('siErr2', ''); saveAge(); busy(b, 'Checking your key');
+    err('siErr2', ''); saveAge();
+    b.disabled = true; const turnstile = await tsToken(b);
+    busy(b, 'Checking your key');
     if (logo()) logo().show();
     let res = null, data = {};
-    try { res = await fetch(API + '/auth/session', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key, secret, under13: !SI.age13 }) }); data = await res.json().catch(() => ({})); }
+    try { res = await fetch(API + '/auth/session', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key, secret, under13: !SI.age13, ...(turnstile ? { turnstile } : {}) }) }); data = await res.json().catch(() => ({})); }
     catch (e) { res = null; }
     if (res && res.ok) { freshStart(); setHint(true); location.href = data.demo || !onboarded() ? '/onboard' : startPath(); return; }
     if (logo()) logo().hide();

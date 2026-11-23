@@ -1289,3 +1289,10 @@
 1289|Os colegas que usam o Averages veem sua foto no lugar das suas iniciais. Desative e ela deixa de aparecer na hora.
 1290|Os colegas que usam o Averages já veem sua foto.
 1291|Sua foto agora está escondida dos colegas.
+1292|Verifique seu e-mail
+1293|Enviar código de verificação
+1294|Reenviar código de verificação
+1295|Código de verificação do e-mail
+1296|Usar outro e-mail
+1297|Enviando…
+1298|Depois, vamos enviar um código de 6 dígitos para confirmar que é seu.

@@ -10,6 +10,8 @@ export const ERROR_MESSAGES = {
   schoology_error: "Schoology isn't responding right now. Try again in a moment.",
   server_misconfigured: "The Averages server isn't set up correctly yet. Please let us know.",
   feature_off: "Signing in this way is turned off right now. Try again later.",
+  verify_failed: "We couldn't check that you're a person. Reload the page and try again.",
+  verify_unavailable: "We couldn't finish a quick security check. Try again in a moment.",
 };
 export const SCHOOLOGY_SIGNIN_ERRORS = {
   teacher_account: "Averages.io is for students. You signed in with a teacher or admin Schoology account, so it can't be used here. Sign out of Schoology and log in with a student account.",
@@ -27,4 +29,6 @@ export const SCHOOLOGY_SIGNIN_ERRORS = {
   schoology_bad_answer: "Schoology sent back something unexpected. Try again in a moment.",
   no_user_id: "Schoology didn't say which account you signed in with. Try again.",
   server_misconfigured: "The Averages server isn't set up correctly yet. Please let us know.",
+  verify_failed: "We couldn't check that you're a person. Reload the page and try again.",
+  verify_unavailable: "We couldn't finish a quick security check. Try again in a moment.",
 };
