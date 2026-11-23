@@ -7153,7 +7153,7 @@ window.AveragesHelp = {
         ${shared.length || p.me ? '' : `<p class="mb-empty">${esc(ME.name)} is the only class you have with ${esc(first)}.</p>`}</div>`;
     }
     const talk = true ? '' : `<div class="mb-blk"><h4>${p.me ? 'Your comments' : 'In updates'}</h4>${said.length ? `<div class="mb-feed">${said.map(({ u, c }) => upRow(u, `"${esc(c.t)}"`, `On "${snip(upText(u))}" · ${esc(c.when)}`)).join('')}</div>` : `<p class="mb-empty">${p.me ? "You haven't" : `${esc(first)} hasn't`} commented on any updates yet.</p>`}</div>`;
-    const priv = p.teacher ? '' : `<p class="mb-priv">${ico('eyeoff')}${p.me ? 'Classmates see your name and photo in Schoology. Your grades and work stay private.' : 'Only their name, photo and classes show here, from Schoology. Grades and work stay private.'}</p>`;
+    const priv = p.teacher ? '' : `<p class="mb-priv">${ico('eyeoff')}${p.me ? 'Classmates see your name and photo in Schoology, and here too if you turn on Show my photo to classmates in Settings. Your grades and work stay private.' : 'Only their name, photo and classes show here. Grades and work stay private.'}</p>`;
     $('mbDet').innerHTML = back + hero + `<div class="mb-facts">${facts.join('')}</div>` + blocks + talk + priv;
     $('mbDet').setAttribute('aria-label', p.name);
     const el = $('mbDet'); el.classList.remove('swap'); if (MB.anim && !calm()) { void el.offsetWidth; el.classList.add('swap'); } MB.anim = false;
