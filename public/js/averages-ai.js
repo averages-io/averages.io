@@ -131,7 +131,7 @@
   // keep it across same-site page changes; Chrome does with extendedLifetime (Chrome 148+, ~30 s after the last page
   // goes). A browser without SharedWorker, or without WebGPU inside one, gets a worker of this page's own, as before.
   var NO_SHARED = false;
-  try { NO_SHARED = sessionStorage.getItem('averages_ai_own') === '1'; } catch (e) { /* off */ }
+  try { NO_SHARED = sessionStorage.getItem('averages_ai_own2') === '1'; } catch (e) { /* off */ }
   function worker() {
     if (W) return W;
     var v = (window.AVG_JSV || {})['averages-ai-worker.js'], url = '/js/averages-ai-worker.js' + (v ? '?v=' + v : '');
@@ -163,7 +163,7 @@
     return new Promise(function (yes, no) { var id = ++seq; waits[id] = { yes: yes, no: no, progress: progress }; msg.id = id; worker().post(msg); });
   }
   var lastFail = 0;
-  function load(v, card) {
+  function load(v, card, retry) {
     if (ready && readyV === v) return ready;
     // the other version: a page's own worker starts over; the shared one swaps models itself (other pages use it too)
     if (W && readyV && readyV !== v) { if (W.shared) { ready = null; readyV = ''; } else stop(); }
@@ -181,17 +181,22 @@
       progressed(p.loaded || 0);
     }).then(function (r) {
       if (window.console) console.info('[ai] ready in ' + (Date.now() - t0) + ' ms' + (r && r.fresh === false ? ' (it was already running)' : ''));
+      // only now is it known that sharing was the problem: the rest of this tab uses a worker of its own
+      if (retry) try { sessionStorage.setItem('averages_ai_own2', '1'); } catch (x) { /* off */ }
       if (shown) initDone(shown, true, r && r.fresh); starting(false); return r;
     }, function (e) {
         ready = null; readyV = '';
         if (window.console) console.warn('[ai] start failed: ' + (e && e.message) + (W && W.shared ? ' (shared worker: trying a worker of its own)' : ''));
-        // the shared worker couldn't start it here (no WebGPU in one, or anything else): this page, and this tab from
-        // now on, uses a worker of its own, as before, so it's never worse than that (other tabs keep theirs)
+        // the shared worker couldn't start it here (no WebGPU in one, or anything else): this page tries a worker of
+        // its own. If that works, the rest of this tab uses its own (above). If it fails too, sharing wasn't the
+        // problem (Mac Firefox's shader error failed both, and then every page in the tab started over, Martin
+        // 2026-11-23): the next start shares again.
         if (e && e.message !== 'stopped' && W && W.shared) {
-          NO_SHARED = true; try { sessionStorage.setItem('averages_ai_own', '1'); } catch (x) { /* off */ }
+          NO_SHARED = true;
           try { W.close(); } catch (x) { /* gone */ } W = null;
-          return load(v, shown);
+          return load(v, shown, true);
         }
+        if (retry) { NO_SHARED = false; try { if (W) W.close(); } catch (x) { /* gone */ } W = null; }
         if (shown) initDone(shown, false); starting(false); lastFail = Date.now();
         throw e;
       });
