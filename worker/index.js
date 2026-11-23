@@ -77,6 +77,35 @@ export function schoologyLaunch(body) {
 }
 
 /**
+ * Who Schoology says opened the app is only believed when Schoology sent them (2026-11-23 security sweep). Any site
+ * could post a made-up packet here, or link to "/?launch=…&as=…", and the sign-in page signs out whoever is signed in
+ * when that uid isn't theirs: a way to sign anyone out from another site. So the uid now rides in a short cookie, set
+ * only when the request came from a Schoology page (Origin, or Referer when there's no Origin), and the address
+ * carries just the school (picking it is harmless). Answers the redirect.
+ * @param {Request} request @param {string | null} go schoologyLaunch's answer
+ */
+export function launchRedirect(request, go) {
+  const headers = { Location: "/", "Cache-Control": "no-store" };
+  if (!go) return new Response(null, { status: 303, headers });
+  const to = new URL(go, "https://app.averages.io");
+  const as = to.searchParams.get("as") || "", domain = to.searchParams.get("launch") || "";
+  to.searchParams.delete("as");
+  headers.Location = to.pathname + to.search;
+  const res = new Response(null, { status: 303, headers });
+  if (as && launchFromSchoology(request, domain)) res.headers.append("Set-Cookie", `${LAUNCH_AS}=${as}; Path=/; Max-Age=120; Secure; SameSite=Lax`);
+  return res;
+}
+const LAUNCH_AS = "averages_launch_as";
+/** @param {Request} request @param {string} domain */
+function launchFromSchoology(request, domain) {
+  const origin = request.headers.get("Origin"), referer = request.headers.get("Referer");
+  let host = "";
+  try { host = origin && origin !== "null" ? new URL(origin).hostname : referer ? new URL(referer).hostname : ""; } catch { host = ""; }
+  host = host.toLowerCase();
+  return !!host && (host === domain || host === "schoology.com" || host.endsWith(".schoology.com"));
+}
+
+/**
  * The sign-in page, shown at "/" (fs-src/signin.html, built to /IS/signin). The address stays "/", so nothing
  * flashes and links to "/" keep working.
  * @param {Request} request @param {{ ASSETS: { fetch: (r: Request) => Promise<Response> } }} env
@@ -139,13 +168,13 @@ export default {
     if (request.method === "GET" && url.pathname === "/" && url.searchParams.has("SAMLResponse")) {
       // the same packet in the address (the docs don't say how it comes, so both are taken)
       const go = schoologyLaunch(new URLSearchParams({ SAMLResponse: url.searchParams.get("SAMLResponse") || "" }).toString());
-      return new Response(null, { status: 303, headers: { Location: go || "/", "Cache-Control": "no-store" } });
+      return launchRedirect(request, go);
     }
     if (request.method === "POST" && url.pathname === "/") {
       let body = "";
       try { body = (request.headers.get("Content-Type") || "").includes("form") ? await request.text() : ""; } catch { body = ""; }
       const go = schoologyLaunch(body);
-      return new Response(null, { status: 303, headers: { Location: go || "/", "Cache-Control": "no-store" } });
+      return launchRedirect(request, go);
     }
     const to = frontDoor(request);
     if (to) {

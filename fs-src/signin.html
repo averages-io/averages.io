@@ -4248,7 +4248,12 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     const params = new URLSearchParams(location.search);
     const back = params.get('signin') === 'schoology', code = params.get('signin_error');
     // opened from inside Schoology (worker/index.js schoologyLaunch): their school, and who Schoology says they are
-    const launch = (params.get('launch') || '').toLowerCase(), launchAs = params.get('as') || '';
+    // (who: from the short cookie worker/index.js launchRedirect sets only for a launch Schoology sent; never the address)
+    const launch = (params.get('launch') || '').toLowerCase(), launchAs = (() => {
+      const m = /(?:^|;\s*)averages_launch_as=([0-9]{1,20})(?:;|$)/.exec(document.cookie);
+      document.cookie = 'averages_launch_as=; Path=/; Max-Age=0; Secure; SameSite=Lax';
+      return m && launch ? m[1] : '';
+    })();
     const clean = () => { ['signin', 'signin_error', 'signedout', 'launch', 'as'].forEach(k => params.delete(k)); const rest = params.toString(); try { history.replaceState(history.state, '', location.pathname + (rest ? '?' + rest : '') + location.hash); } catch (e) {} };
     if (params.has('signedout') || code || back || launch) clean();
     // the school picked for them: a Schoology address, or a school's own address we know (the API checks again)

@@ -6,7 +6,7 @@
   "license": "GPL-3.0-only",
   "scripts": {
     "port": "node scripts/port-pages.mjs && node scripts/build-fs.mjs",
-    "verify": "node scripts/verify-pages.mjs && node scripts/verify-model.mjs",
+    "verify": "node scripts/verify-pages.mjs && node scripts/verify-model.mjs && node scripts/verify-launch.mjs",
     "prebuild": "npm run port && npm run verify",
     "build": "next build",
     "dev": "npm run port && next dev",
