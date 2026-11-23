@@ -5,6 +5,8 @@
 #   HSTS               browsers only ever use https for app.averages.io (one year)
 #   Permissions-Policy camera, microphone, location, payments and devices are off: the app uses none of them
 #   CSP                no <base> tag tricks, no plugins, forms only post to the app, every request upgraded to https
+#   Link preconnect  opens the connection to the API early; Cloudflare's Early Hints (2026-11-23) sends it
+#                    as a 103 before the page itself, so the first /data request skips the handshake.
 # The CSP leaves scripts and styles alone on purpose: the pages run their own inline code
 # (see LegacyPage), and Google/Microsoft sign-in, Typekit and the API all need to keep working.
 /*
@@ -14,6 +16,7 @@
   Strict-Transport-Security: max-age=31536000; includeSubDomains
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), serial=(), hid=(), bluetooth=(), midi=(), browsing-topics=()
   Content-Security-Policy: base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests
+  Link: <https://api.averages.io>; rel=preconnect
 
 # Let browsers keep the app's own built files (2026-10-14).
 # Everything under /_next/static/ has a hash of its content in its file name,

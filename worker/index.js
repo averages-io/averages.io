@@ -114,6 +114,12 @@ export async function aiFile(request, env) {
   return new Response(request.method === "HEAD" ? null : obj.body, { status: 200, headers });
 }
 
+/** Expire Cloudflare's bot-check cookie on sign-out (see the /?signedout page). */
+const CF_CLEARANCE_GONE = [
+  "cf_clearance=; Domain=averages.io; Path=/; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Secure; HttpOnly; SameSite=None; Partitioned",
+  "cf_clearance=; Domain=averages.io; Path=/; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Secure; HttpOnly; SameSite=None",
+];
+
 export default {
   /** @param {Request} request @param {{ ASSETS: { fetch: (r: Request) => Promise<Response> }, AI_FILES?: any }} env */
   async fetch(request, env) {
@@ -123,6 +129,9 @@ export default {
       const page = await signinPage(new Request(new URL("/", url).toString(), { headers: request.headers }), env);
       const res = new Response(page.body, page);
       res.headers.set("Clear-Site-Data", '"cookies", "storage"');
+      // Firefox leaves partitioned cookies behind on Clear-Site-Data, and Cloudflare's bot check
+      // (cf_clearance, Domain=averages.io; Partitioned) is one: expire it by name too, both ways.
+      for (const c of CF_CLEARANCE_GONE) res.headers.append("Set-Cookie", c);
       res.headers.set("Cache-Control", "no-store");
       return res;
     }
