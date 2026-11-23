@@ -270,6 +270,16 @@ function clearAppCookies(): void {
 
 export async function signOut(): Promise<void> {
   const forgetOnServer = true;
+  // A Classic setup this browser never saved to the account (onboarding's save was cut off, or this device never got
+  // to it): saved now, before this browser forgets it, so signing back in doesn't mean onboarding again (2026-11-23).
+  // Never over a copy the account already has; 4 s at most.
+  try {
+    if (!window.localStorage.getItem("averages_sync_meta")) {
+      await Promise.race([seedSyncedRecord(), new Promise((resolve) => setTimeout(resolve, 4000))]);
+    }
+  } catch {
+    /* signing out goes on */
+  }
   setSignedInHint(false);
   cacheClear(SESSION_CACHE);
   cacheClear(BUNDLE_CACHE);
@@ -611,17 +621,97 @@ export async function restoreSyncedSetup(): Promise<boolean> {
   }
 }
 
+/* ── Pictures for the account's copy (the same R2 storage Settings uses: pages-src/settings.html mediaRefFor) ── */
+const PHOTO_SIDE = 256;
+function dataUrlBlob(url: string): Blob {
+  const comma = url.indexOf(",");
+  const type = (/^data:([^;,]+)/.exec(url) || [])[1] || "application/octet-stream";
+  const bin = atob(url.slice(comma + 1));
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new Blob([bytes], { type });
+}
+/** A profile photo the way Settings sends it: 256 px square, WebP (or a JPEG on white where WebP can't be made). */
+function photoUploadBlob(url: string): Promise<Blob> {
+  if (/^data:image\/gif/.test(url)) return Promise.resolve(dataUrlBlob(url));
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement("canvas");
+      c.width = c.height = PHOTO_SIDE;
+      const side = Math.min(img.naturalWidth, img.naturalHeight) || PHOTO_SIDE;
+      const sx = (img.naturalWidth - side) / 2, sy = (img.naturalHeight - side) / 2;
+      c.getContext("2d")!.drawImage(img, sx, sy, side, side, 0, 0, PHOTO_SIDE, PHOTO_SIDE);
+      c.toBlob((b) => {
+        if (b && b.type === "image/webp") return resolve(b);
+        const j = document.createElement("canvas");
+        j.width = j.height = PHOTO_SIDE;
+        const x = j.getContext("2d")!;
+        x.fillStyle = "#fff";
+        x.fillRect(0, 0, PHOTO_SIDE, PHOTO_SIDE);
+        x.drawImage(c, 0, 0);
+        j.toBlob((p) => resolve(p || dataUrlBlob(url)), "image/jpeg", 0.86);
+      }, "image/webp", 0.86);
+    };
+    img.onerror = () => resolve(dataUrlBlob(url));
+    img.src = url;
+  });
+}
+async function pictureHash(text: string): Promise<string> {
+  const d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(d).slice(0, 12), (b) => b.toString(16).padStart(2, "0")).join("");
+}
+/**
+ * One picture for the account's copy: a picture picked on this device goes to the account's picture storage and the
+ * copy holds its reference ("r2:photo:<v>"), the way Settings saves it. That's also the photo classmates see, so a new
+ * one replaces the old for them at once. No photo: the stored one goes too (its classmates' markers with it), so an
+ * old photo can't stay behind. If storage can't be reached, the picture goes as it is (Settings moves it later).
+ */
+async function seedPicture(kind: "photo" | "background", value: unknown, media: Record<string, unknown>): Promise<unknown> {
+  const isImage = typeof value === "string" && /^data:image\//.test(value);
+  try {
+    if (!isImage) {
+      if (kind === "photo" && !value) {
+        await fetch(`${API_BASE}/media/photo`, { method: "DELETE", credentials: "include" });
+        delete media.photo;
+      }
+      return value;
+    }
+    const body = kind === "photo" ? await photoUploadBlob(value as string) : dataUrlBlob(value as string);
+    const res = await fetch(`${API_BASE}/media/${kind}`, { method: "PUT", credentials: "include", headers: { "Content-Type": body.type || "application/octet-stream" }, body });
+    if (!res.ok) return value;
+    const data = await res.json().catch(() => null);
+    const v = data && typeof data.v === "string" ? data.v.replace(/"/g, "") : "";
+    if (!/^[A-Za-z0-9._-]{1,128}$/.test(v)) return value;
+    media[kind] = { v, h: await pictureHash(value as string) };
+    return `r2:${kind}:${v}`;
+  } catch {
+    return value;
+  }
+}
+
 /**
  * The account's synced copy, made from this device when the account has none yet (2026-11-23, Martin: signing out
  * and back in "I had to go thru onboarding again"). Onboarding only saved to this browser, and the account's copy
  * was first written by a later change in Settings; sign-out clears the browser, so an account that never changed a
- * setting came back as new. Classic only; never over a copy the account already has. Pictures go as they are
- * (Settings moves them to the account's picture storage the next time it opens). Never throws.
+ * setting came back as new. Classic only. Never throws.
+ *
+ * `replace` (onboarding's last step): this setup becomes the account's copy even if it has one, since onboarding
+ * only shows when that copy couldn't be read. Otherwise never over a copy the account already has.
+ * Pictures go to the account's picture storage (seedPicture, 2026-11-23, Martin: a new account's photo from
+ * onboarding never reached classmates, and after onboarding again with no photo "it is the old pic").
  */
-export async function seedSyncedRecord(): Promise<void> {
+export async function seedSyncedRecord(opts: { replace?: boolean } = {}): Promise<void> {
   try {
     const ls = window.localStorage;
-    if (ls.getItem("averages_onboarded") !== "1" || ls.getItem("averages_account_mode") === "incognito") return;
+    if (ls.getItem("averages_onboarded") !== "1") return;
+    // Onboarding again and picking Incognito: whatever the account still had stored (a photo classmates could see,
+    // say) goes, as switching to Incognito in Settings does.
+    const incognito = ls.getItem("averages_account_mode") === "incognito";
+    if (incognito) {
+      if (opts.replace) await fetch(`${API_BASE}/sync/settings`, { method: "DELETE", credentials: "include" }).catch(() => {});
+      return;
+    }
     const read = (k: string) => {
       try {
         return JSON.parse(ls.getItem(k) || "null");
@@ -634,12 +724,19 @@ export async function seedSyncedRecord(): Promise<void> {
       if (options.syncAcrossDevices === false) return;
       delete options.browserNotifications;   // per browser, never synced
     }
-    const ask = apiAsk(6000);
-    const res = await ask("/sync/settings");
-    if (!res.ok) return;
-    const record = await res.json().catch(() => null);
-    if (!record || record.settings) return;   // the account has its copy (or the answer is unclear): leave it
-    const settings = { settingsOptions: options, appearance: read("averages_appearance"), darkMode: ls.getItem("averages_dark_mode") || "auto", profile: read("averages_profile") };
+    if (!opts.replace) {
+      const res = await apiAsk(6000)("/sync/settings");
+      if (!res.ok) return;
+      const record = await res.json().catch(() => null);
+      if (!record || record.settings) return;   // the account has its copy (or the answer is unclear): leave it
+    }
+    const media: Record<string, unknown> = read("averages_sync_media") || {};
+    const profile = read("averages_profile");
+    const appearance = read("averages_appearance");
+    if (profile && typeof profile === "object") profile.photo = await seedPicture("photo", profile.photo, media);
+    if (appearance && typeof appearance === "object" && appearance.background) appearance.background = await seedPicture("background", appearance.background, media);
+    ls.setItem("averages_sync_media", JSON.stringify(media));
+    const settings = { settingsOptions: options, appearance, darkMode: ls.getItem("averages_dark_mode") || "auto", profile };
     const put = await fetch(`${API_BASE}/sync/settings`, { method: "PUT", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ settings }) });
     if (!put.ok) return;
     const saved = await put.json().catch(() => null);

@@ -260,8 +260,9 @@ export default function LegacyPage({
       installNsfwGlobal();
       // onboarding's last step saves the setup to the account (see seedSyncedRecord); other pages make sure once a tab
       // that an account set up before that has its copy too
+      // (an under-13 sign-in too: onboarding as Incognito clears what the account may still have stored)
+      if (session.mode === "live") (window as any).__averagesSeedSync = seedSyncedRecord;
       if (session.mode === "live" && !session.incognito) {
-        (window as any).__averagesSeedSync = seedSyncedRecord;
         try {
           if (pageId !== "onboarding" && window.sessionStorage.getItem("averages_sync_seeded") !== "1") {
             window.sessionStorage.setItem("averages_sync_seeded", "1");
