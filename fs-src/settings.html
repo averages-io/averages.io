@@ -4438,11 +4438,11 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       const trShown = SGV.trDevice === true || !!LIVE.serverTr;
       if (!trShown && SGV.trDevice === false && on) L.setItems(false).then(() => { L.forget(); if (SG.sec === 'language') sgPane(); });
       const opts = [['auto', 'Same as this device']].concat(Object.entries(L.LANGS));
-      return `
-      ${sec('Language', `<div class="sg-opts sg-langs" role="group" aria-label="Language" data-set="lang">${opts.map(([v, t]) => `<button class="sg-opt" data-seg="lang" data-v="${v}" aria-pressed="${L.choice === v}">${v === 'auto' ? `<b>${t}</b><small data-no-t>${esc(L.LANGS[L.deviceLang])}</small>` : `<b data-no-t>${t}</b>`}</button>`).join('')}</div>`)}
-      // One switch (Martin 2026-11-18: "it won't let you turn it on"): where this browser can't translate on its own
+      // Advanced translation is one switch (Martin 2026-11-18: "it won't let you turn it on"): where this browser can't translate on its own
       // but our server can, the switch says so and turning it on uses the server (it used to need a second switch that
       // only showed up after the first). Locked without Plus: it says why, right on the row.
+      return `
+      ${sec('Language', `<div class="sg-opts sg-langs" role="group" aria-label="Language" data-set="lang">${opts.map(([v, t]) => `<button class="sg-opt" data-seg="lang" data-v="${v}" aria-pressed="${L.choice === v}">${v === 'auto' ? `<b>${t}</b><small data-no-t>${esc(L.LANGS[L.deviceLang])}</small>` : `<b data-no-t>${t}</b>`}</button>`).join('')}</div>`)}
       ${!trShown ? '' : (() => { const viaServer = SGV.trDevice === false && !!LIVE.serverTr, locked = !plusOk();
         const desc = locked ? 'Comes with Averages Plus. Class names, assignment and test titles, teacher posts and messages, in your language.'
           : viaServer ? 'Class names, assignment and test titles, teacher posts and messages, in your language. This browser can\'t translate on its own, so they\'re sent to our server to translate. We don\'t keep them.'
@@ -4733,7 +4733,8 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   // The account's copy of the photo (Windowed's mediaRefFor): a 256px WebP (PNG where WebP can't be made) to PUT
   // /media/photo; its version is remembered so the synced profile can point at it instead of carrying the picture.
   async function photoUpload(url) {
-    const blob = await new Promise(ok => { const im = new Image(); im.onload = () => { const c = document.createElement('canvas'); c.width = c.height = 256; c.getContext('2d').drawImage(im, 0, 0, 256, 256); c.toBlob(b => b && b.type === 'image/webp' ? ok(b) : c.toBlob(ok, 'image/png'), 'image/webp', .86); }; im.onerror = () => ok(null); im.src = url; });
+    const blob = await new Promise(ok => { const im = new Image(); im.onload = () => { const c = document.createElement('canvas'); c.width = c.height = 256; c.getContext('2d').drawImage(im, 0, 0, 256, 256); c.toBlob(b => { if (b && b.type === 'image/webp') return ok(b); const j = document.createElement('canvas'); j.width = j.height = 256; const x = j.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, 256, 256); x.drawImage(c, 0, 0); j.toBlob(ok, 'image/jpeg', .86); }, 'image/webp', .86); }; im.onerror = () => ok(null); im.src = url; });
+    // (Safari can't make WebP: a JPEG on white, ~20 KB, not a PNG several times that; 2026-11-23)
     if (!blob) return;
     const res = await fetch(FSX.API + '/media/photo', { method: 'PUT', credentials: 'include', headers: { 'Content-Type': blob.type }, body: blob });
     if (!res.ok) return;

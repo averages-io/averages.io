@@ -4439,10 +4439,15 @@
           const side = Math.min(img.naturalWidth, img.naturalHeight) || PHOTO_SIDE;
           const sx = (img.naturalWidth - side) / 2, sy = (img.naturalHeight - side) / 2;
           c.getContext('2d').drawImage(img, sx, sy, side, side, 0, 0, PHOTO_SIDE, PHOTO_SIDE);
-          // WebP where the browser can make it (keeps transparency), PNG where it can't.
+          // WebP where the browser can make it (keeps transparency); where it can't (Safari), a JPEG on white,
+          // about 20 KB, not a PNG several times that (2026-11-23: the API now turns away big photos).
           c.toBlob((b) => {
             if (b && b.type === 'image/webp') return resolve(b);
-            c.toBlob((p) => resolve(p || dataUrlToBlob(url)), 'image/png');
+            const j = document.createElement('canvas');
+            j.width = j.height = PHOTO_SIDE;
+            const x = j.getContext('2d');
+            x.fillStyle = '#fff'; x.fillRect(0, 0, PHOTO_SIDE, PHOTO_SIDE); x.drawImage(c, 0, 0);
+            j.toBlob((p) => resolve(p || dataUrlToBlob(url)), 'image/jpeg', 0.86);
           }, 'image/webp', 0.86);
         };
         img.onerror = () => resolve(dataUrlToBlob(url));
