@@ -1283,3 +1283,9 @@
 1283|# notas
 1284|Después de {x}
 1285|Enviado a {x}.
+1286|Mostrar mi foto a mis compañeros
+1287|Por ahora, solo para clases de Schoology.
+1288|Primero añade una foto en Cuenta. Tus compañeros que usan Averages la verán en lugar de tus iniciales.
+1289|Tus compañeros que usan Averages ven tu foto en lugar de tus iniciales. Si lo desactivas, deja de mostrarse al instante.
+1290|Tus compañeros que usan Averages ya ven tu foto.
+1291|Tu foto ya no se muestra a tus compañeros.

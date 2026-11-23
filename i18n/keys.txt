@@ -1283,3 +1283,9 @@
 1283|# grades
 1284|After {x}
 1285|Sent to {x}.
+1286|Show my photo to classmates
+1287|Only for Schoology classes for now.
+1288|Add a photo in Account first. Classmates who use Averages will see it in place of your initials.
+1289|Classmates who use Averages see your photo in place of your initials. Turn this off and it stops showing right away.
+1290|Classmates who use Averages see your photo now.
+1291|Your photo is hidden from classmates now.

@@ -4187,7 +4187,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     drive: false, canva: false, onedrive: false, openIn: (() => { try { const v = localStorage.getItem('averages_default_editor'); return v === 'onedrive' ? 'onedrive' : v === 'gdrive' ? 'drive' : 'canva'; } catch (_) { return 'canva'; } })(), cal: false };
   { const q = FSX.q.get('section'); if (q && ['account', 'plan', 'appearance', 'language', 'ai', 'personal', 'notifications', 'apps', 'privacy', 'about'].includes(q)) SG.sec = q; }
   // what the API says (filled in as each answer comes back): Plus, the calendar link, Canva, notifications, early features
-  const LIVE = { billing: null, cal: null, canva: null, push: null, pushCfg: null, early: [], busy: '' };
+  const LIVE = { billing: null, cal: null, canva: null, push: null, pushCfg: null, early: [], busy: '', share: null };
   const SGV = { q: '', open: innerWidth > 860 };
   const sgSave = () => store.set('fsset', Object.assign(store.get('fsset') || {}, { theme: SG.theme, accent: SG.accent, sec: SG.sec }));
   // another device changed the theme or accent (FSX.syncPull): show it here, so the next save doesn't put the old one back
@@ -4264,7 +4264,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     ['appearance', 'layout', 'Window', 'layout fullscreen windowed full screen background'], ['appearance', 'fstheme', 'Theme', 'is industry standard look style fullscreen theme'], ['appearance', 'theme', 'Mode', 'dark mode light system auto colors night'], ['appearance', 'accent', 'Accent color', 'color highlight buttons'],
     ['ai', 'aiOn', 'A.I. search', 'ai artificial intelligence ask question model download device search smart'], ['ai', 'aiQ', 'A.I. quality', 'ai standard higher quality model size download'], ['appearance', 'aitools', 'A.I. tools', 'ai model saved device storage delete space download'],
     ['language', 'lang', 'Language', 'language english spanish espanol french francais portuguese german deutsch chinese translate'], ['language', 'trItems', 'Advanced translation', 'translate names titles posts messages plus auto translate'],
-    ['personal', 'corder', 'Course order', 'courses order move up down reorder sort classes'], ['personal', 'shortcuts', 'Home shortcuts', 'shortcuts home buttons chips quick actions customize add remove'], ['privacy', 'ctSchool', 'Only search my school', 'add contacts people search school everyone schoology find'], ['appearance', 'potato', 'Potato mode', 'performance animations chromebook slow fast font'], ['appearance', 'motion', 'Reduce motion', 'animation accessibility'], ['appearance', 'previews', 'File previews', 'thumbnails images pdf'], ['appearance', 'officePdf', 'Office files as PDFs', 'word powerpoint excel docx pptx xlsx convert pdf previews original'], ['appearance', 'cache', 'Saved on this device', 'cache storage clear space'],
+    ['personal', 'corder', 'Course order', 'courses order move up down reorder sort classes'], ['personal', 'shortcuts', 'Home shortcuts', 'shortcuts home buttons chips quick actions customize add remove'], ['privacy', 'ctSchool', 'Only search my school', 'add contacts people search school everyone schoology find'], ['privacy', 'mateShare', 'Show my photo to classmates', 'profile picture photo avatar classmates share see'], ['appearance', 'potato', 'Potato mode', 'performance animations chromebook slow fast font'], ['appearance', 'motion', 'Reduce motion', 'animation accessibility'], ['appearance', 'previews', 'File previews', 'thumbnails images pdf'], ['appearance', 'officePdf', 'Office files as PDFs', 'word powerpoint excel docx pptx xlsx convert pdf previews original'], ['appearance', 'cache', 'Saved on this device', 'cache storage clear space'],
     ['notifications', 'notif', 'Browser notifications', 'alerts push notices'], ['notifications', 'nGrades', 'Grade updates', 'scores new grade'], ['notifications', 'nAssign', 'New assignments', 'work posted homework'],
     ['notifications', 'nDue', 'Due date reminders', 'due soon remind tomorrow'], ['notifications', 'nMsgs', 'Messages', 'inbox chat'], ['notifications', 'nAnn', 'Announcements', 'updates posts course'], ['notifications', 'quiet', 'Quiet during class', 'school hours do not disturb silence'], ['notifications', 'test', 'Send a test notification', 'try check'],
     ['apps', 'schoology', 'Schoology', 'classes grades connected'], ['apps', 'drive', 'Google Drive', 'docs files connect disconnect'], ['apps', 'canva', 'Canva', 'designs connect disconnect'], ['apps', 'onedrive', 'OneDrive', 'microsoft files connect'],
@@ -4499,7 +4499,9 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
         `<button class="sg-row" role="radio" aria-checked="${!incog()}" data-mode="classic" data-set="mode"${FSD.me.incognito ? ' aria-disabled="true"' : ''}><span class="sg-rd" aria-hidden="true"></span>${tx('Classic', FSD.me.incognito ? 'Not for accounts under 13. Incognito keeps everything on this device.' : SG.plan !== 'free' ? 'Subscribed to Plus' : 'Your settings, starred things and drafts are saved, so they follow you to every device.')}</button>` +
         `<button class="sg-row" role="radio" aria-checked="${incog()}" data-mode="incognito"${SG.plan !== 'free' || FSD.me.incognito ? ' aria-disabled="true"' : ''}><span class="sg-rd" aria-hidden="true"></span>${tx('Incognito', SG.plan !== 'free' ? 'Unavailable in Plus' : 'Nothing about you is stored on our servers. Everything stays in this browser.')}</button>`)}
       ${grp('', row('sync', 'Sync across devices', incog() ? 'Off in Incognito. Settings stay in this browser.' : 'Always on in Classic.', chip(incog() ? 'Off' : ico('ok') + 'On', incog() ? '' : ' on')))}
-      ${grp('Contacts', tog('ctSchool', 'Only search my school', 'Add contacts finds people at your school. Turn this off to find anyone on Schoology, at any school or district.', SG.ctSchool))}
+      ${grp('Contacts', tog('ctSchool', 'Only search my school', 'Add contacts finds people at your school. Turn this off to find anyone on Schoology, at any school or district.', SG.ctSchool) +
+        // your photo for classmates who use Averages too (2026-11-23); theirs show for you the same way. Off to start.
+        tog('mateShare', 'Show my photo to classmates', incog() ? 'Off in Incognito mode.' : !LIVE.share ? 'Checking…' : LIVE.share.available === false ? 'Only for Schoology classes for now.' : !PROFILE.photo ? 'Add a photo in Account first. Classmates who use Averages will see it in place of your initials.' : 'Classmates who use Averages see your photo in place of your initials. Turn this off and it stops showing right away.', !!(LIVE.share && LIVE.share.on), incog() || !LIVE.share || LIVE.share.available === false))}
       ${grp('Your data',
         row('data', 'Download your data', 'A copy of everything Averages stored about you. Your grades and files stay in Schoology.', btn('download', 'Download')) +
         row('delete', 'Delete your account', 'Deletes everything Averages stored about you. Schoology isn\'t changed.', btn('delete', 'Delete', '', ' sg-del')))}`,
@@ -5067,6 +5069,19 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       if (k === 'notif' && !SG.notif) { notifConsent(); return; }
       if (k === 'notif') { window.AveragesPush.disable().then(() => { SG.notif = false; SGV.flip = 'notif'; redraw(); toast('Browser notifications are off. We deleted your saved sign-in.'); }); return; }
       if (k === 'cal') { calSet(!(LIVE.cal && LIVE.cal.on)); return; }
+      if (k === 'mateShare') {
+        if (!LIVE.share || LIVE.share.available === false || incog() || LIVE.busy) return;
+        const on = !LIVE.share.on; LIVE.busy = 'share';
+        t.setAttribute('aria-checked', on); t.querySelector('.sw').classList.toggle('on', on); t.setAttribute('aria-busy', 'true');
+        FSX.api('/media/photo/share', { method: 'POST', json: { on } }).then(() => {
+          LIVE.share = Object.assign({}, LIVE.share, { on }); LIVE.busy = ''; SGV.flip = 'mateShare'; redraw();
+          toast(on ? 'Classmates who use Averages see your photo now.' : 'Your photo is hidden from classmates now.');
+        }, e => {
+          LIVE.busy = ''; redraw();
+          toast(e && e.message === 'not_supported' ? 'Only for Schoology classes for now.' : 'Couldn\'t save that. Try again in a moment.');
+        });
+        return;
+      }
       if (k === 'ctSchool') { SG.ctSchool = !SG.ctSchool; saveOpt('contactsSearch', SG.ctSchool ? 'school' : 'everyone'); t.setAttribute('aria-checked', SG.ctSchool); t.querySelector('.sw').classList.toggle('on', SG.ctSchool); sgNav(); toast(SG.ctSchool ? 'Add contacts searches just your school now.' : 'Add contacts searches all of Schoology now.'); return; }
       if (k === 'officePdf') { SG.officePdf = !SG.officePdf; saveOpt('officePdfPreviews', SG.officePdf); t.setAttribute('aria-checked', SG.officePdf); t.querySelector('.sw').classList.toggle('on', SG.officePdf); toast(SG.officePdf ? 'Office files preview as PDFs.' : 'Office files open as the original.'); return; }
       if (k === 'previews') { SG.previews = !SG.previews; saveOpt('filePreviews', SG.previews); if (!SG.previews) { try { sessionStorage.removeItem('averages_previews'); } catch (_) {} } t.setAttribute('aria-checked', SG.previews); t.querySelector('.sw').classList.toggle('on', SG.previews); toast(SG.previews ? 'File previews on.' : 'File previews off.'); return; }
@@ -5264,6 +5279,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   FSX.api('/billing/status').then(b => { LIVE.billing = b; SG.plan = b && b.plus ? 'plus' : 'free'; redraw(); }).catch(() => { LIVE.billing = { enabled: false }; redraw(); });
   FSX.api('/calendar/status').then(c => { LIVE.cal = c; SG.cal = !!(c && c.on); redraw(); }).catch(() => { LIVE.cal = { enabled: false }; redraw(); });
   FSX.api('/canva/status').then(c => { LIVE.canva = c; SG.canva = !!(c && c.connected); redraw(); }).catch(() => {});
+  FSX.api('/media/photo/share').then(r => { LIVE.share = r || { available: false }; redraw(); }).catch(() => { LIVE.share = { available: false }; redraw(); });
   FSX.api('/config/features').then(f => { LIVE.early = Array.isArray(f && f.early) ? f.early : []; LIVE.serverTr = !!(f && f.features && f.features['server-translate']); redraw(); }).catch(() => {});
   FST.ready().then(() => { SG.drive = FST.connected('drive'); SG.onedrive = FST.connected('onedrive'); redraw(); }).catch(() => {});
   (function pushReady() {

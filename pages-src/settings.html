@@ -1642,6 +1642,16 @@
                   <span class="track"><span class="thumb"></span></span>
                 </label>
               </div>
+              <div class="settings-row is-disabled" id="classmatePhotoRow">
+                <div class="settings-row-text">
+                  <p class="settings-row-label">Show My Photo to Classmates</p>
+                  <p class="settings-row-desc" id="classmatePhotoDesc">Checking…</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="classmatePhotoToggle" aria-label="Show my photo to classmates" disabled>
+                  <span class="track"><span class="thumb"></span></span>
+                </label>
+              </div>
             </div>
             <p class="settings-subhead">Your data</p>
             <div class="settings-group">
@@ -2867,6 +2877,30 @@
     contactsSchoolToggle.addEventListener('change', () => {
       saveSettingsOption('contactsSearch', contactsSchoolToggle.checked ? 'school' : 'everyone');
     });
+    // Your photo for classmates who use Averages too, and theirs for you (2026-11-23; same switch as Fullscreen's,
+    // kept by the API). Off to start. Never in Incognito.
+    (function classmatePhoto() {
+      const row = document.getElementById('classmatePhotoRow'), box = document.getElementById('classmatePhotoToggle'), desc = document.getElementById('classmatePhotoDesc');
+      const ON_TEXT = 'Classmates who use Averages see your photo in place of your initials. Turn this off and it stops showing right away.';
+      const set = (text, usable) => { desc.textContent = text; box.disabled = !usable; row.classList.toggle('is-disabled', !usable); };
+      if (window.__AVERAGES_MODE__ !== 'live' || AVERAGES_INCOGNITO) { set(AVERAGES_INCOGNITO ? 'Off in Incognito mode.' : 'Only when you\'re signed in.', false); return; }
+      fetch(averagesApiBase() + '/media/photo/share', { credentials: 'include', cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(j => {
+        if (!j || j.available === false) { set('Only for Schoology classes for now.', false); return; }
+        box.checked = !!j.on; set(ON_TEXT, true);
+      }).catch(() => set('Not available right now.', false));
+      box.addEventListener('change', async () => {
+        const on = box.checked; box.disabled = true;
+        try {
+          const r = await fetch(averagesApiBase() + '/media/photo/share', { method: 'POST', credentials: 'include', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ on }) });
+          const j = await r.json().catch(() => ({}));
+          if (!r.ok) throw new Error(j && j.error || 'failed');
+          set(ON_TEXT, true);
+        } catch (e) {
+          box.checked = !on;
+          set(e && e.message === 'not_supported' ? 'Only for Schoology classes for now.' : 'Couldn\'t save that. Try again in a moment.', !(e && e.message === 'not_supported'));
+        }
+      });
+    })();
     filePreviewsToggle.addEventListener('change', () => {
       saveSettingsOption('filePreviews', filePreviewsToggle.checked);
       // Off: forget the pictures already made in this tab.

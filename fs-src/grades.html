@@ -3788,7 +3788,7 @@
       const at = e.x.at || 0, key = at ? new Date(at).toDateString() : (out.length ? out[out.length - 1].key : 'x');
       const cur = out[out.length - 1];
       if (cur && cur.key === key) { cur.v = e.v; cur.each = e.each; cur.grades.push(e); }
-      else out.push({ key, on: e.on, v: e.v, each: e.each, grades: [e] });
+      else out.push({ key, on: e.on, t: at ? new Date(at).setHours(0, 0, 0, 0) : 0, v: e.v, each: e.each, grades: [e] });
     });
     return out;
   })();
@@ -3880,18 +3880,25 @@
     const lines = GR.each ? AVG_OF.map((c, j) => DAYS.map(e => e.each[j])) : [];
     const all = DAYV.concat(...lines);
     const mn = Math.min(...all), mx = Math.max(...all), mid = (mn + mx) / 2, span = Math.max(10, mx - mn + 3), lo = Math.floor(mid - span / 2), hi = Math.ceil(mid + span / 2); // at least 10 points tall, so a steady grade reads as a flat line
-    const last = N - 1, X = i => CH.l + (i / last) * (CH.w - CH.l - CH.r), Y = v => CH.t + (1 - (v - lo) / (hi - lo)) * (CH.h - CH.t - CH.b);
+    // across: by date (Martin 2026-11-23: Nov 3, Nov 4 and Nov 8 sat evenly apart), so a week without grades takes
+    // a week's room. Only when a day has no date do the points fall back to even steps.
+    const last = N - 1, W = CH.w - CH.l - CH.r, T = DAYS.map(d => d.t), timed = T.every(t => t > 0) && T[last] > T[0];
+    const X = i => CH.l + (timed ? (T[i] - T[0]) / (T[last] - T[0]) : i / last) * W, Y = v => CH.t + (1 - (v - lo) / (hi - lo)) * (CH.h - CH.t - CH.b);
     const path = arr => 'M' + arr.map((v, i) => `${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join('L');
-    // about one date every 90px, evenly spread, a date shown once
-    const n = Math.max(2, Math.min(N, Math.floor((CH.w - CH.l - CH.r) / 90) + 1)), at = [...new Set(Array.from({ length: n }, (_, k) => Math.round(k * last / (n - 1))))];
+    // dates under the days that have grades: the first and the last, and the ones between that are at least 90px from both
+    const at = [0];
+    for (let i = 1; i < last; i++) if (X(i) - X(at[at.length - 1]) >= 90 && X(last) - X(i) >= 90) at.push(i);
+    at.push(last);
     let prev = ''; const xs = at.map(i => { const d = DAYS[i].on; if (!d || d === prev) return ''; prev = d;
       return `<text class="x-t" x="${X(i)}" y="${CH.h - 6}" text-anchor="${i === 0 ? 'start' : i === last ? 'end' : 'middle'}">${d}</text>`; }).join('');
     const each = GR.each ? AVG_OF.map((c, k) => `<path class="cl" data-cl="${c.id}" pathLength="100" style="--i:${k}" d="${path(lines[k])}" stroke="${c.color}"/>`).join('') : '';
     const area = `${path(DAYV)}L${X(last)},${CH.h - CH.b}L${X(0)},${CH.h - CH.b}Z`;
     // a point for each grade while they fit; when there are too many to tell apart, only the newest, and the one you point at
-    const colW = (CH.w - CH.l - CH.r) / last, roomy = colW >= 12;
+    const gap = Math.min(...DAYV.slice(1).map((v, i) => X(i + 1) - X(i))), roomy = gap >= 12;
+    // each day's hover strip reaches halfway to its neighbours
+    const edge = i => i <= 0 ? X(0) - gap / 2 : i > last ? X(last) + gap / 2 : (X(i - 1) + X(i)) / 2;
     const dots = DAYV.map((v, i) => `<circle class="dot pt${i === last ? ' end' : ''}" data-i="${i}" style="--d:${popDelay(i, N)}ms" cx="${X(i)}" cy="${Y(v)}" r="${i === last ? 5 : roomy ? 3.5 : 0}"/>`).join('');
-    const hits = DAYV.map((v, i) => `<rect class="hit" data-wk="${i}" x="${X(i) - colW / 2}" y="0" width="${colW}" height="${CH.h - CH.b}"/>`).join('');
+    const hits = DAYV.map((v, i) => `<rect class="hit" data-wk="${i}" x="${edge(i).toFixed(1)}" y="0" width="${Math.max(1, edge(i + 1) - edge(i)).toFixed(1)}" height="${CH.h - CH.b}"/>`).join('');
     return `<svg class="gs-svg${enter && !calm() ? ' enter' : ''}${GR.each ? ' each' : ''}${roomy ? '' : ' dense'}" viewBox="0 0 ${CH.w} ${CH.h}" style="--series:var(--ink)" role="img" aria-label="Your overall grade at the end of each day with grades, from ${DAYV[0].toFixed(1)}% to ${DAYV[last].toFixed(1)}% over ${N} days">
       ${bandsSVG(lo, hi, Y)}${xs}<line class="xh" id="gsXh" x1="0" x2="0" y1="${CH.t}" y2="${CH.h - CH.b}" visibility="hidden"/>${each}<path class="ov-a" d="${area}"/><path class="ov ln-main" pathLength="100" d="${path(DAYV)}"/>${dots}${hits}</svg>`;
   }

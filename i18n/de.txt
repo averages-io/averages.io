@@ -1283,3 +1283,9 @@
 1283|# Noten
 1284|Nach {x}
 1285|An {x} gesendet.
+1286|Mein Foto für Mitschüler anzeigen
+1287|Vorerst nur für Schoology-Kurse.
+1288|Füge zuerst unter Konto ein Foto hinzu. Mitschüler, die Averages nutzen, sehen es statt deiner Initialen.
+1289|Mitschüler, die Averages nutzen, sehen dein Foto statt deiner Initialen. Schalte es aus, und es verschwindet sofort.
+1290|Mitschüler, die Averages nutzen, sehen jetzt dein Foto.
+1291|Dein Foto ist jetzt für Mitschüler verborgen.
