@@ -127,6 +127,11 @@ export default {
       return res;
     }
     // opened from inside Schoology: on to the sign-in page, with their school picked (see schoologyLaunch)
+    if (request.method === "GET" && url.pathname === "/" && url.searchParams.has("SAMLResponse")) {
+      // the same packet in the address (the docs don't say how it comes, so both are taken)
+      const go = schoologyLaunch(new URLSearchParams({ SAMLResponse: url.searchParams.get("SAMLResponse") || "" }).toString());
+      return new Response(null, { status: 303, headers: { Location: go || "/", "Cache-Control": "no-store" } });
+    }
     if (request.method === "POST" && url.pathname === "/") {
       let body = "";
       try { body = (request.headers.get("Content-Type") || "").includes("form") ? await request.text() : ""; } catch { body = ""; }
