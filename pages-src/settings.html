@@ -2884,9 +2884,17 @@
       const ON_TEXT = 'Classmates who use Averages see your photo in place of your initials. Turn this off and it stops showing right away.';
       const set = (text, usable) => { desc.textContent = text; box.disabled = !usable; row.classList.toggle('is-disabled', !usable); };
       if (window.__AVERAGES_MODE__ !== 'live' || AVERAGES_INCOGNITO) { set(AVERAGES_INCOGNITO ? 'Off in Incognito mode.' : 'Only when you\'re signed in.', false); return; }
+      // Showing it needs the account's copy of the photo: one only ever kept on this device goes up now (Martin
+      // 2026-11-23: "the pfp sharing doesn't work": on, but no photo saved to show)
+      const needsPhoto = (j) => {
+        if (!j || !j.on || j.photo !== false || !/^data:image\//.test(profileState.photo || '')) return;
+        set('Saving your photo to your account…', true);
+        const all = loadSyncMedia(); delete all.photo; saveSyncMedia(all);   // the server has none, whatever this device remembers
+        mediaRefFor('photo', profileState.photo, true).catch(() => {}).then(() => set(ON_TEXT, true));
+      };
       fetch(averagesApiBase() + '/media/photo/share', { credentials: 'include', cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(j => {
         if (!j || j.available === false) { set('Only for Schoology classes for now.', false); return; }
-        box.checked = !!j.on; set(ON_TEXT, true);
+        box.checked = !!j.on; set(ON_TEXT, true); needsPhoto(j);
       }).catch(() => set('Not available right now.', false));
       box.addEventListener('change', async () => {
         const on = box.checked; box.disabled = true;
@@ -2894,7 +2902,7 @@
           const r = await fetch(averagesApiBase() + '/media/photo/share', { method: 'POST', credentials: 'include', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ on }) });
           const j = await r.json().catch(() => ({}));
           if (!r.ok) throw new Error(j && j.error || 'failed');
-          set(ON_TEXT, true);
+          set(ON_TEXT, true); needsPhoto(j);
         } catch (e) {
           box.checked = !on;
           set(e && e.message === 'not_supported' ? 'Only for Schoology classes for now.' : 'Couldn\'t save that. Try again in a moment.', !(e && e.message === 'not_supported'));

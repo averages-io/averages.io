@@ -4501,7 +4501,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       ${grp('', row('sync', 'Sync across devices', incog() ? 'Off in Incognito. Settings stay in this browser.' : 'Always on in Classic.', chip(incog() ? 'Off' : ico('ok') + 'On', incog() ? '' : ' on')))}
       ${grp('Contacts', tog('ctSchool', 'Only search my school', 'Add contacts finds people at your school. Turn this off to find anyone on Schoology, at any school or district.', SG.ctSchool) +
         // your photo for classmates who use Averages too (2026-11-23); theirs show for you the same way. Off to start.
-        tog('mateShare', 'Show my photo to classmates', incog() ? 'Off in Incognito mode.' : !LIVE.share ? 'Checking…' : LIVE.share.available === false ? 'Only for Schoology classes for now.' : !PROFILE.photo ? 'Add a photo in Account first. Classmates who use Averages will see it in place of your initials.' : 'Classmates who use Averages see your photo in place of your initials. Turn this off and it stops showing right away.', !!(LIVE.share && LIVE.share.on), incog() || !LIVE.share || LIVE.share.available === false))}
+        tog('mateShare', 'Show my photo to classmates', incog() ? 'Off in Incognito mode.' : !LIVE.share ? 'Checking…' : LIVE.share.available === false ? 'Only for Schoology classes for now.' : !PROFILE.photo ? 'Add a photo in Account first. Classmates who use Averages will see it in place of your initials.' : LIVE.share.on && LIVE.share.photo === false ? 'Saving your photo to your account…' : LIVE.share.on && LIVE.share.classes ? `Classmates who use Averages see your photo in your ${LIVE.share.classes} ${LIVE.share.classes === 1 ? 'class' : 'classes'}. Turn this off and it stops showing right away.` : 'Classmates who use Averages see your photo in place of your initials. Turn this off and it stops showing right away.', !!(LIVE.share && LIVE.share.on), incog() || !LIVE.share || LIVE.share.available === false))}
       ${grp('Your data',
         row('data', 'Download your data', 'A copy of everything Averages stored about you. Your grades and files stay in Schoology.', btn('download', 'Download')) +
         row('delete', 'Delete your account', 'Deletes everything Averages stored about you. Schoology isn\'t changed.', btn('delete', 'Delete', '', ' sg-del')))}`,
@@ -5074,8 +5074,9 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
         if (!LIVE.share || LIVE.share.available === false || incog() || LIVE.busy) return;
         const on = !LIVE.share.on; LIVE.busy = 'share';
         t.setAttribute('aria-checked', on); t.querySelector('.sw').classList.toggle('on', on); t.setAttribute('aria-busy', 'true');
-        FSX.api('/media/photo/share', { method: 'POST', json: { on } }).then(() => {
-          LIVE.share = Object.assign({}, LIVE.share, { on }); LIVE.busy = ''; SGV.flip = 'mateShare'; redraw();
+        FSX.api('/media/photo/share', { method: 'POST', json: { on } }).then(r => {
+          LIVE.share = Object.assign({}, LIVE.share, { on, photo: r && r.photo, classes: r && r.classes || 0 }); LIVE.busy = ''; SGV.flip = 'mateShare'; redraw();
+          if (on) shareNeedsPhoto();
           toast(on ? 'Classmates who use Averages see your photo now.' : 'Your photo is hidden from classmates now.');
         }, e => {
           LIVE.busy = ''; redraw();
@@ -5280,7 +5281,15 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   FSX.api('/billing/status').then(b => { LIVE.billing = b; SG.plan = b && b.plus ? 'plus' : 'free'; redraw(); }).catch(() => { LIVE.billing = { enabled: false }; redraw(); });
   FSX.api('/calendar/status').then(c => { LIVE.cal = c; SG.cal = !!(c && c.on); redraw(); }).catch(() => { LIVE.cal = { enabled: false }; redraw(); });
   FSX.api('/canva/status').then(c => { LIVE.canva = c; SG.canva = !!(c && c.connected); redraw(); }).catch(() => {});
-  FSX.api('/media/photo/share').then(r => { LIVE.share = r || { available: false }; redraw(); }).catch(() => { LIVE.share = { available: false }; redraw(); });
+  FSX.api('/media/photo/share').then(r => { LIVE.share = r || { available: false }; redraw(); shareNeedsPhoto(); }).catch(() => { LIVE.share = { available: false }; redraw(); });
+  // Showing the photo to classmates needs the account's copy of it (in R2). A photo that was only ever kept on this
+  // device (set before account copies, or while they couldn't be saved) goes up now, and the classes get it.
+  // (Martin 2026-11-23: "the pfp sharing doesn't work": the switch was on, but there was no photo to show.)
+  function shareNeedsPhoto() {
+    if (!LIVE.share || !LIVE.share.on || LIVE.share.photo !== false || !/^data:image\//.test(PROFILE.photo || '') || shareNeedsPhoto.busy) return;
+    shareNeedsPhoto.busy = true;
+    photoUpload(PROFILE.photo).catch(() => {}).then(() => FSX.api('/media/photo/share')).then(r => { if (r) { LIVE.share = r; redraw(); } }).catch(() => {}).then(() => { shareNeedsPhoto.busy = false; });
+  }
   FSX.api('/config/features').then(f => { LIVE.early = Array.isArray(f && f.early) ? f.early : []; LIVE.serverTr = !!(f && f.features && f.features['server-translate']); redraw(); }).catch(() => {});
   FST.ready().then(() => { SG.drive = FST.connected('drive'); SG.onedrive = FST.connected('onedrive'); redraw(); }).catch(() => {});
   (function pushReady() {
