@@ -13,6 +13,40 @@ import { AutoTokenizer, AutoModelForCausalLM, LogitsProcessor, env } from '/vend
 import { makeToolCallConstraint } from '/vendor/averages-ai-1/constrain.mjs';
 import { Safety, REFUSE } from '/vendor/averages-ai-1/safety.mjs';
 
+/* Firefox on a Mac: A.I. search couldn't start ("no matching function for call to 'set_output_by_indices'").
+ * Firefox's WebGPU turns two WGSL names for the same array type (alias input_0_indices_t = array<u32, 5>; and
+ * alias output_indices_t = array<u32, 5>;) into two different types for Metal, and Apple's compiler refuses to mix
+ * them (gfx-rs/wgpu#10580, not fixed in Firefox yet). Writing the array type out in place of each alias name means the
+ * same thing in WGSL and avoids it. Only Firefox on a Mac gets the rewrite; every other browser is left alone. */
+(function () {
+  try {
+    var ua = (self.navigator && navigator.userAgent) || '';
+    if (!/Firefox\//.test(ua) || !/Mac OS X|Macintosh/.test(ua)) return;
+    if (typeof GPUDevice === 'undefined' || GPUDevice.prototype.__averagesAliasFix) return;
+  } catch (e) { return; }
+  var ALIAS = /\balias\s+([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(array\s*<[^;]*>)\s*;/g;
+  function inline(code) {
+    if (typeof code !== 'string' || code.indexOf('alias') < 0) return code;
+    var map = {}, names = [];
+    var out = code.replace(ALIAS, function (_, name, type) { map[name] = type; names.push(name); return ''; });
+    if (!names.length) return code;
+    var word = new RegExp('\\b(' + names.join('|') + ')\\b', 'g');
+    for (var i = 0; i < 4; i++) names.forEach(function (n) { map[n] = map[n].replace(word, function (w) { return map[w]; }); });
+    return out.replace(word, function (w) { return map[w]; });
+  }
+  var make = GPUDevice.prototype.createShaderModule;
+  GPUDevice.prototype.createShaderModule = function (desc) {
+    try {
+      if (desc && typeof desc.code === 'string') {
+        var code = inline(desc.code);
+        if (code !== desc.code) desc = Object.assign({}, desc, { code: code });
+      }
+    } catch (e) {}
+    return make.call(this, desc);
+  };
+  GPUDevice.prototype.__averagesAliasFix = true;
+})();
+
 const CACHE = 'averages-ai-v1';
 const WASM = '/ai/runtime/ort-1.31.0-dev.20260914/ort-wasm-simd-threaded.asyncify.wasm';
 env.allowRemoteModels = false;        // never Hugging Face: only our own files
