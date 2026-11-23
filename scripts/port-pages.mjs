@@ -307,10 +307,14 @@ function wireOnboardingComplete(script, file) {
           window.localStorage.setItem('averages_profile_name', nameInput.value.trim());
         } catch (e) { /* private browsing — non-fatal, they just redo setup */ }
 
-        setTimeout(() => {
+        // and saves the setup to the account (Classic), so signing out and back in doesn't mean doing it again
+        // (2026-11-23); going on waits for that, 4 s at most
+        const saved = typeof window.__averagesSeedSync === 'function' ? window.__averagesSeedSync() : Promise.resolve();
+        const go = () => {
           if (typeof window.__averagesOnboardFinish === 'function') window.__averagesOnboardFinish();
           else window.location.href = '/home';
-        }, 1800);
+        };
+        setTimeout(() => { Promise.race([saved, new Promise((r) => setTimeout(r, 4000))]).then(go, go); }, 1800);
       }, 650);`;
 
   return assertReplaced(

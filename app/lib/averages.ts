@@ -611,6 +611,44 @@ export async function restoreSyncedSetup(): Promise<boolean> {
   }
 }
 
+/**
+ * The account's synced copy, made from this device when the account has none yet (2026-11-23, Martin: signing out
+ * and back in "I had to go thru onboarding again"). Onboarding only saved to this browser, and the account's copy
+ * was first written by a later change in Settings; sign-out clears the browser, so an account that never changed a
+ * setting came back as new. Classic only; never over a copy the account already has. Pictures go as they are
+ * (Settings moves them to the account's picture storage the next time it opens). Never throws.
+ */
+export async function seedSyncedRecord(): Promise<void> {
+  try {
+    const ls = window.localStorage;
+    if (ls.getItem("averages_onboarded") !== "1" || ls.getItem("averages_account_mode") === "incognito") return;
+    const read = (k: string) => {
+      try {
+        return JSON.parse(ls.getItem(k) || "null");
+      } catch {
+        return null;
+      }
+    };
+    const options = read("averages_settings_options");
+    if (options && typeof options === "object") {
+      if (options.syncAcrossDevices === false) return;
+      delete options.browserNotifications;   // per browser, never synced
+    }
+    const ask = apiAsk(6000);
+    const res = await ask("/sync/settings");
+    if (!res.ok) return;
+    const record = await res.json().catch(() => null);
+    if (!record || record.settings) return;   // the account has its copy (or the answer is unclear): leave it
+    const settings = { settingsOptions: options, appearance: read("averages_appearance"), darkMode: ls.getItem("averages_dark_mode") || "auto", profile: read("averages_profile") };
+    const put = await fetch(`${API_BASE}/sync/settings`, { method: "PUT", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ settings }) });
+    if (!put.ok) return;
+    const saved = await put.json().catch(() => null);
+    if (saved && typeof saved.settingsUpdatedAt === "string") ls.setItem("averages_sync_meta", JSON.stringify({ settingsUpdatedAt: saved.settingsUpdatedAt }));
+  } catch {
+    /* the next page tries again */
+  }
+}
+
 export const SYNC_PULL_EVERY_MS = 5 * 60 * 1000;
 const SYNC_PULLED_AT = "averages_sync_pulled_at";
 export async function pullSyncedSettings(): Promise<string[]> {

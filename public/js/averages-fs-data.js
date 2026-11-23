@@ -955,6 +955,8 @@
       if (opts.windowType !== 'fullscreen' && typeof opts.language !== 'string') return;
       try { if (LS.getItem('averages_account_mode') === 'incognito') return; } catch (e) { return; }
       FSX.api('/sync/settings').then(function (rec) {
+        // the account has no copy yet (set up before onboarding saved one, 2026-11-23): this device's becomes it
+        if (rec && rec.settings === null) { FSX.seedSync(); return; }
         var st = rec && rec.settings; if (!st || typeof st !== 'object' || typeof rec.settingsUpdatedAt !== 'string') return;
         var so = st.settingsOptions && typeof st.settingsOptions === 'object' ? st.settingsOptions : {}, add = {};
         if (opts.windowType === 'fullscreen' && so.windowType !== 'fullscreen') { add.windowType = 'fullscreen'; add.fsTheme = opts.fsTheme || 'is'; }
@@ -966,6 +968,16 @@
           // this device agreed with the account's copy before: it still does
           if (mine && r && typeof r.settingsUpdatedAt === 'string') FSX.lset('averages_sync_meta', { settingsUpdatedAt: r.settingsUpdatedAt });
         });
+      }).catch(function () {});
+    },
+    /** The account's synced copy, from this device, when the account has none (app/lib/averages.ts seedSyncedRecord). */
+    seedSync: function () {
+      var me = window.FSD && window.FSD.me, raw = function (k) { try { return LS.getItem(k); } catch (e) { return null; } };
+      if (!me || me.incognito || raw('averages_account_mode') === 'incognito' || raw('averages_onboarded') !== '1') return;
+      var opts = FSX.lget('averages_settings_options') || {}; if (opts.syncAcrossDevices === false) return; delete opts.browserNotifications;
+      var settings = { settingsOptions: opts, appearance: FSX.lget('averages_appearance'), darkMode: raw('averages_dark_mode') || 'auto', profile: FSX.lget('averages_profile') };
+      FSX.api('/sync/settings', { method: 'PUT', json: { settings: settings } }).then(function (r) {
+        if (r && typeof r.settingsUpdatedAt === 'string') FSX.lset('averages_sync_meta', { settingsUpdatedAt: r.settingsUpdatedAt });
       }).catch(function () {});
     },
     syncPush: function () {

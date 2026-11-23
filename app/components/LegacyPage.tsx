@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { API_BASE, BELL_UPDATES_MAX_AGE_MS, getSession, loadBundle, loadExtras, pullSyncedSettings, restoreSyncedSetup, signOut, startExtras, studentTimeZone, waitForExtras, type ExtrasRun, type Mode } from "../lib/averages";
+import { API_BASE, BELL_UPDATES_MAX_AGE_MS, getSession, loadBundle, loadExtras, pullSyncedSettings, restoreSyncedSetup, seedSyncedRecord, signOut, startExtras, studentTimeZone, waitForExtras, type ExtrasRun, type Mode } from "../lib/averages";
 import { SPLASH_KEY } from "../lib/splash";
 import { EXTRAS_LATE_GIVE_UP_MS, LATE_EXTRAS, mergeExtras, mergeLateExtra, type ExtraName } from "../lib/extras";
 import { installNsfwGlobal, preloadNsfwModel } from "../lib/nsfw";
@@ -258,6 +258,17 @@ export default function LegacyPage({
       }
 
       installNsfwGlobal();
+      // onboarding's last step saves the setup to the account (see seedSyncedRecord); other pages make sure once a tab
+      // that an account set up before that has its copy too
+      if (session.mode === "live" && !session.incognito) {
+        (window as any).__averagesSeedSync = seedSyncedRecord;
+        try {
+          if (pageId !== "onboarding" && window.sessionStorage.getItem("averages_sync_seeded") !== "1") {
+            window.sessionStorage.setItem("averages_sync_seeded", "1");
+            window.setTimeout(() => { void seedSyncedRecord(); }, 2500);
+          }
+        } catch {}
+      }
 
       uidRef.current = session.uid ?? "";
       const wantsExtras = requiresAuth && session.mode === "live" && !!pageId;
