@@ -1,7 +1,8 @@
 // app.averages.io's front door.
 
-const SESSION_COOKIE = "averages_session";
-const LEGACY_SESSION_COOKIE = "schoolagy_session";
+// "Someone's signed in on this browser" (the API sets it next to its session cookie, which since 2026-11-23 is a
+// __Host- cookie on api.averages.io only, so this site never sees it). Only a hint: it holds no token.
+const SIGNED_IN_COOKIE = "averages_signed_in";
 const BOUNCE_COOKIE = "averages_bounced";
 const BOUNCE_SECONDS = 15;
 /** Where "/" sends a signed-in student: set by the app's pages from the look and Open to they picked. */
@@ -42,7 +43,7 @@ export function frontDoor(request) {
   if (url.pathname !== "/") return null;
   if (KEEP_PARAMS.some((p) => url.searchParams.has(p))) return null;
   const cookies = request.headers.get("Cookie");
-  if (!(hasCookie(cookies, SESSION_COOKIE) || hasCookie(cookies, LEGACY_SESSION_COOKIE)) || hasCookie(cookies, BOUNCE_COOKIE)) return null;
+  if (!hasCookie(cookies, SIGNED_IN_COOKIE) || hasCookie(cookies, BOUNCE_COOKIE)) return null;
   // Straight to the page they open to (Fullscreen's own address when that's their look), skipping /home's redirect
   let start = "";
   try { start = decodeURIComponent(cookieValue(cookies, START_COOKIE)); } catch { start = ""; }

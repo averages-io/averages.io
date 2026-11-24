@@ -1296,3 +1296,8 @@
 1296|Usar otro correo
 1297|Enviando…
 1298|Después te enviaremos un código de 6 dígitos para comprobar que es tuyo.
+1299|Cerrar sesión en todas partes
+1300|Cierra tu sesión en todos los dispositivos, también en este. Úsalo si iniciaste sesión en una computadora que no es tuya o perdiste un teléfono.
+1301|¿Cerrar sesión en todas partes?
+1302|Se cerrará tu sesión en todos los teléfonos, tabletas y computadoras, también en este, en menos de un minuto. Puedes volver a iniciar sesión con Schoology cuando quieras.
+1303|No se pudo cerrar la sesión en todas partes. Inténtalo de nuevo en un momento.

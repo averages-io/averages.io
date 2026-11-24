@@ -194,6 +194,8 @@
   }
   .profile-menu-item:hover { background: var(--panel-inner); }
   .profile-menu-item.signout { color: var(--grade-bad); }
+  .signout-all { margin-top: 10px; }
+  #signOutAllMsg { margin-top: 6px; }
 
   /* ---------- Settings card: sidebar + detail pane ---------- */
   .settings-card {
@@ -1299,6 +1301,8 @@
             <p class="settings-row-desc plus-msg" id="plusMsg" role="status" hidden></p>
 
             <button class="btn-danger" type="button" data-action="signout">Sign Out</button>
+            <button class="btn-secondary signout-all" type="button" id="signOutAllBtn">Sign out everywhere</button>
+            <p class="settings-row-desc" id="signOutAllMsg" role="status">Signs you out on every device, this one too. Use it if you signed in on a computer that isn&rsquo;t yours or lost a phone.</p>
           </div>
 
           <div class="settings-section" data-section="plus">
@@ -2100,6 +2104,31 @@
     document.querySelectorAll('[data-action="signout"]').forEach(btn => {
       btn.addEventListener('click', averagesSignOutClick);
     });
+
+    // Sign out everywhere (2026-11-23): a second press within 5 s confirms; the API ends every sign-in, then this
+    // device forgets everything, as Sign out does.
+    (function signOutEverywhere() {
+      const b = document.getElementById('signOutAllBtn'), msg = document.getElementById('signOutAllMsg');
+      if (!b) return;
+      const LABEL = b.textContent, NOTE = msg.textContent;
+      let armed = 0, busy = false;
+      b.addEventListener('click', async () => {
+        if (busy) return;
+        if (Date.now() - armed > 5000) {
+          armed = Date.now(); b.textContent = 'Press again to sign out on every device'; msg.textContent = 'This signs you out on every phone, tablet and computer within a minute.';
+          setTimeout(() => { if (Date.now() - armed >= 5000 && !busy) { b.textContent = LABEL; msg.textContent = NOTE; } }, 5100);
+          return;
+        }
+        busy = true; b.disabled = true; b.textContent = 'Signing out everywhere…';
+        try {
+          const r = await fetch(averagesApiBase() + '/auth/signout-everywhere', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+          if (!r.ok) throw new Error(String(r.status));
+          if (typeof window.__averagesSignOut === 'function') window.__averagesSignOut(); else window.location.href = '/?signedout=1';
+        } catch (e) {
+          busy = false; armed = 0; b.disabled = false; b.textContent = LABEL; msg.textContent = 'Couldn\u2019t sign out everywhere. Try again in a moment.';
+        }
+      });
+    })();
 
     // Bottom nav — same purely-visual-for-the-preview pattern as home.html;
     // pages with a real file behind them (data-href) actually navigate.

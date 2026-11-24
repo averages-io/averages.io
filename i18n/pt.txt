@@ -1296,3 +1296,8 @@
 1296|Usar outro e-mail
 1297|Enviando…
 1298|Depois, vamos enviar um código de 6 dígitos para confirmar que é seu.
+1299|Sair em todos os lugares
+1300|Desconecta você em todos os dispositivos, inclusive neste. Use se você entrou em um computador que não é seu ou perdeu um celular.
+1301|Sair em todos os lugares?
+1302|Você será desconectado em todos os celulares, tablets e computadores, inclusive neste, em até um minuto. Você pode entrar de novo com o Schoology quando quiser.
+1303|Não foi possível sair em todos os lugares. Tente de novo daqui a pouco.

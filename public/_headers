@@ -5,6 +5,11 @@
 #   HSTS               browsers only ever use https for app.averages.io (one year)
 #   Permissions-Policy camera, microphone, location, payments and devices are off: the app uses none of them
 #   CSP                no <base> tag tricks, no plugins, forms only post to the app, every request upgraded to https
+#   CSP Report-Only  (2026-11-23 security sweep) where scripts may load from and pages may connect to: our own sites,
+#                    Typekit, Turnstile, Cloudflare's page-speed counter, Google sign-in, Google and Microsoft for Drive / OneDrive.
+#                    Report-only: nothing is blocked yet. Browsers report what it WOULD block to
+#                    api.averages.io/csp-report (wrangler tail: "csp_report"). Once a week or two shows only
+#                    expected things, rename the header to Content-Security-Policy to enforce it.
 #   Link preconnect  opens the connection to the API early; Cloudflare's Early Hints (2026-11-23) sends it
 #                    as a 103 before the page itself, so the first /data request skips the handshake.
 # The CSP leaves scripts and styles alone on purpose: the pages run their own inline code
@@ -17,6 +22,7 @@
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), serial=(), hid=(), bluetooth=(), midi=(), browsing-topics=()
   Content-Security-Policy: base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests
   Link: <https://api.averages.io>; rel=preconnect
+  Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://challenges.cloudflare.com https://static.cloudflareinsights.com https://accounts.google.com; style-src 'self' 'unsafe-inline' https://use.typekit.net https://p.typekit.net https://accounts.google.com; font-src 'self' data: https://use.typekit.net; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; connect-src 'self' data: blob: https://api.averages.io https://www.googleapis.com https://oauth2.googleapis.com https://openidconnect.googleapis.com https://graph.microsoft.com https://login.microsoftonline.com https://cloudflareinsights.com https://challenges.cloudflare.com https://accounts.google.com; frame-src 'self' blob: https://challenges.cloudflare.com https://accounts.google.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; report-uri https://api.averages.io/csp-report
 
 # Let browsers keep the app's own built files (2026-10-14).
 # Everything under /_next/static/ has a hash of its content in its file name,

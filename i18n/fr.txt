@@ -1296,3 +1296,8 @@
 1296|Utiliser une autre adresse
 1297|Envoi…
 1298|Ensuite, nous t'enverrons un code à 6 chiffres pour vérifier qu'elle est à toi.
+1299|Se déconnecter partout
+1300|Vous déconnecte sur tous les appareils, celui-ci aussi. Utilisez-le si vous vous êtes connecté sur un ordinateur qui n'est pas le vôtre ou si vous avez perdu un téléphone.
+1301|Se déconnecter partout ?
+1302|Vous serez déconnecté sur tous les téléphones, tablettes et ordinateurs, celui-ci aussi, d'ici une minute. Vous pouvez vous reconnecter avec Schoology à tout moment.
+1303|Impossible de se déconnecter partout. Réessayez dans un instant.

@@ -1296,3 +1296,8 @@
 1296|Andere E-Mail verwenden
 1297|Wird gesendet…
 1298|Danach schicken wir dir einen 6-stelligen Code, um zu prüfen, dass sie dir gehört.
+1299|Überall abmelden
+1300|Meldet dich auf allen Geräten ab, auch auf diesem. Nutze es, wenn du dich an einem fremden Computer angemeldet oder ein Handy verloren hast.
+1301|Überall abmelden?
+1302|Du wirst innerhalb einer Minute auf allen Handys, Tablets und Computern abgemeldet, auch auf diesem. Du kannst dich jederzeit wieder mit Schoology anmelden.
+1303|Überall abmelden hat nicht geklappt. Versuch es gleich noch einmal.
