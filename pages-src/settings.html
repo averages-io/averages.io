@@ -4405,12 +4405,17 @@
       try { darkMode = localStorage.getItem(AVERAGES_DARK_MODE_KEY) || 'auto'; } catch {}   // 'auto' = System, so it syncs too
       const options = readJSON(AVERAGES_SETTINGS_OPTIONS_KEY);
       if (options && typeof options === 'object') delete options[DEVICE_ONLY_OPTION];
-      return {
+      const out = {
         settingsOptions: options,
         appearance: readJSON(AVERAGES_APPEARANCE_KEY),
         darkMode,
         profile: readJSON(AVERAGES_PROFILE_KEY),
       };
+      // the dates added from the school's calendar (Fullscreen Calendar, 2026-11-26), when this device has them;
+      // without the field the API keeps the account's list
+      const dates = readJSON('averages_calendar_dates');
+      if (Array.isArray(dates)) out.calendarDates = dates.slice(-600);
+      return out;
     }
     async function applySyncedSettings(remote) {
       if (!remote || typeof remote !== 'object') return;
@@ -4435,6 +4440,7 @@
         if (remote.darkMode === 'auto') localStorage.removeItem(AVERAGES_DARK_MODE_KEY);
         else if (remote.darkMode === 'dark' || remote.darkMode === 'light') localStorage.setItem(AVERAGES_DARK_MODE_KEY, remote.darkMode);
         if (profile) localStorage.setItem(AVERAGES_PROFILE_KEY, JSON.stringify(profile));
+        if (Array.isArray(remote.calendarDates)) localStorage.setItem('averages_calendar_dates', JSON.stringify(remote.calendarDates.slice(-600)));
       } catch {}
     }
 

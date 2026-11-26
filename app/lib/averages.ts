@@ -570,6 +570,8 @@ async function adoptSyncedRecord(remote: any, stamp: string, ask: (path: string)
     next.averages_profile = JSON.stringify(profile);
     if (typeof profile.name === "string" && profile.name.trim()) next.averages_profile_name = profile.name.trim();
   }
+  // the dates added from the school's calendar (2026-11-26): the account's list, when it has one
+  if (Array.isArray(remote.calendarDates)) next.averages_calendar_dates = JSON.stringify(remote.calendarDates.slice(-600));
   const changed: string[] = [];
   if (followSystem && ls.getItem("averages_dark_mode") !== null) {
     ls.removeItem("averages_dark_mode");
@@ -736,7 +738,10 @@ export async function seedSyncedRecord(opts: { replace?: boolean } = {}): Promis
     if (profile && typeof profile === "object") profile.photo = await seedPicture("photo", profile.photo, media);
     if (appearance && typeof appearance === "object" && appearance.background) appearance.background = await seedPicture("background", appearance.background, media);
     ls.setItem("averages_sync_media", JSON.stringify(media));
-    const settings = { settingsOptions: options, appearance, darkMode: ls.getItem("averages_dark_mode") || "auto", profile };
+    const settings: Record<string, unknown> = { settingsOptions: options, appearance, darkMode: ls.getItem("averages_dark_mode") || "auto", profile };
+    // the dates added from the school's calendar, when this device has them (without the field the API keeps the account's)
+    const dates = read("averages_calendar_dates");
+    if (Array.isArray(dates)) settings.calendarDates = dates.slice(-600);
     const put = await fetch(`${API_BASE}/sync/settings`, { method: "PUT", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ settings }) });
     if (!put.ok) return;
     const saved = await put.json().catch(() => null);

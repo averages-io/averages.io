@@ -976,6 +976,7 @@
       if (!me || me.incognito || raw('averages_account_mode') === 'incognito' || raw('averages_onboarded') !== '1') return;
       var opts = FSX.lget('averages_settings_options') || {}; if (opts.syncAcrossDevices === false) return; delete opts.browserNotifications;
       var settings = { settingsOptions: opts, appearance: FSX.lget('averages_appearance'), darkMode: raw('averages_dark_mode') || 'auto', profile: FSX.lget('averages_profile') };
+      var cd = FSX.lget('averages_calendar_dates'); if (Array.isArray(cd)) settings.calendarDates = cd.slice(-600);
       FSX.api('/sync/settings', { method: 'PUT', json: { settings: settings } }).then(function (r) {
         if (r && typeof r.settingsUpdatedAt === 'string') FSX.lset('averages_sync_meta', { settingsUpdatedAt: r.settingsUpdatedAt });
       }).catch(function () {});
@@ -998,6 +999,8 @@
         if (pr && typeof pr === 'object') pr = Object.assign({}, pr, { photo: ref('photo', pr.photo) });
         if (!ok) return;
         var settings = { settingsOptions: opts, appearance: ap, darkMode: raw('averages_dark_mode') || 'auto', profile: pr };   // 'auto' = System, so it syncs too
+        // the dates added from the school's calendar, when this device has them (none: the API keeps the account's)
+        var cd = FSX.lget('averages_calendar_dates'); if (Array.isArray(cd)) settings.calendarDates = cd.slice(-600);
         FSX.api('/sync/settings', { method: 'PUT', json: { settings: settings } }).then(function (r) {
           if (r && typeof r.settingsUpdatedAt === 'string') FSX.lset('averages_sync_meta', { settingsUpdatedAt: r.settingsUpdatedAt });
         }).catch(function () {});
@@ -1066,6 +1069,8 @@
             changed = put('averages_profile', JSON.stringify(pr)) || changed;
             if (typeof pr.name === 'string' && pr.name.trim()) put('averages_profile_name', pr.name.trim());
           }
+          // the dates added from the school's calendar (2026-11-26): the account's list, when it has one
+          if (Array.isArray(st.calendarDates)) changed = put('averages_calendar_dates', JSON.stringify(st.calendarDates.slice(-600))) || changed;
           // the theme and accent on this page now: averages-fs.js turns fsset into both (and back into averages_*)
           var dm = st.darkMode === 'dark' || st.darkMode === 'light' || st.darkMode === 'auto' ? st.darkMode : null;
           var fsset = FSX.lget('fsset') || {}, before = JSON.stringify(fsset);

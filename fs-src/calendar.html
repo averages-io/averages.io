@@ -4174,8 +4174,12 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (school) { E('s' + x.id, 'school', x.title || 'School event', OFF_RE.test((x.title || '') + ' ' + (x.desc || '')) ? 'off' : 'event', x.date, time, 'school', { desc: x.desc || '' }); return; }
     E('t' + x.id, x.source, x.title || 'Class event', 'event', x.date, time, 'teacher', { desc: x.desc || '' });
   });
-  // dates you added from your school's calendar (this device only)
-  const IMP_KEY = 'fscal_imported_' + FSD.me.uid;
+  // dates you added from your school's calendar: on every device with Sync Across Devices (2026-11-26, Martin: "can we
+  // sync added events/imported events"), and in the calendar link. Kept under one name (sign-out, or another student
+  // signing in, clears this browser); the old per-account name moves over once.
+  const IMP_KEY = 'averages_calendar_dates';
+  { const OLD = 'fscal_imported_' + FSD.me.uid, old = store.get(OLD); if (Array.isArray(old) && !Array.isArray(store.get(IMP_KEY))) store.set(IMP_KEY, old); try { localStorage.removeItem(OLD); } catch (e) { /* fine */ } }
+  const datesChanged = () => { if (window.FSX && FSX.syncPush) FSX.syncPush(); };
   const IMPORTED = store.get(IMP_KEY) || [];
   IMPORTED.forEach(x => { if (x && /^\d{4}-\d{2}-\d{2}$/.test(x.date)) E(x.id, 'school', x.t, x.kind === 'off' ? 'off' : 'event', x.date, '', 'upload', { desc: x.desc || (x.kind === 'off' ? 'No school.' : ''), file: x.file || '' }); });
 
@@ -4419,7 +4423,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     const ev = EV.find(x => x.id === rm.dataset.cimrm); if (!ev) return;
     const same = EV.filter(x => x.by === 'upload' && x.t === ev.t);
     same.forEach(x => EV.splice(EV.indexOf(x), 1));
-    store.set(IMP_KEY, (store.get(IMP_KEY) || []).filter(x => !same.some(y => y.id === x.id)));
+    store.set(IMP_KEY, (store.get(IMP_KEY) || []).filter(x => !same.some(y => y.id === x.id))); datesChanged();
     popClose(); calBody('items'); calUp(); calOff(); calMeta(); calCls(); toast(`Removed ${ev.t}.`);
   });
   function calUp() {
@@ -4788,7 +4792,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
         let n = 0, k = 0; const picked = [...cim.sel].map(i => FOUND[i]).filter(f => !had(f));
         const keep = store.get(IMP_KEY) || [];
         picked.forEach(f => f.days.forEach(d => { k++; const id = 'up' + Date.now().toString(36) + k; E(id, 'school', f.t, f.kind, d, '', 'upload', { desc: f.note || (f.kind === 'off' ? 'No school.' : ''), file: cim.name }); keep.push({ id, t: f.t, kind: f.kind, date: d, desc: f.note || '', file: cim.name }); })); n = picked.length;
-        store.set(IMP_KEY, keep.slice(-600));
+        store.set(IMP_KEY, keep.slice(-600)); datesChanged();
         const name = cim.name; cimClose();
         calBody('items'); calUp(); calOff(); calMeta(); calCls();
         toast(`Added ${n} ${n === 1 ? 'date' : 'dates'} from ${name}. The file isn't kept.`);
