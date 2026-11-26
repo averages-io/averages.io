@@ -3470,9 +3470,20 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       if (t.unread) { t.unread = false; renderMessages(); renderCounts(); }
       touchRecent('Messages', t.subject, 'thread:' + id);
       return { label: `${t.subject}, with ${t.who}`, wide: true, html: head(t.subject, [t.who, c && c.name].filter(Boolean).join(' · '), { back: 'threads', lead: badge(c) }) +
-        `<div class="chat" id="chat">${t.msgs.map(m => `<div class="msg${m.me ? ' me' : ''}${m.t.length > 200 ? ' long' : ''}"><small>${m.me ? 'You' : esc(t.who)} · ${esc(m.at)}</small><span class="mt">${esc(m.t.length > 200 ? m.t.slice(0, 200).trimEnd() + '…' : m.t)}</span></div>`).join('')}</div>
+        `<div class="chat" id="chat">${t.msgs.map(m => `<div class="msg${m.me ? ' me' : ''}${m.t.length > 200 ? ' long' : ''}"><small>${m.me ? 'You' : esc(m.who || t.who)}${m.at ? ` · ${esc(m.at)}` : ''}</small><span class="mt">${esc(m.t.length > 200 ? m.t.slice(0, 200).trimEnd() + '…' : m.t)}</span></div>`).join('')}</div>
         <div class="pop-foot"><button class="btn primary big" data-act="openpage" data-arg="thread:${t.id}">${ico('msg')}Open in Messages to reply</button></div>`,
         wire(el) {
+          // the conversation itself, the last few messages (2026-11-26, Martin: "why is the most recent message not
+          // showing"): the list only has each one's newest line, which is empty for a file. Read once, kept for this page.
+          if (!t.loaded && !t.loading && /^\d+$/.test(t.id) && FSX.thread) {
+            t.loading = true;
+            FSX.thread(t.id).then(d => {
+              const ms = (d && Array.isArray(d.messages) ? d.messages : []).slice(-8);
+              if (ms.length) t.msgs = ms.map(m => ({ me: m.from === 'me', who: m.from === 'me' ? '' : (n => n && n !== 'Schoology' ? n : t.who)(m.authorId ? nameOf(m.authorId) : ''),
+                t: m.text || ((m.files || []).length ? '📎 ' + m.files.map(f => f.name).join(', ') : ''), at: m.time || '' }));
+              t.loaded = true;
+            }, () => {}).then(() => { t.loading = false; if (cur && cur.key === 'thread' && cur.arg === id && t.loaded) render('thread', id); });
+          }
           // long messages stop at four lines with "..."; clicking the bubble shows all of it
           const th = T(cur.arg), chat = el.querySelector('#chat');
           chat.scrollTop = chat.scrollHeight; // open on the newest message
