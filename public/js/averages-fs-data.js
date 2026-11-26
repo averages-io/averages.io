@@ -981,6 +981,17 @@
         if (r && typeof r.settingsUpdatedAt === 'string') FSX.lset('averages_sync_meta', { settingsUpdatedAt: r.settingsUpdatedAt });
       }).catch(function () {});
     },
+    /**
+     * Recent searches (2026-11-26, Martin: "not all recent searches show up"): one list for every search box (Home's
+     * search and search anything on every page), 8 at most, newest first. A search counts when you open a result or
+     * get an A.I. answer.
+     */
+    recentSearches: function () { var v = lget('fsmock_srecent'); return Array.isArray(v) ? v.filter(function (x) { return typeof x === 'string' && x.trim(); }).slice(0, 8) : []; },
+    recentAdd: function (q) {
+      q = String(q || '').replace(/\s+/g, ' ').trim().slice(0, 120); if (!q) return;
+      try { LS.setItem('fsmock_srecent', JSON.stringify([q].concat(FSX.recentSearches().filter(function (x) { return x.toLowerCase() !== q.toLowerCase(); })).slice(0, 8))); } catch (e) { /* storage off */ }
+    },
+    recentRemove: function (q) { try { LS.setItem('fsmock_srecent', JSON.stringify(FSX.recentSearches().filter(function (x) { return x !== q; }))); } catch (e) { /* storage off */ } },
     syncPush: function () {
       clearTimeout(FSX._syncT);
       FSX._syncT = setTimeout(function () {

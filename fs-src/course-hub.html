@@ -4793,7 +4793,10 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     let html = '';
     if (!typed) {
       cmdkRaw = null;
-      html = `<div class="lbl">Quick actions</div>` + ['turnin', 'msg', 'whatif', 'proj'].map(k => actRow(GEN[k]())).join('') +
+      // recent searches, shared with every search box (FSX.recentSearches, 2026-11-26)
+      const rec = FSX.recentSearches ? FSX.recentSearches() : [];
+      html = (rec.length ? `<div class="lbl">Recent searches</div>` + rec.map(r => row(`data-cmdkrecent="${esc(r)}"`, ico('search'), esc(r), '')).join('') : '')
+        + `<div class="lbl">Quick actions</div>` + ['turnin', 'msg', 'whatif', 'proj'].map(k => actRow(GEN[k]())).join('') +
         `<div class="lbl">Suggested in ${esc(ME.name)}</div>` + MATERIALS.filter(m => m.pin).map(m => row(matAttr(m), tile(m), esc(m.name), [kindL(m), m.unit ? FOLDER[m.unit] : ''].filter(Boolean).join(' · '))).join('') +
         `<div class="s-tip">${ico('bolt')}<span>Or type a command, like <b>message ${esc(TNAME)}</b>, <b>turn in</b> or <b>what if</b></span></div>`;
       res.innerHTML = html; const f = res.querySelector('.mi'); if (f) f.classList.add('sel'); return;
@@ -4830,6 +4833,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     cmdk = document.body.lastElementChild;
     cmdk.addEventListener('click', e => {
       if (e.target === cmdk) { cmdkClose(); return; }
+      const rr = e.target.closest('[data-cmdkrecent]'); if (rr) { const inp = cmdk.querySelector('input'); inp.value = rr.dataset.cmdkrecent; inp.dispatchEvent(new Event('input', { bubbles: true })); inp.focus(); return; }
       const r = e.target.closest('[data-sraw]'); if (r) { cmdkRaw = r.dataset.sraw; cmdkRender(); cmdk.querySelector('input').focus(); return; }
       const c = e.target.closest('[data-cmd]'); if (c) cmdkCmd(c.dataset.cmd);
     });
@@ -4843,6 +4847,8 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       el.firstElementChild.animate([{ transform: 'none' }, { transform: 'translateY(-6px) scale(.98)' }], { duration: 160, easing: 'cubic-bezier(.4, 0, 1, 1)', fill: 'forwards' }).onfinish = () => el.remove(); }
     if (cmdkFrom && cmdkFrom.focus) cmdkFrom.focus({ preventScroll: true });
   }
+  // picking a result remembers what you searched for (not a recent search itself)
+  document.addEventListener('click', e => { if (!cmdk || !FSX.recentAdd) return; const pick = e.target.closest('.cmdk .mi, .cmdk a[href]'), qv = (cmdk.querySelector('input') || {}).value || ''; if (pick && qv.trim() && !pick.matches('[data-cmdkrecent], [data-sraw]')) FSX.recentAdd(qv); }, true);
   document.addEventListener('click', e => { if (cmdk && e.target.closest('.cmdk [data-toast], .cmdk [data-go]')) cmdkClose(); }, true);
   $('sideSearch').addEventListener('click', e => { e.preventDefault(); cmdkOpen(); });
   document.addEventListener('keydown', e => {

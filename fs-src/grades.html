@@ -3694,6 +3694,9 @@
     const q = cmdk.querySelector('input').value.trim(), res = cmdk.querySelector('.cmdk-res'); let html = '';
     const page = ([p, ic]) => crow(p === HERE ? 'data-cmdkx' : `data-toast="the ${p} page"`, ico(ic), cmark(p, q), p === HERE ? "You're here" : '');
     if (!q) {
+      // recent searches, shared with Home's search (FSX.recentSearches, 2026-11-26)
+      const rec = FSX.recentSearches ? FSX.recentSearches() : [];
+      if (rec.length) html += `<div class="lbl">Recent searches</div>` + rec.map(r => crow(`data-cmdkrecent="${esc(r)}"`, ico('search'), esc(r), '')).join('');
       html += `<div class="lbl">Quick actions</div>` + crow('data-cmdkmsg=""', ico('msg'), 'Message a teacher', 'Start a new message', ' s-cmd') + crow('data-toast="Turn in, on the Assignments page"', ico('upload'), 'Turn in an assignment', 'Pick from what you have due', ' s-cmd')
         + (HERE ? crow('data-cmdkhere=""', ico('search'), `Search ${esc(HERE)}`, 'Just this page. You can also press / or T', ' s-cmd') : '');
       html += `<div class="lbl">Your classes</div>` + CLASSES.map(c => cclass(c, '')).join('');
@@ -3728,6 +3731,7 @@
     cmdk = document.body.lastElementChild;
     cmdk.addEventListener('click', e => {
       if (e.target === cmdk || e.target.closest('[data-cmdkx]')) { cmdkClose(); return; }
+      const rr = e.target.closest('[data-cmdkrecent]'); if (rr) { const inp = cmdk.querySelector('input'); inp.value = rr.dataset.cmdkrecent; inp.dispatchEvent(new Event('input', { bubbles: true })); inp.focus(); return; }
       const g = e.target.closest('[data-cmdkgo]'); if (g) { const k = g.dataset.cmdkgo; cmdkClose(false); if (typeof window.CMDK_GO === 'function') window.CMDK_GO(k); return; }
       const mg = e.target.closest('[data-cmdkmsg]'); if (mg) { const id = mg.dataset.cmdkmsg; cmdkClose(false); if (typeof window.CMDK_MSG === 'function') window.CMDK_MSG(id); else FSX.go('messages', { compose: id || 'new' }); return; }
       const h = e.target.closest('[data-cmdkhere]'); if (h) { const v = h.dataset.cmdkhere; cmdkClose(false); findFocus(); const el = document.activeElement; if (v && el && 'value' in el) { el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); } return; }
@@ -3742,6 +3746,8 @@
       el.firstElementChild.animate([{ transform: 'none' }, { transform: 'translateY(-6px) scale(.98)' }], { duration: 160, easing: 'cubic-bezier(.4, 0, 1, 1)', fill: 'forwards' }).onfinish = () => el.remove(); }
     if (back && cmdkFrom && cmdkFrom.isConnected && cmdkFrom.focus) cmdkFrom.focus({ preventScroll: true });
   }
+  // picking a result remembers what you searched for (not a recent search itself, nor closing)
+  document.addEventListener('click', e => { if (!cmdk || !FSX.recentAdd) return; const pick = e.target.closest('.cmdk .mi, .cmdk a[href]'), qv = (cmdk.querySelector('input') || {}).value || ''; if (pick && qv.trim() && !pick.matches('[data-cmdkrecent], [data-cmdkx], [data-cmdkhere]')) FSX.recentAdd(qv); }, true);
   document.addEventListener('click', e => { if (cmdk && e.target.closest('.cmdk [data-toast], .cmdk [data-go]')) cmdkClose(false); }, true);
   document.addEventListener('keydown', e => {
     if (!cmdk) return;

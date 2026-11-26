@@ -585,7 +585,7 @@
       // "the next thing due", "my oldest missing work": the first one is the answer
       if ((a.sort === 'earliest_due' || a.sort === 'latest_due') && nW && W[0].dueAt && !big) big = dShort(W[0].dueAt);
       rows = W.slice(0, 30).map(function (x) {
-        var cc = C[x.c], end = x.st === 'graded' && x.got != null ? esc(x.got + (x.pts ? '/' + x.pts : '')) : x.st === 'missing' ? '<span class="av-ai-tag bad">' + esc(t(x.marked ? 'Missing' : 'Late')) + '</span>' : x.st === 'turned' ? '<span class="av-ai-tag ok">' + esc(t(lateIn ? 'Turned in late' : 'Turned in')) + '</span>' : a.sort === 'most_points' && x.pts ? esc(t(x.pts + ' pts')) : '';
+        var cc = C[x.c], end = x.st === 'graded' && x.got != null ? esc(x.got + (x.pts ? '/' + x.pts : '')) : x.st === 'missing' ? '<span class="av-ai-tag bad">' + esc(t(x.marked ? 'Missing' : 'Late')) + '</span>' : x.st === 'turned' ? '<span class="av-ai-tag ' + (lateIn ? 'late' : 'ok') + '">' + esc(t(lateIn ? 'Turned in late' : 'Turned in')) + '</span>' : a.sort === 'most_points' && x.pts ? esc(t(x.pts + ' pts')) : '';
         return row({ href: FSX.hubUrl(x.c, '', { a: x.id }), lead: clsTile(cc), t: x.t, sub: (cc ? cc.name : '') + (x.dueAt ? ' · ' + t('Due') + ' ' + dShort(x.dueAt) + (x.time ? ', ' + x.time : '') : ''), end: end });
       });
       if (W.length > 30) note = W.length + ' found. Showing the first 30.';
@@ -897,7 +897,7 @@
         var out = run(calls[0], q, got[NEEDS[calls[0].name]]);
         if (out.go) { window.location.href = out.go; return; }
         if (out.words != null) { STATE.skip = out.words; b.input.value = out.words; b.input.dispatchEvent(new Event('input', { bubbles: true })); return; }
-        open(b, card(out, calls[0]) + words + foot);
+        open(b, card(out, calls[0]) + words + foot); if (window.FSX && FSX.recentAdd) FSX.recentAdd(q);   // an answer counts as a search (recent searches, 2026-11-26)
         return;
       }
       // several: a page to open is a row in its own card (nothing opens by itself)
@@ -906,7 +906,7 @@
         if (o.go) o = { rows: [row({ href: o.go, lead: '<svg class="i"><use href="#i-right"/></svg>', t: t('Open ' + (PAGE_NAME[x.args && x.args.page] || 'page')) })], call: x };
         return card(o, x);
       }).join('');
-      open(b, html + words + foot);
+      open(b, html + words + foot); if (window.FSX && FSX.recentAdd) FSX.recentAdd(q);   // an answer counts as a search (recent searches, 2026-11-26)
         });
     }).catch(function (e) {
       if (!still()) return;
@@ -948,7 +948,7 @@
     '.av-ai-h .av-ai-ic{width:18px;height:18px;margin:0 2px 0 0}',
     '.av-ai-chip{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:11px;background:var(--panel,#eef0f4);box-shadow:inset 0 0 0 1px var(--inner,#e2e4ea);color:var(--ink);font-size:12px;font-weight:700}',
     '.av-ai-end{flex:none;font-weight:800;color:var(--ink);white-space:nowrap}.av-ai-end small{color:var(--muted);font-weight:700;margin-left:4px}',
-    '.av-ai-tag{display:inline-block;padding:2px 8px;border-radius:9px;font-size:12px;font-weight:800}.av-ai-tag.bad{background:color-mix(in srgb,#d0393e 14%,transparent);color:#b3261e}.av-ai-tag.ok{background:color-mix(in srgb,#2e7d4f 14%,transparent);color:#22653f}',
+    '.av-ai-tag{display:inline-block;padding:2px 8px;border-radius:9px;font-size:12px;font-weight:800}.av-ai-tag.bad{background:color-mix(in srgb,#d0393e 14%,transparent);color:#b3261e}.av-ai-tag.ok{background:color-mix(in srgb,#2e7d4f 14%,transparent);color:#22653f}.av-ai-tag.late{background:color-mix(in srgb,#c98a00 16%,transparent);color:#7a4f00}html[data-theme="dark"] .av-ai-tag.bad,body.dark-mode .av-ai-tag.bad{background:color-mix(in srgb,#d0393e 26%,transparent);color:#ff9a94}html[data-theme="dark"] .av-ai-tag.ok,body.dark-mode .av-ai-tag.ok{background:color-mix(in srgb,#2e7d4f 30%,transparent);color:#7fdca6}html[data-theme="dark"] .av-ai-tag.late,body.dark-mode .av-ai-tag.late{background:color-mix(in srgb,#e0a21c 24%,transparent);color:#f2c35b}',
     '.av-ai-wait,.av-ai-say{display:flex;align-items:center;gap:6px;min-height:52px;padding:8px 12px;font-weight:700;color:var(--ink)}',
     // waiting: the mascot in the logo's colors (#E5484D, with the loading logo's #FF7A50 glow) sweeping up through it;
     // reduced motion blinks instead, Potato mode stays still
