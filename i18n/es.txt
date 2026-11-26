@@ -1302,3 +1302,8 @@
 1302|Se cerrará tu sesión en todos los teléfonos, tabletas y computadoras, también en este, en menos de un minuto. Puedes volver a iniciar sesión con Schoology cuando quieras.
 1303|No se pudo cerrar la sesión en todas partes. Inténtalo de nuevo en un momento.
 1304|Tu escuela desactivó los mensajes entre estudiantes, así que no puedes responder aquí. Todavía puedes leer esta conversación.
+1305|Actualización en segundo plano
+1306|Busca calificaciones, trabajos y mensajes nuevos cada 30 segundos mientras Averages está abierto.
+1307|Desactivada. Averages busca calificaciones, trabajos y mensajes nuevos cuando abres una página o pulsas Sincronizar.
+1308|La actualización en segundo plano está activada
+1309|La actualización en segundo plano está desactivada. Averages revisa cuando abres una página.

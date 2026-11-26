@@ -4270,7 +4270,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   // every setting, for the search box here and for Search anything
   const IDX = [
     ['account', 'profile', 'Name and photo', 'profile picture edit name avatar'], ['account', 'email', 'Email', 'address school'], ['account', 'school', 'School', 'lincoln high district student id'], ['account', 'sgy', 'Schoology website', 'schoology url address domain site link'],
-    ['account', 'avemail', 'Averages email', 'email address verify change add code'], ['account', 'start', 'Open to', 'start page open first home default landing'], ['account', 'tz', 'Time zone', 'timezone zone clock time due dates'], ['account', 'signin', 'Signed in with Schoology', 'sign in password login account'], ['account', 'signout', 'Sign out', 'log out leave'], ['account', 'signoutall', 'Sign out everywhere', 'sign out all devices everywhere log out lost phone stolen other computer'],
+    ['account', 'avemail', 'Averages email', 'email address verify change add code'], ['account', 'start', 'Open to', 'start page open first home default landing'], ['account', 'tz', 'Time zone', 'timezone zone clock time due dates'], ['account', 'bgrefresh', 'Background refresh', 'background refresh auto update sync check new battery data'], ['account', 'signin', 'Signed in with Schoology', 'sign in password login account'], ['account', 'signout', 'Sign out', 'log out leave'], ['account', 'signoutall', 'Sign out everywhere', 'sign out all devices everywhere log out lost phone stolen other computer'],
     ['plan', 'current', 'Your plan', 'averages plus subscription renew billing'], ['plan', 'other', 'Other plans', 'free classic switch cancel downgrade get plus upgrade'], ['plan', 'payment', 'Payment and receipts', 'card billing cancel receipt'], ['plan', 'early', 'New features early', 'beta preview try'], ['plan', 'experiments', 'Experiments', 'beta labs try new features study planner grade goals focus timer weekly recap'],
     ['appearance', 'layout', 'Window', 'layout fullscreen windowed full screen background'], ['appearance', 'fstheme', 'Theme', 'is industry standard look style fullscreen theme'], ['appearance', 'theme', 'Mode', 'dark mode light system auto colors night'], ['appearance', 'accent', 'Accent color', 'color highlight buttons'],
     ['ai', 'aiOn', 'A.I. search', 'ai artificial intelligence ask question model download device search smart'], ['ai', 'aiQ', 'A.I. quality', 'ai standard higher quality model size download'], ['appearance', 'aitools', 'A.I. tools', 'ai model saved device storage delete space download'],
@@ -4375,7 +4375,8 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       ${(() => { const z = optGet().timeZone, auto = !z || z === 'auto' || !ZONES.includes(z), zone = auto ? deviceZone() : z, st = startOf(startNow());
         return grp('Using Averages',
           `<div class="sg-row" data-set="start">${tx('Open to', 'The page you see first when you open Averages.')}<button class="btn sg-ddb" data-act="startdd" data-dd="start" aria-haspopup="listbox" aria-expanded="false">${ico(st[2])}<span>${st[1]}</span>${ico('chev-d', 'i chev')}</button></div>` +
-          `<div class="sg-row wrapr" data-set="tz">${tx('Time zone', auto ? `Set by this device: ${esc(zoneName(zone))}, ${esc(zoneNow(zone))} now.` : `${esc(zoneName(zone))}, ${esc(zoneNow(zone))} now. Due dates and the calendar use it.`)}<label class="sg-tz">${ico('search', 'i sic')}<input type="text" data-tzin role="combobox" aria-label="Time zone" aria-autocomplete="list" aria-expanded="false" aria-controls="sgTzList" autocomplete="off" spellcheck="false" placeholder="Search time zones" value="${esc(auto ? (window.AvI18n ? AvI18n.t('Automatic') : 'Automatic') : tzLabel(z))}">${ico('chev-d', 'i chev')}</label></div>`); })()}
+          `<div class="sg-row wrapr" data-set="tz">${tx('Time zone', auto ? `Set by this device: ${esc(zoneName(zone))}, ${esc(zoneNow(zone))} now.` : `${esc(zoneName(zone))}, ${esc(zoneNow(zone))} now. Due dates and the calendar use it.`)}<label class="sg-tz">${ico('search', 'i sic')}<input type="text" data-tzin role="combobox" aria-label="Time zone" aria-autocomplete="list" aria-expanded="false" aria-controls="sgTzList" autocomplete="off" spellcheck="false" placeholder="Search time zones" value="${esc(auto ? (window.AvI18n ? AvI18n.t('Automatic') : 'Automatic') : tzLabel(z))}">${ico('chev-d', 'i chev')}</label></div>`
+          + tog('bgrefresh', 'Background refresh', optGet().backgroundRefresh === false ? 'Off. Averages checks for new grades, work and messages when you open a page or press Sync.' : 'Checks for new grades, work and messages every 30 seconds while Averages is open.', optGet().backgroundRefresh !== false)); })()}
       ${grp('Sign-in', row('signin', 'Signed in with Schoology', 'Your classes and grades come straight from Schoology.', chip(ico('ok') + 'Connected', ' on'))
         + row('signoutall', 'Sign out everywhere', 'Signs you out on every device, this one too. Use it if you signed in on a computer that isn\'t yours or lost a phone.', btn('signoutall', 'Sign out everywhere')))}
       <button class="btn sg-out" data-act="signout" data-set="signout">Sign out</button>`,
@@ -5075,6 +5076,11 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
         else if (['notif', 'cal'].includes(k) && incog()) toast('This is off in Incognito mode.');
         else toast('Turn on browser notifications first.');
         return;
+      }
+      if (k === 'bgrefresh') {
+        // Background refresh (2026-11-26, Martin): the 30-second check for anything new while Averages is open
+        const on = optGet().backgroundRefresh === false; saveOpt('backgroundRefresh', on);
+        SGV.flip = 'bgrefresh'; sgPane(); toast(on ? 'Background refresh is on' : 'Background refresh is off. Averages checks when you open a page.'); return;
       }
       if (k === 'potato') {
         const on = document.body.classList.toggle('potato-mode'); store.set('fsmock_potato', on);

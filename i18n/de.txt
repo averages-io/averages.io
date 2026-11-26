@@ -1302,3 +1302,8 @@
 1302|Du wirst innerhalb einer Minute auf allen Handys, Tablets und Computern abgemeldet, auch auf diesem. Du kannst dich jederzeit wieder mit Schoology anmelden.
 1303|Überall abmelden hat nicht geklappt. Versuch es gleich noch einmal.
 1304|Deine Schule hat Nachrichten zwischen Schülern ausgeschaltet, daher kannst du hier nicht antworten. Du kannst diese Unterhaltung aber weiter lesen.
+1305|Hintergrundaktualisierung
+1306|Sucht alle 30 Sekunden nach neuen Noten, Aufgaben und Nachrichten, solange Averages geöffnet ist.
+1307|Aus. Averages sucht nach neuen Noten, Aufgaben und Nachrichten, wenn du eine Seite öffnest oder auf Synchronisieren tippst.
+1308|Hintergrundaktualisierung ist an
+1309|Hintergrundaktualisierung ist aus. Averages prüft, wenn du eine Seite öffnest.

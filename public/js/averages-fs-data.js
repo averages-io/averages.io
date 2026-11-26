@@ -442,8 +442,11 @@
     var cacheAt = 0; try { cacheAt = (JSON.parse(sessionStorage.getItem('averages_bundle_cache') || 'null') || {}).at || 0; } catch (e) { /* none */ }
     // a page that opened from this tab's copy (from a page before) checks for anything new right after it shows
     var stale = cacheAt && Date.now() - cacheAt > 10000;
-    setTimeout(function () { notisAt = Date.now(); if (stale) setTimeout(notisCheck, 800); setInterval(function () { if (Date.now() - notisAt >= refreshEvery()) notisCheck(); }, 5000); setInterval(syncShow, 30000); }, 1000);
-    document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible' && Date.now() - notisAt >= refreshEvery()) notisCheck(); });
+    // Background refresh off (Settings > Account, 2026-11-26): no checking on a timer; a page still checks once when it
+    // opens from this tab's copy, and Sync checks now
+    var bgOn = function () { return (lget('averages_settings_options') || {}).backgroundRefresh !== false; };
+    setTimeout(function () { notisAt = Date.now(); if (stale) setTimeout(notisCheck, 800); setInterval(function () { if (bgOn() && Date.now() - notisAt >= refreshEvery()) notisCheck(); }, 5000); setInterval(syncShow, 30000); }, 1000);
+    document.addEventListener('visibilitychange', function () { if (bgOn() && document.visibilityState === 'visible' && Date.now() - notisAt >= refreshEvery()) notisCheck(); });
   });
   (function () { var st = document.createElement('style'); st.textContent = '.fs-pav{width:28px;height:28px;flex:none;display:grid;place-items:center;border-radius:50%;color:#fff;font-size:11px;font-weight:800;letter-spacing:.01em;background:#8a8d99}.fs-pav.sq{border-radius:8px}'; (document.head || document.documentElement).appendChild(st); })();
   (function () {

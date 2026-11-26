@@ -1302,3 +1302,8 @@
 1302|Vous serez déconnecté sur tous les téléphones, tablettes et ordinateurs, celui-ci aussi, d'ici une minute. Vous pouvez vous reconnecter avec Schoology à tout moment.
 1303|Impossible de se déconnecter partout. Réessayez dans un instant.
 1304|Ton école a désactivé les messages entre élèves, tu ne peux donc pas répondre ici. Tu peux toujours lire cette conversation.
+1305|Actualisation en arrière-plan
+1306|Vérifie les nouvelles notes, les devoirs et les messages toutes les 30 secondes quand Averages est ouvert.
+1307|Désactivée. Averages vérifie les nouvelles notes, les devoirs et les messages quand tu ouvres une page ou appuies sur Synchroniser.
+1308|L'actualisation en arrière-plan est activée
+1309|L'actualisation en arrière-plan est désactivée. Averages vérifie quand tu ouvres une page.

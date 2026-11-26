@@ -1302,3 +1302,8 @@
 1302|You'll be signed out on every phone, tablet and computer, this one too, within a minute. You can sign back in with Schoology any time.
 1303|Couldn't sign out everywhere. Try again in a moment.
 1304|Your school turned off messaging other students, so you can't reply here. You can still read this conversation.
+1305|Background refresh
+1306|Checks for new grades, work and messages every 30 seconds while Averages is open.
+1307|Off. Averages checks for new grades, work and messages when you open a page or press Sync.
+1308|Background refresh is on
+1309|Background refresh is off. Averages checks when you open a page.
