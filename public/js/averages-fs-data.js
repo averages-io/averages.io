@@ -1613,6 +1613,10 @@
       if (f.at >= s.at) { s.at = f.at; s.late = !!f.late; }
       if (s.files.length < 20) s.files.push({ name: f.name, size: f.size ? (f.size < 1048576 ? Math.max(1, Math.round(f.size / 1024)) + ' KB' : (f.size / 1048576).toFixed(1) + ' MB') : 'File', rev: f.revision });
     });
+    // each asked-about assignment's newest turn-in, files or not (API 2026-11-26): typed answers count as turned in,
+    // and Schoology's late mark is known even without files
+    var turnins = {};
+    arr(raw.submissions && raw.submissions.turnins).forEach(function (x) { if (x && x.course && x.assignment) turnins[x.course + ':' + x.assignment] = { at: +x.at || 0, late: !!x.late }; });
     var gbById = {}, gbCat = {};
     CLASSES.forEach(function (c) { arr(obj(gradebook[c.id]).categories).forEach(function (cat) { arr(cat.assignments).forEach(function (a) { gbById[c.id + ':' + a.id] = a; gbCat[c.id + ':' + a.id] = cat.name || ''; }); }); });
     var today0 = startOfDay(now);
@@ -1625,7 +1629,8 @@
       var type = base.type || 'assignment', outside = !!base.outside;
       // posted: a discussion the student has replied in (Schoology's discussion replies, 2026-11-14), done the way
       // Schoology's own To Do counts it. A teacher's "missing" in the gradebook still wins.
-      var done = !sub && !!posted[key];
+      var tin = turnins[key];
+      var done = !sub && (!!posted[key] || !!tin);
       var st = graded ? 'graded' : sub || done ? 'turned' : dueMs != null && dueMs < now ? (outside ? 'due' : 'missing') : 'due';
       if (g.missing && !graded && !sub) st = 'missing';
       WORK_ALL.push({
@@ -1633,9 +1638,9 @@
         dueAt: dueMs, off: offOf(dueMs), day: dueMs != null ? WD[new Date(dueMs).getDay()] : '', time: dueMs != null ? (base.time || timeOf(dueMs)) : '',
         pts: typeof g.points === 'number' && g.points > 0 ? g.points : null, st: st,
         marked: !!(g.missing && !graded && !sub),   // the teacher marked it missing (st 'missing' is also work that's only past due)
-        turnedAt: sub ? sub.at : 0, turned: sub ? (sub.at ? dayLabel(sub.at, now) : 'earlier') : done ? 'earlier' : null, sent: sub ? sub.files : undefined, posted: done || undefined,
+        turnedAt: sub ? sub.at : tin ? tin.at : 0, turned: sub ? (sub.at ? dayLabel(sub.at, now) : 'earlier') : tin && tin.at ? dayLabel(tin.at, now) : done ? 'earlier' : null, sent: sub ? sub.files : undefined, posted: (done && !tin) || undefined,
         // turned in late: Schoology says so, or it came in after the due date (graded tests taken in class have neither)
-        turnedLate: !!(sub && (sub.late || (sub.at && dueMs != null && sub.at > dueMs + 60000))), cat: gbCat[key] || '',
+        turnedLate: !!((sub && (sub.late || (sub.at && dueMs != null && sub.at > dueMs + 60000))) || (tin && (tin.late || (tin.at && dueMs != null && tin.at > dueMs + 60000)))), cat: gbCat[key] || '',
         got: graded ? g.score : undefined, gradedAt: graded ? g.gradedAt || 0 : 0, graded: graded ? (g.gradedAt ? dayLabel(g.gradedAt, now) : 'earlier') : null, note: g.comment || '',
       });
     }

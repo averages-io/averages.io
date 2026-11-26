@@ -501,6 +501,43 @@
     }).catch(function () { return null; });
   }
   var NEEDS = { find_messages: 'messages', find_files: 'files' };
+  /** The data a search needs before it runs: "turned in late" also asks Schoology about graded work (lateWork). */
+  function needOf(x) { return x && x.name === 'find_work' && x.args && x.args.status === 'turned_in_late' ? 'late' : NEEDS[x && x.name]; }
+
+  /**
+   * "What did I turn in late" (2026-11-26, Martin: it said "0 turned in late"): the page only knows when work was
+   * turned in for what isn't graded yet; for graded work it never asked. Asked now, only for this search: the 40
+   * most recently graded pieces of work (two requests of 20, inside Schoology's limits), remembered 10 minutes. Each
+   * answer marks the work's turn-in time and Schoology's own late mark. Never fails the search.
+   */
+  function lateWork() {
+    var D = window.FSD || {}, me = D.me && D.me.uid, A = D.ASG || [], KEY = 'averages_ai_late', known = {};
+    try { var c = JSON.parse(sessionStorage.getItem(KEY) || 'null'); if (c && c.who === me && Date.now() - (c.at || 0) < 10 * 6e4) known = c.done || {}; } catch (e) { /* none */ }
+    var apply = function () {
+      A.forEach(function (x) {
+        var k = x.c + ':' + x.id, r = known[k];
+        if (!r || x.turnedAt) return;
+        x.turnedAt = r.at || 0;
+        x.turnedLate = !!(r.late || (r.at && x.dueAt && r.at > x.dueAt + 6e4));
+      });
+    };
+    var ask = A.filter(function (x) { return x.st === 'graded' && !x.turnedAt && x.kind === 'assignment' && !x.disc && !x.outside && !x.noDrop && /^\d+$/.test(String(x.c)) && /^\d+$/.test(String(x.id)) && !((x.c + ':' + x.id) in known); })
+      .sort(function (x, y) { return (y.gradedAt || 0) - (x.gradedAt || 0); }).slice(0, 40).map(function (x) { return x.c + ':' + x.id; });
+    if (!ask.length || !window.FSX) { apply(); return Promise.resolve(true); }
+    var batches = [ask.slice(0, 20), ask.slice(20, 40)].filter(function (b) { return b.length; });
+    return batches.reduce(function (p, b) {
+      return p.then(function () {
+        return window.FSX.api('/data/submissions?for=' + b.join(',')).then(function (d) {
+          b.forEach(function (k) { known[k] = 0; });   // asked: nothing turned in unless listed
+          ((d && d.turnins) || []).forEach(function (t) { known[t.course + ':' + t.assignment] = { at: +t.at || 0, late: !!t.late }; });
+        }).catch(function () { /* not now: what we have */ });
+      });
+    }, Promise.resolve()).then(function () {
+      try { sessionStorage.setItem(KEY, JSON.stringify({ who: me, at: Date.now(), done: known })); } catch (e) { /* full */ }
+      apply();
+      return true;
+    });
+  }
 
   function run(c, q, extra) {
     c = sanitize(c, q);
@@ -849,10 +886,10 @@
       var calls = (r.calls && r.calls.length ? r.calls : [{ name: r.name, args: r.args }]).slice(0, 3);
       // with other searches, "look for these words" adds nothing
       if (calls.length > 1) { var real = calls.filter(function (x) { return x.name !== 'word_search'; }); calls = real.length ? real : calls.slice(0, 1); }
-      var needs = calls.map(function (x) { return NEEDS[x.name]; }).filter(function (x, i, A) { return x && A.indexOf(x) === i; });
+      var needs = calls.map(needOf).filter(function (x, i, A) { return x && A.indexOf(x) === i; });
       var got = {};
       // what it's doing now, then the data it needs, then "Reviewing results" for a moment before the answer opens
-      return step(b, SEARCHING[calls[0].name] || 'Searching').then(function () { return Promise.all([Promise.all(needs.map(function (k) { return extraData(k).then(function (d) { got[k] = d; }); })), pause(350)]); })
+      return step(b, SEARCHING[calls[0].name] || 'Searching').then(function () { return Promise.all([Promise.all(needs.map(function (k) { return (k === 'late' ? lateWork() : extraData(k)).then(function (d) { got[k] = d; }); })), pause(350)]); })
         .then(function () { if (!still()) return; return step(b, 'Reviewing results').then(function () { return pause(250); }); })
         .then(function () {
       if (!still()) return;
