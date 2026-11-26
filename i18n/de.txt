@@ -1307,3 +1307,48 @@
 1307|Aus. Averages sucht nach neuen Noten, Aufgaben und Nachrichten, wenn du eine Seite öffnest oder auf Synchronisieren tippst.
 1308|Hintergrundaktualisierung ist an
 1309|Hintergrundaktualisierung ist aus. Averages prüft, wenn du eine Seite öffnest.
+1310|Früh wach, {x}!
+1311|Aufstehen, {x}!
+1312|Frühaufsteher-Modus, {x}.
+1313|Neuer Start, {x}.
+1314|Morgen, {x}! Los geht's.
+1315|Hey {x}, bereit für heute?
+1316|Kaffee und Unterricht, {x}?
+1317|Früh und munter, {x}!
+1318|Kurzer Check zur Mittagszeit, {x}.
+1319|Halbzeit des Tages, {x}!
+1320|Guten Nachmittag, {x}!
+1321|Nachmittags-Fokus, {x}.
+1322|Endspurt, {x}!
+1323|Nach-der-Schule-Modus, {x}.
+1324|Snack und Lernen, {x}?
+1325|Abend, {x}. Lass uns abschließen.
+1326|Hausaufgabenzeit, {x}.
+1327|Goldene Stunde, {x}.
+1328|Langsam zur Ruhe kommen, {x}?
+1329|Arbeit im Mondschein, {x}.
+1330|Nachteulen-Modus, {x}.
+1331|Lernen am späten Abend, {x}?
+1332|Noch spät dran, {x}?
+1333|Noch wach, {x}?
+1334|Ruhige Stunden, {x}.
+1335|Nach Mitternacht noch wach, {x}?
+1336|Die Welt schläft, {x}.
+1337|Mitternachts-Lernrunde, {x}?
+1338|Vergiss nicht zu schlafen, {x}.
+1339|Schönen Montag, {x}!
+1340|Neue Woche, {x}. Du schaffst das.
+1341|Schönen Dienstag, {x}!
+1342|Halbzeit der Woche, {x}!
+1343|Fast Freitag, {x}!
+1344|Schönen Freitag, {x}!
+1345|Endlich Freitag, {x}!
+1346|Schönen Samstag, {x}!
+1347|Wochenend-Modus, {x}.
+1348|Sonntags-Reset, {x}.
+1349|Schönen Sonntag, {x}!
+1350|Willkommen zurück, {x}!
+1351|Hallo, {x}!
+1352|Schön, dich zu sehen, {x}!
+1353|Hier ist dein Tag, {x}.
+1354|Mal sehen, wo du stehst, {x}.

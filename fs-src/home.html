@@ -2618,6 +2618,74 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (state.dueSort === 'class') list.sort((a, b) => C[a.c].name.localeCompare(C[b.c].name));
     return list;
   }
+  // ---------- the greeting: one of 48, for the time of day and the day of the week (2026-11-26, Martin: "more
+  // greetings... like moonlit work... actual variety"). Picked once each time Home opens. Translated like any text.
+  const GREETINGS = [
+    ["early", "Up early, {x}!"],
+    ["early", "Rise and shine, {x}!"],
+    ["early", "Early bird mode, {x}."],
+    ["early", "Fresh start, {x}."],
+    ["morning", "Good morning, {x}!"],
+    ["morning", "Morning, {x}! Let's get to it."],
+    ["morning", "Hey {x}, ready for today?"],
+    ["morning", "Coffee and classes, {x}?"],
+    ["morning", "Bright and early, {x}!"],
+    ["midday", "Good afternoon, {x}!"],
+    ["midday", "Lunchtime check-in, {x}."],
+    ["midday", "Halfway through the day, {x}!"],
+    ["afternoon", "Afternoon, {x}!"],
+    ["afternoon", "Afternoon focus, {x}."],
+    ["afternoon", "Home stretch, {x}!"],
+    ["afternoon", "After-school mode, {x}."],
+    ["afternoon", "Snack and study, {x}?"],
+    ["evening", "Good evening, {x}!"],
+    ["evening", "Evening, {x}. Let's wrap up."],
+    ["evening", "Homework hour, {x}."],
+    ["evening", "Golden hour, {x}."],
+    ["evening", "Winding down, {x}?"],
+    ["night", "Moonlit work, {x}."],
+    ["night", "Night owl mode, {x}."],
+    ["night", "Late-night study, {x}?"],
+    ["night", "Burning the midnight oil, {x}?"],
+    ["night", "Still up, {x}?"],
+    ["night", "Quiet hours, {x}."],
+    ["late", "Up past midnight, {x}?"],
+    ["late", "The world's asleep, {x}."],
+    ["late", "Midnight study session, {x}?"],
+    ["late", "Don't forget to sleep, {x}."],
+    ["mon", "Happy Monday, {x}!"],
+    ["mon", "New week, {x}. You've got this."],
+    ["tue", "Happy Tuesday, {x}!"],
+    ["wed", "Halfway through the week, {x}!"],
+    ["thu", "Almost Friday, {x}!"],
+    ["fri", "Happy Friday, {x}!"],
+    ["fri", "Friday at last, {x}!"],
+    ["sat", "Happy Saturday, {x}!"],
+    ["sat", "Weekend mode, {x}."],
+    ["sun", "Sunday reset, {x}."],
+    ["sun", "Happy Sunday, {x}!"],
+    ["any", "Welcome back, {x}!"],
+    ["any", "Hey there, {x}!"],
+    ["any", "Good to see you, {x}!"],
+    ["any", "Here's your day, {x}."],
+    ["any", "Let's see where things stand, {x}."]
+  ];
+  const DAYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+  let greetPick = null;
+  function greeting() {
+    const d = new Date(), h = d.getHours();
+    const part = h < 5 ? 'late' : h < 8 ? 'early' : h < 12 ? 'morning' : h < 14 ? 'midday' : h < 18 ? 'afternoon' : h < 21 ? 'evening' : 'night';
+    if (!greetPick || greetPick.part !== part) {
+      // the time of day, then the day's own ("Happy Friday") in the daytime, and a few for any time except late at night
+      const pool = GREETINGS.filter(([k]) => k === part || (h >= 5 && h < 21 && k === DAYS[d.getDay()]) || (part !== 'late' && part !== 'night' && k === 'any'));
+      // not the one Home showed last time, when there's a choice
+      let last = ''; try { last = sessionStorage.getItem('averages_greet_last') || ''; } catch (e) { /* none */ }
+      const fresh = pool.filter(([, t]) => t !== last), from = fresh.length ? fresh : pool;
+      greetPick = { part, t: from[Math.floor(Math.random() * from.length)][1] };
+      try { sessionStorage.setItem('averages_greet_last', greetPick.t); } catch (e) { /* fine */ }
+    }
+    return greetPick.t.replace('{x}', firstName());
+  }
   function renderAvatar() {
     document.querySelectorAll('[data-av]').forEach(el => {
       el.textContent = PROFILE.name.trim().charAt(0).toUpperCase() || '?';
@@ -2625,8 +2693,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       el.style.backgroundImage = PROFILE.photo ? `url("${PROFILE.photo}")` : '';
     });
     document.querySelectorAll('[data-name]').forEach(el => { el.textContent = PROFILE.name; });
-    const h = new Date().getHours();
-    $('greet').textContent = `Good ${h < 12 ? 'morning' : h < 18 ? 'afternoon' : 'evening'}, ${firstName()}!`;
+    $('greet').textContent = greeting();
     $('todayDate').textContent = new Date().toLocaleDateString((window.AvI18n ? window.AvI18n.locale : 'en-US'), { weekday: 'long', month: 'long', day: 'numeric' });
   }
   function renderSide() {

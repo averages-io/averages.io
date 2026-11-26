@@ -1307,3 +1307,48 @@
 1307|Désactivée. Averages vérifie les nouvelles notes, les devoirs et les messages quand tu ouvres une page ou appuies sur Synchroniser.
 1308|L'actualisation en arrière-plan est activée
 1309|L'actualisation en arrière-plan est désactivée. Averages vérifie quand tu ouvres une page.
+1310|Debout tôt, {x} !
+1311|Debout là-dedans, {x} !
+1312|Mode lève-tôt, {x}.
+1313|Nouveau départ, {x}.
+1314|Bonjour, {x} ! On s'y met.
+1315|Salut {x}, tout est prêt pour aujourd'hui ?
+1316|Café et cours, {x} ?
+1317|Frais et dispo, {x} !
+1318|Petit point à midi, {x}.
+1319|La moitié de la journée, {x} !
+1320|Bon après-midi, {x} !
+1321|Concentration de l'après-midi, {x}.
+1322|Dernière ligne droite, {x} !
+1323|Mode après les cours, {x}.
+1324|Goûter et révisions, {x} ?
+1325|Bonsoir, {x}. On termine.
+1326|L'heure des devoirs, {x}.
+1327|Heure dorée, {x}.
+1328|On ralentit, {x} ?
+1329|Travail au clair de lune, {x}.
+1330|Mode oiseau de nuit, {x}.
+1331|Révisions tardives, {x} ?
+1332|Tu veilles tard, {x} ?
+1333|Encore debout, {x} ?
+1334|Heures calmes, {x}.
+1335|Debout après minuit, {x} ?
+1336|Le monde dort, {x}.
+1337|Séance de révision à minuit, {x} ?
+1338|N'oublie pas de dormir, {x}.
+1339|Bon lundi, {x} !
+1340|Nouvelle semaine, {x}. Tu vas gérer.
+1341|Bon mardi, {x} !
+1342|La moitié de la semaine, {x} !
+1343|Presque vendredi, {x} !
+1344|Bon vendredi, {x} !
+1345|Enfin vendredi, {x} !
+1346|Bon samedi, {x} !
+1347|Mode week-end, {x}.
+1348|Dimanche pour repartir, {x}.
+1349|Bon dimanche, {x} !
+1350|Content de te revoir, {x} !
+1351|Salut, {x} !
+1352|Ça fait plaisir de te voir, {x} !
+1353|Voici ta journée, {x}.
+1354|Voyons où tu en es, {x}.

@@ -1307,3 +1307,48 @@
 1307|Desactivada. Averages busca calificaciones, trabajos y mensajes nuevos cuando abres una página o pulsas Sincronizar.
 1308|La actualización en segundo plano está activada
 1309|La actualización en segundo plano está desactivada. Averages revisa cuando abres una página.
+1310|¡Madrugaste, {x}!
+1311|¡Arriba, {x}!
+1312|Modo madrugador, {x}.
+1313|Un nuevo comienzo, {x}.
+1314|¡Buenos días, {x}! Manos a la obra.
+1315|Hola {x}, ¿todo listo para hoy?
+1316|¿Café y clases, {x}?
+1317|¡Temprano y con energía, {x}!
+1318|Repaso a la hora del almuerzo, {x}.
+1319|¡Ya vas por la mitad del día, {x}!
+1320|¡Buenas tardes, {x}!
+1321|Concentración de la tarde, {x}.
+1322|¡Recta final, {x}!
+1323|Modo después de clases, {x}.
+1324|¿Merienda y estudio, {x}?
+1325|Buenas noches, {x}. Vamos a terminar.
+1326|Hora de la tarea, {x}.
+1327|Hora dorada, {x}.
+1328|¿Ya bajando el ritmo, {x}?
+1329|Trabajo a la luz de la luna, {x}.
+1330|Modo búho nocturno, {x}.
+1331|¿Estudio nocturno, {x}?
+1332|¿Quemándote las pestañas, {x}?
+1333|¿Aún en pie, {x}?
+1334|Horas tranquilas, {x}.
+1335|¿Pasada la medianoche y aún en pie, {x}?
+1336|El mundo duerme, {x}.
+1337|¿Sesión de estudio de medianoche, {x}?
+1338|No olvides dormir, {x}.
+1339|¡Feliz lunes, {x}!
+1340|Nueva semana, {x}. Tú puedes.
+1341|¡Feliz martes, {x}!
+1342|¡Ya vas por la mitad de la semana, {x}!
+1343|¡Ya casi es viernes, {x}!
+1344|¡Feliz viernes, {x}!
+1345|¡Por fin es viernes, {x}!
+1346|¡Feliz sábado, {x}!
+1347|Modo fin de semana, {x}.
+1348|Domingo para reiniciar, {x}.
+1349|¡Feliz domingo, {x}!
+1350|¡Qué bueno tenerte de vuelta, {x}!
+1351|¡Hola, {x}!
+1352|¡Qué gusto verte, {x}!
+1353|Aquí está tu día, {x}.
+1354|Veamos cómo van las cosas, {x}.
