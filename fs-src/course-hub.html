@@ -7143,7 +7143,7 @@ window.AveragesHelp = {
   function mbDet() {
     const p = mbGet(MB.sel) || MB_TEACH, who = mbWho(p);
     const said = [];
-    const first = p.teacher ? (p.name || ME.teacher || 'your teacher') : p.first;
+    const first = p.teacher ? (p.name || ME.teacher || 'your teacher') : (p.name || p.first);   // full name (2026-11-26, Martin: "add last names")
     const back = `<button class="btn sm mb-back" data-mbback>${ico('chev-l')}All members</button>`;
     const hero = `<div class="mb-hero">${mbAva(p, true)}<div class="tx"><h3>${esc(p.name)}</h3><small>${p.teacher ? '<span class="mb-role tch">Teacher</span>' : p.me ? '<span class="mb-role">You</span>' : '<span class="mb-role">Student</span>'}${esc(ME.name)}${ME.hasPeriod ? ' · Period ' + ME.period : ''}</small></div>
       <div class="mb-acts">${p.me ? `<button class="btn" data-toast="your profile settings">${ico('user')}Edit profile</button>` : (p.teacher && (p.uid || ME.teacher) ? `<button class="btn" ${p.uid ? `data-hubmsgto="${esc(p.uid)}" data-name="${esc(p.name)}"` : 'data-hubmsg'}>${ico('msg')}Message ${esc(first)}</button>` : '') + (p.uid ? `<button class="btn" data-go="${FSX.url('contacts', { person: p.uid })}">${ico('user')}Open contact</button>` : '')}</div></div>`;
