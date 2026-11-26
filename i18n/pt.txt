@@ -1309,46 +1309,25 @@
 1309|A atualização em segundo plano está desativada. O Averages verifica quando você abre uma página.
 1310|Acordou cedo, {x}!
 1311|Bom dia, flor do dia, {x}!
-1312|Modo madrugador, {x}.
-1313|Um novo começo, {x}.
-1314|Bom dia, {x}! Vamos nessa.
-1315|Oi {x}, tudo pronto para hoje?
-1316|Café e aulas, {x}?
-1317|Cedinho e animado, {x}!
-1318|Uma olhada na hora do almoço, {x}.
-1319|Metade do dia já foi, {x}!
-1320|Boa tarde, {x}!
-1321|Foco da tarde, {x}.
-1322|Reta final, {x}!
-1323|Modo pós-aula, {x}.
-1324|Lanche e estudo, {x}?
-1325|Boa noite, {x}. Vamos finalizar.
-1326|Hora da lição de casa, {x}.
-1327|Hora dourada, {x}.
-1328|Desacelerando, {x}?
-1329|Trabalho ao luar, {x}.
-1330|Modo coruja, {x}.
-1331|Estudo de madrugada, {x}?
-1332|Virando a noite, {x}?
-1333|Ainda de pé, {x}?
-1334|Horas tranquilas, {x}.
-1335|De pé depois da meia-noite, {x}?
-1336|O mundo está dormindo, {x}.
-1337|Sessão de estudo à meia-noite, {x}?
-1338|Não esqueça de dormir, {x}.
-1339|Feliz segunda, {x}!
-1340|Semana nova, {x}. Você consegue.
-1341|Feliz terça, {x}!
-1342|Metade da semana já foi, {x}!
-1343|Quase sexta, {x}!
-1344|Feliz sexta, {x}!
-1345|Finalmente sexta, {x}!
-1346|Feliz sábado, {x}!
-1347|Modo fim de semana, {x}.
-1348|Domingo de recomeço, {x}.
-1349|Feliz domingo, {x}!
-1350|Que bom ter você de volta, {x}!
-1351|Oi, {x}!
-1352|Que bom te ver, {x}!
-1353|Aqui está o seu dia, {x}.
-1354|Vamos ver como estão as coisas, {x}.
+1312|Bom dia, {x}!
+1313|Oi, {x}!
+1314|Olá, {x}!
+1315|Boa tarde, {x}!
+1316|Boa noite, {x}!
+1317|Trabalho ao luar, {x}.
+1318|Coruja da noite, {x}?
+1319|Noite longa, {x}?
+1320|Virando a noite, {x}?
+1321|Ainda de pé, {x}?
+1322|De pé depois da meia-noite, {x}?
+1323|Vai dormir um pouco, {x}.
+1324|Feliz segunda, {x}!
+1325|Feliz terça, {x}!
+1326|Feliz quarta, {x}!
+1327|Feliz quinta, {x}!
+1328|Quase sexta, {x}!
+1329|Feliz sexta, {x}!
+1330|Feliz sábado, {x}!
+1331|Feliz domingo, {x}!
+1332|Que bom ter você de volta, {x}!
+1333|Oi, {x}!
