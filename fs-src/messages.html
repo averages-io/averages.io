@@ -3154,6 +3154,7 @@
   .ms-empty { margin: auto; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; color: var(--muted); font-weight: 700; padding: 24px; }
   .ms-empty .emo { width: 56px; height: 56px; } .ms-empty .emo svg { width: 56px; height: 56px; }
   .ms-empty b { font-size: 17px; color: var(--ink); }
+  .ms-ro { padding: 12px 0 16px; flex: none; }
   .ms-note { margin: 0 16px; padding: 8px 12px; border-radius: 10px; background: var(--field); font-size: 12px; font-weight: 700; color: var(--muted); flex: none; display: flex; gap: 8px; align-items: center; }
   .ms-note svg.i { width: 15px; height: 15px; flex: none; }
 
@@ -4730,6 +4731,28 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   function topHTML(t, sub, extraBtns = '') {
     return `<div class="ms-top"><button class="ibtn ms-back" data-msback aria-label="Back to your messages">${ico('chev-l')}</button>${tav(t)}<span class="tx"><b>${esc(title(t))}</b><small>${esc(sub)}</small></span>${extraBtns}<button class="ibtn" data-mswho aria-label="Who's in this conversation" aria-haspopup="dialog">${ico('info')}</button><button class="ibtn" data-msmore="${MS.open}" aria-label="More" aria-haspopup="menu" aria-expanded="false">${ico('dots')}</button></div>`;
   }
+  // A conversation with classmates after the school turned off messaging other students (2026-11-26, Martin): it stays
+  // (nothing you got disappears, as on Schoology), read only. Schoology says per person (GET /messages/can, its
+  // send_message), kept in fsct_can like Contacts: a yes a day, a no 15 minutes. Teachers are never read only here.
+  const roAsked = new Set();
+  function readOnly(t) {
+    const ids = (t.with || []).map(String).filter(id => /^\d{1,20}$/.test(id));
+    if (!ids.length || !ids.every(id => P(id).role === 'Student')) return false;
+    const can = (() => { const v = store.get('fsct_can'); return v && typeof v === 'object' && !Array.isArray(v) ? v : {}; })();
+    const of = id => { const v = can[id]; return v && Date.now() - (v.at || 0) < (v.s === true ? 864e5 : 9e5) ? v.s : undefined; };
+    const need = ids.filter(id => of(id) === undefined && !roAsked.has(id)).slice(0, 25);
+    if (need.length) {
+      need.forEach(id => roAsked.add(id));
+      FSX.api('/messages/can?ids=' + need.join(',')).then(j => {
+        const at = Date.now(), all = (() => { const v = store.get('fsct_can'); return v && typeof v === 'object' && !Array.isArray(v) ? v : {}; })();
+        need.forEach(id => { all[id] = { s: null, at }; });
+        Object.entries((j && j.can) || {}).forEach(([id, v]) => { all[id] = Object.assign({}, all[id], { s: v === true ? true : v === false ? false : null, at }); });
+        store.set('fsct_can', all);
+        if (MS.open && need.some(id => (TH.find(x => x.id === MS.open || keyOf(x) === MS.open.slice(2)) || { with: [] }).with.map(String).includes(id))) msThread(true);
+      }).catch(() => {});
+    }
+    return ids.every(id => of(id) === false);
+  }
   function msThread(keepScroll) {
     const box = $('msThread'), feedTop = keepScroll && box.querySelector('.ms-feed') ? box.querySelector('.ms-feed').scrollTop : null;
     $('ms').classList.toggle('open', !!MS.open);
@@ -4746,8 +4769,9 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     // more than one subject with this person: you pick which one your reply goes in (Schoology keeps them apart)
     const reply = ts && ts.length > 1 ? (MS.subjFor[MS.open] || t.id) : t.id;
     const pick = ts && ts.length > 1 ? `<div class="ms-pick"><span>Reply in</span><div class="mp-types" id="msSubj" role="group" aria-label="Reply in"><span class="mp-pill" aria-hidden="true"></span>${ts.map(x => `<button data-mssubj="${x.id}" aria-pressed="${x.id === reply}">${esc(x.subject)}</button>`).join('')}</div></div>` : '';
+    const ro = readOnly(t);
     box.innerHTML = topHTML(t, subOf(t)) + (showSubj ? `<div class="ms-subj">${ico('msg')}<span>All subjects <small>· ${ts.length}</small></span></div>` : `<div class="ms-subj">${ico('msg')}<span>${esc(t.subject)}</span></div>`)
-      + `<div class="ms-feed" id="msFeed" role="log" aria-label="Messages" aria-live="polite">${feedHTML(msgs, showSubj, isGroup)}</div>` + composerHTML(isGroup ? 'Reply to everyone' : `Message ${title(t).replace(/^(Dr|Mr|Ms|Mrs)\.\s+/, '$1. ')}`, note + pick + (t.loaded ? '' : `<p class="ms-note">${ico('clock')}<span>${t.failed ? 'Couldn\'t load the whole conversation. Refresh to try again.' : 'Loading the whole conversation…'}</span></p>`), allTeachers(t.with));
+      + `<div class="ms-feed" id="msFeed" role="log" aria-label="Messages" aria-live="polite">${feedHTML(msgs, showSubj, isGroup)}</div>` + (ro ? `<div class="ms-ro"><p class="ms-note">${ico('info')}<span>Your school turned off messaging other students, so you can't reply here. You can still read this conversation.</span></p></div>` : composerHTML(isGroup ? 'Reply to everyone' : `Message ${title(t).replace(/^(Dr|Mr|Ms|Mrs)\.\s+/, '$1. ')}`, note + pick + (t.loaded ? '' : `<p class="ms-note">${ico('clock')}<span>${t.failed ? 'Couldn\'t load the whole conversation. Refresh to try again.' : 'Loading the whole conversation…'}</span></p>`), allTeachers(t.with)));
     box.dataset.reply = reply;
     if (pick) requestAnimationFrame(() => mpPill($('msSubj'), false));
     const feed = $('msFeed'); feed.scrollTop = feedTop != null ? feedTop : feed.scrollHeight;

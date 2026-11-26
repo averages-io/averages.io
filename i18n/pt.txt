@@ -1301,3 +1301,4 @@
 1301|Sair em todos os lugares?
 1302|Você será desconectado em todos os celulares, tablets e computadores, inclusive neste, em até um minuto. Você pode entrar de novo com o Schoology quando quiser.
 1303|Não foi possível sair em todos os lugares. Tente de novo daqui a pouco.
+1304|Sua escola desativou as mensagens entre alunos, então você não pode responder aqui. Você ainda pode ler esta conversa.

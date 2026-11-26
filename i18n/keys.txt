@@ -1301,3 +1301,4 @@
 1301|Sign out everywhere?
 1302|You'll be signed out on every phone, tablet and computer, this one too, within a minute. You can sign back in with Schoology any time.
 1303|Couldn't sign out everywhere. Try again in a moment.
+1304|Your school turned off messaging other students, so you can't reply here. You can still read this conversation.

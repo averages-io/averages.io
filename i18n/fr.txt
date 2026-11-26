@@ -1301,3 +1301,4 @@
 1301|Se déconnecter partout ?
 1302|Vous serez déconnecté sur tous les téléphones, tablettes et ordinateurs, celui-ci aussi, d'ici une minute. Vous pouvez vous reconnecter avec Schoology à tout moment.
 1303|Impossible de se déconnecter partout. Réessayez dans un instant.
+1304|Ton école a désactivé les messages entre élèves, tu ne peux donc pas répondre ici. Tu peux toujours lire cette conversation.
