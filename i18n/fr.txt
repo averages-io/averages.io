@@ -1331,3 +1331,9 @@
 1331|Bon dimanche, {x} !
 1332|Content de te revoir, {x} !
 1333|Salut, {x} !
+1334|Choisir dans tout ton OneDrive
+1335|Revenir aux fichiers déjà utilisés
+1336|Rechercher dans tout ton OneDrive
+1337|Mes fichiers
+1338|Chargement de ton OneDrive…
+1339|Ta connexion a expiré. Clique sur le x, puis à nouveau sur le +.

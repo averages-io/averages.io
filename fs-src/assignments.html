@@ -2401,6 +2401,14 @@
   .pk-search svg.i { width: 18px; height: 18px; flex: none; }
   .pk-search input { flex: 1; min-width: 0; border: 0; background: none; outline: none; font: inherit; font-size: 14px; font-weight: 700; color: var(--ink); }
   .pk-search:focus-within { box-shadow: 0 0 0 2px var(--focus); }
+  /* Add from OneDrive: "+" at the end of the search bar opens their whole OneDrive in place, and turns into an "x" to go back (2026-11-28) */
+  .pk-all { flex: none; width: 30px; height: 30px; margin-right: -8px; display: grid; place-items: center; border-radius: 9px; color: var(--ink-2); cursor: pointer; transition: background-color .15s ease, color .15s ease; }
+  .pk-all:hover, .pk-all.on { background: var(--inner); color: var(--ink); }
+  .pk-search .pk-all svg.i { width: 18px; height: 18px; transition: transform .32s cubic-bezier(.3, 1.45, .5, 1); }
+  .pk-all.on svg.i { transform: rotate(135deg); }
+  @media (prefers-reduced-motion: reduce) { .pk-search .pk-all svg.i { transition: none; } }
+  .potato-mode .pk-search .pk-all svg.i { transition: none; }
+  .pk-crumbs:empty { min-height: 12px; padding: 0; }
   .pk-crumbs { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; min-height: 44px; padding: 8px 16px; font-size: 13px; font-weight: 800; color: var(--muted); }
   .pk-crumbs button { max-width: 200px; padding: 4px 8px; border-radius: 8px; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .pk-crumbs button:hover { background: var(--panel); color: var(--ink); }
@@ -4431,23 +4439,34 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   let pk = null;
   const pkFiles = (node, path = []) => node.items.flatMap(i => i.folder ? pkFiles(i, path.concat(i.name)) : [{ ...i, path }]);
   const pkHas = (k, name) => (DRAFT[tiSel] || []).some(f => f.src === k && f.name === name);
+  // a picked file's key: its path in the list of files they've used, or its OneDrive id in their whole OneDrive
+  const pkKey = i => pk.all ? 'od:' + i.id : (i.path || pk.trail.slice(1).map(t => t.name)).concat(i.name).join('/');
   function pkRow(i, idx) {
-    if (i.folder) { const n = i.items.length; return `<button class="pk-row" data-pkf="${idx}"><span class="pk-ico pk-fold">${ico('folder')}</span><span class="pk-n"><b>${esc(i.name)}</b><small>Folder · ${plural(n, 'item')}</small></span>${ico('chev-r')}</button>`; }
-    const key = (i.path || pk.trail.slice(1).map(t => t.name)).concat(i.name).join('/'), got = pkHas(pk.k, i.name), on = pk.sel.has(key);
+    if (i.folder) { const n = i.items ? i.items.length : i.count || 0; return `<button class="pk-row" data-pkf="${idx}"><span class="pk-ico pk-fold">${ico('folder')}</span><span class="pk-n"><b>${esc(i.name)}</b><small>Folder · ${plural(n, 'item')}</small></span>${ico('chev-r')}</button>`; }
+    const key = pkKey(i), got = pkHas(pk.k, i.name), on = pk.sel.has(key);
     const sub = got ? 'Already added' : pk.q && i.path ? `In ${[SOURCES[pk.k].name].concat(i.path).join(' / ')}` : i.sub;
     return `<button class="pk-row file${on ? ' on' : ''}${got ? ' added' : ''}" data-pkfile="${idx}" role="checkbox" aria-checked="${on || got}"${got ? ' disabled' : ''}><span class="mp-ck" aria-hidden="true">${ico('ok')}</span><span class="pk-ico avfi-host">${fileIco('x.' + (KIND_EXT[i.kind] || i.kind), 34)}</span><span class="pk-n"><b>${esc(i.name)}</b><small>${esc(sub)}</small></span></button>`;
   }
-  function pkShown() { return pk.q ? pkFiles(TREES[pk.k]).filter(i => i.name.toLowerCase().includes(pk.q.toLowerCase())) : pk.trail[pk.trail.length - 1].items.slice().sort((a, b) => (b.folder ? 1 : 0) - (a.folder ? 1 : 0)); }
+  function pkShown() { if (pk.all) return pk.allItems || []; return pk.q ? pkFiles(TREES[pk.k]).filter(i => i.name.toLowerCase().includes(pk.q.toLowerCase())) : pk.trail[pk.trail.length - 1].items.slice().sort((a, b) => (b.folder ? 1 : 0) - (a.folder ? 1 : 0)); }
   function pkDraw() {
     if (!pk) return; const el = pk.el, here = pk.trail[pk.trail.length - 1], list = pkShown();
+    const all = el.querySelector('[data-pkall]');
+    if (all) { all.classList.toggle('on', !!pk.all); all.setAttribute('aria-pressed', pk.all ? 'true' : 'false');
+      const tip = pk.all ? "Back to the files you've used" : 'Pick from all of your OneDrive'; all.setAttribute('aria-label', tip); all.title = tip;
+      const inp = el.querySelector('[data-pkq]'); inp.placeholder = pk.all ? 'Search all of your OneDrive' : `Search your ${SOURCES[pk.k].name}`; }
+    if (pk.all && pk.allState !== 'ok') {
+      el.querySelector('.pk-crumbs').innerHTML = pk.q ? '' : pkAtHTML();
+      el.querySelector('.pk-list').innerHTML = pk.allState === 'error' ? `<p class="pk-msg">${esc(pk.allMsg || "Couldn't load your OneDrive.")}</p><p class="pk-msg"><button class="btn" data-pkallretry>Try again</button></p>` : '<p class="pk-msg">Loading your OneDrive…</p>';
+      el.querySelector('.pk-count').textContent = pk.sel.size ? `${plural(pk.sel.size, 'file')} picked` : 'Tick the files to add'; el.querySelector('[data-pkadd]').disabled = !pk.sel.size; return;
+    }
     if (pk.state && pk.state !== 'ok') {
       el.querySelector('.pk-crumbs').innerHTML = '';
       el.querySelector('.pk-list').innerHTML = `<p class="pk-msg">${pk.state === 'loading' ? `Loading your ${SOURCES[pk.k].name}…` : pk.state === 'connect' ? `Connect ${SOURCES[pk.k].name} to add from it.</p><p class="pk-msg"><button class="btn primary" data-pkconnect>Connect ${SOURCES[pk.k].name}</button>` : `${esc(pk.msg || 'Couldn\'t load your files.')}</p><p class="pk-msg"><button class="btn" data-pkretry>Try again</button>`}</p>`;
       el.querySelector('.pk-count').textContent = ''; el.querySelector('[data-pkadd]').disabled = true; return;
     }
-    el.querySelector('.pk-crumbs').innerHTML = pk.k === 'drive' && !pk.q ? `<button class="pk-addf" data-pkdrive>${ico('plus')}Add a file</button><span class="pk-note">Only files you've opened with Averages.io show here.</span>` : pk.k === 'onedrive' && !pk.q ? `<button class="pk-addf" data-pkod>${ico('plus')}Pick from all of OneDrive</button><span class="pk-note">Files you've used with Averages.io show here.</span>` : pk.q ? `<button data-pkcrumb="0">${esc(TREES[pk.k].name)}</button>${ico('chev-r')}<span aria-current="page">Results for “${esc(pk.q)}”</span>`
+    el.querySelector('.pk-crumbs').innerHTML = pk.all ? (pk.q ? '' : pkAtHTML()) : pk.k === 'onedrive' && !pk.q ? '' : pk.k === 'drive' && !pk.q ? `<button class="pk-addf" data-pkdrive>${ico('plus')}Add a file</button><span class="pk-note">Only files you've opened with Averages.io show here.</span>` : pk.k === 'onedrive' && !pk.q ? `<button class="pk-addf" data-pkod>${ico('plus')}Pick from all of OneDrive</button><span class="pk-note">Files you've used with Averages.io show here.</span>` : pk.q ? `<button data-pkcrumb="0">${esc(TREES[pk.k].name)}</button>${ico('chev-r')}<span aria-current="page">Results for “${esc(pk.q)}”</span>`
       : pk.trail.map((t, i) => i === pk.trail.length - 1 ? `<span aria-current="page">${esc(t.name)}</span>` : `<button data-pkcrumb="${i}">${esc(t.name)}</button>${ico('chev-r')}`).join('');
-    el.querySelector('.pk-list').innerHTML = list.length ? list.map(pkRow).join('') : `<p class="pk-msg">${pk.q ? `Nothing in your ${SOURCES[pk.k].name} matches “${esc(pk.q)}”.` : 'This folder is empty.'}</p>`;
+    el.querySelector('.pk-list').innerHTML = list.length ? list.map(pkRow).join('') : `<p class="pk-msg">${pk.q ? `Nothing in your ${SOURCES[pk.k].name} matches “${esc(pk.q)}”.` : pk.k === 'onedrive' && !pk.all && pk.trail.length === 1 ? "Files you've used with Averages.io show here." : 'This folder is empty.'}</p>`;
     const n = pk.sel.size; el.querySelector('.pk-count').textContent = n ? `${plural(n, 'file')} picked` : 'Tick the files to add';
     el.querySelector('[data-pkadd]').disabled = !n; el.querySelector('[data-pkadd]').innerHTML = `${ico('plus')}${n > 1 ? `Add ${n} files` : 'Add'}`;
   }
@@ -4460,7 +4479,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (pk) pkClose(); saveNote();
     document.body.insertAdjacentHTML('beforeend', `<div class="pk-scrim"><div class="pk-box" role="dialog" aria-modal="true" aria-labelledby="pkT">
       <div class="pk-head">${srcMark(k)}<h2 id="pkT">Add from ${SOURCES[k].name}</h2><button class="pk-x" data-pkclose aria-label="Close">${ico('x')}</button></div>
-      <label class="pk-search">${ico('search')}<input type="search" placeholder="Search your ${SOURCES[k].name}" aria-label="Search your ${SOURCES[k].name}" autocomplete="off" data-pkq></label>
+      <label class="pk-search">${ico('search')}<input type="search" placeholder="Search your ${SOURCES[k].name}" aria-label="Search your ${SOURCES[k].name}" autocomplete="off" data-pkq>${k === 'onedrive' ? `<button type="button" class="pk-all" data-pkall aria-pressed="false" aria-label="Pick from all of your OneDrive" title="Pick from all of your OneDrive">${ico('plus')}</button>` : ''}</label>
       <nav class="pk-crumbs" aria-label="Folders"></nav><div class="pk-list" aria-label="Files and folders"></div>
       <div class="pk-foot"><span class="pk-count" aria-live="polite"></span><button class="btn" data-pkclose>Cancel</button><button class="btn primary" data-pkadd disabled>Add</button></div></div></div>`);
     pk = { k, el: document.body.lastElementChild, trail: [TREES[k]], q: '', sel: new Map(), from: document.activeElement };
@@ -4482,17 +4501,33 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
           .catch(err => { if (err && err.code === 'popup_closed') return; toast(FST.message(err)); });
         return;
       }
-      const fo = e.target.closest('[data-pkf]'); if (fo) { pk.trail.push(pkShown()[+fo.dataset.pkf]); pkDraw(); const r = el.querySelector('.pk-row'); if (r) r.focus(); return; }
+      if (e.target.closest('[data-pkall]')) { e.preventDefault(); const inp = el.querySelector('[data-pkq]'); pk.q = ''; inp.value = '';
+        if (pk.all) { pk.all = false; pkDraw(); } else { pk.all = true; pk.at = [{ id: 'root', name: 'My files' }]; pk.allItems = []; pkAllLoad(); }
+        inp.focus({ preventScroll: true }); return; }
+      if (e.target.closest('[data-pkallretry]')) { pkAllLoad(); return; }
+      const at = e.target.closest('[data-pkat]'); if (at) { pk.at = pk.at.slice(0, +at.dataset.pkat + 1); pkAllLoad(); return; }
+      const fo = e.target.closest('[data-pkf]'); if (fo && pk.all) { const f = pkShown()[+fo.dataset.pkf]; if (!f) return; pk.q = ''; el.querySelector('[data-pkq]').value = ''; pk.at.push({ id: f.id, name: f.name }); pkAllLoad(); return; }
+      if (fo) { pk.trail.push(pkShown()[+fo.dataset.pkf]); pkDraw(); const r = el.querySelector('.pk-row'); if (r) r.focus(); return; }
       const cr = e.target.closest('[data-pkcrumb]'); if (cr) { pk.trail = pk.trail.slice(0, +cr.dataset.pkcrumb + 1); pk.q = ''; el.querySelector('[data-pkq]').value = ''; pkDraw(); return; }
-      const fi = e.target.closest('[data-pkfile]'); if (fi && !fi.disabled) { const i = pkShown()[+fi.dataset.pkfile], key = (i.path || pk.trail.slice(1).map(t => t.name)).concat(i.name).join('/'); pk.sel.has(key) ? pk.sel.delete(key) : pk.sel.set(key, i); pkDraw(); const again = el.querySelector(`[data-pkfile="${fi.dataset.pkfile}"]`); if (again) again.focus(); return; }
+      const fi = e.target.closest('[data-pkfile]'); if (fi && !fi.disabled) { const i = pkShown()[+fi.dataset.pkfile], key = pkKey(i); pk.sel.has(key) ? pk.sel.delete(key) : pk.sel.set(key, i); pkDraw(); const again = el.querySelector(`[data-pkfile="${fi.dataset.pkfile}"]`); if (again) again.focus(); return; }
       if (e.target.closest('[data-pkadd]')) {
+        const fromAll = [...pk.sel.entries()].filter(([key]) => key.startsWith('od:')).map(([, i]) => i);
+        if (fromAll.length) { FST.rememberOneDrive(fromAll); const items = TREES.onedrive.items, have = new Set(items.map(x => x.id)); fromAll.forEach(f => { if (!have.has(f.id)) { items.unshift(f); have.add(f.id); } }); }
         const k2 = pk.k, add = [...pk.sel.values()].map(i => ({ src: k2, id: i.id, designId: i.designId, mime: i.mime, name: i.name, kind: i.kind, mode: 'copy', fmt: FST.formats(Object.assign({ src: k2 }, i))[0][0], fresh: true }));
         pkClose(); DRAFT[tiSel] = (DRAFT[tiSel] || []).concat(add); tiRender(); return;
       }
     });
-    el.querySelector('[data-pkq]').addEventListener('input', e => { pk.q = e.target.value.trim(); pkDraw(); });
+    el.querySelector('[data-pkq]').addEventListener('input', e => { pk.q = e.target.value.trim(); if (pk.all) { clearTimeout(pk.qt); pk.qt = setTimeout(pkAllLoad, 300); return; } pkDraw(); });
     pkDraw(); el.querySelector('[data-pkq]').focus({ preventScroll: true });
     pkLoad(k);
+  }
+  // their whole OneDrive, one folder (or search) at a time, in this picker (the "+" in its search bar)
+  const pkAtHTML = () => pk.at.map((t, i) => i === pk.at.length - 1 ? `<span aria-current="page">${esc(t.name)}</span>` : `<button data-pkat="${i}">${esc(t.name)}</button>${ico('chev-r')}`).join('');
+  function pkAllLoad() {
+    if (!pk || !pk.all) return; const my = pk.seq = (pk.seq || 0) + 1;
+    pk.allState = 'loading'; pkDraw();
+    FST.browseOneDrive(pk.q ? { q: pk.q } : { folder: pk.at[pk.at.length - 1].id }).then(items => { if (!pk || !pk.all || pk.seq !== my) return; pk.allItems = items; pk.allState = 'ok'; pkDraw(); })
+      .catch(err => { if (!pk || !pk.all || pk.seq !== my) return; pk.allState = 'error'; pk.allMsg = err && err.code === 'needs_click' ? 'Your sign-in ran out. Click the x, then the + again.' : FST.message(err); pkDraw(); });
   }
   // the app's real list (inside the click that opened the picker, so a sign-in window can open)
   function pkLoad(k) {

@@ -1581,6 +1581,42 @@
     return d.toLocaleDateString((window.AvI18n ? window.AvI18n.locale : 'en-US'), d.getFullYear() === new Date().getFullYear() ? { month: 'short', day: 'numeric' } : { month: 'short', day: 'numeric', year: 'numeric' });
   }
 
+  /**
+   * One page of the student's whole OneDrive, for pickers drawn by the page itself (2026-11-28: Add from OneDrive's
+   * "+" in its search bar): a folder's contents ({ folder: id }, 'root' for the top) or a search ({ q }), files and
+   * folders of their own drive only, like oneDrivePick. Needs a read token (oneDriveToken({ read: true })).
+   * Answers { items: [{ id, name, folder, count, size, mimeType, modified }] }.
+   */
+  async function oneDriveBrowse(token, opts) {
+    opts = opts || {};
+    const q = String(opts.q || '').trim().slice(0, 200);
+    const folder = String(opts.folder || 'root');
+    if (folder !== 'root' && !ITEM_ID.test(folder)) throw fail('file_gone');
+    const url = q
+      ? `${GRAPH}/me/drive/root/search(q='${encodeURIComponent(q.replace(/'/g, "''"))}')?$top=100&$select=${PICK_SELECT}`
+      : folder === 'root'
+        ? `${GRAPH}/me/drive/root/children?$top=200&$select=${PICK_SELECT}`
+        : `${GRAPH}/me/drive/items/${encodeURIComponent(folder)}/children?$top=200&$select=${PICK_SELECT}`;
+    const r = await mfetch(token, url);
+    if (r.status === 403) throw fail('read_access_needed');
+    if (!r.ok) throw fail('network');
+    const j = await r.json().catch(() => ({}));
+    const items = (Array.isArray(j.value) ? j.value : [])
+      .filter((i) => i && typeof i.id === 'string' && ITEM_ID.test(i.id) && (i.folder || i.file) && !i.remoteItem && !i.package)
+      .map((i) => ({
+        id: i.id,
+        name: String(i.name || 'OneDrive file').slice(0, 200),
+        folder: !!i.folder,
+        count: i.folder ? Number(i.folder.childCount) || 0 : 0,
+        size: Number(i.size) || 0,
+        mimeType: String((i.file && i.file.mimeType) || ''),
+        modified: Date.parse(i.lastModifiedDateTime || '') || 0,
+        webUrl: String(i.webUrl || ''),
+      }));
+    if (!q) items.sort((a, b) => (b.folder ? 1 : 0) - (a.folder ? 1 : 0) || a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
+    return { items };
+  }
+
   let pickerOpen = null; // closes the picker that's open (a second one replaces it)
 
   function oneDrivePick(token) {
@@ -1954,6 +1990,9 @@
     oneDriveUpload,
     oneDriveList,
     oneDrivePick,
+    oneDriveBrowse,
+    /** Files picked in a page's own picker (oneDriveBrowse): remembered like oneDrivePick's, so they download with read access. */
+    oneDriveRemember: (items) => rememberPicked(Array.isArray(items) ? items : []),
     oneDriveDownload,
     oneDriveShareLink,
     oneDriveCanShare,

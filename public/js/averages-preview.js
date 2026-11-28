@@ -18,7 +18,7 @@
   function pdf(url) {
     if (DOCS[url]) return DOCS[url];
     var p = Promise.all([lib(), fetch(url, { credentials: 'include' }).then(function (r) { if (!r.ok) throw new Error('http_' + r.status); return r.arrayBuffer(); })])
-      .then(function (v) { return v[0].getDocument({ data: new Uint8Array(v[1]), isEvalSupported: false }).promise; });
+      .then(function (v) { return v[0].getDocument({ data: new Uint8Array(v[1]), isEvalSupported: false, verbosity: 0 }).promise; });
     DOCS[url] = p; ORDER.push(url); p.catch(function () { delete DOCS[url]; });
     while (ORDER.length > 6) { var old = ORDER.shift(), d = DOCS[old]; delete DOCS[old]; if (d) d.then(function (doc) { doc.destroy(); }, function () {}); }
     return p;

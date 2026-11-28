@@ -4505,18 +4505,39 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (folder) CVF.path.push({ id: folder.id, name: folder.name || 'Untitled folder' }); else CVF.path = CVF.path.slice(0, i + 1);
     cvfLoad(); flRender(true);
   }
+  // Previews already drawn are kept when the list is drawn again (2026-11-28, Martin: "every time i click into something the
+  // whole thing needs to reload"): a class file's picture or first page isn't fetched and drawn again, and a card that was
+  // already on screen doesn't fade in again. Kept by file id, and only while the card would draw exactly the same.
+  const KEPT = new Map();
+  function keepThumbs(box) {
+    box.querySelectorAll('.fl-card[data-flgo]').forEach(c => { const th = c.querySelector('.fl-th'); if (th && th._src != null) { KEPT.delete(c.dataset.flgo); KEPT.set(c.dataset.flgo, th); } });
+    while (KEPT.size > 400) KEPT.delete(KEPT.keys().next().value);
+  }
+  // a kept preview goes back in place of the new one: in the inert template the new one is swapped for a marker (so its
+  // picture isn't asked for), and the marker for the kept one once it's on the page (moved within the page, never adopted
+  // through the template, which would make the browser fetch the picture again)
+  function reuseThumbs(frag) {
+    frag.querySelectorAll('.fl-card[data-flgo]').forEach(c => {
+      const th = c.querySelector('.fl-th'); if (!th) return; const src = th.innerHTML, old = KEPT.get(c.dataset.flgo);
+      if (old && old._src === src) { const mark = document.createElement('span'); mark.className = 'fl-th'; mark.dataset.flkeep = c.dataset.flgo; th.replaceWith(mark); } else th._src = src;
+    });
+  }
+  function putKept(box) { box.querySelectorAll('[data-flkeep]').forEach(m => { const old = KEPT.get(m.dataset.flkeep); if (old) m.replaceWith(old); }); }
   function flAll(anim) {
+    const box = $('flAll'), was = new Set([...box.querySelectorAll('[data-flgo]')].map(c => c.dataset.flgo)); keepThumbs(box);
     let list = sorted(FILES.filter(f => matches(f)));
     if (cvfInside()) { const ids = new Set(CVF.items.filter(x => x.type === 'design').map(x => 'canva:' + x.id)); list = list.filter(f => ids.has(f.id)); }
     $('flAllT').textContent = FL.q && FL.place === 'all' ? 'Results' : cvfInside() ? cvfHere().name : placeName(FL.place);
     const extra = [FL.place.startsWith('t:') && `${C[tFolder(FL.place.slice(2))[1]].name} · ${C[tFolder(FL.place.slice(2))[1]].teacher}`, FL.type && TYPES.find(t => t[0] === FL.type)[1], FL.when && WHENS.find(w => w[0] === FL.when)[1]].filter(Boolean);
     $('flCount').innerHTML = `${list.length} ${list.length === 1 ? 'file' : 'files'}${extra.length ? ' · ' + esc(extra.join(' · ')) : ''}`;
     const app = SOURCES[FL.place] ? FL.place : '', st = app && APPLOAD[app];
-    $('flAll').innerHTML = st === 'loading' ? `<div class="fl-none"><b>Loading your ${esc(SOURCES[app].name)}…</b>From your own sign-in. Nothing is copied.</div>`
+    const html = st === 'loading' ? `<div class="fl-none"><b>Loading your ${esc(SOURCES[app].name)}…</b>From your own sign-in. Nothing is copied.</div>`
       : st === 'connect' || st === 'failed' ? `<div class="fl-none"><b>${st === 'connect' ? `Connect ${esc(SOURCES[app].name)}` : `Couldn't load ${esc(SOURCES[app].name)}`}</b><button class="btn sm primary" data-flapp="${app}">${st === 'connect' ? 'Connect' : 'Try again'}</button></div>`
       : !list.length ? `<div class="fl-none"><b>${FL.q ? `Nothing matches "${esc(FL.q)}"` : 'No files here'}</b>${FL.q ? `Try a different word.<br><button class="btn sm" data-flclear>Clear search</button>` : FL.place.startsWith('f:') ? 'Open a file and pick this folder to put it here.' : cvfInside() ? (CVF.st === 'loading' ? 'Getting this folder from Canva…' : 'No designs in this folder.') : 'Files show up here as they\'re posted.'}</div>`
       : FL.view === 'list' ? `<div class="fl-list"><div class="fl-lh"><span>Name</span><span>Class</span><span>From</span><span>Size</span></div>${list.map(rowHTML).join('')}</div>` : `<div class="fl-grid">${list.map(cardHTML).join('')}</div>`;
-    if (anim && !calm()) $('flAll').querySelectorAll('.fl-card, .fl-row, .fl-none').forEach((el, i) => el.animate && el.animate([{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: 320, delay: Math.min(i * 22, 300), easing: 'cubic-bezier(.2, .8, .2, 1)', fill: 'backwards' }));
+    // drawn in an inert template first, so a kept preview's picture isn't asked for again before the old one goes back in
+    const tpl = document.createElement('template'); tpl.innerHTML = html; reuseThumbs(tpl.content); box.replaceChildren(tpl.content); putKept(box);
+    if (anim && !calm()) [...box.querySelectorAll('.fl-card, .fl-row, .fl-none')].filter(el => !(el.dataset.flgo && was.has(el.dataset.flgo))).forEach((el, i) => el.animate && el.animate([{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: 320, delay: Math.min(i * 22, 300), easing: 'cubic-bezier(.2, .8, .2, 1)', fill: 'backwards' }));
   }
   const starBtn = (p, name) => `<button class="fl-star" data-flstar="${p}" aria-pressed="${STARS.has(p)}" aria-label="${STARS.has(p) ? 'Unstar' : 'Star'} ${esc(name)}" title="${STARS.has(p) ? 'Unstar' : 'Star'}">${ico('star')}</button>`;
   // starred folders come first (teachers' before yours, as before, within each)

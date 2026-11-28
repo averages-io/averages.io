@@ -4710,7 +4710,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   }
   // every page's words with where they sit (pdfEntries puts them back together)
   async function pdfItems(buf) {
-    const lib = await pdfjs(), doc = await lib.getDocument({ data: buf, isEvalSupported: false }).promise, pages = [];
+    const lib = await pdfjs(), doc = await lib.getDocument({ data: buf, isEvalSupported: false, verbosity: 0 }).promise, pages = [];
     for (let n = 1; n <= Math.min(doc.numPages, 12); n++) {
       const tc = await (await doc.getPage(n)).getTextContent();
       pages.push(tc.items.filter(it => it.str).map(it => ({ s: it.str, x: it.transform[4], y: it.transform[5], w: it.width, f: Math.hypot(it.transform[2], it.transform[3]) || it.height || 10 })));

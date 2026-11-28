@@ -1331,3 +1331,9 @@
 1331|Schönen Sonntag, {x}!
 1332|Willkommen zurück, {x}!
 1333|Hallo, {x}!
+1334|Aus deinem ganzen OneDrive auswählen
+1335|Zurück zu den Dateien, die du schon benutzt hast
+1336|Dein ganzes OneDrive durchsuchen
+1337|Meine Dateien
+1338|Dein OneDrive wird geladen…
+1339|Deine Anmeldung ist abgelaufen. Klicke auf das x und dann noch einmal auf das +.

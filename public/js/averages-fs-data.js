@@ -1245,7 +1245,7 @@
       pdf: function (url) {
         if (PREV_DOCS[url]) return PREV_DOCS[url];
         var p = Promise.all([prevPdfjs(), fetch(url, { credentials: 'include' }).then(function (r) { if (!r.ok) throw new Error('http_' + r.status); return r.arrayBuffer(); })])
-          .then(function (v) { return v[0].getDocument({ data: new Uint8Array(v[1]), isEvalSupported: false }).promise; });
+          .then(function (v) { return v[0].getDocument({ data: new Uint8Array(v[1]), isEvalSupported: false, verbosity: 0 }).promise; });
         PREV_DOCS[url] = p; PREV_ORDER.push(url);
         p.catch(function () { delete PREV_DOCS[url]; });
         while (PREV_ORDER.length > 8) { var old = PREV_ORDER.shift(), d = PREV_DOCS[old]; delete PREV_DOCS[old]; if (d) d.then(function (doc) { doc.destroy(); }, function () {}); }

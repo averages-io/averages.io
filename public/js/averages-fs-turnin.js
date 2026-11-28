@@ -78,6 +78,8 @@
   }
   function oneDriveToken(write, quiet) { var c = C(); if (!c) return Promise.reject({ code: 'not_ready' }); return c.oneDriveToken(write ? { interactive: true, write: true } : { interactive: !quiet, read: true }); }
 
+  // a OneDrive file's own page (webUrl), only on Microsoft's sites: what Open in OneDrive opens
+  function odUrl(u) { u = String(u || ''); return /^https:\/\/([a-z0-9-]+\.)*(live\.com|sharepoint\.com|1drv\.ms|microsoftpersonalcontent\.com|onedrive\.com|office\.com|cloud\.microsoft)\//i.test(u) ? u : ''; }
   var CANVA_FMT = {}, CANVA_ASKED = {};   // design id -> the types Canva can make of it
   var FST = window.FST = {
     ready: function () { return Promise.all([S(), Cl()]); },
@@ -151,11 +153,23 @@
       var c = C(); if (!c) return Promise.reject({ code: 'not_ready' });
       return Promise.resolve(src === 'drive' ? c.disconnectGoogle() : c.disconnectOneDrive());
     },
+    /** One folder (or a search) of their whole OneDrive, as picker rows: { items } (see oneDriveBrowse). */
+    browseOneDrive: function (opts) {
+      var c = C();
+      return oneDriveToken(false).then(function (t) { return c.oneDriveBrowse(t, opts || {}); }).then(function (r) {
+        return (r.items || []).map(function (f) {
+          return f.folder ? { id: f.id, name: f.name, folder: true, count: f.count }
+            : { id: f.id, name: f.name, kind: extOf(f.name) || 'file', mime: f.mimeType, url: odUrl(f.webUrl), sub: [size(f.size), f.modified ? 'Edited ' + new Date(f.modified).toLocaleDateString((window.AvI18n ? window.AvI18n.locale : 'en-US'), { month: 'short', day: 'numeric' }) : ''].filter(Boolean).join(' · ') };
+        });
+      });
+    },
+    /** Picked from browseOneDrive: remembered, so they download with read access later. */
+    rememberOneDrive: function (items) { var c = C(); if (c && c.oneDriveRemember) c.oneDriveRemember(items); },
     /** OneDrive's own file picker (any file in their OneDrive). */
     pickOneDrive: function () {
       var c = C();
       return oneDriveToken(false).then(function (t) { return c.oneDrivePick(t); }).then(function (l) {
-        return (l || []).map(function (f) { return { id: String(f.id || ''), name: String(f.name || 'OneDrive file').slice(0, 200), kind: extOf(f.name) || 'file', mime: String(f.mimeType || ''), sub: size(Number(f.size) || 0) }; });
+        return (l || []).map(function (f) { return { id: String(f.id || ''), name: String(f.name || 'OneDrive file').slice(0, 200), kind: extOf(f.name) || 'file', mime: String(f.mimeType || ''), sub: size(Number(f.size) || 0), url: odUrl(f.webUrl) }; });
       });
     },
     /** What a picked file can be sent as: [[ext, label]]. Google files convert; Canva exports; others go as they are. */

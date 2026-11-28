@@ -1331,3 +1331,9 @@
 1331|¡Feliz domingo, {x}!
 1332|¡Qué bueno tenerte de vuelta, {x}!
 1333|¡Hola, {x}!
+1334|Elegir de todo tu OneDrive
+1335|Volver a los archivos que ya usaste
+1336|Buscar en todo tu OneDrive
+1337|Mis archivos
+1338|Cargando tu OneDrive…
+1339|Tu sesión caducó. Haz clic en la x y luego otra vez en el +.

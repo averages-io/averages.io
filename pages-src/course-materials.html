@@ -3683,7 +3683,7 @@
       } else {
         const lib = await loadPdfjs();
         // isEvalSupported: false: a PDF's fonts can never run code (CVE-2024-4367).
-        const doc = await lib.getDocument({ data: new Uint8Array(await blob.arrayBuffer()), isEvalSupported: false, enableXfa: false }).promise;
+        const doc = await lib.getDocument({ data: new Uint8Array(await blob.arrayBuffer()), isEvalSupported: false, enableXfa: false, verbosity: 0 }).promise;
         try {
           const page = await doc.getPage(1);
           const base = page.getViewport({ scale: 1 });

@@ -1331,3 +1331,9 @@
 1331|Happy Sunday, {x}!
 1332|Welcome back, {x}!
 1333|Hey there, {x}!
+1334|Pick from all of your OneDrive
+1335|Back to the files you've used
+1336|Search all of your OneDrive
+1337|My files
+1338|Loading your OneDrive…
+1339|Your sign-in ran out. Click the x, then the + again.
