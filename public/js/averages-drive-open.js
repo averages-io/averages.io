@@ -1,4 +1,4 @@
-// "Open with → Averages.io" from the cloud drive.
+// "Open with → Averages.io" from Google Drive.
 (function () {
   'use strict';
   const KEY = 'averages_drive_open';
@@ -17,7 +17,7 @@
     try { sessionStorage.removeItem(KEY); } catch { /* storage off */ }
   }
 
-  // 1. Arriving from the cloud drive.
+  // 1. Arriving from Google Drive.
   try {
     const u = new URL(window.location.href);
     const raw = u.searchParams.get('state');

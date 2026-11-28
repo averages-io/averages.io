@@ -36,7 +36,7 @@
   function canvaDesign(id, title, at, thumb) {
     return { id: String(id), designId: String(id), name: String(title || 'Untitled design').slice(0, 200), kind: 'design', sub: ago(Number(at) || 0) || 'Canva design', at: Number(at) || 0, bytes: 0, url: '', thumb: /^https:\/\//i.test(String(thumb || '')) ? String(thumb) : '' };
   }
-  // Design folders, down to 3 levels and at most 25 folders (the design app lets each student list 100 a minute):
+  // Canva's folders, down to 3 levels and at most 25 folders (Canva lets each student list 100 a minute):
   // [{ folder: true, id, name, items: [...] }, design, ...] for the folder that id names ("root": the top of Projects).
   function canvaTree() {
     var budget = 25;
@@ -78,18 +78,18 @@
   }
   function oneDriveToken(write, quiet) { var c = C(); if (!c) return Promise.reject({ code: 'not_ready' }); return c.oneDriveToken(write ? { interactive: true, write: true } : { interactive: !quiet, read: true }); }
 
-  // a drive file's own page (webUrl), only on the drive's own sites: what Open in the drive opens
-  // a drive file's preview picture (its thumbnails), only from the drive's own file servers
+  // a OneDrive file's own page (webUrl), only on Microsoft's sites: what Open in OneDrive opens
+  // a OneDrive file's preview picture (Graph's thumbnails), only from Microsoft's own file servers
   function odThumb(f) {
     var t = f && Array.isArray(f.thumbnails) && f.thumbnails[0], u = t && ((t.large && t.large.url) || (t.medium && t.medium.url)) || '';
     try { var x = new URL(u); return x.protocol === 'https:' && /(^|\.)(1drv\.com|sharepoint\.com|microsoftpersonalcontent\.com|livefilestore\.com|onedrive\.com|live\.com|microsoft\.com)$/i.test(x.hostname) ? x.href : ''; } catch (e) { return ''; }
   }
   function odUrl(u) {
-    // by host name, so an address with no "/" before its "?" counts too (newer drive addresses put the
-    // query right after the host, and those files opened a blank tab)
+    // by host name, so an address with no "/" before its "?" counts too (new OneDrive addresses look like
+    // https://onedrive.live.com?cid=…&id=…, and every OneDrive file on the Files page opened a blank tab)
     try { var x = new URL(String(u || '')); return x.protocol === 'https:' && /(^|\.)(live\.com|sharepoint\.com|1drv\.ms|microsoftpersonalcontent\.com|onedrive\.com|office\.com|cloud\.microsoft)$/i.test(x.hostname) ? x.href : ''; } catch (e) { return ''; }
   }
-  var CANVA_FMT = {}, CANVA_ASKED = {};   // design id -> the types the design app can make of it
+  var CANVA_FMT = {}, CANVA_ASKED = {};   // design id -> the types Canva can make of it
   var FST = window.FST = {
     ready: function () { return Promise.all([S(), Cl()]); },
     size: size,
@@ -129,8 +129,8 @@
             .map(function (d) { return canvaDesign(d.id, d.title, d.updatedAt, d.thumbnailUrl); });
         }).catch(function (e) { if (e && (e.code === 'canva_not_connected' || e.code === 'canva_reconnect_needed')) throw { code: 'not_connected' }; throw e; });
         if (!(opts && opts.folders)) return flat;
-        // For the pickers: design folders as a tree ({ folder: true, name, items }), then every design that isn't in one.
-        // Without folder permission (or if the design app says no) it's the flat list, as before.
+        // For the pickers: Canva's folders as a tree ({ folder: true, name, items }), then every design that isn't in one.
+        // Without folder permission (or if Canva says no) it's the flat list, as before.
         return flat.then(function (designs) {
           return canvaTree().then(function (tree) {
             var inFolders = {};
@@ -187,7 +187,7 @@
     formats: function (item) {
       var NAMES = { pdf: 'PDF', docx: 'Word', xlsx: 'Excel', pptx: 'PowerPoint', png: 'PNG', jpg: 'JPG', csv: 'CSV' };
       if (item.src === 'canva' || item.kind === 'design') {
-        // what the design app says this design can be (a document design can't be a PNG); asked once, the pages redraw on fst:formats
+        // what Canva says this design can be (a Canva Doc can't be a PNG); asked once, the pages redraw on fst:formats
         var did = String(item.designId || item.id || ''), known = CANVA_FMT[did];
         if (!known && did && !CANVA_ASKED[did]) {
           CANVA_ASKED[did] = 1;

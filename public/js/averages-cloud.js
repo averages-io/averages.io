@@ -1,4 +1,4 @@
-// Averages.io — cloud drives, in the browser.
+// Averages.io — Google Drive and OneDrive, in the browser.
 (function () {
   'use strict';
   if (window.AveragesCloud) return;
@@ -22,11 +22,11 @@
   const DRIVE_UPLOAD = 'https://www.googleapis.com/upload/drive/v3';
   const MS_AUTH = 'https://login.microsoftonline.com/common/oauth2/v2.0';
   const MS_SCOPES = 'openid profile offline_access User.Read Files.ReadWrite.AppFolder';
-  // The read token (Add from the drive) asks for everything above plus Files.Read.
+  // The read token (Add from OneDrive) asks for everything above plus Files.Read.
   const MS_READ_SCOPES = MS_SCOPES + ' Files.Read';
   const MS_SLOT_SCOPES = { onedrive: MS_SCOPES, onedriveRead: MS_READ_SCOPES };
   const GRAPH = 'https://graph.microsoft.com/v1.0';
-  // Drive item ids: "ABC123!456" (personal) or "01ABC..." (school).
+  // OneDrive item ids: "ABC123!456" (personal) or "01ABC..." (school).
   const ITEM_ID = /^[A-Za-z0-9!_.-]{1,200}$/;
 
   class CloudError extends Error {
@@ -271,7 +271,7 @@
       return j.access_token;
     }
     if (r.status === 409) {
-      // The drive took the sign-in back: Reconnect.
+      // Google / Microsoft took the sign-in back: Reconnect.
       if ((j && j.error === 'cloud_reconnect_needed') || lost(app)) {
         markLost(app);
         throw fail('reconnect');
@@ -296,7 +296,7 @@
   /** Connect through our API: the page goes to Google / Microsoft and comes back here. */
   function goConnect(app, read) {
     const need = needOf(read);
-    // Disconnected by the drive: their account chooser starts on the same account.
+    // Disconnected by Google / Microsoft: their account chooser starts on the same account.
     const acct = accounts()[app] || lost(app);
     const hint = acct && (acct.email || acct.username) ? `&login_hint=${encodeURIComponent(acct.email || acct.username)}` : '';
     window.location.assign(`${API}/cloud/${app}/connect?return_to=${encodeURIComponent(returnPath())}${need === 'write' ? '&write=1' : need === 'read' ? '&read=1' : ''}${hint}`);
@@ -483,9 +483,9 @@
           gPending = null;
           if (!p) return;
           if (!resp || resp.error || !resp.access_token) return p.reject(fail('denied'));
-          // People can untick individual permissions on the consent screen.
+          // Google lets people untick individual permissions on the consent screen.
           if (!window.google.accounts.oauth2.hasGrantedAllScopes(resp, DRIVE_SCOPE)) return p.reject(fail('drive_not_allowed'));
-          // A new sign-in may be a different account: its folder is looked up again.
+          // A new sign-in may be a different Google account: its folder is looked up again.
           setToken('gdrive', { token: resp.access_token, exp: Date.now() + (Number(resp.expires_in) || 3600) * 1000, folder: '' });
           p.resolve(resp.access_token);
         },
@@ -517,8 +517,8 @@
     return new Promise((resolve, reject) => {
       gPending = { resolve, reject };
       const acct = accounts().gdrive;
-      // Nobody connected on this device yet: always show the drive's account
-      // chooser, so a browser still signed in to someone else's account
+      // Nobody connected on this device yet: always show Google's account
+      // chooser, so a browser still signed in to someone else's Google
       // account can't be used without the student seeing it.
       const ask = { prompt: opts.prompt || (acct ? '' : 'select_account') };
       if (acct && acct.email) ask.login_hint = acct.email;
@@ -554,7 +554,7 @@
       clearToken('gdrive');
       delete SRV.tok.gdrive;
       // Our server keeps the connection: ask it for a new token once (it
-      // answers `reconnect` if the drive took the connection back), then retry.
+      // answers `reconnect` if Google took the connection back), then retry.
       if (serverOn('gdrive') && !init.retried) {
         const fresh = await serverToken('gdrive', false, true);
         return gfetch(fresh, url, Object.assign({}, init, { retried: true }));
@@ -741,7 +741,7 @@
     await Promise.all(missing.map(async (id) => {
       const res = await gfetch(token, `${DRIVE}/files/${encodeURIComponent(id)}?fields=${DRIVE_FIELDS},trashed&${ALL_DRIVES}`);
       if (res.status === 404) { gone.push(id); return; }
-      if (!res.ok) return;   // The drive busy or offline: tried again next time
+      if (!res.ok) return;   // Google busy or offline: tried again next time
       const f = await res.json().catch(() => null);
       if (!f || !f.id) return;
       if (f.trashed) { trashed.push(id); return; }
@@ -772,7 +772,7 @@
   function plainName(name) {
     return String(name || '').replace(/[\\/\u0000-\u001f\u007f]/g, '_').trim().slice(0, 200) || 'File';
   }
-  // The drive's own formats have no bytes to download: they're exported as a PDF.
+  // Google's own formats have no bytes to download: they're exported as a PDF.
   const GOOGLE_EXPORTS = new Set([
     'application/vnd.google-apps.document',
     'application/vnd.google-apps.spreadsheet',
@@ -817,7 +817,7 @@
       type = EXPORT_MIME[as];
       r = await gfetch(token, `${DRIVE}/files/${encodeURIComponent(id)}/export?mimeType=${encodeURIComponent(type)}`);
       if (r.status === 403) {
-        // The drive only exports files up to 10 MB.
+        // Google only exports files up to 10 MB.
         const j = await r.json().catch(() => ({}));
         const reason = j && j.error && Array.isArray(j.error.errors) && j.error.errors[0] ? j.error.errors[0].reason : '';
         if (reason !== 'exportSizeLimitExceeded') throw fail('download_blocked');
@@ -1039,7 +1039,7 @@
       const c = claimsOf(j.id_token);
       const username = String(c.preferred_username || c.email || '');
       const before = accounts().onedrive;
-      // A different account: the other token and the picked files were the last one's.
+      // A different Microsoft account: the other token and the picked files were the last one's.
       if (before && before.username && username && before.username.toLowerCase() !== username.toLowerCase()) {
         clearToken(slot === 'onedrive' ? 'onedriveRead' : 'onedrive');
         clearPicked();
@@ -1292,7 +1292,7 @@
     }
     logRes(r.status);
     if (r.status === 401 && serverOn('onedrive') && !init.retried) {
-      // Same as the other drive: one new token from our server, then retry.
+      // Same as Google Drive: one new token from our server, then retry.
       delete SRV.tok.onedrive;
       const fresh = await serverToken('onedrive', false, true);
       return mfetch(fresh, url, Object.assign({}, init, { retried: true }));
@@ -1973,7 +1973,7 @@
     messageFor,
     extOf,
     GOOGLE_TYPE,
-    // Cloud drive
+    // Google Drive
     prepareGoogle,
     googleReady: () => !!gClient || serverOn('gdrive'),
     googleToken,
@@ -1994,7 +1994,7 @@
     listDriveDrafts,
     removeDriveDraft,
     refreshDriveDrafts,
-    // Second cloud drive
+    // OneDrive
     oneDriveToken,
     connectOneDrive,
     disconnectOneDrive,

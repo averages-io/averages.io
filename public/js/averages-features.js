@@ -231,7 +231,7 @@
       .catch(() => { /* keep everyone else's view */ });
   }
 
-  // Client-side navigation: page notices follow the address.
+  // Client-side navigation (Next.js): page notices follow the address.
   let last = window.location.pathname;
   setInterval(() => {
     if (window.location.pathname !== last) { last = window.location.pathname; whenBody(pageNotice); }
