@@ -79,6 +79,11 @@
   function oneDriveToken(write, quiet) { var c = C(); if (!c) return Promise.reject({ code: 'not_ready' }); return c.oneDriveToken(write ? { interactive: true, write: true } : { interactive: !quiet, read: true }); }
 
   // a OneDrive file's own page (webUrl), only on Microsoft's sites: what Open in OneDrive opens
+  // a OneDrive file's preview picture (Graph's thumbnails), only from Microsoft's own file servers
+  function odThumb(f) {
+    var t = f && Array.isArray(f.thumbnails) && f.thumbnails[0], u = t && ((t.large && t.large.url) || (t.medium && t.medium.url)) || '';
+    return /^https:\/\/([a-z0-9-]+\.)+(1drv\.com|sharepoint\.com|microsoftpersonalcontent\.com|livefilestore\.com|onedrive\.com|live\.com|microsoft\.com)\//i.test(u) ? u : '';
+  }
   function odUrl(u) { u = String(u || ''); return /^https:\/\/([a-z0-9-]+\.)*(live\.com|sharepoint\.com|1drv\.ms|microsoftpersonalcontent\.com|onedrive\.com|office\.com|cloud\.microsoft)\//i.test(u) ? u : ''; }
   var CANVA_FMT = {}, CANVA_ASKED = {};   // design id -> the types Canva can make of it
   var FST = window.FST = {
@@ -143,7 +148,7 @@
       }
       return oneDriveToken(false, quiet).then(function (t) { return c.oneDriveList(t); }).then(function (l) {
         return (l || []).filter(function (f) { return f && f.id && !f.folder; }).map(function (f) {
-          return { id: String(f.id), name: String(f.name || 'OneDrive file').slice(0, 200), kind: extOf(f.name) || 'file', mime: String((f.file && f.file.mimeType) || f.mimeType || ''), sub: [size(f.size), ago(Date.parse(f.lastModifiedDateTime || ''))].filter(Boolean).join(' · '), at: Date.parse(f.lastModifiedDateTime || '') || 0, bytes: Number(f.size) || 0, url: /^https:\/\/([a-z0-9-]+\.)*(live\.com|sharepoint\.com|1drv\.ms|microsoftpersonalcontent\.com|onedrive\.com|office\.com|cloud\.microsoft)\//i.test(String(f.webUrl || '')) ? String(f.webUrl) : '' };
+          return { id: String(f.id), name: String(f.name || 'OneDrive file').slice(0, 200), kind: extOf(f.name) || 'file', mime: String((f.file && f.file.mimeType) || f.mimeType || ''), sub: [size(f.size), ago(Date.parse(f.lastModifiedDateTime || ''))].filter(Boolean).join(' · '), at: Date.parse(f.lastModifiedDateTime || '') || 0, bytes: Number(f.size) || 0, thumb: odThumb(f), url: /^https:\/\/([a-z0-9-]+\.)*(live\.com|sharepoint\.com|1drv\.ms|microsoftpersonalcontent\.com|onedrive\.com|office\.com|cloud\.microsoft)\//i.test(String(f.webUrl || '')) ? String(f.webUrl) : '' };
         });
       });
     },
@@ -163,6 +168,8 @@
         });
       });
     },
+    /** A OneDrive file's own page, looked up by id (for one the list didn't carry an address for). */
+    oneDriveUrl: function (id) { var c = C(); return oneDriveToken(false, true).then(function (t) { return c.oneDriveWebUrl(t, id); }).then(odUrl); },
     /** Picked from browseOneDrive: remembered, so they download with read access later. */
     rememberOneDrive: function (items) { var c = C(); if (c && c.oneDriveRemember) c.oneDriveRemember(items); },
     /** OneDrive's own file picker (any file in their OneDrive). */

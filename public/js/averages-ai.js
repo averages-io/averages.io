@@ -288,11 +288,13 @@
     if (DL) return DL.p;
     var V = VARIANTS[v], prev = variantOf(), o = opts();
     LAST_ERR = '';
+    // asked for right away, inside the click (2026-11-28): after a wait the browser no longer counts it as the student's
+    // own action, and Firefox then quietly says no. Persistent storage isn't cleared when the disk gets full.
+    if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(function () {});
     var space = navigator.storage && navigator.storage.estimate ? navigator.storage.estimate().catch(function () { return null; }) : Promise.resolve(null);
     DL = { v: v, loaded: 0, total: V.bytes };
     DL.p = space.then(function (est) {
       if (est && est.quota && est.quota - (est.usage || 0) < V.bytes * 1.1) throw new Error('no_space');
-      if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(function () {});
       // remembered, so any page picks it back up if this one closes first
       var o1 = opts(); o1.pending = v; saveOpts(o1);
       changed();

@@ -158,7 +158,9 @@ export default {
     if (request.method === "GET" && url.pathname === "/" && url.searchParams.has("signedout")) {
       const page = await signinPage(new Request(new URL("/", url).toString(), { headers: request.headers }), env);
       const res = new Response(page.body, page);
-      res.headers.set("Clear-Site-Data", '"cookies", "storage"');
+      // Cookies only (2026-11-28): the page itself wipes storage first thing (fs-src/signin.html), keeping the A.I.
+      // search and photo-check models, which "storage" deleted on every sign-out (Martin: "the ai ... is getting deleted often").
+      res.headers.set("Clear-Site-Data", '"cookies"');
       // Firefox leaves partitioned cookies behind on Clear-Site-Data, and Cloudflare's bot check
       // (cf_clearance, Domain=averages.io; Partitioned) is one: expire it by name too, both ways.
       for (const c of CF_CLEARANCE_GONE) res.headers.append("Set-Cookie", c);

@@ -5145,6 +5145,13 @@ window.AveragesHelp = {
       return;
     }
     if (f.item && f.item.url) { FSX.newTab(f.item.url); return; }
+    // a OneDrive file without its address (added before 2026-11-28): asked for now, the tab opened inside the click
+    if (f.src === 'onedrive' && f.item && f.item.id) {
+      const w = window.open('about:blank', '_blank');
+      FST.oneDriveUrl(f.item.id).then(u => { if (!u) throw { code: 'file_gone' }; f.item.url = u; if (w) { w.opener = null; w.location.href = u; } else FSX.newTab(u); },
+        er => { if (w) w.close(); toast(er && er.code === 'file_gone' ? 'That file is gone from your OneDrive.' : FST.message(er)); });
+      return;
+    }
     toast(`Couldn't find that file in your ${SOURCES[f.src] ? SOURCES[f.src].name : 'app'}. Open the app and look for it there.`);
   }
   function flOpen(id) {

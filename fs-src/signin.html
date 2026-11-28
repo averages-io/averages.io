@@ -3,6 +3,23 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script>
+/* Just signed out (2026-11-28): everything app.averages.io kept on this device is wiped, before anything else on this
+   page runs, as the Clear-Site-Data "storage" it replaces did (worker/index.js still has the browser clear the cookies).
+   Kept: the A.I. search model and the photo check's model, which hold nothing about anyone and are hundreds of MB to
+   download again (Martin: "the ai ... is getting deleted often"), and whether A.I. search is on (averages_ai). */
+(function () {
+  if (!/[?&]signedout(=|&|$)/.test(location.search)) return;
+  var ai = null;
+  try { ai = localStorage.getItem('averages_ai'); } catch (e) {}
+  try { localStorage.clear(); if (ai) localStorage.setItem('averages_ai', ai); } catch (e) {}
+  try { sessionStorage.clear(); } catch (e) {}
+  var KEEP_CACHES = { 'averages-ai-v1': 1 }, KEEP_DBS = { tensorflowjs: 1 };
+  try { if (window.caches) caches.keys().then(function (ks) { ks.forEach(function (k) { if (!KEEP_CACHES[k]) caches.delete(k); }); }, function () {}); } catch (e) {}
+  try { if (window.indexedDB && indexedDB.databases) indexedDB.databases().then(function (l) { l.forEach(function (d) { if (d && d.name && !KEEP_DBS[d.name]) indexedDB.deleteDatabase(d.name); }); }, function () {}); } catch (e) {}
+  try { if (navigator.serviceWorker) navigator.serviceWorker.getRegistrations().then(function (rs) { rs.forEach(function (r) { r.unregister(); }); }, function () {}); } catch (e) {}
+})();
+</script>
 <title>Averages.io — Sign in</title>
 <style>
   /* Sign In Mock (same tokens as the app; no top bar or sidebar). Averages look, light only. Layout: top bar + hover-open icon rail around one rounded content sheet (the Windowed card, stretched to fill). */

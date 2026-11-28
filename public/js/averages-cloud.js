@@ -1355,7 +1355,8 @@
   }
 
   async function oneDriveList(token) {
-    const r = await mfetch(token, `${GRAPH}${APPROOT}/children?$top=100&$select=${ONEDRIVE_SELECT}`);
+    // with their preview pictures (2026-11-28: the Files page showed OneDrive files without one)
+    const r = await mfetch(token, `${GRAPH}${APPROOT}/children?$top=100&$select=${ONEDRIVE_SELECT}&$expand=thumbnails`);
     let own = [];
     if (r.status !== 404) {
       if (!r.ok) throw fail('network');
@@ -1392,7 +1393,7 @@
         const r = await mfetch(token, `${GRAPH}/$batch`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ requests: part.map((p, k) => ({ id: String(k), method: 'GET', url: `/me/drive/items/${encodeURIComponent(p.id)}?$select=${ONEDRIVE_SELECT}` })) }),
+          body: JSON.stringify({ requests: part.map((p, k) => ({ id: String(k), method: 'GET', url: `/me/drive/items/${encodeURIComponent(p.id)}?$select=${ONEDRIVE_SELECT}&$expand=thumbnails` })) }),
         });
         if (!r.ok) break;
         answers = (await r.json()).responses;
@@ -1615,6 +1616,16 @@
       }));
     if (!q) items.sort((a, b) => (b.folder ? 1 : 0) - (a.folder ? 1 : 0) || a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
     return { items };
+  }
+
+  /** A OneDrive file's own page (webUrl), looked up when the list didn't carry one. */
+  async function oneDriveWebUrl(token, id) {
+    if (!ITEM_ID.test(String(id || ''))) throw fail('file_gone');
+    const r = await mfetch(token, `${GRAPH}/me/drive/items/${encodeURIComponent(id)}?$select=id,webUrl`);
+    if (r.status === 404) throw fail('file_gone');
+    if (!r.ok) throw fail('network');
+    const j = await r.json().catch(() => ({}));
+    return String(j.webUrl || '');
   }
 
   let pickerOpen = null; // closes the picker that's open (a second one replaces it)
@@ -1991,6 +2002,7 @@
     oneDriveList,
     oneDrivePick,
     oneDriveBrowse,
+    oneDriveWebUrl,
     /** Files picked in a page's own picker (oneDriveBrowse): remembered like oneDrivePick's, so they download with read access. */
     oneDriveRemember: (items) => rememberPicked(Array.isArray(items) ? items : []),
     oneDriveDownload,
