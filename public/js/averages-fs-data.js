@@ -163,7 +163,7 @@
     }
     untitle(side);
     var nav = side.querySelector('.nav'), foot = side.querySelector('.foot');
-    // everything but the footer scrolls together (Cloudflare's viewport), so the footer never covers a row
+    // everything but the footer scrolls together (one viewport), so the footer never covers a row
     var sc = document.createElement('div'); sc.className = 'side-scroll'; sc.id = 'sideScroll';
     [].slice.call(side.children).forEach(function (x) { if (x !== foot) sc.appendChild(x); });
     side.insertBefore(sc, foot || null);
@@ -176,7 +176,7 @@
       if (home) {
         var rec = document.createElement('a'); rec.href = '#'; rec.id = 'sideRec'; rec.className = 'side-rec'; rec.setAttribute('role', 'button');
         rec.innerHTML = CLOCK + '<span class="fade">Recents</span><span class="side-chev">' + CHEV + '</span>';
-        // the folder's rows: a grid row that grows from 0 to their height (Cloudflare's 0fr to 1fr)
+        // the folder's rows: a grid row that grows from 0 to their height (0fr to 1fr)
         var rw = document.createElement('div'); rw.className = 'side-subw'; rw.id = 'sideRecW';
         rw.innerHTML = '<div class="side-sub" id="sideRecList">' + recentsHTML() + '</div>';
         var on = !!sideOpen().rec; rec.setAttribute('aria-expanded', on ? 'true' : 'false'); rw.classList.toggle('on', on); if (!on) rw.inert = true;

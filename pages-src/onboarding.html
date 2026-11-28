@@ -2582,7 +2582,7 @@
           if (cfg.failed) throw new Error('config');
           cloud.cfg = cfg;
           cloud.state = 'ready';
-          // Google's sign-in script loads now, so Connect can open its window straight away.
+          // The drive's sign-in script loads now, so Connect can open its window straight away.
           if (cfg.google) K.prepareGoogle().catch(() => {});
           const back = typeof K.connectResult === 'function' ? K.connectResult() : null;
           if (back) {
@@ -2636,7 +2636,7 @@
           .finally(() => { cloud.busy[app] = false; render(); focusRow(app); });
       });
 
-      // Back from Canva with the browser's Back button (the page comes out of the cache): not opening any more.
+      // Back from the design app with the browser's Back button (the page comes out of the cache): not opening any more.
       window.addEventListener('pageshow', e => { if (e.persisted && canva.going) { canva.going = false; render(); } });
 
       let started = false;
@@ -2645,10 +2645,10 @@
         started = true;
         render();
         if (!LIVE) return;
-        // Signed in as under 13: Canva can never be used, so don't ask about it.
+        // Signed in as under 13: the design app can never be used, so don't ask about it.
         if (!(INCOG && INCOG.locked)) loadCanva();
         loadCloud();
-        // Back from the Canva tab (or a drive changed in another tab): check again.
+        // Back from the design tab (or a drive changed in another tab): check again.
         document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && canva.waiting) loadCanva(); });
         window.addEventListener('focus', () => { if (canva.waiting) loadCanva(); });
         window.addEventListener('averages-cloud-change', () => { if (cloud.state === 'ready') render(); });
@@ -3011,7 +3011,7 @@
         }
       } catch {}
 
-      // Picked Plus (and doesn't have it yet): Stripe checkout instead of Home
+      // Picked Plus (and doesn't have it yet): checkout instead of Home
       // once setup is done. Used by the finish step (scripts/port-pages.mjs).
       // A cancelled or failed checkout lands in the app as Classic.
       if (accountMode === 'plus' && !(billingStatus && billingStatus.plus)) {
@@ -3432,7 +3432,7 @@
       // The switch can go off (or come in late): Fullscreen only while it's on.
       if (window.AveragesFeatures && window.AveragesFeatures.ready) Promise.resolve(window.AveragesFeatures.ready).then(() => { if (on && !allowed()) leave(); else start(); });
 
-      // Left for Google or Microsoft sign-in and came back: same view, same step.
+      // Left for a drive's sign-in and came back: same view, same step.
       window.addEventListener('pagehide', () => {
         if (finishing) return;
         try {

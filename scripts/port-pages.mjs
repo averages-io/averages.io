@@ -379,7 +379,7 @@ export default function Page() {
 `;
 
   // The page's CSS is a real stylesheet next to it (imported above), not a string in the bundle:
-  // Next.js links it in <head>, the browser caches it, and the page's JavaScript gets smaller.
+  // The framework links it in <head>, the browser caches it, and the page's JavaScript gets smaller.
   fs.writeFileSync(path.join(outDir, "page.css"), cssFile(name, data.style));
   fs.writeFileSync(path.join(outDir, "page.tsx"), content);
   return content.length;
@@ -422,7 +422,7 @@ for (const [name, route] of Object.entries(ROUTES)) {
   }
 }
 
-// 404 has no route segment — Next.js renders app/not-found.tsx for unmatched paths.
+// 404 has no route segment — app/not-found.tsx renders for unmatched paths.
 try {
   const data = extract(path.join(SRC_DIR, "404.html"));
   data.style = rewriteLinks(data.style);

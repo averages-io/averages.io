@@ -444,7 +444,7 @@
       await sleep(1500, signal);
       const s = await call('GET', `/canva/exports/${enc(job)}`, null, signal);
       if (s.status === 'success') { files = Math.max(1, Math.min(MAX_FILES, Number(s.files) || 1)); break; }
-      // { status: 'failed', error }: license_required / approval_required are the student's to sort out in Canva.
+      // { status: 'failed', error }: license_required / approval_required are the student's to sort out in the design app.
       if (s.status === 'failed') throw fail(/^canva_export_[a-z_]{1,40}$/.test(String(s.error || '')) ? s.error : 'canva_export_failed');
     }
     status('downloading');
@@ -464,7 +464,7 @@
         if (res.ok) break;
         const j = await res.json().catch(() => null);
         const code = codeFor(res.status, j && j.error);
-        // Canva said done but the file isn't quite there yet: wait a moment, within the same time limit.
+        // The design app said done but the file isn't quite there yet: wait a moment, within the same time limit.
         if (code !== 'canva_export_not_ready' || Date.now() - started > limit) throw fail(code === 'canva_export_not_ready' ? 'canva_export_timeout' : code, { status: res.status });
         await sleep(1500, signal);
       }

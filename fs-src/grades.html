@@ -3506,7 +3506,7 @@
   }
   // The number is painted on a canvas the size of the badge, so it moves with the circle as one piece. Text on the page
   // snaps to whole pixels on its own, which could leave the digit up to half a pixel off from its circle.
-  // Spotify-style names: with animations on, a name that doesn't fit stays on one line and slides to show the end.
+  // Scrolling names: with animations on, a name that doesn't fit stays on one line and slides to show the end.
   // With potato mode or reduced motion, names go back to wrapping normally.
   const MQ_SEL = '.gr-ct > b, .gr-ct > small, .gw-t > b, .gw-sub, .rg2 .tx > b, .rg2 .tx > small'; // names, and the line under them
   function mqOff(el) { const inn = el.querySelector(':scope > .mq-in'); if (inn) el.innerHTML = inn.innerHTML; el.classList.remove('mq'); delete el.dataset.mq; }

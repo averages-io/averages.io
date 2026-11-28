@@ -3,7 +3,7 @@
 // The model is Averages' fine-tune of IBM Granite 4.0 H 350M (Apache 2.0), run by transformers.js on the
 // student's own device. It never sees anything but what the student typed and the names of their own classes
 // and teachers; nothing leaves the device. Files: /vendor/transformers-4.3.2/ (the library), the model and the
-// ONNX Runtime .wasm from /ai/ (our R2, through the app's own worker, so it's the same site).
+// ONNX Runtime .wasm from /ai/ (our file storage, through the app's own worker, so it's the same site).
 //
 // Messages in:  { t: 'load', id, model, dtype, files, device, schema }   { t: 'ask', id, text, classes, teachers, lang }
 // Messages out: { t: 'progress', id, loaded, total, phase? ('prepare', 'warmup') } { t: 'ready', id, device }
@@ -49,7 +49,7 @@ import { Safety, REFUSE } from '/vendor/averages-ai-1/safety.mjs';
 
 const CACHE = 'averages-ai-v1';
 const WASM = '/ai/runtime/ort-1.31.0-dev.20260914/ort-wasm-simd-threaded.asyncify.wasm';
-env.allowRemoteModels = false;        // never Hugging Face: only our own files
+env.allowRemoteModels = false;        // never an outside model host: only our own files
 env.allowLocalModels = true;
 env.localModelPath = '/ai/models/';
 env.useBrowserCache = true;
@@ -110,8 +110,8 @@ export function searchTools(classes, teachers, schema = 16) {
 
 let tok = null, model = null, safety = null, loading = null, device = '', schema = 16, firstAsk = true, loaded = '';
 // One copy of the model for every page of the site: the app starts this as a SharedWorker when it can,
-// so going to another page in the same tab keeps the model ready instead of starting it again (Firefox and Safari
-// keep a shared worker across same-site page changes; Chrome does with extendedLifetime, about 30 s). Each page talks
+// so going to another page in the same tab keeps the model ready instead of starting it again (most browsers
+// keep a shared worker across same-site page changes; some only for about 30 s). Each page talks
 // through its own port; replies go to the page whose message is being handled (one message at a time, below).
 const SHARED = typeof SharedWorkerGlobalScope !== 'undefined' && self instanceof SharedWorkerGlobalScope;
 let port = null;
@@ -159,8 +159,8 @@ async function load(m) {
     safety = new Safety(await sw.json());
     schema = m.schema === 17 ? 17 : 16;
     // warm-up: one throwaway search, the same path as a real one, so the browser compiles its GPU programs now, while
-    // the page says "Getting A.I. ready", and not during the student's first search (Firefox: 25-31 s otherwise,
-    // Chrome a few seconds; averages-ai NOTE_FOR_CLAUDE_CHAT.md). Every load, also from the cache. Its answer is dropped;
+    // the page says "Getting A.I. ready", and not during the student's first search (25-31 s otherwise in slower browsers,
+    // a few seconds in faster ones). Every load, also from the cache. Its answer is dropped;
     // a search typed meanwhile waits in the queue below and runs right after.
     post({ t: 'progress', id: m.id, loaded: m.total || 0, total: m.total || 0, phase: 'warmup' });
     const w0 = performance.now();

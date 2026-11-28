@@ -3445,8 +3445,8 @@
     });
     const wait = ms => new Promise(r => setTimeout(r, ms));
 
-    // Save to Canva: the API makes a Canva folder and saves the files one by
-    // one on its queue, a few a minute (Canva's own limit), so a big folder
+    // Save to the design app: the API makes a design folder and saves the files one by
+    // one on its queue, a few a minute (the design app's own limit), so a big folder
     // takes a little while. It keeps going if this page is closed; this tab
     // picks the progress up again after a reload.
     const SAVES_KEY = 'averages_canva_saves';
@@ -4128,7 +4128,7 @@
             const rawExt = String(f.ext || '').toLowerCase();
             const item = {
               name: String(f.name || 'File'),
-              // Google's own types have no extension; short labels that fit the badge.
+              // The drive's own types have no extension; short labels that fit the badge.
               ext: (classroom ? ({ gdoc: 'doc', gsheet: 'xls', gslides: 'ppt', gdraw: 'img' })[rawExt] : '') || rawExt || 'file',
               created: label(at),
               live: { course: String(f.course), kind: String(f.kind), parent: String(f.parent), parentTitle: String(f.parentTitle || ''), id: String(f.id), size: Number(f.size) || 0, at },

@@ -2075,7 +2075,7 @@
     }
     // Takes a person/teacher object ({name, color, ...}), not a thread.
     function avatarBg(p) {
-      if (window.AveragesAvatar) return window.AveragesAvatar.background(p && !p.unnamed ? p.name : '');   // no name: Apple's grey
+      if (window.AveragesAvatar) return window.AveragesAvatar.background(p && !p.unnamed ? p.name : '');   // no name: the usual grey
       return `linear-gradient(135deg, ${p.color}, ${shadeColor(p.color, -0.26)})`;
     }
 

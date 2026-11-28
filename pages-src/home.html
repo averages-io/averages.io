@@ -2496,7 +2496,7 @@
 
     // dragstart is cancelled unless it began on the dot handle, so
     // grabbing the color swatch or name input never starts a drag.
-    // Chromium reports dragstart's e.target as the draggable ancestor
+    // Some browsers report dragstart's e.target as the draggable ancestor
     // (the row) rather than the exact element the gesture began on, so
     // the handle check has to happen on the preceding mousedown instead.
     let courseDragAllowed = false;

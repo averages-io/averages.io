@@ -1029,7 +1029,7 @@
       document.getElementById('filesSub').textContent = `${FILES.length} files from ${FILE_COURSES.length} courses, Google Drive, OneDrive and Canva`;
     }
 
-    // Menus: a file's actions, and Add from Google Drive.
+    // Menus: a file's actions, and Add from the cloud drive.
     const fxMenu = document.getElementById('fxMenu');
     let fxMenuFor = null;
     let fxLast = null;   // where the last menu opened, so a submenu opens in the same spot
@@ -1083,7 +1083,7 @@
         if (days === 1) return 'Yesterday';
         return new Date(t).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
       };
-      // Google Docs, Sheets and Slides and Canva designs have no file size, so they count as 0.
+      // The drive's own docs, sheets and slides and designs have no file size, so they count as 0.
       function sizeLabel(bytes) {
         const mb = bytes / (1024 * 1024);
         if (!bytes) return '0 MB';
@@ -1099,7 +1099,7 @@
       // The page's own state.
       const LV = { filter: 'all', query: '', shown: 60 };
 
-      // ---------- Google Drive and OneDrive ----------
+      // ---------- cloud drives ----------
       const CLOUD = {
         gdrive: { name: 'Google Drive', state: 'loading', files: [], busy: false, message: '' },
         onedrive: { name: 'OneDrive', state: 'loading', files: [], busy: false, message: '' },
@@ -1283,7 +1283,7 @@
       Object.assign(CF_BADGE, { gdoc: ['DOC', '#3b6fd1'], gsheet: ['SHEET', '#2f7d54'], gslides: ['SLIDES', '#d1852f'], gdraw: ['DRAW', '#7a5ba6'], sheet: ['SHEET', '#2f7d54'], slides: ['SLIDES', '#d1852f'] });
       const cfCourse = id => CF.courses.find(c => c.id === id) || { id, name: 'Course', color: '#83849a' };
       const cfColor = c => (/^#[0-9a-f]{3,8}$/i.test(String(c.color || '')) ? c.color : '#83849a');
-      // One status line under the header, for saves and Canva folder changes.
+      // One status line under the header, for saves and design folder changes.
       let flashState = null;
       function flash(text, bad, link, undo) {
         flashState = { text, bad: !!bad, link: link && C() && C().linkOk(link.url) ? link : null, undo: typeof undo === 'function' ? undo : null };
@@ -1374,7 +1374,7 @@
             j = await res.json();
             if (!j.partial) { try { sessionStorage.setItem(SUB_CACHE, JSON.stringify({ at: Date.now(), owner: cfOwner(), data: j })); } catch {} }
           }
-          // Google Classroom keeps turned-in work in Classroom.
+          // Classroom keeps turned-in work in Classroom.
           if (j.platform === 'classroom') { SUB.state = 'off'; render(); return; }
           SUB.courses = (Array.isArray(j.courses) ? j.courses : []).filter(c => c && ID_OK(c.id)).map(c => ({ id: String(c.id), name: String(c.name || 'Course'), color: String(c.color || '') }));
           SUB.files = (Array.isArray(j.files) ? j.files : [])
@@ -1398,7 +1398,7 @@
         let pending;
         if (app === 'gdrive') {
           if (!K.googleReady()) { K.prepareGoogle().catch(() => {}); flash(K.messageFor('not_ready'), true); return; }
-          pending = K.googleSession({ interactive: true });   // inside the click: may open Google's window
+          pending = K.googleSession({ interactive: true });   // inside the click: may open the drive's window
         } else {
           pending = K.oneDriveToken({ interactive: true });
         }
@@ -1456,7 +1456,7 @@
         window.location.href = avgAssignHref(t.course, t.title, t.id, `&attach=${encodeURIComponent(JSON.stringify(file))}`);
       }
       // A second menu in the same spot: one class's assignments (a course
-      // file), or every class's, grouped by class (Drive, OneDrive, Canva).
+      // file), or every class's, grouped by class (cloud drives, designs).
       function openAttach(file, courseId) {
         const targets = attachTargets(courseId);
         const row = t => ({ label: t.title, sub: t.overdue ? `Late${t.due ? ' · was due ' + t.due : ''}` : (t.due ? `Due ${t.due}` : 'No due date'), run: () => attachTo(file, t) });
@@ -1476,11 +1476,11 @@
         if (fxLast) openFxMenu(fxLast.anchor, `Attach "${file.name}" to`, list, { x: fxLast.x, y: fxLast.y });
       }
 
-      // ---------- Canva ----------
+      // ---------- design app ----------
       // Designs: GET /canva/designs (newest first). Folders (when switched
       // on): GET /canva/folders/:id/items, one folder at a time.
       const CV = { state: 'loading', items: [], next: null, folders: 'off', busy: false };
-      // Canva's thumbnail links come from Canva's own CDN and expire; only https ones are used.
+      // Design thumbnail links come from the design app's own CDN and expire; only https ones are used.
       const thumbOk = u => /^https:\/\//i.test(String(u || ''));
       async function loadCanva(more) {
         if (!more) { CV.state = 'loading'; render(); }
@@ -1745,7 +1745,7 @@
       }
 
       // ---------- Drawing ----------
-      // Google's own files (Docs, Sheets, Slides) get Google's icons, not Word's or Excel's.
+      // The drive's own files (docs, sheets, slides) get their own icons, not the office ones.
       const iconKey = e => (e.src === 'canva' ? 'canva' : (e.src === 'gdrive' && ({ Docs: 'gdoc', Sheets: 'gsheet', Slides: 'gslide' })[e.kind]) || e.ext);
       function badgeLive(e) {
         if (e.folder) return `<span class="fx-badge lf-folder-badge" aria-hidden="true">${FOLDER_ICON}</span>`;
@@ -1772,7 +1772,7 @@
         }
         return plain;
       }
-      // Only Google's own image host, over https.
+      // Only the drive's own image host, over https.
       const GDRIVE_THUMB_OK = u => /^https:\/\/[a-z0-9-]+\.googleusercontent\.com\//i.test(String(u || ''));
       // A preview that won't load (they expire after a few hours) becomes the plain page.
       document.addEventListener('error', ev => {
@@ -1985,7 +1985,7 @@
         const items = [];
         if (f.kind === 'assignment') items.push({ label: 'Open assignment', sub: f.parentTitle, run: () => { window.location.href = avgAssignHref(f.course, f.parentTitle, f.parent); } });
         const show = { label: 'Show in Materials', run: () => { window.location.href = `course-materials.html?${avgCourseQ(f.course)}&show=${encodeURIComponent(`${f.kind}:${f.parent}:${f.id}`)}`; } };
-        // Classroom files are already in Google Drive: they open there.
+        // Classroom files are already in the cloud drive: they open there.
         if (f.url) {
           items.push({ label: 'Open in Google Drive', run: () => { if (DRIVE_URL_OK(f.url)) window.open(f.url, '_blank', 'noopener,noreferrer'); } });
           items.push(show);
@@ -2030,7 +2030,7 @@
           list.push(hideItem(e));
           return list;
         }
-        // Canva: a folder, or a design (from the list or from a folder).
+        // The design app: a folder, or a design (from the list or from a folder).
         const id = String(e.raw.id);
         if (e.folder) return [
           { label: 'Open folder', run: () => goFolder(0, { id, name: e.name }) },
@@ -2039,7 +2039,7 @@
         const list = [{ label: 'Open in Canva', run: () => openDesign(id, anchor && anchor.closest('[data-lv]')) }];
         if (!isClassroom() && !e.hidden) list.push({ label: 'Attach to an assignment', next: true, run: () => openAttach({ src: 'canva', id, name: e.name }, null) });
         if (LV.filter === 'canva' && foldersOn()) list.push({ label: 'Move to folder', next: true, run: () => openMoveMenu({ id, name: e.name }) });
-        // Designs listed inside a Canva folder are Canva's own view: no Remove there.
+        // Designs listed inside a design folder are the design app's own view: no Remove there.
         if (!e.key.startsWith('fv:')) list.push(hideItem(e));
         return list;
       }
@@ -2056,7 +2056,7 @@
           if (c.state === 'connect') list.push({ label: `Connect ${c.name}`, run: () => askCloud(app, 'connect') });
           else if (c.state === 'reconnect') list.push({ label: `Reconnect ${c.name}`, sub: 'It got disconnected', run: () => askCloud(app, 'connect') });
           else if (app === 'gdrive' && (c.state === 'ready' || c.state === 'click')) {
-            // No picker: Google Drive opens, and they choose Open with → Averages.io there.
+            // No picker: the cloud drive opens, and they choose Open with → Averages.io there.
             const ow = C() && typeof C().googleOpenWith === 'function' ? C().googleOpenWith() : 'on';
             if (ow === 'reconnect') list.push({ label: 'Reconnect Google Drive', sub: 'Adds Averages.io to Google Drive’s Open with menu', run: () => askCloud(app, 'connect') });
             else list.push({ label: 'From Google Drive', sub: 'In Drive, right-click a file → Open with → Averages.io for Drive', run: () => { (window.AveragesHelp ? (f) => window.AveragesHelp.open('drive', { onContinue: f }) : (f) => f())(() => window.open((C() && C().driveHome) || 'https://drive.google.com/', '_blank', 'noopener,noreferrer')); } });
@@ -2096,7 +2096,7 @@
         if (t.closest('[data-drive-open-cancel]')) { if (window.AveragesDriveOpen) window.AveragesDriveOpen.clear(); render(); return; }
         const hideRe = t.closest('[data-reauth-hide]');
         if (hideRe) { hideReauth(hideRe.dataset.reauthHide); return; }
-        // Google Drive / OneDrive: each opens a window, so nothing is awaited before it.
+        // Cloud drives: each opens a window, so nothing is awaited before it.
         const conn = t.closest('[data-cloud-connect]');
         if (conn && !conn.disabled) { askCloud(conn.dataset.cloudConnect, 'connect'); return; }
         const show = t.closest('[data-cloud-show]');
@@ -2114,7 +2114,7 @@
         if (t.closest('[data-connect-canva]')) { window.location.href = `${api}/canva/connect?return_to=${encodeURIComponent('/files')}`; return; }
         if (t.closest('[data-retry-designs]')) { loadCanva(false); return; }
         if (t.closest('[data-more-designs]')) { loadCanva(true); return; }
-        // Canva folders
+        // Design folders
         const crumb = t.closest('[data-crumb]');
         if (crumb) { goFolder(+crumb.dataset.crumb, null); return; }
         if (t.closest('[data-folder-new]')) { if (!FD.formBusy) { FD.form = { mode: 'new', value: '', focus: true }; render(); } return; }
@@ -2156,7 +2156,7 @@
       document.addEventListener('keydown', ev => { if (ev.key === 'Escape') closeFxMenu(true); });
       window.addEventListener('resize', () => closeFxMenu(false));
       window.addEventListener('scroll', () => closeFxMenu(false), true);
-      // Back from Canva's Return button: tidy the address.
+      // Back from the design app's Return button: tidy the address.
       try {
         const u = new URL(window.location.href);
         if (u.searchParams.has('canva')) { u.searchParams.delete('canva'); window.history.replaceState(window.history.state, '', u.pathname + u.search + u.hash); }

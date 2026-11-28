@@ -161,7 +161,7 @@ export default {
       // Cookies only: the page itself wipes storage first thing (fs-src/signin.html), keeping the A.I.
       // search and photo-check models, which "storage" deleted on every sign-out .
       res.headers.set("Clear-Site-Data", '"cookies"');
-      // Firefox leaves partitioned cookies behind on Clear-Site-Data, and Cloudflare's bot check
+      // Some browsers leave partitioned cookies behind on Clear-Site-Data, and the bot check
       // (cf_clearance, Domain=averages.io; Partitioned) is one: expire it by name too, both ways.
       for (const c of CF_CLEARANCE_GONE) res.headers.append("Set-Cookie", c);
       res.headers.set("Cache-Control", "no-store");

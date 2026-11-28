@@ -1965,8 +1965,8 @@
           <a class="material-name material-link" href="${escapeHtml(l.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(l.title)}</a>
         </div>`;
     }
-    // Classroom materials are links: Drive files open in Google Drive, plus
-    // web links, YouTube videos and Google Forms.
+    // Classroom materials are links: drive files open in the drive, plus
+    // web links, videos and forms.
     const CLASSROOM_BADGE = { drive: ['DRIVE', '#3b6fd1'], youtube: ['VIDEO', '#c1443a'], form: ['FORM', '#7a4fae'], link: ['LINK', '#4f6b8c'] };
     function classroomMaterialRowHTML(m) {
       const ext = (String(m.title || '').match(/\.([a-z0-9]{1,5})$/i) || [])[1];
@@ -1995,7 +1995,7 @@
         + liveMaterials.links.map(linkRowHTML).join('');
       materialsEl.innerHTML = rows || '<p class="assign-empty">No materials attached to this assignment.</p>';
     }
-    // Signed in: is Canva connected? (Google Drive is checked in this browser, see loadCloud.)
+    // Signed in: is the design app connected? (The cloud drive is checked in this browser, see loadCloud.)
     let canvaInfo = null;
     async function loadCanvaReady() {
       try {
@@ -2075,8 +2075,8 @@
       else materialsEl.innerHTML = '<p class="assign-empty">No materials attached to this assignment.</p>';
     }
 
-    // A small popup for anything that stops Edit in Canva. Connect sends the
-    // student through Canva and back to this same page.
+    // A small popup for anything that stops Edit in the design app. Connect sends the
+    // student through the design app and back to this same page.
     function showCanvaProblem(code) {
       const connect = code === 'canva_not_connected' || code === 'canva_reconnect_needed';
       const MSG = {
@@ -2152,7 +2152,7 @@
       btn.setAttribute('aria-busy', 'true');
       if (label) label.textContent = 'Opening Canva…';
       const done = () => { btn.removeAttribute('aria-busy'); if (label) label.textContent = was; };
-      // Makes the design in the student's Canva and gives back its edit link.
+      // Makes the design in the student's design app and gives back its edit link.
       const getUrl = async () => {
         let res, j;
         try {
@@ -2183,7 +2183,7 @@
 
     let cloudCfg = null;   // null until loaded: { google, microsoft }
     const CLOUD_NAME = { gdrive: 'Google Drive', onedrive: 'OneDrive' };
-    // Where saved files go: a folder Averages.io makes in Drive, and OneDrive's app folder (all it can reach).
+    // Where saved files go: a folder Averages.io makes in each drive (one drive only lets it reach its app folder).
     const CLOUD_WHERE = { gdrive: 'the Averages.io folder in your Google Drive', onedrive: 'the Apps/Averages.io folder in your OneDrive' };
     function loadCloudScript() {
       return new Promise((resolve, reject) => {
@@ -2284,9 +2284,9 @@
       if (!C || !cloudCfg) { showCloudProblem('Couldn’t open this in Google Drive', 'not_ready'); return; }
       if (!cloudCfg.google) { showCloudProblem('Google Drive is coming soon', 'not_configured'); return; }
       const src = attachmentSource(btn);
-      // Already signed in to Google in this tab: the new tab opens now, inside
+      // Already signed in to the drive in this tab: the new tab opens now, inside
       // this click, and the file loads into it when it's ready. Otherwise this
-      // click goes to Google's sign-in window, and the file opens from a link.
+      // click goes to the drive's sign-in window, and the file opens from a link.
       const signedIn = C.hasToken('gdrive') && C.googleReady();
       const pending = cloudToken(C, 'gdrive');
       let tab = null;
@@ -2883,7 +2883,7 @@
       onedrive: id => /^[A-Za-z0-9!._-]{1,200}$/.test(id),
       canva: id => /^[A-Za-z0-9_-]{1,64}$/.test(id),
     };
-    // Source marks: a colored circle with a white shape, the same family as Canva's.
+    // Source marks: a colored circle with a white shape, the same family as the design app's.
     const AS_MARK = (c, d) => `<span class="as-mark" style="--mark:${c}" aria-hidden="true"><svg viewBox="0 0 24 24">${d}</svg></span>`;
     const SOURCE_MARK = {
       canva: '<span class="canva-mark" aria-hidden="true"></span>',
@@ -3018,7 +3018,7 @@
       opts = opts || {};
       const sec = String(item.courseId), asg = String(item.id);
       // Each pick: { key, src, name, size?, file? (device), id, designId?, title?, kind?, parent?, course?,
-      //   mode: 'copy' | 'link', role: 'reader' | 'commenter', url (Canva link), menu, access,
+      //   mode: 'copy' | 'link', role: 'reader' | 'commenter', url (design link), menu, access,
       //   up: { state: 'waiting' | 'hashing' | 'uploading' | 'done' | 'failed', frac, fileId, at, err } (device only),
       //   fileId (once uploaded at turn-in), status (its line while turning in) }
       const st = { picks: [], phase: null, write: false, wph: null, html: '', log: [], boxH: 0, prog: null, wprog: null, err: null, xBack: false, menuKey: null, desc: '', descResult: '' };
@@ -3459,7 +3459,7 @@
         const reup = list.filter(p => p.src === 'device' && (!p.up.fileId || p.stale));
         const steps = [];
         if (canvaCopies.length) {
-          // Named for the type picked: "Making a PowerPoint in Canva", "Canva Word"; mixed types read as files.
+          // Named for the type picked: "Making a slide deck", "Making a document"; mixed types read as files.
           const kinds = [...new Set(canvaCopies.map(p => p.type || 'pdf'))];
           const one = kinds.length === 1 ? turnType(kinds[0]) : null;
           const label = canvaCopies.length > 1
@@ -3590,7 +3590,7 @@
                 if (signal.aborted) throw { code: 'aborted' };
               }
             } else if (stp.k === 'up') {
-              // A pick can be several files (a Canva design as PNG pages): each one goes up.
+              // A pick can be several files (a design as PNG pages): each one goes up.
               const items = stp.items.map(p => {
                 const got = p.src === 'device' ? { blob: p.file, name: p.name } : blobs.get(p.key);
                 return { p, fs: got ? [].concat(got) : [] };
@@ -3711,13 +3711,13 @@
         }
       }
 
-      // ---------- Add from Canva / Google Drive / OneDrive ----------
+      // ---------- Add from the design app / cloud drives ----------
       function sourceNote(html) {
         const el = document.getElementById('uploadSourceNote');
         if (el) { el.innerHTML = html; el.hidden = !html; }
       }
       let canvaPickItems = [], canvaPickNext = null;
-      // Canva folders (GET /canva/folders/:id/items): the top ones above your designs; open one to pick from inside it
+      // Design folders (GET /canva/folders/:id/items): the top ones above your designs; open one to pick from inside it
       let canvaPickFolders = [], canvaPickPath = [], canvaPickInside = null, canvaPickN = 0;
       const PICK_FOLDER_ICON = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="#7d2ae8" d="M3 7.5A1.5 1.5 0 0 1 4.5 6h4.6l2 2.4h8.4A1.5 1.5 0 0 1 21 9.9v7.6a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5z"/></svg>';
       const okFolderItem = x => x && (x.type === 'folder' || x.type === 'design') && /^[A-Za-z0-9_-]{1,50}$/.test(String(x.id || ''));
@@ -3774,7 +3774,7 @@
         if (!more) {
           canvaPickItems = []; canvaPickNext = null; canvaPickPath = []; canvaPickInside = null; canvaPickN++;
           box.innerHTML = canvaPickHead + '<p class="canva-pick-empty">Loading your Canva designs…</p>';
-          // the top folders, alongside (no folder permission, or Canva says no: just the designs)
+          // the top folders, alongside (no folder permission, or the design app says no: just the designs)
           canvaFolderItems('root').then(items => { canvaPickFolders = items.filter(x => x.type === 'folder'); if (!canvaPickPath.length && canvaPickItems.length) renderCanvaPick(); }, () => { canvaPickFolders = []; });
         }
         try {
@@ -3793,7 +3793,7 @@
           box.innerHTML = canvaPickHead + '<p class="canva-pick-empty">Couldn’t load your Canva designs.<button class="assign-retry" type="button" data-canva-retry>Try again</button></p>';
         }
       }
-      // Add from Google Drive: the files Averages.io can see (drive.file), newest first.
+      // Add from the cloud drive: the files Averages.io can see (drive.file), newest first.
       let drivePickItems = [];
       const driveHead = `<div class="canva-pick-head"><span>Your Google Drive files in Averages.io</span><button class="material-icon-btn" type="button" data-drive-close aria-label="Close Google Drive files">${REMOVE_ICON}</button></div>`;
       const driveFoot = '<p class="canva-pick-empty drive-pick-more"><button class="as-linkbtn" type="button" data-drive-open>Add from Google Drive</button></p>';
@@ -3843,7 +3843,7 @@
         }
       }
 
-      // Google Drive / OneDrive: the sign-in window (if any) opens inside the click, before anything is awaited.
+      // Cloud drives: the sign-in window (if any) opens inside the click, before anything is awaited.
       function addFromCloud(app, btn) {
         const c = C();
         if (!c) return;
@@ -3994,7 +3994,7 @@
           if (dp.getAttribute('aria-disabled') === 'true') return;
           const f = drivePickItems.find(x => String(x.id) === dp.dataset.pickDrive);
           if (!f) return;
-          // Google Docs, Sheets and Slides go in as PDFs when they're sent as a copy.
+          // The drive's own docs, sheets and slides go in as PDFs when they're sent as a copy.
           const google = /^application\/vnd\.google-apps\./.test(String(f.mimeType || '')) && !/\.pdf$/i.test(String(f.name));
           if (addPick({ src: 'gdrive', id: String(f.id), name: (google ? String(f.name) + '.pdf' : String(f.name)).slice(0, 200), mimeType: String(f.mimeType || ''), size: Number(f.size) || 0 })) render();
           return;
@@ -4049,9 +4049,9 @@
         if (C() && typeof C().setLogger === 'function') C().setLogger(logHook);
       }
       modalBox.dataset.asOpen = '1';
-      // OneDrive's sharing (and the Copy / Link pill) is known once our server says how it's connected.
+      // The drive's sharing (and the Copy / Link pill) is known once our server says how it's connected.
       const onCloudStatus = () => {
-        // Not while they're typing (a Canva link): the box would lose their place.
+        // Not while they're typing (a design link): the box would lose their place.
         const a = document.activeElement;
         if (st.phase || st.write || uploading() || (a && modalBox.contains(a) && a.matches('input, textarea, [contenteditable="true"]'))) return;
         render();
@@ -4132,7 +4132,7 @@
     const CANVA_VIEW_LINK = u => /^https:\/\/(www\.)?canva\.com\/design\/[A-Za-z0-9_-]+\/[A-Za-z0-9_\-\/?=&.%]*$/.test(String(u || '').trim());
     const isDriveDraft = d => !!d.drive || d.app === 'gdrive';
     const isCanvaDraft = d => !d.drive && (d.live || d.app === 'canva');
-    // Share a Link is for Google Drive and Canva drafts (a course file or OneDrive file goes in as a copy).
+    // Share a Link is for cloud drive and design drafts (a course file or a picked drive file goes in as a copy).
     const canLink = d => isDriveDraft(d) || isCanvaDraft(d);
     function draftTypes(d, t) {
       if (!t || t.mode === 'link') return [];
@@ -4303,7 +4303,7 @@
         tiAnim(tiQ(id, '.ti-menu'), [{ opacity: 0, transform: 'translateY(-6px) scale(.96)' }, { opacity: 1, transform: 'none' }], 200);
         revealTiles(tiQ(id, '.ti-tmenu'));
       } else if (motion === 'types') {
-        // The type pill joins the group once Canva says what the design can be: it grows in from
+        // The type pill joins the group once the design app says what the design can be: it grows in from
         // nothing beside Send a Copy (Submit slides over), instead of just appearing.
         const pill = tiQ(id, '.ti-type'), sep = tiQ(id, '.ti-sep');
         if (pill && !before.type && !tiStill() && pill.animate) {
@@ -4425,7 +4425,7 @@
         return;
       }
       const C = window.AveragesCloud;
-      // Inside this click: Google may need its sign-in window.
+      // Inside this click: the drive may need its sign-in window.
       const token = d.live && isDriveDraft(d) ? driveReadToken(C) : null;
       if (token) token.catch(() => {});
       t.busy = true; t.err = '';
@@ -4481,7 +4481,7 @@
           if (!r || !r.blob) throw { code: 'download_failed' };
           files = [{ blob: r.blob, name: String(r.name || d.name + '.' + (t.type || 'pdf')) }];
         } else {
-          // The type picked (PNG is a file per page; Word goes through our converter).
+          // The type picked (PNG is a file per page; documents go through our converter).
           files = await S.exportCanvaFiles(d.designId, { title: d.name, format: t.type || 'pdf' });
         }
         P.size = files.reduce((a, f) => a + (f.blob ? f.blob.size : 0), 0);
@@ -4513,7 +4513,7 @@
         tiDraw(d.id);
       });
     }
-    // Typing the Canva link is kept as it's typed (the row redraws keep it).
+    // Typing the design link is kept as it's typed (the row redraws keep it).
     draftsList.addEventListener('input', e => {
       const inp = e.target.closest('[data-ti-url]');
       if (!inp) return;
@@ -4544,7 +4544,7 @@
       const tip = (label, inner) => `<span class="tipwrap">${inner}<span class="tip" role="tooltip">${label}</span></span>`;
       const testItem = item.type === 'assessment' || item.type === 'discussion' || !!item.outside;
       const t = TI.get(d.id);
-      // Can this draft be turned in from here? (Signed in: Drive needs its download; Canva needs our API.)
+      // Can this draft be turned in from here? (Signed in: a drive draft needs its download; a design needs our API.)
       let can = !testItem, why = testItem ? (item.outside ? 'This one is turned in on Schoology' : 'Tests are turned in on Schoology') : '';
       if (d.live && d.drive && !(SUBMIT_LIVE && driveDownloadReady())) { can = false; why = why || 'Turning in from Averages.io is coming soon'; }
       if (d.live && !d.drive && !SUBMIT_LIVE) { can = false; why = why || 'Turning in from Averages.io is coming soon'; }
@@ -4619,7 +4619,7 @@
     function driveDraft(g) {
       return { id: 'g-' + g.fileId, driveId: String(g.fileId), name: String(g.name || 'Google Drive file'), app: 'gdrive', ext: String(g.ext || 'docx'), edited: editedLabel(g.modifiedTime), t: Number(g.modifiedTime) || 0, link: String(g.webViewLink || ''), live: true, drive: true };
     }
-    // Canva's drafts come from the API, Google Drive's from this browser; one list, newest first.
+    // Design drafts come from the API, drive drafts from this browser; one list, newest first.
     let canvaDrafts = [];
     function mergeDrafts() {
       const C = window.AveragesCloud;
@@ -4772,7 +4772,7 @@
       ok.addEventListener('click', () => {
         if (ok.disabled) return;
         const C = window.AveragesCloud;
-        const token = d.drive ? driveReadToken(C) : null;   // inside the click: it may open Google's window
+        const token = d.drive ? driveReadToken(C) : null;   // inside the click: it may open the drive's window
         if (token) token.catch(() => {});
         const ctl = new AbortController();
         activeSubmitAbort = () => ctl.abort();
@@ -4841,12 +4841,12 @@
         closeModal();
         if (!d.live) { removeDraftRow(d.id); return; }
         if (d.drive) {
-          // Only forgotten here; the file stays in their Google Drive.
+          // Only forgotten here; the file stays in their drive.
           if (window.AveragesCloud) window.AveragesCloud.removeDriveDraft(d.driveId);
           removeDraftRow(d.id);
           return;
         }
-        // Signed in: forget it on the API first (the design stays in Canva).
+        // Signed in: forget it on the API first (the design stays in the design app).
         try {
           const res = await fetch(`${averagesApiBase()}/canva/drafts/${encodeURIComponent(d.designId)}`, { method: 'DELETE', credentials: 'include' });
           if (!res.ok) throw new Error('status ' + res.status);
@@ -4895,9 +4895,9 @@
       }
       if (act !== 'submit') return;
       if (d.live) { confirmSubmitDraft(d, btn); return; }
-      // Submit: the Canva design goes in as a PDF, like any other turn-in.
+      // Submit: the design goes in as a PDF, like any other turn-in.
       removeDraftRow(id, () => {
-        // Canva designs go in as a PDF; a Google Drive file in its own format.
+        // Designs go in as a PDF; a drive file in its own format.
         // Files attached from the Files page go in as they are.
         const outExt = d.app === 'canva' ? 'pdf' : (d.ext || 'docx');
         submissionHistory.push({ files: [{ name: `${d.name}.${outExt}`, ext: outExt }], timestamp: 'Just now', fromCanva: d.app === 'canva', fromDrive: d.app === 'gdrive' });
@@ -4906,7 +4906,7 @@
       });
     });
 
-    // Signed in: load this assignment's drafts, and say so when Canva's
+    // Signed in: load this assignment's drafts, and say so when the design app's
     // Return button brought the student back (?canva=saved).
     if (LIVE_DETAIL && !CANVA_PREVIEW) {
       const back = params.get('canva');

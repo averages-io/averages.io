@@ -40,7 +40,7 @@ function splashTag() {
 const SPLASH_TAG = splashTag();
 // pages with the Turn in popup: they also get the turning-in code (averages-fs-turnin.js)
 // The version line in Settings > About, the same as the Windowed pages' (scripts/port-pages.mjs):
-// Beta <package.json version> (Build <first 7 of the commit Cloudflare is building>), "local" elsewhere.
+// Beta <package.json version> (Build <first 7 of the commit being built>), "local" elsewhere.
 import { execFileSync } from "node:child_process";
 function buildVersion() {
   const pkg = JSON.parse(fs.readFileSync(path.resolve(HERE, "../package.json"), "utf8"));
@@ -325,7 +325,7 @@ function build() {
     "#side #sideRec .side-chev{transition:transform .26s cubic-bezier(.2,.8,.2,1),opacity .15s ease}#side #sideRec[aria-expanded=true] .side-chev{transform:rotate(90deg)}",
     //: the
     // rows keep their own height and are uncovered as the folder opens (they used to shrink with it, so their two lines of
-    // text squashed into each other), on an ease-out like Cloudflare's rather than the sidebar's slow-start ease, and fade
+    // text squashed into each other), on an ease-out rather than the sidebar's slow-start ease, and fade
     "#side .side-subw{display:grid;grid-template-rows:0fr;transition:grid-template-rows .26s cubic-bezier(.2,.8,.2,1)}#side .side-subw.on{grid-template-rows:1fr}" + CLOSED + " .side-subw.on{grid-template-rows:0fr}",
     "#side .side-subw>.side-sub{min-height:0;overflow:hidden;opacity:0;transition:opacity .18s ease}#side .side-subw.on>.side-sub{opacity:1;transition:opacity .22s ease .04s}",
     "#side .side-sub>*{flex-shrink:0}",

@@ -142,7 +142,7 @@
       return fail('service_worker');
     }
     // Push's own permission answer, which is the one subscribe() goes by.
-    // (Notification.permission can disagree, e.g. in headless Chromium.)
+    // (Notification.permission can disagree, e.g. in a headless browser.)
     let permission = Notification.permission;
     try {
       if (reg.pushManager.permissionState) permission = await reg.pushManager.permissionState({ userVisibleOnly: true });

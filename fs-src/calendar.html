@@ -3867,7 +3867,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   }
   // The number is painted on a canvas the size of the badge, so it moves with the circle as one piece. Text on the page
   // snaps to whole pixels on its own, which could leave the digit up to half a pixel off from its circle.
-  // Spotify-style names: with animations on, a name that doesn't fit stays on one line and slides to show the end.
+  // Scrolling names: with animations on, a name that doesn't fit stays on one line and slides to show the end.
   // With potato mode or reduced motion, names go back to wrapping normally.
   const MQ_SEL = '.cu-row .tx > b, .cu-row .tx > small, .cs-row .tx > b, .cs-row .tx > small'; // names, and the line under them
   function mqOff(el) { const inn = el.querySelector(':scope > .mq-in'); if (inn) el.innerHTML = inn.innerHTML; el.classList.remove('mq'); delete el.dataset.mq; }
@@ -4373,7 +4373,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (kind === 'det') { CAL.sel = null; document.querySelectorAll('[data-ev][aria-pressed="true"]').forEach(b => b.setAttribute('aria-pressed', 'false')); }
     if (from && from.isConnected) { if (from.matches('[aria-expanded]')) from.setAttribute('aria-expanded', 'false'); if (focus) from.focus({ preventScroll: true }); }
   }
-  // side: a day's list opens under its button; details open beside the item (like Calendar on a Mac), or under it on a phone
+  // side: a day's list opens under its button; details open beside the item, or under it on a phone
   function popPlace(el, r, side) {
     const w = el.offsetWidth, h = el.offsetHeight, narrow = innerWidth <= 760; let x, y;
     if (side && !narrow) {

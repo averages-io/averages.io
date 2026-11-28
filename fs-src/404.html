@@ -3612,7 +3612,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   }
   // The number is painted on a canvas the size of the badge, so it moves with the circle as one piece. Text on the page
   // snaps to whole pixels on its own, which could leave the digit up to half a pixel off from its circle.
-  // Spotify-style names: with animations on, a name that doesn't fit stays on one line and slides to show the end.
+  // Scrolling names: with animations on, a name that doesn't fit stays on one line and slides to show the end.
   // With potato mode or reduced motion, names go back to wrapping normally.
   const MQ_SEL = '.nf-pg .tx > b'; // names, and the line under them
   function mqOff(el) { const inn = el.querySelector(':scope > .mq-in'); if (inn) el.innerHTML = inn.innerHTML; el.classList.remove('mq'); delete el.dataset.mq; }
@@ -3903,7 +3903,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     else if (e.key === 'Escape' && nfIn.value) { e.preventDefault(); e.stopPropagation(); nfIn.value = ''; nfRender(); }
   });
   $('nfBack').addEventListener('click', () => { const r = document.referrer; if (r && new URL(r).origin === location.origin && history.length > 1) history.back(); else FSX.go('home'); });
-  // the GitHub form for broken links, with the link filled in (.github/ISSUE_TEMPLATE/broken-link.yml)
+  // the issue form for broken links, with the link filled in (.github/ISSUE_TEMPLATE/broken-link.yml)
   $('nfReport').addEventListener('click', () => {
     const came = document.referrer && new URL(document.referrer).origin === location.origin ? document.referrer : '';
     FSX.newTab('https://github.com/averages-io/averages.io/issues/new?template=broken-link.yml&link=' + encodeURIComponent('https://' + NF_LINK) + (came ? '&came-from=' + encodeURIComponent(came) : ''));
