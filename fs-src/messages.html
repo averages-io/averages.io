@@ -4370,7 +4370,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const YOU = { id: 'me', name: PROFILE.name || 'You', first: (PROFILE.name || 'You').split(' ')[0] };
   document.documentElement.style.setProperty('--me-photo', PROFILE.photo ? `url("${PROFILE.photo}")` : 'none');
   const hue = s => [...s].reduce((a, c) => a + c.charCodeAt(0) * 37, 0) % 360; // the same person gets the same color everywhere
-  const ini = n => n.replace(/^(Dr|Mr|Ms|Mrs)\.\s+/, '').split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  const ini = n => !n || n === 'Someone in Schoology' ? '?' : n.replace(/^(Dr|Mr|Ms|Mrs)\.\s+/, '').split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();   // nobody's name: a "?"
   const PEOPLE = {};
   ((FSD.people && FSD.people.CONTACTS) || []).forEach(x => { const c = (x.courses || []).find(id => C[id]); if (!c) return;
     PEOPLE[String(x.id)] = { id: String(x.id), name: x.name || 'Teacher', role: 'Teacher', c, room: '', email: x.email || '' }; });
