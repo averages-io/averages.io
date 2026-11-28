@@ -322,9 +322,13 @@ function build() {
     "#side .nav a .pip{left:21px;top:6px}",
     // a folder (Recents): the arrow turns, its rows slide open, hanging off a line under the folder's icon
     "#side .side-chev{display:inline-flex;width:16px;height:16px;flex:none;margin-left:auto;color:var(--muted);transition:transform " + EASE + ",opacity .15s ease}#side .side-chev svg{display:block;width:100%;height:100%}",
-    "#side #sideRec[aria-expanded=true] .side-chev{transform:rotate(90deg)}",
-    "#side .side-subw{display:grid;grid-template-rows:0fr;transition:grid-template-rows " + EASE + "}#side .side-subw.on{grid-template-rows:1fr}" + CLOSED + " .side-subw.on{grid-template-rows:0fr}",
-    "#side .side-subw>.side-sub{min-height:0;overflow:hidden}",
+    "#side #sideRec .side-chev{transition:transform .26s cubic-bezier(.2,.8,.2,1),opacity .15s ease}#side #sideRec[aria-expanded=true] .side-chev{transform:rotate(90deg)}",
+    // (2026-11-28, Martin: "the dropdowns are kind of weird and not smooth, i want them to be more like" Cloudflare's): the
+    // rows keep their own height and are uncovered as the folder opens (they used to shrink with it, so their two lines of
+    // text squashed into each other), on an ease-out like Cloudflare's rather than the sidebar's slow-start ease, and fade
+    "#side .side-subw{display:grid;grid-template-rows:0fr;transition:grid-template-rows .26s cubic-bezier(.2,.8,.2,1)}#side .side-subw.on{grid-template-rows:1fr}" + CLOSED + " .side-subw.on{grid-template-rows:0fr}",
+    "#side .side-subw>.side-sub{min-height:0;overflow:hidden;opacity:0;transition:opacity .18s ease}#side .side-subw.on>.side-sub{opacity:1;transition:opacity .22s ease .04s}",
+    "#side .side-sub>*{flex-shrink:0}",
     "#side .side-sub{position:relative;display:flex;flex-direction:column;gap:1px;margin:0;padding:0 0 0 28px;border:0;height:auto}",
     "#side .side-sub::before{content:'';position:absolute;left:18px;top:1px;bottom:1px;width:1px;background:var(--inner)}",
     "#side .nav a.side-recl{display:flex;flex-direction:column;align-items:stretch;justify-content:center;gap:1px;min-height:34px;padding:8px 12px 8px 11px;text-align:left;border-radius:8px;color:var(--ink);white-space:nowrap;overflow:hidden}",
