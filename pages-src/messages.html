@@ -32,7 +32,7 @@
 
   /* Scrollbars app-wide: a slim, permanently-visible, rounded gray bar
      sitting slightly inset from the true edge of its scrollable area --
-     like a normal OS/Gmail-style scrollbar, not hidden and not
+     like a normal scrollbar, not hidden and not
      hover-gated. (An earlier hover-only version turned out unreliable:
      the outer page counts as "hovered" almost the entire time you're
      using it, so it either showed constantly or never, depending on the
@@ -2075,7 +2075,7 @@
     }
     // Takes a person/teacher object ({name, color, ...}), not a thread.
     function avatarBg(p) {
-      if (window.AveragesAvatar) return window.AveragesAvatar.background(p && !p.unnamed ? p.name : '');   // no name: the usual grey
+      if (window.AveragesAvatar) return window.AveragesAvatar.background(p && !p.unnamed ? p.name : '');   // no name: plain grey
       return `linear-gradient(135deg, ${p.color}, ${shadeColor(p.color, -0.26)})`;
     }
 

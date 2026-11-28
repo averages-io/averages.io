@@ -46,7 +46,7 @@
 
   /* Scrollbars app-wide: a slim, permanently-visible, rounded gray bar
      sitting slightly inset from the true edge of its scrollable area --
-     like a normal OS/Gmail-style scrollbar, not hidden and not
+     like a normal scrollbar, not hidden and not
      hover-gated. (An earlier hover-only version turned out unreliable:
      the outer page counts as "hovered" almost the entire time you're
      using it, so it either showed constantly or never, depending on the
@@ -1008,7 +1008,7 @@
   .editor-widget-title { font-weight: 700; font-size: 0.86rem; color: var(--text-dark); }
   .editor-widget-desc { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px !important; }
 
-  /* Apple-style pill toggle — same construction as onboarding.html's
+  /* Pill toggle — same construction as onboarding.html's
      Features-step toggles, so the editor speaks the same visual
      language as the rest of the app's settings surfaces. */
   .toggle { position: relative; display: inline-block; width: 40px; height: 24px; flex-shrink: 0; }
@@ -1086,7 +1086,7 @@
   .tu-course { font-weight: 700; font-size: 0.72rem; color: var(--text-muted); }
   .tu-time { font-size: 0.68rem; font-weight: 700; color: var(--text-faint); flex-shrink: 0; white-space: nowrap; }
   .tu-body { font-size: 0.78rem; color: var(--text-dark); line-height: 1.4; margin-top: 4px !important; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-  /* Quiz / Test label (GitHub style) */
+  /* Quiz / Test label */
   .test-tag { display: inline-block; margin-left: 8px; padding: 3px 7px 1px; border: 1px solid rgb(from var(--grade-bad) r g b / 0.55); border-radius: 999px; background: transparent; color: var(--grade-bad); font-size: 0.6rem; font-weight: 700; line-height: 1.2; vertical-align: 2px; text-align: center; font-style: normal; }
   .assign-item.is-test .assign-title { font-weight: 800; }
   /* Summary card */
@@ -2496,7 +2496,7 @@
 
     // dragstart is cancelled unless it began on the dot handle, so
     // grabbing the color swatch or name input never starts a drag.
-    // Some browsers report dragstart's e.target as the draggable ancestor
+    // Chromium reports dragstart's e.target as the draggable ancestor
     // (the row) rather than the exact element the gesture began on, so
     // the handle check has to happen on the preceding mousedown instead.
     let courseDragAllowed = false;

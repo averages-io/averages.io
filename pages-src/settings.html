@@ -557,7 +557,7 @@
   .swatch.white { background: #ffffff; border-color: #cfcfd3; }
   .swatch.black { background: #111114; }
 
-  /* Apple-style pill toggle — same construction used everywhere else. */
+  /* Pill toggle — same construction used everywhere else. */
   .toggle { position: relative; display: inline-block; width: 40px; height: 24px; flex-shrink: 0; }
   .toggle input { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; z-index: 1; }
   .toggle .track { position: absolute; inset: 0; background: var(--toggle-track-bg); border-radius: 999px; transition: background 0.2s ease; }
@@ -2097,7 +2097,7 @@
         window.__averagesSignOut();
       } else {
         // Fallback for the standalone preview (this file opened outside the
-        // framework app, where no session backend is wired up).
+        // Next.js app, where no session backend is wired up).
         window.location.href = 'login.html';
       }
     }
@@ -2197,7 +2197,7 @@
       const LIVE = window.__AVERAGES_MODE__ === 'live';
       const INCOG = window.__AVERAGES_INCOGNITO__ || null;
       const INCOGNITO = !!(INCOG && INCOG.on);
-      // state: loading | ready | error | unconfigured (the API has no design app credentials)
+      // state: loading | ready | error | unconfigured (the API has no Canva app credentials)
       const canvaLive = { state: 'loading', connected: false, name: '', busy: false, turnIn: 'off' };
       function canvaRowHTML(a) {
         const s = canvaLive;
@@ -2231,7 +2231,7 @@
               ${action}
             </div>`;
       }
-      // Cloud drives, signed in. state: loading | ready | error
+      // Google Drive and OneDrive, signed in. state: loading | ready | error
       const cloud = { state: 'loading', cfg: { google: null, microsoft: null }, busy: {} };
       const cloudApi = () => window.AveragesCloud || null;
       function cloudAccount(id) {
@@ -2323,7 +2323,7 @@
       const editorOpts = editorMenu ? [...editorMenu.querySelectorAll('.pick-opt')] : [];
       let editorValue = 'canva';
       function lockedEditor() {
-        // Incognito: the design app is off, so a cloud drive or nothing.
+        // Incognito: Canva is off, so Google Drive or nothing.
         if (INCOGNITO) {
           if (!LIVE || cloud.state !== 'ready') return 'none';
           return cloud.cfg.google && cloudAccount('gdrive') ? 'gdrive' : 'none';
@@ -2427,7 +2427,7 @@
         document.querySelector('.settings-detail-wrap').addEventListener('scroll', () => closeEditorMenu(false), { passive: true });
       }
       editorReady = true;
-      // Messages after coming back from the design app, and the Disconnect confirm.
+      // Messages after coming back from Canva, and the Disconnect confirm.
       const flash = document.createElement('p');
       flash.className = 'integ-flash';
       flash.setAttribute('role', 'status');
@@ -2543,7 +2543,7 @@
           }
         }
       });
-      // Cloud drives. Connect has to open the sign-in window inside
+      // Google Drive / OneDrive. Connect has to open the sign-in window inside
       // this click, so nothing is awaited before connectGoogle/connectOneDrive.
       list.addEventListener('click', e => {
         const b = e.target.closest('[data-cloud]');
@@ -2601,7 +2601,7 @@
             }[back.result] || `Couldn’t connect ${name}. Try again in a moment.`;
             setTimeout(() => showFlash(said, back.result !== 'connected'), 0);
           }
-          // The drive's sign-in script loads now, so Connect can open its window straight away.
+          // Google's sign-in script loads now, so Connect can open its window straight away.
           if (cfg.google) C.prepareGoogle().catch(() => {});
         } catch {
           cloud.state = 'error';
@@ -2635,7 +2635,7 @@
         window.addEventListener('averages-cloud-change', () => { if (cloud.state === 'ready') render(); });
         window.addEventListener('averages-cloud-status', () => { if (cloud.state === 'ready') render(); });
       }
-      // Back from the design app: open Integrations and say how it went, then tidy the address.
+      // Back from Canva: open Integrations and say how it went, then tidy the address.
       const canvaParam = new URLSearchParams(window.location.search).get('canva');
       if (canvaParam) {
         const msg = {
@@ -2900,7 +2900,7 @@
     potatoModeToggle.addEventListener('change', () => {
       document.body.classList.toggle('potato-mode', potatoModeToggle.checked);
       saveSettingsOption('potatoMode', potatoModeToggle.checked);
-      // Potato mode skips the web font (app/layout.tsx); turning it off brings it back without a reload.
+      // Potato mode skips the Adobe font (app/layout.tsx); turning it off brings it back without a reload.
       if (!potatoModeToggle.checked && typeof window.__averagesLoadFonts === 'function') window.__averagesLoadFonts();
       syncFilePreviewsToggle();
     });
@@ -3883,7 +3883,7 @@
       profileEditNameInput.value = profileState.name;
       profileEditEmailInput.value = profileState.email;
       profileEditEmailError.hidden = true;
-      // no email yet: the one on their Averages Plus account (from the payment provider), filled in; they can change it, and it's
+      // no email yet: the one on their Averages Plus account (from Stripe), filled in; they can change it, and it's
       // still checked with a code (same as Fullscreen)
       const hint = document.getElementById('profileEditEmailHint');
       hint.textContent = 'Not required.';
@@ -3966,7 +3966,7 @@
     // API stop keeping its two GPA snapshots for this student.
     if (settingsOptions.weeklyGradeSummary === true) saveSettingsOption('weeklyGradeSummary', false);
     // The browser's answer from navigator.permissions once known (it can be
-    // more accurate than Notification.permission, which a headless browser
+    // more accurate than Notification.permission, which headless Chromium
     // always reports as denied), and kept current: unblocking in the site
     // settings hides the "blocked" note without a reload.
     let notifPermState = null;
@@ -4507,7 +4507,7 @@
           const side = Math.min(img.naturalWidth, img.naturalHeight) || PHOTO_SIDE;
           const sx = (img.naturalWidth - side) / 2, sy = (img.naturalHeight - side) / 2;
           c.getContext('2d').drawImage(img, sx, sy, side, side, 0, 0, PHOTO_SIDE, PHOTO_SIDE);
-          // WebP where the browser can make it (keeps transparency); where it can't, a JPEG on white,
+          // WebP where the browser can make it (keeps transparency); where it can't (Safari), a JPEG on white,
           // about 20 KB, not a PNG several times that.
           c.toBlob((b) => {
             if (b && b.type === 'image/webp') return resolve(b);
@@ -4522,7 +4522,7 @@
         img.src = url;
       });
     }
-    // When /media said it can't store pictures (no bucket yet, storage down),
+    // When /media said it can't store pictures (no bucket yet, R2 down),
     // stop asking for an hour, across page loads, and send them inline.
     const MEDIA_RETRY_MS = 60 * 60 * 1000;
     function mediaUnavailable() {
@@ -4546,7 +4546,7 @@
       if (known && known.pending && value === known.local) return 'r2:' + kind + ':' + known.v;
       if (!isDataImage(value)) {
         // A built-in background, white/black, or no photo: whatever this
-        // device put in file storage before isn't needed any more.
+        // device put in R2 before isn't needed any more.
         if (known && upload) {
           delete all[kind];
           saveSyncMedia(all);
@@ -4698,7 +4698,7 @@
     }
     async function deleteSyncSettingsNow() {
       // Let a push that's already uploading a picture finish first, so its
-      // picture can't land in file storage after the delete and be left behind.
+      // picture can't land in R2 after the delete and be left behind.
       if (syncPushChain) await syncPushChain.catch(() => {});
       try {
         await fetch(averagesApiBase() + '/sync/settings', { method: 'DELETE', credentials: 'include' });
@@ -4764,7 +4764,7 @@
         // (someone else changed it since). Both are real reasons to adopt.
         const remote = JSON.stringify(record.settings);
         // Pictures compared as references when this device's copy is the
-        // one already in file storage (nothing is uploaded just for comparing).
+        // one already in R2 (nothing is uploaded just for comparing).
         const local = JSON.stringify(await syncedSettingsForServer(false));
         if (remote === local) {
           saveSyncMeta(remoteStamp);
@@ -4874,7 +4874,7 @@
         return 'You have Plus. Thanks!';
       }
       // What they pay, from GET /billing/status's price ({ amount in cents, currency, interval }),
-      // in their own currency: "$1.99 a month", "€34.99 a year". Empty when the payment provider hasn't said yet.
+      // in their own currency: "$1.99 a month", "€34.99 a year". Empty when Stripe hasn't said yet.
       function priceText(p) {
         if (!p || typeof p.amount !== 'number' || !p.currency) return '';
         let money = '';
@@ -4969,7 +4969,7 @@
           });
           const data = await res.json().catch(() => ({}));
           const url = data && typeof data.url === 'string' ? data.url : '';
-          // Only ever the payment provider's own pages.
+          // Only ever Stripe's own pages.
           if (res.ok && /^https:\/\/(checkout|billing)\.stripe\.com\//.test(url)) { window.location.assign(url); return true; }
           const code = data && data.error;
           if (code === 'billing_already_subscribed') { await load(); say('You already have Plus.'); }
@@ -5015,7 +5015,7 @@
             reloadToAccount();
             return;
           }
-          // Plus -> Classic means cancelling the subscription, which is the payment provider's page.
+          // Plus -> Classic means cancelling the subscription, which is Stripe's page.
           openStripe('portal', 'Cancel Plus on the next page. You keep it until it ends.');
           return;
         }
@@ -5027,7 +5027,7 @@
       Object.keys(picks).forEach(m => picks[m].addEventListener('click', () => pick(m)));
       copies.forEach(([m, r]) => r.querySelector('.mode-pick').addEventListener('click', () => pick(m)));
       // Arrow keys move between the options (picking still needs Enter or Space:
-      // picking can mean leaving for checkout).
+      // picking can mean leaving for Stripe).
       document.querySelectorAll('.mode-group').forEach(g => g.addEventListener('keydown', e => {
         if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) return;
         const shown = [...g.querySelectorAll('.mode-row')].filter(r => !r.hidden).map(r => r.querySelector('.mode-pick'));
@@ -5040,7 +5040,7 @@
       getBtn.addEventListener('click', () => { if (getBtn.getAttribute('aria-disabled') !== 'true') pick('plus'); });
       payBtn.addEventListener('click', () => {
         say('');
-        // The billing portal always comes back to Account; this brings them back here instead.
+        // Stripe's portal always comes back to Account; this brings them back here instead.
         try { sessionStorage.setItem('averages_portal_back', 'plus'); } catch (e) {}
         openStripe('portal');
       });
@@ -5069,11 +5069,11 @@
         saveSettingsOption('syncAcrossDevices', false);
         await notifForget();
         if (window.__AVERAGES_MODE__ === 'live') {
-          // The design app: tokens and Drafts list deleted on our server (designs stay in the design app).
+          // Canva: tokens and Drafts list deleted on our server (designs stay in Canva).
           try { await fetch(averagesApiBase() + '/canva/connection', { method: 'DELETE', credentials: 'include' }); } catch {}
           try { await fetch(averagesApiBase() + '/calendar', { method: 'DELETE', credentials: 'include' }); } catch {}
           try { localStorage.removeItem('averages_calendar_on'); localStorage.removeItem('averages_calendar_touched'); } catch {}
-          // Cloud drives: forgotten here (and the drive's access withdrawn).
+          // Google Drive / OneDrive: forgotten here (and Google's access withdrawn).
           const C = window.AveragesCloud;
           if (C) { try { C.disconnectGoogle(); C.disconnectOneDrive(); } catch {} }
         }
@@ -5087,8 +5087,8 @@
         reloadToAccount();
       });
 
-      // Back from checkout: ?billing=success|cancelled (with ?section=account,
-      // which opens Account below). The billing webhook can land a few seconds
+      // Back from Stripe: ?billing=success|cancelled (with ?section=account,
+      // which opens Account below). Stripe's webhook can land a few seconds
       // after the browser does, so success checks again for up to ~20s.
       let back = null;
       try {
@@ -5242,7 +5242,7 @@
       let back = null;
       try { back = sessionStorage.getItem('averages_portal_back'); sessionStorage.removeItem('averages_portal_back'); } catch (e) {}
       if (wanted && ['account', 'plus', 'general', 'integrations', 'notifications', 'privacy', 'about'].includes(wanted)) {
-        // Back from the billing portal (it always returns to Account) after Manage payment in Plus.
+        // Back from Stripe's portal (it always returns to Account) after Manage payment in Plus.
         if (!settingsStartSection) settingsStartSection = wanted === 'account' && back === 'plus' ? 'plus' : wanted;
         u.searchParams.delete('section');
         try { window.history.replaceState(window.history.state, '', u.pathname + u.search + u.hash); } catch (e) {}

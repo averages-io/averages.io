@@ -86,7 +86,7 @@ function stageHTML(k) {
   const ext = k === 'canva'
     ? `<div class="avh-sc avh-s-ed" data-sc="ext"><div class="avh-ed-top"><span class="avh-mk avh-canva"></span><span class="avh-ln"></span><span class="avh-ln"></span><span class="avh-grow"></span><span class="avh-ret" data-hit="ret">${ico('back')}Return to Averages.io</span></div>
         <div class="avh-ed-main"><div class="avh-ed-rail"><i></i><i></i><i></i><i></i></div><div class="avh-ed-can"><div class="avh-art" data-art><i class="avh-a1"></i><i class="avh-a2"></i><i class="avh-a3"></i><i class="avh-a4"></i></div></div></div></div>`
-    // a simplified cloud drive: its layout, colors and menu wording, drawn with generic icons
+    // a simplified file picker, drawn with generic icons
     : `<div class="avh-sc avh-s-dr" data-sc="ext">
         <div class="avh-dr-top"><span class="avh-mk avh-drive"></span><b>Drive</b><span class="avh-dr-search">${ico('search')}Search in Drive</span><span class="avh-dr-me"></span></div>
         <div class="avh-dr-side"><span class="avh-dr-new">${ico('plus')}<span>New</span></span>
@@ -240,7 +240,7 @@ function openHelp(k, from, onContinue, prepare) {
     if (bar && bar.animate && ms && !calm()) bar.animate([{ width: '0%' }, { width: '100%' }], { duration: ms, easing: 'linear', fill: 'forwards' });
   });
   open = { el, k, player };
-  // with prepare (making the design), the go button stays grey until it's done; if it fails, the button says Try again
+  // with prepare (Canva: making the design), the go button stays grey until it's done; if it fails, the button says Try again
   const go = el.querySelector('[data-go]'), live = el.querySelector('[data-live]');
   let state = 'ready', result;
   const setGo = s => {
@@ -284,9 +284,9 @@ document.addEventListener('keydown', e => {
 addEventListener('resize', () => { if (open && !open.player.paused) open.player.goTo(0); });
 // ---------- public API ----------
 window.AveragesHelp = {
-  // Show the first-time help for 'canva' or 'drive'. onContinue runs when they click the Open button,
+  // Show the first-time help for 'canva' or 'drive'. onContinue runs when they click Open Canva / Open Google Drive,
   // or right away if they ticked "Don't show this again" before. Call it from the click handler so new tabs aren't blocked.
-  // prepare (optional): a function returning a Promise, like making the design. The go button stays grey until it
+  // prepare (optional): a function returning a Promise, like making the Canva design. The go button stays grey until it
   // resolves, and onContinue gets what it resolved to (the design's edit link). If it rejects, the button says Try again.
   // If they ticked "Don't show this again", onContinue runs right away with no value and prepare isn't called,
   // so keep the app's own open-a-tab-then-load flow for that case.

@@ -57,7 +57,7 @@
 
   /* Scrollbars app-wide: a slim, permanently-visible, rounded gray bar
      sitting slightly inset from the true edge of its scrollable area --
-     like a normal OS/Gmail-style scrollbar, not hidden and not
+     like a normal scrollbar, not hidden and not
      hover-gated. (An earlier hover-only version turned out unreliable:
      the outer page counts as "hovered" almost the entire time you're
      using it, so it either showed constantly or never, depending on the
@@ -161,7 +161,7 @@
   }
 
   /* Step nav — the bottom current-step label from the reviewed
-     Illustrator draft. justify-content:space-between spreads the tabs
+     design draft. justify-content:space-between spreads the tabs
      edge-to-edge when there's room; the explicit gap is a MINIMUM, so
      on a narrow/mobile viewport where the tabs no longer fit, they keep
      that minimum spacing and the row scrolls horizontally instead of
@@ -661,7 +661,7 @@
     line-height: 1.4;
   }
 
-  /* Apple-style pill toggle, placed on the LEFT of each feature row */
+  /* Pill toggle, placed on the LEFT of each feature row */
   .toggle {
     position: relative;
     display: inline-block;
@@ -2372,7 +2372,7 @@
 
     // Two grid cells in the original design are left empty (reserved,
     // unused slots) — kept here as inert placeholders so the 8-column
-    // grid lines up exactly the same as the Illustrator file.
+    // grid lines up exactly the same as the design file.
     function addBlankSlot() {
       const blank = document.createElement('div');
       blank.className = 'swatch blank';
@@ -2582,7 +2582,7 @@
           if (cfg.failed) throw new Error('config');
           cloud.cfg = cfg;
           cloud.state = 'ready';
-          // The drive's sign-in script loads now, so Connect can open its window straight away.
+          // Google's sign-in script loads now, so Connect can open its window straight away.
           if (cfg.google) K.prepareGoogle().catch(() => {});
           const back = typeof K.connectResult === 'function' ? K.connectResult() : null;
           if (back) {
@@ -2636,7 +2636,7 @@
           .finally(() => { cloud.busy[app] = false; render(); focusRow(app); });
       });
 
-      // Back from the design app with the browser's Back button (the page comes out of the cache): not opening any more.
+      // Back from Canva with the browser's Back button (the page comes out of the cache): not opening any more.
       window.addEventListener('pageshow', e => { if (e.persisted && canva.going) { canva.going = false; render(); } });
 
       let started = false;
@@ -2645,10 +2645,10 @@
         started = true;
         render();
         if (!LIVE) return;
-        // Signed in as under 13: the design app can never be used, so don't ask about it.
+        // Signed in as under 13: Canva can never be used, so don't ask about it.
         if (!(INCOG && INCOG.locked)) loadCanva();
         loadCloud();
-        // Back from the design tab (or a drive changed in another tab): check again.
+        // Back from the Canva tab (or a drive changed in another tab): check again.
         document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && canva.waiting) loadCanva(); });
         window.addEventListener('focus', () => { if (canva.waiting) loadCanva(); });
         window.addEventListener('averages-cloud-change', () => { if (cloud.state === 'ready') render(); });
@@ -3011,7 +3011,7 @@
         }
       } catch {}
 
-      // Picked Plus (and doesn't have it yet): checkout instead of Home
+      // Picked Plus (and doesn't have it yet): Stripe checkout instead of Home
       // once setup is done. Used by the finish step (scripts/port-pages.mjs).
       // A cancelled or failed checkout lands in the app as Classic.
       if (accountMode === 'plus' && !(billingStatus && billingStatus.plus)) {
@@ -3432,7 +3432,7 @@
       // The switch can go off (or come in late): Fullscreen only while it's on.
       if (window.AveragesFeatures && window.AveragesFeatures.ready) Promise.resolve(window.AveragesFeatures.ready).then(() => { if (on && !allowed()) leave(); else start(); });
 
-      // Left for a drive's sign-in and came back: same view, same step.
+      // Left for Google or Microsoft sign-in and came back: same view, same step.
       window.addEventListener('pagehide', () => {
         if (finishing) return;
         try {

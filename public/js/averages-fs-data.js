@@ -163,7 +163,7 @@
     }
     untitle(side);
     var nav = side.querySelector('.nav'), foot = side.querySelector('.foot');
-    // everything but the footer scrolls together (one viewport), so the footer never covers a row
+    // everything but the footer scrolls together, so the footer never covers a row
     var sc = document.createElement('div'); sc.className = 'side-scroll'; sc.id = 'sideScroll';
     [].slice.call(side.children).forEach(function (x) { if (x !== foot) sc.appendChild(x); });
     side.insertBefore(sc, foot || null);

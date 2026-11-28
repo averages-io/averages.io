@@ -20,7 +20,7 @@
     ['#6E7582', '#535B6B'], // slate
     ['#916D56', '#7C5136'], // brown
   ];
-  // No name at all: the plain grey.
+  // No name at all: a plain grey.
   const NOBODY = ['#A5ABB8', '#858994'];
   const TITLE = /^(?:mr|mrs|ms|mx|miss|dr|sr|sra|srta|prof|coach|nurse|mme|mlle|herr|frau)\.?\s+/i;
 

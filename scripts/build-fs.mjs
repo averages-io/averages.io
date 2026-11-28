@@ -40,7 +40,7 @@ function splashTag() {
 const SPLASH_TAG = splashTag();
 // pages with the Turn in popup: they also get the turning-in code (averages-fs-turnin.js)
 // The version line in Settings > About, the same as the Windowed pages' (scripts/port-pages.mjs):
-// Beta <package.json version> (Build <first 7 of the commit being built>), "local" elsewhere.
+// Beta <package.json version> (Build <first 7 of the commit Cloudflare is building>), "local" elsewhere.
 import { execFileSync } from "node:child_process";
 function buildVersion() {
   const pkg = JSON.parse(fs.readFileSync(path.resolve(HERE, "../package.json"), "utf8"));

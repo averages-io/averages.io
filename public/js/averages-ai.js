@@ -44,9 +44,9 @@
   function gpuOk() {
     if (DEV_WASM) return Promise.resolve(true);
     // Computers only (phones haven't been tested, and the model needs the memory). Every browser with WebGPU may try:
-    // the first run checks it can really search (selfTest below). One browser turned down one of ONNX Runtime's shaders
+    // the first run checks it can really search (selfTest below). Firefox turned down one of ONNX Runtime's shaders
     // with Round 6 ("Shader 'Pad' parsing error"); the Round 10 / 70/30 files have every Pad
-    // rewritten (same weights), so newer versions of that browser run them. A browser that still can't is told so, and tested again
+    // rewritten (same weights), so Firefox 160 runs them. A browser that still can't is told so, and tested again
     // when it updates.
     var uad = navigator.userAgentData;
     if (uad ? uad.mobile : /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '')) return Promise.resolve(false);
@@ -96,7 +96,7 @@
   // averages_ai_check = { ua, v, ok }: one test search after each download, and again whenever the browser updates
   // (its user agent changes), so a browser that couldn't starts working once it can.
   var CHECK = 'averages_ai_check', UA = String(navigator.userAgent || '').slice(0, 300);
-  // ...and per model: a new model is tested again (an older model failed in one browser; the Round 10 / 70/30 files run)
+  // ...and per model: a new model is tested again (Firefox couldn't run Round 6; the Round 10 / 70/30 files can)
   function check() { try { var c = JSON.parse(LS.getItem(CHECK) || 'null'); return c && c.ua === UA && VARIANTS[c.v] && c.m === VARIANTS[c.v].model ? c : null; } catch (e) { return null; } }
   function setCheck(v, ok) { try { LS.setItem(CHECK, JSON.stringify({ ua: UA, v: v, m: VARIANTS[v] && VARIANTS[v].model, ok: !!ok, at: Date.now() })); } catch (e) { /* full or off */ } }
   var GPU_ERR = /webgpu|shader|ortrun|compute pipeline|f16|device (was )?lost/i;
@@ -104,7 +104,7 @@
   function selfTest(v) {
     if (testing) return testing;
     var my, timer = 0;
-    // a browser whose graphics never answer (some hang instead of failing) counts as can't
+    // a browser whose graphics never answer (Firefox can hang instead of failing) counts as can't
     var timeout = new Promise(function (_, no) { timer = setTimeout(function () { no(new Error('webgpu_test_timeout')); }, TEST_MS); });
     my = testing = Promise.race([load(v).then(function () { return call({ t: 'ask', text: 'my grades', classes: ['Biology'], teachers: ['Ms. Lee'], lang: 'en' }); }), timeout])
       .then(function () { setCheck(v, true); return true; }, function (e) {
@@ -126,8 +126,8 @@
 
   // ---------- the worker ----------
   var W = null, seq = 0, waits = {}, ready = null, readyV = '', DL = null, LAST_ERR = '', STARTING = false;
-  // One model for the whole site: a SharedWorker, so the next page finds the model already running. Most browsers
-  // keep it across same-site page changes; some only for about 30 s after the last page
+  // One model for the whole site: a SharedWorker, so the next page finds the model already running. Firefox and Safari
+  // keep it across same-site page changes; Chrome does with extendedLifetime (Chrome 148+, ~30 s after the last page
   // goes). A browser without SharedWorker, or without WebGPU inside one, gets a worker of this page's own, as before.
   var NO_SHARED = false;
   try { NO_SHARED = sessionStorage.getItem('averages_ai_own2') === '1'; } catch (e) { /* off */ }
@@ -188,7 +188,7 @@
         if (window.console) console.warn('[ai] start failed: ' + (e && e.message) + (W && W.shared ? ' (shared worker: trying a worker of its own)' : ''));
         // the shared worker couldn't start it here (no WebGPU in one, or anything else): this page tries a worker of
         // its own. If that works, the rest of this tab uses its own (above). If it fails too, sharing wasn't the
-        // problem (a shader error failed both, and then every page in the tab started over): the next
+        // problem (Mac Firefox's shader error failed both, and then every page in the tab started over): the next
         // start shares again.
         if (e && e.message !== 'stopped' && W && W.shared) {
           NO_SHARED = true;
@@ -205,9 +205,9 @@
 
   // ---------- starting the model, in the background, with a status in the bottom right ----------
   // Every page that loads the model starts it on its own thread (the page stays usable) and runs one throwaway search,
-  // so the student's first real search is fast (some browsers compile their graphics programs then: ~25-30 s). While that
+  // so the student's first real search is fast (Firefox compiles its graphics programs then: ~25-30 s). While that
   // goes on, a small card in the bottom right says so, with about how long is left: the time it took last time in
-  // this browser (averages_ai_init), or a first guess. Quick starts (a second or two) never show it.
+  // this browser (averages_ai_init), or a first guess. Quick starts (Chrome: a second or two) never show it.
   var INIT = 'averages_ai_init';
   function initGuess(v) {
     try { var r = JSON.parse(LS.getItem(INIT) || 'null'); if (r && r.ua === UA && r.m === VARIANTS[v].model && r.ms > 0) return r.ms; } catch (e) { /* none */ }
@@ -288,7 +288,7 @@
     var V = VARIANTS[v], prev = variantOf(), o = opts();
     LAST_ERR = '';
     // asked for right away, inside the click: after a wait the browser no longer counts it as the student's
-    // own action, and some browsers then quietly say no. Persistent storage isn't cleared when the disk gets full.
+    // own action, and Firefox then quietly says no. Persistent storage isn't cleared when the disk gets full.
     if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(function () {});
     var space = navigator.storage && navigator.storage.estimate ? navigator.storage.estimate().catch(function () { return null; }) : Promise.resolve(null);
     DL = { v: v, loaded: 0, total: V.bytes };
@@ -780,7 +780,7 @@
   var NOUN = { find_work: ['assignment', 'assignments'], scores: ['graded assignment', 'graded assignments'], grade: ['class', 'classes'], gpa: ['GPA', 'GPA'],
     what_it_takes: ['estimate', 'estimates'], find_posts: ['post', 'posts'], find_messages: ['conversation', 'conversations'], find_files: ['file', 'files'] };
   var calmNow = function () { return potato() || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches); };
-  // While it works (like Siri's "Working… Searching events… Reviewing results"): the results
+  // While it works ("Working… Searching events… Reviewing results"): the results
   // shrink to a small dark pill with a spinning ring of dots and a status that shimmers and changes as it goes.
   // When the answer is ready the pill opens out into it.
   var SEARCHING = { find_work: 'Searching assignments', find_grades: 'Searching grades', what_it_takes: 'Working out your grade',

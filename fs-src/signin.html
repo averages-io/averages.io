@@ -1243,7 +1243,7 @@
   @keyframes wiIn { from { opacity: 0; transform: translateY(12px) scale(.98); } }
   @media (max-width: 720px) { .wi-scrim { padding: 0; align-items: flex-end; } .wi-pop { border-radius: 22px 22px 0 0; max-height: 92vh; } .wi-g b { font-size: 22px; } }
   /* ===== end What-if grades ===== */
-  /* ===== Spotify names (Home) ===== */
+  /* ===== Scrolling names (Home) ===== */
   /* long names: one line that slides to show the rest, then slides back */
   .mq { display: block !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: clip !important; -webkit-line-clamp: unset !important;
     --mq-mask: linear-gradient(90deg, transparent 0, #000 var(--mq-l), #000 calc(100% - 16px), transparent); -webkit-mask-image: var(--mq-mask); mask-image: var(--mq-mask);
@@ -1258,7 +1258,7 @@
   .potato-mode .mq > .mq-in { animation: none; }
   @media (prefers-reduced-motion: reduce) { .mq > .mq-in { animation: none; } }
   .mq, .mq > .mq-in { animation-delay: var(--mq-delay, 0s); } /* a pair runs half a cycle apart, so they move opposite ways */
-  /* ===== end Spotify names ===== */
+  /* ===== end scrolling names ===== */
 
   /* ---------- course hub ----------
      Layout: the org-page pattern (identity header, tabs, main column + side rail) inside Home's frame.
@@ -2480,7 +2480,7 @@
   .aw-src b { font-size: 14px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .aw-src small { font-size: 12px; font-weight: 700; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .ti-lbl span { color: var(--muted); font-weight: 700; }
-  /* the step bar, like Cloudflare's deploys: one segment per step, sized by how long it usually takes */
+  /* the step bar: one segment per step, sized by how long it usually takes */
   .aw-send { display: flex; flex-direction: column; gap: 16px; }
   .aw-prog { display: grid; gap: 12px; }
   .aw-prog-h { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 16px; font-weight: 900; color: var(--ink); }
@@ -2679,7 +2679,7 @@
   }
   @media (max-width: 680px) { .mp-path { font-size: 16px; } .mp-stats { gap: 12px 32px; } .mp-stat b { font-size: 18px; } .mp-find { flex: 1 1 100%; order: 3; } .mp-types { order: 4; overflow-x: auto; } }
   .potato-mode .mp-paper, .potato-mode .mp-row { animation: none !important; }
-  /* the upload bar, Apple-style: a thin rounded line, one solid fill, no stripes; the numbers sit under it */
+  /* the upload bar: a thin rounded line, one solid fill, no stripes; the numbers sit under it */
   .ti-up { gap: 8px; margin: 0 2px; }
   .ti-up .ti-prog { height: 4px; border-radius: 2px; background: rgba(120, 120, 128, .2); overflow: hidden; }
   .ti-up .ti-prog i { border-radius: 2px; background-image: none !important; background-color: var(--accent); animation-name: tiFillW !important; animation-timing-function: linear !important; }
@@ -4176,9 +4176,9 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const goLabel = () => `${ico('up')}<span>Log in with Schoology</span>`;
   let sgyOn = null;   // the API says whether Sign in with Schoology is set up
   fetch(API + '/auth/schoology/status', { credentials: 'omit' }).then(r => (r.ok ? r.json() : null)).then(j => { sgyOn = !!(j && j.on === true); if (j && typeof j.turnstile === 'string') tsLoad(j.turnstile); }).catch(() => { sgyOn = false; });
-  // The bot check, invisible: almost everyone sees nothing. The check runs when they press Log in
+  // Cloudflare Turnstile, invisible: almost everyone sees nothing. The check runs when they press Log in
   // (or Connect), and its one-time token goes to the API with the sign-in. Only when the API gives a site key.
-  // If the bot check needs a click from someone, its box shows under the button (.si-ts).
+  // If Cloudflare needs a click from someone, its box shows under the button (.si-ts).
   const TS = { key: '', id: null, wait: null, loaded: null };
   function tsLoad(key) {
     TS.key = key;
@@ -4201,7 +4201,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   async function tsToken(where) {
     if (!TS.key) return '';
     const up = await TS.loaded; if (!up || TS.id === null) return '';
-    // its box (only ever shown when the bot check needs a click) goes under the button that was pressed
+    // its box (only ever shown when Cloudflare needs a click) goes under the button that was pressed
     const box = $('siTs'); if (where && box && box.previousElementSibling !== where) where.after(box);
     return new Promise(ok => {
       TS.wait = ok;
@@ -4213,7 +4213,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (!SI.school) return; const b = $('siGo');
     err('siErr', '');
     if (sgyOn === false) { err('siErr', SAY_SGY.not_configured); return; }
-    // the person check first, while the page still shows (if it wants a click, its box is right here)
+    // the person check first, while the page still shows (if Cloudflare wants a click, its box is right here)
     b.disabled = true; const ts = await tsToken(b); b.disabled = false;
     saveAge(); rememberSchool();
     busy(b, `Opening ${SI.school.domain}`);

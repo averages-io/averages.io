@@ -1222,7 +1222,7 @@
   @keyframes wiIn { from { opacity: 0; transform: translateY(12px) scale(.98); } }
   @media (max-width: 720px) { .wi-scrim { padding: 0; align-items: flex-end; } .wi-pop { border-radius: 22px 22px 0 0; max-height: 92vh; } .wi-g b { font-size: 22px; } }
   /* ===== end What-if grades ===== */
-  /* ===== Spotify names (Home) ===== */
+  /* ===== Scrolling names (Home) ===== */
   /* long names: one line that slides to show the rest, then slides back */
   .mq { display: block !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: clip !important; -webkit-line-clamp: unset !important;
     --mq-mask: linear-gradient(90deg, transparent 0, #000 var(--mq-l), #000 calc(100% - 16px), transparent); -webkit-mask-image: var(--mq-mask); mask-image: var(--mq-mask);
@@ -1237,7 +1237,7 @@
   .potato-mode .mq > .mq-in { animation: none; }
   @media (prefers-reduced-motion: reduce) { .mq > .mq-in { animation: none; } }
   .mq, .mq > .mq-in { animation-delay: var(--mq-delay, 0s); } /* a pair runs half a cycle apart, so they move opposite ways */
-  /* ===== end Spotify names ===== */
+  /* ===== end scrolling names ===== */
 
   /* ---------- course hub ----------
      Layout: the org-page pattern (identity header, tabs, main column + side rail) inside Home's frame.
@@ -2456,7 +2456,7 @@
   .aw-src b { font-size: 14px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .aw-src small { font-size: 12px; font-weight: 700; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .ti-lbl span { color: var(--muted); font-weight: 700; }
-  /* the step bar, like Cloudflare's deploys: one segment per step, sized by how long it usually takes */
+  /* the step bar: one segment per step, sized by how long it usually takes */
   .aw-send { display: flex; flex-direction: column; gap: 16px; }
   .aw-prog { display: grid; gap: 12px; }
   .aw-prog-h { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 16px; font-weight: 900; color: var(--ink); }
@@ -2655,7 +2655,7 @@
   }
   @media (max-width: 680px) { .mp-path { font-size: 16px; } .mp-stats { gap: 12px 32px; } .mp-stat b { font-size: 18px; } .mp-find { flex: 1 1 100%; order: 3; } .mp-types { order: 4; overflow-x: auto; } }
   .potato-mode .mp-paper, .potato-mode .mp-row { animation: none !important; }
-  /* the upload bar, Apple-style: a thin rounded line, one solid fill, no stripes; the numbers sit under it */
+  /* the upload bar: a thin rounded line, one solid fill, no stripes; the numbers sit under it */
   .ti-up { gap: 8px; margin: 0 2px; }
   .ti-up .ti-prog { height: 4px; border-radius: 2px; background: rgba(120, 120, 128, .2); overflow: hidden; }
   .ti-up .ti-prog i { border-radius: 2px; background-image: none !important; background-color: var(--accent); animation-name: tiFillW !important; animation-timing-function: linear !important; }
@@ -4307,7 +4307,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   };
   const srcMark = k => k === 'canva' ? `<span class="ti-mark canva-mark" aria-hidden="true"></span>`
     : `<span class="ti-mark ${k}-mark" style="--m:${SOURCES[k].mark[0]}" aria-hidden="true">${k === 'drive' ? '' : `<svg viewBox="0 0 24 24">${SOURCES[k].mark[1]}</svg>`}</span>`;
-  // The drive's logo is a file on the app's own site (public/brand/). When it loads, the
+  // Google Drive's logo is a file on the app's own site (public/brand/google-drive.png). When it loads, the
   // plain green stand-in steps aside for it; until then (or in this preview) the stand-in stays.
   (function probeLogo(key, urls, i = 0) {
     if (i >= urls.length) return;
@@ -4319,7 +4319,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
 
   // ---------- Files ----------
   // Every file in one place: what teachers posted in each class (Schoology Materials, and files attached to assignments,
-  // GET /data/files), what you turned in (GET /data/submissions), and your cloud drives and designs (loaded when
+  // GET /data/files), what you turned in (GET /data/submissions), and your Google Drive, OneDrive and Canva (loaded when
   // you open them, from your own sign-in: averages-fs-turnin.js). ago: minutes since it changed.
   const FF = (id, name, c, kind, src, who, when, ago, size, extra = {}) => Object.assign({ id, name, c, kind, src, who, when, ago, size }, extra);
   const NOW = Date.now(), DAYMS = 864e5;
@@ -4378,7 +4378,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const SORTS = [['edited', 'Last changed'], ['name', 'Name'], ['size', 'Size']];
   const FL = { naming: false, q: '', place: 'all', type: '', when: '', sort: store.get('fsfiles_sort') || 'edited', view: store.get('fsfiles_view') || 'grid', seen: new Set(store.get('fsfiles_seen') || []) };
   const isNew = f => f.isNew && !FL.seen.has(f.id);
-  // a preview link that has run out (the drive's and the design app's expire): drop it, the drawn preview under it shows
+  // a preview link that has run out (Google's and Canva's expire): drop it, the drawn preview under it shows
   document.addEventListener('error', e => { const t = e.target; if (!t || t.tagName !== 'IMG' || !t.hasAttribute('data-thumb-fallback')) return;
     if (t.classList.contains('fl-bigimg') && lb) { t.outerHTML = drawn(lbList[lbAt]); lbFit(); } else t.remove(); }, true);
   const filtering = () => !!(FL.q || FL.place !== 'all' || FL.type || FL.when);
@@ -4394,7 +4394,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const hashOf = s => [...s].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 7);
 
   const classPdf = f => (f.src === 'class' || f.src === 'turned') && f.raw && /\.pdf$/i.test(f.name);
-  // a document, slide or spreadsheet file Schoology made a PDF copy of (the API says preview: true): drawn and shown from that copy
+  // a Word, PowerPoint or Excel file Schoology made a PDF copy of (the API says preview: true): drawn and shown from that copy
   // Settings › Appearance › Office files as PDFs (officePdfPreviews, on unless turned off): off keeps the drawn stand-in, and opening one goes to the original
   const OFFICE_PDF = (() => { try { return (JSON.parse(localStorage.getItem('averages_settings_options') || '{}') || {}).officePdfPreviews !== false; } catch (_) { return true; } })();
   const officePdf = f => OFFICE_PDF && (f.src === 'class' || f.src === 'turned') && f.raw && f.raw.preview === true && !/\.pdf$/i.test(f.name);
@@ -4403,7 +4403,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   function thumb(f) {
     if ((classPdf(f) || officePdf(f)) && !thumb.plain) { thumb.plain = true; const d = thumb(f); thumb.plain = false; return `${d}<span class="fl-pth" data-pthumb="${esc(classPdf(f) ? viewHref(f) : pdfCopyHref(f))}"></span>`; }
     if (f.kind === 'image' && f.raw && (f.src === 'class' || f.src === 'turned')) return `<img class="fl-img" src="${esc(viewHref(f))}" alt="" loading="lazy">`;
-    // The cloud drive and the design app send their own preview picture; the drawn one stays under it in case the link has run out
+    // Google Drive and Canva send their own preview picture; the drawn one stays under it in case the link has run out
     if (f.item && f.item.thumb && !thumb.plain) { thumb.plain = true; const d = thumb(f); thumb.plain = false; return `${d}<img class="fl-img fl-cimg" src="${esc(thumbAt(f.item.thumb, 480))}" alt="" loading="lazy" referrerpolicy="no-referrer" data-thumb-fallback>`; }
     const c = C[f.c].color, h = hashOf(f.name), w = i => 34 + ((h >> (i * 3)) % 5) * 7, line = (x, y, l, o = .14) => `<rect x="${x}" y="${y}" width="${l}" height="4" rx="2" fill="#1f2230" opacity="${o}"/>`;
     const shadow = 'filter="drop-shadow(0 2px 3px rgba(20,21,31,.14))"';
@@ -4424,7 +4424,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       return `<svg viewBox="0 0 160 120" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="160" height="120" fill="${sky}"/><circle cx="${110 + h % 20}" cy="34" r="12" fill="#ffffff" opacity=".8"/>
         <path d="M0 92 Q40 ${60 + h % 14} 80 86 T160 ${78 + h % 10} V120 H0Z" fill="${c}" opacity=".55"/><path d="M0 104 Q50 86 100 102 T160 98 V120 H0Z" fill="${c}" opacity=".85"/>
         <rect x="${24 + h % 30}" y="58" width="26" height="30" rx="3" fill="#ffffff" opacity=".7"/></svg>`; }
-    // a design: a poster in the class color
+    // a Canva design: a poster in the class color
     return `<svg viewBox="0 0 160 120" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><g ${shadow}><rect x="46" y="8" width="68" height="104" rx="4" fill="${c}"/></g>
         <circle cx="${80 + (h % 9) - 4}" cy="48" r="20" fill="#ffffff" opacity=".9"/><circle cx="${80 + (h % 9) - 4}" cy="48" r="10" fill="${c}" opacity=".5"/>
         <rect x="56" y="78" width="48" height="7" rx="3.5" fill="#ffffff"/><rect x="62" y="90" width="36" height="4" rx="2" fill="#ffffff" opacity=".7"/><rect x="66" y="98" width="28" height="4" rx="2" fill="#ffffff" opacity=".5"/></svg>`;
@@ -4474,10 +4474,10 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     $('flSide').innerHTML = SB.order.filter(k => !SB.hidden.has(k)).map(k => `<div class="fl-sg" data-sg="${k}" aria-label="${SB_NAME[k]}">${G[k]}</div>`).join('');
     $('flSideLbl').textContent = placeName(FL.place) + (FL.type ? ' · ' + TYPES.find(t => t[0] === FL.type)[1] : '') + (FL.when ? ' · ' + WHENS.find(w => w[0] === FL.when)[1] : '');
   }
-  // ---------- design folders (GET /canva/folders/:id/items, "root" is the top of Projects), as in Windowed ----------
-  // Picking the design app shows its folders above the designs; opening one shows what's in it. Read-only here.
+  // ---------- Canva folders (GET /canva/folders/:id/items, "root" is the top of Projects), as in Windowed ----------
+  // Picking Canva shows its folders above the designs; opening one shows what's in it. Read-only here.
   const CVF = { on: false, path: [{ id: 'root', name: 'Canva' }], items: [], st: '', n: 0, root: [], rootSt: '' };
-  // All files' Folders section shows your top design folders too: loaded once, on their own
+  // All files' Folders section shows your top Canva folders too: loaded once, on their own
   function cvfRoot() {
     if (CVF.rootSt) return; CVF.rootSt = 'loading';
     FSX.api('/canva/folders/root/items').then(j => {
@@ -4494,7 +4494,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     });
     page('', []).then(items => {
       if (my !== CVF.n) return;
-      // designs in a folder that aren't in the designs list yet go in, like the rest of your designs
+      // designs in a folder that aren't in the designs list yet go in, like the rest of your Canva designs
       items.filter(x => x.type === 'design' && !FILES.some(f => f.id === 'canva:' + x.id)).forEach(x => FILES.push(FF('canva:' + x.id, String(x.name || 'Untitled design').slice(0, 200), APP_CLASS, 'design', 'canva', 'You', '', x.updatedAt ? (NOW - x.updatedAt) / 6e4 : 1e9, 'Design', { app: APP_NAME.design, item: { id: x.id, designId: x.id, name: x.name, kind: 'design', at: x.updatedAt || 0, thumb: '' } })));
       CVF.items = items; CVF.st = 'ok'; if (here.id === 'root') { CVF.root = items.filter(x => x.type === 'folder'); CVF.rootSt = 'ok'; } flRender(true);
     }, e => { if (my !== CVF.n) return; CVF.st = 'failed'; if (e && /reconnect/.test(String(e.code || e.error || ''))) CVF.on = false; flRender(false); });
@@ -4717,7 +4717,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (!calm() && row.animate) row.animate([{ transform: row.style.transform || 'none' }, { transform: 'none' }], { duration: 180, easing: 'cubic-bezier(.2, .8, .2, 1)' }); row.style.transform = ''; sbApply(`[data-sbgrip="${row.dataset.sb}"]`); });
   window.CZ_ON = () => true; // Customize this page: the sidebar can be reordered and hidden
   // Add files: Averages.io doesn't keep files, it shows the ones in your apps. So adding means connecting an app,
-  // or, for the cloud drive, opening a file there with the Averages.io app (the drive only shares those). There's no upload.
+  // or, for Google Drive, opening a file there with Averages for Drive (Drive only shares those). There's no upload.
 
 /* Averages.io first-time help popups for Add from Canva and Add from Google Drive.
    Needs averages-help.css. Usage, from the click handler of each button:
@@ -4807,7 +4807,7 @@ function stageHTML(k) {
   const ext = k === 'canva'
     ? `<div class="avh-sc avh-s-ed" data-sc="ext"><div class="avh-ed-top"><span class="avh-mk avh-canva"></span><span class="avh-ln"></span><span class="avh-ln"></span><span class="avh-grow"></span><span class="avh-ret" data-hit="ret">${ico('back')}Return to Averages.io</span></div>
         <div class="avh-ed-main"><div class="avh-ed-rail"><i></i><i></i><i></i><i></i></div><div class="avh-ed-can"><div class="avh-art" data-art><i class="avh-a1"></i><i class="avh-a2"></i><i class="avh-a3"></i><i class="avh-a4"></i></div></div></div></div>`
-    // a simplified cloud drive: its layout, colors and menu wording, drawn with generic icons
+    // a simplified file picker, drawn with generic icons
     : `<div class="avh-sc avh-s-dr" data-sc="ext">
         <div class="avh-dr-top"><span class="avh-mk avh-drive"></span><b>Drive</b><span class="avh-dr-search">${ico('search')}Search in Drive</span><span class="avh-dr-me"></span></div>
         <div class="avh-dr-side"><span class="avh-dr-new">${ico('plus')}<span>New</span></span>
@@ -4961,7 +4961,7 @@ function openHelp(k, from, onContinue, prepare) {
     if (bar && bar.animate && ms && !calm()) bar.animate([{ width: '0%' }, { width: '100%' }], { duration: ms, easing: 'linear', fill: 'forwards' });
   });
   open = { el, k, player };
-  // with prepare (making the design), the go button stays grey until it's done; if it fails, the button says Try again
+  // with prepare (Canva: making the design), the go button stays grey until it's done; if it fails, the button says Try again
   const go = el.querySelector('[data-go]'), live = el.querySelector('[data-live]');
   let state = 'ready', result;
   const setGo = s => {
@@ -5005,9 +5005,9 @@ document.addEventListener('keydown', e => {
 addEventListener('resize', () => { if (open && !open.player.paused) open.player.goTo(0); });
 // ---------- public API ----------
 window.AveragesHelp = {
-  // Show the first-time help for 'canva' or 'drive'. onContinue runs when they click the Open button,
+  // Show the first-time help for 'canva' or 'drive'. onContinue runs when they click Open Canva / Open Google Drive,
   // or right away if they ticked "Don't show this again" before. Call it from the click handler so new tabs aren't blocked.
-  // prepare (optional): a function returning a Promise, like making the design. The go button stays grey until it
+  // prepare (optional): a function returning a Promise, like making the Canva design. The go button stays grey until it
   // resolves, and onContinue gets what it resolved to (the design's edit link). If it rejects, the button says Try again.
   // If they ticked "Don't show this again", onContinue runs right away with no value and prepare isn't called,
   // so keep the app's own open-a-tab-then-load flow for that case.
@@ -5024,7 +5024,7 @@ window.AveragesHelp = {
       onContinue: v => { if (opts.onGo) opts.onGo(v); else FSX.newTab(k === 'canva' ? 'https://www.canva.com/projects' : 'https://drive.google.com/drive/my-drive'); } });
   }
   let af = null, afFrom = null, afApp = null, afPath = [], afSel = new Set();
-  // The drive's picker: only the files someone chooses here are shared with Averages.io (it links to them, it doesn't copy them)
+  // OneDrive's picker: only the files someone chooses here are shared with Averages.io (it links to them, it doesn't copy them)
   const OF = (name, kind, c, when, size) => ({ name, kind, c, when, size });
   const OD_TREE = { name: 'My files', kids: [
     { name: 'School', kids: [
@@ -5068,7 +5068,7 @@ window.AveragesHelp = {
   function afGo(k) {
     afApp = k;
     if (k === 'drive') { const from = afFrom; afClose(true); hpOpen('drive', from); return; }
-    // The drive's own picker: only the files picked there are shared with Averages.io
+    // OneDrive's own picker: only the files picked there are shared with Averages.io
     FST.pickOneDrive().then(list => { afClose(); let n = 0; list.forEach(it => { if (FILES.some(f => f.id === 'onedrive:' + it.id)) return; n++; FILES.unshift(FF('onedrive:' + it.id, it.name, APP_CLASS, kindOf(it.name), 'onedrive', 'You', 'Added just now', 0, it.sub || '', { item: it })); });
       LINKED.add('onedrive'); flMeta(); flRecent(); flRender(true); if (n) toast(`Added ${n} ${n === 1 ? 'file' : 'files'} from OneDrive. They stay in your OneDrive.`); }, e => { if (!(e && e.code === 'popup_closed')) toast(FST.message(e)); });
   }
@@ -5138,13 +5138,13 @@ window.AveragesHelp = {
     if (f.src === 'class') { FSX.newTab(VIEW_RE.test(f.name) ? FSX.fileUrl(f.raw, true) : FSX.schoology(`/course/${encodeURIComponent(f.raw.course)}/materials`)); return; }
     if (f.src === 'turned') { FSX.newTab(VIEW_RE.test(f.name) ? viewHref(f) : fileHref(f)); return; }
     if (f.src === 'canva') {
-      // the tab opens inside the click; the design's address comes a moment later
+      // the tab opens inside the click; Canva's address comes a moment later
       const w = window.open('about:blank', '_blank'); toast('Opening Canva…');
       FST.canvaOpen(f.item.designId).then(u => { if (w) { w.opener = null; w.location.href = u; } else location.assign(u); }, er => { if (w) w.close(); toast(FST.canvaMessage(er && er.code)); });
       return;
     }
     if (f.item && f.item.url) { FSX.newTab(f.item.url); return; }
-    // a drive file without its address: asked for now, the tab opened inside the click
+    // a OneDrive file without its address: asked for now, the tab opened inside the click
     if (f.src === 'onedrive' && f.item && f.item.id) {
       const w = window.open('about:blank', '_blank');
       Promise.race([FST.oneDriveUrl(f.item.id), new Promise((_, no) => setTimeout(() => no({ code: 'network' }), 12000))])
@@ -5177,8 +5177,8 @@ window.AveragesHelp = {
   // the page is as big as fits, keeping its shape, so its edge and shadow hug the page itself
   function lbFit() {
     const fig = lb && lb.querySelector('.fl-big'); if (!fig) return;
-    // a real picture (a teacher's image, a drive or design preview) is made as big as fits, keeping its shape,
-    // even when the file the drive or design app sends is smaller than that
+    // a real picture (a teacher's image, a Drive or Canva preview) is made as big as fits, keeping its shape,
+    // even when the file Google or Canva sends is smaller than that
     const im = fig.querySelector('img.fl-bigimg');
     if (im) {
       if (!im.naturalWidth) { im.addEventListener('load', lbFit, { once: true }); return; }
@@ -5327,7 +5327,7 @@ window.AveragesHelp = {
   // the glow behind the header matches the blue folder in the logo
   $('flLogo').style.setProperty('--c', '#3d8fe0'); document.querySelector('.hub-h').style.setProperty('--class-c', '#3d8fe0'); $('flLogo').innerHTML = EMOJI_SVG['📁'] || '';
   flMeta(); flRecent(); flViewSync(); flRender(false); ntInit();
-  // which apps are connected: the cloud drives from this browser's sign-ins, the design app from our API
+  // which apps are connected: Google Drive and OneDrive from this browser's sign-ins, Canva from our API
   FST.ready().then(() => { ['drive', 'onedrive'].forEach(k => { if (FST.connected(k)) { LINKED.add(k); appLoad(k, true); } }); flMeta(); flSide(); }).catch(() => {});
   FSX.api('/canva/status').then(j => { if (j && j.connected) { CVF.on = j.folders === 'ready'; LINKED.add('canva'); appLoad('canva', true); flMeta(); flSide(); if (FL.place === 'canva') flRender(false); } }).catch(() => {});
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { inkMemo.clear(); shCenter(); });
