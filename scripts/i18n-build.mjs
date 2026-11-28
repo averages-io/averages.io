@@ -1,4 +1,4 @@
-// The word lists for other languages (2026-11-15): i18n/keys.txt holds the app's English text, one per line
+// The word lists for other languages: i18n/keys.txt holds the app's English text, one per line
 // as "N|text"; i18n/<lang>.txt holds the same line numbers with the translation. This writes public/i18n/<lang>.json,
 // which public/js/averages-i18n.js loads. "#" stands for a number (in the same order in both), and "{x}" for
 // a name or title that stays as it is ("Turn in {x}"). Run: node scripts/i18n-build.mjs

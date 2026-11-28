@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script>
-/* Just signed out (2026-11-28): everything app.averages.io kept on this device is wiped, before anything else on this
+/* Just signed out: everything app.averages.io kept on this device is wiped, before anything else on this
    page runs, as the Clear-Site-Data "storage" it replaces did (worker/index.js still has the browser clear the cookies).
    Kept: the A.I. search model and the photo check's model, which hold nothing about anyone and are hundreds of MB to
-   download again (Martin: "the ai ... is getting deleted often"), and whether A.I. search is on (averages_ai). */
+   download again , and whether A.I. search is on (averages_ai). */
 (function () {
   if (!/[?&]signedout(=|&|$)/.test(location.search)) return;
   var ai = null;
@@ -46,7 +46,7 @@
     --mark: rgba(229,72,77,.18);
     --pop-shadow: 0 16px 40px rgba(20,21,31,.16), 0 2px 6px rgba(20,21,31,.06);
     --scrim: rgba(20,21,31,.32);
-    --display: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif; /* the system font (SF Pro on a Mac), the one the chat preview showed while Puffin couldn't load */
+    --display: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif; /* the system font (SF Pro on a Mac) */
     --rail: 64px;
     --side-open: 248px;
   }
@@ -74,7 +74,7 @@
 
   /* Twemoji subject icon on a tint of the subject color (same table as courses.html) */
   .badge { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; flex: none; background: color-mix(in srgb, var(--c) 18%, #ffffff); }
-  .badge svg { width: 21px; height: 21px; display: block; }   /* the class emoji fills its tile (was 17px, 2026-11-14) */
+  .badge svg { width: 21px; height: 21px; display: block; }   /* the class emoji fills its tile (was 17px) */
   .italic { font-style: italic; }
 
   /* ---------- frame ---------- */
@@ -837,7 +837,7 @@
   .sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--field); transition: transform .15s ease; }
   .sw.on { background: var(--accent); }
   .sw.on::after { transform: translateX(12px); }
-  /* dark: a light knob on a lighter track, so the switch reads as a switch (2026-11-26, Martin: "the off circles r not centered") */
+  /* dark: a light knob on a lighter track, so the switch reads as a switch */
   html[data-theme="dark"] .sw:not(.on) { background: #3d4052; }
   html[data-theme="dark"] .sw::after { background: #ffffff; }
   .cb { width: 20px; height: 20px; border-radius: 6px; border: 2px solid var(--inner); display: grid; place-items: center; flex: none; color: transparent; }
@@ -3148,7 +3148,7 @@
 
   <aside class="side" id="side" aria-label="Sidebar" hidden inert>
     <nav class="nav" aria-label="Pages">
-      <a href="#" title="Search" id="sideSearch" aria-keyshortcuts="Control+K Meta+K"><svg class="i"><use href="#i-search"/></svg><span class="fade">Search</span><kbd class="fade side-kbd" id="sideKbd">Ctrl K</kbd></a><script data-now>/* the right shortcut from the first frame (data-now: run as the page is read, not held for its data by scripts/build-fs.mjs) (2026-11-28: it showed "Ctrl K" for a moment on a Mac, then changed) */ (function () { var p = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || navigator.userAgent || ''; if (/mac|iphone|ipad|ipod/i.test(p)) document.getElementById('sideKbd').textContent = '⌘K'; })();</script>
+      <a href="#" title="Search" id="sideSearch" aria-keyshortcuts="Control+K Meta+K"><svg class="i"><use href="#i-search"/></svg><span class="fade">Search</span><kbd class="fade side-kbd" id="sideKbd">Ctrl K</kbd></a><script data-now>/* the right shortcut from the first frame (data-now: run as the page is read, not held for its data by scripts/build-fs.mjs) */ (function () { var p = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || navigator.userAgent || ''; if (/mac|iphone|ipad|ipod/i.test(p)) document.getElementById('sideKbd').textContent = '⌘K'; })();</script>
       <a href="#" title="Home" data-toast="Home"><svg class="i"><use href="#i-home"/></svg><span class="fade">Home</span></a>
       <a href="#" title="Courses" class="on" aria-current="page"><svg class="i"><use href="#i-binder"/></svg><span class="fade">Courses</span></a>
       <a href="#" title="Grades" data-toast="the Grades page"><svg class="i"><use href="#i-chart"/></svg><span class="fade">Grades</span></a>
@@ -3313,9 +3313,9 @@
 </svg>
 
 <script>
-/* Copied from averages.io public/js/averages-file-icons.js (2026-10-09). Fredoka Bold (OFL, see THIRD-PARTY-NOTICES.md) is inlined so the labels render here. */
+/* Copied from averages.io public/js/averages-file-icons.js. Fredoka Bold (OFL, see THIRD-PARTY-NOTICES.md) is inlined so the labels render here. */
 /*
- * File type icons (2026-10-09, Martin; design in the project doc claude/file-icons.md).
+ * File type icons.
  *
  * A see-through page with a line in the type's color around it and a folded
  * corner. The label (PDF, DOC, ZIP…, Fredoka Bold, same color) runs across
@@ -4176,7 +4176,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const goLabel = () => `${ico('up')}<span>Log in with Schoology</span>`;
   let sgyOn = null;   // the API says whether Sign in with Schoology is set up
   fetch(API + '/auth/schoology/status', { credentials: 'omit' }).then(r => (r.ok ? r.json() : null)).then(j => { sgyOn = !!(j && j.on === true); if (j && typeof j.turnstile === 'string') tsLoad(j.turnstile); }).catch(() => { sgyOn = false; });
-  // Cloudflare Turnstile, invisible (2026-11-23): almost everyone sees nothing. The check runs when they press Log in
+  // Cloudflare Turnstile, invisible: almost everyone sees nothing. The check runs when they press Log in
   // (or Connect), and its one-time token goes to the API with the sign-in. Only when the API gives a site key.
   // If Cloudflare needs a click from someone, its box shows under the button (.si-ts).
   const TS = { key: '', id: null, wait: null, loaded: null };

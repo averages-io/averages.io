@@ -182,7 +182,7 @@
 182|Ver o que você precisa
 183|Novidades do curso
 184|Próxima prova
-185|# aulas ainda podem subir uma letra neste período.
+185|# aulas podem subir uma letra com o trabalho publicado até agora.
 186|Sua nota
 187|Pasta
 188|Conectado
@@ -1154,7 +1154,7 @@
 1154|Você já chegou lá
 1155|Não dá para alcançar com os pontos publicados até agora
 1156|Cerca de #% em {x}
-1157|# tarefas por vir (# pontos)
+1157|# tarefas publicadas até agora (# pontos)
 1158|# encontrados. Mostrando os primeiros #.
 1159|(Sem assunto)
 1160|# aulas

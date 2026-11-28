@@ -85,7 +85,7 @@
     try { var x = new URL(u); return x.protocol === 'https:' && /(^|\.)(1drv\.com|sharepoint\.com|microsoftpersonalcontent\.com|livefilestore\.com|onedrive\.com|live\.com|microsoft\.com)$/i.test(x.hostname) ? x.href : ''; } catch (e) { return ''; }
   }
   function odUrl(u) {
-    // by host name, so an address with no "/" before its "?" counts too (2026-11-28: new OneDrive addresses look like
+    // by host name, so an address with no "/" before its "?" counts too (new OneDrive addresses look like
     // https://onedrive.live.com?cid=…&id=…, and every OneDrive file on the Files page opened a blank tab)
     try { var x = new URL(String(u || '')); return x.protocol === 'https:' && /(^|\.)(live\.com|sharepoint\.com|1drv\.ms|microsoftpersonalcontent\.com|onedrive\.com|office\.com|cloud\.microsoft)$/i.test(x.hostname) ? x.href : ''; } catch (e) { return ''; }
   }

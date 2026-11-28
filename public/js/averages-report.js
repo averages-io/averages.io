@@ -1,6 +1,6 @@
 /**
- * The grade report PDF (2026-11-12): Grades' "Report card" button makes a one-page PDF of the student's
- * current grades on Martin's letterhead design, made right here on the device (nothing is sent anywhere).
+ * The grade report PDF: Grades' "Report card" button makes a one-page PDF of the student's
+ * current grades on the letterhead design, made right here on the device (nothing is sent anywhere).
  *
  *   AveragesReport.download(data)  -> makes it and saves "Averages grade report - <name> - <date>.pdf"
  *   AveragesReport.make(data)      -> Promise<Uint8Array> (the PDF's bytes)
@@ -17,7 +17,7 @@
  * }
  *
  * The page itself (stripe, logo, rule, column names, bottom logo) is public/report/v1/report-template.pdf,
- * Martin's design with the per-student text taken out. Page 2 of that file is the logo mark, drawn small
+ * The letterhead design with the per-student text taken out. Page 2 of that file is the logo mark, drawn small
  * inside the seal. Everything else is drawn on top here, at the same places as the approved sample.
  * pdf-lib and fontkit (MIT) are in public/vendor; the fonts are Inter (OFL), subset to Latin.
  */

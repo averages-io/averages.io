@@ -182,7 +182,7 @@
 182|Sehen, was du brauchst
 183|Kursneuigkeiten
 184|Nächster Test
-185|# Kurse könnten in diesem Halbjahr noch eine Note besser werden.
+185|# Kurse könnten mit den bisher veröffentlichten Aufgaben eine Note besser werden.
 186|Deine Note
 187|Ordner
 188|Verbunden
@@ -1154,7 +1154,7 @@
 1154|Das hast du schon geschafft
 1155|Mit den bisher veröffentlichten Punkten nicht erreichbar
 1156|Etwa #% bei {x}
-1157|# kommende Aufgaben (# Punkte)
+1157|# bisher veröffentlichte Aufgaben (# Punkte)
 1158|# gefunden. Die ersten # werden gezeigt.
 1159|(Kein Betreff)
 1160|# Kurse

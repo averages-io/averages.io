@@ -355,7 +355,7 @@
     if (checkTimer || mode !== 'live') return;
     checkedAt = Date.now();
     try { const at = (JSON.parse(sessionStorage.getItem('averages_bundle_cache') || 'null') || {}).at || 0; if (at && Date.now() - at > 60000) setTimeout(backgroundCheck, 4000); } catch { /* none */ }
-    // Background refresh off (Settings, 2026-11-26): no checking on a timer
+    // Background refresh off (Settings): no checking on a timer
     const bgOn = () => { try { return (JSON.parse(localStorage.getItem('averages_settings_options') || 'null') || {}).backgroundRefresh !== false; } catch (e) { return true; } };
     checkTimer = setInterval(() => { if (bgOn() && Date.now() - checkedAt >= CHECK_EVERY) backgroundCheck(); }, 15000);
     document.addEventListener('visibilitychange', () => { if (bgOn() && !document.hidden && Date.now() - checkedAt >= CHECK_EVERY) backgroundCheck(); });

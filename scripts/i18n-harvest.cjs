@@ -1,4 +1,4 @@
-// Finds the app's English text that has no translation yet (2026-11-15). With the local API (wrangler dev
+// Finds the app's English text that has no translation yet. With the local API (wrangler dev
 // --port 8787, without the "ai" binding) and app (--port 3000) running, it signs in as the review sandbox student,
 // opens every Fullscreen page in Spanish with public/js/averages-i18n.js collecting what it couldn't translate,
 // and writes the list to i18n-harvest.json, most-seen first. Add the ones that are the app's own words (not names,

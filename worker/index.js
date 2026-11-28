@@ -1,6 +1,6 @@
 // app.averages.io's front door.
 
-// "Someone's signed in on this browser" (the API sets it next to its session cookie, which since 2026-11-23 is a
+// "Someone's signed in on this browser" (the API sets it next to its session cookie, which is a
 // __Host- cookie on api.averages.io only, so this site never sees it). Only a hint: it holds no token.
 const SIGNED_IN_COOKIE = "averages_signed_in";
 const BOUNCE_COOKIE = "averages_bounced";
@@ -51,7 +51,7 @@ export function frontDoor(request) {
 }
 
 /**
- * Opened from inside Schoology (2026-11-23, Martin: "is identifying the user having SSO or schoology log in done").
+ * Opened from inside Schoology.
  * Schoology opens the App URL with a SAML packet (form field SAMLResponse, base64) that names the student (uid) and
  * their school's Schoology address (domain); it used to get "405 Method Not Allowed". Its signature isn't checked
  * here on purpose: the packet is only a hint for which school to send them to. Who they are is still proven by
@@ -78,7 +78,7 @@ export function schoologyLaunch(body) {
 }
 
 /**
- * Who Schoology says opened the app is only believed when Schoology sent them (2026-11-23 security sweep). Any site
+ * Who Schoology says opened the app is only believed when Schoology sent them. Any site
  * could post a made-up packet here, or link to "/?launch=…&as=…", and the sign-in page signs out whoever is signed in
  * when that uid isn't theirs: a way to sign anyone out from another site. So the uid now rides in a short cookie, set
  * only when the request came from a Schoology page (Origin, or Referer when there's no Origin), and the address
@@ -117,7 +117,7 @@ function signinPage(request, env) {
 }
 
 /**
- * A.I. search's files (2026-11-15, public/js/averages-ai.js): the model and the ONNX Runtime .wasm are too big for
+ * A.I. search's files (public/js/averages-ai.js): the model and the ONNX Runtime .wasm are too big for
  * static assets (25 MiB a file), so they live in R2 (bucket "averages-ai", binding AI_FILES) and come through here,
  * on the app's own site: no other site, no CORS. Only GET/HEAD of a fixed set of paths under /ai/. Each version
  * has its own folder name, so they never change in place and browsers can keep them for a year.
@@ -158,8 +158,8 @@ export default {
     if (request.method === "GET" && url.pathname === "/" && url.searchParams.has("signedout")) {
       const page = await signinPage(new Request(new URL("/", url).toString(), { headers: request.headers }), env);
       const res = new Response(page.body, page);
-      // Cookies only (2026-11-28): the page itself wipes storage first thing (fs-src/signin.html), keeping the A.I.
-      // search and photo-check models, which "storage" deleted on every sign-out (Martin: "the ai ... is getting deleted often").
+      // Cookies only: the page itself wipes storage first thing (fs-src/signin.html), keeping the A.I.
+      // search and photo-check models, which "storage" deleted on every sign-out .
       res.headers.set("Clear-Site-Data", '"cookies"');
       // Firefox leaves partitioned cookies behind on Clear-Site-Data, and Cloudflare's bot check
       // (cf_clearance, Domain=averages.io; Partitioned) is one: expire it by name too, both ways.

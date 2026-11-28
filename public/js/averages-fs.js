@@ -83,7 +83,7 @@
     root.style.setProperty('--accent-hover', c[1]);
   }
   // One of Fullscreen's seven colors, or its default red: a Windowed color (from a background, say) showed on some
-  // pages and not others (2026-11-09, Martin: "force choose the default red"). Saved, so every page agrees.
+  // pages and not others. Saved, so every page agrees.
   if (accentKey() === 'custom') {
     var apx = json('averages_appearance') || {};
     apx.accent = ACCENTS.punch[0];
@@ -191,7 +191,7 @@
     })
     .catch(function () { /* API unreachable: stay */ });
 
-  // ---------- the maintenance banner (Martin's design, 2026-11-09): along the bottom of every page while the
+  // ---------- the maintenance banner: along the bottom of every page while the
   // maintenance-banner switch is on (forced), or while the API's 15-minute check finds something down (automatic), with the API's message and a link to api.averages.io/status. × hides it for this
   // tab (until the message changes); the same choice as Windowed's banner (averages_banner_x:<message>).
   function maintBanner(msg) {

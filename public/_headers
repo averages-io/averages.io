@@ -1,19 +1,19 @@
-# Security headers on every page and file (2026-10-23, Martin: "tighten up app security").
+# Security headers on every page and file.
 #   nosniff            a file is only ever run as the type it's served as
 #   Referrer-Policy    other sites see only "app.averages.io", never a page's address (which can hold ids)
 #   X-Frame-Options / frame-ancestors   no other site can show the app inside a frame (clickjacking)
 #   HSTS               browsers only ever use https for app.averages.io (one year)
 #   Permissions-Policy camera, microphone, location, payments and devices are off: the app uses none of them
-#   CSP              (enforced 2026-11-28; report-only from 2026-11-23 showed nothing on the live sites) where scripts
+#   CSP              (enforced; a report-only run showed nothing on the live sites) where scripts
 #                    may load from and pages may connect to: our own sites, Typekit, Turnstile, Cloudflare's page-speed
 #                    counter, Google sign-in, Google and Microsoft for Drive / OneDrive (OneDrive's file downloads and
 #                    big uploads go to *.sharepoint.com / *.1drv.com / *.livefilestore.com, and for personal accounts
-#                    my.microsoftpersonalcontent.com / *.storage.live.com: found 2026-11-28, Add from OneDrive was blocked). Also no <base> tag tricks,
+#                    my.microsoftpersonalcontent.com / *.storage.live.com: Add from OneDrive needs them). Also no <base> tag tricks,
 #                    no plugins, forms only post to the app, no other site can frame it, every request upgraded to
 #                    https. Anything it blocks is reported to api.averages.io/csp-report (Workers Logs or wrangler
 #                    tail: "csp_report"), so a new outside service shows up there and needs adding here.
 #                    Scripts still allow inline code ('unsafe-inline'): the pages run their own inline code (see LegacyPage).
-#   Link preconnect  opens the connection to the API early; Cloudflare's Early Hints (2026-11-23) sends it
+#   Link preconnect  opens the connection to the API early; Cloudflare's Early Hints sends it
 #                    as a 103 before the page itself, so the first /data request skips the handshake.
 /*
   X-Content-Type-Options: nosniff
@@ -24,7 +24,7 @@
   Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://challenges.cloudflare.com https://static.cloudflareinsights.com https://accounts.google.com; style-src 'self' 'unsafe-inline' https://use.typekit.net https://p.typekit.net https://accounts.google.com; font-src 'self' data: https://use.typekit.net; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; connect-src 'self' data: blob: https://api.averages.io https://*.sharepoint.com https://*.1drv.com https://*.livefilestore.com https://*.microsoftpersonalcontent.com https://*.storage.live.com https://api.onedrive.com https://www.googleapis.com https://oauth2.googleapis.com https://openidconnect.googleapis.com https://graph.microsoft.com https://login.microsoftonline.com https://cloudflareinsights.com https://challenges.cloudflare.com https://accounts.google.com; frame-src 'self' blob: https://challenges.cloudflare.com https://accounts.google.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests; report-uri https://api.averages.io/csp-report
   Link: <https://api.averages.io>; rel=preconnect
 
-# Let browsers keep the app's own built files (2026-10-14).
+# Let browsers keep the app's own built files.
 # Everything under /_next/static/ has a hash of its content in its file name,
 # so a changed file always gets a new name and a new address. Marking these
 # "keep for a year, never re-check" is safe, and saves the "has this changed?"
@@ -33,22 +33,22 @@
 /_next/static/*
   Cache-Control: public, max-age=31536000, immutable
 
-# Our own scripts (2026-10-20). Every page asks for them by an address with a
+# Our own scripts. Every page asks for them by an address with a
 # version in it (/js/averages-bell.js?v=...; see scripts/port-pages.mjs), so a
 # changed file always has a new address and this is as safe as /_next/static.
 /js/*
   Cache-Control: public, max-age=31536000, immutable
 
-# JSZip and pdf.js (2026-10-23), pdf-lib and fontkit (2026-11-12): the version is in the folder name, so these never change in place.
+# JSZip and pdf.js, pdf-lib and fontkit: the version is in the folder name, so these never change in place.
 /vendor/*
   Cache-Control: public, max-age=31536000, immutable
 
-# The report card's page design and fonts (2026-11-12): the version is in the folder name (/report/v1/),
+# The report card's page design and fonts: the version is in the folder name (/report/v1/),
 # so a changed design goes in /report/v2/ and these never change in place.
 /report/*
   Cache-Control: public, max-age=31536000, immutable
 
-# The picture check (2026-11-09): Fullscreen Settings runs /scan in a hidden frame on our own pages, and
+# The picture check: Fullscreen Settings runs /scan in a hidden frame on our own pages, and
 # frame-ancestors 'none' above blocked it ("Photo scans are not working in fs"). Only this page may be framed,
 # and only by app.averages.io itself; every other site still can't.
 /scan

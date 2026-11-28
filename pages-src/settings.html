@@ -1116,7 +1116,7 @@
   .ev-code:focus { box-shadow: inset 0 0 0 2px var(--accent); }
   .ev-msg { min-height: 1.2em; margin: 8px 0 0; text-align: center; font-size: 0.82rem; font-weight: 700; color: var(--text-dark); opacity: 0.75; }
   .ev-msg.bad { color: #d92626; opacity: 1; }
-  /* Verify your email (2026-11-23): Send/Resend button, status, the code box, a link back to change the email, Cancel and Verify */
+  /* Verify your email: Send/Resend button, status, the code box, a link back to change the email, Cancel and Verify */
   .ev-send { display: inline-flex; margin-top: 12px; padding: 9px 14px; border-radius: 10px; border: 1px solid var(--border); background: var(--panel-inner); color: var(--text-dark); font: inherit; font-size: 0.86rem; font-weight: 700; cursor: pointer; }
   .ev-send:hover:not(:disabled) { background: var(--control-hover); }
   .ev-send:disabled { opacity: 0.6; cursor: default; }
@@ -2105,7 +2105,7 @@
       btn.addEventListener('click', averagesSignOutClick);
     });
 
-    // Sign out everywhere (2026-11-23): a second press within 5 s confirms; the API ends every sign-in, then this
+    // Sign out everywhere: a second press within 5 s confirms; the API ends every sign-in, then this
     // device forgets everything, as Sign out does.
     (function signOutEverywhere() {
       const b = document.getElementById('signOutAllBtn'), msg = document.getElementById('signOutAllMsg');
@@ -2919,15 +2919,15 @@
     contactsSchoolToggle.addEventListener('change', () => {
       saveSettingsOption('contactsSearch', contactsSchoolToggle.checked ? 'school' : 'everyone');
     });
-    // Your photo for classmates who use Averages too, and theirs for you (2026-11-23; same switch as Fullscreen's,
+    // Your photo for classmates who use Averages too, and theirs for you (same switch as Fullscreen's,
     // kept by the API). Off to start. Never in Incognito.
     (function classmatePhoto() {
       const row = document.getElementById('classmatePhotoRow'), box = document.getElementById('classmatePhotoToggle'), desc = document.getElementById('classmatePhotoDesc');
       const ON_TEXT = 'Classmates who use Averages see your photo in place of your initials. Turn this off and it stops showing right away.';
       const set = (text, usable) => { desc.textContent = text; box.disabled = !usable; row.classList.toggle('is-disabled', !usable); };
       if (window.__AVERAGES_MODE__ !== 'live' || AVERAGES_INCOGNITO) { set(AVERAGES_INCOGNITO ? 'Off in Incognito mode.' : 'Only when you\'re signed in.', false); return; }
-      // Showing it needs the account's copy of the photo: one only ever kept on this device goes up now (Martin
-      // 2026-11-23: "the pfp sharing doesn't work": on, but no photo saved to show)
+      // Showing it needs the account's copy of the photo: one only ever kept on this device goes up now (
+      // the switch was on, but no photo was saved to show)
       const needsPhoto = (j) => {
         if (!j || !j.on || j.photo !== false || !/^data:image\//.test(profileState.photo || '')) return;
         set('Saving your photo to your account…', true);
@@ -3237,7 +3237,7 @@
         const full = opt.dataset.shape === 'fullscreen';
         saveSettingsOption('windowType', full ? 'fullscreen' : 'windowed');
         if (full) {
-          // Fullscreen starts on its default red (2026-11-09, Martin): a Windowed color isn't one of Fullscreen's seven,
+          // Fullscreen starts on its default red: a Windowed color isn't one of Fullscreen's seven,
           // and some pages showed it while others showed red. The student can pick another in Fullscreen's Settings.
           try {
             const ap = JSON.parse(localStorage.getItem(AVERAGES_APPEARANCE_KEY) || '{}') || {};
@@ -3884,7 +3884,7 @@
       profileEditEmailInput.value = profileState.email;
       profileEditEmailError.hidden = true;
       // no email yet: the one on their Averages Plus account (from Stripe), filled in; they can change it, and it's
-      // still checked with a code (same as Fullscreen, 2026-11-23)
+      // still checked with a code (same as Fullscreen)
       const hint = document.getElementById('profileEditEmailHint');
       hint.textContent = 'Not required.';
       if (!profileState.email && window.AveragesEmail && window.AveragesEmail.suggested) window.AveragesEmail.suggested().then((v) => {
@@ -4232,8 +4232,8 @@
     const emailVerifyResend = document.getElementById('emailVerifyResend');
     const emailVerifyConfirm = document.getElementById('emailVerifyConfirm');
     const evSay = (t, bad) => { emailVerifyMsg.textContent = t || ''; emailVerifyMsg.classList.toggle('bad', !!bad); };
-    // Nothing is sent until they press Send verification code (2026-11-23, Martin: not automatic, like a
-    // "Verify your identity" popup: Send/Resend, the code box, Verify).
+    // Nothing is sent until they press Send verification code (not automatic, like a "Verify your identity" popup:
+    // Send/Resend, the code box, Verify).
     let evSent = false;
     async function emailVerifySend() {
       const em = profileState.email;
@@ -4411,7 +4411,7 @@
         darkMode,
         profile: readJSON(AVERAGES_PROFILE_KEY),
       };
-      // the dates added from the school's calendar (Fullscreen Calendar, 2026-11-26), when this device has them;
+      // the dates added from the school's calendar (Fullscreen Calendar), when this device has them;
       // without the field the API keeps the account's list
       const dates = readJSON('averages_calendar_dates');
       if (Array.isArray(dates)) out.calendarDates = dates.slice(-600);
@@ -4508,7 +4508,7 @@
           const sx = (img.naturalWidth - side) / 2, sy = (img.naturalHeight - side) / 2;
           c.getContext('2d').drawImage(img, sx, sy, side, side, 0, 0, PHOTO_SIDE, PHOTO_SIDE);
           // WebP where the browser can make it (keeps transparency); where it can't (Safari), a JPEG on white,
-          // about 20 KB, not a PNG several times that (2026-11-23: the API now turns away big photos).
+          // about 20 KB, not a PNG several times that.
           c.toBlob((b) => {
             if (b && b.type === 'image/webp') return resolve(b);
             const j = document.createElement('canvas');
@@ -4841,7 +4841,7 @@
       const is13 = read('averages_13plus') === 'yes';
       const incognito = INC ? INC.on : read('averages_account_mode') === 'incognito';
       const locked = !!(INC && INC.locked);
-      const PRICE = '$1.99/month plus tax.';   // $1.99 + tax (2026-11-10, Martin)
+      const PRICE = '$1.99/month plus tax.';   // $1.99 + tax
       const OFFER = 'Notifications, calendar sync and early features. ' + PRICE;
       let billing = null;   // GET /billing/status, once it answers
       let loaded = !LIVE;

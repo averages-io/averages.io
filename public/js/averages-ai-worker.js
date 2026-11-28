@@ -1,4 +1,4 @@
-// A.I. search's model, in its own thread (2026-11-15). Started by averages-ai.js as a module worker.
+// A.I. search's model, in its own thread. Started by averages-ai.js as a module worker.
 //
 // The model is Averages' fine-tune of IBM Granite 4.0 H 350M (Apache 2.0), run by transformers.js on the
 // student's own device. It never sees anything but what the student typed and the names of their own classes
@@ -109,7 +109,7 @@ export function searchTools(classes, teachers, schema = 16) {
 }
 
 let tok = null, model = null, safety = null, loading = null, device = '', schema = 16, firstAsk = true, loaded = '';
-// One copy of the model for every page of the site (2026-11-17): the app starts this as a SharedWorker when it can,
+// One copy of the model for every page of the site: the app starts this as a SharedWorker when it can,
 // so going to another page in the same tab keeps the model ready instead of starting it again (Firefox and Safari
 // keep a shared worker across same-site page changes; Chrome does with extendedLifetime, about 30 s). Each page talks
 // through its own port; replies go to the page whose message is being handled (one message at a time, below).

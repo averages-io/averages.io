@@ -271,7 +271,7 @@ function clearAppCookies(): void {
 export async function signOut(): Promise<void> {
   const forgetOnServer = true;
   // A Classic setup this browser never saved to the account (onboarding's save was cut off, or this device never got
-  // to it): saved now, before this browser forgets it, so signing back in doesn't mean onboarding again (2026-11-23).
+  // to it): saved now, before this browser forgets it, so signing back in doesn't mean onboarding again.
   // Never over a copy the account already has; 4 s at most.
   try {
     if (!window.localStorage.getItem("averages_sync_meta")) {
@@ -558,7 +558,7 @@ async function adoptSyncedRecord(remote: any, stamp: string, ask: (path: string)
     next.averages_appearance = JSON.stringify(appearance);
   }
   if (remote.darkMode === "dark" || remote.darkMode === "light") next.averages_dark_mode = remote.darkMode;
-  // System ("auto", 2026-11-09): this device follows its own light or dark setting
+  // System ("auto"): this device follows its own light or dark setting
   const followSystem = remote.darkMode === "auto";
   if (remote.profile && typeof remote.profile === "object") {
     const profile = { ...remote.profile };
@@ -570,7 +570,7 @@ async function adoptSyncedRecord(remote: any, stamp: string, ask: (path: string)
     next.averages_profile = JSON.stringify(profile);
     if (typeof profile.name === "string" && profile.name.trim()) next.averages_profile_name = profile.name.trim();
   }
-  // the dates added from the school's calendar (2026-11-26): the account's list, when it has one
+  // the dates added from the school's calendar: the account's list, when it has one
   if (Array.isArray(remote.calendarDates)) next.averages_calendar_dates = JSON.stringify(remote.calendarDates.slice(-600));
   const changed: string[] = [];
   if (followSystem && ls.getItem("averages_dark_mode") !== null) {
@@ -693,15 +693,15 @@ async function seedPicture(kind: "photo" | "background", value: unknown, media: 
 }
 
 /**
- * The account's synced copy, made from this device when the account has none yet (2026-11-23, Martin: signing out
- * and back in "I had to go thru onboarding again"). Onboarding only saved to this browser, and the account's copy
+ * The account's synced copy, made from this device when the account has none yet (signing out and back
+ * in showed onboarding again). Onboarding only saved to this browser, and the account's copy
  * was first written by a later change in Settings; sign-out clears the browser, so an account that never changed a
  * setting came back as new. Classic only. Never throws.
  *
  * `replace` (onboarding's last step): this setup becomes the account's copy even if it has one, since onboarding
  * only shows when that copy couldn't be read. Otherwise never over a copy the account already has.
- * Pictures go to the account's picture storage (seedPicture, 2026-11-23, Martin: a new account's photo from
- * onboarding never reached classmates, and after onboarding again with no photo "it is the old pic").
+ * Pictures go to the account's picture storage (seedPicture: a new account's photo from onboarding
+ * never reached classmates, and onboarding again with no photo kept the old one).
  */
 export async function seedSyncedRecord(opts: { replace?: boolean } = {}): Promise<void> {
   try {

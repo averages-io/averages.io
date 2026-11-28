@@ -29,7 +29,7 @@
     --mark: rgba(229,72,77,.18);
     --pop-shadow: 0 16px 40px rgba(20,21,31,.16), 0 2px 6px rgba(20,21,31,.06);
     --scrim: rgba(20,21,31,.32);
-    --display: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif; /* the system font (SF Pro on a Mac), the one the chat preview showed while Puffin couldn't load */
+    --display: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif; /* the system font (SF Pro on a Mac) */
     --rail: 64px;
     --side-open: 248px;
   }
@@ -57,7 +57,7 @@
 
   /* Twemoji subject icon on a tint of the subject color (same table as courses.html) */
   .badge { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; flex: none; background: color-mix(in srgb, var(--c) 18%, #ffffff); }
-  .badge svg { width: 21px; height: 21px; display: block; }   /* the class emoji fills its tile (was 17px, 2026-11-14) */
+  .badge svg { width: 21px; height: 21px; display: block; }   /* the class emoji fills its tile (was 17px) */
   .italic { font-style: italic; }
 
   /* ---------- frame ---------- */
@@ -823,7 +823,7 @@
   .sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--field); transition: transform .15s ease; }
   .sw.on { background: var(--accent); }
   .sw.on::after { transform: translateX(12px); }
-  /* dark: a light knob on a lighter track, so the switch reads as a switch (2026-11-26, Martin: "the off circles r not centered") */
+  /* dark: a light knob on a lighter track, so the switch reads as a switch */
   html[data-theme="dark"] .sw:not(.on) { background: #3d4052; }
   html[data-theme="dark"] .sw::after { background: #ffffff; }
   .cb { width: 20px; height: 20px; border-radius: 6px; border: 2px solid var(--inner); display: grid; place-items: center; flex: none; color: transparent; }
@@ -3024,7 +3024,7 @@
 
   <aside class="side" id="side" aria-label="Sidebar" hidden inert>
     <nav class="nav" aria-label="Pages">
-      <a href="#" title="Search" id="sideSearch" aria-keyshortcuts="Control+K Meta+K"><svg class="i"><use href="#i-search"/></svg><span class="fade">Search</span><kbd class="fade side-kbd" id="sideKbd">Ctrl K</kbd></a><script data-now>/* the right shortcut from the first frame (data-now: run as the page is read, not held for its data by scripts/build-fs.mjs) (2026-11-28: it showed "Ctrl K" for a moment on a Mac, then changed) */ (function () { var p = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || navigator.userAgent || ''; if (/mac|iphone|ipad|ipod/i.test(p)) document.getElementById('sideKbd').textContent = '⌘K'; })();</script>
+      <a href="#" title="Search" id="sideSearch" aria-keyshortcuts="Control+K Meta+K"><svg class="i"><use href="#i-search"/></svg><span class="fade">Search</span><kbd class="fade side-kbd" id="sideKbd">Ctrl K</kbd></a><script data-now>/* the right shortcut from the first frame (data-now: run as the page is read, not held for its data by scripts/build-fs.mjs) */ (function () { var p = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || navigator.userAgent || ''; if (/mac|iphone|ipad|ipod/i.test(p)) document.getElementById('sideKbd').textContent = '⌘K'; })();</script>
       <a href="/IS/home" data-go="/IS/home" title="Home" data-was="Home"><svg class="i"><use href="#i-home"/></svg><span class="fade">Home</span></a>
       <a href="/IS/courses" data-go="/IS/courses" title="Courses" data-was="the Courses page"><svg class="i"><use href="#i-binder"/></svg><span class="fade">Courses</span></a>
       <a href="/IS/grades" data-go="/IS/grades" title="Grades" data-was="the Grades page"><svg class="i"><use href="#i-chart"/></svg><span class="fade">Grades</span></a>
@@ -3454,7 +3454,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const NT_SEEN = new Set(FSD.NT_SEEN_IDS);
   { const add = NT_SEEN.add.bind(NT_SEEN); NT_SEEN.add = id => { const it = NT_ITEMS.find(x => x.id === id); if (it) FSX.seen.mark(it.kind, it.raw); return add(id); }; }   // marked here = marked in Windowed too
   // seen somewhere else after this page drew (another device's list arriving late, another tab, or the Grades page
-  // clearing new grades): count it here too, without marking it again (2026-11-14: the bell showed 10 until a refresh)
+  // clearing new grades): count it here too, without marking it again
   window.addEventListener('fs:seen', () => { let n = 0; NT_ITEMS.forEach(it => { if (!NT_SEEN.has(it.id) && FSX.seen.has(it.kind, it.raw)) { Set.prototype.add.call(NT_SEEN, it.id); n++; } }); if (n) { ntBadge(); NT.onChange(); } });
   const NT = Object.assign({ here: null, onChange: () => {} }, typeof NT_HOOKS === 'object' ? NT_HOOKS : {});
   let ntEl = null, ntFrom = null, ntScope = NT.here || 'all';
@@ -3800,7 +3800,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     const q = cmdk.querySelector('input').value.trim(), res = cmdk.querySelector('.cmdk-res'); let html = '';
     const page = ([p, ic]) => crow(p === HERE ? 'data-cmdkx' : `data-toast="the ${p} page"`, ico(ic), cmark(p, q), p === HERE ? "You're here" : '');
     if (!q) {
-      // recent searches, shared with Home's search (FSX.recentSearches, 2026-11-26)
+      // recent searches, shared with Home's search (FSX.recentSearches)
       const rec = FSX.recentSearches ? FSX.recentSearches() : [];
       if (rec.length) html += `<div class="lbl">Recent searches</div>` + rec.map(r => crow(`data-cmdkrecent="${esc(r)}"`, ico('search'), esc(r), '')).join('');
       html += `<div class="lbl">Quick actions</div>` + crow('data-cmdkmsg=""', ico('msg'), 'Message a teacher', 'Start a new message', ' s-cmd') + crow('data-toast="Turn in, on the Assignments page"', ico('upload'), 'Turn in an assignment', 'Pick from what you have due', ' s-cmd')

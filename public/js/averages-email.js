@@ -2,7 +2,7 @@
  * Email verification codes, for onboarding and Settings in both looks.
  * AveragesEmail.send(email) emails a 6-digit code (API: POST /email/code); AveragesEmail.check(email, code) checks it
  * (POST /email/verify). AveragesEmail.say(error) turns an error into a sentence for the student.
- * Before a code is sent, the API checks the address (2026-11-18): not a throwaway inbox, not a typo of a big provider
+ * Before a code is sent, the API checks the address: not a throwaway inbox, not a typo of a big provider
  * ("Did you mean gmail.com?": sending the same address again goes ahead), and a domain that gets email.
  * AveragesEmail.suggested() is the email on the student's Averages Plus account, to fill in (they can change it).
  */

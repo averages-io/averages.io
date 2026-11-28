@@ -1355,7 +1355,7 @@
   }
 
   async function oneDriveList(token) {
-    // with their preview pictures (2026-11-28: the Files page showed OneDrive files without one)
+    // with their preview pictures
     const r = await mfetch(token, `${GRAPH}${APPROOT}/children?$top=100&$select=${ONEDRIVE_SELECT}&$expand=thumbnails`);
     let own = [];
     if (r.status !== 404) {
@@ -1583,7 +1583,7 @@
   }
 
   /**
-   * One page of the student's whole OneDrive, for pickers drawn by the page itself (2026-11-28: Add from OneDrive's
+   * One page of the student's whole OneDrive, for pickers drawn by the page itself (Add from OneDrive's
    * "+" in its search bar): a folder's contents ({ folder: id }, 'root' for the top) or a search ({ q }), files and
    * folders of their own drive only, like oneDrivePick. Needs a read token (oneDriveToken({ read: true })).
    * Answers { items: [{ id, name, folder, count, size, mimeType, modified }] }.

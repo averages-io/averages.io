@@ -1,4 +1,4 @@
-// Opened from inside Schoology (worker/index.js launchRedirect, 2026-11-23 security sweep): who Schoology says it is
+// Opened from inside Schoology (worker/index.js launchRedirect): who Schoology says it is
 // is believed only when Schoology sent them, so another site can't sign anyone out. Run by npm run verify.
 import worker, { schoologyLaunch } from '../worker/index.js';
 const saml = (d, u) => btoa(`<samlp:Response><saml:Attribute Name="domain"><saml:AttributeValue>${d}</saml:AttributeValue></saml:Attribute><saml:Attribute Name="uid"><saml:AttributeValue>${u}</saml:AttributeValue></saml:Attribute></samlp:Response>`);

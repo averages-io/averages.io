@@ -29,7 +29,7 @@
     --mark: rgba(229,72,77,.18);
     --pop-shadow: 0 16px 40px rgba(20,21,31,.16), 0 2px 6px rgba(20,21,31,.06);
     --scrim: rgba(20,21,31,.32);
-    --display: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif; /* the system font (SF Pro on a Mac), the one the chat preview showed while Puffin couldn't load */
+    --display: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif; /* the system font (SF Pro on a Mac) */
     --rail: 64px;
     --side-open: 248px;
   }
@@ -57,7 +57,7 @@
 
   /* Twemoji subject icon on a tint of the subject color (same table as courses.html) */
   .badge { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; flex: none; background: color-mix(in srgb, var(--c) 18%, #ffffff); }
-  .badge svg { width: 21px; height: 21px; display: block; }   /* the class emoji fills its tile (was 17px, 2026-11-14) */
+  .badge svg { width: 21px; height: 21px; display: block; }   /* the class emoji fills its tile (was 17px) */
   .italic { font-style: italic; }
 
   /* ---------- frame ---------- */
@@ -825,7 +825,7 @@
   .sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--field); transition: transform .15s ease; }
   .sw.on { background: var(--accent); }
   .sw.on::after { transform: translateX(12px); }
-  /* dark: a light knob on a lighter track, so the switch reads as a switch (2026-11-26, Martin: "the off circles r not centered") */
+  /* dark: a light knob on a lighter track, so the switch reads as a switch */
   html[data-theme="dark"] .sw:not(.on) { background: #3d4052; }
   html[data-theme="dark"] .sw::after { background: #ffffff; }
   .cb { width: 20px; height: 20px; border-radius: 6px; border: 2px solid var(--inner); display: grid; place-items: center; flex: none; color: transparent; }
@@ -1515,7 +1515,7 @@
   .ti-fmt button .avfi { flex: none; }
 
   /* ---------- Turn in: app marks, upload bar, written answer, step bar ---------- */
-  /* Add from Google Drive / OneDrive / Canva, the popup picker (2026-11-28: Home had no styles for it; the same as Assignments and the course hub) */
+  /* Add from Google Drive / OneDrive / Canva, the popup picker */
   .mp-ck { width: 20px; height: 20px; border-radius: 6px; display: grid; place-items: center; background: var(--field); box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--muted) 55%, transparent); color: transparent; }
   .mp-ck:hover { box-shadow: inset 0 0 0 2px var(--ink-2); }
   .pk-scrim { position: fixed; inset: 0; z-index: 96; display: flex; align-items: center; justify-content: center; padding: 24px 16px; background: var(--scrim); }
@@ -1529,7 +1529,7 @@
   .pk-search svg.i { width: 18px; height: 18px; flex: none; }
   .pk-search input { flex: 1; min-width: 0; border: 0; background: none; outline: none; font: inherit; font-size: 14px; font-weight: 700; color: var(--ink); }
   .pk-search:focus-within { box-shadow: 0 0 0 2px var(--focus); }
-  /* Add from OneDrive: "+" at the end of the search bar opens their whole OneDrive in place, and turns into an "x" to go back (2026-11-28) */
+  /* Add from OneDrive: "+" at the end of the search bar opens their whole OneDrive in place, and turns into an "x" to go back */
   .pk-all { flex: none; width: 30px; height: 30px; margin-right: -8px; display: grid; place-items: center; border-radius: 9px; color: var(--ink-2); cursor: pointer; transition: background-color .15s ease, color .15s ease; }
   .pk-all:hover, .pk-all.on { background: var(--inner); color: var(--ink); }
   .pk-search .pk-all svg.i { width: 18px; height: 18px; transition: transform .32s cubic-bezier(.3, 1.45, .5, 1); }
@@ -1934,7 +1934,7 @@
 
   <aside class="side" id="side" aria-label="Sidebar">
     <nav class="nav" aria-label="Pages">
-      <a href="#" title="Search" id="sideSearch" aria-keyshortcuts="Control+K Meta+K"><svg class="i"><use href="#i-search"/></svg><span class="fade">Search</span><kbd class="fade side-kbd" id="sideKbd">Ctrl K</kbd></a><script data-now>/* the right shortcut from the first frame (data-now: run as the page is read, not held for its data by scripts/build-fs.mjs) (2026-11-28: it showed "Ctrl K" for a moment on a Mac, then changed) */ (function () { var p = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || navigator.userAgent || ''; if (/mac|iphone|ipad|ipod/i.test(p)) document.getElementById('sideKbd').textContent = '⌘K'; })();</script>
+      <a href="#" title="Search" id="sideSearch" aria-keyshortcuts="Control+K Meta+K"><svg class="i"><use href="#i-search"/></svg><span class="fade">Search</span><kbd class="fade side-kbd" id="sideKbd">Ctrl K</kbd></a><script data-now>/* the right shortcut from the first frame (data-now: run as the page is read, not held for its data by scripts/build-fs.mjs) */ (function () { var p = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || navigator.userAgent || ''; if (/mac|iphone|ipad|ipod/i.test(p)) document.getElementById('sideKbd').textContent = '⌘K'; })();</script>
       <a href="#" title="Home" class="on" aria-current="page"><svg class="i"><use href="#i-home"/></svg><span class="fade">Home</span></a>
       <a href="#" title="Courses" data-open="page:Courses"><svg class="i"><use href="#i-binder"/></svg><span class="fade">Courses</span></a>
       <a href="#" title="Grades" data-open="page:Grades"><svg class="i"><use href="#i-chart"/></svg><span class="fade">Grades</span></a>
@@ -2419,7 +2419,8 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const letter = p => CUTS.find(([c]) => p >= c)[1];
   const nextUp = p => { const i = CUTS.findIndex(([c]) => p >= c); return i > 0 ? CUTS[i - 1] : null; };
 
-  // pts = points possible so far, rem = points still to come this quarter
+  // pts = points possible so far, rem = points of the work posted so far that isn't graded yet (only what's posted
+  // is known, so nothing here may say what's possible "this quarter": teachers keep posting work)
   // The student's classes (averages-fs-data.js), in Home's shape: short name, teacher, the period (shown where the design
   // had a room), points graded so far and still to come (from the gradebook), the last three scores, the projected
   // grade and the scores it comes from.
@@ -2435,7 +2436,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   // The projection starts from the most recent graded assignment, so its direction is latest score to projected grade
   // (a point or more either way), not the oldest score on the chart to the newest.
   // the arrow compares the prediction with the grade now (it used to compare with the last single score, so a higher
-  // prediction could show a down arrow, 2026-11-09)
+  // prediction could show a down arrow)
   CLASSES.forEach(c => { const d = c.predictedPct - c.pct; c.trend = d >= 0.5 ? 'up' : d <= -0.5 ? 'down' : 'flat'; });
   // Each class's grading categories, from its gradebook: name, weight %, your % (null: nothing graded yet), points so far.
   const CATS = FSD.CATS;
@@ -2449,7 +2450,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   // a class with nothing graded yet reads N/A, never F 0.0%
   const gtxt = c => c.none ? 'No grades yet' : `${letter(c.pct)} · ${c.pct.toFixed(1)}%`;
   const WITH_GRADES = () => CLASSES.filter(c => !c.none);
-  // the day of the month in a short date: "Nov 21", "21 nov.", "21. Nov." and "11月21日" all give 21 (2026-11-15: dates follow the app's language)
+  // the day of the month in a short date: "Nov 21", "21 nov.", "21. Nov." and "11月21日" all give 21
   const dayNum = x => { const m = String(x || '').match(/\d+/g); return m ? m[m.length - 1] : ''; };
   const dtile = d => d.k === 'late' ? `<span class="dtile late" aria-hidden="true"><small>${d.day}</small><b>${dayNum(d.date)}</b></span>`
     : `<span class="dtile ${d.date === TODAY ? 'today' : ''}" aria-hidden="true"><small>${d.date === TODAY ? 'Today' : d.day}</small><b>${dayNum(d.date)}</b></span>`;
@@ -2669,8 +2670,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (state.dueSort === 'class') list.sort((a, b) => C[a.c].name.localeCompare(C[b.c].name));
     return list;
   }
-  // ---------- the greeting: one of these, for the time of day and the day of the week (2026-11-26, Martin: "more
-  // greetings... like moonlit work"; then "most of these sound ai": kept to things people say). Each one lists when it
+  // ---------- the greeting: one of these, for the time of day and the day of the week. Each one lists when it
   // fits (early, morning, midday, afternoon, evening, night, late, a day, any). Picked each time Home opens. Translated.
   const GREETINGS = [
     ["early", "Up early, {x}!"],
@@ -3007,7 +3007,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   function renderPromo() {
     // classes with points posted that can still go up, plus classes projected to go up when the points aren't posted
     const n = WITH_GRADES().filter(c => { const t = takes(c); return t.ok || (t.unknown && c.predictedPct >= t.cut); }).length;
-    $('promoText').textContent = `${n === 0 ? 'No classes' : n === 1 ? '1 class' : n + ' classes'} could still go up a letter this term.`;
+    $('promoText').textContent = `${n === 0 ? 'No classes' : n === 1 ? '1 class' : n + ' classes'} could go up a letter with the work posted so far.`;
   }
   const secId = k => SECTIONS.find(x => x[0] === k)[2];
   function applyOrder() {
@@ -3019,7 +3019,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   function applySections() {
     const shown = [];
     SECTIONS.forEach(([k, , id]) => { const was = $(id).hidden; $(id).hidden = state.hidden.has(k); if (was && !$(id).hidden) shown.push(k); });
-    // a section drawn while hidden measured 0 tall (Course updates came back empty until a reload, 2026-11-09): draw again
+    // a section drawn while hidden measured 0 tall (Course updates came back empty until a reload): draw again
     const REDRAW = { updates: () => renderFeed(), due: () => renderDue(), messages: () => renderMessages(), drafts: () => renderDrafts() };
     shown.forEach(k => { try { if (REDRAW[k]) REDRAW[k](); } catch (_) { /* drawn on the next refresh */ } });
     $('rail').dataset.n = ['due', 'drafts', 'quarter', 'updates', 'messages'].filter(k => !state.hidden.has(k)).length;
@@ -3104,7 +3104,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       });
     });
   }
-  // Teachers, messages, files and course updates come a moment after the page is up (averages-fs-data.js, 2026-11-13):
+  // Teachers, messages, files and course updates come a moment after the page is up (averages-fs-data.js):
   // the lists built from them are built again and the cards drawn again.
   window.addEventListener('fs:more', () => {
     CLASSES.forEach(c => { const x = FSD.C[c.id]; if (x) { c.teacher = x.teacher || 'Your teacher'; c.teacherIds = x.teacherIds; c.teachers = x.teachers || []; } });
@@ -3559,11 +3559,11 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
 
     threads() {
       const n = THREADS.filter(t => t.unread).length;
-      return { label: 'Messages', wide: true, html: head('Messages', n ? `${n} unread` : 'All read') + THREADS.map(t => threadRow(t, n > 0)).join('') +   // all read: no dot column, so the class icon sits at the edge (2026-11-26)
+      return { label: 'Messages', wide: true, html: head('Messages', n ? `${n} unread` : 'All read') + THREADS.map(t => threadRow(t, n > 0)).join('') +   // all read: no dot column, so the class icon sits at the edge
         `<div class="pop-foot"><button class="btn primary big" data-act="openpage" data-arg="Messages">${ico('msg')}Open Messages</button></div>` };
     },
     thread(id) {
-      // a message that isn't from a class (no course) has no class: it opened nothing (2026-11-26, Martin: "can't click tru")
+      // a message that isn't from a class (no course) has no class: it opened nothing
       const t = T(id), c = C[t && t.c];
       if (!t) return this.threads();
       if (t.unread) { t.unread = false; renderMessages(); renderCounts(); }
@@ -3572,8 +3572,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
         `<div class="chat" id="chat">${t.msgs.map(m => `<div class="msg${m.me ? ' me' : ''}${m.t.length > 200 ? ' long' : ''}"><small>${m.me ? 'You' : esc(m.who || t.who)}${m.at ? ` · ${esc(m.at)}` : ''}</small><span class="mt">${esc(m.t.length > 200 ? m.t.slice(0, 200).trimEnd() + '…' : m.t)}</span></div>`).join('')}</div>
         <div class="pop-foot"><button class="btn primary big" data-act="openpage" data-arg="thread:${t.id}">${ico('msg')}Open in Messages to reply</button></div>`,
         wire(el) {
-          // the conversation itself, the last few messages (2026-11-26, Martin: "why is the most recent message not
-          // showing"): the list only has each one's newest line, which is empty for a file. Read once, kept for this page.
+          // the conversation itself, the last few messages: the list only has each one's newest line, which is empty for a file. Read once, kept for this page.
           if (!t.loaded && !t.loading && /^\d+$/.test(t.id) && FSX.thread) {
             t.loading = true;
             FSX.thread(t.id).then(d => {
@@ -3604,7 +3603,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
         return mi({ attrs: `data-go="${many ? 'pickteacher' : 'compose'}:${c.id}"`, lead: badge(c), t: c.teacher, sub: n ? `${c.name} · ${n} conversation${n > 1 ? 's' : ''}` : c.name, end: many ? ico('chev-r', 'i go') : '' });
       }).join('') };
     },
-    // Martin 2026-11-18: "Message Martin, Message Test, or Start a GC"
+    // one row per teacher, then a group message
     pickteacher(cid) {
       const c = C[cid], L = c.teachers || [];
       return { label: 'Message ' + c.teacher, html: head('Message a teacher', c.name, { back: 'teachers', lead: badge(c) }) +
@@ -3771,11 +3770,11 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       touchRecent('Course', c.name, 'class:' + id);
       return { label: c.name, html: head(c.name, `${c.teacher} · ${c.room}`, { lead: badge(c) }) +
         `<div class="kv"><div><small>Current grade</small><b>${c.none ? '<span class="g-na">N/A</span> <small>No grades yet</small>' : `${c.pct.toFixed(1)}% <span class="${gcls(c.pct)}">${letter(c.pct)}</span>`}</b></div>${c.rem != null
-          ? `<div><small>Points still to come</small><b>${c.rem}</b></div>`
+          ? `<div><small>Points posted, not graded yet</small><b>${c.rem}</b></div>`
           : `<div><small>Projected grade</small><b><span class="trend ${c.trend}" id="projChip" tabindex="0" role="button" aria-haspopup="true" aria-expanded="false" aria-label="Why is ${esc(c.name)} projected ${letter(c.predictedPct)}, ${c.predictedPct} percent? Show the trend."><span class="arrow" aria-hidden="true">${TREND_ARROW[c.trend]}</span>${letter(c.predictedPct)}<span class="tp">${c.predictedPct.toFixed(1)}%</span></span></b></div>`}</div>
         <div class="lbl">Recent scores</div>
         ${c.recent.map(([n, s]) => `<div class="mi" style="cursor:default">${ico('ok')}<span class="tx"><b>${esc(n)}</b></span><span class="end">${esc(s)}</span></div>`).join('')}
-        <div class="note">${t.top ? 'Already at the top letter grade.' : t.unknown ? `${esc(c.teacher)} hasn't posted how many points are left, so this shows your projected grade. Hover it to see the trend.` : t.ok ? `Average ${t.need.toFixed(1)}% on what's left to reach ${t.up}.` : `${t.up} is out of reach this term (it would take ${t.need.toFixed(1)}%).`}</div>
+        <div class="note">${t.top ? 'Already at the top letter grade.' : t.unknown ? `${esc(c.teacher)} hasn't posted how many points are left, so this shows your projected grade. Hover it to see the trend.` : t.ok ? `Average ${t.need.toFixed(1)}% on the work posted so far to reach ${t.up}.` : `${t.up} would take more than the work posted so far (${t.need.toFixed(1)}%). That can change as ${esc(c.teacher)} posts more.`}</div>
         <div class="acts split"><button class="btn" data-go="whatif:${c.id}">${ico('calc')}What-if grades</button><button class="btn" data-go="compose:${c.id}">${ico('msg')}Message ${esc(c.teacher)}</button></div>`,
         wire(el) { const chip = el.querySelector('#projChip'); if (chip) bindTrend(chip, c); } };
     },
@@ -3867,13 +3866,13 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
         } };
     },
     takes() {
-      return { label: 'What it takes', wide: true, html: head('What it takes', 'To go up a letter by Oct 30') +
+      return { label: 'What it takes', wide: true, html: head('What it takes', 'With the work posted so far') +
         WITH_GRADES().map(c => {
           const t = takes(c);
-          const end = t.top ? `<span class="end need no">Top grade</span>` : t.unknown ? `<span class="end">Projected ${letter(c.predictedPct)}</span>` : `<span class="end need ${t.ok ? 'ok' : 'no'}">${t.ok ? t.need.toFixed(1) + '% avg' : 'Out of reach'}</span>`;
-          const sub = t.top ? `${letter(c.pct)} · ${c.pct.toFixed(1)}%` : t.unknown ? `No points-left posted · projected ${c.predictedPct.toFixed(1)}%` : `${letter(c.pct)} to ${t.up} needs ${t.cut}% · ${c.rem} points left`;
+          const end = t.top ? `<span class="end need no">Top grade</span>` : t.unknown ? `<span class="end">Projected ${letter(c.predictedPct)}</span>` : `<span class="end need ${t.ok ? 'ok' : 'no'}">${t.ok ? t.need.toFixed(1) + '% avg' : 'Not yet'}</span>`;
+          const sub = t.top ? `${letter(c.pct)} · ${c.pct.toFixed(1)}%` : t.unknown ? `No points-left posted · projected ${c.predictedPct.toFixed(1)}%` : `${letter(c.pct)} to ${t.up} needs ${t.cut}% · ${c.rem} points posted`;
           return mi({ attrs: `data-go="class:${c.id}"`, lead: badge(c), t: c.name, sub, end });
-        }).join('') + `<div class="hr"></div><div class="note">The average you'd need on the work still to come, assuming every assignment counts by points.</div>` };
+        }).join('') + `<div class="hr"></div><div class="note">The average you'd need on the work posted so far that isn't graded yet, assuming every assignment counts by points. Teachers usually post more, so this changes.</div>` };
     },
   };
 
@@ -3981,7 +3980,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       // one row per class: a verdict, one bar for the average needed on what's left (tick = what you average now), one plain sentence
       const an = l => (/^[AEF]/.test(l) ? 'an' : 'a') + ' ' + l;
       const cutOf = l => CUTS.find(([, x]) => x === l)[0];
-      // average needed on the work still to come to end the quarter at or above a cutoff
+      // average needed on the work posted so far (not graded yet) to be at or above a cutoff once it's graded
       const needFor = (c, cut) => c.rem ? (cut * (c.pts + c.rem) - c.pct * c.pts) / c.rem : null;
       // points needed out of what's left, rounded up since a half point short still misses the cutoff
       const ptsFor = (c, pct) => Math.max(0, Math.ceil(pct / 100 * c.rem - 1e-9));
@@ -3992,7 +3991,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
         const cur = letter(c.pct), list = [];
         if (c.rem == null) {
           list.push(step({ l: cur, tag: 'Now', sub: `${c.pct.toFixed(1)}%`, st: 'now', bcls: gcls(c.pct) }));
-          list.push(step({ l: letter(c.predictedPct), tag: 'Projected', sub: `${c.predictedPct.toFixed(1)}% by Oct 30`, st: 'proj', bcls: gcls(c.predictedPct) }));
+          list.push(step({ l: letter(c.predictedPct), tag: 'Projected', sub: `${c.predictedPct.toFixed(1)}% on the trend`, st: 'proj', bcls: gcls(c.predictedPct) }));
           return { html: list.join(arw), cap: `No total points posted, so this uses your projected grade from the trend in your recent scores.` };
         }
         const best = (c.pct * c.pts + 100 * c.rem) / (c.pts + c.rem);
@@ -4000,11 +3999,11 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
         for (let i = iCur; i >= iBest; i--) {
           const [cut, l] = CUTS[i], need = needFor(c, cut);
           list.push(i === iCur
-            ? step({ l, tag: 'Now', sub: need <= 0 ? 'Yours to keep' : `${ptsFor(c, need)} of ${c.rem} pts to keep`, st: 'now', bcls: gcls(c.pct) })
+            ? step({ l, tag: 'Now', sub: need <= 0 ? 'Safe so far' : `${ptsFor(c, need)} of ${c.rem} pts to keep`, st: 'now', bcls: gcls(c.pct) })
             : step({ l, tag: i === iCur - 1 ? 'Next' : '', sub: `${ptsFor(c, need)} of ${c.rem} pts`, st: 'reach', color: c.color, bcls: gcls(cut) }));
         }
         if (iBest > 0) { const [cut, l] = CUTS[iBest - 1]; list.push(step({ l, tag: iBest === iCur ? 'Next' : '', sub: `Needs ${ptsFor(c, needFor(c, cut))} of ${c.rem}`, st: 'out' })); }
-        return { html: list.join(arw), cap: `Points you'd need out of the ${c.rem} still to come this quarter.` };
+        return { html: list.join(arw), cap: `Points you'd need out of the ${c.rem} posted so far that aren't graded yet.` };
       };
       const tkRow = ({ c, t }) => {
         const cur = letter(c.pct), best = (c.pct * c.pts + 100 * (c.rem || 0)) / (c.pts + (c.rem || 0));
@@ -4012,35 +4011,35 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
         let chip, cls, say;
         if (t.top) {
           chip = 'Top grade'; cls = 'ok';
-          say = `You have the top grade, ${an(cur)} (${c.pct.toFixed(1)}%).${keep === null ? '' : keep <= 0 ? ' It stays yours whatever happens.' : ` To keep it, you need ${ptsFor(c, keep)} of the ${c.rem} points still to come.`}`;
+          say = `You have the top grade, ${an(cur)} (${c.pct.toFixed(1)}%).${keep === null ? '' : keep <= 0 ? ' The work posted so far can\'t take it away.' : ` To keep it, you need ${ptsFor(c, keep)} of the ${c.rem} points posted so far.`}`;
         } else if (t.unknown) {
           const p = letter(c.predictedPct), dir = CUTS.findIndex(([, l]) => l === cur) - CUTS.findIndex(([, l]) => l === p);
           chip = dir > 0 ? 'Projected up' : dir < 0 ? 'Projected down' : 'Projected to hold'; cls = dir > 0 ? 'ok' : dir < 0 ? 'warn' : 'muted';
-          say = `You're projected to finish with ${an(p)} (${c.predictedPct.toFixed(1)}%)${dir > 0 ? `, up from your ${cur} now` : dir < 0 ? `, down from your ${cur} now` : `, so you keep your ${cur}`}. Once ${esc(c.teacher)} posts the quarter's total points, this switches to exactly what you'd need.`;
+          say = `You're projected to finish with ${an(p)} (${c.predictedPct.toFixed(1)}%)${dir > 0 ? `, up from your ${cur} now` : dir < 0 ? `, down from your ${cur} now` : `, so you keep your ${cur}`}. Once ${esc(c.teacher)} posts work with points, this switches to exactly what you'd need on it.`;
         } else {
           const gap = t.need - c.pct;
-          if (!t.ok) { chip = 'Out of reach'; cls = 'muted'; }
+          if (!t.ok) { chip = 'Not yet'; cls = 'muted'; }
           else if (gap <= 0) { chip = 'On track'; cls = 'ok'; }
           else if (gap <= 5) { chip = 'Within reach'; cls = 'ok'; }
           else { chip = 'Stretch'; cls = 'warn'; }
           say = t.ok
             ? (gap > 0
-              ? `To finish with ${an(t.up)}, you need <b>${ptsFor(c, t.need)} of the ${c.rem} points</b> still to come. At your current pace you'd get about ${Math.round(c.pct / 100 * c.rem)}, so that's ${ptsFor(c, t.need) - Math.round(c.pct / 100 * c.rem)} more than usual.`
-              : `To finish with ${an(t.up)}, you need <b>${ptsFor(c, t.need)} of the ${c.rem} points</b> still to come. At your current pace you'd get about ${Math.round(c.pct / 100 * c.rem)}, so keep it up.`)
-            : `${an(t.up).replace(/^./, m => m.toUpperCase())} isn't possible this quarter. It would take ${ptsFor(c, t.need)} points, and only ${c.rem} are left. Even all of them gets you to ${best.toFixed(1)}%.`;
+              ? `To get ${an(t.up)}, you need <b>${ptsFor(c, t.need)} of the ${c.rem} points</b> posted so far. At your current pace you'd get about ${Math.round(c.pct / 100 * c.rem)}, so that's ${ptsFor(c, t.need) - Math.round(c.pct / 100 * c.rem)} more than usual.`
+              : `To get ${an(t.up)}, you need <b>${ptsFor(c, t.need)} of the ${c.rem} points</b> posted so far. At your current pace you'd get about ${Math.round(c.pct / 100 * c.rem)}, so keep it up.`)
+            : `${an(t.up).replace(/^./, m => m.toUpperCase())} would take ${ptsFor(c, t.need)} points, and only ${c.rem} are posted so far. All of them would get you to ${best.toFixed(1)}%. That can change as ${esc(c.teacher)} posts more work.`;
         }
         const lad = ladder(c, t);
         return `<div class="tk-row">${badge(c)}<div class="tk-main"><div class="tk-top"><b>${esc(c.name)}</b><span class="tk-goal">${esc(c.teacher)}</span><span class="tk-chip ${cls}">${chip}</span></div>
-          <div class="tk-steps" role="list" aria-label="Grades you can still get in ${esc(c.name)}">${lad.html}</div>
+          <div class="tk-steps" role="list" aria-label="Grades you can get with the work posted so far in ${esc(c.name)}">${lad.html}</div>
           <p class="tk-cap">${lad.cap}</p><p>${say}</p></div></div>`;
       };
-      body = `<section class="dpanel"><h3>Grades you can still get</h3>
+      body = `<section class="dpanel"><h3>With the work posted so far</h3><p class="dnote" style="margin-top:-4px">Only work your teachers have posted counts here. They usually post more, so this changes as they do.</p>
           <div class="tk">${rows.map(tkRow).join('')}</div></section>
-        <section class="dpanel"><div class="dt-h"><h3>Data table</h3><button class="hbtn" data-csv>${ico('doc')}Download CSV</button></div><div class="tablewrap"><table class="dt big"><thead><tr><th>Class</th><th>Now</th><th>Next letter</th><th>Points left</th><th>Points needed</th></tr></thead>
+        <section class="dpanel"><div class="dt-h"><h3>Data table</h3><button class="hbtn" data-csv>${ico('doc')}Download CSV</button></div><div class="tablewrap"><table class="dt big"><thead><tr><th>Class</th><th>Now</th><th>Next letter</th><th>Points posted</th><th>Points needed</th></tr></thead>
           <tbody>${rows.map(({ c, t }) => `<tr><td>${cn(c)}</td><td>${c.pct.toFixed(1)}% <span class="${gcls(c.pct)}">${letter(c.pct)}</span></td>
             <td>${t.top ? 'Top grade' : `${t.up} at ${t.cut}%`}</td><td>${c.rem == null ? 'Not posted' : c.rem}</td>
-            <td>${t.top ? '' : t.unknown ? `Projected ${letter(c.predictedPct)}` : (t.ok ? `<b class="ga">${ptsFor(c, t.need)} of ${c.rem}</b>` : `<span class="none" title="Would need ${ptsFor(c, t.need)} of the ${c.rem} points left">Out of reach</span>`)}</td></tr>`).join('')}</tbody></table></div>
-          <p class="dnote">Assumes the work left is spread across categories the way it is now. Quarter 1 ends Oct 30.</p></section>`;
+            <td>${t.top ? '' : t.unknown ? `Projected ${letter(c.predictedPct)}` : (t.ok ? `<b class="ga">${ptsFor(c, t.need)} of ${c.rem}</b>` : `<span class="none" title="Would need ${ptsFor(c, t.need)} of the ${c.rem} points posted so far">Not yet</span>`)}</td></tr>`).join('')}</tbody></table></div>
+          <p class="dnote">Only counts work your teachers have posted so far, so it changes as they post more. Assumes it's spread across categories the way your grades are now.</p></section>`;
     } else if (k === 'turn') {
       const totals = CLASSES.map(c => ({ c, n: TURNED_BY[c.id].slice(idx).reduce((a, b) => a + b, 0) })).sort((a, b) => b.n - a.n);
       const sum = totals.reduce((a, x) => a + x.n, 0);
@@ -4066,7 +4065,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     modal = document.createElement('div');
     modal.className = 'modal-wrap';
     modal.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle" tabindex="-1" id="mDialog">
-      <div class="modal-h"><div><h2 id="mTitle">${{ avg: 'Overall average', turn: 'Assignments turned in', takes: 'What it takes', gpa: 'GPA', rate: 'On-time turn-in rate' }[k]}</h2><p>${k === 'takes' ? 'What each class needs to go up a letter by Oct 30 · 15 days left' : k === 'rate' ? 'How much of your work goes in on time · ' + range : 'Trend and the classes behind it · ' + range}</p></div>
+      <div class="modal-h"><div><h2 id="mTitle">${{ avg: 'Overall average', turn: 'Assignments turned in', takes: 'What it takes', gpa: 'GPA', rate: 'On-time turn-in rate' }[k]}</h2><p>${k === 'takes' ? 'What each class needs to go up a letter, from the work posted so far' : k === 'rate' ? 'How much of your work goes in on time · ' + range : 'Trend and the classes behind it · ' + range}</p></div>
         <button class="sq" id="mClose" aria-label="Close">${ico('x')}</button></div>
       <div class="modal-b">${body}</div></div>`;
     document.body.appendChild(modal);
@@ -4505,7 +4504,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     if (go && !go.disabled && /^(class|due|turnin|update):/.test(go.dataset.go)) { closePop(); openPage(go.dataset.go); return; }
     if (go && !go.disabled) {
       const v = go.dataset.go;
-      // an address (a person in Contacts, say): go there. Anything with no popup of its own: open its page (2026-11-14)
+      // an address (a person in Contacts, say): go there. Anything with no popup of its own: open its page
       if (v.charAt(0) === '/') { closePop(); window.location.href = v; return; }
       const [k, ...rest] = v.split(':');
       if (typeof POP[k] !== 'function' && k !== 'notifs' && k !== 'whatif') { closePop(); openPage(v); return; }
@@ -5391,7 +5390,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     const q = cmdk.querySelector('input').value.trim(), res = cmdk.querySelector('.cmdk-res'); let html = '';
     const page = ([p, ic]) => crow(p === HERE ? 'data-cmdkx' : `data-toast="the ${p} page"`, ico(ic), cmark(p, q), p === HERE ? "You're here" : '');
     if (!q) {
-      // recent searches, shared with Home's search (FSX.recentSearches, 2026-11-26)
+      // recent searches, shared with Home's search (FSX.recentSearches)
       const rec = FSX.recentSearches ? FSX.recentSearches() : [];
       if (rec.length) html += `<div class="lbl">Recent searches</div>` + rec.map(r => crow(`data-cmdkrecent="${esc(r)}"`, ico('search'), esc(r), '')).join('');
       html += `<div class="lbl">Quick actions</div>` + crow('data-cmdkmsg=""', ico('msg'), 'Message a teacher', 'Start a new message', ' s-cmd') + crow('data-toast="Turn in, on the Assignments page"', ico('upload'), 'Turn in an assignment', 'Pick from what you have due', ' s-cmd')
@@ -5653,7 +5652,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const NT_SEEN = new Set(FSD.NT_SEEN_IDS);
   { const add = NT_SEEN.add.bind(NT_SEEN); NT_SEEN.add = id => { const it = NT_ITEMS.find(x => x.id === id); if (it) FSX.seen.mark(it.kind, it.raw); return add(id); }; }   // marked here = marked in Windowed too
   // seen somewhere else after this page drew (another device's list arriving late, another tab, or the Grades page
-  // clearing new grades): count it here too, without marking it again (2026-11-14: the bell showed 10 until a refresh)
+  // clearing new grades): count it here too, without marking it again
   window.addEventListener('fs:seen', () => { let n = 0; NT_ITEMS.forEach(it => { if (!NT_SEEN.has(it.id) && FSX.seen.has(it.kind, it.raw)) { Set.prototype.add.call(NT_SEEN, it.id); n++; } }); if (n) { ntBadge(); NT.onChange(); } });
   const NT = Object.assign({ here: null, onChange: () => {} }, typeof NT_HOOKS === 'object' ? NT_HOOKS : {});
   let ntEl = null, ntFrom = null, ntScope = NT.here || 'all';

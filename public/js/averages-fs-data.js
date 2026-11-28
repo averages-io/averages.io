@@ -271,7 +271,7 @@
       window.FSD.NT.forEach(function (it) { have[it.id] = true; });
       // Only what's really new: not already in the list, and not already seen (read in Schoology, seen on this device or
       // another one, or over 15 days old: fresh.NT_SEEN_IDS), the same rule as the late lists (mergeLater). Seen ones
-      // used to come in as new, so the bell said 10 until a manual sync rebuilt the list (Martin 2026-11-16).
+      // used to come in as new, so the bell said 10 until a manual sync rebuilt the list.
       var seenIds = {}; (fresh.NT_SEEN_IDS || []).forEach(function (id) { seenIds[id] = true; });
       var added = fresh.NT.filter(function (it) { return !have[it.id] && !seenIds[it.id]; });
       if (!added.length) return;
@@ -408,7 +408,7 @@
     var live = D.NT.filter(function (it) { return !FSX.seen.has(it.kind, it.raw); });
     var g = live.filter(function (it) { return it.k === 'graded'; }).length;
     var nav = document.querySelector('.side .nav'); if (!nav) return;
-    // Courses has no number or dot (2026-11-09, Martin): its posts and files are in the bell
+    // Courses has no number or dot: its posts and files are in the bell
     var cl = nav.querySelector('a[data-title="Courses"]') || nav.querySelector('a[data-open="page:Courses"], a[title="Courses"]');
     if (cl) [].forEach.call(cl.querySelectorAll('em.count, i.pip'), function (x) { x.remove(); });
     [['Grades', g]].forEach(function (x) {
@@ -442,7 +442,7 @@
     var cacheAt = 0; try { cacheAt = (JSON.parse(sessionStorage.getItem('averages_bundle_cache') || 'null') || {}).at || 0; } catch (e) { /* none */ }
     // a page that opened from this tab's copy (from a page before) checks for anything new right after it shows
     var stale = cacheAt && Date.now() - cacheAt > 10000;
-    // Background refresh off (Settings > Account, 2026-11-26): no checking on a timer; a page still checks once when it
+    // Background refresh off (Settings > Account): no checking on a timer; a page still checks once when it
     // opens from this tab's copy, and Sync checks now
     var bgOn = function () { return (lget('averages_settings_options') || {}).backgroundRefresh !== false; };
     setTimeout(function () { notisAt = Date.now(); if (stale) setTimeout(notisCheck, 800); setInterval(function () { if (bgOn() && Date.now() - notisAt >= refreshEvery()) notisCheck(); }, 5000); setInterval(syncShow, 30000); }, 1000);
@@ -610,7 +610,7 @@
    * The work whose turn-ins the page shows, as "section:assignment,..." (at most 20): what's past due and not graded
    * yet, newest first, then today's, then what's due soon. Only work that's turned in here (not discussions, tests,
    * outside tools or work with no dropbox), and nothing already graded: that's done either way.
-   * (Before 2026-11-14 it took the first 10 of the bundle's OVERDUE, which is oldest first and has everything ever past
+   * (It used to take the first 10 of the bundle's OVERDUE, which is oldest first and has everything ever past
    * due, so recent work that was turned in still showed as overdue.)
    */
   function turnedInFor(b) {
@@ -653,7 +653,7 @@
   }
   function extrasPlan() {
     var now = new Date(), tz = zone(), zq = tz ? '&tz=' + encodeURIComponent(tz) : '';
-    // Home (2026-11-13): drawn as soon as grades, assignments and turned-in work are in; teachers, course updates,
+    // Home: drawn as soon as grades, assignments and turned-in work are in; teachers, course updates,
     // messages and files come a moment later (@later), so the first round stays inside Schoology's 50 calls per 5 s.
     var later = page === 'home' ? '@later' : '';
     var x = { people: ['/data/people', 'people', later], updates: ['/data/updates', 'updates', later] };
@@ -732,7 +732,7 @@
     });
   }
   /**
-   * Home and Courses (2026-11-14): once the page and its late lists are in, each class's hub data (materials, gradebook,
+   * Home and Courses: once the page and its late lists are in, each class's hub data (materials, gradebook,
    * its calendar) and the classmates list are read in the background and kept for 5 minutes, so opening a class is
    * instant. One class at a time, a moment apart, so it stays well inside Schoology's 50 calls every 5 seconds and our
    * own limit; skipped with Data Saver, on a slow connection or a low battery, and while the tab is hidden.
@@ -770,7 +770,7 @@
     try { if (LS.getItem('averages_account_mode') === 'incognito') return true; } catch (e) { return true; }
     return o.syncAcrossDevices === false;
   }
-  /* Seen ids are kept for 15 days (2026-11-14, the API's sync.ts SEEN_DAYS): averages_seen_at holds the day each
+  /* Seen ids are kept for 15 days (the API's sync.ts SEEN_DAYS): averages_seen_at holds the day each
      was marked seen. Anything posted more than 15 days ago counts as seen anyway (FSX.seen.has), so older ids go. */
   var SEEN_DAYS = 15, seenAge = {};
   function today() { return Math.floor(Date.now() / 86400000); }
@@ -949,7 +949,7 @@
      * changed on this device and not uploaded yet is left to the Windowed Settings, so nothing is lost.
      */
     syncWindowType: function () {
-      // also the language picked in onboarding (2026-11-14): sent once when the account's copy has none yet,
+      // also the language picked in onboarding: sent once when the account's copy has none yet,
       // so a language chosen on another device is never overwritten
       var me = window.FSD && window.FSD.me, LSs = window.sessionStorage;
       try { if (LSs.getItem('averages_fs_wt') === '1') return; LSs.setItem('averages_fs_wt', '1'); } catch (e) { return; }
@@ -958,7 +958,7 @@
       if (opts.windowType !== 'fullscreen' && typeof opts.language !== 'string') return;
       try { if (LS.getItem('averages_account_mode') === 'incognito') return; } catch (e) { return; }
       FSX.api('/sync/settings').then(function (rec) {
-        // the account has no copy yet (set up before onboarding saved one, 2026-11-23): this device's becomes it
+        // the account has no copy yet (set up before onboarding saved one): this device's becomes it
         if (rec && rec.settings === null) { FSX.seedSync(); return; }
         var st = rec && rec.settings; if (!st || typeof st !== 'object' || typeof rec.settingsUpdatedAt !== 'string') return;
         var so = st.settingsOptions && typeof st.settingsOptions === 'object' ? st.settingsOptions : {}, add = {};
@@ -985,7 +985,7 @@
       }).catch(function () {});
     },
     /**
-     * Recent searches (2026-11-26, Martin: "not all recent searches show up"): one list for every search box (Home's
+     * Recent searches: one list for every search box (Home's
      * search and search anything on every page), 8 at most, newest first. A search counts when you open a result or
      * get an A.I. answer.
      */
@@ -1021,7 +1021,7 @@
       }, 800);
     },
     /**
-     * Sync across devices, the other way (2026-11-09, Martin: "i am switching between devices and it is not syncing"):
+     * Sync across devices, the other way:
      * the account's copy comes back to this device when it changed somewhere else (on open, every 5 minutes, and
      * when the tab comes back). The same rules as Windowed's adoptSyncedRecord (app/lib/averages.ts): notifications
      * on/off stays this browser's; pictures come from /media/<kind> only when theirs is newer. Theme and accent
@@ -1083,7 +1083,7 @@
             changed = put('averages_profile', JSON.stringify(pr)) || changed;
             if (typeof pr.name === 'string' && pr.name.trim()) put('averages_profile_name', pr.name.trim());
           }
-          // the dates added from the school's calendar (2026-11-26): the account's list, when it has one
+          // the dates added from the school's calendar: the account's list, when it has one
           if (Array.isArray(st.calendarDates)) changed = put('averages_calendar_dates', JSON.stringify(st.calendarDates.slice(-600))) || changed;
           // the theme and accent on this page now: averages-fs.js turns fsset into both (and back into averages_*)
           var dm = st.darkMode === 'dark' || st.darkMode === 'light' || st.darkMode === 'auto' ? st.darkMode : null;
@@ -1104,7 +1104,7 @@
      * The last step of centering a count's number in its bubble (the pages' centerInk): draws it once where the
      * measurement says, at this screen's own pixel size, looks where its ink really landed, and returns how far to
      * move it [x, y] (CSS px) so its outline sits in the middle. The measurement alone came out a pixel right on
-     * some screens (2026-11-09: "none of the numbers in the bubbles seem to be centered").
+     * some screens.
      */
     inkNudge: function (text, font, x, y, w, h, dpr) {
       var key = [text, font, x, y, w, h, dpr].join('|'), memo = FSX._inkNudge || (FSX._inkNudge = new Map());
@@ -1123,7 +1123,7 @@
           if (xx < L) L = xx; if (xx > R) R = xx; if (yy < T) T = yy; if (yy > B) B = yy;
         }
         // Across: halfway between the outline's middle and where the ink's weight is. The outline alone looked off for
-        // "11": a 1's thin flag widens its outline to the left, so its heavy stem sat right of center (2026-11-10).
+        // "11": a 1's thin flag widens its outline to the left, so its heavy stem sat right of center.
         // The weight alone pushed "17" the other way. Up and down: the outline (digits are all one height).
         if (R >= 0) out = [Math.round(W / 2 - ((L + R + 1) / 2 + sx / sw) / 2) / dpr, Math.round(H / 2 - (T + B + 1) / 2) / dpr];
       } catch (e) { /* drawn where measured */ }
@@ -1381,7 +1381,7 @@
     if (diff > 1 && diff < 7) return WD[d.getDay()];
     return shortDate(ms);
   }
-  // in the student's language when it isn't English (averages-i18n.js, 2026-11-15)
+  // in the student's language when it isn't English (averages-i18n.js)
   function shortDate(ms) { var L = window.AvI18n && window.AvI18n.shortDate(ms); if (L) return L; var d = new Date(ms); return MON[d.getMonth()] + ' ' + d.getDate(); }
   function timeOf(ms) { var L = window.AvI18n && window.AvI18n.timeOf(ms); if (L) return L; return new Date(ms).toLocaleTimeString((window.AvI18n ? window.AvI18n.locale : 'en-US'), { hour: 'numeric', minute: '2-digit' }); }
   function initials(n) { return String(n || '').replace(/^(Dr|Mr|Mrs|Ms|Mx|Sra|Sr|Srta|Prof)\.?\s+/i, '').split(/\s+/).filter(Boolean).map(function (w) { return w[0]; }).join('').slice(0, 2).toUpperCase() || '?'; }
@@ -1438,7 +1438,7 @@
   }
 
   /**
-   * The class grade right after each graded assignment, oldest first (2026-11-14): not the assignment's own score,
+   * The class grade right after each graded assignment, oldest first: not the assignment's own score,
    * the overall grade it took the class to, worked out the same way as gradeAt. Lined up with the grade Schoology
    * reports today, like weeklyTrend: the gap, if any, is spread over every point so the last one is the real grade.
    * [{ v, t (title), at (graded time, 0 when unknown), id, got, of }]
@@ -1535,7 +1535,7 @@
       var m = arr(mates[id]);
       var tcs = arr(people.CONTACTS).filter(function (p) { return arr(p.courses).indexOf(id) >= 0; });
       var tids = tcs.map(function (p) { return String(p.id); });
-      // each teacher by name, for "Message a teacher" when a class has more than one (2026-11-18)
+      // each teacher by name, for "Message a teacher" when a class has more than one
       var tlist = tcs.map(function (p) { return { id: String(p.id), name: String(p.name || 'Teacher') }; });
       return {
         id: id, name: c.name || 'Class', short: initials(c.name), teacher: teacherOf(id), teacherIds: tids, teachers: tlist, period: typeof c.period === 'number' ? c.period : i + 1,
@@ -1628,11 +1628,11 @@
     var posted = {}; arr(raw.submissions && raw.submissions.posted).forEach(function (k) { posted[String(k)] = true; });
     arr(raw.submissions && raw.submissions.files).forEach(function (f) {
       var k = f.course + ':' + f.assignment, s = subs[k] || (subs[k] = { at: 0, files: [] });
-      // late: Schoology's own mark on the newest turned-in revision (2026-11-18, for "what did I turn in late")
+      // late: Schoology's own mark on the newest turned-in revision (for "what did I turn in late")
       if (f.at >= s.at) { s.at = f.at; s.late = !!f.late; }
       if (s.files.length < 20) s.files.push({ name: f.name, size: f.size ? (f.size < 1048576 ? Math.max(1, Math.round(f.size / 1024)) + ' KB' : (f.size / 1048576).toFixed(1) + ' MB') : 'File', rev: f.revision });
     });
-    // each asked-about assignment's newest turn-in, files or not (API 2026-11-26): typed answers count as turned in,
+    // each asked-about assignment's newest turn-in, files or not: typed answers count as turned in,
     // and Schoology's late mark is known even without files
     var turnins = {};
     arr(raw.submissions && raw.submissions.turnins).forEach(function (x) { if (x && x.course && x.assignment) turnins[x.course + ':' + x.assignment] = { at: +x.at || 0, late: !!x.late }; });
@@ -1646,7 +1646,7 @@
       var g = gbById[key] || {}, sub = subs[key], graded = g.graded && typeof g.score === 'number';
       if (g.excused && !graded && !sub) return;   // excused by the teacher (Schoology's exception 1): nothing to do
       var type = base.type || 'assignment', outside = !!base.outside;
-      // posted: a discussion the student has replied in (Schoology's discussion replies, 2026-11-14), done the way
+      // posted: a discussion the student has replied in (Schoology's discussion replies), done the way
       // Schoology's own To Do counts it. A teacher's "missing" in the gradebook still wins.
       var tin = turnins[key];
       var done = !sub && (!!posted[key] || !!tin);
@@ -1672,7 +1672,7 @@
     var canTurnIn = function (a) { return a.kind === 'assignment' && !a.disc && !a.outside && !a.noDrop; };
 
     // each class's missing count: what's really missing (past due, not turned in, posted, graded or excused), not
-    // everything Schoology lists as past due (2026-11-14: Courses said 50 missing)
+    // everything Schoology lists as past due
     CLASSES.forEach(function (c) { c.missing = WORK_ALL.filter(function (a) { return a.c === c.id && a.st === 'missing'; }).length; });
     var counts = {
       assign: WORK_ALL.filter(function (a) { return (a.st === 'missing' || a.st === 'due') && a.dueAt; }).length,

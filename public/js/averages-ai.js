@@ -1,4 +1,4 @@
-/* A.I. search (2026-11-15): ask in your own words in search anything ("what's missing in chem"), answered by a
+/* A.I. search: ask in your own words in search anything ("what's missing in chem"), answered by a
  * small model that runs on this device. Averages' fine-tune of IBM Granite 4.0 H 350M (Apache 2.0) turns the
  * question into one read-only search ("find_work, class Chemistry, status missing"), and this file runs that search
  * on the data the page already has. Nothing the student types leaves the device; the model only ever sees the
@@ -8,7 +8,7 @@
  *   Averages.io school), the browser has WebGPU, and Potato mode is off.
  * - Downloaded once, when the student turns it on in Settings > A.I. search (size shown first), from our R2 through
  *   the app's own /ai/ (worker/index.js). Kept in the browser's Cache Storage ("averages-ai-v1"); never a server.
- * - Two versions (2026-11-17): Standard = Round 10 in 4-bit; Higher quality = the 70/30 blend (0.7 Round 17b + 0.3
+ * - Two versions: Standard = Round 10 in 4-bit; Higher quality = the 70/30 blend (0.7 Round 17b + 0.3
  *   Round 10) in 8-bit, twice the download, the only one that knows the Round 17 search options (schema 17: grades
  *   above/below a percent and by kind of work, work sorted, what it takes in every class). Both have the Firefox fix
  *   (every ONNX Pad rewritten, same weights), and both answer a two- or three-part question with up to 3 searches.
@@ -45,7 +45,7 @@
     if (DEV_WASM) return Promise.resolve(true);
     // Computers only (phones haven't been tested, and the model needs the memory). Every browser with WebGPU may try:
     // the first run checks it can really search (selfTest below). Firefox turned down one of ONNX Runtime's shaders
-    // with Round 6 ("Shader 'Pad' parsing error", Martin 2026-11-15); the Round 10 / 70/30 files have every Pad
+    // with Round 6 ("Shader 'Pad' parsing error"); the Round 10 / 70/30 files have every Pad
     // rewritten (same weights), so Firefox 160 runs them. A browser that still can't is told so, and tested again
     // when it updates.
     var uad = navigator.userAgentData;
@@ -104,7 +104,7 @@
   function selfTest(v) {
     if (testing) return testing;
     var my, timer = 0;
-    // a browser whose graphics never answer (Firefox can hang instead of failing, Martin 2026-11-15) counts as can't
+    // a browser whose graphics never answer (Firefox can hang instead of failing) counts as can't
     var timeout = new Promise(function (_, no) { timer = setTimeout(function () { no(new Error('webgpu_test_timeout')); }, TEST_MS); });
     my = testing = Promise.race([load(v).then(function () { return call({ t: 'ask', text: 'my grades', classes: ['Biology'], teachers: ['Ms. Lee'], lang: 'en' }); }), timeout])
       .then(function () { setCheck(v, true); return true; }, function (e) {
@@ -126,8 +126,7 @@
 
   // ---------- the worker ----------
   var W = null, seq = 0, waits = {}, ready = null, readyV = '', DL = null, LAST_ERR = '', STARTING = false;
-  // One model for the whole site (2026-11-17, Martin: "every single time you go to another page, in the same tab, the
-  // ai still has to initialize"): a SharedWorker, so the next page finds the model already running. Firefox and Safari
+  // One model for the whole site: a SharedWorker, so the next page finds the model already running. Firefox and Safari
   // keep it across same-site page changes; Chrome does with extendedLifetime (Chrome 148+, ~30 s after the last page
   // goes). A browser without SharedWorker, or without WebGPU inside one, gets a worker of this page's own, as before.
   var NO_SHARED = false;
@@ -147,7 +146,7 @@
       try {
         var sw = new SharedWorker(url, { type: 'module', name: 'averages-ai', extendedLifetime: true });
         // a shared worker that has already answered keeps going: some browsers report its later script errors here
-        // too (they aren't fatal), and treating them as fatal started the model over and over (Martin 2026-11-17)
+        // too (they aren't fatal), and treating them as fatal started the model over and over
         sw.port.onmessage = onmsg; sw.onerror = function (e) { if (W && W.shared && W.alive) { if (window.console) console.warn('[ai] shared worker:', e && e.message); return; } onerr(e); }; sw.port.start();
         // leaving: this page's port closes; the model stays for the next page. stop(): the model goes for every page.
         W = { shared: true, post: function (m) { sw.port.postMessage(m); }, close: function () { try { sw.port.close(); } catch (e) { /* gone */ } }, end: function () { try { sw.port.postMessage({ t: 'quit' }); sw.port.close(); } catch (e) { /* gone */ } } };
@@ -169,7 +168,7 @@
     if (W && readyV && readyV !== v) { if (W.shared) { ready = null; readyV = ''; } else stop(); }
     var V = VARIANTS[v]; readyV = v;
     // one status card per start: a retry in a worker of this page's own keeps the same card (it used to vanish and
-    // come back, Martin 2026-11-17). A download has its own bar in Settings.
+    // come back). A download has its own bar in Settings.
     var shown = card || (DL ? null : initStart(v)), w = worker(), t0 = Date.now();
     starting(true);
     if (window.console) console.info('[ai] starting ' + V.model + (w.shared ? ' (shared by every page)' : ' (this page only)'));
@@ -189,8 +188,8 @@
         if (window.console) console.warn('[ai] start failed: ' + (e && e.message) + (W && W.shared ? ' (shared worker: trying a worker of its own)' : ''));
         // the shared worker couldn't start it here (no WebGPU in one, or anything else): this page tries a worker of
         // its own. If that works, the rest of this tab uses its own (above). If it fails too, sharing wasn't the
-        // problem (Mac Firefox's shader error failed both, and then every page in the tab started over, Martin
-        // 2026-11-23): the next start shares again.
+        // problem (Mac Firefox's shader error failed both, and then every page in the tab started over): the next
+        // start shares again.
         if (e && e.message !== 'stopped' && W && W.shared) {
           NO_SHARED = true;
           try { W.close(); } catch (x) { /* gone */ } W = null;
@@ -244,7 +243,7 @@
     }, ok ? 2200 : 0);
   }
   // while the model starts, search anything has no "Ask A.I." row (it would only wait); it comes back once it's ready
-  // (Martin 2026-11-17)
+  //
   function starting(on) {
     STARTING = on;
     if (on) document.querySelectorAll('.av-ai-row[data-avai="ask"]').forEach(function (x) { x.remove(); });
@@ -268,7 +267,7 @@
   }
 
   // A download that was going on when the page closed carries on in the next page (refresh below): finished files are
-  // kept, only the rest is fetched. (A Background Fetch, so it kept going with no page open, was tried 2026-11-16 and
+  // kept, only the rest is fetched. (A Background Fetch, so it kept going with no page open, was tried and
   // taken out: it didn't work. Any left over from then is called off.)
   function bgCleanup() {
     if (!('serviceWorker' in navigator) || typeof window.BackgroundFetchManager !== 'function') return;
@@ -288,7 +287,7 @@
     if (DL) return DL.p;
     var V = VARIANTS[v], prev = variantOf(), o = opts();
     LAST_ERR = '';
-    // asked for right away, inside the click (2026-11-28): after a wait the browser no longer counts it as the student's
+    // asked for right away, inside the click: after a wait the browser no longer counts it as the student's
     // own action, and Firefox then quietly says no. Persistent storage isn't cleared when the disk gets full.
     if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(function () {});
     var space = navigator.storage && navigator.storage.estimate ? navigator.storage.estimate().catch(function () { return null; }) : Promise.resolve(null);
@@ -413,7 +412,7 @@
   /** { rows: html[], note, go, words } for a tool call */
   // ---------- second checks on the model's choice, with what the student actually typed ----------
   // A class or teacher the student never named is dropped (results get wider, never wrong): the model sometimes
-  // fills one in from the list ("how many assignments have a B" came back as AP Human Geog A, Martin 2026-11-15).
+  // fills one in from the list ("how many assignments have a B" came back as AP Human Geog A).
   var GENERIC = { the: 1, and: 1, ap: 1, ib: 1, honors: 1, hon: 1, i: 1, ii: 1, iii: 1, iv: 1, v: 1, period: 1, class: 1, course: 1, intro: 1, introduction: 1, to: 1, of: 1, advanced: 1, placement: 1, a: 1, b: 1, c: 1, sem: 1, semester: 1, s1: 1, s2: 1 };
   // the same subject in the app's other languages (the class is usually named in English)
   var SUBJ = [
@@ -450,13 +449,13 @@
     var a = Object.assign({}, c.args || {});
     if (a['class'] && q && !named(a['class'], q)) delete a['class'];
     if (a.teacher && q && !named(a.teacher, q)) delete a.teacher;
-    // filters the student never asked for: "what have my teachers texted me" came back as unread only (Martin 2026-11-15)
+    // filters the student never asked for: "what have my teachers texted me" came back as unread only
     if (a.unread && q && !/unread|\bnew\b|haven'?t (read|seen|opened)|not (read|seen|opened)|didn'?t (read|see|open)|sin leer|no le[ií]d|nuev[oa]s?|non lus?|nouveaux?|nouvelles?|n[aã]o lid|nov[oa]s?|ungelesen|neue?n?|未读|新/i.test(q)) delete a.unread;
     if (a.when && a.when !== 'any' && q && !/today|tonight|tomorrow|week|yesterday|\bnow\b|soon|month|year|semester|hoy|ma[nñ]ana|semana|esta noche|\bmes\b|a[nñ]o|aujourd|demain|semaine|ce soir|mois|ann[eé]e|\ban\b|hoje|amanh[aã]|m[eê]s|\bano\b|heute|morgen|woche|monat|jahr|今天|明天|昨天|本周|这周|下周|上周|星期|礼拜|今晚|月|年/i.test(q)) delete a.when;
     // only work a teacher commented on: when the student said so
     if (a.commented && q && !/comment|feedback|remark|\bnotes?\b|coment|retroaliment|commentaire|remarque|kommentar|anmerkung|r[uü]ckmeldung|评论|评语|反馈/i.test(q)) delete a.commented;
     var name = c.name, L = q ? letterAsked(q) : '';
-    // a kind of work the student never said ("got an A" came back as tests only, Martin 2026-11-18)
+    // a kind of work the student never said ("got an A" came back as tests only)
     // (loosely: "tests", "quizzes", "exams" count; only a kind with no word for it at all goes)
     if (a.kind && a.kind !== 'any' && KIND_RE[a.kind] && q && name !== 'find_files' && !new RegExp(KIND_RE[a.kind].source.replace(/\\b/g, ''), 'i').test(q)) delete a.kind;
     // "my period 2 grade", "3rd period": the class in that period (both models; the model has no period yet)
@@ -481,7 +480,7 @@
       name = 'find_grades'; a.show = 'scores'; a.letter = L;
     }
     // a letter, or one kind of work (tests, quizzes), is about scores on pieces of work; "which classes have a B" is
-    // about the classes' grades (the model answered with scores, golden set 2026-11-17)
+    // about the classes' grades (the model answered with scores in the golden set)
     var classWords = /\b(class|classes|course|courses|clase|clases|cours|aula|aulas|mat[eé]rias?|kurs|kurse|f[aä]cher)\b|课/i, workWords = /\b(assignments?|tests?|quiz(z?es)?|homework|essays?|labs?|projects?|scores?|tareas?|trabajos?|ex[aá]men(es)?|devoirs?|contr[oô]les?|tarefas?|provas?|aufgaben?|arbeiten?|klausuren?)\b|作业|考试|测验/i;
     if (name === 'find_grades' && a.letter && (!a.kind || a.kind === 'any') && q && classWords.test(q) && !workWords.test(q)) a.show = 'grade';
     else if (name === 'find_grades' && a.show !== 'gpa' && (a.letter || (a.kind && a.kind !== 'any'))) a.show = 'scores';
@@ -507,7 +506,7 @@
   function needOf(x) { return x && x.name === 'find_work' && x.args && x.args.status === 'turned_in_late' ? 'late' : NEEDS[x && x.name]; }
 
   /**
-   * "What did I turn in late" (2026-11-26, Martin: it said "0 turned in late"): the page only knows when work was
+   * "What did I turn in late": the page only knows when work was
    * turned in for what isn't graded yet; for graded work it never asked. Asked now, only for this search: the 40
    * most recently graded pieces of work (two requests of 20, inside Schoology's limits), remembered 10 minutes. Each
    * answer marks the work's turn-in time and Schoology's own late mark. Never fails the search.
@@ -648,7 +647,7 @@
         var rem = todo.reduce(function (s2, x) { return s2 + x.pts; }, 0), now2 = k.pct;
         var sub2 = [t('Goal: ' + a.target), t('Now: ' + now2.toFixed(1) + '%'), k.name].join(' · ');
         if (!rem || !of) return { need: 1e9, row: row({ href: FSX.hubUrl(k.id, 'grades'), lead: clsTile(k), t: t('No points posted for upcoming work yet'), sub: sub2 }) };
-        var need = (T * (of + rem) - now2 * of) / rem, what = todo.length === 1 ? todo[0].t : t(todo.length + ' assignments still to come (' + rem + ' points)');
+        var need = (T * (of + rem) - now2 * of) / rem, what = todo.length === 1 ? todo[0].t : t(todo.length + ' assignments posted so far (' + rem + ' points)');
         var tt = need <= 0 ? t("You're already there") : need > 100 ? t('Not reachable with the points posted so far') : t('About ' + Math.ceil(need) + '% on ' + what);
         return { need: need, row: row({ href: todo.length === 1 ? FSX.hubUrl(k.id, '', { a: todo[0].id }) : FSX.hubUrl(k.id, 'grades'), lead: clsTile(k), t: tt, sub: (todo.length === 1 && need <= 100 && need > 0 ? '' : todo.length === 1 ? todo[0].t + ' · ' : '') + sub2 }) };
       });
@@ -691,7 +690,7 @@
   }
 
   // ---------- search anything: the "Ask A.I." row and its answer ----------
-  // the A.I. search mascot, "A buddy" (handoff/icons/mascot.svg, 2026-11-15): the Averages A with two eyes, one color.
+  // the A.I. search mascot, "A buddy" (handoff/icons/mascot.svg): the Averages A with two eyes, one color.
   // The eyes are cut out with evenodd instead of the file's mask, so many copies on a page don't share a mask id.
   // the A.I. mascot, "A buddy" (handoff/icons/mascot.svg): the Averages A with two eyes, one color (currentColor)
   var AI_SVG = '<svg class="av-ai-ic" viewBox="0 0 24 24" aria-hidden="true"><mask id="avAiEyes"><rect width="24" height="24" fill="#fff"/><rect x="9.4" y="10.6" width="1.9" height="3.4" rx=".95" fill="#000"/><rect x="12.7" y="10.6" width="1.9" height="3.4" rx=".95" fill="#000"/></mask><path mask="url(#avAiEyes)" fill="currentColor" d="M12 2.5c.8 0 1.5.5 1.8 1.2l6.9 16.1a1.6 1.6 0 0 1-1.5 2.2h-2.4a1.6 1.6 0 0 1-1.5-1l-1-2.6H9.7l-1 2.6a1.6 1.6 0 0 1-1.5 1H4.8a1.6 1.6 0 0 1-1.5-2.2l6.9-16.1c.3-.7 1-1.2 1.8-1.2z"/></svg>';
@@ -752,7 +751,7 @@
       var foot = b.res.querySelector(':scope > .pop-foot'), first = asked && STATE.saved;
       var tmp = document.createElement('div'); tmp.innerHTML = html; var el = tmp.firstChild;
       // with Actions (Turn in…, Message…), Ask A.I. goes right under them and they stay first: "turn in my lab" + Enter
-      // turns it in (Martin 2026-11-18)
+      // turns it in
       var actLbl = [].filter.call(b.res.querySelectorAll(':scope > .lbl'), function (x) { var tx = x.textContent.trim(); return tx === 'Actions' || tx === t('Actions'); })[0];
       if (actLbl) {
         var after = actLbl; while (after.nextElementSibling && after.nextElementSibling.classList.contains('mi')) after = after.nextElementSibling;
@@ -781,7 +780,7 @@
   var NOUN = { find_work: ['assignment', 'assignments'], scores: ['graded assignment', 'graded assignments'], grade: ['class', 'classes'], gpa: ['GPA', 'GPA'],
     what_it_takes: ['estimate', 'estimates'], find_posts: ['post', 'posts'], find_messages: ['conversation', 'conversations'], find_files: ['file', 'files'] };
   var calmNow = function () { return potato() || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches); };
-  // While it works (like Siri's "Working… Searching events… Reviewing results", Martin 2026-11-15): the results
+  // While it works (like Siri's "Working… Searching events… Reviewing results"): the results
   // shrink to a small dark pill with a spinning ring of dots and a status that shimmers and changes as it goes.
   // When the answer is ready the pill opens out into it.
   var SEARCHING = { find_work: 'Searching assignments', find_grades: 'Searching grades', what_it_takes: 'Working out your grade',
@@ -860,7 +859,7 @@
     }
   }
   var PAGE_NAME = { home: 'Home', grades: 'Grades', assignments: 'Assignments', calendar: 'Calendar', messages: 'Messages', files: 'Files', contacts: 'Contacts', settings: 'Settings', courses: 'Courses', 'class': 'class' };
-  // one search's answer card (the sneak-peek ad's design, Martin 2026-11-17): "A.I." with the mascot, the answer big,
+  // one search's answer card (the sneak-peek ad's design): "A.I." with the mascot, the answer big,
   // the rows, then "Searched for:" with its chips. A longer count line (letter grades) goes under the big answer.
   function card(out, c) {
     var r = out.call || c, a = r.args || {};
@@ -899,7 +898,7 @@
         var out = run(calls[0], q, got[NEEDS[calls[0].name]]);
         if (out.go) { window.location.href = out.go; return; }
         if (out.words != null) { STATE.skip = out.words; b.input.value = out.words; b.input.dispatchEvent(new Event('input', { bubbles: true })); return; }
-        open(b, card(out, calls[0]) + words + foot); if (window.FSX && FSX.recentAdd) FSX.recentAdd(q);   // an answer counts as a search (recent searches, 2026-11-26)
+        open(b, card(out, calls[0]) + words + foot); if (window.FSX && FSX.recentAdd) FSX.recentAdd(q);   // an answer counts as a search (recent searches)
         return;
       }
       // several: a page to open is a row in its own card (nothing opens by itself)
@@ -908,7 +907,7 @@
         if (o.go) o = { rows: [row({ href: o.go, lead: '<svg class="i"><use href="#i-right"/></svg>', t: t('Open ' + (PAGE_NAME[x.args && x.args.page] || 'page')) })], call: x };
         return card(o, x);
       }).join('');
-      open(b, html + words + foot); if (window.FSX && FSX.recentAdd) FSX.recentAdd(q);   // an answer counts as a search (recent searches, 2026-11-26)
+      open(b, html + words + foot); if (window.FSX && FSX.recentAdd) FSX.recentAdd(q);   // an answer counts as a search (recent searches)
         });
     }).catch(function (e) {
       if (!still()) return;
@@ -942,7 +941,7 @@
     // Home's dropdown has no top padding (its first row is a label with its own): room above the A.I. row and the answer
     '.pop.spop > .av-ai-row:first-child{margin-top:8px}.pop.spop > .av-ai-panel{padding-top:8px}',
     // the arrow keys move down through a long answer: the row they pick scrolls up past the sticky key-hints footer
-    // instead of stopping behind it (it was picked but hidden, Martin 2026-11-17)
+    // instead of stopping behind it (it was picked but hidden)
     '.pop.spop{scroll-padding:8px 0 64px}.cmdk-res{scroll-padding:8px 0 8px}',
     '.av-ai-cl{flex:none;display:grid;place-items:center;width:30px;height:30px;border-radius:9px;background:var(--c);color:#fff;font-size:11px;font-weight:800;letter-spacing:.02em}',
     '.av-ai-panel{display:flex;flex-direction:column;gap:2px}',
@@ -983,7 +982,7 @@
     '.av-ai-big{margin:4px 10px 8px;color:var(--ink);font-family:var(--display,inherit);font-size:34px;line-height:1.05;font-weight:800;letter-spacing:-.02em;overflow-wrap:anywhere}',
     '.av-ai-card .av-ai-lead{margin:0 10px 8px;font-size:15px;color:var(--ink-2,var(--muted))}',
     '.av-ai-card .av-ai-end{font-size:15px}',
-    // two or three questions in one: each answer its own card, a line apart (Martin's note in the model handoff)
+    // two or three questions in one: each answer its own card, a line apart
     '.av-ai-card + .av-ai-card{margin-top:18px}',
     '.av-ai-card .av-ai-by{margin:10px 0 0;padding:0 10px;background:none}.av-ai-card .av-ai-by .av-ai-chip{background:var(--panel,#eef0f4);height:26px;font-size:13px}',
     // after the answer: what it searched for, at the bottom, in readable chips

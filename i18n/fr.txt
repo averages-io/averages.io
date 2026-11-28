@@ -182,7 +182,7 @@
 182|Voir ce qu'il te faut
 183|Nouveautés du cours
 184|Prochain contrôle
-185|# cours peuvent encore monter d'une lettre ce trimestre.
+185|# cours pourraient monter d'une lettre avec le travail publié jusqu'ici.
 186|Ta note
 187|Dossier
 188|Connecté
@@ -1154,7 +1154,7 @@
 1154|Tu y es déjà
 1155|Impossible à atteindre avec les points publiés pour l'instant
 1156|Environ #% à {x}
-1157|# travaux à venir (# points)
+1157|# devoirs publiés jusqu'ici (# points)
 1158|# trouvés. Les # premiers sont affichés.
 1159|(Sans objet)
 1160|# cours

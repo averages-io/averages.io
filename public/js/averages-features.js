@@ -108,7 +108,7 @@
   function banner() {
     const old = document.getElementById('avfBanner');
     // The API sends a message while the maintenance-banner switch is on (forced, its own message) or, with it off,
-    // while its 15-minute check finds something down (automatic, 2026-11-10). Either way it shows.
+    // while its 15-minute check finds something down (automatic). Either way it shows.
     const msg = state.maintenance ? String(state.maintenance.message || '') : '';
     let gone = false;
     try { gone = !!msg && sessionStorage.getItem(dismissedKey(msg)) === '1'; } catch { /* storage off */ }

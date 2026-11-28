@@ -308,7 +308,7 @@ function wireOnboardingComplete(script, file) {
         } catch (e) { /* private browsing — non-fatal, they just redo setup */ }
 
         // and saves the setup to the account (Classic), so signing out and back in doesn't mean doing it again
-        // (2026-11-23), photo included (classmates see it); Incognito deletes what the account still had. Going on
+        //, photo included (classmates see it); Incognito deletes what the account still had. Going on
         // waits for that, 8 s at most
         const saved = typeof window.__averagesSeedSync === 'function' ? window.__averagesSeedSync({ replace: true }) : Promise.resolve();
         const go = () => {

@@ -3147,7 +3147,7 @@
       function accentNow() { return getComputedStyle(document.documentElement).getPropertyValue('--accent').trim().toLowerCase(); }
       const FS_SKINS = [['is', 'IS', 'Industry Standard']];
       let fsSkin = 'is';
-      // Language (2026-11-14): the same choice as Settings > Language, kept with the other settings so it syncs
+      // Language: the same choice as Settings > Language, kept with the other settings so it syncs
       // (averages_settings_options.language). The app's pages read it through /js/averages-i18n.js.
       const OB_LANGS = [['auto', 'Same as this device'], ['en', 'English'], ['es', 'Español'], ['fr', 'Français'], ['pt', 'Português'], ['de', 'Deutsch'], ['zh', '中文']];
       function obLang() { try { const o = JSON.parse(localStorage.getItem('averages_settings_options') || '{}') || {}; return typeof o.language === 'string' ? o.language : (localStorage.getItem('averages_lang') || 'auto'); } catch (e) { return 'auto'; } }

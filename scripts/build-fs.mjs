@@ -18,9 +18,9 @@ const GPA_FILE = path.resolve(HERE, "../public/js/averages-gpa.js");
 const PREVIEW_FILE = path.resolve(HERE, "../public/js/averages-preview.js");
 const NOTE_FILE = path.resolve(HERE, "../public/js/averages-note.js");
 const AVATAR_FILE = path.resolve(HERE, "../public/js/averages-avatar.js");
-// A.I. search (2026-11-15): the "Ask A.I." row in search anything, on every page (it stays hidden unless it's on)
+// A.I. search: the "Ask A.I." row in search anything, on every page (it stays hidden unless it's on)
 const AI_FILE = path.resolve(HERE, "../public/js/averages-ai.js");
-// Other languages (2026-11-15): the word lists in public/i18n and the script that uses them, first in <head> so the page draws in the student's language
+// Other languages: the word lists in public/i18n and the script that uses them, first in <head> so the page draws in the student's language
 const I18N_FILE = path.resolve(HERE, "../public/js/averages-i18n.js");
 const I18N_DIR = path.resolve(HERE, "../public/i18n");
 const SPLASH_FILE = path.resolve(HERE, "../app/lib/splash.ts");
@@ -156,7 +156,7 @@ function darkDecl(prop, value, sel = "") {
   const v = value.trim();
   const imp = v.includes("!important") ? " !important" : "";
   if (TEXT_PROPS.has(p)) {
-    // the accent stays the color picked in Settings (Martin, 2026-11-09: the 50%-white tint read as pink, not his red).
+    // the accent stays the color picked in Settings.
     // Icons get it exactly; text gets only a touch lighter so small words stay readable on the dark panels.
     if (/^var\(--accent\)\s*(!important)?$/.test(v)) return (/\bsvg\b|\.i\b|\.ico\b/.test(sel) ? "var(--accent)" : "color-mix(in srgb, var(--accent) 88%, #ffffff)") + imp;
     // text in a surface color sits on an ink-colored fill (pills, toasts, avatars): white in dark
@@ -229,7 +229,7 @@ function emit(nodes) {
     if (n.at) { const inner = emit(n.children); if (inner) out += `${n.at} {\n${inner}}\n`; continue; }
     if (!n.sel || n.sel.startsWith("@")) continue;
     if (/--keep-dark\s*:/.test(n.body)) continue; // a rule whose colors are already right in dark (a dark backdrop): left alone
-    if (/data-theme=["']?dark/.test(n.sel)) continue; // already written for dark mode by hand (2026-10-30): leave it as it is
+    if (/data-theme=["']?dark/.test(n.sel)) continue; // already written for dark mode by hand: leave it as it is
     const decls = [];
     for (const d of splitTop(n.body, ";")) {
       const k = d.indexOf(":");
@@ -269,7 +269,7 @@ function build() {
   fs.rmSync(OLD, { recursive: true, force: true });
   fs.mkdirSync(OLD, { recursive: true });
   const ver = (f) => crypto.createHash("sha256").update(fs.readFileSync(f)).digest("hex").slice(0, 10);
-  // Every script in public/js by its version (2026-11-09): /js/* is cached for a year, so a script one of our
+  // Every script in public/js by its version: /js/* is cached for a year, so a script one of our
   // scripts loads later (the turn-in's averages-submit.js and averages-cloud.js, push) has to be asked for by a
   // versioned address too, or a browser keeps the first copy it ever got. The pages carry the list (AVG_JSV);
   // '/js/averages-x.js' written in a page's own code is versioned here.
@@ -323,7 +323,7 @@ function build() {
     // a folder (Recents): the arrow turns, its rows slide open, hanging off a line under the folder's icon
     "#side .side-chev{display:inline-flex;width:16px;height:16px;flex:none;margin-left:auto;color:var(--muted);transition:transform " + EASE + ",opacity .15s ease}#side .side-chev svg{display:block;width:100%;height:100%}",
     "#side #sideRec .side-chev{transition:transform .26s cubic-bezier(.2,.8,.2,1),opacity .15s ease}#side #sideRec[aria-expanded=true] .side-chev{transform:rotate(90deg)}",
-    // (2026-11-28, Martin: "the dropdowns are kind of weird and not smooth, i want them to be more like" Cloudflare's): the
+    //: the
     // rows keep their own height and are uncovered as the folder opens (they used to shrink with it, so their two lines of
     // text squashed into each other), on an ease-out like Cloudflare's rather than the sidebar's slow-start ease, and fade
     "#side .side-subw{display:grid;grid-template-rows:0fr;transition:grid-template-rows .26s cubic-bezier(.2,.8,.2,1)}#side .side-subw.on{grid-template-rows:1fr}" + CLOSED + " .side-subw.on{grid-template-rows:0fr}",
@@ -343,7 +343,7 @@ function build() {
     "#side .nav a em.count[hidden]~.pip,#side .nav a em.count:empty~.pip{display:none}",
     // Assignments' dot: only when something was assigned since you last opened Assignments (a due count isn't news)
     "html:not(.asg-new) #pipAssign{display:none}",
-    // Assignments' number is a to-do count, not news: plain, with no bubble (2026-11-09, Martin)
+    // Assignments' number is a to-do count, not news: plain, with no bubble
     "#side .nav #cntAssign{background:transparent!important;color:var(--muted)!important;box-shadow:none!important}",
     "body.potato-mode #side,body.potato-mode #side *{transition:none!important}@media (prefers-reduced-motion:reduce){#side,#side *{transition:none!important}}",
   ].join("");
@@ -401,7 +401,7 @@ requestAnimationFrame(function(){requestAnimationFrame(function(){r.classList.re
 
 
 // Browser storage that still has the old names (schoolagy_*) moves to averages_* first, once, before any page script reads it
-// (2026-11-18, the rename away from the old name). Put first in every page's <head>, the sign-in page too.
+// (the rename away from the old name). Put first in every page's <head>, the sign-in page too.
 const STORAGE_RENAME = "(function(){try{[localStorage,sessionStorage].forEach(function(st){var ks=[];for(var i=0;i<st.length;i++){var k=st.key(i);if(k&&k.indexOf('schoolagy_')===0)ks.push(k)}ks.forEach(function(k){var n='averages_'+k.slice(10);if(st.getItem(n)===null)st.setItem(n,st.getItem(k));st.removeItem(k)})})}catch(e){}})();";
 
 // The sign-in page (/IS/signin, shown at "/" by worker/index.js). Signed out, so none of

@@ -29,7 +29,7 @@
     --mark: rgba(229,72,77,.18);
     --pop-shadow: 0 16px 40px rgba(20,21,31,.16), 0 2px 6px rgba(20,21,31,.06);
     --scrim: rgba(20,21,31,.32);
-    --display: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif; /* the system font (SF Pro on a Mac), the one the chat preview showed while Puffin couldn't load */
+    --display: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif; /* the system font (SF Pro on a Mac) */
     --rail: 64px;
     --side-open: 248px;
   }
@@ -57,7 +57,7 @@
 
   /* Twemoji subject icon on a tint of the subject color (same table as courses.html) */
   .badge { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; flex: none; background: color-mix(in srgb, var(--c) 18%, #ffffff); }
-  .badge svg { width: 21px; height: 21px; display: block; }   /* the class emoji fills its tile (was 17px, 2026-11-14) */
+  .badge svg { width: 21px; height: 21px; display: block; }   /* the class emoji fills its tile (was 17px) */
   .italic { font-style: italic; }
 
   /* ---------- frame ---------- */
@@ -823,7 +823,7 @@
   .sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--field); transition: transform .15s ease; }
   .sw.on { background: var(--accent); }
   .sw.on::after { transform: translateX(12px); }
-  /* dark: a light knob on a lighter track, so the switch reads as a switch (2026-11-26, Martin: "the off circles r not centered") */
+  /* dark: a light knob on a lighter track, so the switch reads as a switch */
   html[data-theme="dark"] .sw:not(.on) { background: #3d4052; }
   html[data-theme="dark"] .sw::after { background: #ffffff; }
   .cb { width: 20px; height: 20px; border-radius: 6px; border: 2px solid var(--inner); display: grid; place-items: center; flex: none; color: transparent; }
@@ -2402,7 +2402,7 @@
   .pk-search svg.i { width: 18px; height: 18px; flex: none; }
   .pk-search input { flex: 1; min-width: 0; border: 0; background: none; outline: none; font: inherit; font-size: 14px; font-weight: 700; color: var(--ink); }
   .pk-search:focus-within { box-shadow: 0 0 0 2px var(--focus); }
-  /* Add from OneDrive: "+" at the end of the search bar opens their whole OneDrive in place, and turns into an "x" to go back (2026-11-28) */
+  /* Add from OneDrive: "+" at the end of the search bar opens their whole OneDrive in place, and turns into an "x" to go back */
   .pk-all { flex: none; width: 30px; height: 30px; margin-right: -8px; display: grid; place-items: center; border-radius: 9px; color: var(--ink-2); cursor: pointer; transition: background-color .15s ease, color .15s ease; }
   .pk-all:hover, .pk-all.on { background: var(--inner); color: var(--ink); }
   .pk-search .pk-all svg.i { width: 18px; height: 18px; transition: transform .32s cubic-bezier(.3, 1.45, .5, 1); }
@@ -3218,7 +3218,7 @@
 
   <aside class="side" id="side" aria-label="Sidebar">
     <nav class="nav" aria-label="Pages">
-      <a href="#" title="Search" id="sideSearch" aria-keyshortcuts="Control+K Meta+K"><svg class="i"><use href="#i-search"/></svg><span class="fade">Search</span><kbd class="fade side-kbd" id="sideKbd">Ctrl K</kbd></a><script data-now>/* the right shortcut from the first frame (data-now: run as the page is read, not held for its data by scripts/build-fs.mjs) (2026-11-28: it showed "Ctrl K" for a moment on a Mac, then changed) */ (function () { var p = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || navigator.userAgent || ''; if (/mac|iphone|ipad|ipod/i.test(p)) document.getElementById('sideKbd').textContent = '⌘K'; })();</script>
+      <a href="#" title="Search" id="sideSearch" aria-keyshortcuts="Control+K Meta+K"><svg class="i"><use href="#i-search"/></svg><span class="fade">Search</span><kbd class="fade side-kbd" id="sideKbd">Ctrl K</kbd></a><script data-now>/* the right shortcut from the first frame (data-now: run as the page is read, not held for its data by scripts/build-fs.mjs) */ (function () { var p = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || navigator.userAgent || ''; if (/mac|iphone|ipad|ipod/i.test(p)) document.getElementById('sideKbd').textContent = '⌘K'; })();</script>
       <a href="/IS/home" data-go="/IS/home" title="Home" data-was="Home"><svg class="i"><use href="#i-home"/></svg><span class="fade">Home</span></a>
       <a href="/IS/courses" data-go="/IS/courses" title="Courses" data-was="the Courses page"><svg class="i"><use href="#i-binder"/></svg><span class="fade">Courses</span></a>
       <a href="/IS/grades" data-go="/IS/grades" title="Grades" data-was="the Grades page"><svg class="i"><use href="#i-chart"/></svg><span class="fade">Grades</span></a>
@@ -4801,7 +4801,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     let html = '';
     if (!typed) {
       cmdkRaw = null;
-      // recent searches, shared with every search box (FSX.recentSearches, 2026-11-26)
+      // recent searches, shared with every search box (FSX.recentSearches)
       const rec = FSX.recentSearches ? FSX.recentSearches() : [];
       html = (rec.length ? `<div class="lbl">Recent searches</div>` + rec.map(r => row(`data-cmdkrecent="${esc(r)}"`, ico('search'), esc(r), '')).join('') : '')
         + `<div class="lbl">Quick actions</div>` + ['turnin', 'msg', 'whatif', 'proj'].map(k => actRow(GEN[k]())).join('') +
@@ -5703,7 +5703,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const NT_SEEN = new Set(FSD.NT_SEEN_IDS);
   { const add = NT_SEEN.add.bind(NT_SEEN); NT_SEEN.add = id => { const it = NT_ITEMS.find(x => x.id === id); if (it) FSX.seen.mark(it.kind, it.raw); return add(id); }; }   // marked here = marked in Windowed too
   // seen somewhere else after this page drew (another device's list arriving late, another tab, or the Grades page
-  // clearing new grades): count it here too, without marking it again (2026-11-14: the bell showed 10 until a refresh)
+  // clearing new grades): count it here too, without marking it again
   window.addEventListener('fs:seen', () => { let n = 0; NT_ITEMS.forEach(it => { if (!NT_SEEN.has(it.id) && FSX.seen.has(it.kind, it.raw)) { Set.prototype.add.call(NT_SEEN, it.id); n++; } }); if (n) { ntBadge(); NT.onChange(); } });
   const NT = Object.assign({ here: null, onChange: () => {} }, typeof NT_HOOKS === 'object' ? NT_HOOKS : {});
   let ntEl = null, ntFrom = null, ntScope = NT.here || 'all';
@@ -6662,7 +6662,7 @@ window.AveragesHelp = {
     if (h === mpHere) return; mpHere = h;
     try { history.pushState(null, '', h || location.pathname + location.search); } catch (_) {}
   }
-  // The chart is the class grade after each graded assignment (2026-11-14), not week by week: each point is where that
+  // The chart is the class grade after each graded assignment, not week by week: each point is where that
   // assignment took your overall grade (averages-fs-data.js gradeSteps). Labels: the graded date and the assignment.
   const GD_STEPS = ((FSD.C && FSD.C[ME.id]) || ME).steps || [];
   const GD_WEEKS = GD_STEPS.map(x => x.at ? FSD.fmt.shortDate(x.at) : '');
@@ -7178,7 +7178,7 @@ window.AveragesHelp = {
   function mbDet() {
     const p = mbGet(MB.sel) || MB_TEACH, who = mbWho(p);
     const said = [];
-    const first = p.teacher ? (p.name || ME.teacher || 'your teacher') : (p.name || p.first);   // full name (2026-11-26, Martin: "add last names")
+    const first = p.teacher ? (p.name || ME.teacher || 'your teacher') : (p.name || p.first);   // full name
     const back = `<button class="btn sm mb-back" data-mbback>${ico('chev-l')}All members</button>`;
     const hero = `<div class="mb-hero">${mbAva(p, true)}<div class="tx"><h3>${esc(p.name)}</h3><small>${p.teacher ? '<span class="mb-role tch">Teacher</span>' : p.me ? '<span class="mb-role">You</span>' : '<span class="mb-role">Student</span>'}${esc(ME.name)}${ME.hasPeriod ? ' · Period ' + ME.period : ''}</small></div>
       <div class="mb-acts">${p.me ? `<button class="btn" data-toast="your profile settings">${ico('user')}Edit profile</button>` : (p.teacher && (p.uid || ME.teacher) ? `<button class="btn" ${p.uid ? `data-hubmsgto="${esc(p.uid)}" data-name="${esc(p.name)}"` : 'data-hubmsg'}>${ico('msg')}Message ${esc(first)}</button>` : '') + (p.uid ? `<button class="btn" data-go="${FSX.url('contacts', { person: p.uid })}">${ico('user')}Open contact</button>` : '')}</div></div>`;

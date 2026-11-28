@@ -182,7 +182,7 @@
 182|See what it takes
 183|Course updates
 184|Next test
-185|# classes could still go up a letter this term.
+185|# classes could go up a letter with the work posted so far.
 186|Your grade
 187|Folder
 188|Connected
@@ -1154,7 +1154,7 @@
 1154|You're already there
 1155|Not reachable with the points posted so far
 1156|About #% on {x}
-1157|# assignments still to come (# points)
+1157|# assignments posted so far (# points)
 1158|# found. Showing the first #.
 1159|(No subject)
 1160|# classes

@@ -60,7 +60,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* the old saved names move first (schoolagy_* -> averages_*, 2026-11-18), before anything reads them */}
+        {/* the old saved names move first (schoolagy_* -> averages_*), before anything reads them */}
         <script dangerouslySetInnerHTML={{ __html: STORAGE_RENAME_JS + FS_BOOT_JS }} />
         <link rel="preconnect" href="https://api.averages.io" />
         <link rel="preconnect" href="https://use.typekit.net" />

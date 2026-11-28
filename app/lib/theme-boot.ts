@@ -1,5 +1,5 @@
 // The user's saved dark-mode / accent / background, applied before the browser paints anything at all.
-// The old names (schoolagy_*) move to averages_* first, once (2026-11-18), so saved settings carry over.
+// The old names (schoolagy_*) move to averages_* first, once, so saved settings carry over.
 export const STORAGE_RENAME_JS = `(function(){try{[localStorage,sessionStorage].forEach(function(st){var ks=[];for(var i=0;i<st.length;i++){var k=st.key(i);if(k&&k.indexOf('schoolagy_')===0)ks.push(k)}ks.forEach(function(k){var n='averages_'+k.slice(10);if(st.getItem(n)===null)st.setItem(n,st.getItem(k));st.removeItem(k)})})}catch(e){}})();`;
 export const THEME_BOOT_JS = STORAGE_RENAME_JS + `(function () {
   function darken(hex, amount) {

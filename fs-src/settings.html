@@ -29,7 +29,7 @@
     --mark: rgba(229,72,77,.18);
     --pop-shadow: 0 16px 40px rgba(20,21,31,.16), 0 2px 6px rgba(20,21,31,.06);
     --scrim: rgba(20,21,31,.32);
-    --display: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif; /* the system font (SF Pro on a Mac), the one the chat preview showed while Puffin couldn't load */
+    --display: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif; /* the system font (SF Pro on a Mac) */
     --rail: 64px;
     --side-open: 248px;
   }
@@ -57,7 +57,7 @@
 
   /* Twemoji subject icon on a tint of the subject color (same table as courses.html) */
   .badge { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; flex: none; background: color-mix(in srgb, var(--c) 18%, #ffffff); }
-  .badge svg { width: 21px; height: 21px; display: block; }   /* the class emoji fills its tile (was 17px, 2026-11-14) */
+  .badge svg { width: 21px; height: 21px; display: block; }   /* the class emoji fills its tile (was 17px) */
   .italic { font-style: italic; }
 
   /* ---------- frame ---------- */
@@ -823,7 +823,7 @@
   .sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--field); transition: transform .15s ease; }
   .sw.on { background: var(--accent); }
   .sw.on::after { transform: translateX(12px); }
-  /* dark: a light knob on a lighter track, so the switch reads as a switch (2026-11-26, Martin: "the off circles r not centered") */
+  /* dark: a light knob on a lighter track, so the switch reads as a switch */
   html[data-theme="dark"] .sw:not(.on) { background: #3d4052; }
   html[data-theme="dark"] .sw::after { background: #ffffff; }
   .cb { width: 20px; height: 20px; border-radius: 6px; border: 2px solid var(--inner); display: grid; place-items: center; flex: none; color: transparent; }
@@ -3042,7 +3042,7 @@
   .sg-opts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
   .sg-opt { display: flex; flex-direction: column; justify-content: center; gap: 2px; min-height: 64px; padding: 8px 16px; border-radius: 16px; background: var(--field); text-align: left; color: var(--ink); transition: box-shadow .15s ease; }
   .sg-opt b { font-size: 15px; font-weight: 800; }
-  .sg-langs { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); } /* Language (2026-11-15) */
+  .sg-langs { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); } /* Language */
   .sg-opt small { font-size: 13px; font-weight: 600; color: var(--muted); }
   .av-ai-bar { flex: 1; height: 8px; border-radius: 4px; background: var(--field); overflow: hidden; }
   .av-ai-bar i { display: block; height: 100%; border-radius: 4px; background: var(--accent); transition: width .3s ease; }
@@ -3337,7 +3337,7 @@
 
   <aside class="side" id="side" aria-label="Sidebar">
     <nav class="nav" aria-label="Pages">
-      <a href="#" title="Search" id="sideSearch" aria-keyshortcuts="Control+K Meta+K"><svg class="i"><use href="#i-search"/></svg><span class="fade">Search</span><kbd class="fade side-kbd" id="sideKbd">Ctrl K</kbd></a><script data-now>/* the right shortcut from the first frame (data-now: run as the page is read, not held for its data by scripts/build-fs.mjs) (2026-11-28: it showed "Ctrl K" for a moment on a Mac, then changed) */ (function () { var p = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || navigator.userAgent || ''; if (/mac|iphone|ipad|ipod/i.test(p)) document.getElementById('sideKbd').textContent = '⌘K'; })();</script>
+      <a href="#" title="Search" id="sideSearch" aria-keyshortcuts="Control+K Meta+K"><svg class="i"><use href="#i-search"/></svg><span class="fade">Search</span><kbd class="fade side-kbd" id="sideKbd">Ctrl K</kbd></a><script data-now>/* the right shortcut from the first frame (data-now: run as the page is read, not held for its data by scripts/build-fs.mjs) */ (function () { var p = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || navigator.userAgent || ''; if (/mac|iphone|ipad|ipod/i.test(p)) document.getElementById('sideKbd').textContent = '⌘K'; })();</script>
       <a href="/IS/home" data-go="/IS/home" title="Home" data-was="Home"><svg class="i"><use href="#i-home"/></svg><span class="fade">Home</span></a>
       <a href="/IS/courses" data-go="/IS/courses" title="Courses" data-was="the Courses page"><svg class="i"><use href="#i-binder"/></svg><span class="fade">Courses</span></a>
       <a href="/IS/grades" data-go="/IS/grades" title="Grades" data-was="the Grades page"><svg class="i"><use href="#i-chart"/></svg><span class="fade">Grades</span></a>
@@ -3428,7 +3428,7 @@
   <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 6.5 8.5 6.5 8.5-6.5"/></symbol>
   <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/></symbol>
   <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/></symbol>
-  <!-- Language (2026-11-14): an "A" and a "文" with curved arrows between them -->
+  <!-- Language: an "A" and a "文" with curved arrows between them -->
   <symbol id="i-ai" viewBox="0 0 24 24"><path fill="currentColor" stroke="none" fill-rule="evenodd" d="M12 2.5c.8 0 1.5.5 1.8 1.2l6.9 16.1a1.6 1.6 0 0 1-1.5 2.2h-2.4a1.6 1.6 0 0 1-1.5-1l-1-2.6H9.7l-1 2.6a1.6 1.6 0 0 1-1.5 1H4.8a1.6 1.6 0 0 1-1.5-2.2l6.9-16.1c.3-.7 1-1.2 1.8-1.2zM10.35 10.6a.95.95 0 0 1 .95.95v1.5a.95.95 0 0 1-1.9 0v-1.5a.95.95 0 0 1 .95-.95zM13.65 10.6a.95.95 0 0 1 .95.95v1.5a.95.95 0 0 1-1.9 0v-1.5a.95.95 0 0 1 .95-.95z"/></symbol>
   <symbol id="i-translate" viewBox="0 0 24 24"><path d="M3 12.5 7 3l4 9.5M4.6 9h4.8"/><path d="M17 11v2M12.5 13.6h9M14.2 13.6c.8 3.6 2.8 6 6.8 7.4M19.8 13.6c-.8 3.6-2.8 6-6.8 7.4"/><path d="M13.5 5.5h3a2 2 0 0 1 2 2v1.5M10.5 18.5h-3a2 2 0 0 1-2-2V15" opacity=".55"/></symbol>
   <symbol id="i-text" viewBox="0 0 24 24"><path d="M5 6h14M5 10h14M5 14h14M5 18h9"/></symbol>
@@ -3771,7 +3771,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const NT_SEEN = new Set(FSD.NT_SEEN_IDS);
   { const add = NT_SEEN.add.bind(NT_SEEN); NT_SEEN.add = id => { const it = NT_ITEMS.find(x => x.id === id); if (it) FSX.seen.mark(it.kind, it.raw); return add(id); }; }   // marked here = marked in Windowed too
   // seen somewhere else after this page drew (another device's list arriving late, another tab, or the Grades page
-  // clearing new grades): count it here too, without marking it again (2026-11-14: the bell showed 10 until a refresh)
+  // clearing new grades): count it here too, without marking it again
   window.addEventListener('fs:seen', () => { let n = 0; NT_ITEMS.forEach(it => { if (!NT_SEEN.has(it.id) && FSX.seen.has(it.kind, it.raw)) { Set.prototype.add.call(NT_SEEN, it.id); n++; } }); if (n) { ntBadge(); NT.onChange(); } });
   const NT = Object.assign({ here: null, onChange: () => {} }, typeof NT_HOOKS === 'object' ? NT_HOOKS : {});
   let ntEl = null, ntFrom = null, ntScope = NT.here || 'all';
@@ -4119,7 +4119,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     const q = cmdk.querySelector('input').value.trim(), res = cmdk.querySelector('.cmdk-res'); let html = '';
     const page = ([p, ic]) => crow(p === HERE ? 'data-cmdkx' : `data-toast="the ${p} page"`, ico(ic), cmark(p, q), p === HERE ? "You're here" : '');
     if (!q) {
-      // recent searches, shared with Home's search (FSX.recentSearches, 2026-11-26)
+      // recent searches, shared with Home's search (FSX.recentSearches)
       const rec = FSX.recentSearches ? FSX.recentSearches() : [];
       if (rec.length) html += `<div class="lbl">Recent searches</div>` + rec.map(r => crow(`data-cmdkrecent="${esc(r)}"`, ico('search'), esc(r), '')).join('');
       html += `<div class="lbl">Quick actions</div>` + crow('data-cmdkmsg=""', ico('msg'), 'Message a teacher', 'Start a new message', ' s-cmd') + crow('data-toast="Turn in, on the Assignments page"', ico('upload'), 'Turn in an assignment', 'Pick from what you have due', ' s-cmd')
@@ -4218,7 +4218,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     { id: 'plan', t: 'Plan', ic: 'star', c: '#b77d00', d: 'Averages Plus and the other plans' },
     { id: 'appearance', t: 'Appearance', ic: 'brush', c: '#7a3fa0', d: 'Window, theme, colors and speed' },
     { id: 'language', t: 'Language', ic: 'translate', c: '#2f5fb3', d: 'The app\'s language and Advanced translation' },
-    // A.I. search (2026-11-15, public/js/averages-ai.js): only listed where it's offered (AIX.ok)
+    // A.I. search (public/js/averages-ai.js): only listed where it's offered (AIX.ok)
     { id: 'ai', t: 'A.I. search', ic: 'ai', c: '#3a3d4f', d: 'Ask in your own words, on this device' },
     { id: 'personal', t: 'Personalization', ic: 'sliders', c: '#b25600', d: 'Course order and Home shortcuts' },
     { id: 'notifications', t: 'Notifications', ic: 'bell', c: '#d0393e', d: 'What your browser tells you about' },
@@ -4253,7 +4253,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
                 ['recap', 'Weekly recap', 'A Sunday summary on Home: what you turned in, new grades and what\'s due next week.']];
   const startOf = v => STARTS.find(x => x[0] === v) || STARTS[0];
   const startNow = () => startOf(optGet().openTo)[0];
-  const PLANS = { plus: { t: 'Averages Plus', pr: '$1.99 a month plus tax' }, free: { t: 'Free', pr: '' } };   // $1.99 + tax (2026-11-10, Martin)
+  const PLANS = { plus: { t: 'Averages Plus', pr: '$1.99 a month plus tax' }, free: { t: 'Free', pr: '' } };   // $1.99 + tax
   // What Plus costs, from GET /billing/status's price ({ amount in cents, currency, interval, intervalCount }),
   // in the student's own currency: "$1.99 a month", "€34.99 a year". Empty when Stripe hasn't said yet.
   function priceText(p) {
@@ -4306,7 +4306,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   const nCount = () => ['nGrades', 'nAssign', 'nDue', 'nMsgs', 'nAnn'].filter(k => SG[k]).length;
   const appsOn = () => Object.keys(APPS).filter(k => SG[k]);
 
-  // ---------- A.I. search (2026-11-15, public/js/averages-ai.js) ----------
+  // ---------- A.I. search (public/js/averages-ai.js) ----------
   // AIX.ok: offered here (its switch, WebGPU); AIX.st: AvAI.status() ({ on, v, saved, any, bytes, busy, loaded, total, error })
   const AIX = { ok: false, st: null, why: '' };
   const secOn = s => s.id !== 'ai' || AIX.ok;
@@ -4418,7 +4418,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
         (AIX.st && AIX.st.any && !AIX.st.busy ? row('aitools', 'A.I. tools', `${window.AvAI.mb(AIX.st.bytes)}. The A.I. search model, saved so it doesn't download again. Delete it to free the space.`, btn('aidel', 'Delete')) : ''))}`;
     },
 
-    // A.I. search (2026-11-15, public/js/averages-ai.js): turn it on (downloads the model once), pick its size, delete it
+    // A.I. search (public/js/averages-ai.js): turn it on (downloads the model once), pick its size, delete it
     ai: () => {
       const A = window.AvAI, st = AIX.st;
       if (!A || !st) return grp('A.I. search', row('aiOn', 'Checking…', ''));
@@ -4438,7 +4438,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
         'Built on IBM Granite 4.0 (Apache 2.0), trained by Averages. Made to run fully on device, and not use our servers. A.I. can make mistakes.')}`;
     },
 
-    // Language (2026-11-15, public/js/averages-i18n.js): the app's words in 6 languages, free; Advanced
+    // Language (public/js/averages-i18n.js): the app's words in 6 languages, free; Advanced
     // translation (Plus) translates the school's words too: class names, titles, posts and messages, not files.
     language: () => {
       const L = window.AvI18n;
@@ -4447,11 +4447,11 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
       if (SGV.trDevice === undefined) { SGV.trDevice = null; L.deviceCan().then(ok => { SGV.trDevice = ok; if (SG.sec === 'language') sgPane(); }); }
       // Advanced translation only shows where it can work: this browser translates on its own, or "Translate on our
       // server" is offered (the server-translate switch). Otherwise (Firefox, say, with the switch off) the switch did
-      // nothing, so the whole group is hidden, and turned off if it was on (Martin 2026-11-16).
+      // nothing, so the whole group is hidden, and turned off if it was on.
       const trShown = SGV.trDevice === true || !!LIVE.serverTr;
       if (!trShown && SGV.trDevice === false && on) L.setItems(false).then(() => { L.forget(); if (SG.sec === 'language') sgPane(); });
       const opts = [['auto', 'Same as this device']].concat(Object.entries(L.LANGS));
-      // Advanced translation is one switch (Martin 2026-11-18: "it won't let you turn it on"): where this browser can't translate on its own
+      // Advanced translation is one switch: where this browser can't translate on its own
       // but our server can, the switch says so and turning it on uses the server (it used to need a second switch that
       // only showed up after the first). Locked without Plus: it says why, right on the row.
       return `
@@ -4513,7 +4513,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
         `<button class="sg-row" role="radio" aria-checked="${incog()}" data-mode="incognito"${SG.plan !== 'free' || FSD.me.incognito ? ' aria-disabled="true"' : ''}><span class="sg-rd" aria-hidden="true"></span>${tx('Incognito', SG.plan !== 'free' ? 'Unavailable in Plus' : 'Nothing about you is stored on our servers. Everything stays in this browser.')}</button>`)}
       ${grp('', row('sync', 'Sync across devices', incog() ? 'Off in Incognito. Settings stay in this browser.' : 'Always on in Classic.', chip(incog() ? 'Off' : ico('ok') + 'On', incog() ? '' : ' on')))}
       ${grp('Contacts', tog('ctSchool', 'Only search my school', 'Add contacts finds people at your school. Turn this off to find anyone on Schoology, at any school or district.', SG.ctSchool) +
-        // your photo for classmates who use Averages too (2026-11-23); theirs show for you the same way. Off to start.
+        // your photo for classmates who use Averages too; theirs show for you the same way. Off to start.
         tog('mateShare', 'Show my photo to classmates', incog() ? 'Off in Incognito mode.' : !LIVE.share ? 'Checking…' : LIVE.share.available === false ? 'Only for Schoology classes for now.' : !PROFILE.photo ? 'Add a photo in Account first. Classmates who use Averages will see it in place of your initials.' : LIVE.share.on && LIVE.share.photo === false ? 'Saving your photo to your account…' : LIVE.share.on && LIVE.share.classes ? `Classmates who use Averages see your photo in your ${LIVE.share.classes} ${LIVE.share.classes === 1 ? 'class' : 'classes'}. Turn this off and it stops showing right away.` : 'Classmates who use Averages see your photo in place of your initials. Turn this off and it stops showing right away.', !!(LIVE.share && LIVE.share.on), incog() || !LIVE.share || LIVE.share.available === false))}
       ${grp('Your data',
         row('data', 'Download your data', 'A copy of everything Averages stored about you. Your grades and files stay in Schoology.', btn('download', 'Download')) +
@@ -4570,7 +4570,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
 
   // The section panel is at least as tall as the window, so a short section never pulls the page back up: picking
   // a section used to move the whole page, menu and all, by however much shorter it was, or back to a spot it
-  // remembered (Martin 2026-11-23: "selecting a tab/page on settings ... shifts the whole page including the bar").
+  // remembered.
   function paneFloor() { const sc = $('scroller'), pane = $('sgPane'); if (sc && pane) pane.style.minHeight = innerWidth > 860 ? Math.max(0, sc.clientHeight - 32) + 'px' : ''; }
   addEventListener('resize', paneFloor);
   function openSec(id, focusTop) {
@@ -4623,8 +4623,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && dlg) { e.preventDefault(); e.stopImmediatePropagation(); dlgClose(true); } }, true);
 
   // ---------- Averages email: add, change or remove it, with a 6-digit code (public/js/averages-email.js) ----------
-  // Two steps in one popup (2026-11-23, Martin: replace the popup with the code box, and the student clicks to send
-  // the code, it isn't automatic): 1. the email (checked, nothing sent); 2. "Verify your email" with Send
+  // Two steps in one popup (the student clicks to send the code, it isn't automatic): 1. the email (checked, nothing sent); 2. "Verify your email" with Send
   // verification code, the code box and Verify. "Use a different email" goes back to step 1.
   function editEmail() {
     const P = store.get('averages_profile') || {}, cur = typeof P.email === 'string' ? P.email : '';
@@ -4777,7 +4776,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   // /media/photo; its version is remembered so the synced profile can point at it instead of carrying the picture.
   async function photoUpload(url) {
     const blob = await new Promise(ok => { const im = new Image(); im.onload = () => { const c = document.createElement('canvas'); c.width = c.height = 256; c.getContext('2d').drawImage(im, 0, 0, 256, 256); c.toBlob(b => { if (b && b.type === 'image/webp') return ok(b); const j = document.createElement('canvas'); j.width = j.height = 256; const x = j.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, 256, 256); x.drawImage(c, 0, 0); j.toBlob(ok, 'image/jpeg', .86); }, 'image/webp', .86); }; im.onerror = () => ok(null); im.src = url; });
-    // (Safari can't make WebP: a JPEG on white, ~20 KB, not a PNG several times that; 2026-11-23)
+    // (Safari can't make WebP: a JPEG on white, ~20 KB, not a PNG several times that)
     if (!blob) return;
     const res = await fetch(FSX.API + '/media/photo', { method: 'PUT', credentials: 'include', headers: { 'Content-Type': blob.type }, body: blob });
     if (!res.ok) return;
@@ -5078,7 +5077,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
         return;
       }
       if (k === 'bgrefresh') {
-        // Background refresh (2026-11-26, Martin): the 30-second check for anything new while Averages is open
+        // Background refresh: the 30-second check for anything new while Averages is open
         const on = optGet().backgroundRefresh === false; saveOpt('backgroundRefresh', on);
         SGV.flip = 'bgrefresh'; sgPane(); toast(on ? 'Background refresh is on' : 'Background refresh is off. Averages checks when you open a page.'); return;
       }
@@ -5185,7 +5184,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
     else if (k === 'signoutall') dlgOpen({ title: 'Sign out everywhere?', ok: 'Sign out everywhere', danger: true,
       body: '<p>You\'ll be signed out on every phone, tablet and computer, this one too, within a minute. You can sign back in with Schoology any time.</p>',
       onOk: () => {
-        // the API ends every sign-in (2026-11-23), then this device forgets everything, as Sign out does
+        // the API ends every sign-in, then this device forgets everything, as Sign out does
         FSX.api('/auth/signout-everywhere', { method: 'POST', json: {} }).then(() => FSX.signOut(), () => toast('Couldn\'t sign out everywhere. Try again in a moment.'));
       } });
     else if (k === 'plan') setPlan(a.dataset.plan);
@@ -5338,7 +5337,7 @@ body.potato-mode .avfi-label, body.potato-mode .avfi-gap { opacity: 1; }
   FSX.api('/media/photo/share').then(r => { LIVE.share = r || { available: false }; redraw(); shareNeedsPhoto(); }).catch(() => { LIVE.share = { available: false }; redraw(); });
   // Showing the photo to classmates needs the account's copy of it (in R2). A photo that was only ever kept on this
   // device (set before account copies, or while they couldn't be saved) goes up now, and the classes get it.
-  // (Martin 2026-11-23: "the pfp sharing doesn't work": the switch was on, but there was no photo to show.)
+  //
   function shareNeedsPhoto() {
     if (!LIVE.share || !LIVE.share.on || LIVE.share.photo !== false || !/^data:image\//.test(PROFILE.photo || '') || shareNeedsPhoto.busy) return;
     shareNeedsPhoto.busy = true;

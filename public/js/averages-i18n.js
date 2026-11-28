@@ -1,4 +1,4 @@
-/* Averages in other languages (2026-11-15).
+/* Averages in other languages.
  *
  * 1. The app's own words. Pick a language in Settings > Language. Every page loads
  *    /i18n/<lang>.json, a list of the app's English text and its translation, and puts the
@@ -32,7 +32,7 @@
     for (var i = 0; i < list.length; i++) { var b = String(list[i] || '').toLowerCase().split('-')[0]; if (LANGS[b]) return b; }
     return 'en';
   }
-  // the choice syncs across devices with the other settings (averages_settings_options.language, 2026-11-14)
+  // the choice syncs across devices with the other settings (averages_settings_options.language)
   function synced() { try { var o = JSON.parse(ls.get('averages_settings_options') || '{}') || {}; return typeof o.language === 'string' ? o.language : null; } catch (e) { return null; } }
   var choice = synced() || ls.get('averages_lang') || 'auto';
   if (choice !== 'auto' && !LANGS[choice]) choice = 'auto';
@@ -162,7 +162,7 @@
   }
 
   // ---------- 2. Advanced translation: the school's words ----------
-  // Works in every language, English too (2026-11-14): each name, title, post or message is checked for
+  // Works in every language, English too: each name, title, post or message is checked for
   // the language it's written in, and only translated when that isn't the app's language. In English
   // that means a Spanish teacher's posts or a French class's titles come out in English.
   var TR_ON = ls.get('averages_tr_items') === '1';

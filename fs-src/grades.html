@@ -29,7 +29,7 @@
     --mark: rgba(229,72,77,.18);
     --pop-shadow: 0 16px 40px rgba(20,21,31,.16), 0 2px 6px rgba(20,21,31,.06);
     --scrim: rgba(20,21,31,.32);
-    --display: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif; /* the system font (SF Pro on a Mac), the one the chat preview showed while Puffin couldn't load */
+    --display: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif; /* the system font (SF Pro on a Mac) */
     --rail: 64px;
     --side-open: 248px;
   }
@@ -57,7 +57,7 @@
 
   /* Twemoji subject icon on a tint of the subject color (same table as courses.html) */
   .badge { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; flex: none; background: color-mix(in srgb, var(--c) 18%, #ffffff); }
-  .badge svg { width: 21px; height: 21px; display: block; }   /* the class emoji fills its tile (was 17px, 2026-11-14) */
+  .badge svg { width: 21px; height: 21px; display: block; }   /* the class emoji fills its tile (was 17px) */
   .italic { font-style: italic; }
 
   /* ---------- frame ---------- */
@@ -823,7 +823,7 @@
   .sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--field); transition: transform .15s ease; }
   .sw.on { background: var(--accent); }
   .sw.on::after { transform: translateX(12px); }
-  /* dark: a light knob on a lighter track, so the switch reads as a switch (2026-11-26, Martin: "the off circles r not centered") */
+  /* dark: a light knob on a lighter track, so the switch reads as a switch */
   html[data-theme="dark"] .sw:not(.on) { background: #3d4052; }
   html[data-theme="dark"] .sw::after { background: #ffffff; }
   .cb { width: 20px; height: 20px; border-radius: 6px; border: 2px solid var(--inner); display: grid; place-items: center; flex: none; color: transparent; }
@@ -3084,7 +3084,7 @@
   .gc-row .gr-ct b { font-size: 17px; }
   .gc-row .gr-ct small { font-size: 14px; }
   .gc-row .gc-g b { font-size: 23px; }
-  /* the class's emoji tile, a size up in the class rows (2026-11-14) */
+  /* the class's emoji tile, a size up in the class rows */
   .gc-row > .badge { width: 40px; height: 40px; border-radius: 11px; }
   .gc-row > .badge svg { width: 27px; height: 27px; }
   /* "N/A" stays on one line ("No grades yet" can wrap beside it) */
@@ -3115,7 +3115,7 @@
 
   <aside class="side" id="side" aria-label="Sidebar">
     <nav class="nav" aria-label="Pages">
-      <a href="#" title="Search" id="sideSearch" aria-keyshortcuts="Control+K Meta+K"><svg class="i"><use href="#i-search"/></svg><span class="fade">Search</span><kbd class="fade side-kbd" id="sideKbd">Ctrl K</kbd></a><script data-now>/* the right shortcut from the first frame (data-now: run as the page is read, not held for its data by scripts/build-fs.mjs) (2026-11-28: it showed "Ctrl K" for a moment on a Mac, then changed) */ (function () { var p = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || navigator.userAgent || ''; if (/mac|iphone|ipad|ipod/i.test(p)) document.getElementById('sideKbd').textContent = '⌘K'; })();</script>
+      <a href="#" title="Search" id="sideSearch" aria-keyshortcuts="Control+K Meta+K"><svg class="i"><use href="#i-search"/></svg><span class="fade">Search</span><kbd class="fade side-kbd" id="sideKbd">Ctrl K</kbd></a><script data-now>/* the right shortcut from the first frame (data-now: run as the page is read, not held for its data by scripts/build-fs.mjs) */ (function () { var p = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || navigator.userAgent || ''; if (/mac|iphone|ipad|ipod/i.test(p)) document.getElementById('sideKbd').textContent = '⌘K'; })();</script>
       <a href="/IS/home" data-go="/IS/home" title="Home" data-was="Home"><svg class="i"><use href="#i-home"/></svg><span class="fade">Home</span></a>
       <a href="/IS/courses" data-go="/IS/courses" title="Courses" data-was="the Courses page"><svg class="i"><use href="#i-binder"/></svg><span class="fade">Courses</span></a>
       <a href="#" title="Grades" class="on" aria-current="page"><svg class="i"><use href="#i-chart"/></svg><span class="fade">Grades</span></a>
@@ -3348,7 +3348,7 @@
   const NT_SEEN = new Set(FSD.NT_SEEN_IDS);
   { const add = NT_SEEN.add.bind(NT_SEEN); NT_SEEN.add = id => { const it = NT_ITEMS.find(x => x.id === id); if (it) FSX.seen.mark(it.kind, it.raw); return add(id); }; }   // marked here = marked in Windowed too
   // seen somewhere else after this page drew (another device's list arriving late, another tab, or the Grades page
-  // clearing new grades): count it here too, without marking it again (2026-11-14: the bell showed 10 until a refresh)
+  // clearing new grades): count it here too, without marking it again
   window.addEventListener('fs:seen', () => { let n = 0; NT_ITEMS.forEach(it => { if (!NT_SEEN.has(it.id) && FSX.seen.has(it.kind, it.raw)) { Set.prototype.add.call(NT_SEEN, it.id); n++; } }); if (n) { ntBadge(); NT.onChange(); } });
   const NT = Object.assign({ here: null, onChange: () => {} }, typeof NT_HOOKS === 'object' ? NT_HOOKS : {});
   let ntEl = null, ntFrom = null, ntScope = NT.here || 'all';
@@ -3694,7 +3694,7 @@
     const q = cmdk.querySelector('input').value.trim(), res = cmdk.querySelector('.cmdk-res'); let html = '';
     const page = ([p, ic]) => crow(p === HERE ? 'data-cmdkx' : `data-toast="the ${p} page"`, ico(ic), cmark(p, q), p === HERE ? "You're here" : '');
     if (!q) {
-      // recent searches, shared with Home's search (FSX.recentSearches, 2026-11-26)
+      // recent searches, shared with Home's search (FSX.recentSearches)
       const rec = FSX.recentSearches ? FSX.recentSearches() : [];
       if (rec.length) html += `<div class="lbl">Recent searches</div>` + rec.map(r => crow(`data-cmdkrecent="${esc(r)}"`, ico('search'), esc(r), '')).join('');
       html += `<div class="lbl">Quick actions</div>` + crow('data-cmdkmsg=""', ico('msg'), 'Message a teacher', 'Start a new message', ' s-cmd') + crow('data-toast="Turn in, on the Assignments page"', ico('upload'), 'Turn in an assignment', 'Pick from what you have due', ' s-cmd')
@@ -3769,7 +3769,7 @@
   // classes with nothing graded yet stay out of the overall average (they'd count as 0%)
   const AVG_OF = CLASSES.filter(c => !c.none);
   const avg = AVG_OF.length ? AVG_OF.reduce((t, c) => t + c.pct, 0) / AVG_OF.length : 0;
-  // The overall chart, one point per graded assignment (2026-11-14; it was one per week, so a week with grades in
+  // The overall chart, one point per graded assignment (it was one per week, so a week with grades in
   // every class was a single point and the line looked flat). Every class's grades are replayed in the order they
   // were graded, and after each one the overall grade is the average of every class's grade at that moment. A class
   // counts at its first grade from the start (so its first grade isn't read as the overall jumping), a class with a
@@ -3788,7 +3788,7 @@
     return out;
   })();
   const OVERALL = EV.map(e => e.v);
-  // The chart: one point per day (Martin 2026-11-18: per assignment was too many points), each the overall grade at the
+  // The chart: one point per day, each the overall grade at the
   // end of that day, after all of its grades. A grade with no date stays with the day before it. The class pages keep
   // their per-assignment charts; "over the last 2 grades" above still counts grades.
   const DAYS = (() => {
@@ -3807,7 +3807,7 @@
   const gpaList = () => CLASSES.filter(c => !c.none).map(c => ({ id: String(c.id), name: c.name, grade: letter(c.pct) }));
   const gpa = w => { const G = window.AveragesGPA; if (G) { const r = G.compute(gpaList()); return (w ? r.weighted : r.unweighted) || 0; }
     const L = CLASSES.filter(c => !c.none); return L.length ? L.reduce((t, c) => t + GPTS[letter(c.pct)] + (w && /^(AP|IB)\b|\bhonors\b/i.test(c.name) ? (/^(AP|IB)\b/.test(c.name) ? 1 : .5) : 0), 0) / L.length : 0; };
-  // how a class moved over its last 2 grades (2026-11-14: it was the last two weeks, and with every grade
+  // how a class moved over its last 2 grades (it was the last two weeks, and with every grade
   // entered the same week each class read Steady); a class with no gradebook to replay falls back to its weeks
   const stepsOf = c => c.steps && c.steps.length >= 2 ? c.steps.map(x => x.v) : c.trend;
   const fromOf = c => { const t = stepsOf(c); return t[Math.max(0, t.length - 3)]; };
@@ -3821,7 +3821,7 @@
 
   document.addEventListener('click', e => { if (e.target.closest('[data-gpascale]') && window.AveragesGPA) window.AveragesGPA.edit(gpaList(), () => { grMeta(); grSum(false); }); });
 
-  // Report card (2026-11-12): a one-page PDF of the grades on this page, made on this device by
+  // Report card: a one-page PDF of the grades on this page, made on this device by
   // /js/averages-report.js (loaded the first time it's asked for). The student ID comes from /auth/me.
   function reportData(studentId) {
     const G = window.AveragesGPA, graded = CLASSES.filter(c => !c.none);
@@ -3870,7 +3870,7 @@
   const CH = { w: 640, h: 210, l: 34, r: 12, t: 12, b: 26 };
   // the same chart entrance as Home: the line draws across, the area fades in under it, the points pop in along the way
   const popDelay = (i, n) => Math.max(0, Math.round(Math.acos(1 - 2 * i / (n - 1)) / Math.PI * 900) - 60);
-  // letter-grade lines down the left (2026-11-14): when there's room, a line at every cut (A+, A, A- …) with its
+  // letter-grade lines down the left: when there's room, a line at every cut (A+, A, A- …) with its
   // letter in the middle of its band; when the chart is tall in points (Each class, or a wide spread) only A, B,
   // C, D and F, so the letters never crowd or skip. Both go down to F, so a low class always has a letter beside it.
   function bandsSVG(lo, hi, Y) {
@@ -3889,7 +3889,7 @@
     const lines = GR.each ? AVG_OF.map((c, j) => DAYS.map(e => e.each[j])) : [];
     const all = DAYV.concat(...lines);
     const mn = Math.min(...all), mx = Math.max(...all), mid = (mn + mx) / 2, span = Math.max(10, mx - mn + 3), lo = Math.floor(mid - span / 2), hi = Math.ceil(mid + span / 2); // at least 10 points tall, so a steady grade reads as a flat line
-    // across: by date (Martin 2026-11-23: Nov 3, Nov 4 and Nov 8 sat evenly apart), so a week without grades takes
+    // across: by date, so a week without grades takes
     // a week's room. Only when a day has no date do the points fall back to even steps.
     const last = N - 1, W = CH.w - CH.l - CH.r, T = DAYS.map(d => d.t), timed = T.every(t => t > 0) && T[last] > T[0];
     const X = i => CH.l + (timed ? (T[i] - T[0]) / (T[last] - T[0]) : i / last) * W, Y = v => CH.t + (1 - (v - lo) / (hi - lo)) * (CH.h - CH.t - CH.b);
@@ -3981,7 +3981,7 @@
   }
 
   // ---------- your classes ----------
-  // the class grade after each graded assignment (2026-11-14), the same line as its Grades chart; week by week until two are graded
+  // the class grade after each graded assignment, the same line as its Grades chart; week by week until two are graded
   const spark = c => { const t = c.steps && c.steps.length >= 2 ? c.steps.map(x => x.v) : c.trend, mid = (Math.min(...t) + Math.max(...t)) / 2, span = Math.max(8, Math.max(...t) - Math.min(...t) + 1.2), lo = mid - span / 2, hi = mid + span / 2, /* at least 8 points tall, so small moves look small */ w = 110, h = 30, x = i => (i / (t.length - 1)) * w, y = v => h - ((v - lo) / (hi - lo)) * h; const line = 'M' + t.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join('L');
     return `<svg class="gc-sp" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true"><path d="${line}L${w},${h}L0,${h}Z" fill="${c.color}" fill-opacity=".12"/><path d="${line}" fill="none" stroke="${c.color}" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg>`; };
   const workOf = (id, q) => WORK.filter(w => w.c === id && (!q || w.n.toLowerCase().includes(q)));
@@ -4064,7 +4064,7 @@
   document.addEventListener('click', e => { const r = e.target.closest && e.target.closest('[data-gw], [data-rgw]'); if (r) seeWork(r.dataset.gw || r.dataset.rgw); }, true);
   $('grList').addEventListener('click', e => {
     const t = e.target.closest('[data-gctoggle]'); if (t) { toggleClass(t.dataset.gctoggle); return; }
-    const w = e.target.closest('[data-gw]'); if (w && !e.target.closest('button')) { const x = WORK.find(v => v.id === w.dataset.gw); FSX.hub(x.c, 'assignments', { a: x.id }); }   // the assignment's own page in its class (2026-11-14), graded or not
+    const w = e.target.closest('[data-gw]'); if (w && !e.target.closest('button')) { const x = WORK.find(v => v.id === w.dataset.gw); FSX.hub(x.c, 'assignments', { a: x.id }); }   // the assignment's own page in its class, graded or not
   });
   $('grAll').addEventListener('click', () => { const list = classesShown(), all = list.every(c => GR.open.has(c.id)); list.forEach(c => all ? GR.open.delete(c.id) : GR.open.add(c.id)); store.set('fsgrades_open', [...GR.open]); grList(true); });
   $('grFind').addEventListener('input', e => { GR.q = e.target.value.trim(); grList(false); });
@@ -4082,7 +4082,7 @@
   // ---------- rail ----------
   function grRecent() {
     const list = WORK.filter(w => !w.missing).slice(0, 6);
-    // each one opens that assignment, like everywhere else (Martin 2026-11-17); graded work with no page of its own
+    // each one opens that assignment, like everywhere else; graded work with no page of its own
     // opens its row in the class's Grades
     $('grRecent').innerHTML = list.map(w => `<a class="rg2" href="${esc(FSX.hubUrl(w.c, '', { a: w.id }))}" data-rgw="${w.id}">${badge(C[w.c])}<span class="tx"><b>${esc(w.n)}</b><small>${esc(C[w.c].name)} · ${esc(w.on)}</small></span>${isNew(w) ? '<span class="newtag">New</span>' : ''}<span class="sc"><b class="${gcls(pctOf(w))}">${pctOf(w).toFixed(0)}%</b><small>${w.got} / ${w.of}</small></span></a>`).join('');
   }
