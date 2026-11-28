@@ -82,9 +82,13 @@
   // a OneDrive file's preview picture (Graph's thumbnails), only from Microsoft's own file servers
   function odThumb(f) {
     var t = f && Array.isArray(f.thumbnails) && f.thumbnails[0], u = t && ((t.large && t.large.url) || (t.medium && t.medium.url)) || '';
-    return /^https:\/\/([a-z0-9-]+\.)+(1drv\.com|sharepoint\.com|microsoftpersonalcontent\.com|livefilestore\.com|onedrive\.com|live\.com|microsoft\.com)\//i.test(u) ? u : '';
+    try { var x = new URL(u); return x.protocol === 'https:' && /(^|\.)(1drv\.com|sharepoint\.com|microsoftpersonalcontent\.com|livefilestore\.com|onedrive\.com|live\.com|microsoft\.com)$/i.test(x.hostname) ? x.href : ''; } catch (e) { return ''; }
   }
-  function odUrl(u) { u = String(u || ''); return /^https:\/\/([a-z0-9-]+\.)*(live\.com|sharepoint\.com|1drv\.ms|microsoftpersonalcontent\.com|onedrive\.com|office\.com|cloud\.microsoft)\//i.test(u) ? u : ''; }
+  function odUrl(u) {
+    // by host name, so an address with no "/" before its "?" counts too (2026-11-28: new OneDrive addresses look like
+    // https://onedrive.live.com?cid=…&id=…, and every OneDrive file on the Files page opened a blank tab)
+    try { var x = new URL(String(u || '')); return x.protocol === 'https:' && /(^|\.)(live\.com|sharepoint\.com|1drv\.ms|microsoftpersonalcontent\.com|onedrive\.com|office\.com|cloud\.microsoft)$/i.test(x.hostname) ? x.href : ''; } catch (e) { return ''; }
+  }
   var CANVA_FMT = {}, CANVA_ASKED = {};   // design id -> the types Canva can make of it
   var FST = window.FST = {
     ready: function () { return Promise.all([S(), Cl()]); },
@@ -148,7 +152,7 @@
       }
       return oneDriveToken(false, quiet).then(function (t) { return c.oneDriveList(t); }).then(function (l) {
         return (l || []).filter(function (f) { return f && f.id && !f.folder; }).map(function (f) {
-          return { id: String(f.id), name: String(f.name || 'OneDrive file').slice(0, 200), kind: extOf(f.name) || 'file', mime: String((f.file && f.file.mimeType) || f.mimeType || ''), sub: [size(f.size), ago(Date.parse(f.lastModifiedDateTime || ''))].filter(Boolean).join(' · '), at: Date.parse(f.lastModifiedDateTime || '') || 0, bytes: Number(f.size) || 0, thumb: odThumb(f), url: /^https:\/\/([a-z0-9-]+\.)*(live\.com|sharepoint\.com|1drv\.ms|microsoftpersonalcontent\.com|onedrive\.com|office\.com|cloud\.microsoft)\//i.test(String(f.webUrl || '')) ? String(f.webUrl) : '' };
+          return { id: String(f.id), name: String(f.name || 'OneDrive file').slice(0, 200), kind: extOf(f.name) || 'file', mime: String((f.file && f.file.mimeType) || f.mimeType || ''), sub: [size(f.size), ago(Date.parse(f.lastModifiedDateTime || ''))].filter(Boolean).join(' · '), at: Date.parse(f.lastModifiedDateTime || '') || 0, bytes: Number(f.size) || 0, thumb: odThumb(f), url: odUrl(f.webUrl) };
         });
       });
     },
