@@ -1934,7 +1934,7 @@
 
   <aside class="side" id="side" aria-label="Sidebar">
     <nav class="nav" aria-label="Pages">
-      <a href="#" title="Search" id="sideSearch" aria-keyshortcuts="Control+K Meta+K"><svg class="i"><use href="#i-search"/></svg><span class="fade">Search</span><kbd class="fade side-kbd" id="sideKbd">Ctrl K</kbd></a>
+      <a href="#" title="Search" id="sideSearch" aria-keyshortcuts="Control+K Meta+K"><svg class="i"><use href="#i-search"/></svg><span class="fade">Search</span><kbd class="fade side-kbd" id="sideKbd">Ctrl K</kbd></a><script data-now>/* the right shortcut from the first frame (data-now: run as the page is read, not held for its data by scripts/build-fs.mjs) (2026-11-28: it showed "Ctrl K" for a moment on a Mac, then changed) */ (function () { var p = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || navigator.userAgent || ''; if (/mac|iphone|ipad|ipod/i.test(p)) document.getElementById('sideKbd').textContent = '⌘K'; })();</script>
       <a href="#" title="Home" class="on" aria-current="page"><svg class="i"><use href="#i-home"/></svg><span class="fade">Home</span></a>
       <a href="#" title="Courses" data-open="page:Courses"><svg class="i"><use href="#i-binder"/></svg><span class="fade">Courses</span></a>
       <a href="#" title="Grades" data-open="page:Grades"><svg class="i"><use href="#i-chart"/></svg><span class="fade">Grades</span></a>
@@ -1959,7 +1959,7 @@
         </div>
 
         <div class="bigsearch">
-          <label id="bigLabel"><svg class="i"><use href="#i-search"/></svg><input id="bigInput" autocomplete="off" spellcheck="false" placeholder="search anything" aria-label="Search" aria-autocomplete="list" aria-keyshortcuts="Control+K Meta+K /"><button class="sclear" id="bigClear" type="button" aria-label="Clear search" hidden><svg class="i"><use href="#i-x"/></svg></button><span class="keys" id="searchKeys" aria-hidden="true"><kbd>Ctrl</kbd><kbd>K</kbd></span></label>
+          <label id="bigLabel"><svg class="i"><use href="#i-search"/></svg><input id="bigInput" autocomplete="off" spellcheck="false" placeholder="search anything" aria-label="Search" aria-autocomplete="list" aria-keyshortcuts="Control+K Meta+K /"><button class="sclear" id="bigClear" type="button" aria-label="Clear search" hidden><svg class="i"><use href="#i-x"/></svg></button><span class="keys" id="searchKeys" aria-hidden="true"><kbd>Ctrl</kbd><kbd>K</kbd></span></label><script data-now>(function () { var p = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || navigator.userAgent || ''; if (/mac|iphone|ipad|ipod/i.test(p)) document.getElementById('searchKeys').innerHTML = '<kbd title="Command">⌘</kbd><kbd>K</kbd>'; })();</script>
         </div>
 
         <div class="chips" id="chips" role="group" aria-label="Shortcuts"><span id="chipList" style="display:contents"></span></div>

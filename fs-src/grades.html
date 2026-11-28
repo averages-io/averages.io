@@ -3115,7 +3115,7 @@
 
   <aside class="side" id="side" aria-label="Sidebar">
     <nav class="nav" aria-label="Pages">
-      <a href="#" title="Search" id="sideSearch" aria-keyshortcuts="Control+K Meta+K"><svg class="i"><use href="#i-search"/></svg><span class="fade">Search</span><kbd class="fade side-kbd" id="sideKbd">Ctrl K</kbd></a>
+      <a href="#" title="Search" id="sideSearch" aria-keyshortcuts="Control+K Meta+K"><svg class="i"><use href="#i-search"/></svg><span class="fade">Search</span><kbd class="fade side-kbd" id="sideKbd">Ctrl K</kbd></a><script data-now>/* the right shortcut from the first frame (data-now: run as the page is read, not held for its data by scripts/build-fs.mjs) (2026-11-28: it showed "Ctrl K" for a moment on a Mac, then changed) */ (function () { var p = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || navigator.userAgent || ''; if (/mac|iphone|ipad|ipod/i.test(p)) document.getElementById('sideKbd').textContent = '⌘K'; })();</script>
       <a href="/IS/home" data-go="/IS/home" title="Home" data-was="Home"><svg class="i"><use href="#i-home"/></svg><span class="fade">Home</span></a>
       <a href="/IS/courses" data-go="/IS/courses" title="Courses" data-was="the Courses page"><svg class="i"><use href="#i-binder"/></svg><span class="fade">Courses</span></a>
       <a href="#" title="Grades" class="on" aria-current="page"><svg class="i"><use href="#i-chart"/></svg><span class="fade">Grades</span></a>
